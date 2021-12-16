@@ -16,20 +16,19 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.HelloWorldPage
-import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import javax.inject.{Inject, Singleton}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
+
 import scala.concurrent.Future
 
 @Singleton
-class HelloWorldController @Inject()(
-  mcc: MessagesControllerComponents,
-  helloWorldPage: HelloWorldPage)
-    extends FrontendController(mcc) {
+class AccountCheckController @Inject()(authAction: AuthAction,
+                                       mcc: MessagesControllerComponents) extends FrontendController(mcc) {
 
-  val helloWorld: Action[AnyContent] = Action.async { implicit request =>
-    Future.successful(Ok(helloWorldPage()))
+  def accountCheck(redirectUrl: String): Action[AnyContent] = authAction.async {implicit request =>
+  Future.successful(Ok)
   }
 
 }

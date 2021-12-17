@@ -28,7 +28,7 @@ lazy val microservice = Project(appName, file("."))
     majorVersion                     := 0,
     scalaVersion                     := "2.12.15",
     libraryDependencies              ++= AppDependencies.compile ++ AppDependencies.test,
-    PlayKeys.playDefaultPort := 6000,
+    PlayKeys.playDefaultPort := 7750,
     pipelineStages in Assets := Seq(gzip),
     // ***************
     // Use the silencer plugin to suppress warnings

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 HM Revenue & Customs
+ * Copyright 2022 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,10 +25,12 @@ import scala.concurrent.Future
 
 @Singleton
 class AccountCheckController @Inject()(authAction: AuthAction,
-                                       mcc: MessagesControllerComponents) extends FrontendController(mcc) {
+                                       mcc: MessagesControllerComponents)
+    extends FrontendController(mcc) {
 
-  def accountCheck(redirectUrl: String): Action[AnyContent] = authAction.async {implicit request =>
-  Future.successful(Ok)
+  def accountCheck(redirectUrl: String): Action[AnyContent] = authAction.async {
+    implicit request =>
+      Future.successful(Ok("Successful"))
   }
 
 }

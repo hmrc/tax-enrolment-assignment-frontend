@@ -30,7 +30,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixtur
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class authActionSpec extends TestFixture {
+class AuthActionSpec extends TestFixture {
 
   def authAction: AuthAction = new AuthAction(mockAuthConnector, testBodyParser)
 

@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.controllers
 
-import play.api.test.Helpers.status
+import play.api.test.Helpers.{status, _}
 import uk.gov.hmrc.auth.core.Enrolments
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
-import play.api.test.Helpers._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{AccountCheckController, testOnly}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -36,9 +36,11 @@ class AccountCheckControllerSpec extends TestFixture {
       (mockAuthConnector.authorise(_: Predicate, _: Retrieval[(Option[String] ~ Option[Credentials]) ~ Enrolments])(_: HeaderCarrier, _: ExecutionContext))
         .expects(predicates, retrievals, *, *).returning(Future.successful(retrievalResponse()))
 
-      val result = controller.accountCheck("http://example.com")
-        .apply(buildFakeRequestWithSessionId("GET", "/account-check?redirectUrl=http://example.com"))
-       status(result) shouldBe OK
+      val result = controller.accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
+        .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+
+      status(result) shouldBe SEE_OTHER
+      redirectLocation(result) shouldBe Some("/tax-enrolment-assignment-frontend/test-only/successful")
     }
   }
 

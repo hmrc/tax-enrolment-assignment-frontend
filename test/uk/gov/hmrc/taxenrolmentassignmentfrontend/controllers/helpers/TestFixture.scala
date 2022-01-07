@@ -21,7 +21,7 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.Injector
-import play.api.mvc.{AnyContent, BodyParsers, DefaultMessagesActionBuilderImpl, MessagesActionBuilder}
+import play.api.mvc.{AnyContent, BodyParsers, DefaultMessagesActionBuilderImpl, MessagesActionBuilder, MessagesControllerComponents}
 import play.api.test.Helpers.{stubBodyParser, stubMessagesApi, stubMessagesControllerComponents}
 import play.api.test.Injecting
 import uk.gov.hmrc.auth.core.AuthConnector
@@ -40,7 +40,7 @@ trait TestFixture extends AnyWordSpec with MockFactory with GuiceOneAppPerSuite 
 
   //Controller
   val messagesActionBuilder: MessagesActionBuilder = new DefaultMessagesActionBuilderImpl(stubBodyParser[AnyContent](), stubMessagesApi())
-  lazy val mcc = stubMessagesControllerComponents()
+  lazy val mcc: MessagesControllerComponents = stubMessagesControllerComponents()
 
 
 }

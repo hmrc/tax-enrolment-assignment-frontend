@@ -16,18 +16,14 @@
 
 package helpers
 
-import akka.http.scaladsl.model.HttpResponse
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, GivenWhenThen, TestSuite}
 import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, GivenWhenThen, TestSuite}
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import play.api.{Application, Environment, Mode}
 import play.api.inject.guice.GuiceApplicationBuilder
-
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, Future}
+import play.api.{Application, Environment, Mode}
 
 trait IntegrationSpecBase extends AnyWordSpec
   with GivenWhenThen
@@ -49,7 +45,8 @@ trait IntegrationSpecBase extends AnyWordSpec
     "auditing.consumer.baseUri.host"                          -> s"$mockHost",
     "auditing.consumer.baseUri.port"                          -> s"$mockPort",
     "microservice.services.auth.host"                         -> s"$mockHost",
-    "microservice.services.auth.port"                         -> s"$mockPort"
+    "microservice.services.auth.port"                         -> s"$mockPort",
+    "play.http.router"                                        -> "testOnlyDoNotUseInAppConf.Routes"
   )
 
   override implicit val patienceConfig: PatienceConfig = PatienceConfig(

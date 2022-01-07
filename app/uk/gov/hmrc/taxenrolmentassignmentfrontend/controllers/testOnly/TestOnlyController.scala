@@ -14,24 +14,23 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
 
 import play.api.Logging
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
 
 import javax.inject.{Inject, Singleton}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+
 import scala.concurrent.Future
 
 @Singleton
-class AccountCheckController @Inject()(authAction: AuthAction,
-                                       mcc: MessagesControllerComponents)
-    extends FrontendController(mcc) with Logging {
+class TestOnlyController @Inject()(mcc: MessagesControllerComponents)
+  extends FrontendController(mcc) with Logging {
 
-  def accountCheck(redirectUrl: String): Action[AnyContent] = authAction.async {
-    implicit request =>
-      Future.successful(Redirect(redirectUrl))
+  def successfulCall: Action[AnyContent] = Action.async { implicit request =>
+    logger.info("[TestOnlyController][successfulCall] Successfully Redirected")
+    Future.successful(Ok("Successful"))
   }
 
 }

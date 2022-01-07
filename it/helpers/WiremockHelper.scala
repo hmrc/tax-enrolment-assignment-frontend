@@ -89,7 +89,7 @@ trait WiremockHelper extends ServerProvider {
 
   def resetWiremock(): Unit = WireMock.reset()
 
-  def buildRequest(path: String): WSRequest =
-    ws.url(s"http://localhost:$port/tax-enrolment-assignment-frontend$path").withFollowRedirects(false)
+  def buildRequest(path: String, followRedirects: Boolean = false): WSRequest =
+    ws.url(s"http://localhost:$port/tax-enrolment-assignment-frontend$path").withFollowRedirects(followRedirects)
 
 }

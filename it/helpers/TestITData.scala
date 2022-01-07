@@ -23,13 +23,13 @@ import uk.gov.hmrc.auth.core.retrieve.Credentials
 
 object TestITData {
 
-  val NINO = "testNino"
-  val CREDENTIAL_ID = "credId123"
-  val creds = Credentials(CREDENTIAL_ID, GovernmentGateway.toString)
-  val noEnrolments = Enrolments(Set.empty[Enrolment])
-  val saEnrolmentOnly = Enrolments(Set(Enrolment("IR-SA", Seq(EnrolmentIdentifier("UTR", "123456789")), "Activated", None)))
-  val ptEnrolmentOnly = Enrolments(Set(Enrolment("HMRC-PT", Seq(EnrolmentIdentifier("NINO", NINO)), "Activated", None)))
-  val saAndptEnrolments = Enrolments(Set(
+  val NINO: String = "testNino"
+  val CREDENTIAL_ID: String = "credId123"
+  val creds: Credentials = Credentials(CREDENTIAL_ID, GovernmentGateway.toString)
+  val noEnrolments: Enrolments = Enrolments(Set.empty[Enrolment])
+  val saEnrolmentOnly: Enrolments = Enrolments(Set(Enrolment("IR-SA", Seq(EnrolmentIdentifier("UTR", "123456789")), "Activated", None)))
+  val ptEnrolmentOnly: Enrolments = Enrolments(Set(Enrolment("HMRC-PT", Seq(EnrolmentIdentifier("NINO", NINO)), "Activated", None)))
+  val saAndptEnrolments: Enrolments = Enrolments(Set(
     Enrolment("HMRC-PT", Seq(EnrolmentIdentifier("NINO", NINO)), "Activated", None),
     Enrolment("IR-SA", Seq(EnrolmentIdentifier("UTR", "123456789")), "Activated", None)
   ))

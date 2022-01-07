@@ -19,12 +19,13 @@ package controllers
 import helpers.IntegrationSpecBase
 import helpers.WiremockHelper._
 import helpers.TestITData._
-
 import play.api.http.Status
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
 
 class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
 
-  val urlPath = "/account-check?redirectUrl=http%3A%2F%2Fexample.com"
+  val teaHost  = s"localhost:$port"
+  val urlPath = s"/account-check?redirectUrl=${testOnly.routes.TestOnlyController.successfulCall.absoluteURL(false, teaHost)}"
 
   s"GET $urlPath" when {
     "the user is authorised to use the service" should {
@@ -33,7 +34,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val res = buildRequest(urlPath).withHttpHeaders(xSessionId, csrfContent).get()
+        val res = buildRequest(urlPath, followRedirects = true).withHttpHeaders(xSessionId, csrfContent).get()
 
         whenReady(res) {resp =>
           resp.status shouldBe OK

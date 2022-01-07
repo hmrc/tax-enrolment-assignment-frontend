@@ -73,22 +73,15 @@ class AuthAction @Inject()(
 
           block(RequestWithUserDetails(request, userDetails))
 
-        case x =>
-          logger.warn(
-            s"[AuthAction][invokeBlock] session missing credential or NINO field for uri: ${request.uri}"
-          )
+        case _ =>
+          logger.warn(s"[AuthAction][invokeBlock] session missing credential or NINO field for uri: ${request.uri}")
           Future.successful(Unauthorized)
       } recover {
       case er: NoActiveSession =>
-        logger.warn(
-          s"[AuthAction][invokeBlock] no active session for uri: ${request.uri} with message: ${er.getMessage}",
-          er
-        )
+        logger.warn(s"[AuthAction][invokeBlock] no active session for uri: ${request.uri} with message: ${er.getMessage}", er)
         Unauthorized("NoActiveSession")
       case er: AuthorisationException =>
-        logger.warn(
-          s"[AuthAction][invokeBlock] Auth exception: ${er.getMessage} for  uri ${request.uri}"
-        )
+        logger.warn(s"[AuthAction][invokeBlock] Auth exception: ${er.getMessage} for  uri ${request.uri}")
         Unauthorized(er.getMessage)
     }
   }

@@ -14,19 +14,21 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.config
+package uk.gov.hmrc
 
-import javax.inject.{Inject, Singleton}
-import play.api.Configuration
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+/*
+ * Copyright 2021 HM Revenue & Customs
+ *
+ */
 
-@Singleton
-class AppConfig @Inject()(config: Configuration,
-                          val servicesConfig: ServicesConfig) {
-  val welshLanguageSupportEnabled: Boolean = config
-    .getOptional[Boolean]("features.welsh-language-support")
-    .getOrElse(false)
+import cats.data.EitherT
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 
-  val IV_BASE_URL = servicesConfig.baseUrl("identity-verification")
+import scala.concurrent.Future
+
+package object service {
+
+  type EitherF[A, B] = EitherT[Future, A, B]
+  type TEAFResult[T] = EitherF[TaxEnrolmentAssignmentErrors, T]
 
 }

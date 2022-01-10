@@ -14,19 +14,8 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.config
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.errors
 
-import javax.inject.{Inject, Singleton}
-import play.api.Configuration
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+sealed trait TaxEnrolmentAssignmentErrors
 
-@Singleton
-class AppConfig @Inject()(config: Configuration,
-                          val servicesConfig: ServicesConfig) {
-  val welshLanguageSupportEnabled: Boolean = config
-    .getOptional[Boolean]("features.welsh-language-support")
-    .getOrElse(false)
-
-  val IV_BASE_URL = servicesConfig.baseUrl("identity-verification")
-
-}
+object UnexpectedResponseFromIV extends TaxEnrolmentAssignmentErrors

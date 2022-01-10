@@ -14,19 +14,17 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.config
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 
-import javax.inject.{Inject, Singleton}
-import play.api.Configuration
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import play.api.libs.json.{Format, Json, Reads, Writes}
 
-@Singleton
-class AppConfig @Inject()(config: Configuration,
-                          val servicesConfig: ServicesConfig) {
-  val welshLanguageSupportEnabled: Boolean = config
-    .getOptional[Boolean]("features.welsh-language-support")
-    .getOrElse(false)
+case class IVNinoStoreEntry(credId: String, confidenceLevel: Option[Int])
 
-  val IV_BASE_URL = servicesConfig.baseUrl("identity-verification")
+object IVNinoStoreEntry {
+  implicit val format: Format[IVNinoStoreEntry] = Json.format[IVNinoStoreEntry]
+
+  implicit val formatList: Format[List[IVNinoStoreEntry]] = {
+    Format(Reads.list[IVNinoStoreEntry], Writes.list[IVNinoStoreEntry])
+  }
 
 }

@@ -34,40 +34,70 @@ import uk.gov.hmrc.auth.core.{AuthProviders, ConfidenceLevel}
 object WiremockHelper extends Eventually with IntegrationPatience {
   val wiremockPort = 1111
   val wiremockHost = "localhost"
-  val wiremockURL  = s"http://$wiremockHost:$wiremockPort"
+  val wiremockURL = s"http://$wiremockHost:$wiremockPort"
 
   def stubAuthorizePost(status: Integer, responseBody: String): StubMapping = {
     val authorizePath = "/auth/authorise"
     val jsonRequest = Json.obj(
       "authorise" -> (AuthProviders(GovernmentGateway) and ConfidenceLevel.L200).toJson,
-      "retrieve" -> Json.arr(JsString("nino"), JsString("optionalCredentials"), JsString("allEnrolments"))
+      "retrieve" -> Json.arr(
+        JsString("nino"),
+        JsString("optionalCredentials"),
+        JsString("allEnrolments")
+      )
     )
-    stubPost(authorizePath, equalToJson(jsonRequest.toString()), status, responseBody)
+    stubPost(
+      authorizePath,
+      equalToJson(jsonRequest.toString()),
+      status,
+      responseBody
+    )
   }
 
   def stubAuthorizePostUnauthorised(failureReason: String): StubMapping = {
     stubFor(
       post(urlMatching("/auth/authorise"))
-        .willReturn(aResponse()
-          .withStatus(401)
-          .withHeader("WWW-Authenticate", failureReason)
+        .willReturn(
+          aResponse()
+            .withStatus(401)
+            .withHeader("WWW-Authenticate", failureReason)
         )
     )
   }
 
-  def stubPost(url: String, requestBody: StringValuePattern, status: Integer, responseBody: String): StubMapping =
+  def stubPost(url: String,
+               requestBody: StringValuePattern,
+               status: Integer,
+               responseBody: String): StubMapping =
     stubFor(
       post(urlMatching(url))
         .withRequestBody(requestBody)
-        .willReturn(aResponse()
-          .withStatus(status)
-          .withHeader("Content-Type", "application/json")
-          .withBody(responseBody)))
+        .willReturn(
+          aResponse()
+            .withStatus(status)
+            .withHeader("Content-Type", "application/json")
+            .withBody(responseBody)
+        )
+    )
 
-  def stubPost(url: String, status: Integer, responseBody: String): StubMapping =
+  def stubPost(url: String,
+               status: Integer,
+               responseBody: String): StubMapping =
     stubFor(
       post(urlMatching(url))
-        .willReturn(aResponse().withStatus(status).withBody(responseBody)))
+        .willReturn(aResponse().withStatus(status).withBody(responseBody))
+    )
+
+  def stubGetWithQueryParam(url: String,
+                            queryParamKey: String,
+                            queryParamValue: String,
+                            status: Integer,
+                            responseBody: String): StubMapping =
+    stubFor(
+      get(urlPathEqualTo(url))
+        .withQueryParam(queryParamKey, equalTo(queryParamValue))
+        .willReturn(aResponse().withStatus(status).withBody(responseBody))
+    )
 }
 
 trait WiremockHelper extends ServerProvider {
@@ -78,7 +108,7 @@ trait WiremockHelper extends ServerProvider {
   lazy val ws: WSClient = app.injector.instanceOf[WSClient]
 
   lazy val wmConfig: WireMockConfiguration = wireMockConfig().port(wiremockPort)
-  lazy val wireMockServer                  = new WireMockServer(wmConfig)
+  lazy val wireMockServer = new WireMockServer(wmConfig)
 
   def startWiremock(): Unit = {
     WireMock.configureFor(wiremockHost, wiremockPort)
@@ -90,6 +120,7 @@ trait WiremockHelper extends ServerProvider {
   def resetWiremock(): Unit = WireMock.reset()
 
   def buildRequest(path: String, followRedirects: Boolean = false): WSRequest =
-    ws.url(s"http://localhost:$port/tax-enrolment-assignment-frontend$path").withFollowRedirects(followRedirects)
+    ws.url(s"http://localhost:$port/tax-enrolment-assignment-frontend$path")
+      .withFollowRedirects(followRedirects)
 
 }

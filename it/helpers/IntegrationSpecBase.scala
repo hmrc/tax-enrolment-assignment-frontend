@@ -20,37 +20,51 @@ import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, GivenWhenThen, TestSuite}
+import org.scalatest.{
+  BeforeAndAfterAll,
+  BeforeAndAfterEach,
+  GivenWhenThen,
+  TestSuite
+}
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.{Application, Environment, Mode}
+import uk.gov.hmrc.http.HeaderCarrier
 
-trait IntegrationSpecBase extends AnyWordSpec
-  with GivenWhenThen
-  with TestSuite
-  with ScalaFutures
-  with IntegrationPatience
-  with Matchers
-  with WiremockHelper
-  with GuiceOneServerPerSuite
-  with BeforeAndAfterEach
-  with BeforeAndAfterAll
-  with Eventually {
+import scala.concurrent.ExecutionContext
+
+trait IntegrationSpecBase
+    extends AnyWordSpec
+    with GivenWhenThen
+    with TestSuite
+    with ScalaFutures
+    with IntegrationPatience
+    with Matchers
+    with WiremockHelper
+    with GuiceOneServerPerSuite
+    with BeforeAndAfterEach
+    with BeforeAndAfterAll
+    with Eventually {
+
+  implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.global
+  lazy implicit val hc: HeaderCarrier = HeaderCarrier()
 
   val mockHost: String = WiremockHelper.wiremockHost
-  val mockPort: Int    = WiremockHelper.wiremockPort
-  val mockUrl          = s"http://$mockHost:$mockPort"
+  val mockPort: Int = WiremockHelper.wiremockPort
+  val mockUrl = s"http://$mockHost:$mockPort"
 
   def config: Map[String, String] = Map(
-    "auditing.consumer.baseUri.host"                          -> s"$mockHost",
-    "auditing.consumer.baseUri.port"                          -> s"$mockPort",
-    "microservice.services.auth.host"                         -> s"$mockHost",
-    "microservice.services.auth.port"                         -> s"$mockPort",
-    "play.http.router"                                        -> "testOnlyDoNotUseInAppConf.Routes"
+    "auditing.consumer.baseUri.host" -> s"$mockHost",
+    "auditing.consumer.baseUri.port" -> s"$mockPort",
+    "microservice.services.auth.host" -> s"$mockHost",
+    "microservice.services.auth.port" -> s"$mockPort",
+    "microservice.services.identity-verification.host" -> s"$mockHost",
+    "microservice.services.identity-verification.port" -> s"$mockPort",
+    "play.http.router" -> "testOnlyDoNotUseInAppConf.Routes"
   )
 
   override implicit val patienceConfig: PatienceConfig = PatienceConfig(
-    timeout  = scaled(Span(15, Seconds)),
+    timeout = scaled(Span(15, Seconds)),
     interval = scaled(Span(200, Millis))
   )
 

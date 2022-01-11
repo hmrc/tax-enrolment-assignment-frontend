@@ -1,0 +1,80 @@
+/*
+ * Copyright 2022 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package connectors
+
+import helpers.IntegrationSpecBase
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.IVConnector
+import helpers.WiremockHelper._
+import helpers.TestITData._
+import play.api.http.Status
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromIV
+
+class IVConnectorISpec extends IntegrationSpecBase {
+
+  lazy val connector: IVConnector = app.injector.instanceOf[IVConnector]
+  lazy val path = "/nino"
+
+  "getCredentialsWithNino" when {
+    "multiple credentials have the same nino" should {
+      "return the list of credentials with confidence levels" in {
+        stubGetWithQueryParam(
+          path,
+          "nino",
+          "JT872173A",
+          Status.OK,
+          ivResponseMultiCredsJsonString
+        )
+        whenReady(connector.getCredentialsWithNino("JT872173A").value) {
+          response =>
+            response shouldBe Right(multiIVCreds)
+        }
+      }
+    }
+
+    "one credential has the nino" should {
+      "return the credential with confidence level" in {
+        stubGetWithQueryParam(
+          path,
+          "nino",
+          "JT872173A",
+          Status.OK,
+          ivResponseSingleCredsJsonString
+        )
+        whenReady(connector.getCredentialsWithNino("JT872173A").value) {
+          response =>
+            response shouldBe Right(List(ivNinoStoreEntry4))
+        }
+      }
+    }
+
+    "a non 200 is returned" should {
+      "return an UnexpectedResponseFromIV error" in {
+        stubGetWithQueryParam(
+          path,
+          "nino",
+          "JT872173A",
+          Status.INTERNAL_SERVER_ERROR,
+          ""
+        )
+        whenReady(connector.getCredentialsWithNino("JT872173A").value) {
+          response =>
+            response shouldBe Left(UnexpectedResponseFromIV)
+        }
+      }
+    }
+  }
+}

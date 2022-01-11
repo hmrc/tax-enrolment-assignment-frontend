@@ -23,10 +23,8 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 @Singleton
 class AppConfig @Inject()(config: Configuration,
                           val servicesConfig: ServicesConfig) {
-  val welshLanguageSupportEnabled: Boolean = config
-    .getOptional[Boolean]("features.welsh-language-support")
-    .getOrElse(false)
-
+  val welshLanguageSupportEnabled: Boolean = servicesConfig
+    .getConfBool("features.welsh-language-support", defBool = false)
   val IV_BASE_URL = servicesConfig.baseUrl("identity-verification")
 
 }

@@ -18,6 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors
 
 import cats.data.EitherT
 import com.google.inject.{Inject, Singleton}
+import play.api.Logger
 import play.api.http.Status.OK
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
 import uk.gov.hmrc.service.TEAFResult
@@ -25,24 +26,33 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromIV
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IVNinoStoreEntry
 import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class IVConnector @Inject()(httpClient: HttpClient, appConfig: AppConfig) {
+class IVConnector @Inject()(httpClient: HttpClient,
+                            logger: EventLoggerService,
+                            appConfig: AppConfig) {
+
+  implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
   def getCredentialsWithNino(nino: String)(
     implicit ec: ExecutionContext,
     hc: HeaderCarrier
   ): TEAFResult[List[IVNinoStoreEntry]] = EitherT {
     val url = s"${appConfig.IV_BASE_URL}/nino"
+
     httpClient
       .GET[HttpResponse](url, queryParams = Seq("nino" -> nino))
       .map(
         httpResponse =>
           httpResponse.status match {
             case OK => Right(httpResponse.json.as[List[IVNinoStoreEntry]])
-            case _  => Left(UnexpectedResponseFromIV)
+            case status =>
+              logger.logEvent(logUnexpectedResponseFromIV(nino, status))
+              Left(UnexpectedResponseFromIV)
         }
       )
   }

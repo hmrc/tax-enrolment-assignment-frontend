@@ -34,13 +34,12 @@ class IVConnectorISpec extends IntegrationSpecBase {
         stubGetWithQueryParam(
           path,
           "nino",
-          "JT872173A",
+          NINO,
           Status.OK,
           ivResponseMultiCredsJsonString
         )
-        whenReady(connector.getCredentialsWithNino("JT872173A").value) {
-          response =>
-            response shouldBe Right(multiIVCreds)
+        whenReady(connector.getCredentialsWithNino(NINO).value) { response =>
+          response shouldBe Right(multiIVCreds)
         }
       }
     }
@@ -50,29 +49,45 @@ class IVConnectorISpec extends IntegrationSpecBase {
         stubGetWithQueryParam(
           path,
           "nino",
-          "JT872173A",
+          NINO,
           Status.OK,
           ivResponseSingleCredsJsonString
         )
-        whenReady(connector.getCredentialsWithNino("JT872173A").value) {
-          response =>
-            response shouldBe Right(List(ivNinoStoreEntry4))
+        whenReady(connector.getCredentialsWithNino(NINO).value) { response =>
+          response shouldBe Right(List(ivNinoStoreEntry4))
         }
       }
     }
 
-    "a non 200 is returned" should {
+    "a non 404 is returned" should {
+      "return an UnexpectedResponseFromIV error" in {
+        stubGetWithQueryParam(path, "nino", NINO, Status.NOT_FOUND, "")
+        whenReady(connector.getCredentialsWithNino(NINO).value) { response =>
+          response shouldBe Left(UnexpectedResponseFromIV)
+        }
+      }
+    }
+
+    "a non 400 is returned" should {
+      "return an UnexpectedResponseFromIV error" in {
+        stubGetWithQueryParam(path, "nino", NINO, Status.BAD_REQUEST, "")
+        whenReady(connector.getCredentialsWithNino(NINO).value) { response =>
+          response shouldBe Left(UnexpectedResponseFromIV)
+        }
+      }
+    }
+
+    "a non 500 is returned" should {
       "return an UnexpectedResponseFromIV error" in {
         stubGetWithQueryParam(
           path,
           "nino",
-          "JT872173A",
+          NINO,
           Status.INTERNAL_SERVER_ERROR,
           ""
         )
-        whenReady(connector.getCredentialsWithNino("JT872173A").value) {
-          response =>
-            response shouldBe Left(UnexpectedResponseFromIV)
+        whenReady(connector.getCredentialsWithNino(NINO).value) { response =>
+          response shouldBe Left(UnexpectedResponseFromIV)
         }
       }
     }

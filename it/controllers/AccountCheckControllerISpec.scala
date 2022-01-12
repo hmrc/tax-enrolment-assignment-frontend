@@ -24,20 +24,94 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
 
 class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
 
-  val teaHost  = s"localhost:$port"
-  val urlPath = s"/account-check?redirectUrl=${testOnly.routes.TestOnlyController.successfulCall.absoluteURL(false, teaHost)}"
+  val teaHost = s"localhost:$port"
+  val returnUrl = testOnly.routes.TestOnlyController.successfulCall
+    .absoluteURL(false, teaHost)
+  val urlPath =
+    s"/account-check?redirectUrl=${testOnly.routes.TestOnlyController.successfulCall
+      .absoluteURL(false, teaHost)}"
 
   s"GET $urlPath" when {
-    "the user is authorised to use the service" should {
-      s"return $OK" in {
+    "an authorised user with one credential uses the service" should {
+      s"redirect to returnUrl" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
+        stubGetWithQueryParam(
+          "/nino",
+          "nino",
+          NINO,
+          Status.OK,
+          ivResponseSingleCredsJsonString
+        )
+        val res = buildRequest(urlPath, followRedirects = true)
+          .withHttpHeaders(xSessionId, csrfContent)
+          .get()
 
-        val res = buildRequest(urlPath, followRedirects = true).withHttpHeaders(xSessionId, csrfContent).get()
-
-        whenReady(res) {resp =>
+        whenReady(res) { resp =>
           resp.status shouldBe OK
+          resp.uri.toString shouldBe returnUrl
+        }
+      }
+    }
+
+    "an authorised user with multiple credential uses the service" should {
+      s"return $OK with multiple credential message" in {
+        val authResponse = authoriseResponseJson()
+        stubAuthorizePost(OK, authResponse.toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        stubGetWithQueryParam(
+          "/nino",
+          "nino",
+          NINO,
+          Status.OK,
+          ivResponseMultiCredsJsonString
+        )
+        val res = buildRequest(urlPath, followRedirects = true)
+          .withHttpHeaders(xSessionId, csrfContent)
+          .get()
+
+        whenReady(res) { resp =>
+          resp.status shouldBe OK
+          resp.body shouldBe "Multiple Accounts with Nino"
+        }
+      }
+    }
+
+    "an authorised user with no credential uses the service" should {
+      s"return $INTERNAL_SERVER_ERROR" in {
+        val authResponse = authoriseResponseJson()
+        stubAuthorizePost(OK, authResponse.toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        stubGetWithQueryParam("/nino", "nino", NINO, Status.NOT_FOUND, "")
+        val res = buildRequest(urlPath, followRedirects = true)
+          .withHttpHeaders(xSessionId, csrfContent)
+          .get()
+
+        whenReady(res) { resp =>
+          resp.status shouldBe INTERNAL_SERVER_ERROR
+        }
+      }
+    }
+
+    "an authorised user but IV returns internal error" should {
+      s"return $INTERNAL_SERVER_ERROR" in {
+        val authResponse = authoriseResponseJson()
+        stubAuthorizePost(OK, authResponse.toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        stubGetWithQueryParam(
+          "/nino",
+          "nino",
+          NINO,
+          Status.INTERNAL_SERVER_ERROR,
+          ""
+        )
+        val res = buildRequest(urlPath, followRedirects = true)
+          .withHttpHeaders(xSessionId, csrfContent)
+          .get()
+
+        whenReady(res) { resp =>
+          resp.status shouldBe INTERNAL_SERVER_ERROR
         }
       }
     }
@@ -48,9 +122,10 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val res = buildRequest(urlPath).withHttpHeaders(xSessionId, csrfContent).get()
+        val res =
+          buildRequest(urlPath).withHttpHeaders(xSessionId, csrfContent).get()
 
-        whenReady(res) {resp =>
+        whenReady(res) { resp =>
           resp.status shouldBe UNAUTHORIZED
         }
       }
@@ -62,27 +137,31 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val res = buildRequest(urlPath).withHttpHeaders(xSessionId, csrfContent).get()
+        val res =
+          buildRequest(urlPath).withHttpHeaders(xSessionId, csrfContent).get()
 
-        whenReady(res) {resp =>
+        whenReady(res) { resp =>
           resp.status shouldBe UNAUTHORIZED
         }
       }
     }
 
-    List(sessionNotFound, insufficientConfidenceLevel).foreach{ failureReason =>
-      s"the auth returns 401 and the user has an $failureReason" should {
-        s"return $UNAUTHORIZED" in {
-          stubAuthorizePostUnauthorised(failureReason)
-          stubPost(s"/write/.*", OK, """{"x":2}""")
+    List(sessionNotFound, insufficientConfidenceLevel).foreach {
+      failureReason =>
+        s"the auth returns 401 and the user has an $failureReason" should {
+          s"return $UNAUTHORIZED" in {
+            stubAuthorizePostUnauthorised(failureReason)
+            stubPost(s"/write/.*", OK, """{"x":2}""")
 
-          val res = buildRequest(urlPath).withHttpHeaders(xSessionId, csrfContent).get()
+            val res = buildRequest(urlPath)
+              .withHttpHeaders(xSessionId, csrfContent)
+              .get()
 
-          whenReady(res) {resp =>
-            resp.status shouldBe UNAUTHORIZED
+            whenReady(res) { resp =>
+              resp.status shouldBe UNAUTHORIZED
+            }
           }
         }
-      }
     }
   }
 }

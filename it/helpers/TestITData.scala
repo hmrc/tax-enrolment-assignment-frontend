@@ -24,7 +24,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IVNinoStoreEntry
 
 object TestITData {
 
-  val NINO: String = "testNino"
+  val NINO: String = "JT872173A"
   val CREDENTIAL_ID: String = "credId123"
   val creds: Credentials =
     Credentials(CREDENTIAL_ID, GovernmentGateway.toString)

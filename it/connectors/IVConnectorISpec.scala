@@ -26,8 +26,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromI
 class IVConnectorISpec extends IntegrationSpecBase {
 
   lazy val connector: IVConnector = app.injector.instanceOf[IVConnector]
-  lazy val path = "/nino"
-
+  lazy val path = "/identity-verification/nino"
   "getCredentialsWithNino" when {
     "multiple credentials have the same nino" should {
       "return the list of credentials with confidence levels" in {

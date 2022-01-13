@@ -20,18 +20,28 @@ import play.api.Logging
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
-
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.Future
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.IVConnector
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromIV
 
+import scala.concurrent.ExecutionContext
 @Singleton
-class AccountCheckController @Inject()(authAction: AuthAction,
-                                       mcc: MessagesControllerComponents)
-    extends FrontendController(mcc) with Logging {
+class AccountCheckController @Inject()(
+  authAction: AuthAction,
+  ivConnector: IVConnector,
+  mcc: MessagesControllerComponents
+)(implicit ec: ExecutionContext)
+    extends FrontendController(mcc)
+    with Logging {
 
   def accountCheck(redirectUrl: String): Action[AnyContent] = authAction.async {
     implicit request =>
-      Future.successful(Redirect(redirectUrl))
+      ivConnector.getCredentialsWithNino(request.userDetails.nino).value.map {
+        case Right(credsWithNino) if credsWithNino.length == 1 =>
+          Redirect(redirectUrl)
+        case Right(_)                       => Ok("Multiple Accounts with Nino")
+        case Left(UnexpectedResponseFromIV) => InternalServerError
+      }
   }
 
 }

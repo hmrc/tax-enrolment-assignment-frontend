@@ -23,24 +23,96 @@ import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{AccountCheckController, testOnly}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{
+  AccountCheckController,
+  testOnly
+}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromIV
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class AccountCheckControllerSpec extends TestFixture {
 
-  val controller = new AccountCheckController(mockAuthAction, mcc)
+  val controller =
+    new AccountCheckController(mockAuthAction, mockIVConnector, mcc)
 
-  "accountCheck" should {
-    "return OK" in {
-      (mockAuthConnector.authorise(_: Predicate, _: Retrieval[(Option[String] ~ Option[Credentials]) ~ Enrolments])(_: HeaderCarrier, _: ExecutionContext))
-        .expects(predicates, retrievals, *, *).returning(Future.successful(retrievalResponse()))
+  "accountCheck" when {
+    "a single credential exists for a given nino" should {
+      "redirect to the return url" in {
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[(Option[String] ~ Option[Credentials]) ~ Enrolments]
+          )(_: HeaderCarrier, _: ExecutionContext))
+          .expects(predicates, retrievals, *, *)
+          .returning(Future.successful(retrievalResponse()))
+        (mockIVConnector
+          .getCredentialsWithNino(_: String)(
+            _: ExecutionContext,
+            _: HeaderCarrier
+          ))
+          .expects(NINO, *, *)
+          .returning(createInboundResult(List(ivNinoStoreEntry4)))
 
-      val result = controller.accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
-        .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+        val result = controller
+          .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
+          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-      status(result) shouldBe SEE_OTHER
-      redirectLocation(result) shouldBe Some("/tax-enrolment-assignment-frontend/test-only/successful")
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result) shouldBe Some(
+          "/tax-enrolment-assignment-frontend/test-only/successful"
+        )
+      }
+    }
+
+    "multiple credentials exists for a given nino" should {
+      "return OK" in {
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[(Option[String] ~ Option[Credentials]) ~ Enrolments]
+          )(_: HeaderCarrier, _: ExecutionContext))
+          .expects(predicates, retrievals, *, *)
+          .returning(Future.successful(retrievalResponse()))
+        (mockIVConnector
+          .getCredentialsWithNino(_: String)(
+            _: ExecutionContext,
+            _: HeaderCarrier
+          ))
+          .expects(NINO, *, *)
+          .returning(createInboundResult(multiIVCreds))
+
+        val result = controller
+          .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
+          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+
+        status(result) shouldBe OK
+      }
+    }
+
+    "a no credentials exists in IV for a given nino" should {
+      "return InternalServerError" in {
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[(Option[String] ~ Option[Credentials]) ~ Enrolments]
+          )(_: HeaderCarrier, _: ExecutionContext))
+          .expects(predicates, retrievals, *, *)
+          .returning(Future.successful(retrievalResponse()))
+        (mockIVConnector
+          .getCredentialsWithNino(_: String)(
+            _: ExecutionContext,
+            _: HeaderCarrier
+          ))
+          .expects(NINO, *, *)
+          .returning(createInboundResultError(UnexpectedResponseFromIV))
+
+        val result = controller
+          .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
+          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+
+        status(result) shouldBe INTERNAL_SERVER_ERROR
+      }
     }
   }
 

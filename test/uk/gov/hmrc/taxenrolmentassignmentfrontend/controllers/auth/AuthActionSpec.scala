@@ -21,7 +21,12 @@ import play.api.test.Helpers._
 import play.api.mvc.{Result, Results}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsString, status}
-import uk.gov.hmrc.auth.core.{Enrolments, InsufficientConfidenceLevel, SessionRecordNotFound, UnsupportedAuthProvider}
+import uk.gov.hmrc.auth.core.{
+  Enrolments,
+  InsufficientConfidenceLevel,
+  SessionRecordNotFound,
+  UnsupportedAuthProvider
+}
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -32,9 +37,12 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class AuthActionSpec extends TestFixture {
 
-  def authAction: AuthAction = new AuthAction(mockAuthConnector, testBodyParser)
+  def authAction: AuthAction =
+    new AuthAction(mockAuthConnector, testBodyParser, logger)
 
-  def defaultAsyncBody(requestTestCase: RequestWithUserDetails[_] => Assertion): RequestWithUserDetails[_] => Result = testRequest => {
+  def defaultAsyncBody(
+    requestTestCase: RequestWithUserDetails[_] => Assertion
+  ): RequestWithUserDetails[_] => Result = testRequest => {
     requestTestCase(testRequest)
     Results.Ok("Successful")
   }
@@ -42,11 +50,17 @@ class AuthActionSpec extends TestFixture {
   "AuthAction" when {
     "the session contains nino, credential and no enrolments" should {
       "return OK and the userDetails" in {
-        (mockAuthConnector.authorise(_: Predicate, _: Retrieval[(Option[String] ~ Option[Credentials]) ~ Enrolments])(_: HeaderCarrier, _: ExecutionContext))
-          .expects(predicates, retrievals, *, *).returning(Future.successful(retrievalResponse()))
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[(Option[String] ~ Option[Credentials]) ~ Enrolments]
+          )(_: HeaderCarrier, _: ExecutionContext))
+          .expects(predicates, retrievals, *, *)
+          .returning(Future.successful(retrievalResponse()))
 
-        val result: Future[Result] = authAction(defaultAsyncBody
-        (_.userDetails shouldBe userDetailsNoEnrolments))(FakeRequest())
+        val result: Future[Result] = authAction(
+          defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
+        )(FakeRequest())
 
         status(result) shouldBe OK
         contentAsString(result) shouldBe "Successful"
@@ -55,11 +69,19 @@ class AuthActionSpec extends TestFixture {
 
     "the session contains nino, credential and IR-SA enrolments" should {
       "return OK and the userDetails" in {
-        (mockAuthConnector.authorise(_: Predicate, _: Retrieval[(Option[String] ~ Option[Credentials]) ~ Enrolments])(_: HeaderCarrier, _: ExecutionContext))
-          .expects(predicates, retrievals, *, *).returning(Future.successful(retrievalResponse(enrolments = saEnrolmentOnly)))
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[(Option[String] ~ Option[Credentials]) ~ Enrolments]
+          )(_: HeaderCarrier, _: ExecutionContext))
+          .expects(predicates, retrievals, *, *)
+          .returning(
+            Future.successful(retrievalResponse(enrolments = saEnrolmentOnly))
+          )
 
-        val result: Future[Result] = authAction(defaultAsyncBody
-        (_.userDetails shouldBe userDetailsWithSAEnrolment))(FakeRequest())
+        val result: Future[Result] = authAction(
+          defaultAsyncBody(_.userDetails shouldBe userDetailsWithSAEnrolment)
+        )(FakeRequest())
 
         status(result) shouldBe OK
         contentAsString(result) shouldBe "Successful"
@@ -68,11 +90,19 @@ class AuthActionSpec extends TestFixture {
 
     "the session contains nino, credential and PT enrolments" should {
       "return OK and the userDetails" in {
-        (mockAuthConnector.authorise(_: Predicate, _: Retrieval[(Option[String] ~ Option[Credentials]) ~ Enrolments])(_: HeaderCarrier, _: ExecutionContext))
-          .expects(predicates, retrievals, *, *).returning(Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly)))
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[(Option[String] ~ Option[Credentials]) ~ Enrolments]
+          )(_: HeaderCarrier, _: ExecutionContext))
+          .expects(predicates, retrievals, *, *)
+          .returning(
+            Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly))
+          )
 
-        val result: Future[Result] = authAction(defaultAsyncBody
-        (_.userDetails shouldBe userDetailsWithPTEnrolment))(FakeRequest())
+        val result: Future[Result] = authAction(
+          defaultAsyncBody(_.userDetails shouldBe userDetailsWithPTEnrolment)
+        )(FakeRequest())
 
         status(result) shouldBe OK
         contentAsString(result) shouldBe "Successful"
@@ -81,11 +111,21 @@ class AuthActionSpec extends TestFixture {
 
     "the session contains nino, credential and IR-SA and PT enrolments" should {
       "return OK and the userDetails" in {
-        (mockAuthConnector.authorise(_: Predicate, _: Retrieval[(Option[String] ~ Option[Credentials]) ~ Enrolments])(_: HeaderCarrier, _: ExecutionContext))
-          .expects(predicates, retrievals, *, *).returning(Future.successful(retrievalResponse(enrolments = saAndptEnrolments)))
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[(Option[String] ~ Option[Credentials]) ~ Enrolments]
+          )(_: HeaderCarrier, _: ExecutionContext))
+          .expects(predicates, retrievals, *, *)
+          .returning(
+            Future.successful(retrievalResponse(enrolments = saAndptEnrolments))
+          )
 
-        val result: Future[Result] = authAction(defaultAsyncBody
-        (_.userDetails shouldBe userDetailsWithPTAndSAEnrolment))(FakeRequest())
+        val result: Future[Result] = authAction(
+          defaultAsyncBody(
+            _.userDetails shouldBe userDetailsWithPTAndSAEnrolment
+          )
+        )(FakeRequest())
 
         status(result) shouldBe OK
         contentAsString(result) shouldBe "Successful"
@@ -94,11 +134,19 @@ class AuthActionSpec extends TestFixture {
 
     "the session contains nino, but no credential" should {
       "return Unauthorised" in {
-        (mockAuthConnector.authorise(_: Predicate, _: Retrieval[(Option[String] ~ Option[Credentials]) ~ Enrolments])(_: HeaderCarrier, _: ExecutionContext))
-          .expects(predicates, retrievals, *, *).returning(Future.successful(retrievalResponse(optCredentials = None)))
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[(Option[String] ~ Option[Credentials]) ~ Enrolments]
+          )(_: HeaderCarrier, _: ExecutionContext))
+          .expects(predicates, retrievals, *, *)
+          .returning(
+            Future.successful(retrievalResponse(optCredentials = None))
+          )
 
-        val result: Future[Result] = authAction(defaultAsyncBody
-        (_.userDetails shouldBe userDetailsNoEnrolments))(FakeRequest())
+        val result: Future[Result] = authAction(
+          defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
+        )(FakeRequest())
 
         status(result) shouldBe UNAUTHORIZED
       }
@@ -106,11 +154,17 @@ class AuthActionSpec extends TestFixture {
 
     "the session contains no nino, but credential" should {
       "return Unauthorised" in {
-        (mockAuthConnector.authorise(_: Predicate, _: Retrieval[(Option[String] ~ Option[Credentials]) ~ Enrolments])(_: HeaderCarrier, _: ExecutionContext))
-          .expects(predicates, retrievals, *, *).returning(Future.successful(retrievalResponse(optNino = None)))
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[(Option[String] ~ Option[Credentials]) ~ Enrolments]
+          )(_: HeaderCarrier, _: ExecutionContext))
+          .expects(predicates, retrievals, *, *)
+          .returning(Future.successful(retrievalResponse(optNino = None)))
 
-        val result: Future[Result] = authAction(defaultAsyncBody
-        (_.userDetails shouldBe userDetailsNoEnrolments))(FakeRequest())
+        val result: Future[Result] = authAction(
+          defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
+        )(FakeRequest())
 
         status(result) shouldBe UNAUTHORIZED
       }
@@ -118,11 +172,21 @@ class AuthActionSpec extends TestFixture {
 
     "the session contains no nino or credential" should {
       "return Unauthorised" in {
-        (mockAuthConnector.authorise(_: Predicate, _: Retrieval[(Option[String] ~ Option[Credentials]) ~ Enrolments])(_: HeaderCarrier, _: ExecutionContext))
-          .expects(predicates, retrievals, *, *).returning(Future.successful(retrievalResponse(optNino = None, optCredentials = None)))
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[(Option[String] ~ Option[Credentials]) ~ Enrolments]
+          )(_: HeaderCarrier, _: ExecutionContext))
+          .expects(predicates, retrievals, *, *)
+          .returning(
+            Future.successful(
+              retrievalResponse(optNino = None, optCredentials = None)
+            )
+          )
 
-        val result: Future[Result] = authAction(defaultAsyncBody
-        (_.userDetails shouldBe userDetailsNoEnrolments))(FakeRequest())
+        val result: Future[Result] = authAction(
+          defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
+        )(FakeRequest())
 
         status(result) shouldBe UNAUTHORIZED
       }
@@ -130,11 +194,17 @@ class AuthActionSpec extends TestFixture {
 
     "the session cannot be found" should {
       "return Unauthorised" in {
-        (mockAuthConnector.authorise(_: Predicate, _: Retrieval[(Option[String] ~ Option[Credentials]) ~ Enrolments])(_: HeaderCarrier, _: ExecutionContext))
-          .expects(predicates, retrievals, *, *).returning(Future.failed(SessionRecordNotFound("FAILED")))
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[(Option[String] ~ Option[Credentials]) ~ Enrolments]
+          )(_: HeaderCarrier, _: ExecutionContext))
+          .expects(predicates, retrievals, *, *)
+          .returning(Future.failed(SessionRecordNotFound("FAILED")))
 
-        val result: Future[Result] = authAction(defaultAsyncBody
-        (_.userDetails shouldBe userDetailsNoEnrolments))(FakeRequest())
+        val result: Future[Result] = authAction(
+          defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
+        )(FakeRequest())
 
         status(result) shouldBe UNAUTHORIZED
       }
@@ -142,11 +212,17 @@ class AuthActionSpec extends TestFixture {
 
     "the session is from an unsupported auth provider" should {
       "return Unauthorised" in {
-        (mockAuthConnector.authorise(_: Predicate, _: Retrieval[(Option[String] ~ Option[Credentials]) ~ Enrolments])(_: HeaderCarrier, _: ExecutionContext))
-          .expects(predicates, retrievals, *, *).returning(Future.failed(UnsupportedAuthProvider("FAILED")))
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[(Option[String] ~ Option[Credentials]) ~ Enrolments]
+          )(_: HeaderCarrier, _: ExecutionContext))
+          .expects(predicates, retrievals, *, *)
+          .returning(Future.failed(UnsupportedAuthProvider("FAILED")))
 
-        val result: Future[Result] = authAction(defaultAsyncBody
-        (_.userDetails shouldBe userDetailsNoEnrolments))(FakeRequest())
+        val result: Future[Result] = authAction(
+          defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
+        )(FakeRequest())
 
         status(result) shouldBe UNAUTHORIZED
       }
@@ -154,11 +230,17 @@ class AuthActionSpec extends TestFixture {
 
     "the session is at an insufficient confidence level" should {
       "return Unauthorised" in {
-        (mockAuthConnector.authorise(_: Predicate, _: Retrieval[(Option[String] ~ Option[Credentials]) ~ Enrolments])(_: HeaderCarrier, _: ExecutionContext))
-          .expects(predicates, retrievals, *, *).returning(Future.failed(InsufficientConfidenceLevel("FAILED")))
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[(Option[String] ~ Option[Credentials]) ~ Enrolments]
+          )(_: HeaderCarrier, _: ExecutionContext))
+          .expects(predicates, retrievals, *, *)
+          .returning(Future.failed(InsufficientConfidenceLevel("FAILED")))
 
-        val result: Future[Result] = authAction(defaultAsyncBody
-        (_.userDetails shouldBe userDetailsNoEnrolments))(FakeRequest())
+        val result: Future[Result] = authAction(
+          defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
+        )(FakeRequest())
 
         status(result) shouldBe UNAUTHORIZED
       }

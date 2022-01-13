@@ -16,28 +16,59 @@
 
 package helpers
 
-import play.api.libs.json.{JsArray, JsObject, JsString, JsValue, Json}
+import play.api.libs.json.{JsArray, JsNumber, JsObject, JsString, JsValue, Json}
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
 import uk.gov.hmrc.auth.core.retrieve.Credentials
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IVNinoStoreEntry
 
 object TestITData {
 
-  val NINO: String = "testNino"
+  val NINO: String = "JT872173A"
   val CREDENTIAL_ID: String = "credId123"
-  val creds: Credentials = Credentials(CREDENTIAL_ID, GovernmentGateway.toString)
+  val creds: Credentials =
+    Credentials(CREDENTIAL_ID, GovernmentGateway.toString)
   val noEnrolments: Enrolments = Enrolments(Set.empty[Enrolment])
-  val saEnrolmentOnly: Enrolments = Enrolments(Set(Enrolment("IR-SA", Seq(EnrolmentIdentifier("UTR", "123456789")), "Activated", None)))
-  val ptEnrolmentOnly: Enrolments = Enrolments(Set(Enrolment("HMRC-PT", Seq(EnrolmentIdentifier("NINO", NINO)), "Activated", None)))
-  val saAndptEnrolments: Enrolments = Enrolments(Set(
-    Enrolment("HMRC-PT", Seq(EnrolmentIdentifier("NINO", NINO)), "Activated", None),
-    Enrolment("IR-SA", Seq(EnrolmentIdentifier("UTR", "123456789")), "Activated", None)
-  ))
+  val saEnrolmentOnly: Enrolments = Enrolments(
+    Set(
+      Enrolment(
+        "IR-SA",
+        Seq(EnrolmentIdentifier("UTR", "123456789")),
+        "Activated",
+        None
+      )
+    )
+  )
+  val ptEnrolmentOnly: Enrolments = Enrolments(
+    Set(
+      Enrolment(
+        "HMRC-PT",
+        Seq(EnrolmentIdentifier("NINO", NINO)),
+        "Activated",
+        None
+      )
+    )
+  )
+  val saAndptEnrolments: Enrolments = Enrolments(
+    Set(
+      Enrolment(
+        "HMRC-PT",
+        Seq(EnrolmentIdentifier("NINO", NINO)),
+        "Activated",
+        None
+      ),
+      Enrolment(
+        "IR-SA",
+        Seq(EnrolmentIdentifier("UTR", "123456789")),
+        "Activated",
+        None
+      )
+    )
+  )
 
   val sessionId = "sessionId-eb3158c2-0aff-4ce8-8d1b-f2208ace52fe"
   val xSessionId: (String, String) = "X-Session-ID" -> sessionId
   val csrfContent: (String, String) = "Csrf-Token" -> "nocheck"
-
 
   def authoriseResponseJson(optNino: Option[String] = Some(NINO),
                             optCreds: Option[Credentials] = Some(creds),
@@ -45,11 +76,18 @@ object TestITData {
     val enrolmentsJson = Json.obj(
       "allEnrolments" -> JsArray(enrolments.enrolments.map(_.toJson).toSeq)
     )
-    val ninoJson = optNino.fold[JsObject](Json.obj())(nino => Json.obj("nino" -> JsString(nino)))
-    val credentialsJson = optCreds.fold[JsObject](Json.obj())(creds => Json.obj("optionalCredentials" -> Json.obj(
-      "providerId" -> JsString(creds.providerId),
-      "providerType" -> JsString("GovernmentGateway")
-    )))
+    val ninoJson = optNino.fold[JsObject](Json.obj())(
+      nino => Json.obj("nino" -> JsString(nino))
+    )
+    val credentialsJson = optCreds.fold[JsObject](Json.obj())(
+      creds =>
+        Json.obj(
+          "optionalCredentials" -> Json.obj(
+            "providerId" -> JsString(creds.providerId),
+            "providerType" -> JsString("GovernmentGateway")
+          )
+      )
+    )
 
     ninoJson ++ credentialsJson ++ enrolmentsJson
   }
@@ -57,4 +95,47 @@ object TestITData {
   val sessionNotFound = "SessionRecordNotFound"
   val insufficientConfidenceLevel = "InsufficientConfidenceLevel"
 
+  val ivResponseMultiCredsJsonString =
+    """[
+      |{
+      |"credId":"6902202884164548",
+      |"nino":"JT872173A",
+      |"confidenceLevel":50,
+      |"createdAt":{"$date":1638526944017},
+      |"updatedAt":{"$date":1641388390858}},
+      |{"credId":"8316291481001919",
+      |"nino":"JT872173A",
+      |"confidenceLevel":200,
+      |"createdAt":{"$date":1638527029415},
+      |"updatedAt":{"$date":1638527029478}},
+      |{"credId":"0493831301037584",
+      |"nino":"JT872173A",
+      |"confidenceLevel":200,
+      |"createdAt":{"$date":1638527081626},
+      |"updatedAt":{"$date":1638527081689}},
+      |{"credId":"2884521810163541",
+      |"nino":"JT872173A",
+      |"confidenceLevel":200,
+      |"createdAt":{"$date":1638531686457},
+      |"updatedAt":{"$date":1638531686525}}]""".stripMargin
+
+  val ivResponseSingleCredsJsonString =
+    """[
+      |{"credId":"2884521810163541",
+      |"nino":"JT872173A",
+      |"confidenceLevel":200,
+      |"createdAt":{"$date":1638531686457},
+      |"updatedAt":{"$date":1638531686525}}]""".stripMargin
+
+  val ivNinoStoreEntry1 = IVNinoStoreEntry("6902202884164548", Some(50))
+  val ivNinoStoreEntry2 = IVNinoStoreEntry("8316291481001919", Some(200))
+  val ivNinoStoreEntry3 = IVNinoStoreEntry("0493831301037584", Some(200))
+  val ivNinoStoreEntry4 = IVNinoStoreEntry("2884521810163541", Some(200))
+
+  val multiIVCreds = List(
+    ivNinoStoreEntry1,
+    ivNinoStoreEntry2,
+    ivNinoStoreEntry3,
+    ivNinoStoreEntry4
+  )
 }

@@ -16,20 +16,24 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
 
-import play.api.Logging
-
+import play.api.{Logger, Logging}
 import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 
 import scala.concurrent.Future
 
 @Singleton
-class TestOnlyController @Inject()(mcc: MessagesControllerComponents)
-  extends FrontendController(mcc) with Logging {
+class TestOnlyController @Inject()(mcc: MessagesControllerComponents,
+                                   logger: EventLoggerService)
+    extends FrontendController(mcc) {
+
+  implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
   def successfulCall: Action[AnyContent] = Action.async { implicit request =>
-    logger.info("[TestOnlyController][successfulCall] Successfully Redirected")
+    logger.logEvent(logSuccessfulRedirectToReturnUrl)
     Future.successful(Ok("Successful"))
   }
 

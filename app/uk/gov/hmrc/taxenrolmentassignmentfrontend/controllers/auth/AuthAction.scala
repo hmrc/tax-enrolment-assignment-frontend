@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth
 
 import javax.inject.{Inject, Singleton}
-import play.api.Logging
+import play.api.{Logger, Logging}
 import uk.gov.hmrc.auth.core.retrieve.~
 import play.api.mvc._
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
@@ -26,6 +26,8 @@ import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import play.api.mvc.Results._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -43,13 +45,14 @@ trait AuthIdentifierAction
 @Singleton
 class AuthAction @Inject()(
   override val authConnector: AuthConnector,
-  val parser: BodyParsers.Default
+  val parser: BodyParsers.Default,
+  logger: EventLoggerService
 )(implicit val executionContext: ExecutionContext)
     extends AuthorisedFunctions
-    with AuthIdentifierAction
-    with Logging {
+    with AuthIdentifierAction {
 
   val origin: String = "tax-enrolment-assignment-frontend"
+  implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
   override def invokeBlock[A](
     request: Request[A],
@@ -74,14 +77,27 @@ class AuthAction @Inject()(
           block(RequestWithUserDetails(request, userDetails))
 
         case _ =>
-          logger.warn(s"[AuthAction][invokeBlock] session missing credential or NINO field for uri: ${request.uri}")
+          logger.logEvent(
+            logAuthenticationFailure(
+              s"session missing credential or NINO field for uri: ${request.uri}"
+            )
+          )
           Future.successful(Unauthorized)
       } recover {
       case er: NoActiveSession =>
-        logger.warn(s"[AuthAction][invokeBlock] no active session for uri: ${request.uri} with message: ${er.getMessage}", er)
+        logger.logEvent(
+          logAuthenticationFailure(
+            s"no active session for uri: ${request.uri} with message: ${er.getMessage}"
+          ),
+          er
+        )
         Unauthorized("NoActiveSession")
       case er: AuthorisationException =>
-        logger.warn(s"[AuthAction][invokeBlock] Auth exception: ${er.getMessage} for  uri ${request.uri}")
+        logger.logEvent(
+          logAuthenticationFailure(
+            s"Auth exception: ${er.getMessage} for  uri ${request.uri}"
+          )
+        )
         Unauthorized(er.getMessage)
     }
   }

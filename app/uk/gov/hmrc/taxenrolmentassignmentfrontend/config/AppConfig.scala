@@ -25,6 +25,6 @@ class AppConfig @Inject()(config: Configuration,
                           val servicesConfig: ServicesConfig) {
   val welshLanguageSupportEnabled: Boolean = servicesConfig
     .getConfBool("features.welsh-language-support", defBool = false)
-  val IV_BASE_URL = servicesConfig.baseUrl("identity-verification")
+  val IV_BASE_URL = servicesConfig.baseUrl("identity-verification") + "/identity-verification"
 
 }

@@ -38,7 +38,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGetWithQueryParam(
-          "/nino",
+          "/identity-verification/nino",
           "nino",
           NINO,
           Status.OK,
@@ -61,7 +61,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGetWithQueryParam(
-          "/nino",
+          "/identity-verification/nino",
           "nino",
           NINO,
           Status.OK,
@@ -83,7 +83,13 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        stubGetWithQueryParam("/nino", "nino", NINO, Status.NOT_FOUND, "")
+        stubGetWithQueryParam(
+          "/identity-verification/nino",
+          "nino",
+          NINO,
+          Status.NOT_FOUND,
+          ""
+        )
         val res = buildRequest(urlPath, followRedirects = true)
           .withHttpHeaders(xSessionId, csrfContent)
           .get()
@@ -100,7 +106,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGetWithQueryParam(
-          "/nino",
+          "/identity-verification/nino",
           "nino",
           NINO,
           Status.INTERNAL_SERVER_ERROR,

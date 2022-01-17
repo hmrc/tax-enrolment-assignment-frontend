@@ -98,6 +98,12 @@ object WiremockHelper extends Eventually with IntegrationPatience {
         .withQueryParam(queryParamKey, equalTo(queryParamValue))
         .willReturn(aResponse().withStatus(status).withBody(responseBody))
     )
+
+  def stubGet(url: String, status: Integer, responseBody: String): StubMapping =
+    stubFor(
+      get(urlPathEqualTo(url))
+        .willReturn(aResponse().withStatus(status).withBody(responseBody))
+    )
 }
 
 trait WiremockHelper extends ServerProvider {

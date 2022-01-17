@@ -32,6 +32,22 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
       .absoluteURL(false, teaHost)}"
 
   s"GET $urlPath" when {
+    "an authorised user with PT enrolment in session uses the service" should {
+      s"redirect to returnUrl" in {
+        val authResponse = authoriseResponseJson(enrolments = ptEnrolmentOnly)
+        stubAuthorizePost(OK, authResponse.toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        val res = buildRequest(urlPath, followRedirects = true)
+          .withHttpHeaders(xSessionId, csrfContent)
+          .get()
+
+        whenReady(res) { resp =>
+          resp.status shouldBe OK
+          resp.uri.toString shouldBe returnUrl
+        }
+      }
+    }
+
     "an authorised user with one credential uses the service" should {
       s"redirect to returnUrl" in {
         val authResponse = authoriseResponseJson()

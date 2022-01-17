@@ -90,6 +90,29 @@ class AccountCheckControllerSpec extends TestFixture {
       }
     }
 
+    "a single credential exists for a given nino that is already enrolled for PT" should {
+      "redirect to the return url" in {
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[(Option[String] ~ Option[Credentials]) ~ Enrolments]
+          )(_: HeaderCarrier, _: ExecutionContext))
+          .expects(predicates, retrievals, *, *)
+          .returning(
+            Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly))
+          )
+
+        val result = controller
+          .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
+          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result) shouldBe Some(
+          "/tax-enrolment-assignment-frontend/test-only/successful"
+        )
+      }
+    }
+
     "a no credentials exists in IV for a given nino" should {
       "return InternalServerError" in {
         (mockAuthConnector

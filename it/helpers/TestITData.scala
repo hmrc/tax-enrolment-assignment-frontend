@@ -16,9 +16,8 @@
 
 package helpers
 
-import play.api.libs.json.{JsArray, JsNumber, JsObject, JsString, JsValue, Json}
+import play.api.libs.json._
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
-import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
 import uk.gov.hmrc.auth.core.retrieve.Credentials
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IVNinoStoreEntry
 
@@ -28,43 +27,26 @@ object TestITData {
   val CREDENTIAL_ID: String = "credId123"
   val creds: Credentials =
     Credentials(CREDENTIAL_ID, GovernmentGateway.toString)
-  val noEnrolments: Enrolments = Enrolments(Set.empty[Enrolment])
-  val saEnrolmentOnly: Enrolments = Enrolments(
-    Set(
-      Enrolment(
-        "IR-SA",
-        Seq(EnrolmentIdentifier("UTR", "123456789")),
-        "Activated",
-        None
-      )
-    )
+  val noEnrolments: JsValue = Json.arr()
+  val saEnrolmentOnly: JsValue =
+    Json.arr(createEnrolmentJson("IR-SA", "UTR", "123456789"))
+  val ptEnrolmentOnly: JsValue =
+    Json.arr(createEnrolmentJson("HMRC-PT", "NINO", NINO))
+  val saAndptEnrolments: JsArray = Json.arr(
+    createEnrolmentJson("HMRC-PT", "NINO", NINO),
+    createEnrolmentJson("IR-SA", "UTR", "123456789")
   )
-  val ptEnrolmentOnly: Enrolments = Enrolments(
-    Set(
-      Enrolment(
-        "HMRC-PT",
-        Seq(EnrolmentIdentifier("NINO", NINO)),
-        "Activated",
-        None
-      )
+  def createEnrolmentJson(key: String,
+                          identifierKey: String,
+                          identifierValue: String): JsValue = {
+    Json.obj(
+      ("key" -> JsString("HMRC-PT")),
+      ("identifiers" -> Json
+        .arr(Json.obj(("key" -> JsString("")), ("value" -> JsString(""))))),
+      ("state" -> JsString("Activated")),
+      ("confidenceLevel" -> JsNumber(200))
     )
-  )
-  val saAndptEnrolments: Enrolments = Enrolments(
-    Set(
-      Enrolment(
-        "HMRC-PT",
-        Seq(EnrolmentIdentifier("NINO", NINO)),
-        "Activated",
-        None
-      ),
-      Enrolment(
-        "IR-SA",
-        Seq(EnrolmentIdentifier("UTR", "123456789")),
-        "Activated",
-        None
-      )
-    )
-  )
+  }
 
   val sessionId = "sessionId-eb3158c2-0aff-4ce8-8d1b-f2208ace52fe"
   val xSessionId: (String, String) = "X-Session-ID" -> sessionId
@@ -72,10 +54,9 @@ object TestITData {
 
   def authoriseResponseJson(optNino: Option[String] = Some(NINO),
                             optCreds: Option[Credentials] = Some(creds),
-                            enrolments: Enrolments = noEnrolments): JsValue = {
-    val enrolmentsJson = Json.obj(
-      "allEnrolments" -> JsArray(enrolments.enrolments.map(_.toJson).toSeq)
-    )
+                            enrolments: JsValue = noEnrolments): JsValue = {
+
+    val enrolmentsJson = Json.obj("allEnrolments" -> enrolments)
     val ninoJson = optNino.fold[JsObject](Json.obj())(
       nino => Json.obj("nino" -> JsString(nino))
     )

@@ -25,7 +25,10 @@ import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromEACD
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logUnexpectedResponseFromIV
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{
+  logUnexpectedResponseFromEACD,
+  logUnexpectedResponseFromIV
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
 import uk.gov.hmrc.http.HttpReads.Implicits._
 
@@ -60,7 +63,7 @@ class EACDConnector @Inject()(httpClient: HttpClient,
             case NO_CONTENT => Right(None)
             case status =>
               logger.logEvent(
-                logUnexpectedResponseFromIV(
+                logUnexpectedResponseFromEACD(
                   enrolmentKey.split("~").head,
                   status
                 )

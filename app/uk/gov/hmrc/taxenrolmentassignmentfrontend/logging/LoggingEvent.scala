@@ -42,6 +42,17 @@ object LoggingEvent {
       )
     )
 
+  def logUnexpectedResponseFromEACD(enrolmentType: String,
+                                    statusReturned: Int): LoggingEvent =
+    Error(
+      Event(
+        "[EACDConnector][getUsersWithAssignedEnrolment]",
+        errorDetails = Some(
+          s"EACDn return status of $statusReturned when searching for users with $enrolmentType enrolment"
+        )
+      )
+    )
+
   implicit val formats: Format[Event] = Json.format[Event]
 
   sealed trait LoggingEvent {

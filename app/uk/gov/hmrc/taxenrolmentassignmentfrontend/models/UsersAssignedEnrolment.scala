@@ -14,9 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.errors
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 
-sealed trait TaxEnrolmentAssignmentErrors
+import play.api.libs.json.{Format, Json}
 
-object UnexpectedResponseFromIV extends TaxEnrolmentAssignmentErrors
-object UnexpectedResponseFromEACD extends TaxEnrolmentAssignmentErrors
+case class UsersAssignedEnrolment(principalUserIds: List[String],
+                                  delegatedUserIds: List[String])
+
+object UsersAssignedEnrolment {
+  implicit val format: Format[UsersAssignedEnrolment] =
+    Json.format[UsersAssignedEnrolment]
+}

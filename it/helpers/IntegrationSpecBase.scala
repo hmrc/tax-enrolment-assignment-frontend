@@ -60,6 +60,8 @@ trait IntegrationSpecBase
     "microservice.services.auth.port" -> s"$mockPort",
     "microservice.services.identity-verification.host" -> s"$mockHost",
     "microservice.services.identity-verification.port" -> s"$mockPort",
+    "microservice.services.enrolment-store-proxy.host" -> s"$mockHost",
+    "microservice.services.enrolment-store-proxy.port" -> s"$mockPort",
     "play.http.router" -> "testOnlyDoNotUseInAppConf.Routes"
   )
 

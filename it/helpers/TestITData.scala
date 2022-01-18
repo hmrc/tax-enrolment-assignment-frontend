@@ -238,4 +238,38 @@ object TestITData {
     friendlyName = "Something",
     failedActivationCount = 1,
     identifiers = Seq(identifierTxNum, identifierTxRef))
+
+  val es0ResponseMatchingCred =
+    """
+      |{
+      |    "principalUserIds": [
+      |       "ABCEDEFGI1234567",
+      |       "credId123"
+      |    ],
+      |    "delegatedUserIds": []
+      |}
+      |""".stripMargin
+
+  val es0ResponseNotMatchingCred =
+    """
+      |{
+      |    "principalUserIds": [
+      |    "ABCEDEFGI1234567",
+      |    "ACDCDEFGI2134567"
+      |    ],
+      |    "delegatedUserIds": []
+      |}
+      |""".stripMargin
+
+  val es0ResponseNoRecordCred =
+    """
+      |{
+      |    "principalUserIds": [],
+      |    "delegatedUserIds": []
+      |}
+      |""".stripMargin
+
+  val underConstructionTruePageTitle = "Tax Enrolment Assignment Frontend - Enrolment Present"
+  val underConstructionFalsePageTitle = "Tax Enrolment Assignment Frontend - Enrolment Not Present"
+
 }

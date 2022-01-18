@@ -100,6 +100,9 @@ object TestData {
   val ivNinoStoreEntry3 = IVNinoStoreEntry("0493831301037584", Some(200))
   val ivNinoStoreEntry4 = IVNinoStoreEntry("2884521810163541", Some(200))
 
+  val UsersAssignedEnrolment1 = UsersAssignedEnrolment(List("6102202884164541", "credId123"), List.empty)
+  val UsersAssignedEnrolment2 = UsersAssignedEnrolment(List("8116291481001919","8216291481001912"), List.empty)
+
   val multiIVCreds = List(
     ivNinoStoreEntry1,
     ivNinoStoreEntry2,

@@ -27,5 +27,6 @@ class AppConfig @Inject()(config: Configuration,
     .getConfBool("features.welsh-language-support", defBool = false)
   val IV_BASE_URL = servicesConfig.baseUrl("identity-verification") + "/identity-verification"
   val EACD_BASE_URL = servicesConfig.baseUrl("enrolment-store-proxy") + "/enrolment-store-proxy"
+  val TAX_ENROLMENTS_BASE_URL = servicesConfig.baseUrl("tax-enrolments") + "/tax-enrolments"
 
 }

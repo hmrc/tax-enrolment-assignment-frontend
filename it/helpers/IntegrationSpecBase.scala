@@ -16,6 +16,7 @@
 
 package helpers
 
+import helpers.TestITData.AUTHORIZE_HEADER_VALUE
 import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Millis, Seconds, Span}
@@ -29,7 +30,7 @@ import org.scalatest.{
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.{Application, Environment, Mode}
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
 
 import scala.concurrent.ExecutionContext
 
@@ -47,7 +48,9 @@ trait IntegrationSpecBase
     with Eventually {
 
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.global
-  lazy implicit val hc: HeaderCarrier = HeaderCarrier()
+  lazy implicit val hc: HeaderCarrier = HeaderCarrier(
+    authorization = Some(Authorization(AUTHORIZE_HEADER_VALUE))
+  )
 
   val mockHost: String = WiremockHelper.wiremockHost
   val mockPort: Int = WiremockHelper.wiremockPort
@@ -62,6 +65,8 @@ trait IntegrationSpecBase
     "microservice.services.identity-verification.port" -> s"$mockPort",
     "microservice.services.enrolment-store-proxy.host" -> s"$mockHost",
     "microservice.services.enrolment-store-proxy.port" -> s"$mockPort",
+    "microservice.services.tax-enrolments.host" -> s"$mockHost",
+    "microservice.services.tax-enrolments.port" -> s"$mockPort",
     "play.http.router" -> "testOnlyDoNotUseInAppConf.Routes"
   )
 

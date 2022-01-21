@@ -80,6 +80,18 @@ object WiremockHelper extends Eventually with IntegrationPatience {
         )
     )
 
+  def stubPostWithAuthorizeHeaders(url: String,
+                                   authorizeHeaderValue: String,
+                                   status: Integer): StubMapping =
+    stubFor(
+      post(urlMatching(url))
+        .withHeader("Authorization", equalTo(authorizeHeaderValue))
+        .willReturn(
+          aResponse()
+            .withStatus(status)
+        )
+    )
+
   def stubPost(url: String,
                status: Integer,
                responseBody: String): StubMapping =

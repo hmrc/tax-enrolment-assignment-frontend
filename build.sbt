@@ -4,7 +4,7 @@ import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 
 val appName = "tax-enrolment-assignment-frontend"
 
-val silencerVersion = "1.7.7"
+val silencerVersion = "1.7.8"
 
 lazy val coverageSettings: Seq[Setting[_]] = {
   Seq(

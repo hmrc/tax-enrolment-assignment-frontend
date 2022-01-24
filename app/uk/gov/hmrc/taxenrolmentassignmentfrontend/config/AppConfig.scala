@@ -21,11 +21,10 @@ import play.api.Configuration
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 
 @Singleton
-class AppConfig @Inject()(config: Configuration,
-                          val servicesConfig: ServicesConfig) {
-  val welshLanguageSupportEnabled: Boolean = servicesConfig
+class AppConfig @Inject()(val servicesConfig: ServicesConfig) {
+  lazy val welshLanguageSupportEnabled: Boolean = servicesConfig
     .getConfBool("features.welsh-language-support", defBool = false)
-  val IV_BASE_URL = servicesConfig.baseUrl("identity-verification") + "/identity-verification"
-  val EACD_BASE_URL = servicesConfig.baseUrl("enrolment-store-proxy") + "/enrolment-store-proxy"
+  lazy val IV_BASE_URL: String = servicesConfig.baseUrl("identity-verification") + "/identity-verification"
+  lazy val EACD_BASE_URL: String = servicesConfig.baseUrl("enrolment-store-proxy") + "/enrolment-store-proxy"
 
 }

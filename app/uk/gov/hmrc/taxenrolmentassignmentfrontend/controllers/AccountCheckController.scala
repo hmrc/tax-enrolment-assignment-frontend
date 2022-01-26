@@ -36,6 +36,8 @@ class AccountCheckController @Inject()(
 
   def accountCheck(redirectUrl: String): Action[AnyContent] = authAction.async {
     implicit request =>
+
+       logger.error(Console.YELLOW+s"${request.headers}"+Console.RESET)
       if (request.userDetails.hasPTEnrolment) {
         Future.successful(Redirect(redirectUrl))
       } else {

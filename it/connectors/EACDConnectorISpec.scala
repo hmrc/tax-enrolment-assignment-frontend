@@ -28,6 +28,39 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
 class EACDConnectorISpec extends IntegrationSpecBase {
 
   lazy val connector: EACDConnector = app.injector.instanceOf[EACDConnector]
+  
+  "assignPTEnrolmentToUser" should {
+    val userId = "fakeId"
+    val ENROLMENT_KEY = s"HMRC-PT~NINO~$NINO"
+    val url = s"/enrolment-store-proxy/enrolment-store/users/$userId/enrolments/$ENROLMENT_KEY"
+
+    "successfully assign the HMRC-PT Enrolment" in {
+      stubPost("/write/audit/merged", Status.NO_CONTENT, "")
+      stubPost(url, Status.CREATED, "")
+      whenReady(connector.assignPTEnrolmentToUser(userId, NINO).value) {
+        response =>
+          response shouldBe Right("Success")
+      }
+    }
+
+    "return a success when the user already has the enrolment" in {
+      stubPost("/write/audit/merged", Status.NO_CONTENT, "")
+      stubPost(url, Status.CONFLICT, eacdExampleError)
+      whenReady(connector.assignPTEnrolmentToUser(userId, NINO).value) {
+        response =>
+          response shouldBe Right("Duplicate Enrolment Request")
+      }
+    }
+
+    "return an UnexpectedResponseFromEACD when receiving any 4XX/5XX response" in {
+      stubPost("/write/audit/merged", Status.NO_CONTENT, "")
+      stubPost(url, Status.BAD_REQUEST, eacdExampleError)
+      whenReady(connector.assignPTEnrolmentToUser(userId, NINO).value) {
+        response =>
+          response shouldBe Left(UnexpectedResponseFromEACD)
+      }
+    }
+  }
 
   "getUsersWithAssignedEnrolment" when {
     val ENROLMENT_KEY = s"HMRC-PT~NINO~$NINO"

@@ -42,13 +42,17 @@ object LoggingEvent {
       )
     )
 
-  def logUnexpectedResponseFromEACD(enrolmentType: String,
-                                    statusReturned: Int): LoggingEvent =
+  def logUnexpectedResponseFromEACD(
+    enrolmentType: String,
+    statusReturned: Int,
+    eacdErrorMsg: String = "N/A"
+  ): LoggingEvent =
     Error(
       Event(
         "[EACDConnector][getUsersWithAssignedEnrolment]",
         errorDetails = Some(
-          s"EACD return status of $statusReturned when searching for users with $enrolmentType enrolment"
+          s"EACD returned status of $statusReturned when searching for users with $enrolmentType enrolment." +
+            s"\nError Message: $eacdErrorMsg"
         )
       )
     )

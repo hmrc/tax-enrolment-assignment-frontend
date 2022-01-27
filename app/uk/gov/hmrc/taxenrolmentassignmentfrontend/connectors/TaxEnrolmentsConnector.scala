@@ -20,22 +20,16 @@ import cats.data.EitherT
 import com.google.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.http.Status._
-import uk.gov.hmrc.http.{
-  HeaderCarrier,
-  HttpClient,
-  HttpResponse,
-  Upstream4xxResponse,
-  UpstreamErrorResponse
-}
+import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromTaxEnrolments
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logUnexpectedResponseFromTaxEnrolments
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.PersonalTaxEnrolment
-import uk.gov.hmrc.http.HttpReads.Implicits._
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class TaxEnrolmentsConnector @Inject()(httpClient: HttpClient,

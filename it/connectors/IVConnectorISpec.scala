@@ -21,6 +21,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.IVConnector
 import helpers.WiremockHelper._
 import helpers.TestITData._
 import play.api.http.Status
+import play.api.http.Status.OK
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromIV
 
 class IVConnectorISpec extends IntegrationSpecBase {
@@ -37,6 +38,7 @@ class IVConnectorISpec extends IntegrationSpecBase {
           Status.OK,
           ivResponseMultiCredsJsonString
         )
+        stubPost(s"/write/.*", OK, """{"x":2}""")
         whenReady(connector.getCredentialsWithNino(NINO).value) { response =>
           response shouldBe Right(multiIVCreds)
         }
@@ -52,6 +54,7 @@ class IVConnectorISpec extends IntegrationSpecBase {
           Status.OK,
           ivResponseSingleCredsJsonString
         )
+        stubPost(s"/write/.*", OK, """{"x":2}""")
         whenReady(connector.getCredentialsWithNino(NINO).value) { response =>
           response shouldBe Right(List(ivNinoStoreEntry4))
         }
@@ -61,6 +64,7 @@ class IVConnectorISpec extends IntegrationSpecBase {
     "a non 404 is returned" should {
       "return an UnexpectedResponseFromIV error" in {
         stubGetWithQueryParam(path, "nino", NINO, Status.NOT_FOUND, "")
+        stubPost(s"/write/.*", OK, """{"x":2}""")
         whenReady(connector.getCredentialsWithNino(NINO).value) { response =>
           response shouldBe Left(UnexpectedResponseFromIV)
         }
@@ -70,6 +74,7 @@ class IVConnectorISpec extends IntegrationSpecBase {
     "a non 400 is returned" should {
       "return an UnexpectedResponseFromIV error" in {
         stubGetWithQueryParam(path, "nino", NINO, Status.BAD_REQUEST, "")
+        stubPost(s"/write/.*", OK, """{"x":2}""")
         whenReady(connector.getCredentialsWithNino(NINO).value) { response =>
           response shouldBe Left(UnexpectedResponseFromIV)
         }
@@ -85,6 +90,7 @@ class IVConnectorISpec extends IntegrationSpecBase {
           Status.INTERNAL_SERVER_ERROR,
           ""
         )
+        stubPost(s"/write/.*", OK, """{"x":2}""")
         whenReady(connector.getCredentialsWithNino(NINO).value) { response =>
           response shouldBe Left(UnexpectedResponseFromIV)
         }

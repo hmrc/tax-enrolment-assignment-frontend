@@ -20,6 +20,7 @@ import helpers.IntegrationSpecBase
 import helpers.TestITData._
 import helpers.WiremockHelper._
 import play.api.http.Status
+import play.api.http.Status.OK
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.TaxEnrolmentsConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromTaxEnrolments
 
@@ -39,6 +40,7 @@ class TaxEnrolmentsConnectorISpec extends IntegrationSpecBase {
           AUTHORIZE_HEADER_VALUE,
           Status.CREATED
         )
+        stubPost(s"/write/.*", OK, """{"x":2}""")
         whenReady(
           connector.assignPTEnrolment(GROUP_ID, CREDENTIAL_ID, NINO).value
         ) { response =>
@@ -54,6 +56,7 @@ class TaxEnrolmentsConnectorISpec extends IntegrationSpecBase {
           AUTHORIZE_HEADER_VALUE,
           Status.UNAUTHORIZED
         )
+        stubPost(s"/write/.*", OK, """{"x":2}""")
         whenReady(
           connector.assignPTEnrolment(GROUP_ID, CREDENTIAL_ID, NINO).value
         ) { response =>
@@ -69,6 +72,7 @@ class TaxEnrolmentsConnectorISpec extends IntegrationSpecBase {
           AUTHORIZE_HEADER_VALUE,
           Status.BAD_REQUEST
         )
+        stubPost(s"/write/.*", OK, """{"x":2}""")
         whenReady(
           connector.assignPTEnrolment(GROUP_ID, CREDENTIAL_ID, NINO).value
         ) { response =>
@@ -84,6 +88,7 @@ class TaxEnrolmentsConnectorISpec extends IntegrationSpecBase {
           AUTHORIZE_HEADER_VALUE,
           Status.NOT_FOUND
         )
+        stubPost(s"/write/.*", OK, """{"x":2}""")
         whenReady(
           connector.assignPTEnrolment(GROUP_ID, CREDENTIAL_ID, NINO).value
         ) { response =>
@@ -99,6 +104,7 @@ class TaxEnrolmentsConnectorISpec extends IntegrationSpecBase {
           AUTHORIZE_HEADER_VALUE,
           Status.INTERNAL_SERVER_ERROR
         )
+        stubPost(s"/write/.*", OK, """{"x":2}""")
         whenReady(
           connector.assignPTEnrolment(GROUP_ID, CREDENTIAL_ID, NINO).value
         ) { response =>

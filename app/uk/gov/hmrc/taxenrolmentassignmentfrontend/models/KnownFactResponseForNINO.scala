@@ -18,8 +18,16 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 
 import play.api.libs.json.{Format, Json}
 
-case class Verifiers(key: String, value: String)
+case class KnownFactResponseForNINO(service: String,
+                                    enrolments: List[Enrolment]) {
 
-object Verifiers {
-  implicit val format: Format[Verifiers] = Json.format[Verifiers]
+  def getUTR: String =
+    enrolments.head.identifiers.collect {
+      case identifier if identifier.key == "UTR" => identifier.value
+    }.head
+}
+
+object KnownFactResponseForNINO {
+  implicit val format: Format[KnownFactResponseForNINO] =
+    Json.format[KnownFactResponseForNINO]
 }

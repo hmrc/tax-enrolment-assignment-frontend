@@ -26,8 +26,15 @@ import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromEACD
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logUnexpectedResponseFromEACD
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{
+  logUnexpectedResponseFromEACD,
+  logUnexpectedResponseFromEACDQueryKnownFacts
+}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
+  KnownFactQueryForNINO,
+  KnownFactResponseForNINO,
+  UsersAssignedEnrolment
+}
 
 import scala.concurrent.ExecutionContext
 
@@ -37,19 +44,27 @@ class EACDConnector @Inject()(httpClient: HttpClient,
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
-  def assignPTEnrolmentToUser(userId: String, nino: String)
-                              (implicit ec: ExecutionContext, hc: HeaderCarrier): TEAFResult[String]  = EitherT {
+  def assignPTEnrolmentToUser(userId: String, nino: String)(
+    implicit ec: ExecutionContext,
+    hc: HeaderCarrier
+  ): TEAFResult[String] = EitherT {
     val enrolmentKey = s"HMRC-PT~NINO~$nino"
-    lazy val url = s"${appConfig.EACD_BASE_URL}/enrolment-store/users/$userId/enrolments/$enrolmentKey"
+    lazy val url =
+      s"${appConfig.EACD_BASE_URL}/enrolment-store/users/$userId/enrolments/$enrolmentKey"
 
-    httpClient.POSTEmpty[HttpResponse](url)
+    httpClient
+      .POSTEmpty[HttpResponse](url)
       .map { response =>
         response.status match {
-          case CREATED => Right("Success")
+          case CREATED  => Right("Success")
           case CONFLICT => Right("Duplicate Enrolment Request")
           case status =>
             logger.logEvent(
-              logUnexpectedResponseFromEACD("HMRC-PT~NINO", status, response.body)
+              logUnexpectedResponseFromEACD(
+                "HMRC-PT~NINO",
+                status,
+                response.body
+              )
             )
             Left(UnexpectedResponseFromEACD)
         }
@@ -83,6 +98,29 @@ class EACDConnector @Inject()(httpClient: HttpClient,
                   enrolmentKey.split("~").head,
                   status
                 )
+              )
+              Left(UnexpectedResponseFromEACD)
+        }
+      )
+  }
+
+  def queryKnownFactsByNinoVerifier(nino: String)(
+    implicit ec: ExecutionContext,
+    hc: HeaderCarrier
+  ): TEAFResult[Option[String]] = EitherT {
+    val url = s"${appConfig.EACD_BASE_URL}/enrolment-store/enrolments"
+    val request = new KnownFactQueryForNINO(nino)
+    httpClient
+      .POST[KnownFactQueryForNINO, HttpResponse](url, request)
+      .map(
+        httpResponse =>
+          httpResponse.status match {
+            case OK =>
+              Right(Some(httpResponse.json.as[KnownFactResponseForNINO].getUTR))
+            case NO_CONTENT => Right(None)
+            case status =>
+              logger.logEvent(
+                logUnexpectedResponseFromEACDQueryKnownFacts(nino, status)
               )
               Left(UnexpectedResponseFromEACD)
         }

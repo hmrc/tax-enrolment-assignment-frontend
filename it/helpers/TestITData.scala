@@ -25,6 +25,7 @@ object TestITData {
 
   val NINO: String = "JT872173A"
   val CREDENTIAL_ID: String = "credId123"
+  val GROUP_ID: String = "GROUPID123"
   val CL50 = 50
   val CL200 = 200
   val creds: Credentials =
@@ -38,13 +39,21 @@ object TestITData {
     createEnrolmentJson("HMRC-PT", "NINO", NINO),
     createEnrolmentJson("IR-SA", "UTR", "123456789")
   )
+  val AUTHORIZE_HEADER_VALUE =
+    "Bearer BXQ3/Treo4kQCZvVcCqKPhhpBYpRtQQKWTypn1WBfRHWUopu5V/IFWF5phY/fymAP1FMqQR27MmCJxb50Hi5GD6G3VMjMtSLu7TAAIuqDia6jByIpXJpqOgLQuadi7j0XkyDVkl0Zp/zbKtHiNrxpa0nVHm3+GUC4H2h4Ki8OjP9KwIkeIPK/mMlBESjue4V"
   def createEnrolmentJson(key: String,
                           identifierKey: String,
                           identifierValue: String): JsValue = {
-    Json.obj( fields =
-      "key" -> JsString(key),
+    Json.obj(
+      fields =
+        "key" -> JsString(key),
       "identifiers" -> Json
-        .arr(Json.obj("key" -> JsString(identifierKey), "value" -> JsString(identifierValue))),
+        .arr(
+          Json.obj(
+            "key" -> JsString(identifierKey),
+            "value" -> JsString(identifierValue)
+          )
+        ),
       "state" -> JsString("Activated"),
       "confidenceLevel" -> JsNumber(CL200)
     )
@@ -118,10 +127,14 @@ object TestITData {
       |"createdAt":{"$date":1638531686457},
       |"updatedAt":{"$date":1638531686525}}]""".stripMargin
 
-  val ivNinoStoreEntry1: IVNinoStoreEntry = IVNinoStoreEntry("6902202884164548", Some(CL50))
-  val ivNinoStoreEntry2: IVNinoStoreEntry = IVNinoStoreEntry("8316291481001919", Some(CL200))
-  val ivNinoStoreEntry3: IVNinoStoreEntry = IVNinoStoreEntry("0493831301037584", Some(CL200))
-  val ivNinoStoreEntry4: IVNinoStoreEntry = IVNinoStoreEntry("2884521810163541", Some(CL200))
+  val ivNinoStoreEntry1: IVNinoStoreEntry =
+    IVNinoStoreEntry("6902202884164548", Some(CL50))
+  val ivNinoStoreEntry2: IVNinoStoreEntry =
+    IVNinoStoreEntry("8316291481001919", Some(CL200))
+  val ivNinoStoreEntry3: IVNinoStoreEntry =
+    IVNinoStoreEntry("0493831301037584", Some(CL200))
+  val ivNinoStoreEntry4: IVNinoStoreEntry =
+    IVNinoStoreEntry("2884521810163541", Some(CL200))
 
   val multiIVCreds = List(
     ivNinoStoreEntry1,

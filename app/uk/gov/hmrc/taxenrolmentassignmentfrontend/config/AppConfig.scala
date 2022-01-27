@@ -24,7 +24,8 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 class AppConfig @Inject()(val servicesConfig: ServicesConfig) {
   lazy val welshLanguageSupportEnabled: Boolean = servicesConfig
     .getConfBool("features.welsh-language-support", defBool = false)
-  lazy val IV_BASE_URL: String = servicesConfig.baseUrl("identity-verification") + "/identity-verification"
-  lazy val EACD_BASE_URL: String = servicesConfig.baseUrl("enrolment-store-proxy") + "/enrolment-store-proxy"
+  val IV_BASE_URL = servicesConfig.baseUrl("identity-verification") + "/identity-verification"
+  val EACD_BASE_URL = servicesConfig.baseUrl("enrolment-store-proxy") + "/enrolment-store-proxy"
+  val TAX_ENROLMENTS_BASE_URL = servicesConfig.baseUrl("tax-enrolments") + "/tax-enrolments"
 
 }

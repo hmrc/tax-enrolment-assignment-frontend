@@ -25,7 +25,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
 class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
 
   val teaHost = s"localhost:$port"
-  val returnUrl = testOnly.routes.TestOnlyController.successfulCall
+  val returnUrl: String = testOnly.routes.TestOnlyController.successfulCall
     .absoluteURL(false, teaHost)
   val urlPath =
     s"/account-check?redirectUrl=${testOnly.routes.TestOnlyController.successfulCall

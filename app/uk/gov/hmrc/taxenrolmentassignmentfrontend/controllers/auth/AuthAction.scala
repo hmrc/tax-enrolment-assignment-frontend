@@ -16,19 +16,19 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth
 
-import javax.inject.{Inject, Singleton}
-import play.api.{Logger, Logging}
-import uk.gov.hmrc.auth.core.retrieve.~
+import play.api.Logger
+import play.api.mvc.Results._
 import play.api.mvc._
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
-import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals._
 import uk.gov.hmrc.auth.core._
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals._
+import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
-import play.api.mvc.Results._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 case class UserDetailsFromSession(credId: String,

@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
 
-import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
 
 @Singleton

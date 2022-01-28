@@ -36,6 +36,7 @@ class AccountCheckController @Inject()(
 
   def accountCheck(redirectUrl: String): Action[AnyContent] = authAction.async {
     implicit request =>
+      logger.info(s"[AccountCheckController][accountCheck] User IP: ${request.headers.get("True-Client-IP")}")
       if (request.userDetails.hasPTEnrolment) {
         Future.successful(Redirect(redirectUrl))
       } else {

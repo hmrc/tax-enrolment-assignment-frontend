@@ -22,23 +22,16 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.inject.Injector
-import play.api.mvc.{
-  AnyContent,
-  BodyParsers,
-  DefaultMessagesActionBuilderImpl,
-  MessagesActionBuilder,
-  MessagesControllerComponents
-}
-import play.api.test.Helpers.{
-  stubBodyParser,
-  stubMessagesApi,
-  stubMessagesControllerComponents
-}
-import play.api.test.Injecting
+import play.api.mvc._
+import play.api.test.CSRFTokenHelper._
+import play.api.test.Helpers._
+import play.api.test._
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.http.SessionKeys
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.IVConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 
@@ -77,4 +70,8 @@ trait TestFixture
     error: TaxEnrolmentAssignmentErrors
   ): TEAFResult[T] = EitherT.left(Future.successful(error))
 
+  lazy val testOnlyController = new TestOnlyController(
+    mcc,
+    logger,
+  )
 }

@@ -12,4 +12,5 @@
 # Add all the application routes to the prod.routes file
 ->         /                                             prod.Routes
 
-GET        /tax-enrolment-assignment-frontend/test-only/successful                         uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController.successfulCall
+GET        /tax-enrolment-assignment-frontend/test-only/successful                                                             uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController.successfulCall
+GET        /tax-enrolment-assignment-frontend/test-only/enrolment-store/enrolments/:enrolmentKey/users                         uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController.es0Call(enrolmentKey)

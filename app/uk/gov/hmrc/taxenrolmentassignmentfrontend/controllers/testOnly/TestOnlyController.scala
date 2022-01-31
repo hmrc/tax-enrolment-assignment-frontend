@@ -43,8 +43,6 @@ class TestOnlyController @Inject()(mcc: MessagesControllerComponents,
 
     val jsonResp = UsersAssignedEnrolment(List("6145202884164547"), List.empty)
 
-    println(request)
-
     enrolmentKey match {
       case _ if enrolmentKey.contains("CP872173B") => Future.successful(Ok(Json.toJson(jsonResp)))
       case _ => Future.successful(NoContent)

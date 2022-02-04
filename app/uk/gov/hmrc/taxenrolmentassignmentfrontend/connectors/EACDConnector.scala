@@ -120,7 +120,11 @@ class EACDConnector @Inject()(httpClient: HttpClient,
             case NO_CONTENT => Right(None)
             case status =>
               logger.logEvent(
-                logUnexpectedResponseFromEACDQueryKnownFacts(nino, status)
+                logUnexpectedResponseFromEACDQueryKnownFacts(
+                  nino,
+                  status,
+                  httpResponse.body
+                )
               )
               Left(UnexpectedResponseFromEACD)
         }

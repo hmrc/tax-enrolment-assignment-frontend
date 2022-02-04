@@ -57,6 +57,21 @@ object LoggingEvent {
       )
     )
 
+  def logUnexpectedResponseFromEACDQueryKnownFacts(
+    nino: String,
+    statusReturned: Int,
+    eacdErrorMsg: String = "N/A"
+  ): LoggingEvent =
+    Error(
+      Event(
+        "[EACDConnector][queryKnownFactsByNinoVerifier]",
+        errorDetails = Some(
+          s"EACD returned status of $statusReturned when searching for users with IR-SA enrolment for NINO $nino." +
+            s"\nError Message: $eacdErrorMsg"
+        )
+      )
+    )
+
   def logUnexpectedResponseFromTaxEnrolments(
     nino: String,
     statusReturned: Int

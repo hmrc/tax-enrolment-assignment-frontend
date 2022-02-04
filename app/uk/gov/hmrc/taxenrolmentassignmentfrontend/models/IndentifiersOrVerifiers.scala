@@ -18,19 +18,9 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 
 import play.api.libs.json.{Format, Json}
 
-case class PersonalTaxEnrolment(userId: String,
-                                friendlyName: String,
-                                `type`: String,
-                                verifiers: List[IndentifiersOrVerifiers]) {
-  def this(credId: String, nino: String) = this(
-    userId = credId,
-    friendlyName = "My Personal Tax Enrolment",
-    `type` = "principal",
-    verifiers = List(IndentifiersOrVerifiers("NINO1", nino))
-  )
-}
+case class IndentifiersOrVerifiers(key: String, value: String)
 
-object PersonalTaxEnrolment {
-  implicit val format: Format[PersonalTaxEnrolment] =
-    Json.format[PersonalTaxEnrolment]
+object IndentifiersOrVerifiers {
+  implicit val format: Format[IndentifiersOrVerifiers] =
+    Json.format[IndentifiersOrVerifiers]
 }

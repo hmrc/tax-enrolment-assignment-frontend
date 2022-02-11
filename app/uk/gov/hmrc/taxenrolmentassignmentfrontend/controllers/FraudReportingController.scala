@@ -35,8 +35,8 @@ class FraudReportingController @Inject()(
     extends FrontendController(mcc)
     with I18nSupport {
 
-  def accountNotRecognised(redirectUrl: String): Action[AnyContent] =
+  def selectIdsToReport(): Action[AnyContent] =
     authAction.async { implicit request =>
-      Future.successful(Ok(underConstructionView("accountNotRecognised")))
+      Future.successful(Ok(underConstructionView("selectIdsToReport")))
     }
 }

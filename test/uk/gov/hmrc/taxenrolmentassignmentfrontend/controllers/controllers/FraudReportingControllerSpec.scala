@@ -57,9 +57,7 @@ class FraudReportingControllerSpec extends TestFixture {
           .returning(Future.successful(retrievalResponse()))
 
         val result = controller
-          .accountNotRecognised(
-            testOnly.routes.TestOnlyController.successfulCall.url
-          )
+          .selectIdsToReport()
           .apply(request)
 
         status(result) shouldBe OK
@@ -67,10 +65,10 @@ class FraudReportingControllerSpec extends TestFixture {
         page.title shouldBe "multipleAccounts.title"
         page
           .select("h1")
-          .text() shouldBe "multipleAccounts.accountNotRecognised.heading"
+          .text() shouldBe "multipleAccounts.selectIdsToReport.heading"
         page
           .select("p")
-          .text() shouldBe "multipleAccounts.accountNotRecognised.text"
+          .text() shouldBe "multipleAccounts.selectIdsToReport.text"
       }
     }
 
@@ -88,9 +86,7 @@ class FraudReportingControllerSpec extends TestFixture {
           .returning(Future.failed(SessionRecordNotFound("FAILED")))
 
         val result = controller
-          .accountNotRecognised(
-            testOnly.routes.TestOnlyController.successfulCall.url
-          )
+          .selectIdsToReport()
           .apply(request)
 
         status(result) shouldBe UNAUTHORIZED

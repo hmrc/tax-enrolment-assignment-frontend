@@ -26,11 +26,8 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
 class FraudReportingControllerISpec extends IntegrationSpecBase with Status {
 
   val teaHost = s"localhost:$port"
-  val returnUrl: String = testOnly.routes.TestOnlyController.successfulCall
-    .absoluteURL(false, teaHost)
   val urlPath =
-    s"/fraud-reporting?redirectUrl=${testOnly.routes.TestOnlyController.successfulCall
-      .absoluteURL(false, teaHost)}"
+    s"/report-IDs/select-IDs"
 
   s"GET $urlPath" when {
     "the user is authorised" should {
@@ -46,10 +43,10 @@ class FraudReportingControllerISpec extends IntegrationSpecBase with Status {
           resp.status shouldBe OK
           val page = Jsoup.parse(resp.body)
           page.title() should include("Tax Enrolment Assignment Frontend")
-          page.select("h1").text() shouldBe "Fraud Reporting"
+          page.select("h1").text() shouldBe "Fraud Reporting - Select IDs"
           page
             .select("p")
-            .text() shouldBe "User does not recognise one or more accounts"
+            .text() shouldBe "Select IDs for accounts not recognised"
         }
       }
     }

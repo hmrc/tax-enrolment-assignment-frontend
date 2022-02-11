@@ -21,12 +21,14 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.i18n.{Messages, MessagesApi}
 import play.api.inject.Injector
 import play.api.mvc._
 import play.api.test.Helpers._
 import play.api.test._
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.service.TEAFResult
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.IVConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController
@@ -44,6 +46,10 @@ trait TestFixture
 
   lazy val injector: Injector = app.injector
   implicit val ec: ExecutionContext = injector.instanceOf[ExecutionContext]
+  implicit lazy val appConfig: AppConfig = inject[AppConfig]
+
+  lazy val messagesApi: MessagesApi = inject[MessagesApi]
+
   lazy val logger: EventLoggerService = new EventLoggerService()
 
   val mockAuthConnector: AuthConnector = mock[AuthConnector]
@@ -68,8 +74,5 @@ trait TestFixture
     error: TaxEnrolmentAssignmentErrors
   ): TEAFResult[T] = EitherT.left(Future.successful(error))
 
-  lazy val testOnlyController = new TestOnlyController(
-    mcc,
-    logger
-  )
+  lazy val testOnlyController = new TestOnlyController(mcc, logger)
 }

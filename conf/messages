@@ -1,2 +1,3 @@
-service.name = tax-enrolment-assignment-frontend
-service.text = This is your new service
+multipleAccounts.title = Tax Enrolment Assignment Frontend
+multipleAccounts.accountNotRecognised.heading = Fraud Reporting
+multipleAccounts.accountNotRecognised.text = User does not recognise one or more accounts

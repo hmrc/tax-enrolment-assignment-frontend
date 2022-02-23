@@ -23,20 +23,22 @@ import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.IVConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromIV
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 
 import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class AccountCheckController @Inject()(
   authAction: AuthAction,
   ivConnector: IVConnector,
-  mcc: MessagesControllerComponents
+  mcc: MessagesControllerComponents,
+  sessionCache: TEASessionCache
 )(implicit ec: ExecutionContext)
     extends FrontendController(mcc)
     with Logging {
 
   def accountCheck(redirectUrl: String): Action[AnyContent] = authAction.async {
     implicit request =>
-      logger.info(s"[AccountCheckController][accountCheck] User IP: ${request.headers.get("True-Client-IP")}")
+      sessionCache.save[String]("redirectURL", redirectUrl)
       if (request.userDetails.hasPTEnrolment) {
         Future.successful(Redirect(redirectUrl))
       } else {

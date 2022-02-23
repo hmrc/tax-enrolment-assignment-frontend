@@ -23,18 +23,16 @@ import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{
-  AccountCheckController,
-  testOnly
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{AccountCheckController, testOnly}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromIV
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class AccountCheckControllerSpec extends TestFixture {
 
+  val testTeaSessionCache = new TestTeaSessionCache
   val controller =
-    new AccountCheckController(mockAuthAction, mockIVConnector, mcc)
+    new AccountCheckController(mockAuthAction, mockIVConnector, mcc, testTeaSessionCache)
 
   "accountCheck" when {
     "a single credential exists for a given nino" should {

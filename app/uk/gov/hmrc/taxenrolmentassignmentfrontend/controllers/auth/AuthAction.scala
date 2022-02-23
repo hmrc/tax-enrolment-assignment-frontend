@@ -28,6 +28,7 @@ import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 
+import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -36,7 +37,8 @@ case class UserDetailsFromSession(credId: String,
                                   hasPTEnrolment: Boolean,
                                   hasSAEnrolment: Boolean)
 case class RequestWithUserDetails[A](request: Request[A],
-                                     userDetails: UserDetailsFromSession)
+                                     userDetails: UserDetailsFromSession,
+                                     sessionID: String)
     extends WrappedRequest[A](request)
 trait AuthIdentifierAction
     extends ActionBuilder[RequestWithUserDetails, AnyContent]
@@ -74,7 +76,8 @@ class AuthAction @Inject()(
             hasSAEnrolment
           )
 
-          block(RequestWithUserDetails(request, userDetails))
+          val sessionID = request.headers.get("X-Request-ID").getOrElse(UUID.randomUUID().toString)
+          block(RequestWithUserDetails(request, userDetails, sessionID))
 
         case _ =>
           logger.logEvent(

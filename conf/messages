@@ -1,2 +1,6 @@
 service.name = tax-enrolment-assignment-frontend
 service.text = This is your new service
+enrolCurrentUser.title = Which Government Gateway user ID do you want to use to access your personal tax information?
+enrolCurrentUser.heading = Which Government Gateway user ID do you want to use to access your personal tax information?
+enrolCurrentUser.currentUserId = My current user ID ‘{0}’
+enrolCurrentUser.otherUserId = Another user ID

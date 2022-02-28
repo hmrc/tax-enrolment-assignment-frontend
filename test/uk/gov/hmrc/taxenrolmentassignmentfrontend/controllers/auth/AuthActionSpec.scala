@@ -20,7 +20,7 @@ import org.scalatest.Assertion
 import play.api.test.Helpers._
 import play.api.mvc.{Result, Results}
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{contentAsString, status}
+import play.api.test.Helpers.{contentAsString, status, redirectLocation}
 import uk.gov.hmrc.auth.core.{
   Enrolments,
   InsufficientConfidenceLevel,
@@ -38,7 +38,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class AuthActionSpec extends TestFixture {
 
   def authAction: AuthAction =
-    new AuthAction(mockAuthConnector, testBodyParser, logger)
+    new AuthAction(mockAuthConnector, testBodyParser, logger, testAppConfig)
 
   def defaultAsyncBody(
     requestTestCase: RequestWithUserDetails[_] => Assertion
@@ -193,7 +193,7 @@ class AuthActionSpec extends TestFixture {
     }
 
     "the session cannot be found" should {
-      "return Unauthorised" in {
+      "redirect to the login page" in {
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -206,7 +206,11 @@ class AuthActionSpec extends TestFixture {
           defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
         )(FakeRequest())
 
-        status(result) shouldBe UNAUTHORIZED
+        val loginUrl = "http://localhost:9553/bas-gateway/sign-in?continue_url=http%3A%2F%2Flocalhost%3A9232%2F" +
+          "personal-account&origin=tax-enrolment-assignment-frontend"
+
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result) shouldBe Some(loginUrl)
       }
     }
 

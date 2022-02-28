@@ -11,7 +11,7 @@ object AppDependencies {
     "org.typelevel"  %%  "cats-core"                   %  "2.7.0",
     "uk.gov.hmrc"    %%  "domain"                      %  "7.0.0-play-28",
     "uk.gov.hmrc"       %% "http-caching-client"       %  "9.5.0-play-28",
-    "uk.gov.hmrc.mongo" %% "hmrc-mongo-play-28"        %  "0.59.0"
+    "uk.gov.hmrc.mongo" %% "hmrc-mongo-play-28"        %  "0.60.0"
   )
 
   val test = Seq(

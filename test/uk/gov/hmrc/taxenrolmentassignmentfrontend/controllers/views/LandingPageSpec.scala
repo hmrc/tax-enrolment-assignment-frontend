@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.views
 
-import org.jsoup.Jsoup
-import play.api.i18n.Messages
 import play.api.test.FakeRequest
 import play.twirl.api.HtmlFormat
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture

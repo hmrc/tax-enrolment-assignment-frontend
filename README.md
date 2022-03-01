@@ -9,13 +9,7 @@
     >docker run --restart unless-stopped -d -p 27017-27019:27017-27019 --name mongodb mongo:4.2.18
 
      *(please use latest version as per MDTP best practices, this is just an example)*
-  
-- Download postgres: `brew install postgresql`
-  - As the postgresSQL needs to be initiated prior running tests locally
-    - In console..
-      >brew services restart postgres
-    
-      *(please run before executing tests)*
+
 - Run locally: `sbt run` which runs on port `7750` by default
 - Run with test endpoints: `run.sh` or `sbt 'run -Dapplication.router=testOnlyDoNotUseInAppConf.Routes'`
 

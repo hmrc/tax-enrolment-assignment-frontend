@@ -21,16 +21,22 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.i18n.{Messages, MessagesApi}
 import play.api.inject.Injector
 import play.api.libs.json.Format
 import play.api.mvc._
 import play.api.test.Helpers._
 import play.api.test._
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.http.SessionKeys
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.service.TEAFResult
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.IVConnector
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.{AuthAction, RequestWithUserDetails}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.{
+  AuthAction,
+  RequestWithUserDetails
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
@@ -48,6 +54,20 @@ trait TestFixture
   lazy val injector: Injector = app.injector
   implicit val ec: ExecutionContext = injector.instanceOf[ExecutionContext]
   lazy val logger: EventLoggerService = new EventLoggerService()
+  implicit val appConfig: AppConfig = injector.instanceOf[AppConfig]
+  lazy val requestPath = "somePath"
+  implicit lazy val fakeRequest: FakeRequest[AnyContentAsEmpty.type] =
+    FakeRequest("", requestPath)
+      .withSession(
+        SessionKeys.sessionId -> "foo",
+        SessionKeys.authToken -> "token"
+      )
+      .withCSRFToken
+      .asInstanceOf[FakeRequest[AnyContentAsEmpty.type]]
+
+  lazy val messagesApi: MessagesApi = inject[MessagesApi]
+
+  implicit lazy val messages: Messages = messagesApi.preferred(fakeRequest)
 
   val mockAuthConnector: AuthConnector = mock[AuthConnector]
   val mockIVConnector: IVConnector = mock[IVConnector]
@@ -71,25 +91,26 @@ trait TestFixture
     error: TaxEnrolmentAssignmentErrors
   ): TEAFResult[T] = EitherT.left(Future.successful(error))
 
-  lazy val testOnlyController = new TestOnlyController(
-    mcc,
-    logger
-  )
+  lazy val testOnlyController = new TestOnlyController(mcc, logger)
 
   class TestTeaSessionCache extends TEASessionCache {
-    override def save[A](key: String, value: A)
-                        (implicit request: RequestWithUserDetails[AnyContent],
-                         fmt: Format[A]): Future[CacheMap] = Future(CacheMap(request.sessionID, Map()))
+    override def save[A](key: String, value: A)(
+      implicit request: RequestWithUserDetails[AnyContent],
+      fmt: Format[A]
+    ): Future[CacheMap] = Future(CacheMap(request.sessionID, Map()))
 
-    override def remove(key: String)
-                       (implicit request: RequestWithUserDetails[AnyContent]): Future[Boolean] = ???
+    override def remove(key: String)(
+      implicit request: RequestWithUserDetails[AnyContent]
+    ): Future[Boolean] = ???
 
-    override def fetch()
-                      (implicit request: RequestWithUserDetails[AnyContent]): Future[Option[CacheMap]]
-    = Future(Some(CacheMap(request.sessionID, Map())))
+    override def fetch()(
+      implicit request: RequestWithUserDetails[AnyContent]
+    ): Future[Option[CacheMap]] =
+      Future(Some(CacheMap(request.sessionID, Map())))
 
-    override def getEntry[A](key: String)
-                            (implicit request: RequestWithUserDetails[AnyContent],
-                             fmt: Format[A]): Future[Option[A]] = ???
+    override def getEntry[A](key: String)(
+      implicit request: RequestWithUserDetails[AnyContent],
+      fmt: Format[A]
+    ): Future[Option[A]] = ???
   }
 }

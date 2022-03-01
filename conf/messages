@@ -1,2 +1,6 @@
-service.name = tax-enrolment-assignment-frontend
+service.name = Protect your tax
 service.text = This is your new service
+landingPage.title = Landing Page
+landingPage.heading = We are changing the way you access your personal tax information
+landingPage.paragraph = You have other Government Gateway user IDs that have access to your personal tax information. To protect your information we need to limit access to one user ID
+landingPage.continue = Continue

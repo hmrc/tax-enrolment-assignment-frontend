@@ -17,18 +17,24 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers
 
 import cats.data.EitherT
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.i18n
+import play.api.i18n.{Messages, MessagesApi, MessagesImpl}
 import play.api.inject.Injector
 import play.api.libs.json.Format
 import play.api.mvc._
 import play.api.test.Helpers._
 import play.api.test._
+import play.twirl.api.Html
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.service.TEAFResult
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.IVConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.{AuthAction, RequestWithUserDetails}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController
@@ -45,24 +51,24 @@ trait TestFixture
     with Matchers
     with Injecting {
 
-  lazy val injector: Injector = app.injector
-  implicit val ec: ExecutionContext = injector.instanceOf[ExecutionContext]
-  lazy val logger: EventLoggerService = new EventLoggerService()
-
   val mockAuthConnector: AuthConnector = mock[AuthConnector]
   val mockIVConnector: IVConnector = mock[IVConnector]
   val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
-  lazy val mockAuthAction =
-    new AuthAction(mockAuthConnector, testBodyParser, logger)
+  val testAppConfig: AppConfig = app.injector.instanceOf[AppConfig]
+  lazy val mockAuthAction = new AuthAction(mockAuthConnector, testBodyParser, logger, testAppConfig)
+  lazy val logger: EventLoggerService = new EventLoggerService()
+  lazy val mcc: MessagesControllerComponents = stubMessagesControllerComponents()
+  lazy val messagesApi: MessagesApi = inject[MessagesApi]
+  implicit val ec: ExecutionContext = app.injector.instanceOf[ExecutionContext]
+  implicit lazy val testMessages: Messages = messagesApi.preferred(FakeRequest())
 
-  //Controller
   val messagesActionBuilder: MessagesActionBuilder =
     new DefaultMessagesActionBuilderImpl(
       stubBodyParser[AnyContent](),
       stubMessagesApi()
     )
-  lazy val mcc: MessagesControllerComponents =
-    stubMessagesControllerComponents()
+
+  def doc(result: Html): Document = Jsoup.parse(contentAsString(result))
 
   def createInboundResult[T](result: T): TEAFResult[T] =
     EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(result))
@@ -70,11 +76,6 @@ trait TestFixture
   def createInboundResultError[T](
     error: TaxEnrolmentAssignmentErrors
   ): TEAFResult[T] = EitherT.left(Future.successful(error))
-
-  lazy val testOnlyController = new TestOnlyController(
-    mcc,
-    logger
-  )
 
   class TestTeaSessionCache extends TEASessionCache {
     override def save[A](key: String, value: A)

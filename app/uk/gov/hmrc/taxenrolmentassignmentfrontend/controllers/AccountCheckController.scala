@@ -36,19 +36,9 @@ class AccountCheckController @Inject()(
     extends FrontendController(mcc)
     with Logging {
 
-  def accountCheck(redirectUrl: String): Action[AnyContent] = authAction.async {
+  def accountCheck(): Action[AnyContent] = authAction.async {
     implicit request =>
-      sessionCache.save[String]("redirectURL", redirectUrl)
-      if (request.userDetails.hasPTEnrolment) {
-        Future.successful(Redirect(redirectUrl))
-      } else {
-        ivConnector.getCredentialsWithNino(request.userDetails.nino).value.map {
-          case Right(credsWithNino) if credsWithNino.length == 1 =>
-            Redirect(redirectUrl)
-          case Right(_)                       => Ok("Multiple Accounts with Nino")
-          case Left(UnexpectedResponseFromIV) => InternalServerError
-        }
-      }
+      Future.successful(Ok("Successful"))
   }
 
 }

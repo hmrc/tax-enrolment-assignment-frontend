@@ -26,7 +26,7 @@
     govukButton: GovukButton
 )
 
-@(form: Form[EnrolCurrentUserId], currentUserId: String, optSAUserId: Option[String] = None)(implicit request: Request[_], messages: Messages)
+@(form: Form[EnrolCurrentUserId], currentUserId: String, optSAUserId: Option[String] = None)(implicit request: Request[AnyRef], messages: Messages)
 
 @formError = @{form.errors.map(_.message).headOption}
 
@@ -58,7 +58,7 @@
         errorMessage = formError.map(error => ErrorMessage(
           content = Text(messages("ers_check_file_type.alert"))
         )),
-        idPrefix = Some("where-do-you-live"),
+        idPrefix = Some("use-current-id"),
         name = "use-current-id",
         items = Seq(
           RadioItem(

@@ -22,13 +22,13 @@ import helpers.TestITData._
 import play.api.http.Status
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
 
-class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
+class LandingPageControllerISpec extends IntegrationSpecBase with Status {
 
   val teaHost = s"localhost:$port"
   val returnUrl: String = testOnly.routes.TestOnlyController.successfulCall
     .absoluteURL(false, teaHost)
   val urlPath =
-    s"/account-check?redirectUrl=${testOnly.routes.TestOnlyController.successfulCall
+    s"/enrol-pt/introduction?redirectUrl=${testOnly.routes.TestOnlyController.successfulCall
       .absoluteURL(false, teaHost)}"
 
   s"GET $urlPath" when {
@@ -89,7 +89,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
 
         whenReady(res) { resp =>
           resp.status shouldBe OK
-          resp.body shouldBe "Multiple Accounts with Nino"
+          resp.body should include("We are changing the way you access your personal tax information")
         }
       }
     }

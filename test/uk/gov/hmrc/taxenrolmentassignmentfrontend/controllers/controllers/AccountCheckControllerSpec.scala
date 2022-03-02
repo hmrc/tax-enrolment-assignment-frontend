@@ -16,125 +16,13 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.controllers
 
-import play.api.test.Helpers.{status, _}
-import uk.gov.hmrc.auth.core.Enrolments
-import uk.gov.hmrc.auth.core.authorise.Predicate
-import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestData._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.AccountCheckController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{AccountCheckController, testOnly}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromIV
-
-import scala.concurrent.{ExecutionContext, Future}
 
 class AccountCheckControllerSpec extends TestFixture {
 
   val testTeaSessionCache = new TestTeaSessionCache
   val controller =
     new AccountCheckController(mockAuthAction, mockIVConnector, mcc, testTeaSessionCache)
-
-  "accountCheck" when {
-    "a single credential exists for a given nino" should {
-      "redirect to the return url" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[(Option[String] ~ Option[Credentials]) ~ Enrolments]
-          )(_: HeaderCarrier, _: ExecutionContext))
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.successful(retrievalResponse()))
-        (mockIVConnector
-          .getCredentialsWithNino(_: String)(
-            _: ExecutionContext,
-            _: HeaderCarrier
-          ))
-          .expects(NINO, *, *)
-          .returning(createInboundResult(List(ivNinoStoreEntry4)))
-
-        val result = controller
-          .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
-          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
-
-        status(result) shouldBe SEE_OTHER
-        redirectLocation(result) shouldBe Some(
-          "/tax-enrolment-assignment-frontend/test-only/successful"
-        )
-      }
-    }
-
-    "multiple credentials exists for a given nino" should {
-      "return OK" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[(Option[String] ~ Option[Credentials]) ~ Enrolments]
-          )(_: HeaderCarrier, _: ExecutionContext))
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.successful(retrievalResponse()))
-        (mockIVConnector
-          .getCredentialsWithNino(_: String)(
-            _: ExecutionContext,
-            _: HeaderCarrier
-          ))
-          .expects(NINO, *, *)
-          .returning(createInboundResult(multiIVCreds))
-
-        val result = controller
-          .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
-          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
-
-        status(result) shouldBe OK
-      }
-    }
-
-    "a single credential exists for a given nino that is already enrolled for PT" should {
-      "redirect to the return url" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[(Option[String] ~ Option[Credentials]) ~ Enrolments]
-          )(_: HeaderCarrier, _: ExecutionContext))
-          .expects(predicates, retrievals, *, *)
-          .returning(
-            Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly))
-          )
-
-        val result = controller
-          .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
-          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
-
-        status(result) shouldBe SEE_OTHER
-        redirectLocation(result) shouldBe Some(
-          "/tax-enrolment-assignment-frontend/test-only/successful"
-        )
-      }
-    }
-
-    "a no credentials exists in IV for a given nino" should {
-      "return InternalServerError" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[(Option[String] ~ Option[Credentials]) ~ Enrolments]
-          )(_: HeaderCarrier, _: ExecutionContext))
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.successful(retrievalResponse()))
-        (mockIVConnector
-          .getCredentialsWithNino(_: String)(
-            _: ExecutionContext,
-            _: HeaderCarrier
-          ))
-          .expects(NINO, *, *)
-          .returning(createInboundResultError(UnexpectedResponseFromIV))
-
-        val result = controller
-          .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
-          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
-
-        status(result) shouldBe INTERNAL_SERVER_ERROR
-      }
-    }
-  }
 
 }

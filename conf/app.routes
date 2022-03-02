@@ -1,6 +1,7 @@
 # microservice specific routes
 
 ->         /hmrc-frontend           hmrcfrontend.Routes
-GET        /account-check           uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.AccountCheckController.accountCheck(redirectUrl: String)
+GET        /account-check           uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.AccountCheckController.accountCheck
+GET        /enrol-pt/introduction   uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.LandingPageController.showLandingPage(redirectUrl: String)
 GET        /enrol-pt/enrol-current-user-id  uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.EnrolCurrentUserController.view
 GET        /assets/*file            controllers.Assets.versioned(path = "/public", file: Asset)

@@ -14,13 +14,23 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.govukfrontend.views.html.components.Text
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.Layout
 
-@this(layout: Layout)
+@this(
+        layout: Layout,
+        govukButton: GovukButton
+)
 
-@(pageTitle: String, heading: String, message: String)(implicit request: Request[_], messages: Messages)
-@layout(pageTitle = Some(pageTitle)) {
-    <h1 class="govuk-heading-xl">@{Text(heading).asHtml}</h1>
-    <p class="govuk-body">@{Text(message).asHtml}</p>
+@()(implicit request: Request[_], messages: Messages)
+
+@layout(pageTitle = Some(messages("landingPage.title"))) {
+
+ <h2 class="govuk-heading-xl">@messages("landingPage.heading")</h2>
+ <p class="govuk-body">@messages("landingPage.paragraph")</p>
+
+ @govukButton(Button(
+  content = Text(messages("landingPage.continue")),
+  href = Some("?")
+ ))
+
 }

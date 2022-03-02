@@ -21,13 +21,14 @@ import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
 
 
 class TestOnlyControllerSpec extends TestFixture {
 
+  lazy val testOnlyController = new TestOnlyController(mcc, logger)
   private  val fakeReq = FakeRequest("GET", "/tax-enrolment-assignment-frontend/test-only/enrolment-store/enrolments/HMRC-PT~NINO~AB876543F/users")
-
 
   "eS0Call" when {
     "the request Json contains an enrolment key that matches the nino value" should {

@@ -25,8 +25,9 @@
 @(pageTitle: Option[String] = None, optBackLinkUrl: Option[String] = None)(contentBlock: Html)(implicit request: Request[_], messages: Messages)
 
 @hmrcLayout(
-    pageTitle = pageTitle,
-    nonce = CSPNonce.get,
-    isWelshTranslationAvailable = appConfig.welshLanguageSupportEnabled,
-    backLinkUrl = optBackLinkUrl
+ pageTitle = pageTitle,
+ nonce = CSPNonce.get,
+ serviceName = Some(messages("service.name")),
+ isWelshTranslationAvailable = appConfig.welshLanguageSupportEnabled,
+ backLinkUrl = optBackLinkUrl
 )(contentBlock)

@@ -56,7 +56,7 @@
           ))
         )),
         errorMessage = formError.map(error => ErrorMessage(
-          content = Text(messages("ers_check_file_type.alert"))
+          content = Text(messages(error))
         )),
         idPrefix = Some("use-current-id"),
         name = "use-current-id",

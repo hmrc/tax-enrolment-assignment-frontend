@@ -17,8 +17,8 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.views
 
 import play.api.test.FakeRequest
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.controllers.messages.EnrolCurrentUserMessages
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.messages.EnrolCurrentUserMessages
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.EnrolCurrentUserIdForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolCurrentUser
 

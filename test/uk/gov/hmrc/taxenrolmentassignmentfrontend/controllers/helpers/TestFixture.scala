@@ -23,8 +23,7 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.i18n
-import play.api.i18n.{Messages, MessagesApi, MessagesImpl}
+import play.api.i18n.{Messages, MessagesApi}
 import play.api.inject.Injector
 import play.api.libs.json.Format
 import play.api.mvc._
@@ -36,7 +35,10 @@ import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.IVConnector
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.{AuthAction, RequestWithUserDetails}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.{
+  AuthAction,
+  RequestWithUserDetails
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
@@ -51,16 +53,22 @@ trait TestFixture
     with Matchers
     with Injecting {
 
+  lazy val injector: Injector = app.injector
+  implicit lazy val appConfig: AppConfig = inject[AppConfig]
+
   val mockAuthConnector: AuthConnector = mock[AuthConnector]
   val mockIVConnector: IVConnector = mock[IVConnector]
   val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
   val testAppConfig: AppConfig = app.injector.instanceOf[AppConfig]
-  lazy val mockAuthAction = new AuthAction(mockAuthConnector, testBodyParser, logger, testAppConfig)
+  lazy val mockAuthAction =
+    new AuthAction(mockAuthConnector, testBodyParser, logger, testAppConfig)
   lazy val logger: EventLoggerService = new EventLoggerService()
-  lazy val mcc: MessagesControllerComponents = stubMessagesControllerComponents()
+  lazy val mcc: MessagesControllerComponents =
+    stubMessagesControllerComponents()
   lazy val messagesApi: MessagesApi = inject[MessagesApi]
   implicit val ec: ExecutionContext = app.injector.instanceOf[ExecutionContext]
-  implicit lazy val testMessages: Messages = messagesApi.preferred(FakeRequest())
+  implicit lazy val testMessages: Messages =
+    messagesApi.preferred(FakeRequest())
 
   val messagesActionBuilder: MessagesActionBuilder =
     new DefaultMessagesActionBuilderImpl(
@@ -77,20 +85,26 @@ trait TestFixture
     error: TaxEnrolmentAssignmentErrors
   ): TEAFResult[T] = EitherT.left(Future.successful(error))
 
+  lazy val testOnlyController = new TestOnlyController(mcc, logger)
+
   class TestTeaSessionCache extends TEASessionCache {
-    override def save[A](key: String, value: A)
-                        (implicit request: RequestWithUserDetails[AnyContent],
-                         fmt: Format[A]): Future[CacheMap] = Future(CacheMap(request.sessionID, Map()))
+    override def save[A](key: String, value: A)(
+      implicit request: RequestWithUserDetails[AnyContent],
+      fmt: Format[A]
+    ): Future[CacheMap] = Future(CacheMap(request.sessionID, Map()))
 
-    override def remove(key: String)
-                       (implicit request: RequestWithUserDetails[AnyContent]): Future[Boolean] = ???
+    override def remove(key: String)(
+      implicit request: RequestWithUserDetails[AnyContent]
+    ): Future[Boolean] = ???
 
-    override def fetch()
-                      (implicit request: RequestWithUserDetails[AnyContent]): Future[Option[CacheMap]]
-    = Future(Some(CacheMap(request.sessionID, Map())))
+    override def fetch()(
+      implicit request: RequestWithUserDetails[AnyContent]
+    ): Future[Option[CacheMap]] =
+      Future(Some(CacheMap(request.sessionID, Map())))
 
-    override def getEntry[A](key: String)
-                            (implicit request: RequestWithUserDetails[AnyContent],
-                             fmt: Format[A]): Future[Option[A]] = ???
+    override def getEntry[A](key: String)(
+      implicit request: RequestWithUserDetails[AnyContent],
+      fmt: Format[A]
+    ): Future[Option[A]] = ???
   }
 }

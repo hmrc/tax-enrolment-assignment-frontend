@@ -4,4 +4,5 @@
 
 GET        /enrol-pt/introduction   uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.LandingPageController.showLandingPage(redirectUrl: String)
 GET        /account-check           uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.AccountCheckController.accountCheck()
+GET        /report-IDs/select-IDs         uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.FraudReportingController.selectIdsToReport
 GET        /assets/*file            controllers.Assets.versioned(path = "/public", file: Asset)

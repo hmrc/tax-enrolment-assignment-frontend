@@ -14,18 +14,13 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-@import uk.gov.hmrc.hmrcfrontend.views.html.helpers.HmrcLayout
-@import views.html.helper.CSPNonce
+@import uk.gov.hmrc.govukfrontend.views.html.components.Text
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.Layout
 
-@this(
-        appConfig: AppConfig,
-        hmrcLayout: HmrcLayout
-)
-@(pageTitle: Option[String] = None)(contentBlock: Html)(implicit request: Request[_], messages: Messages)
+@this(layout: Layout)
 
-@hmrcLayout(
-    pageTitle = pageTitle,
-    nonce = CSPNonce.get,
-    isWelshTranslationAvailable = appConfig.welshLanguageSupportEnabled
-)(contentBlock)
+@(pageTitle: String, heading: String, message: String)(implicit request: Request[_], messages: Messages)
+@layout(pageTitle = Some(pageTitle)) {
+    <h1 class="govuk-heading-xl">@{Text(heading).asHtml}</h1>
+    <p class="govuk-body">@{Text(message).asHtml}</p>
+}

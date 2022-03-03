@@ -23,29 +23,22 @@ import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.IVConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromIV
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 
 import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class AccountCheckController @Inject()(
   authAction: AuthAction,
   ivConnector: IVConnector,
-  mcc: MessagesControllerComponents
+  mcc: MessagesControllerComponents,
+  sessionCache: TEASessionCache
 )(implicit ec: ExecutionContext)
     extends FrontendController(mcc)
     with Logging {
 
-  def accountCheck(redirectUrl: String): Action[AnyContent] = authAction.async {
+  def accountCheck(): Action[AnyContent] = authAction.async {
     implicit request =>
-      if (request.userDetails.hasPTEnrolment) {
-        Future.successful(Redirect(redirectUrl))
-      } else {
-        ivConnector.getCredentialsWithNino(request.userDetails.nino).value.map {
-          case Right(credsWithNino) if credsWithNino.length == 1 =>
-            Redirect(redirectUrl)
-          case Right(_)                       => Ok("Multiple Accounts with Nino")
-          case Left(UnexpectedResponseFromIV) => InternalServerError
-        }
-      }
+      Future.successful(Ok("Successful"))
   }
 
 }

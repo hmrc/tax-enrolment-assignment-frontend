@@ -29,14 +29,14 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{
   FraudReportingController,
   testOnly
 }
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.UnderConstructionView
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.FraudReporting
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class FraudReportingControllerSpec extends TestFixture {
 
-  val underconstructionView: UnderConstructionView =
-    inject[UnderConstructionView]
+  val underconstructionView: FraudReporting =
+    inject[FraudReporting]
 
   val controller =
     new FraudReportingController(mockAuthAction, mcc, underconstructionView)
@@ -62,34 +62,13 @@ class FraudReportingControllerSpec extends TestFixture {
 
         status(result) shouldBe OK
         val page = Jsoup.parse(contentAsString(result))
-        page.title shouldBe "multipleAccounts.title"
+        page.title shouldBe "fraudReporting.title"
         page
           .select("h1")
-          .text() shouldBe "multipleAccounts.selectIdsToReport.heading"
+          .text() shouldBe "fraudReporting.heading"
         page
           .select("p")
-          .text() shouldBe "multipleAccounts.selectIdsToReport.text"
-      }
-    }
-
-    "the user is unauthenticated" should {
-      "return unauthorized" in {
-        implicit lazy val request =
-          buildFakeRequestWithSessionId("GET", "Not Used")
-
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[(Option[String] ~ Option[Credentials]) ~ Enrolments]
-          )(_: HeaderCarrier, _: ExecutionContext))
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.failed(SessionRecordNotFound("FAILED")))
-
-        val result = controller
-          .selectIdsToReport()
-          .apply(request)
-
-        status(result) shouldBe UNAUTHORIZED
+          .text() shouldBe "fraudReporting.text"
       }
     }
   }

@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth
 
+import controllers.routes
 import play.api.Logger
 import play.api.mvc.Results._
 import play.api.mvc._
@@ -25,9 +26,11 @@ import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals._
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 
+import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -36,7 +39,8 @@ case class UserDetailsFromSession(credId: String,
                                   hasPTEnrolment: Boolean,
                                   hasSAEnrolment: Boolean)
 case class RequestWithUserDetails[A](request: Request[A],
-                                     userDetails: UserDetailsFromSession)
+                                     userDetails: UserDetailsFromSession,
+                                     sessionID: String)
     extends WrappedRequest[A](request)
 trait AuthIdentifierAction
     extends ActionBuilder[RequestWithUserDetails, AnyContent]
@@ -46,7 +50,8 @@ trait AuthIdentifierAction
 class AuthAction @Inject()(
   override val authConnector: AuthConnector,
   val parser: BodyParsers.Default,
-  logger: EventLoggerService
+  logger: EventLoggerService,
+  appConfig: AppConfig
 )(implicit val executionContext: ExecutionContext)
     extends AuthorisedFunctions
     with AuthIdentifierAction {
@@ -74,7 +79,8 @@ class AuthAction @Inject()(
             hasSAEnrolment
           )
 
-          block(RequestWithUserDetails(request, userDetails))
+          val sessionID = request.headers.get("X-Request-ID").getOrElse(UUID.randomUUID().toString)
+          block(RequestWithUserDetails(request, userDetails, sessionID))
 
         case _ =>
           logger.logEvent(
@@ -91,14 +97,25 @@ class AuthAction @Inject()(
           ),
           er
         )
-        Unauthorized("NoActiveSession")
+        toGGLogin
       case er: AuthorisationException =>
         logger.logEvent(
           logAuthenticationFailure(
             s"Auth exception: ${er.getMessage} for  uri ${request.uri}"
           )
         )
+        //TODO Redirect to the error page
         Unauthorized(er.getMessage)
     }
+  }
+
+  def toGGLogin: Result = {
+    Redirect(
+      appConfig.loginURL,
+      Map(
+        "continue_url" -> Seq(appConfig.loginCallback),
+        "origin"   -> Seq("tax-enrolment-assignment-frontend")
+      )
+    )
   }
 }

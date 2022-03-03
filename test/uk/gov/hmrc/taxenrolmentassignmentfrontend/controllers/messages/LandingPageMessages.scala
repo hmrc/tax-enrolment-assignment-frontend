@@ -14,15 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.controllers
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.messages
 
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.AccountCheckController
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
-
-class AccountCheckControllerSpec extends TestFixture {
-
-  val testTeaSessionCache = new TestTeaSessionCache
-  val controller =
-    new AccountCheckController(mockAuthAction, mockIVConnector, mcc, testTeaSessionCache)
-
+object LandingPageMessages {
+  val title = "Landing Page"
+  val heading = "We are changing the way you access your personal tax information"
+  val paragraph: String = "You have other Government Gateway user IDs that have access to your personal tax information. " +
+    "To protect your information we need to limit access to one user ID"
+  val button = "Continue"
 }

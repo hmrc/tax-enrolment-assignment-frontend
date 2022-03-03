@@ -22,7 +22,7 @@ import play.api.mvc._
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.UnderConstructionView
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.FraudReporting
 
 import scala.concurrent.Future
 
@@ -30,13 +30,13 @@ import scala.concurrent.Future
 class FraudReportingController @Inject()(
   authAction: AuthAction,
   mcc: MessagesControllerComponents,
-  underConstructionView: UnderConstructionView
+  fraudReportingView: FraudReporting
 )(implicit config: AppConfig)
     extends FrontendController(mcc)
     with I18nSupport {
 
   def selectIdsToReport(): Action[AnyContent] =
     authAction.async { implicit request =>
-      Future.successful(Ok(underConstructionView("selectIdsToReport")))
+      Future.successful(Ok(fraudReportingView()))
     }
 }

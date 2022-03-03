@@ -14,15 +14,10 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.controllers
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.messages
 
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.AccountCheckController
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
-
-class AccountCheckControllerSpec extends TestFixture {
-
-  val testTeaSessionCache = new TestTeaSessionCache
-  val controller =
-    new AccountCheckController(mockAuthAction, mockIVConnector, mcc, testTeaSessionCache)
-
+object FraudReportingMessages {
+  val title = "Fraud Reporting"
+  val heading = "Fraud Reporting - Select IDs"
+  val paragraph: String = "Select IDs for accounts not recognised"
 }

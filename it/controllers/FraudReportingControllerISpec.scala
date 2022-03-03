@@ -31,7 +31,7 @@ class FraudReportingControllerISpec extends IntegrationSpecBase with Status {
 
   s"GET $urlPath" when {
     "the user is authorised" should {
-      s"render the underconstruction view" in {
+      s"render the fraudReporting view" in {
         val authResponse = authoriseResponseJson(enrolments = ptEnrolmentOnly)
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -42,7 +42,7 @@ class FraudReportingControllerISpec extends IntegrationSpecBase with Status {
         whenReady(res) { resp =>
           resp.status shouldBe OK
           val page = Jsoup.parse(resp.body)
-          page.title() should include("Tax Enrolment Assignment Frontend")
+          page.title() should include("Fraud Reporting")
           page.select("h1").text() shouldBe "Fraud Reporting - Select IDs"
           page
             .select("p")

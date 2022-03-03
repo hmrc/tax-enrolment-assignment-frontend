@@ -87,6 +87,8 @@ trait TestFixture
     error: TaxEnrolmentAssignmentErrors
   ): TEAFResult[T] = EitherT.left(Future.successful(error))
 
+  lazy val testOnlyController = new TestOnlyController(mcc, logger)
+
   class TestTeaSessionCache extends TEASessionCache {
     override def save[A](key: String, value: A)(
       implicit request: RequestWithUserDetails[AnyContent],

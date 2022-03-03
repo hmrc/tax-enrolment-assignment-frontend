@@ -9,7 +9,7 @@ val silencerVersion = "1.7.8"
 lazy val coverageSettings: Seq[Setting[_]] = {
   Seq(
     ScoverageKeys.coverageExcludedPackages := "<empty>;Reverse.*;models/.data/..*;view.*;models.*;config.*;.*(BuildInfo|Routes).*;controllers.testOnly.*",
-    ScoverageKeys.coverageMinimumStmtTotal := 77,
+    ScoverageKeys.coverageMinimumStmtTotal := 85,
     ScoverageKeys.coverageFailOnMinimum := true,
     ScoverageKeys.coverageHighlighting := true
   )

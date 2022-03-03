@@ -31,6 +31,7 @@ import play.api.test.Helpers._
 import play.api.test._
 import play.twirl.api.Html
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.http.SessionKeys
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
@@ -54,7 +55,11 @@ trait TestFixture
     with Injecting {
 
   lazy val injector: Injector = app.injector
-  implicit lazy val appConfig: AppConfig = inject[AppConfig]
+  implicit val ec: ExecutionContext = injector.instanceOf[ExecutionContext]
+  lazy val logger: EventLoggerService = new EventLoggerService()
+  implicit val appConfig: AppConfig = injector.instanceOf[AppConfig]
+
+  lazy val messagesApi: MessagesApi = inject[MessagesApi]
 
   val mockAuthConnector: AuthConnector = mock[AuthConnector]
   val mockIVConnector: IVConnector = mock[IVConnector]
@@ -62,11 +67,8 @@ trait TestFixture
   val testAppConfig: AppConfig = app.injector.instanceOf[AppConfig]
   lazy val mockAuthAction =
     new AuthAction(mockAuthConnector, testBodyParser, logger, testAppConfig)
-  lazy val logger: EventLoggerService = new EventLoggerService()
   lazy val mcc: MessagesControllerComponents =
     stubMessagesControllerComponents()
-  lazy val messagesApi: MessagesApi = inject[MessagesApi]
-  implicit val ec: ExecutionContext = app.injector.instanceOf[ExecutionContext]
   implicit lazy val testMessages: Messages =
     messagesApi.preferred(FakeRequest())
 

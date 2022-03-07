@@ -21,6 +21,7 @@ import play.api.Logging
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.TaxEnrolmentsConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.EnrolCurrentUserIdForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolCurrentUser
@@ -31,7 +32,8 @@ import scala.concurrent.{ExecutionContext, Future}
 class EnrolCurrentUserController @Inject()(
   authAction: AuthAction,
   mcc: MessagesControllerComponents,
-  enrolCurrentUserView: EnrolCurrentUser
+  enrolCurrentUserView: EnrolCurrentUser,
+  taxEnrolmentsConnector: TaxEnrolmentsConnector
 )(implicit ec: ExecutionContext)
     extends FrontendController(mcc)
     with I18nSupport {
@@ -49,5 +51,40 @@ class EnrolCurrentUserController @Inject()(
         )
       )
     )
+  }
+
+  def submit(): Action[AnyContent] = authAction.async { implicit request =>
+    EnrolCurrentUserIdForm.enrolCurrentUserIdForm
+      .bindFromRequest()
+      .fold(
+        formWithErrors => {
+          //ToDo use session cache to get current userId and the userId that contains SA if present on different account
+          val fixedCurrentUserId = "*********9871"
+          val fixedSAUserId = "*********9872"
+          Future.successful(
+            BadRequest(
+              enrolCurrentUserView(
+                formWithErrors,
+                fixedCurrentUserId,
+                Some(fixedSAUserId)
+              )
+            )
+          )
+        },
+        currentUserId => {
+          if (currentUserId.enrolCurrentUserId) {
+            taxEnrolmentsConnector
+              .assignPTEnrolment(request.userDetails)
+              .value
+              .map {
+                case Right(_) => Ok("enrolment assigned page")
+                case Left(_)  => InternalServerError
+              }
+          } else {
+            //ToDo once signout page implemented redirect to there
+            Future.successful(Ok("Sign out Page"))
+          }
+        }
+      )
   }
 }

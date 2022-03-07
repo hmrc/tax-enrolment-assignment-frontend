@@ -24,6 +24,7 @@ import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.UserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromTaxEnrolments
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logUnexpectedResponseFromTaxEnrolments
@@ -38,26 +39,34 @@ class TaxEnrolmentsConnector @Inject()(httpClient: HttpClient,
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
-  def assignPTEnrolment(groupId: String, credId: String, nino: String)(
-    implicit ec: ExecutionContext,
-    hc: HeaderCarrier
-  ): TEAFResult[Unit] = EitherT {
-    val request = new PersonalTaxEnrolment(credId, nino)
-    val enrolmentKey = s"HMRC-PT~NINO~$nino"
-    val url =
-      s"${appConfig.TAX_ENROLMENTS_BASE_URL}/groups/$groupId/enrolments/$enrolmentKey"
-    httpClient
-      .POST[PersonalTaxEnrolment, HttpResponse](url, request)
-      .map(
-        httpResponse =>
-          httpResponse.status match {
-            case CREATED => Right(())
-            case status =>
-              logger
-                .logEvent(logUnexpectedResponseFromTaxEnrolments(nino, status))
-              Left(UnexpectedResponseFromTaxEnrolments)
-        }
+  def assignPTEnrolment(
+    userDetailsFromSession: UserDetailsFromSession
+  )(implicit ec: ExecutionContext, hc: HeaderCarrier): TEAFResult[Unit] =
+    EitherT {
+      val request = new PersonalTaxEnrolment(
+        userDetailsFromSession.credId,
+        userDetailsFromSession.nino
       )
-  }
+      val enrolmentKey = s"HMRC-PT~NINO~${userDetailsFromSession.nino}"
+      val url =
+        s"${appConfig.TAX_ENROLMENTS_BASE_URL}/groups/${userDetailsFromSession.groupId}/enrolments/$enrolmentKey"
+      httpClient
+        .POST[PersonalTaxEnrolment, HttpResponse](url, request)
+        .map(
+          httpResponse =>
+            httpResponse.status match {
+              case CREATED => Right(())
+              case status =>
+                logger
+                  .logEvent(
+                    logUnexpectedResponseFromTaxEnrolments(
+                      userDetailsFromSession.nino,
+                      status
+                    )
+                  )
+                Left(UnexpectedResponseFromTaxEnrolments)
+          }
+        )
+    }
 
 }

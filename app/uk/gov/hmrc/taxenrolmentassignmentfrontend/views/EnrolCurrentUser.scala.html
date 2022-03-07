@@ -23,6 +23,7 @@
     govukRadios : GovukRadios,
     govukErrorSummary: GovukErrorSummary,
     govukWarningText : GovukWarningText,
+    formWithCSRF: FormWithCSRF,
     govukButton: GovukButton
 )
 
@@ -47,40 +48,42 @@
         ))
     }
 
-    @govukRadios(Radios(
-        fieldset = Some(Fieldset(
-          legend = Some(Legend(
-          content = Text(messages("enrolCurrentUser.heading")),
-          classes = "govuk-fieldset__legend--l",
-          isPageHeading = true
-          ))
-        )),
-        errorMessage = formError.map(error => ErrorMessage(
-          content = Text(messages(error))
-        )),
-        idPrefix = Some("use-current-id"),
-        name = "use-current-id",
-        items = Seq(
-          RadioItem(
-            content = Text(messages("enrolCurrentUser.currentUserId", currentUserId)),
-            value = Some("yes")
-          ),
-          RadioItem(
-            content = Text(messages("enrolCurrentUser.otherUserId")),
-            value = Some("no")
-          )
-        )
-    ))
+    @formWithCSRF(action = routes.EnrolCurrentUserController.submit()) {
 
-    @if(optSAUserId.isDefined) {
-        @govukWarningText(WarningText(
-          iconFallbackText = "Warning",
-          content = Text(messages("enrolCurrentUser.warning", optSAUserId.get))
+        @govukRadios(Radios(
+            fieldset = Some(Fieldset(
+              legend = Some(Legend(
+              content = Text(messages("enrolCurrentUser.heading")),
+              classes = "govuk-fieldset__legend--l",
+              isPageHeading = true
+              ))
+            )),
+            errorMessage = formError.map(error => ErrorMessage(
+              content = Text(messages(error))
+            )),
+            idPrefix = Some("use-current-id"),
+            name = "use-current-id",
+            items = Seq(
+              RadioItem(
+                content = Text(messages("enrolCurrentUser.currentUserId", currentUserId)),
+                value = Some("yes")
+            ),
+              RadioItem(
+                content = Text(messages("enrolCurrentUser.otherUserId")),
+                value = Some("no")
+              )
+            )
+        ))
+
+        @if(optSAUserId.isDefined) {
+            @govukWarningText(WarningText(
+              iconFallbackText = "Warning",
+              content = Text(messages("enrolCurrentUser.warning", optSAUserId.get))
+            ))
+        }
+
+        @govukButton(Button(
+           content = Text(messages("common.continue"))
         ))
     }
-
-    @govukButton(Button(
-      content = Text(messages("common.continue")),
-      href = Some("?")
-    ))
 }

@@ -35,6 +35,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 case class UserDetailsFromSession(credId: String,
+                                  groupId: String,
                                   nino: String,
                                   hasPTEnrolment: Boolean,
                                   hasSAEnrolment: Boolean)
@@ -67,19 +68,22 @@ class AuthAction @Inject()(
       HeaderCarrierConverter.fromRequestAndSession(request, request.session)
     }
     authorised(AuthProviders(GovernmentGateway) and ConfidenceLevel.L200)
-      .retrieve(nino and credentials and allEnrolments) {
-        case Some(nino) ~ Some(credentials) ~ enrolments =>
+      .retrieve(nino and credentials and groupIdentifier and allEnrolments) {
+        case Some(nino) ~ Some(credentials) ~ Some(groupId) ~ enrolments =>
           val hasSAEnrolment = enrolments.getEnrolment("IR-SA").isDefined
           val hasPTEnrolment = enrolments.getEnrolment("HMRC-PT").isDefined
 
           val userDetails = UserDetailsFromSession(
             credentials.providerId,
+            groupId,
             nino,
             hasPTEnrolment,
             hasSAEnrolment
           )
 
-          val sessionID = request.headers.get("X-Request-ID").getOrElse(UUID.randomUUID().toString)
+          val sessionID = request.headers
+            .get("X-Request-ID")
+            .getOrElse(UUID.randomUUID().toString)
           block(RequestWithUserDetails(request, userDetails, sessionID))
 
         case _ =>
@@ -114,7 +118,7 @@ class AuthAction @Inject()(
       appConfig.loginURL,
       Map(
         "continue_url" -> Seq(appConfig.loginCallback),
-        "origin"   -> Seq("tax-enrolment-assignment-frontend")
+        "origin" -> Seq("tax-enrolment-assignment-frontend")
       )
     )
   }

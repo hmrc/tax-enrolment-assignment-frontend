@@ -55,12 +55,13 @@ object WiremockHelper extends Eventually with IntegrationPatience {
   }
 
   def stubAuthorizePostUnauthorised(failureReason: String): StubMapping = {
+    val failureReasonMsg = s"""MDTP detail=\"$failureReason\""""
     stubFor(
       post(urlMatching("/auth/authorise"))
         .willReturn(
           aResponse()
             .withStatus(401)
-            .withHeader("WWW-Authenticate", failureReason)
+            .withHeader("WWW-Authenticate", failureReasonMsg)
         )
     )
   }

@@ -89,7 +89,9 @@ class LandingPageControllerISpec extends IntegrationSpecBase with Status {
 
         whenReady(res) { resp =>
           resp.status shouldBe OK
-          resp.body should include("We are changing the way you access your personal tax information")
+          resp.body should include(
+            "We are changing the way you access your personal tax information"
+          )
         }
       }
     }
@@ -168,22 +170,34 @@ class LandingPageControllerISpec extends IntegrationSpecBase with Status {
       }
     }
 
-    List(sessionNotFound, insufficientConfidenceLevel).foreach {
-      failureReason =>
-        s"the auth returns 401 and the user has an $failureReason" should {
-          s"return $UNAUTHORIZED" in {
-            stubAuthorizePostUnauthorised(failureReason)
-            stubPost(s"/write/.*", OK, """{"x":2}""")
+    "the user has a insufficient confidence level" should {
+      s"return $UNAUTHORIZED" in {
+        stubAuthorizePostUnauthorised(insufficientConfidenceLevel)
+        stubPost(s"/write/.*", OK, """{"x":2}""")
 
-            val res = buildRequest(urlPath)
-              .withHttpHeaders(xSessionId, csrfContent)
-              .get()
+        val res =
+          buildRequest(urlPath).withHttpHeaders(xSessionId, csrfContent).get()
 
-            whenReady(res) { resp =>
-              resp.status shouldBe UNAUTHORIZED
-            }
-          }
+        whenReady(res) { resp =>
+          resp.status shouldBe UNAUTHORIZED
         }
+      }
+    }
+
+    "the user has no active session" should {
+      s"redirect to login" in {
+        stubAuthorizePostUnauthorised(sessionNotFound)
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+
+        val res = buildRequest(urlPath)
+          .withHttpHeaders(xSessionId, csrfContent)
+          .get()
+
+        whenReady(res) { resp =>
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include("/bas-gateway/sign-in")
+        }
+      }
     }
   }
 }

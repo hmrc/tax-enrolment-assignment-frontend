@@ -1,0 +1,123 @@
+@*
+ * Copyright 2022 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.govukfrontend.views.html.components._
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.Layout
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.AccountsBelongToUser
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
+
+@this(
+    layout: Layout,
+    govukTag : GovukTag,
+    govukSummaryList : GovukSummaryList,
+    govukRadios : GovukRadios,
+    govukErrorSummary: GovukErrorSummary,
+    govukButton: GovukButton
+)
+
+@(form: Form[AccountsBelongToUser], currentAccountDetails: AccountDetails, otherAccountDetails: List[AccountDetails])(implicit request: Request[AnyRef], messages: Messages)
+
+@formError = @{form.errors.map(_.message).headOption}
+
+@signedInTag = @{govukTag(Tag(
+    content = Text("SIGNED IN")
+    ))}
+
+@createSummaryListItem(accountDetails: AccountDetails) = {
+    @govukSummaryList(SummaryList(
+      rows = Seq(
+        SummaryListRow(
+          key = Key(
+            content = Text("Email")
+          ),
+          value = Value(
+            content = Text(accountDetails.email)
+          ),
+          actions = None
+        ),
+        SummaryListRow(
+          key = Key(
+            content = Text("Last signed in")
+          ),
+          value = Value(
+          content = Text(accountDetails.lastLoginDate)
+          ),
+          actions = None
+        )
+      )
+    ))
+}
+
+@layout(
+    pageTitle = Some(messages("associatedAccounts.title")), None) {
+
+    @if(formError.isDefined) {
+        @govukErrorSummary(ErrorSummary(
+          classes = "validation-summary govuk-!-display-none",
+          errorList = Seq(
+          ErrorLink(
+            href = Some("#check-ids-form"),
+            content = Text(messages(formError.get))
+          )
+        ),
+          title = Text(messages("validation.summary.heading")),
+          attributes = Map("id" -> "errors")
+        ))
+    }
+
+    <h2 class="govuk-heading-xl">@messages("associatedAccounts.heading")</h2>
+    <h2 class="govuk-heading-m">@messages("associatedAccounts.userId", currentAccountDetails.userId) &nbsp;
+      @signedInTag
+    </h2>
+    @createSummaryListItem(currentAccountDetails)
+    <br>
+    @otherAccountDetails.map{otherAccount =>
+        <h2 class="govuk-heading-m">@messages("associatedAccounts.userId", otherAccount.userId)</h2>
+        @createSummaryListItem(otherAccount)
+        <br>
+    }
+    <br>
+
+    @govukRadios(Radios(
+        fieldset = Some(Fieldset(
+          legend = Some(Legend(
+          content = Text(messages("associatedAccounts.radios.heading")),
+          classes = "govuk-fieldset__legend--m",
+          isPageHeading = true
+          ))
+        )),
+        errorMessage = formError.map(error => ErrorMessage(
+          content = Text(messages(error))
+        )),
+        idPrefix = Some("check-ids-form"),
+        name = "recognise-ids",
+        items = Seq(
+          RadioItem(
+            content = Text(messages("associatedAccounts.recogniseIds.yes")),
+            value = Some("yes")
+          ),
+          RadioItem(
+            content = Text(messages("associatedAccounts.recogniseIds.no")),
+            value = Some("no")
+          )
+        )
+    ))
+
+    @govukButton(Button(
+      content = Text(messages("common.continue")),
+      href = Some("?")
+    ))
+}

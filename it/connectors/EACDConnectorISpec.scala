@@ -125,9 +125,8 @@ class EACDConnectorISpec extends IntegrationSpecBase {
       "return None" in {
         stubGet(PATH, Status.NO_CONTENT, "")
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        whenReady(connector.getUsersWithAssignedEnrolment(ENROLMENT_KEY).value) {
-          response =>
-            response shouldBe Right(None)
+        whenReady(connector.getUsersWithPTEnrolment(NINO).value) { response =>
+          response shouldBe Right(None)
         }
       }
     }
@@ -138,9 +137,8 @@ class EACDConnectorISpec extends IntegrationSpecBase {
           UsersAssignedEnrolment(List(CREDENTIAL_ID), List.empty)
         stubGet(PATH, Status.OK, Json.toJson(eacdResponse).toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        whenReady(connector.getUsersWithAssignedEnrolment(ENROLMENT_KEY).value) {
-          response =>
-            response shouldBe Right(Some(eacdResponse))
+        whenReady(connector.getUsersWithPTEnrolment(NINO).value) { response =>
+          response shouldBe Right(Some(eacdResponse))
         }
       }
     }

@@ -18,9 +18,9 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth
 
 import org.scalatest.Assertion
 import play.api.test.Helpers._
-import play.api.mvc.{Result, Results}
+import play.api.mvc.{AnyContent, Result, Results}
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{contentAsString, status, redirectLocation}
+import play.api.test.Helpers.{contentAsString, redirectLocation, status}
 import uk.gov.hmrc.auth.core.{
   Enrolments,
   InsufficientConfidenceLevel,

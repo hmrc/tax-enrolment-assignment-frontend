@@ -17,19 +17,22 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.forms
 
 import play.api.data.Form
-import play.api.data.Forms.{default, mapping, nonEmptyText, text}
+import play.api.data.Forms.{default, mapping, text}
 import play.api.data.validation.Constraints._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.EnrolCurrentUserId
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.{
+  AccountsBelongToUser,
+  EnrolCurrentUserId
+}
 
-object EnrolCurrentUserIdForm {
+object AccountsBelongToUserForm {
 
-  val enrolCurrentUserIdForm: Form[EnrolCurrentUserId] = Form(
+  val accountsBelongToUserForm: Form[AccountsBelongToUser] = Form(
     mapping(
-      "enrolCurrentUserId" -> default[String](text, "")
+      "recogniseIds" -> default[String](text, "")
         .verifying(
-          pattern("yes|no".r, error = "enrolCurrentUserId.error.required")
+          pattern("yes|no".r, error = "associatedAccounts.error.required")
         )
         .transform[Boolean](_ == "yes", x => if (x) "yes" else "no")
-    )(EnrolCurrentUserId.apply)(EnrolCurrentUserId.unapply)
+    )(AccountsBelongToUser.apply)(AccountsBelongToUser.unapply)
   )
 }

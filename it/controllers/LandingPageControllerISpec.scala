@@ -49,7 +49,7 @@ class LandingPageControllerISpec extends IntegrationSpecBase with Status {
     }
 
     "an authorised user with one credential uses the service" should {
-      s"redirect to returnUrl" in {
+      s"redirect to PTA with the HMRC-PT Enrolment" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -60,13 +60,46 @@ class LandingPageControllerISpec extends IntegrationSpecBase with Status {
           Status.OK,
           ivResponseSingleCredsJsonString
         )
+        stubPost(
+          s"/tax-enrolments/groups/$GROUP_ID/enrolments/HMRC-PT~NINO~$NINO",
+          CREATED,
+          ""
+        )
         val res = buildRequest(urlPath, followRedirects = true)
           .withHttpHeaders(xSessionId, csrfContent)
           .get()
 
         whenReady(res) { resp =>
           resp.status shouldBe OK
-          resp.uri.toString shouldBe returnUrl
+        }
+      }
+    }
+
+    "an authorised user with one credential uses the service" should {
+      s"see the error page if they were unable to be enrolled" in {
+        val authResponse = authoriseResponseJson()
+        stubAuthorizePost(OK, authResponse.toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        stubGetWithQueryParam(
+          "/identity-verification/nino",
+          "nino",
+          NINO,
+          Status.OK,
+          ivResponseSingleCredsJsonString
+        )
+        stubPost(
+          s"/tax-enrolments/groups/$GROUP_ID/enrolments/HMRC-PT~NINO~$NINO",
+          INTERNAL_SERVER_ERROR,
+          ""
+        )
+
+        val res = buildRequest(urlPath, followRedirects = true)
+          .withHttpHeaders(xSessionId, csrfContent)
+          .get()
+
+        whenReady(res) { resp =>
+          resp.status shouldBe OK
+          resp.body should include("There was a problem (real content later TODO)")
         }
       }
     }

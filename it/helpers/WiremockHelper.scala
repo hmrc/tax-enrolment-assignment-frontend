@@ -43,7 +43,8 @@ object WiremockHelper extends Eventually with IntegrationPatience {
       "retrieve" -> Json.arr(
         JsString("nino"),
         JsString("optionalCredentials"),
-        JsString("allEnrolments")
+        JsString("allEnrolments"),
+        JsString("groupIdentifier")
       )
     )
     stubPost(

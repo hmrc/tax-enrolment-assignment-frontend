@@ -65,6 +65,7 @@ object TestITData {
 
   def authoriseResponseJson(optNino: Option[String] = Some(NINO),
                             optCreds: Option[Credentials] = Some(creds),
+                            optGroupId: Option[String] = Some(GROUP_ID),
                             enrolments: JsValue = noEnrolments): JsValue = {
 
     val enrolmentsJson = Json.obj("allEnrolments" -> enrolments)
@@ -80,8 +81,11 @@ object TestITData {
           )
       )
     )
+    val groupIdJson = optGroupId.fold[JsObject](Json.obj())(
+      groupId => Json.obj("groupIdentifier" -> JsString(groupId))
+    )
 
-    ninoJson ++ credentialsJson ++ enrolmentsJson
+    ninoJson ++ credentialsJson ++ enrolmentsJson ++ groupIdJson
   }
 
   val sessionNotFound = "SessionRecordNotFound"

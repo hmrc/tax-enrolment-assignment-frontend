@@ -20,11 +20,7 @@ import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core.authorise.Predicate
-import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{
-  allEnrolments,
-  credentials,
-  nino
-}
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{allEnrolments, credentials, groupIdentifier, nino}
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.UserDetailsFromSession
@@ -33,6 +29,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IVNinoStoreEntry
 object TestData {
 
   val NINO = "testNino"
+  val GROUP_ID = "D37DB2E1-CF03-42E8-B151-E17300FFCF78"
   val CREDENTIAL_ID = "credId123"
   val creds = Credentials(CREDENTIAL_ID, GovernmentGateway.toString)
   val noEnrolments = Enrolments(Set.empty[Enrolment])
@@ -77,24 +74,26 @@ object TestData {
   val predicates: Predicate =
     AuthProviders(GovernmentGateway) and ConfidenceLevel.L200
 
-  val retrievals
-    : Retrieval[Option[String] ~ Option[Credentials] ~ Enrolments] = nino and credentials and allEnrolments
+  val retrievals: Retrieval[Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String]] =
+    nino and credentials and allEnrolments and groupIdentifier
 
   def retrievalResponse(
     optNino: Option[String] = Some(NINO),
     optCredentials: Option[Credentials] = Some(creds),
-    enrolments: Enrolments = noEnrolments
-  ): ((Option[String] ~ Option[Credentials]) ~ Enrolments) =
-    new ~(new ~(optNino, optCredentials), enrolments)
+    enrolments: Enrolments = noEnrolments,
+    optGroupId: Option[String] = Some(GROUP_ID)
+  ): (((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[String]) =
+    new ~ (new ~(new ~(optNino, optCredentials), enrolments), optGroupId)
 
   val userDetailsNoEnrolments =
-    UserDetailsFromSession(CREDENTIAL_ID, NINO, false, false)
+    UserDetailsFromSession(CREDENTIAL_ID, NINO, GROUP_ID, hasPTEnrolment = false, hasSAEnrolment = false)
   val userDetailsWithPTEnrolment =
-    UserDetailsFromSession(CREDENTIAL_ID, NINO, true, false)
+    UserDetailsFromSession(CREDENTIAL_ID, NINO, GROUP_ID, hasPTEnrolment = true, hasSAEnrolment = false)
   val userDetailsWithSAEnrolment =
-    UserDetailsFromSession(CREDENTIAL_ID, NINO, false, true)
-  val userDetailsWithPTAndSAEnrolment =
-    UserDetailsFromSession(CREDENTIAL_ID, NINO, true, true)
+    UserDetailsFromSession(CREDENTIAL_ID, NINO, GROUP_ID, hasPTEnrolment = false, hasSAEnrolment = true)
+  val userDetailsWithPTAndSAEnrolment = {
+    UserDetailsFromSession(CREDENTIAL_ID, NINO, GROUP_ID, hasPTEnrolment = true, hasSAEnrolment = true)
+  }
 
   val ivNinoStoreEntry1 = IVNinoStoreEntry("6902202884164548", Some(50))
   val ivNinoStoreEntry2 = IVNinoStoreEntry("8316291481001919", Some(200))

@@ -17,6 +17,11 @@
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.Layout
 
 
+<<<<<<< HEAD
+
+@this(
+layout: Layout
+=======
 @govukBackLink(BackLink(
  href = "#",
  content = Text("Back")
@@ -26,15 +31,20 @@
 layout: Layout,
 govukBackLink : GovukBackLink,
 hmrcNewTabLink : hmrcNewTabLink
+>>>>>>> 2d0d068fab6662181bce155155cb9ec3b7f9445a
 )
 
 @()(implicit request: Request[_], messages: Messages)
 
+<<<<<<< HEAD
+@layout(pageTitle = Some(messages("signInAgain.title")), Some("?")) {
+=======
 @layout(pageTitle = Some(messages("signInAgain.title"))) {
 @govukBackLink(BackLink(
 href = "#",
 content = Text("Back")
 ))
+>>>>>>> 2d0d068fab6662181bce155155cb9ec3b7f9445a
 
  <h2 class="govuk-heading-xl">@messages("signInAgain.heading")</h2>
  <p class="govuk-body"> <a class = "govuk-link" href="#">@messages("signInAgain.linkText") </a>@messages("signInAgain.paragraph")</p>

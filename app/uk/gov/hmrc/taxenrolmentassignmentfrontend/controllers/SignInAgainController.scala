@@ -21,10 +21,7 @@ import play.api.http.ContentTypeOf.contentTypeOf_Html
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.IVConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromIV
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SignInAgain
 
 import javax.inject.{Inject, Singleton}
@@ -33,16 +30,14 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class SignInAgainController @Inject()(
                                         authAction: AuthAction,
-                                        ivConnector: IVConnector,
                                         mcc: MessagesControllerComponents,
-                                        sessionCache: TEASessionCache,
                                         signInAgainPage: SignInAgain
                                       )(implicit ec: ExecutionContext)
   extends FrontendController(mcc) with Logging with I18nSupport {
 
-  def showSighInAgainPage(): Action[AnyContent] = authAction.async {
+  def showSignInAgainPage(): Action[AnyContent] = authAction.async {
     implicit request =>
-      Ok(signInAgainPage())
+      Future.successful(Ok(signInAgainPage()))
   }
 
 }

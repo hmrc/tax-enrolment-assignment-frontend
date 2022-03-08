@@ -19,6 +19,8 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.messages
 object SignInAgainMessages {
   val title = "Sign in again"
   val heading = "You need to sign in again"
-  val paragraph: String = "Sign in again with the Government Gateway user ID you want to use to access your personal tax information."
-  val button = "Back"
+  val paragraph: String = "with the Government Gateway user ID you want to use to access your personal tax information."
+  val backLink = "Back"
+  val linkText = "Sign in again"
+  val link = "#"
 }

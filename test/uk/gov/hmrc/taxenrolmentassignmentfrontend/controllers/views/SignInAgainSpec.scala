@@ -19,7 +19,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.views
 import play.api.test.FakeRequest
 import play.twirl.api.HtmlFormat
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.messages.LandingPageMessages
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.messages.{LandingPageMessages, SignInAgainMessages}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.LandingPage
 
 class SignInAgainSpec extends TestFixture {
@@ -33,18 +33,19 @@ class SignInAgainSpec extends TestFixture {
     }
 
     "contain the correct header" in {
-      doc(result).getElementsByClass("govuk-heading-xl").text shouldBe LandingPageMessages.heading
+      doc(result).getElementsByClass("govuk-heading-xl").text shouldBe SignInAgainMessages.heading
     }
 
     "contain the correct paragraph" in {
-      doc(result).getElementsByClass("govuk-body").text shouldBe LandingPageMessages.paragraph
+      doc(result).getElementsByClass("govuk-body").text shouldBe SignInAgainMessages.paragraph
     }
 
     "contain the correct back link" in {
-      doc(result).getElementsByClass("govuk-back-link").text shouldBe LandingPageMessages.
+      doc(result).getElementsByClass("govuk-back-link").text shouldBe SignInAgainMessages.backLink
     }
     "contain the correct sign in again link" in {
-      doc(result).getElementsByClass("govuk-link").text shouldBe LandingPageMessages.
+      doc(result).getElementsByClass("govuk-link").text shouldBe SignInAgainMessages.linkText
+      doc(result).getElementsByClass("govuk-link").attr("href") shouldBe SignInAgainMessages.link
     }
   }
 }

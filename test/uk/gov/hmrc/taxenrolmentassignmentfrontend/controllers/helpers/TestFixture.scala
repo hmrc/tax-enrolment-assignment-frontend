@@ -99,6 +99,10 @@ trait TestFixture
       implicit request: RequestWithUserDetails[AnyContent]
     ): Future[Boolean] = ???
 
+    override def removeAll()(
+      implicit request: RequestWithUserDetails[AnyContent]
+    ): Future[Boolean] = Future.successful(true)
+
     override def fetch()(
       implicit request: RequestWithUserDetails[AnyContent]
     ): Future[Option[CacheMap]] =

@@ -30,4 +30,5 @@ class AppConfig @Inject()(val servicesConfig: ServicesConfig) {
   lazy val basAuthHost: String = s"${servicesConfig.getConfString("bas-gateway.host", "")}"
   lazy val loginCallback: String = servicesConfig.getConfString("bas-gateway.continue-callback.url", "")
   lazy val loginURL: String = s"$basAuthHost/bas-gateway/sign-in"
+  lazy val signOutUrl: String = s"$basAuthHost/bas-gateway/sign-out-without-state"
 }

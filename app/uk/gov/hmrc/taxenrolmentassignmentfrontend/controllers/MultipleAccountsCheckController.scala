@@ -23,8 +23,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.EACDConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromEACD
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{LandingPage, UnderConstructionView}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.UnderConstructionView
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
@@ -34,9 +33,7 @@ class MultipleAccountsCheckController @Inject()(
   authAction: AuthAction,
   mcc: MessagesControllerComponents,
   eacdConnector: EACDConnector,
-  underConstructionView: UnderConstructionView,
-  landingPageView: LandingPage,
-  sessionCache: TEASessionCache
+  underConstructionView: UnderConstructionView
   )(implicit ec: ExecutionContext,
   implicit val config: AppConfig)
     extends FrontendController(mcc)

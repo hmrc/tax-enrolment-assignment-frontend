@@ -18,17 +18,28 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import play.api.Logging
 import play.api.http.ContentTypeOf.contentTypeOf_Html
+import cats.data.EitherT
+import play.api.Logger
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
+import uk.gov.hmrc.http.HeaderCarrier
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.IVConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.{AuthAction, RequestWithUserDetails}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromIV
+import uk.gov.hmrc.service.TEAFResult
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{EACDConnector, IVConnector}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.{AuthAction, UserDetailsFromSession}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logUnexpectedResponseFromLandingPage
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{ErrorTemplate, LandingPage}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{LandingPage, UnderConstructionView}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -41,35 +52,68 @@ class LandingPageController @Inject()(
                                         silentAssignmentService: SilentAssignmentService,
                                         mcc: MessagesControllerComponents,
                                         sessionCache: TEASessionCache,
+                                        logger: EventLoggerService,
                                         landingPageView: LandingPage,
+                                        underConstructionView: UnderConstructionView,
                                         errorView: ErrorTemplate
-                                      )(implicit ec: ExecutionContext)
+                                      )(implicit ec: ExecutionContext,
+                                        appConfig: AppConfig)
   extends FrontendController(mcc) with Logging with I18nSupport {
+
+  implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
   def showLandingPage(redirectUrl: String): Action[AnyContent] = authAction.async {
     implicit request =>
       sessionCache.save[String]("redirectURL", redirectUrl)
-      if (request.userDetails.hasPTEnrolment) {
-        Future.successful(Redirect(redirectUrl))
-      } else {
-        ivConnector.getCredentialsWithNino(request.userDetails.nino).value.flatMap {
-          case Right(credsWithNino) =>
-            val validPtaAccountsFuture = silentAssignmentService.getValidPtaAccounts(credsWithNino)
-            val result: Future[Future[Result]] = for {
-              validPtaAccounts <- validPtaAccountsFuture
-            } yield {
-              if(validPtaAccounts.flatten.size == 1){
-                silentEnrol()
-              } else {
-                Future.successful(Ok(landingPageView()))
-              }
-            }
-           result.flatten
 
-          case Left(UnexpectedResponseFromIV) => Future.successful(InternalServerError("error"))
-        }
+      val testing =
+      for {
+        usersWithPT <- checkUsersWithPTEnrolmentAlreadyAssigned(request.userDetails)
+        creds <- checkIfUserHasOtherAccounts(request.userDetails)
+      } yield (creds, usersWithPT)
+
+      testing.value.map {
+        case Right((creds, None)) if creds.length <= 1 =>
+          val validPtaAccountsFuture = silentAssignmentService.getValidPtaAccounts(credsWithNino)
+          val result: Future[Future[Result]] = for {
+            validPtaAccounts <- validPtaAccountsFuture
+          } yield {
+            if(validPtaAccounts.flatten.size == 1){
+              silentEnrol()
+            } else {
+              Future.successful(Ok(landingPageView()))
+            }
+          }
+          result.flatten
+        case Right((creds, Some(usersWithPT))) if usersWithPT == request.userDetails.credId =>
+          Redirect(redirectUrl)
+        case Right((creds, Some(_))) =>  Ok(underConstructionView())
+        case Right((creds, None)) => Ok(landingPageView())
+        case Left(error) => logger.logEvent(logUnexpectedResponseFromLandingPage(error))
+          InternalServerError
+
       }
+
   }
+
+  private def checkUsersWithPTEnrolmentAlreadyAssigned(sessionUserDetails:UserDetailsFromSession)(implicit hc : HeaderCarrier): TEAFResult[Option[String]] = {
+    if(sessionUserDetails.hasPTEnrolment) {
+      EitherT.right(Future.successful(Some(sessionUserDetails.credId)))
+    } else {
+      eacdConnector
+        .getUsersWithPTEnrolment(sessionUserDetails.nino)
+        .map(optUsers => optUsers.fold[Option[String]](None)(users => users.principalUserIds.headOption))
+    }
+  }
+
+  private def checkIfUserHasOtherAccounts(sessionUserDetails:UserDetailsFromSession)(implicit hc : HeaderCarrier)
+                                         : TEAFResult[List[String]]  = {
+
+      ivConnector.getCredentialsWithNino(sessionUserDetails.nino)
+        .map(optUsers => optUsers.map(users => users.credId))
+
+  }
+
 
   def silentEnrol()(implicit request: RequestWithUserDetails[AnyContent],
                 hc: HeaderCarrier): Future[Result] = {

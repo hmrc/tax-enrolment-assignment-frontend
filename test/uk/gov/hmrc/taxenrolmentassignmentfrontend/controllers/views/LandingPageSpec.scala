@@ -24,7 +24,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.LandingPage
 
 class LandingPageSpec extends TestFixture {
 
-  val landingPageView: LandingPage = app.injector.instanceOf[LandingPage]
+  val landingPage: LandingPage = app.injector.instanceOf[LandingPage]
   val result: HtmlFormat.Appendable = landingPageView()(FakeRequest(), testMessages)
 
   "The Landing Page" should {

@@ -35,6 +35,7 @@ import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.SessionKeys
 import play.api.test.CSRFTokenHelper._
 import uk.gov.hmrc.http.cache.client.CacheMap
+import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{EACDConnector, IVConnector}
@@ -65,6 +66,7 @@ trait TestFixture
   lazy val messagesApi: MessagesApi    = inject[MessagesApi]
   implicit lazy val messages: Messages = messagesApi.preferred(fakeRequest)
   lazy val UCView: UnderConstructionView = inject[UnderConstructionView]
+  lazy val landingPageView: LandingPage = inject[LandingPage]
   val mockAuthConnector: AuthConnector = mock[AuthConnector]
   val mockIVConnector: IVConnector = mock[IVConnector]
   val mockTaxEnrolmentsConnector: TaxEnrolmentsConnector = mock[TaxEnrolmentsConnector]

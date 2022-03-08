@@ -16,9 +16,10 @@
 
 package controllers
 
-import helpers.IntegrationSpecBase
+import helpers.{IntegrationSpecBase, TestITData}
 import helpers.WiremockHelper._
 import helpers.TestITData._
+import org.jsoup.Jsoup
 import play.api.http.Status
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
 
@@ -32,11 +33,23 @@ class LandingPageControllerISpec extends IntegrationSpecBase with Status {
       .absoluteURL(false, teaHost)}"
 
   s"GET $urlPath" when {
-    "an authorised user with PT enrolment in session uses the service" should {
+    "a single credential user with PT enrolment in session uses the service" should {
       s"redirect to returnUrl" in {
         val authResponse = authoriseResponseJson(enrolments = ptEnrolmentOnly)
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
+        stubGet(
+          s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/users",
+          Status.OK,
+          es0ResponseMatchingCred
+        )
+        stubGetWithQueryParam(
+          "/identity-verification/nino",
+          "nino",
+          NINO,
+          Status.OK,
+          ivResponseSingleCredsJsonString
+        )
         val res = buildRequest(urlPath, followRedirects = true)
           .withHttpHeaders(xSessionId, csrfContent)
           .get()
@@ -48,52 +61,16 @@ class LandingPageControllerISpec extends IntegrationSpecBase with Status {
       }
     }
 
-    "an authorised user with one credential uses the service" should {
-      s"redirect to PTA with the HMRC-PT Enrolment" in {
+    "a single credential user with no PT enrolment in session uses the service" should {
+      s"redirect to returnUrl" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        stubGetWithQueryParam(
-          "/identity-verification/nino",
-          "nino",
-          NINO,
-          Status.OK,
-          ivResponseSingleCredsJsonString
-        )
-
-        stubGetMatching(
-          s"/enrolment-store-proxy/enrolment-store/users/${ivNinoStoreEntry4.credId}/enrolments?type=principal",
-          OK,
-          eacdUserEnrolmentsJson2
-        )
-
-        stubPost(
-          s"/tax-enrolments/groups/$GROUP_ID/enrolments/HMRC-PT~NINO~$NINO",
-          CREATED,
-          ""
-        )
-
         stubGet(
-          s"/personal-account",
-          OK,
-          "Government Gateway"
+          s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/users",
+          Status.OK,
+          es0ResponseNoRecordCred
         )
-        val res = buildRequest(urlPath, followRedirects = true)
-          .withHttpHeaders(xSessionId, csrfContent)
-          .get()
-
-        whenReady(res) { resp =>
-          resp.status shouldBe OK
-          resp.body should include("Government Gateway")
-        }
-      }
-    }
-
-    "an authorised user with one credential uses the service" should {
-      s"see the error page if they were unable to be enrolled" in {
-        val authResponse = authoriseResponseJson()
-        stubAuthorizePost(OK, authResponse.toString())
-        stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGetWithQueryParam(
           "/identity-verification/nino",
           "nino",
@@ -101,7 +78,6 @@ class LandingPageControllerISpec extends IntegrationSpecBase with Status {
           Status.OK,
           ivResponseSingleCredsJsonString
         )
-
         stubPost(
           s"/tax-enrolments/groups/$GROUP_ID/enrolments/HMRC-PT~NINO~$NINO",
           INTERNAL_SERVER_ERROR,
@@ -120,12 +96,44 @@ class LandingPageControllerISpec extends IntegrationSpecBase with Status {
 
         whenReady(res) { resp =>
           resp.status shouldBe OK
-          resp.body should include("There was a problem (real content later TODO)")
+          resp.uri.toString shouldBe returnUrl
         }
       }
     }
 
-    "an authorised user with multiple credential uses the service" should {
+    "a multiple credential user with a PT enrolment is not in the current session" should {
+      s"redirect to returnUrl" in {
+        val authResponse = authoriseResponseJson()
+        stubAuthorizePost(OK, authResponse.toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        stubGetWithQueryParam(
+          "/identity-verification/nino",
+          "nino",
+          NINO,
+          Status.OK,
+          ivResponseSingleCredsJsonString
+        )
+        stubGet(
+          s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/users",
+          Status.OK,
+          es0ResponseMatchingCred
+        )
+
+        val res = buildRequest(urlPath, followRedirects = true)
+          .withHttpHeaders(xSessionId, csrfContent)
+          .get()
+
+        whenReady(res) { resp =>
+
+          val page = Jsoup.parse(resp.body)
+
+          resp.status shouldBe OK
+          page.title    should include(TestITData.underConstructionFalsePageTitle)
+        }
+      }
+    }
+
+    "a multiple credentials user with a PT enrolment is in the current session" should {
       s"return $OK with multiple credential message" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
@@ -137,15 +145,20 @@ class LandingPageControllerISpec extends IntegrationSpecBase with Status {
           Status.OK,
           ivResponseMultiCredsJsonString
         )
+        stubGet(
+          s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/users",
+          Status.OK,
+          es0ResponseNoRecordCred
+        )
         val res = buildRequest(urlPath, followRedirects = true)
           .withHttpHeaders(xSessionId, csrfContent)
           .get()
 
         whenReady(res) { resp =>
+          val page = Jsoup.parse(resp.body)
+
           resp.status shouldBe OK
-          resp.body should include(
-            "We are changing the way you access your personal tax information"
-          )
+          page.title    should include(TestITData.landingPageTitle)
         }
       }
     }

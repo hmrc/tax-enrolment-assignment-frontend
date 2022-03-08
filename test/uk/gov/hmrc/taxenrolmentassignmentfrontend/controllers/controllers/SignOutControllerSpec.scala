@@ -32,7 +32,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class SignOutControllerSpec extends TestFixture {
 
   val testTeaSessionCache = new TestTeaSessionCache
-  val controller = new SignOutController(mockAuthAction, mcc, testAppConfig, testTeaSessionCache)
+  val controller = new SignOutController(mockAuthAction, mcc, appConfig, testTeaSessionCache)
   def fakeReq(method: String, url: String = "N/A"): FakeRequest[AnyContentAsEmpty.type] = {
     FakeRequest(method, url)
       .withSession(

@@ -52,7 +52,7 @@ class FraudReportingControllerISpec extends IntegrationSpecBase with Status {
     }
 
     "the user has no session" should {
-      s"return $UNAUTHORIZED" in {
+      s"redirect to login" in {
         stubAuthorizePostUnauthorised("SessionRecordNotFound")
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
@@ -61,7 +61,8 @@ class FraudReportingControllerISpec extends IntegrationSpecBase with Status {
           .get()
 
         whenReady(res) { resp =>
-          resp.status shouldBe UNAUTHORIZED
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include("/bas-gateway/sign-in")
         }
       }
     }

@@ -29,5 +29,6 @@
  nonce = CSPNonce.get,
  serviceName = Some(messages("service.name")),
  isWelshTranslationAvailable = appConfig.welshLanguageSupportEnabled,
- backLinkUrl = optBackLinkUrl
+ backLinkUrl = optBackLinkUrl,
+ signOutUrl = Some(appConfig.signOutUrl)
 )(contentBlock)

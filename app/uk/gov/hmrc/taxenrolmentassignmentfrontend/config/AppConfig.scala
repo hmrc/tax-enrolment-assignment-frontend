@@ -41,4 +41,6 @@ class AppConfig @Inject()(val servicesConfig: ServicesConfig) {
     servicesConfig.getConfBool("users-group-search.isTest", false)
   lazy val usersGroupSearchBaseURL: String =
     s"${servicesConfig.baseUrl("users-group-search")}/users-group-search"
+  lazy val signOutUrl: String =
+    s"$basAuthHost/bas-gateway/sign-out-without-state"
 }

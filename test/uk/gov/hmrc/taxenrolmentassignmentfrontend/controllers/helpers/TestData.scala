@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers
 
+import java.time.{ZoneId, ZonedDateTime}
+
 import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
@@ -28,7 +30,13 @@ import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.UserDetailsFromSession
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IVNinoStoreEntry
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
+  AccountDetails,
+  AdditonalFactors,
+  IVNinoStoreEntry,
+  MFADetails,
+  UsersGroupResponse
+}
 
 object TestData {
 
@@ -106,6 +114,24 @@ object TestData {
     ivNinoStoreEntry2,
     ivNinoStoreEntry3,
     ivNinoStoreEntry4
+  )
+
+  // accountDetails
+
+  val accountDetails = AccountDetails(
+    userId = "********6037",
+    email = Some("email1@test.com"),
+    lastLoginDate = "27 February 2022",
+    mfaDetails = List(MFADetails("Text message", "07783924321"))
+  )
+
+  // userGroupSearchResponse
+
+  val usersGroupSearchResponse = UsersGroupResponse(
+    obfuscatedUserId = "********6037",
+    email = Some("email1@test.com"),
+    lastAccessedTimestamp = "2022-02-27T12:00:27Z",
+    additionalFactors = List(AdditonalFactors("sms", Some("07783924321")))
   )
 
   def buildFakeRequestWithSessionId(

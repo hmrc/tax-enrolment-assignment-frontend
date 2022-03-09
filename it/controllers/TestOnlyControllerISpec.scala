@@ -16,7 +16,6 @@
 
 package controllers
 
-
 import helpers.IntegrationSpecBase
 import helpers.TestITData.{csrfContent, xSessionId}
 import play.api.http.Status
@@ -39,13 +38,15 @@ class TestOnlyControllerISpec extends IntegrationSpecBase with Status {
 
           val nino = "CP872173B"
           val enrolmentKey = "HMRC-PT~NINO~" + nino
-          val es0Url = s"/test-only/enrolment-store/enrolments/$enrolmentKey/users"
+          val es0Url =
+            s"/test-only/enrolment-store/enrolments/$enrolmentKey/users"
 
-          val returnUrl = testOnly.routes.TestOnlyController.es0Call(enrolmentKey)
+          val returnUrl = testOnly.routes.TestOnlyController
+            .es0Call(enrolmentKey)
             .absoluteURL(false, teaHost)
 
-          val jsonResp = UsersAssignedEnrolment(List("6145202884164547"), List.empty)
-
+          val jsonResp =
+            UsersAssignedEnrolment(List("6145202884164547"), List.empty)
 
           val res = buildRequest(es0Url, followRedirects = true)
             .withHttpHeaders(xSessionId, csrfContent)
@@ -54,7 +55,7 @@ class TestOnlyControllerISpec extends IntegrationSpecBase with Status {
 
           whenReady(res) { resp =>
             resp.status shouldBe OK
-            resp.body shouldBe  s"${Json.toJson(jsonResp)}"
+            resp.body shouldBe s"${Json.toJson(jsonResp)}"
             resp.uri.toString shouldBe returnUrl
           }
         }
@@ -64,7 +65,8 @@ class TestOnlyControllerISpec extends IntegrationSpecBase with Status {
         "return no content with empty body" in {
           val nino = "JT872173B"
           val enrolmentKey = "HMRC-PT~NINO~" + nino
-          val es0Url = s"/test-only/enrolment-store/enrolments/$enrolmentKey/users"
+          val es0Url =
+            s"/test-only/enrolment-store/enrolments/$enrolmentKey/users"
 
           val res = buildRequest(es0Url, followRedirects = true)
             .withHttpHeaders(xSessionId, csrfContent)
@@ -72,9 +74,44 @@ class TestOnlyControllerISpec extends IntegrationSpecBase with Status {
             .get()
 
           whenReady(res) { resp =>
-
             resp.status shouldBe NO_CONTENT
             resp.body shouldBe ""
+          }
+        }
+      }
+    }
+  }
+
+  s"GET /users-group-search/test-only/users/:credId" should {
+    "retrieve the users details" when {
+      "the credential is recognised" in {
+
+        val credId = "2568836745857979"
+        val url = s"/users-group-search/test-only/users/$credId"
+        val expectedResponse =
+          """{"obfuscatedUserId":"********6037","email":"email1@test.com","lastAccessedTimestamp":"2022-01-16T14:40:25Z","additionalFactors":[{"factorType":"sms","phoneNumber":"07783924321"}]}"""
+        val res = buildTestOnlyRequest(url, followRedirects = true)
+          .withHttpHeaders(xSessionId, csrfContent)
+          .withBody(Json.obj())
+          .get()
+
+        whenReady(res) { resp =>
+          resp.status shouldBe OK
+          resp.body shouldBe expectedResponse
+        }
+      }
+
+      "return NOT_FOUND " when {
+        "the credential is not recognised" in {
+          val credId = "2568836745857973"
+          val url = s"/users-group-search/test-only/users/$credId"
+          val res = buildTestOnlyRequest(url, followRedirects = true)
+            .withHttpHeaders(xSessionId, csrfContent)
+            .withBody(Json.obj())
+            .get()
+
+          whenReady(res) { resp =>
+            resp.status shouldBe NOT_FOUND
           }
         }
       }

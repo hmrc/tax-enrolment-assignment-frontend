@@ -29,9 +29,10 @@ import play.api.libs.json.Format
 import play.api.mvc._
 import play.api.test.Helpers._
 import play.api.test._
+import play.api.mvc.AnyContent
 import play.twirl.api.Html
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.http.SessionKeys
+import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
@@ -40,6 +41,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.{
   AuthAction,
   RequestWithUserDetails
 }
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestData.userDetailsWithPTEnrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
@@ -55,7 +57,14 @@ trait TestFixture
     with Injecting {
 
   lazy val injector: Injector = app.injector
+  implicit val request: RequestWithUserDetails[AnyContent] =
+    new RequestWithUserDetails[AnyContent](
+      FakeRequest().asInstanceOf[Request[AnyContent]],
+      userDetailsWithPTEnrolment,
+      "sessionId"
+    )
   implicit val ec: ExecutionContext = injector.instanceOf[ExecutionContext]
+  implicit val hc: HeaderCarrier = HeaderCarrier()
   lazy val logger: EventLoggerService = new EventLoggerService()
   implicit val appConfig: AppConfig = injector.instanceOf[AppConfig]
 
@@ -107,6 +116,6 @@ trait TestFixture
     override def getEntry[A](key: String)(
       implicit request: RequestWithUserDetails[AnyContent],
       fmt: Format[A]
-    ): Future[Option[A]] = ???
+    ): Future[Option[A]] = Future.successful(None)
   }
 }

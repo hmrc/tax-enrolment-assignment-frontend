@@ -24,7 +24,10 @@ import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{LandingPageController, testOnly}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{
+  LandingPageController,
+  testOnly
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromIV
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.LandingPage
 
@@ -32,10 +35,16 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class LandingPageControllerSpec extends TestFixture {
 
-  val testTeaSessionCache = new TestTeaSessionCache
+  val testTeaSessionCache = new TestTeaSessionCache()
   val view: LandingPage = app.injector.instanceOf[LandingPage]
   val controller =
-    new LandingPageController(mockAuthAction, mockIVConnector, mcc, testTeaSessionCache, view)
+    new LandingPageController(
+      mockAuthAction,
+      mockIVConnector,
+      mcc,
+      testTeaSessionCache,
+      view
+    )
 
   "showLandingPage" when {
     "a single credential exists for a given nino" should {
@@ -56,7 +65,9 @@ class LandingPageControllerSpec extends TestFixture {
           .returning(createInboundResult(List(ivNinoStoreEntry4)))
 
         val result = controller
-          .showLandingPage(testOnly.routes.TestOnlyController.successfulCall.url)
+          .showLandingPage(
+            testOnly.routes.TestOnlyController.successfulCall.url
+          )
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe SEE_OTHER
@@ -84,7 +95,9 @@ class LandingPageControllerSpec extends TestFixture {
           .returning(createInboundResult(multiIVCreds))
 
         val result = controller
-          .showLandingPage(testOnly.routes.TestOnlyController.successfulCall.url)
+          .showLandingPage(
+            testOnly.routes.TestOnlyController.successfulCall.url
+          )
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe OK
@@ -105,7 +118,9 @@ class LandingPageControllerSpec extends TestFixture {
           )
 
         val result = controller
-          .showLandingPage(testOnly.routes.TestOnlyController.successfulCall.url)
+          .showLandingPage(
+            testOnly.routes.TestOnlyController.successfulCall.url
+          )
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe SEE_OTHER
@@ -133,7 +148,9 @@ class LandingPageControllerSpec extends TestFixture {
           .returning(createInboundResultError(UnexpectedResponseFromIV))
 
         val result = controller
-          .showLandingPage(testOnly.routes.TestOnlyController.successfulCall.url)
+          .showLandingPage(
+            testOnly.routes.TestOnlyController.successfulCall.url
+          )
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe INTERNAL_SERVER_ERROR

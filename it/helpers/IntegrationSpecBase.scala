@@ -67,6 +67,9 @@ trait IntegrationSpecBase
     "microservice.services.enrolment-store-proxy.port" -> s"$mockPort",
     "microservice.services.tax-enrolments.host" -> s"$mockHost",
     "microservice.services.tax-enrolments.port" -> s"$mockPort",
+    "microservice.services.users-group-search.host" -> s"$mockHost",
+    "microservice.services.users-group-search.port" -> s"$mockPort",
+    "microservice.services.users-group-search.isTest" -> "true",
     "play.http.router" -> "testOnlyDoNotUseInAppConf.Routes"
   )
 

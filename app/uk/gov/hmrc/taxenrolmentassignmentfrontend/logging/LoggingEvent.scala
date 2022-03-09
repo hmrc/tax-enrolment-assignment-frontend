@@ -85,6 +85,19 @@ object LoggingEvent {
       )
     )
 
+  def logUnexpectedResponseFromUsersGroupSearch(
+    credId: String,
+    statusReturned: Int
+  ): LoggingEvent =
+    Error(
+      Event(
+        "[UsersGroupSearchConnector][getUsersDetails]",
+        errorDetails = Some(
+          s"Users Group Search return status of $statusReturned for credID $credId"
+        )
+      )
+    )
+
   implicit val formats: Format[Event] = Json.format[Event]
 
   sealed trait LoggingEvent {

@@ -141,4 +141,9 @@ trait WiremockHelper extends ServerProvider {
     ws.url(s"http://localhost:$port/tax-enrolment-assignment-frontend$path")
       .withFollowRedirects(followRedirects)
 
+  def buildTestOnlyRequest(path: String,
+                           followRedirects: Boolean = false): WSRequest =
+    ws.url(s"http://localhost:$port$path")
+      .withFollowRedirects(followRedirects)
+
 }

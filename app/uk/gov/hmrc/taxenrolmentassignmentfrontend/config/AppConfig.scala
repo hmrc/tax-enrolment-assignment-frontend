@@ -24,10 +24,21 @@ import javax.inject.{Inject, Singleton}
 class AppConfig @Inject()(val servicesConfig: ServicesConfig) {
   lazy val welshLanguageSupportEnabled: Boolean = servicesConfig
     .getConfBool("features.welsh-language-support", defBool = false)
-  lazy val IV_BASE_URL: String = servicesConfig.baseUrl("identity-verification") + "/identity-verification"
-  lazy val EACD_BASE_URL: String = servicesConfig.baseUrl("enrolment-store-proxy") + "/enrolment-store-proxy"
-  lazy val TAX_ENROLMENTS_BASE_URL: String = servicesConfig.baseUrl("tax-enrolments") + "/tax-enrolments"
-  lazy val basAuthHost: String = s"${servicesConfig.getConfString("bas-gateway.host", "")}"
-  lazy val loginCallback: String = servicesConfig.getConfString("bas-gateway.continue-callback.url", "")
+  lazy val IV_BASE_URL
+    : String = servicesConfig.baseUrl("identity-verification") + "/identity-verification"
+  lazy val EACD_BASE_URL: String = servicesConfig.baseUrl(
+    "enrolment-store-proxy"
+  ) + "/enrolment-store-proxy"
+  lazy val TAX_ENROLMENTS_BASE_URL: String = servicesConfig.baseUrl(
+    "tax-enrolments"
+  ) + "/tax-enrolments"
+  lazy val basAuthHost: String =
+    s"${servicesConfig.getConfString("bas-gateway.host", "")}"
+  lazy val loginCallback: String =
+    servicesConfig.getConfString("bas-gateway.continue-callback.url", "")
   lazy val loginURL: String = s"$basAuthHost/bas-gateway/sign-in"
+  lazy val useTestOnlyUsersGroupSearch: Boolean =
+    servicesConfig.getConfBool("users-group-search.isTest", false)
+  lazy val usersGroupSearchBaseURL: String =
+    s"${servicesConfig.baseUrl("users-group-search")}/users-group-search"
 }

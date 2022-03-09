@@ -16,10 +16,17 @@
 
 package helpers
 
+import java.time.{ZoneId, ZonedDateTime}
+import java.time.format.DateTimeFormatter
+
 import play.api.libs.json._
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core.retrieve.Credentials
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IVNinoStoreEntry
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
+  AdditonalFactors,
+  IVNinoStoreEntry,
+  UsersGroupResponse
+}
 
 object TestITData {
 
@@ -142,4 +149,45 @@ object TestITData {
     ivNinoStoreEntry3,
     ivNinoStoreEntry4
   )
+
+  // users group search
+
+  val usersGroupSearchResponse = UsersGroupResponse(
+    obfuscatedUserId = "********6037",
+    email = Some("email1@test.com"),
+    lastAccessedTimestamp = "2022-01-16T14:40:05Z",
+    additionalFactors = List(AdditonalFactors("sms", Some("07783924321")))
+  )
+
+  def additionalFactorsJson(additionalFactors: List[AdditonalFactors]) =
+    additionalFactors.foldLeft[JsArray](Json.arr()) { (a, b) =>
+      val jsObject = if (b.factorType == "totp") {
+        Json.obj(
+          ("factorType", JsString(b.factorType)),
+          ("name", JsString(b.name.getOrElse("")))
+        )
+      } else {
+        Json.obj(
+          ("factorType", JsString(b.factorType)),
+          ("phoneNumber", JsString(b.phoneNumber.getOrElse("")))
+        )
+      }
+      a.append(jsObject)
+    }
+  def usergroupsResponseJson(
+    usersGroupResponse: UsersGroupResponse = usersGroupSearchResponse
+  ) = {
+    Json.obj(
+      ("obfuscatedUserId", JsString(usersGroupResponse.obfuscatedUserId)),
+      ("email", JsString(usersGroupResponse.email.get)),
+      (
+        "lastAccessedTimestamp",
+        JsString(usersGroupResponse.lastAccessedTimestamp)
+      ),
+      (
+        "additionalFactors",
+        additionalFactorsJson(usersGroupResponse.additionalFactors)
+      )
+    )
+  }
 }

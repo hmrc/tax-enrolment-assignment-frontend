@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.controllers
 
-import play.api.libs.json.Json
+import play.api.libs.json.{JsString, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
@@ -50,6 +50,41 @@ class TestOnlyControllerSpec extends TestFixture {
         val request = fakeReq.withBody(Json.obj())
         val res = testOnlyController.es0Call(enrolmentKey)(request)
         status(res) shouldBe NO_CONTENT
+      }
+    }
+  }
+
+  "usersGroupSearchCall" when {
+    "the credential is recognised" should {
+      "return OK with the userdetails" in {
+        val credId = "2568836745857979"
+        val expectedResponse = {
+          Json.obj(
+            ("obfuscatedUserId", JsString("********6037")),
+            ("email", JsString("email1@test.com")),
+            ("lastAccessedTimestamp", JsString("2022-01-16T14:40:25Z")),
+            (
+              "additionalFactors",
+              Json.arr(
+                Json.obj(
+                  ("factorType", JsString("sms")),
+                  ("phoneNumber", JsString("07783924321"))
+                )
+              )
+            )
+          )
+        }
+        val res = testOnlyController.usersGroupSearchCall(credId)(fakeReq)
+        status(res) shouldBe OK
+        contentAsJson(res) shouldBe expectedResponse
+
+      }
+    }
+    "the credential is not recognised" should {
+      "return not found" in {
+        val credId = "3568836745857979"
+        val res = testOnlyController.usersGroupSearchCall(credId)(fakeReq)
+        status(res) shouldBe NOT_FOUND
       }
     }
   }

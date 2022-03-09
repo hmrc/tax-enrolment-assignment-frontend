@@ -19,7 +19,7 @@ package helpers
 import play.api.libs.json._
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core.retrieve.Credentials
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IVNinoStoreEntry
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{IVNinoStoreEntry, IdentifiersOrVerifiers, UserEnrolment}
 
 object TestITData {
 
@@ -65,6 +65,7 @@ object TestITData {
 
   def authoriseResponseJson(optNino: Option[String] = Some(NINO),
                             optCreds: Option[Credentials] = Some(creds),
+                            optGroupId: Option[String] = Some(GROUP_ID),
                             enrolments: JsValue = noEnrolments): JsValue = {
 
     val enrolmentsJson = Json.obj("allEnrolments" -> enrolments)
@@ -80,8 +81,11 @@ object TestITData {
           )
       )
     )
+    val groupIdJson = optGroupId.fold[JsObject](Json.obj())(
+      groupId => Json.obj("groupIdentifier" -> JsString(groupId))
+    )
 
-    ninoJson ++ credentialsJson ++ enrolmentsJson
+    ninoJson ++ credentialsJson ++ enrolmentsJson ++ groupIdJson
   }
 
   val sessionNotFound = "SessionRecordNotFound"
@@ -142,4 +146,96 @@ object TestITData {
     ivNinoStoreEntry3,
     ivNinoStoreEntry4
   )
+
+  val eacdUserEnrolmentsJson1: String =
+    """
+      |{
+      |    "startRecord": 1,
+      |    "totalRecords": 2,
+      |    "enrolments": [
+      |        {
+      |           "service": "IR-PAYE",
+      |           "state": "Activated",
+      |           "friendlyName": "My First Client's PAYE Enrolment",
+      |           "enrolmentDate": "2018-10-05 14:48:00.000Z",
+      |           "failedActivationCount": 1,
+      |           "activationDate": "2018-10-13 17:36:00.000Z",
+      |           "enrolmentTokenExpiryDate": "2018-10-13 17:36:00.000Z",
+      |           "identifiers": [
+      |              {
+      |                 "key": "TaxOfficeNumber",
+      |                 "value": "120"
+      |              },
+      |              {
+      |                 "key": "TaxOfficeReference",
+      |                 "value": "ABC1234567"
+      |              }
+      |           ]
+      |        },
+      |        {
+      |           "service": "IR-PAYE",
+      |           "state": "Activated",
+      |           "friendlyName": "My Second Client's PAYE Enrolment",
+      |           "enrolmentDate": "2017-06-25 12:24:00.000Z",
+      |           "failedActivationCount": 1,
+      |           "activationDate": "2017-07-01 09:52:00.000Z",
+      |           "enrolmentTokenExpiryDate": "2017-10-13 17:36:00.000Z",
+      |           "identifiers": [
+      |              {
+      |                 "key": "TaxOfficeNumber",
+      |                 "value": "123"
+      |              },
+      |              {
+      |                 "key": "TaxOfficeReference",
+      |                 "value": "XYZ9876543"
+      |              }
+      |           ]
+      |        }
+      |    ]
+      |}
+      |""".stripMargin
+
+  val eacdUserEnrolmentsJson2: String =
+    """
+      |{
+      |    "startRecord":1,
+      |    "totalRecords":1,
+      |    "enrolments":[
+      |                {
+      |                    "service":"IR-SA",
+      |                    "state":"NotYetActivated",
+      |                    "friendlyName":"",
+      |                    "enrolmentDate":"2019-10-17 09:26:27.568",
+      |                    "failedActivationCount":0,
+      |                    "enrolmentTokenExpiryDate":"2019-11-16 09:26:27.568",
+      |                    "identifiers": [
+      |                            {
+      |                                "key":"UTR",
+      |                                "value":"1234567890"
+      |                            }
+      |                    ]
+      |                }
+      |    ]
+      |}
+      |""".stripMargin
+
+  val identifierTxNum = IdentifiersOrVerifiers("TaxOfficeNumber", "123")
+  val identifierTxRef = IdentifiersOrVerifiers("TaxOfficeReference", "XYZ9876543")
+  val identifierUTR = IdentifiersOrVerifiers("UTR", "1234567890")
+
+
+  val userEnrolmentIRSA = UserEnrolment(
+    service = "IR-SA",
+    state = "NotYetActivated",
+    friendlyName = "",
+    failedActivationCount = 0,
+    identifiers = Seq(identifierUTR)
+  )
+
+  val userEnrolmentIRPAYE = UserEnrolment(
+    service = "IR-PAYE",
+    state = "Activated",
+    friendlyName = "Something",
+    failedActivationCount = 1,
+    identifiers = Seq(identifierTxNum, identifierTxRef))
 }

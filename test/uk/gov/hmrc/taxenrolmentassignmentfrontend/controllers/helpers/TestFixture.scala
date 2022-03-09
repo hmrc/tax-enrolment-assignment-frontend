@@ -31,15 +31,12 @@ import play.api.test.Helpers._
 import play.api.test._
 import play.twirl.api.Html
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.http.SessionKeys
+import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.IVConnector
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.{
-  AuthAction,
-  RequestWithUserDetails
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{EACDConnector, IVConnector, TaxEnrolmentsConnector}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.{AuthAction, RequestWithUserDetails}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
@@ -55,6 +52,7 @@ trait TestFixture
     with Injecting {
 
   lazy val injector: Injector = app.injector
+  implicit val hc: HeaderCarrier = HeaderCarrier()
   implicit val ec: ExecutionContext = injector.instanceOf[ExecutionContext]
   lazy val logger: EventLoggerService = new EventLoggerService()
   implicit val appConfig: AppConfig = injector.instanceOf[AppConfig]
@@ -63,6 +61,8 @@ trait TestFixture
 
   val mockAuthConnector: AuthConnector = mock[AuthConnector]
   val mockIVConnector: IVConnector = mock[IVConnector]
+  val mockTaxEnrolmentsConnector: TaxEnrolmentsConnector = mock[TaxEnrolmentsConnector]
+  val mockEacdConnector: EACDConnector = mock[EACDConnector]
   val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
   val testAppConfig: AppConfig = app.injector.instanceOf[AppConfig]
   lazy val mockAuthAction =

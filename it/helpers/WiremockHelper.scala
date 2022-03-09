@@ -43,7 +43,8 @@ object WiremockHelper extends Eventually with IntegrationPatience {
       "retrieve" -> Json.arr(
         JsString("nino"),
         JsString("optionalCredentials"),
-        JsString("allEnrolments")
+        JsString("allEnrolments"),
+        JsString("groupIdentifier")
       )
     )
     stubPost(
@@ -115,6 +116,12 @@ object WiremockHelper extends Eventually with IntegrationPatience {
   def stubGet(url: String, status: Integer, responseBody: String): StubMapping =
     stubFor(
       get(urlPathEqualTo(url))
+        .willReturn(aResponse().withStatus(status).withBody(responseBody))
+    )
+
+  def stubGetMatching(url: String, status: Integer, responseBody: String): StubMapping =
+    stubFor(
+      get(urlEqualTo(url))
         .willReturn(aResponse().withStatus(status).withBody(responseBody))
     )
 }

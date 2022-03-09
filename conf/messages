@@ -15,3 +15,6 @@ landingPage.continue = Continue
 fraudReporting.title = Fraud Reporting
 fraudReporting.heading = Fraud Reporting - Select IDs
 fraudReporting.text = Select IDs for accounts not recognised
+enrolmentError.title = There was a problem (real content later TODO)
+enrolmentError.heading = There was a problem (real content later TODO)
+enrolmentError.body = Please try again in 15 minutes (real content later TODO)

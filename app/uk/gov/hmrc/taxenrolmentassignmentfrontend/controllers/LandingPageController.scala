@@ -17,15 +17,18 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import play.api.Logging
+import play.api.http.ContentTypeOf.contentTypeOf_Html
 import play.api.i18n.I18nSupport
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.IVConnector
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.{AuthAction, RequestWithUserDetails}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromIV
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.LandingPage
-import play.api.http.ContentTypeOf.contentTypeOf_Html
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{ErrorTemplate, LandingPage}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -33,10 +36,13 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class LandingPageController @Inject()(
                                         authAction: AuthAction,
+                                        appConfig: AppConfig,
                                         ivConnector: IVConnector,
+                                        silentAssignmentService: SilentAssignmentService,
                                         mcc: MessagesControllerComponents,
                                         sessionCache: TEASessionCache,
-                                        landingPageView: LandingPage
+                                        landingPageView: LandingPage,
+                                        errorView: ErrorTemplate
                                       )(implicit ec: ExecutionContext)
   extends FrontendController(mcc) with Logging with I18nSupport {
 
@@ -46,14 +52,31 @@ class LandingPageController @Inject()(
       if (request.userDetails.hasPTEnrolment) {
         Future.successful(Redirect(redirectUrl))
       } else {
-        ivConnector.getCredentialsWithNino(request.userDetails.nino).value.map {
-          case Right(credsWithNino) if credsWithNino.length == 1 =>
-            Redirect(redirectUrl)
-          case Right(_)                       =>
-            Ok(landingPageView())
-          case Left(UnexpectedResponseFromIV) => InternalServerError("error")
+        ivConnector.getCredentialsWithNino(request.userDetails.nino).value.flatMap {
+          case Right(credsWithNino) =>
+            val validPtaAccountsFuture = silentAssignmentService.getValidPtaAccounts(credsWithNino)
+            val result: Future[Future[Result]] = for {
+              validPtaAccounts <- validPtaAccountsFuture
+            } yield {
+              if(validPtaAccounts.flatten.size == 1){
+                silentEnrol()
+              } else {
+                Future.successful(Ok(landingPageView()))
+              }
+            }
+           result.flatten
+
+          case Left(UnexpectedResponseFromIV) => Future.successful(InternalServerError("error"))
         }
       }
+  }
+
+  def silentEnrol()(implicit request: RequestWithUserDetails[AnyContent],
+                hc: HeaderCarrier): Future[Result] = {
+    silentAssignmentService.enrolUser().isRight map {
+      case true => Redirect(appConfig.redirectPTAUrl)
+      case false => Ok(errorView("enrolmentError.title", "enrolmentError.heading", "enrolmentError.body"))
+    }
   }
 
 }

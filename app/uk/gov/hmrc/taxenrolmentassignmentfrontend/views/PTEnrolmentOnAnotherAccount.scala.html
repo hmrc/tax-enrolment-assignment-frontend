@@ -17,7 +17,6 @@
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.Layout
-@import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.SummaryListItems
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.summarylist.SummaryListRow
 
@@ -25,39 +24,26 @@
 layout: Layout,
 govukSummaryList : GovukSummaryList)
 
-@(ptSummaryListItems: Seq[SummaryListItems], currentAccountHasSA: Boolean)(implicit request: Request[AnyRef], messages: Messages, appConfig: AppConfig)
-
-@createSummaryListRow(key: String, value: String) = {
-    @SummaryListRow(
-      key = Key(
-        content = Text(key)
-      ),
-      value = Value(
-        content = Text(value)
-      ),
-      actions = None
-    )
-}
+@(ptSummaryListRows: Seq[SummaryListRow], currentAccountHasSA: Boolean)(implicit request: Request[AnyRef], messages: Messages, appConfig: AppConfig)
 
 @layout(
     pageTitle = Some(messages("ptEnrolmentOnOtherAccount.title")), None) {
 
-<h2 class="govuk-heading-xl">@messages("ptEnrolmentOnOtherAccount.heading")</h2>
-<p>@messages("ptEnrolmentOnOtherAccount.text1")
-    <a href="@appConfig.signOutUrl">@messages("ptEnrolmentOnOtherAccount.signinAgain")</a>
-    @messages("ptEnrolmentOnOtherAccount.text2")
-</p>
-    @govukSummaryList(SummaryList(
-      rows = ptSummaryListItems.map(summaryListItem => createSummaryListRow(summaryListItem.key, summaryListItem.value))
-    ))
-<p>
-    <a href="@routes.FraudReportingController.selectIdsToReport">@messages("ptEnrolmentOnOtherAccount.notMyUserId")</a>
-</p>
-@if(currentAccountHasSA) {
-    <h3 class="govuk-heading-m">@messages("ptEnrolmentOnOtherAccount.saHeading")</h3>
-    <p>@messages("ptEnrolmentOnOtherAccount.saText")
-      <a href="@appConfig.selfAssessmentUrl">@messages("ptEnrolmentOnOtherAccount.saLink")</a>
-        .
+    <h2 class="govuk-heading-xl">@messages("ptEnrolmentOnOtherAccount.heading")</h2>
+    <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.text1")
+        <a href="@appConfig.signOutUrl">@messages("ptEnrolmentOnOtherAccount.signinAgain")</a>
+      @messages("ptEnrolmentOnOtherAccount.text2")
     </p>
-}
+    @govukSummaryList(SummaryList(
+      rows = ptSummaryListRows
+    ))
+    <p class="govuk-body">
+        <a href="@routes.FraudReportingController.selectIdsToReport">@messages("ptEnrolmentOnOtherAccount.notMyUserId")</a>
+    </p>
+    @if(currentAccountHasSA) {
+        <h3 class="govuk-heading-m">@messages("ptEnrolmentOnOtherAccount.saHeading")</h3>
+        <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.saText")
+          <a href="@appConfig.selfAssessmentUrl">@messages("ptEnrolmentOnOtherAccount.saLink")</a>.
+        </p>
+    }
 }

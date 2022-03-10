@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.controllers
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.AccountCheckController
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
+import play.api.libs.json.{Format, Json}
 
-class AccountCheckControllerSpec extends TestFixture {
+case class IdentifiersOrVerifiers(key: String, value: String)
 
-  val testTeaSessionCache = new TestTeaSessionCache
-  val controller =
-    new AccountCheckController(mockAuthAction, mockIVConnector, mcc, testTeaSessionCache)
-
+object IdentifiersOrVerifiers {
+  implicit val format: Format[IdentifiersOrVerifiers] =
+    Json.format[IdentifiersOrVerifiers]
 }

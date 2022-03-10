@@ -17,6 +17,7 @@
 package helpers
 
 import helpers.TestITData.AUTHORIZE_HEADER_VALUE
+import helpers.WiremockHelper.wiremockURL
 import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Millis, Seconds, Span}
@@ -70,6 +71,7 @@ trait IntegrationSpecBase
     "microservice.services.users-group-search.host" -> s"$mockHost",
     "microservice.services.users-group-search.port" -> s"$mockPort",
     "microservice.services.users-group-search.isTest" -> "true",
+    "microservice.services.personal-tax-account.host" -> s"$wiremockURL",
     "play.http.router" -> "testOnlyDoNotUseInAppConf.Routes"
   )
 

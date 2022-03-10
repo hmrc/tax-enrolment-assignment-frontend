@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth
 
-import controllers.routes
 import play.api.Logger
 import play.api.mvc.Results._
 import play.api.mvc._
@@ -36,12 +35,15 @@ import scala.concurrent.{ExecutionContext, Future}
 
 case class UserDetailsFromSession(credId: String,
                                   nino: String,
+                                  groupId: String,
                                   hasPTEnrolment: Boolean,
                                   hasSAEnrolment: Boolean)
+
 case class RequestWithUserDetails[A](request: Request[A],
                                      userDetails: UserDetailsFromSession,
                                      sessionID: String)
     extends WrappedRequest[A](request)
+
 trait AuthIdentifierAction
     extends ActionBuilder[RequestWithUserDetails, AnyContent]
     with ActionFunction[Request, RequestWithUserDetails]
@@ -67,14 +69,15 @@ class AuthAction @Inject()(
       HeaderCarrierConverter.fromRequestAndSession(request, request.session)
     }
     authorised(AuthProviders(GovernmentGateway) and ConfidenceLevel.L200)
-      .retrieve(nino and credentials and allEnrolments) {
-        case Some(nino) ~ Some(credentials) ~ enrolments =>
+      .retrieve(nino and credentials and allEnrolments and groupIdentifier) {
+        case Some(nino) ~ Some(credentials) ~ enrolments ~ Some(groupId) =>
           val hasSAEnrolment = enrolments.getEnrolment("IR-SA").isDefined
           val hasPTEnrolment = enrolments.getEnrolment("HMRC-PT").isDefined
 
           val userDetails = UserDetailsFromSession(
             credentials.providerId,
             nino,
+            groupId,
             hasPTEnrolment,
             hasSAEnrolment
           )

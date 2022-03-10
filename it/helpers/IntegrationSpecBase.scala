@@ -17,16 +17,12 @@
 package helpers
 
 import helpers.TestITData.AUTHORIZE_HEADER_VALUE
+import helpers.WiremockHelper.wiremockURL
 import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.{
-  BeforeAndAfterAll,
-  BeforeAndAfterEach,
-  GivenWhenThen,
-  TestSuite
-}
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, GivenWhenThen, TestSuite}
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.{Application, Environment, Mode}
@@ -67,6 +63,7 @@ trait IntegrationSpecBase
     "microservice.services.enrolment-store-proxy.port" -> s"$mockPort",
     "microservice.services.tax-enrolments.host" -> s"$mockHost",
     "microservice.services.tax-enrolments.port" -> s"$mockPort",
+    "microservice.services.personal-tax-account.host" -> s"$wiremockURL",
     "play.http.router" -> "testOnlyDoNotUseInAppConf.Routes"
   )
 

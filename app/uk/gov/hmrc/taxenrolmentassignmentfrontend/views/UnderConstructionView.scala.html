@@ -16,7 +16,7 @@
 
 @this(layout: Layout)
 
-@(ptEnrolmentPresent: Boolean = false)(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
+@(ptEnrolmentPresent: Boolean = true)(implicit request: Request[_], messages: Messages, appConfig: AppConfig)
 
 @layout(pageTitle = Some(messages(s"multiplePTE.$ptEnrolmentPresent.title"))) {
 <h1 class="govuk-heading-xl">@{messages(s"multiplePTE.$ptEnrolmentPresent.heading")}</h1>

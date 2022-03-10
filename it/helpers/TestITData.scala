@@ -270,7 +270,6 @@ object TestITData {
       |""".stripMargin
 
   val underConstructionTruePageTitle = "Tax Enrolment Assignment Frontend - Enrolment Present"
-  val underConstructionFalsePageTitle = "Tax Enrolment Assignment Frontend - Enrolment Not Present"
   val landingPageTitle = "Landing Page"
 
 }

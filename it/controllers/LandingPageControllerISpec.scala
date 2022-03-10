@@ -128,7 +128,7 @@ class LandingPageControllerISpec extends IntegrationSpecBase with Status {
           val page = Jsoup.parse(resp.body)
 
           resp.status shouldBe OK
-          page.title    should include(TestITData.underConstructionFalsePageTitle)
+          page.title    should include(TestITData.underConstructionTruePageTitle)
         }
       }
     }

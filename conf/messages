@@ -21,6 +21,3 @@ enrolmentError.body = Please try again in 15 minutes (real content later TODO)
 multiplePTE.true.title = Tax Enrolment Assignment Frontend - Enrolment Present
 multiplePTE.true.heading = This user has no PT enrolment
 multiplePTE.true.text =  The current user does not have an assigned PT enrolment
-multiplePTE.false.title = Tax Enrolment Assignment Frontend - Enrolment Not Present
-multiplePTE.false.heading = No users have been assigned a PT enrolment
-multiplePTE.false.text =  No accounts have an allocated PT enrolment for this enrolment key

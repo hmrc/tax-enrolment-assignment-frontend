@@ -34,8 +34,7 @@ with TestFixture
 
   lazy val view: UnderConstructionView = inject[UnderConstructionView]
 
-  lazy val falseDocument: Document = Jsoup.parse(view()(fakeRequest,messages,appConfig).toString)
-  lazy val trueDocument: Document = Jsoup.parse(view(true)(fakeRequest,messages,appConfig).toString)
+  lazy val document: Document = Jsoup.parse(view()(fakeRequest,messages,appConfig).toString)
 
   object Selectors {
     val title   = "title"
@@ -45,28 +44,16 @@ with TestFixture
 
   "UnderConstructionView()" must {
     "Have the correct page title" in {
-      falseDocument.select(Selectors.title).text shouldBe (UnderConstructionMessages.falseTitle)
+      document.select(Selectors.title).text shouldBe (UnderConstructionMessages.title)
     }
 
     "Have the correct heading" in {
-      falseDocument.select(Selectors.heading).text shouldBe UnderConstructionMessages.falseHeading
+      document.select(Selectors.heading).text shouldBe UnderConstructionMessages.heading
     }
 
     "have the correct p" in {
-      falseDocument.select(Selectors.p).text shouldBe UnderConstructionMessages.falseP
+      document.select(Selectors.p).text shouldBe UnderConstructionMessages.p
     }
   }
-  "UnderConstructionView(true)" must {
-    "Have the correct page title" in {
-      trueDocument.select(Selectors.title).text shouldBe (UnderConstructionMessages.trueTitle)
-    }
 
-    "Have the correct heading" in {
-      trueDocument.select(Selectors.heading).text shouldBe UnderConstructionMessages.trueHeading
-    }
-
-    "have the correct p" in {
-      trueDocument.select(Selectors.p).text shouldBe UnderConstructionMessages.trueP
-    }
-  }
 }

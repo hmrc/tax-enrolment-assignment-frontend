@@ -19,11 +19,9 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.messages
 object UnderConstructionMessages {
 
 
-  val trueTitle = "Tax Enrolment Assignment Frontend - Enrolment Present"
-  val trueHeading = "This user has no PT enrolment"
-  val trueP = "The current user does not have an assigned PT enrolment"
-  val falseTitle = "Tax Enrolment Assignment Frontend - Enrolment Not Present"
-  val falseHeading = "No users have been assigned a PT enrolment"
-  val falseP = "No accounts have an allocated PT enrolment for this enrolment key"
+  val title = "Tax Enrolment Assignment Frontend - Enrolment Present"
+  val heading = "This user has no PT enrolment"
+  val p = "The current user does not have an assigned PT enrolment"
+
 
 }

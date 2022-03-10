@@ -87,13 +87,15 @@ object LoggingEvent {
 
   def logUnexpectedResponseFromUsersGroupSearch(
     credId: String,
-    statusReturned: Int
+    statusReturned: Int,
+    errorMsg: String = "N/A"
   ): LoggingEvent =
     Error(
       Event(
         "[UsersGroupSearchConnector][getUsersDetails]",
         errorDetails = Some(
-          s"Users Group Search return status of $statusReturned for credID $credId"
+          s"Users Group Search return status of $statusReturned for credID $credId" +
+            s"\nError Message: $errorMsg"
         )
       )
     )

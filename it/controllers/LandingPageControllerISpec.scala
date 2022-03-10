@@ -72,6 +72,12 @@ class LandingPageControllerISpec extends IntegrationSpecBase with Status {
           CREATED,
           ""
         )
+
+        stubGet(
+          s"/personal-account",
+          OK,
+          "Government Gateway"
+        )
         val res = buildRequest(urlPath, followRedirects = true)
           .withHttpHeaders(xSessionId, csrfContent)
           .get()

@@ -21,12 +21,12 @@ import play.api.libs.json.{Format, Json}
 case class PersonalTaxEnrolment(userId: String,
                                 friendlyName: String,
                                 `type`: String,
-                                verifiers: List[IndentifiersOrVerifiers]) {
+                                verifiers: List[IdentifiersOrVerifiers]) {
   def this(credId: String, nino: String) = this(
     userId = credId,
     friendlyName = "My Personal Tax Enrolment",
     `type` = "principal",
-    verifiers = List(IndentifiersOrVerifiers("NINO1", nino))
+    verifiers = List(IdentifiersOrVerifiers("NINO1", nino))
   )
 }
 

@@ -46,7 +46,7 @@ class SignOutControllerSpec extends TestFixture {
       (mockAuthConnector
         .authorise(
           _: Predicate,
-          _: Retrieval[(Option[String] ~ Option[Credentials]) ~ Enrolments]
+          _: Retrieval[((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[String]]
         )(_: HeaderCarrier, _: ExecutionContext))
         .expects(predicates, retrievals, *, *)
         .returning(Future.successful(retrievalResponse()))

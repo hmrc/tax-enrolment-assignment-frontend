@@ -21,10 +21,10 @@ import helpers.TestITData._
 import helpers.WiremockHelper._
 import play.api.http.Status
 import play.api.http.Status.OK
-import play.api.libs.json.{JsString, Json}
+import play.api.libs.json.Json
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.EACDConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromEACD
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{UserEnrolmentsListResponse, UsersAssignedEnrolment}
 
 class EACDConnectorISpec extends IntegrationSpecBase {
 
@@ -221,6 +221,59 @@ class EACDConnectorISpec extends IntegrationSpecBase {
         }
       }
     }
+  }
+  
+  "queryEnrolmentsAssignedToUser" when {
+    val USER_ID = "123456"
+    val PATH =
+      s"/enrolment-store-proxy/enrolment-store/users/$USER_ID/enrolments?type=principal"
+
+    s"the user has no enrolments" should {
+      "return None" in {
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        stubGetMatching(PATH, Status.NO_CONTENT, "")
+        whenReady(connector.queryEnrolmentsAssignedToUser(USER_ID).value) {
+          response =>
+            response shouldBe Right(None)
+        }
+      }
+    }
+
+    s"the user has multiple enrolments" should {
+      "return a list of enrolments" in {
+        val eacdResponse = UserEnrolmentsListResponse(Seq(userEnrolmentIRPAYE, userEnrolmentIRSA))
+        
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        stubGetMatching(PATH, Status.OK, Json.toJson(eacdResponse).toString())
+        whenReady(connector.queryEnrolmentsAssignedToUser(USER_ID).value) {
+          response =>
+            response shouldBe Right(Some(eacdResponse))
+        }
+      }
+    }
+
+    "a BAD_REQUEST is returned" should {
+      "return an UnexpectedResponseFromEACD error" in {
+        stubGet(PATH, Status.BAD_REQUEST, "")
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        whenReady(connector.queryEnrolmentsAssignedToUser(USER_ID).value) {
+          response =>
+            response shouldBe Left(UnexpectedResponseFromEACD)
+        }
+      }
+    }
+
+    "a 5xx is returned" should {
+      "return an UnexpectedResponseFromEACD error" in {
+        stubGet(PATH, Status.INTERNAL_SERVER_ERROR, "")
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        whenReady(connector.queryEnrolmentsAssignedToUser(USER_ID).value) {
+          response =>
+            response shouldBe Left(UnexpectedResponseFromEACD)
+        }
+      }
+    }
+
   }
 
 }

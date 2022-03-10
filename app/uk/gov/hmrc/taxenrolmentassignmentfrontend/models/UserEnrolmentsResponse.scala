@@ -16,11 +16,21 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.{Json, OFormat}
 
-case class IndentifiersOrVerifiers(key: String, value: String)
+case class UserEnrolmentsListResponse(enrolments: Seq[UserEnrolment])
 
-object IndentifiersOrVerifiers {
-  implicit val format: Format[IndentifiersOrVerifiers] =
-    Json.format[IndentifiersOrVerifiers]
+object UserEnrolmentsListResponse {
+  implicit val format: OFormat[UserEnrolmentsListResponse] = Json.format[UserEnrolmentsListResponse]
+}
+
+case class UserEnrolment(service: String,
+                         state: String,
+                         friendlyName: String,
+                         failedActivationCount: Int,
+                         identifiers: Seq[IdentifiersOrVerifiers]
+                        )
+
+object UserEnrolment {
+  implicit val format: OFormat[UserEnrolment] = Json.format[UserEnrolment]
 }

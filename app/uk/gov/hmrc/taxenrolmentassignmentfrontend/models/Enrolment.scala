@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 
 import play.api.libs.json.{Format, Json}
 
-case class Enrolment(identifiers: List[IndentifiersOrVerifiers])
+case class Enrolment(identifiers: List[IdentifiersOrVerifiers])
 
 object Enrolment {
   implicit val format: Format[Enrolment] = Json.format[Enrolment]

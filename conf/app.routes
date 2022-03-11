@@ -1,10 +1,11 @@
 # microservice specific routes
 
-->         /hmrc-frontend           hmrcfrontend.Routes
-GET        /enrol-pt/introduction   uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.LandingPageController.showLandingPage(redirectUrl: String)
+->         /hmrc-frontend                   hmrcfrontend.Routes
+GET        /enrol-pt/introduction           uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.LandingPageController.showLandingPage(redirectUrl: String)
 GET        /enrol-pt/enrol-current-user-id  uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.EnrolCurrentUserController.view
-GET        /report-IDs/select-IDs         uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.FraudReportingController.selectIdsToReport
-GET        /logout                  uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignOutController.signOut()
+GET        /enrol-pt/enrolment-success      uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.CurrentIdConfirmationController.view
+GET        /report-IDs/select-IDs           uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.FraudReportingController.selectIdsToReport
+GET        /logout                          uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignOutController.signOut()
+GET        /enrol-pt/sign-in-again          uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignInAgainController.view
 
-GET        /assets/*file            controllers.Assets.versioned(path = "/public", file: Asset)
-GET        /enrol-pt/sign-in-again  uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignInAgainController.view
+GET        /assets/*file                    controllers.Assets.versioned(path = "/public", file: Asset)

@@ -34,7 +34,7 @@ with TestFixture
 
   lazy val view: UnderConstructionView = inject[UnderConstructionView]
 
-  lazy val document: Document = Jsoup.parse(view()(fakeRequest,messages,appConfig).toString)
+  lazy val document: Document = Jsoup.parse(view()(fakeRequest,messages).toString)
 
   object Selectors {
     val title   = "title"

@@ -23,31 +23,26 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.i18n
 import play.api.i18n._
 import play.api.inject.Injector
 import play.api.libs.json.Format
 import play.api.mvc._
+import play.api.test.CSRFTokenHelper._
 import play.api.test.Helpers._
 import play.api.test._
 import play.twirl.api.Html
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.http.SessionKeys
-import play.api.test.CSRFTokenHelper._
-import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
+import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.service.TEAFResult
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{EACDConnector, IVConnector}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{EACDConnector, IVConnector, TaxEnrolmentsConnector}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.{AuthAction, RequestWithUserDetails}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.UnderConstructionView
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{LandingPage, UnderConstructionView}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -72,8 +67,6 @@ trait TestFixture
   val mockTaxEnrolmentsConnector: TaxEnrolmentsConnector = mock[TaxEnrolmentsConnector]
   val mockEacdConnector: EACDConnector = mock[EACDConnector]
   val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
-  lazy val mockAuthAction =
-    new AuthAction(mockAuthConnector, testBodyParser, logger)
   lazy val requestPath = "somePath"
 
   implicit lazy val fakeRequest: FakeRequest[AnyContentAsEmpty.type] =
@@ -84,8 +77,6 @@ trait TestFixture
   val testAppConfig: AppConfig = app.injector.instanceOf[AppConfig]
   lazy val mockAuthAction =
     new AuthAction(mockAuthConnector, testBodyParser, logger, testAppConfig)
-  lazy val mcc: MessagesControllerComponents =
-    stubMessagesControllerComponents()
   implicit lazy val testMessages: Messages =
     messagesApi.preferred(FakeRequest())
 

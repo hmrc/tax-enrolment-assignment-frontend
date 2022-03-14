@@ -80,8 +80,14 @@ class LandingPageControllerISpec extends IntegrationSpecBase with Status {
         )
         stubPost(
           s"/tax-enrolments/groups/$GROUP_ID/enrolments/HMRC-PT~NINO~$NINO",
-          INTERNAL_SERVER_ERROR,
+          CREATED,
           ""
+        )
+
+        stubGet(
+          s"/personal-account",
+          OK,
+          "Government Gateway"
         )
 
         stubGetMatching(
@@ -96,7 +102,7 @@ class LandingPageControllerISpec extends IntegrationSpecBase with Status {
 
         whenReady(res) { resp =>
           resp.status shouldBe OK
-          resp.uri.toString shouldBe returnUrl
+          resp.body should include("Government Gateway")
         }
       }
     }

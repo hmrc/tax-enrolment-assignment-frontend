@@ -16,29 +16,22 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
+import cats.data.EitherT
 import play.api.Logging
 import play.api.http.ContentTypeOf.contentTypeOf_Html
-import cats.data.EitherT
-import play.api.Logger
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.http.HeaderCarrier
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.IVConnector
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.{AuthAction, RequestWithUserDetails}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromIV
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{EACDConnector, IVConnector}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.{AuthAction, UserDetailsFromSession}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logUnexpectedResponseFromLandingPage
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.{AuthAction, RequestWithUserDetails, UserDetailsFromSession}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IVNinoStoreEntry
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{ErrorTemplate, LandingPage}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{LandingPage, UnderConstructionView}
 
 import javax.inject.{Inject, Singleton}
@@ -49,51 +42,36 @@ class LandingPageController @Inject()(
                                         authAction: AuthAction,
                                         appConfig: AppConfig,
                                         ivConnector: IVConnector,
+                                        eacdConnector: EACDConnector,
                                         silentAssignmentService: SilentAssignmentService,
                                         mcc: MessagesControllerComponents,
                                         sessionCache: TEASessionCache,
-                                        logger: EventLoggerService,
                                         landingPageView: LandingPage,
                                         underConstructionView: UnderConstructionView,
                                         errorView: ErrorTemplate
-                                      )(implicit ec: ExecutionContext,
-                                        appConfig: AppConfig)
+                                      )(implicit ec: ExecutionContext
+                                       )
   extends FrontendController(mcc) with Logging with I18nSupport {
-
-  implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
   def showLandingPage(redirectUrl: String): Action[AnyContent] = authAction.async {
     implicit request =>
       sessionCache.save[String]("redirectURL", redirectUrl)
-
       val testing =
       for {
         usersWithPT <- checkUsersWithPTEnrolmentAlreadyAssigned(request.userDetails)
         creds <- checkIfUserHasOtherAccounts(request.userDetails)
-      } yield (creds, usersWithPT)
+        validPtaAccounts<-  EitherT.right[TaxEnrolmentAssignmentErrors](silentAssignmentService.getValidPtaAccounts(creds))
+      } yield (creds, usersWithPT, validPtaAccounts)
 
-      testing.value.map {
-        case Right((creds, None)) if creds.length <= 1 =>
-          val validPtaAccountsFuture = silentAssignmentService.getValidPtaAccounts(credsWithNino)
-          val result: Future[Future[Result]] = for {
-            validPtaAccounts <- validPtaAccountsFuture
-          } yield {
-            if(validPtaAccounts.flatten.size == 1){
+      testing.value.flatMap {
+        case Right((creds, None, validPtaAccounts)) if creds.length <= 1 && validPtaAccounts.flatten.size == 1 =>
               silentEnrol()
-            } else {
-              Future.successful(Ok(landingPageView()))
-            }
-          }
-          result.flatten
-        case Right((creds, Some(usersWithPT))) if usersWithPT == request.userDetails.credId =>
-          Redirect(redirectUrl)
-        case Right((creds, Some(_))) =>  Ok(underConstructionView())
-        case Right((creds, None)) => Ok(landingPageView())
-        case Left(error) => logger.logEvent(logUnexpectedResponseFromLandingPage(error))
-          InternalServerError
-
+        case Right((_, Some(usersWithPT),_)) if usersWithPT == request.userDetails.credId =>
+          Future.successful(Redirect(redirectUrl))
+        case Right((_, Some(_),_)) =>   Future.successful(Ok(underConstructionView()))
+        case Right((_, None,_)) =>  Future.successful(Ok(landingPageView()))
+        case Left(error) => Future.successful(InternalServerError)
       }
-
   }
 
   private def checkUsersWithPTEnrolmentAlreadyAssigned(sessionUserDetails:UserDetailsFromSession)(implicit hc : HeaderCarrier): TEAFResult[Option[String]] = {
@@ -107,15 +85,13 @@ class LandingPageController @Inject()(
   }
 
   private def checkIfUserHasOtherAccounts(sessionUserDetails:UserDetailsFromSession)(implicit hc : HeaderCarrier)
-                                         : TEAFResult[List[String]]  = {
-
+                                         : TEAFResult[List[IVNinoStoreEntry]]  = {
       ivConnector.getCredentialsWithNino(sessionUserDetails.nino)
-        .map(optUsers => optUsers.map(users => users.credId))
 
   }
 
 
-  def silentEnrol()(implicit request: RequestWithUserDetails[AnyContent],
+  private def silentEnrol()(implicit request: RequestWithUserDetails[AnyContent],
                 hc: HeaderCarrier): Future[Result] = {
     silentAssignmentService.enrolUser().isRight map {
       case true => Redirect(appConfig.redirectPTAUrl)

@@ -39,17 +39,16 @@ class TestOnlyController @Inject()(mcc: MessagesControllerComponents,
     Future.successful(Ok("Successful"))
   }
 
-  def es0Call(enrolmentKey: String): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
+  def es0Call(enrolmentKey: String): Action[JsValue] =
+    Action.async(parse.tolerantJson) { implicit request =>
+      val jsonResp =
+        UsersAssignedEnrolment(List("6145202884164547"), List.empty)
 
-    val jsonResp = UsersAssignedEnrolment(List("6145202884164547"), List.empty)
-
-    enrolmentKey match {
-      case _ if enrolmentKey.contains("CP872173B") => Future.successful(Ok(Json.toJson(jsonResp)))
-      case _ => Future.successful(NoContent)
+      enrolmentKey match {
+        case _ if enrolmentKey.contains("CP872173B") =>
+          Future.successful(Ok(Json.toJson(jsonResp)))
+        case _ => Future.successful(NoContent)
+      }
     }
-  }
-
-
-
 
 }

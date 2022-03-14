@@ -33,6 +33,7 @@ import play.twirl.api.Html
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.SessionKeys
 import uk.gov.hmrc.http.cache.client.CacheMap
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.IVConnector
@@ -57,6 +58,7 @@ trait TestFixture
   lazy val injector: Injector = app.injector
   implicit val ec: ExecutionContext = injector.instanceOf[ExecutionContext]
   lazy val logger: EventLoggerService = new EventLoggerService()
+  lazy val servicesConfig = injector.instanceOf[ServicesConfig]
   implicit val appConfig: AppConfig = injector.instanceOf[AppConfig]
 
   lazy val messagesApi: MessagesApi = inject[MessagesApi]

@@ -17,179 +17,182 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.views
 
 import play.api.test.FakeRequest
-import uk.gov.hmrc.govukfrontend.views.viewmodels.summarylist.SummaryListRow
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.messages.EnrolCurrentUserMessages
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.EnrolCurrentUserIdForm
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{
-  EnrolCurrentUser,
-  PTEnrolmentOnAnotherAccount
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.messages.PTEnrolmentOtherAccountMesages
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
+  AccountDetails,
+  MFADetails
 }
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnotherAccount
 
 class PTEnrolmentOnAnotherAccountSpec extends TestFixture {
 
   lazy val view: PTEnrolmentOnAnotherAccount =
     inject[PTEnrolmentOnAnotherAccount]
 
+  lazy val appConfigForTest = new AppConfig(servicesConfig) {
+    override lazy val signOutUrl: String =
+      PTEnrolmentOtherAccountMesages.signoutUrl
+    override lazy val selfAssessmentUrl: String =
+      PTEnrolmentOtherAccountMesages.saUrl
+  }
+
   object Selectors {
     val heading = "govuk-heading-xl"
     val body = "govuk-body"
+    val summaryListRow = "govuk-summary-list__row"
+    val summaryListKey = "govuk-summary-list__key"
+    val summaryListValue = "govuk-summary-list__value"
+    val saHeading = "govuk-heading-m"
   }
 
-  val ptEnrolmentSummaryItemRows = Seq(SummaryListRow())
+  val mfaDetails = Seq(
+    MFADetails("Text message", "07390328923"),
+    MFADetails("Voice call", "0193453839"),
+    MFADetails("Authenticator App", "HRMC APP")
+  )
 
-  "PTEnrolmentOnAnotherAccount" when {
-    "the user has another account with self assessment" should {
-      val htmlWithSA =
-        view(form, fixedCurrentUserId, Some(fixedSAUserId))(
-          FakeRequest(),
-          testMessages
-        )
-      val documentWithSA = doc(htmlWithSA)
-      "have the expected title" in {
-        documentWithSA.title() shouldBe EnrolCurrentUserMessages.title
+  val elementsToMFADetails: Map[Int, MFADetails] = Map(
+    2 -> MFADetails("Text message", "07390328923"),
+    3 -> MFADetails("Voice call", "0193453839"),
+    4 -> MFADetails("Authenticator App", "HRMC APP")
+  )
+
+  val accountDetails = AccountDetails(
+    "********3214",
+    Some("email1@test.com"),
+    "Yesterday",
+    mfaDetails
+  )
+
+  val htmlWithSA =
+    view(accountDetails, true)(FakeRequest(), testMessages, appConfigForTest)
+
+  val documentWithSA = doc(htmlWithSA)
+
+  val htmlNoEmail =
+    view(accountDetails.copy(email = None), false)(
+      FakeRequest(),
+      testMessages,
+      appConfigForTest
+    )
+  val documentNoEmail = doc(htmlNoEmail)
+
+  val html =
+    view(accountDetails, false)(FakeRequest(), testMessages, appConfigForTest)
+  val document = doc(html)
+
+  "PTEnrolmentOnAnotherAccount" should {
+    "have the expected title" in {
+      documentWithSA.title() shouldBe PTEnrolmentOtherAccountMesages.title
+    }
+    "have the expected heading" in {
+      documentWithSA
+        .getElementsByClass(Selectors.heading)
+        .text shouldBe PTEnrolmentOtherAccountMesages.heading
+    }
+    "have a body" that {
+      val textElement = documentWithSA
+        .getElementsByClass(Selectors.body)
+        .get(0)
+      "has the expected text" in {
+        textElement.text shouldBe PTEnrolmentOtherAccountMesages.text1
       }
-      "have a back link" that {
-        val backLink =
-          documentWithSA.getElementsByClass(Selectors.backLink)
-        "has the text back" in {
-          backLink.text() shouldBe "Back"
-        }
-        "goes to the Landing page" in {
-          backLink.attr("href") shouldBe "?"
-        }
+      "contains a link to signin again" in {
+        textElement
+          .select("a")
+          .attr("href") shouldBe PTEnrolmentOtherAccountMesages.signoutUrl
       }
-      "have the expected heading" in {
-        documentWithSA
-          .getElementsByClass(Selectors.heading)
-          .text shouldBe EnrolCurrentUserMessages.title
+    }
+    "contain a summary list" that {
+      val summaryListRows = documentWithSA
+        .getElementsByClass(Selectors.summaryListRow)
+      "includes the userId" in {
+        summaryListRows
+          .get(0)
+          .getElementsByClass(Selectors.summaryListKey)
+          .text() shouldBe "User ID"
+        summaryListRows
+          .get(0)
+          .getElementsByClass(Selectors.summaryListValue)
+          .text() shouldBe accountDetails.userId
       }
-      "have radio buttons" that {
-        val radioButtons = documentWithSA.getElementsByClass(Selectors.radios)
-        "have the option to choose to continue with current userId" in {
-          val radioButton1 = radioButtons
-            .get(0)
-          radioButton1
-            .getElementsByClass(Selectors.radioLables)
-            .text() shouldBe EnrolCurrentUserMessages.radioCurrentUserId(
-            fixedCurrentUserId
-          )
-          radioButton1
-            .getElementsByClass(Selectors.radioInput)
-            .attr("value") shouldBe "yes"
-        }
-        "allow you to choose to continue with different userId" in {
-          val radioButton2 = radioButtons
+      "includes the email" when {
+        "the email is present in accountDetails" in {
+          summaryListRows
             .get(1)
-          radioButton2
-            .getElementsByClass(Selectors.radioLables)
-            .text() shouldBe EnrolCurrentUserMessages.radioOtherUserId
-          radioButton2
-            .getElementsByClass(Selectors.radioInput)
-            .attr("value") shouldBe "no"
+            .getElementsByClass(Selectors.summaryListKey)
+            .text() shouldBe "Email"
+          summaryListRows
+            .get(1)
+            .getElementsByClass(Selectors.summaryListValue)
+            .text() shouldBe accountDetails.email.get
         }
       }
-      "contain a warning message" in {
-        val warningElements =
-          documentWithSA.getElementsByClass(Selectors.warning)
-        warningElements.size() shouldBe 1
-        warningElements.text() shouldBe EnrolCurrentUserMessages.warning(
-          fixedSAUserId
-        )
+      "does not include the email" when {
+        "the email is not present in accountDetails" in {
+          documentNoEmail
+            .getElementsByClass(Selectors.summaryListKey)
+            .eachText() shouldNot contain("Email")
+        }
       }
-      "contain the correct button" in {
-        documentWithSA
-          .getElementsByClass(Selectors.button)
-          .text shouldBe EnrolCurrentUserMessages.button
+      elementsToMFADetails.foreach {
+        case (elementNumber, mfaDetails) =>
+          s"include the ${mfaDetails.factorName}" in {
+            summaryListRows
+              .get(elementNumber)
+              .getElementsByClass(Selectors.summaryListKey)
+              .text() shouldBe mfaDetails.factorName
+            summaryListRows
+              .get(elementNumber)
+              .getElementsByClass(Selectors.summaryListValue)
+              .text() shouldBe mfaDetails.factorValue
+          }
+      }
+    }
+    "contains a link for if userId not recognised" that {
+      val textElement = documentWithSA
+        .getElementsByClass(Selectors.body)
+        .get(1)
+      "has the correct text" in {
+        textElement.text() shouldBe PTEnrolmentOtherAccountMesages.notMyUserId
+      }
+      "has the link to fraud reporting" in {
+        textElement
+          .select("a")
+          .attr("href") shouldBe PTEnrolmentOtherAccountMesages.fraudReportingUrl
       }
     }
 
-    "the user does not have another account with self assessment and no form errors" should {
-      val htmlWithNoSA =
-        view(form, fixedCurrentUserId, None)(FakeRequest(), testMessages)
-      val documentWithNoSA = doc(htmlWithNoSA)
-      "have the expected title" in {
-        documentWithNoSA.title() shouldBe EnrolCurrentUserMessages.title
-      }
-      "have a back link" that {
-        val backLink =
-          documentWithNoSA.getElementsByClass(Selectors.backLink)
-        "has the text back" in {
-          backLink.text() shouldBe "Back"
+    "contain self-assessment information" when {
+      "currentAccountHasSA is true" that {
+        val textElement = documentWithSA
+          .getElementsByClass(Selectors.body)
+          .get(2)
+        "has the expected heading" in {
+          documentWithSA
+            .getElementsByClass(Selectors.saHeading)
+            .text() shouldBe PTEnrolmentOtherAccountMesages.saHeading
         }
-        "goes to the Landing page" in {
-          backLink.attr("href") shouldBe "?"
+        "has the expected text" in {
+          textElement.text() shouldBe PTEnrolmentOtherAccountMesages.saText
         }
-      }
-      "have the expected heading" in {
-        documentWithNoSA
-          .getElementsByClass(Selectors.heading)
-          .text shouldBe EnrolCurrentUserMessages.title
-      }
-      "have radio buttons" that {
-        val radioButtons = documentWithNoSA.getElementsByClass(Selectors.radios)
-        "have the option to choose to continue with current userId" in {
-          val radioButton1 = radioButtons
-            .get(0)
-          radioButton1
-            .getElementsByClass(Selectors.radioLables)
-            .text() shouldBe EnrolCurrentUserMessages.radioCurrentUserId(
-            fixedCurrentUserId
-          )
-          radioButton1
-            .getElementsByClass(Selectors.radioInput)
-            .attr("value") shouldBe "yes"
-        }
-        "allow you to choose to continue with different userId" in {
-          val radioButton2 = radioButtons
-            .get(1)
-          radioButton2
-            .getElementsByClass(Selectors.radioLables)
-            .text() shouldBe EnrolCurrentUserMessages.radioOtherUserId
-          radioButton2
-            .getElementsByClass(Selectors.radioInput)
-            .attr("value") shouldBe "no"
-        }
-      }
-      "not contain a warning message" in {
-        val warningElements =
-          documentWithNoSA.getElementsByClass(Selectors.warning)
-        warningElements.size() shouldBe 0
-      }
-
-      "contain the correct button" in {
-        documentWithNoSA
-          .getElementsByClass(Selectors.button)
-          .text shouldBe EnrolCurrentUserMessages.button
-      }
-    }
-
-    "there are form errors" should {
-      val formWithErrors = EnrolCurrentUserIdForm.enrolCurrentUserIdForm.bind(
-        Map("enrolCurrentUserId" -> "")
-      )
-      val htmlWithNoSA =
-        view(formWithErrors, fixedCurrentUserId, None)(
-          FakeRequest(),
-          testMessages
-        )
-      val documentWithNoSA = doc(htmlWithNoSA)
-
-      "have an error summary" that {
-        "has title" in {
-          documentWithNoSA
-            .getElementsByClass(Selectors.errorSummaryTitle)
-            .text() shouldBe EnrolCurrentUserMessages.errorTitle
-        }
-        "contains a message that links to field with error" in {
-          val errorSummary = documentWithNoSA
-            .getElementsByClass(Selectors.errorSummaryList)
-            .first()
-          errorSummary
+        "has a link to self-assessment" in {
+          textElement
             .select("a")
-            .attr("href") shouldBe "#use-current-id-error"
-          errorSummary.text() shouldBe EnrolCurrentUserMessages.errorMessage
+            .attr("href") shouldBe PTEnrolmentOtherAccountMesages.saUrl
         }
+      }
+    }
+    "not contain self-assessment information" when {
+      "currentAccountHasSA is true" in {
+        document
+          .getElementsByClass(Selectors.saHeading)
+          .size() shouldBe 0
+        document
+          .getElementsByClass(Selectors.body)
+          .size() shouldBe 2
       }
     }
   }

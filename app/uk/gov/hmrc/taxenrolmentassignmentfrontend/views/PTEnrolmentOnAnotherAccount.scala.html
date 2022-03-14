@@ -16,7 +16,7 @@
 
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 @import uk.gov.hmrc.govukfrontend.views.html.components._
-@import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.Layout
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.summarylist.SummaryListRow
 
@@ -24,7 +24,18 @@
 layout: Layout,
 govukSummaryList : GovukSummaryList)
 
-@(ptSummaryListRows: Seq[SummaryListRow], currentAccountHasSA: Boolean)(implicit request: Request[AnyRef], messages: Messages, appConfig: AppConfig)
+@(ptAccountDetails: AccountDetails, currentAccountHasSA: Boolean)(implicit request: Request[AnyRef], messages: Messages, appConfig: AppConfig)
+
+@createSummaryListRow(key: String, value: String) =  {
+    <div class="govuk-summary-list__row">
+      <dt class="govuk-summary-list__key">
+        @key
+      </dt>
+      <dd class="govuk-summary-list__value">
+        @value
+      </dd>
+    </div>
+}
 
 @layout(
     pageTitle = Some(messages("ptEnrolmentOnOtherAccount.title")), None) {
@@ -34,9 +45,15 @@ govukSummaryList : GovukSummaryList)
         <a href="@appConfig.signOutUrl">@messages("ptEnrolmentOnOtherAccount.signinAgain")</a>
       @messages("ptEnrolmentOnOtherAccount.text2")
     </p>
-    @govukSummaryList(SummaryList(
-      rows = ptSummaryListRows
-    ))
+    <dl class="govuk-summary-list">
+        @createSummaryListRow(messages("ptEnrolmentOnOtherAccount.userId"), ptAccountDetails.userId)
+        @if(ptAccountDetails.email.isDefined) {
+          @createSummaryListRow(messages("ptEnrolmentOnOtherAccount.email"), ptAccountDetails.email.get)
+        }
+        @for(mfaDetail <- ptAccountDetails.mfaDetails) {
+        @createSummaryListRow(mfaDetail.factorName, mfaDetail.factorValue)
+        }
+    </dl>
     <p class="govuk-body">
         <a href="@routes.FraudReportingController.selectIdsToReport">@messages("ptEnrolmentOnOtherAccount.notMyUserId")</a>
     </p>

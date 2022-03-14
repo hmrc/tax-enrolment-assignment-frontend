@@ -16,37 +16,34 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.views
 
-import play.api.i18n.Messages
 import play.api.test.FakeRequest
 import play.twirl.api.HtmlFormat
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{CurrentIdConfirmation}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.messages.CurrentIdConfirmationPageMessages
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.CurrentIdConfirmation
 
 class CurrentIdConfirmationSpec extends TestFixture {
 
   val currentIdConfirmation: CurrentIdConfirmation = app.injector.instanceOf[CurrentIdConfirmation]
-  private val testNino = "testNino"
+  private val currentId = "currentId"
   private val saCred = "SaCred"
-  val result: HtmlFormat.Appendable = currentIdConfirmation(testNino,Some(saCred))(FakeRequest(), testMessages)
+  val result: HtmlFormat.Appendable = currentIdConfirmation(currentId,Some(saCred))(FakeRequest(), testMessages)
 
   "The Current ID Confirmation Page" should {
     "contain the correct title" in {
-      doc(result).title shouldBe Messages("currentIdConfirmation.title")
+      doc(result).title shouldBe CurrentIdConfirmationPageMessages.title
     }
 
     "contain the correct header" in {
-      doc(result).getElementsByClass("govuk-heading-xl").text shouldBe Messages("currentIdConfirmation.heading")
+      doc(result).getElementsByClass("govuk-heading-xl").text shouldBe CurrentIdConfirmationPageMessages.heading
     }
 
     "contain the correct paragraph" in {
-      doc(result).getElementsByClass("govuk-body").text shouldBe
-        Messages(
-          "You are currently signed in with the Government Gateway user ID " + testNino + ". From now on, you can only access your personal tax information with this user ID. To access Self Assessment you can still use the ID " + saCred + ", however this user ID will no longer access your personal tax account."
-        )
+      doc(result).getElementsByClass("govuk-body").text shouldBe CurrentIdConfirmationPageMessages.paragraph
     }
 
     "contain the correct button" in {
-      doc(result).getElementsByClass("govuk-button").text shouldBe Messages("currentIdConfirmation.continue")
+      doc(result).getElementsByClass("govuk-button").text shouldBe CurrentIdConfirmationPageMessages.button
     }
   }
 }

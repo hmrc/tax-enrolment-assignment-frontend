@@ -102,6 +102,14 @@ object WiremockHelper extends Eventually with IntegrationPatience {
         .willReturn(aResponse().withStatus(status).withBody(responseBody))
     )
 
+  def stubPut(url: String,
+              status: Integer,
+              responseBody: String): StubMapping =
+    stubFor(
+      put(urlMatching(url))
+        .willReturn(aResponse().withStatus(status).withBody(responseBody))
+    )
+
   def stubGetWithQueryParam(url: String,
                             queryParamKey: String,
                             queryParamValue: String,

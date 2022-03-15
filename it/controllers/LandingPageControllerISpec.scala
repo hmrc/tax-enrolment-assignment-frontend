@@ -78,9 +78,15 @@ class LandingPageControllerISpec extends IntegrationSpecBase with Status {
           Status.OK,
           ivResponseSingleCredsJsonString
         )
-        stubPost(
-          s"/tax-enrolments/groups/$GROUP_ID/enrolments/HMRC-PT~NINO~$NINO",
-          CREATED,
+//        stubPost(
+//          s"/tax-enrolments/groups/$GROUP_ID/enrolments/HMRC-PT~NINO~$NINO",
+//          CREATED,
+//          ""
+//        )
+
+        stubPut(
+          s"/tax-enrolments/service/HMRC-PT/enrolment",
+          NO_CONTENT,
           ""
         )
 

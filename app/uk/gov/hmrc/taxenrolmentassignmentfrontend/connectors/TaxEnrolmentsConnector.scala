@@ -26,8 +26,8 @@ import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromTaxEnrolments
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logUnexpectedResponseFromTaxEnrolments
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.PersonalTaxEnrolment
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{logUnexpectedResponseFromTaxEnrolments, logUnexpectedResponseFromTaxEnrolmentsKnownFacts}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AssignHMRCPTRequest, IdentifiersOrVerifiers, PersonalTaxEnrolment}
 
 import scala.concurrent.ExecutionContext
 
@@ -57,6 +57,48 @@ class TaxEnrolmentsConnector @Inject()(httpClient: HttpClient,
                 .logEvent(logUnexpectedResponseFromTaxEnrolments(nino, status))
               Left(UnexpectedResponseFromTaxEnrolments)
         }
+      )
+  }
+
+//  {
+//    "identifiers": [ { "key": "UTR", "value": "AA000003D" } ],
+//    "verifiers": [
+//    {
+//      "key": "PostCode",
+//      "value": "N15 2FY"
+//    },
+//    {
+//      "key": "IsAbroad",
+//      "value": "N"
+//    }
+//    ]
+//  }
+
+
+
+  def assignPTEnrolmentWithKnownFacts(nino: String)(
+    implicit ec: ExecutionContext,
+    hc: HeaderCarrier
+  ): TEAFResult[Unit] = EitherT {
+
+    val request = AssignHMRCPTRequest(
+      identifier = IdentifiersOrVerifiers("NINO", nino),
+      verifiers = Seq(IdentifiersOrVerifiers("NINO1", nino)
+      )
+    )
+    val url = s"${appConfig.TAX_ENROLMENTS_BASE_URL}/service/HMRC-PT/enrolment"
+
+    httpClient
+      .PUT[AssignHMRCPTRequest, HttpResponse](url, request)
+      .map(
+        httpResponse =>
+          httpResponse.status match {
+            case NO_CONTENT => Right(())
+            case status =>
+              logger
+                .logEvent(logUnexpectedResponseFromTaxEnrolmentsKnownFacts(nino, status, httpResponse.body))
+              Left(UnexpectedResponseFromTaxEnrolments)
+          }
       )
   }
 

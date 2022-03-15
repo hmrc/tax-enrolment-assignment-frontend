@@ -19,11 +19,11 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 import play.api.libs.json.{Format, Json}
 
 case class KnownFactQueryForNINO(service: String,
-                                 knownFacts: List[IndentifiersOrVerifiers]) {
+                                 knownFacts: List[IdentifiersOrVerifiers]) {
   def this(nino: String) =
     this(
       service = "IR-SA",
-      knownFacts = List(IndentifiersOrVerifiers("NINO", nino))
+      knownFacts = List(IdentifiersOrVerifiers("NINO", nino))
     )
 }
 

@@ -1,0 +1,8 @@
+package uk.gov.hmrc.taxenrolmentassignmentfrontend
+
+sealed trait AccountTypes
+
+object SINGLE_ACCOUNT extends AccountTypes
+object PT_ASSIGNED_TO_CURRENT_USER extends AccountTypes
+object PT_ASSIGNED_TO_OTHER_USER extends AccountTypes
+object MULTIPLE_ACCOUNTS extends AccountTypes

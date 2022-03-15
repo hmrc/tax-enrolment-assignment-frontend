@@ -16,34 +16,60 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.controllers
 
-import play.api.http.Status.{SEE_OTHER, OK, INTERNAL_SERVER_ERROR}
+import cats.data.EitherT
+import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK, SEE_OTHER}
+import play.api.mvc.AnyContent
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.Enrolments
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{LandingPageController, testOnly}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromIV
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{TaxEnrolmentAssignmentErrors, UnexpectedResponseFromIV, UnexpectedResponseFromTaxEnrolments}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IVNinoStoreEntry
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.LandingPage
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class LandingPageControllerSpec extends TestFixture {
 
   val testTeaSessionCache = new TestTeaSessionCache
-  val view: LandingPage = app.injector.instanceOf[LandingPage]
-  val controller =
-    new LandingPageController(mockAuthAction, mockIVConnector, mcc, testTeaSessionCache, view)
+  val landingView: LandingPage = app.injector.instanceOf[LandingPage]
+  val errorView: ErrorTemplate = app.injector.instanceOf[ErrorTemplate]
+  val mockSilentAssignmentService: SilentAssignmentService = mock[SilentAssignmentService]
+
+  val controller = new LandingPageController(
+      mockAuthAction,
+      testAppConfig,
+      mockIVConnector,
+    mockEacdConnector,
+      mockSilentAssignmentService,
+      mcc,
+      testTeaSessionCache,
+      landingView,
+    UCView,
+      errorView
+    )
 
   "showLandingPage" when {
-    "a single credential exists for a given nino" should {
-      "redirect to the return url" in {
+    "a single credential exists for a given nino with no PT enrolment" should {
+      "silently assign the HMRC-PT Enrolment and redirect to PTA" in {
+        (mockEacdConnector
+          .getUsersWithPTEnrolment(_: String)(
+            _: ExecutionContext,
+            _: HeaderCarrier
+          ))
+          .expects(NINO, *, *)
+          .returning(createInboundResult(Some(UsersAssignedEnrolmentEmpty)))
         (mockAuthConnector
           .authorise(
             _: Predicate,
-            _: Retrieval[(Option[String] ~ Option[Credentials]) ~ Enrolments]
+            _: Retrieval[((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[String]]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
@@ -55,6 +81,113 @@ class LandingPageControllerSpec extends TestFixture {
           .expects(NINO, *, *)
           .returning(createInboundResult(List(ivNinoStoreEntry4)))
 
+          (mockSilentAssignmentService
+            .getValidPtaAccounts(
+              _: Seq[IVNinoStoreEntry]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            ))
+            .expects(*, *, *)
+            .returning((Future.successful(Seq(Some(ivNinoStoreEntry4)))))
+
+        (mockSilentAssignmentService
+          .enrolUser()(
+            _: RequestWithUserDetails[AnyContent],
+            _: HeaderCarrier,
+            _: ExecutionContext
+          ))
+          .expects(*, *, *)
+          .returning(EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(Unit)))
+
+        val result = controller
+          .showLandingPage(testOnly.routes.TestOnlyController.successfulCall.url)
+          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result) shouldBe Some("http://localhost:9232/personal-account")
+      }
+
+      "return an error page if there was an error assigning the enrolment" in {
+        (mockEacdConnector
+          .getUsersWithPTEnrolment(_: String)(
+            _: ExecutionContext,
+            _: HeaderCarrier
+          ))
+          .expects(NINO, *, *)
+          .returning(createInboundResult(Some(UsersAssignedEnrolmentEmpty)))
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[String]]
+          )(_: HeaderCarrier, _: ExecutionContext))
+          .expects(predicates, retrievals, *, *)
+          .returning(Future.successful(retrievalResponse()))
+        (mockIVConnector
+          .getCredentialsWithNino(_: String)(
+            _: ExecutionContext,
+            _: HeaderCarrier
+          ))
+          .expects(NINO, *, *)
+          .returning(createInboundResult(List(ivNinoStoreEntry4)))
+
+        (mockSilentAssignmentService
+          .getValidPtaAccounts(
+            _: Seq[IVNinoStoreEntry]
+          )(
+            _: HeaderCarrier,
+            _: ExecutionContext
+          ))
+          .expects(*, *, *)
+          .returning((Future.successful(Seq(Some(ivNinoStoreEntry4)))))
+
+        (mockSilentAssignmentService
+          .enrolUser()(
+            _: RequestWithUserDetails[AnyContent],
+            _: HeaderCarrier,
+            _: ExecutionContext
+          ))
+          .expects(*, *, *)
+          .returning(createInboundResultError(UnexpectedResponseFromTaxEnrolments))
+
+        val result = controller
+          .showLandingPage(testOnly.routes.TestOnlyController.successfulCall.url)
+          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+
+        status(result) shouldBe OK
+        contentAsString(result) should include("enrolmentError.title")
+      }
+    }
+
+    "a single credential exists for a given nino that is already enrolled for PT" should {
+      "redirect to the return url" in {
+
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[String]]
+          )(_: HeaderCarrier, _: ExecutionContext))
+          .expects(predicates, retrievals, *, *)
+          .returning(
+            Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly))
+          )
+        (mockIVConnector
+          .getCredentialsWithNino(_: String)(
+            _: ExecutionContext,
+            _: HeaderCarrier
+          ))
+          .expects(NINO, *, *)
+          .returning(createInboundResult(List(ivNinoStoreEntry3)))
+        (mockSilentAssignmentService
+          .getValidPtaAccounts(
+            _: Seq[IVNinoStoreEntry]
+          )(
+            _: HeaderCarrier,
+            _: ExecutionContext
+          ))
+          .expects(*, *, *)
+          .returning((Future.successful(Seq(Some(ivNinoStoreEntry3)))))
+
         val result = controller
           .showLandingPage(testOnly.routes.TestOnlyController.successfulCall.url)
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -66,12 +199,20 @@ class LandingPageControllerSpec extends TestFixture {
       }
     }
 
-    "multiple credentials exists for a given nino" should {
-      "present the landing page" in {
+
+    "multiple credentials exists for a given nino and PT enrolment exists on another account" should {
+      "present the underConstruction page" in {
+        (mockEacdConnector
+          .getUsersWithPTEnrolment(_: String)(
+            _: ExecutionContext,
+            _: HeaderCarrier
+          ))
+          .expects(NINO, *, *)
+          .returning(createInboundResult(Some(UsersAssignedEnrolment1)))
         (mockAuthConnector
           .authorise(
             _: Predicate,
-            _: Retrieval[(Option[String] ~ Option[Credentials]) ~ Enrolments]
+            _: Retrieval[((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[String]]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
@@ -83,44 +224,85 @@ class LandingPageControllerSpec extends TestFixture {
           .expects(NINO, *, *)
           .returning(createInboundResult(multiIVCreds))
 
+        (mockSilentAssignmentService
+          .getValidPtaAccounts(
+            _: Seq[IVNinoStoreEntry]
+          )(
+            _: HeaderCarrier,
+            _: ExecutionContext
+          ))
+          .expects(*, *, *)
+          .returning((Future.successful(Seq(Some(ivNinoStoreEntry4)))))
+
+
         val result = controller
           .showLandingPage(testOnly.routes.TestOnlyController.successfulCall.url)
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe OK
-        contentAsString(result) should include("landingPage.title")
+        contentAsString(result) shouldBe UCView()(fakeRequest, stubMessages()).toString
       }
     }
 
-    "a single credential exists for a given nino that is already enrolled for PT" should {
-      "redirect to the return url" in {
+
+    "multiple credential exists for a given nino and no PT enrolment exists" should {
+      "present the landing page" in {
+        (mockEacdConnector
+          .getUsersWithPTEnrolment(_: String)(
+            _: ExecutionContext,
+            _: HeaderCarrier
+          ))
+          .expects(NINO, *, *)
+          .returning(createInboundResult(Some(UsersAssignedEnrolmentEmpty)))
         (mockAuthConnector
           .authorise(
             _: Predicate,
-            _: Retrieval[(Option[String] ~ Option[Credentials]) ~ Enrolments]
+            _: Retrieval[((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[String]]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(
-            Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly))
+            Future.successful(retrievalResponse())
           )
+        (mockIVConnector
+          .getCredentialsWithNino(_: String)(
+            _: ExecutionContext,
+            _: HeaderCarrier
+          ))
+          .expects(NINO, *, *)
+          .returning(createInboundResult(multiIVCreds))
+        (mockSilentAssignmentService
+          .getValidPtaAccounts(
+            _: Seq[IVNinoStoreEntry]
+          )(
+            _: HeaderCarrier,
+            _: ExecutionContext
+          ))
+          .expects(*, *, *)
+          .returning((Future.successful(Seq(Some(ivNinoStoreEntry4)))))
 
         val result = controller
           .showLandingPage(testOnly.routes.TestOnlyController.successfulCall.url)
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(result) shouldBe SEE_OTHER
-        redirectLocation(result) shouldBe Some(
-          "/tax-enrolment-assignment-frontend/test-only/successful"
-        )
+        status(result) shouldBe OK
+        contentAsString(result) shouldBe landingPageView()(fakeRequest, stubMessages()).toString
+
       }
     }
 
     "a no credentials exists in IV for a given nino" should {
       "return InternalServerError" in {
+        (mockEacdConnector
+          .getUsersWithPTEnrolment(_: String)(
+            _: ExecutionContext,
+            _: HeaderCarrier
+          ))
+          .expects(NINO, *, *)
+          .returning(createInboundResult(Some(UsersAssignedEnrolment1)))
         (mockAuthConnector
           .authorise(
             _: Predicate,
-            _: Retrieval[(Option[String] ~ Option[Credentials]) ~ Enrolments]
+            _: Retrieval[((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[String]]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))

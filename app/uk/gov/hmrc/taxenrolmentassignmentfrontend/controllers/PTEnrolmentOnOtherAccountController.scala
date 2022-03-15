@@ -16,29 +16,39 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
-import javax.inject.{Inject, Singleton}
-import play.api.Logging
+import com.google.inject.{Inject, Singleton}
+import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.IVConnector
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromIV
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.EnrolCurrentUserIdForm
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{
+  EnrolCurrentUser,
+  PTEnrolmentOnAnotherAccount
+}
 
 import scala.concurrent.{ExecutionContext, Future}
+
 @Singleton
-class AccountCheckController @Inject()(
+class PTEnrolmentOnOtherAccountController @Inject()(
   authAction: AuthAction,
-  ivConnector: IVConnector,
   mcc: MessagesControllerComponents,
-  sessionCache: TEASessionCache
-)(implicit ec: ExecutionContext)
+  ptEnrolmentOnAnotherAccountView: PTEnrolmentOnAnotherAccount
+)(implicit ec: ExecutionContext, appConfig: AppConfig)
     extends FrontendController(mcc)
-    with Logging {
+    with I18nSupport {
 
-  def accountCheck(): Action[AnyContent] = authAction.async {
-    implicit request =>
-      Future.successful(Ok("Successful"))
+  def view(): Action[AnyContent] = authAction.async { implicit request =>
+    routes.FraudReportingController.selectIdsToReport
+    Future.successful(
+      Ok(
+        ptEnrolmentOnAnotherAccountView(
+          AccountDetails("ddddd", Some("dddd"), "Today", Seq.empty),
+          request.userDetails.hasSAEnrolment
+        )
+      )
+    )
   }
-
 }

@@ -16,21 +16,15 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.{Format, Json, Reads, Writes}
 
-case class PersonalTaxEnrolment(userId: String,
-                                friendlyName: String,
-                                `type`: String,
-                                verifiers: List[IdentifiersOrVerifiers]) {
-  def this(credId: String, nino: String) = this(
-    userId = credId,
-    friendlyName = "My Personal Tax Enrolment",
-    `type` = "principal",
-    verifiers = List(IdentifiersOrVerifiers("NINO1", nino))
-  )
-}
+case class IVNinoStoreEntry(credId: String, confidenceLevel: Option[Int])
 
-object PersonalTaxEnrolment {
-  implicit val format: Format[PersonalTaxEnrolment] =
-    Json.format[PersonalTaxEnrolment]
+object IVNinoStoreEntry {
+  implicit val format: Format[IVNinoStoreEntry] = Json.format[IVNinoStoreEntry]
+
+  implicit val formatList: Format[Seq[IVNinoStoreEntry]] = {
+    Format(Reads.seq[IVNinoStoreEntry], Writes.seq[IVNinoStoreEntry])
+  }
+
 }

@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.views
 
-import org.jsoup.Jsoup
-import play.api.i18n.Messages
 import play.api.test.FakeRequest
 import play.twirl.api.HtmlFormat
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
@@ -26,7 +24,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.LandingPage
 
 class LandingPageSpec extends TestFixture {
 
-  val landingPageView: LandingPage = app.injector.instanceOf[LandingPage]
+  val landingPage: LandingPage = app.injector.instanceOf[LandingPage]
   val result: HtmlFormat.Appendable = landingPageView()(FakeRequest(), testMessages)
 
   "The Landing Page" should {

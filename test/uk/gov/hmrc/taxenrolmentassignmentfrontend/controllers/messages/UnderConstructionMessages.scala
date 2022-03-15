@@ -14,17 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.messages
 
-import play.api.libs.json.{Format, Json, Reads, Writes}
+object UnderConstructionMessages {
 
-case class IVNinoStoreEntry(credId: String, confidenceLevel: Option[Int])
 
-object IVNinoStoreEntry {
-  implicit val format: Format[IVNinoStoreEntry] = Json.format[IVNinoStoreEntry]
+  val title = "Tax Enrolment Assignment Frontend - Enrolment Present"
+  val heading = "This user has no PT enrolment"
+  val p = "The current user does not have an assigned PT enrolment"
 
-  implicit val formatList: Format[List[IVNinoStoreEntry]] = {
-    Format(Reads.list[IVNinoStoreEntry], Writes.list[IVNinoStoreEntry])
-  }
 
 }

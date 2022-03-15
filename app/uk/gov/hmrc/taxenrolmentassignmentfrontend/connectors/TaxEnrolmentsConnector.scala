@@ -60,29 +60,13 @@ class TaxEnrolmentsConnector @Inject()(httpClient: HttpClient,
       )
   }
 
-//  {
-//    "identifiers": [ { "key": "UTR", "value": "AA000003D" } ],
-//    "verifiers": [
-//    {
-//      "key": "PostCode",
-//      "value": "N15 2FY"
-//    },
-//    {
-//      "key": "IsAbroad",
-//      "value": "N"
-//    }
-//    ]
-//  }
-
-
-
   def assignPTEnrolmentWithKnownFacts(nino: String)(
     implicit ec: ExecutionContext,
     hc: HeaderCarrier
   ): TEAFResult[Unit] = EitherT {
 
     val request = AssignHMRCPTRequest(
-      identifier = IdentifiersOrVerifiers("NINO", nino),
+      identifiers = IdentifiersOrVerifiers("NINO", nino),
       verifiers = Seq(IdentifiersOrVerifiers("NINO1", nino)
       )
     )

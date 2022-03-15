@@ -19,7 +19,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 import play.api.libs.json.{Json, OFormat}
 
 case class AssignHMRCPTRequest(
-                                identifier: IdentifiersOrVerifiers,
+                                identifiers: IdentifiersOrVerifiers,
                                 verifiers: Seq[IdentifiersOrVerifiers]
                               )
 

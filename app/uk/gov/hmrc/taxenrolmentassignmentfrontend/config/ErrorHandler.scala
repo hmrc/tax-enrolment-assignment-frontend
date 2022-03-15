@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.config
 
-import javax.inject.{Inject, Singleton}
-
 import play.api.i18n.MessagesApi
 import play.api.mvc.Request
 import play.twirl.api.Html
 import uk.gov.hmrc.play.bootstrap.frontend.http.FrontendErrorHandler
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.ErrorTemplate
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
+
+import javax.inject.{Inject, Singleton}
 
 @Singleton
 class ErrorHandler @Inject()(errorTemplate: ErrorTemplate,

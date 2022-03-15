@@ -17,6 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.logging
 
 import play.api.libs.json.{Format, Json}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 
 object LoggingEvent {
 
@@ -81,6 +82,17 @@ object LoggingEvent {
         "[TaxEnrolmentsConnector][assignPTEnrolment]",
         errorDetails = Some(
           s"Tax Enrolments return status of $statusReturned when allocating PT enrolment for users with $nino NINO"
+        )
+      )
+    )
+
+
+  def logUnexpectedResponseFromLandingPage(error: TaxEnrolmentAssignmentErrors): LoggingEvent =
+    Error(
+      Event(
+        "[LandingPageController][showLandingPage]",
+        errorDetails = Some(
+          s"Landing Page Controller returned an error: $error"
         )
       )
     )

@@ -24,7 +24,7 @@ import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{allEnrolments, credentials,
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.UserDetailsFromSession
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{IVNinoStoreEntry, IdentifiersOrVerifiers, UserEnrolment}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{IVNinoStoreEntry, IdentifiersOrVerifiers, UserEnrolment, UsersAssignedEnrolment}
 
 object TestData {
 
@@ -99,6 +99,9 @@ object TestData {
   val ivNinoStoreEntry2 = IVNinoStoreEntry("8316291481001919", Some(200))
   val ivNinoStoreEntry3 = IVNinoStoreEntry("0493831301037584", Some(200))
   val ivNinoStoreEntry4 = IVNinoStoreEntry("2884521810163541", Some(200))
+
+  val UsersAssignedEnrolment1 = UsersAssignedEnrolment(List("6102202884164541", "credId123"), List.empty)
+  val UsersAssignedEnrolmentEmpty = UsersAssignedEnrolment(List.empty, List.empty)
 
   val multiIVCreds = List(
     ivNinoStoreEntry1,

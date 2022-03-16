@@ -42,7 +42,7 @@ govukSummaryList : GovukSummaryList)
 
     <h2 class="govuk-heading-xl">@messages("ptEnrolmentOnOtherAccount.heading")</h2>
     <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.text1")
-        <a href="@appConfig.signOutUrl">@messages("ptEnrolmentOnOtherAccount.signinAgain")</a>
+        <a href="@routes.SignOutController.signOut">@messages("ptEnrolmentOnOtherAccount.signinAgain")</a>
       @messages("ptEnrolmentOnOtherAccount.text2")
     </p>
     <dl class="govuk-summary-list">

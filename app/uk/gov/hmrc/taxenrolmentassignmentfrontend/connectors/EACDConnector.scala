@@ -26,8 +26,17 @@ import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromEACD
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{logES2ErrorFromEACD, logUnexpectedResponseFromEACD, logUnexpectedResponseFromEACDQueryKnownFacts}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{KnownFactQueryForNINO, KnownFactResponseForNINO, UserEnrolmentsListResponse, UsersAssignedEnrolment}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{
+  logES2ErrorFromEACD,
+  logUnexpectedResponseFromEACD,
+  logUnexpectedResponseFromEACDQueryKnownFacts
+}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
+  KnownFactQueryForNINO,
+  KnownFactResponseForNINO,
+  UserEnrolmentsListResponse,
+  UsersAssignedEnrolment
+}
 
 import scala.concurrent.ExecutionContext
 
@@ -67,7 +76,7 @@ class EACDConnector @Inject()(httpClient: HttpClient,
   def getUsersWithPTEnrolment(nino: String)(
     implicit ec: ExecutionContext,
     hc: HeaderCarrier
-  ): TEAFResult[Option[UsersAssignedEnrolment]] = {
+  ): TEAFResult[UsersAssignedEnrolment] = {
     val enrolmentKey = s"HMRC-PT~NINO~$nino"
     getUsersWithAssignedEnrolment(enrolmentKey)
   }
@@ -75,7 +84,7 @@ class EACDConnector @Inject()(httpClient: HttpClient,
   def getUsersWithAssignedEnrolment(enrolmentKey: String)(
     implicit ec: ExecutionContext,
     hc: HeaderCarrier
-  ): TEAFResult[Option[UsersAssignedEnrolment]] = EitherT {
+  ): TEAFResult[UsersAssignedEnrolment] = EitherT {
     val url =
       s"${appConfig.EACD_BASE_URL}/enrolment-store/enrolments/$enrolmentKey/users"
     httpClient
@@ -83,8 +92,8 @@ class EACDConnector @Inject()(httpClient: HttpClient,
       .map(
         httpResponse =>
           httpResponse.status match {
-            case OK         => Right(Some(httpResponse.json.as[UsersAssignedEnrolment]))
-            case NO_CONTENT => Right(None)
+            case OK         => Right(httpResponse.json.as[UsersAssignedEnrolment])
+            case NO_CONTENT => Right(UsersAssignedEnrolment(None))
             case status =>
               logger.logEvent(
                 logUnexpectedResponseFromEACD(
@@ -124,28 +133,27 @@ class EACDConnector @Inject()(httpClient: HttpClient,
       )
   }
 
-  def queryEnrolmentsAssignedToUser(userId: String)
-                                   (implicit hc: HeaderCarrier,
-                                    ec: ExecutionContext): TEAFResult[Option[UserEnrolmentsListResponse]] = EitherT {
-    val url = s"${appConfig.EACD_BASE_URL}/enrolment-store/users/$userId/enrolments?type=principal"
+  def queryEnrolmentsAssignedToUser(userId: String)(
+    implicit hc: HeaderCarrier,
+    ec: ExecutionContext
+  ): TEAFResult[Option[UserEnrolmentsListResponse]] = EitherT {
+    val url =
+      s"${appConfig.EACD_BASE_URL}/enrolment-store/users/$userId/enrolments?type=principal"
 
     httpClient
       .GET[HttpResponse](url)
       .map(
         httpResponse =>
           httpResponse.status match {
-            case OK         => Right(Some(httpResponse.json.as[UserEnrolmentsListResponse]))
+            case OK =>
+              Right(Some(httpResponse.json.as[UserEnrolmentsListResponse]))
             case NO_CONTENT => Right(None)
             case status =>
               logger.logEvent(
-                logES2ErrorFromEACD(
-                  userId,
-                  status,
-                  httpResponse.body
-                )
+                logES2ErrorFromEACD(userId, status, httpResponse.body)
               )
               Left(UnexpectedResponseFromEACD)
-          }
+        }
       )
   }
 }

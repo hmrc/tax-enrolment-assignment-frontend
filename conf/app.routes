@@ -1,9 +1,10 @@
 # microservice specific routes
 
 ->         /hmrc-frontend           hmrcfrontend.Routes
-GET        /enrol-pt/introduction   uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.LandingPageController.showLandingPage(redirectUrl: String)
+GET        /no-pt-enrolment   uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.AccountCheckController.accountCheck(redirectUrl: String)
+GET        /enrol-pt/introduction   uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.LandingPageController.view
 GET        /enrol-pt/enrol-current-user-id  uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.EnrolCurrentUserController.view
 GET        /report-IDs/select-IDs         uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.FraudReportingController.selectIdsToReport
 GET        /logout                  uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignOutController.signOut()
-
+GET        /pt-enrolment-other-account   uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.PTEnrolmentOnOtherAccountController.view
 GET        /assets/*file            controllers.Assets.versioned(path = "/public", file: Asset)

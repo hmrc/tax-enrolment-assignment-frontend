@@ -16,12 +16,20 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.{Format, JsObject, JsValue, Json, Reads, Writes}
 
-case class UsersAssignedEnrolment(principalUserIds: List[String],
-                                  delegatedUserIds: List[String])
+case class UsersAssignedEnrolment(enrolledCredential: Option[String])
 
 object UsersAssignedEnrolment {
-  implicit val format: Format[UsersAssignedEnrolment] =
-    Json.format[UsersAssignedEnrolment]
+
+  val reads: Reads[UsersAssignedEnrolment] = (json: JsValue) => {
+    for {
+      jsObject <- json.validate[JsObject]
+      principleUserIds <- (jsObject \ "principalUserIds").validate[List[String]]
+    } yield UsersAssignedEnrolment(principleUserIds.headOption)
+  }
+  val writes: Writes[UsersAssignedEnrolment] =
+    Json.writes[UsersAssignedEnrolment]
+
+  implicit val format: Format[UsersAssignedEnrolment] = Format(reads, writes)
 }

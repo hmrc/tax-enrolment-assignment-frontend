@@ -20,10 +20,13 @@ import com.google.inject.{Inject, Singleton}
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.EnrolCurrentUserIdForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{
   EnrolCurrentUser,
   PTEnrolmentOnAnotherAccount
@@ -35,20 +38,22 @@ import scala.concurrent.{ExecutionContext, Future}
 class PTEnrolmentOnOtherAccountController @Inject()(
   authAction: AuthAction,
   mcc: MessagesControllerComponents,
+  sessionCache: TEASessionCache,
   ptEnrolmentOnAnotherAccountView: PTEnrolmentOnAnotherAccount
 )(implicit ec: ExecutionContext, appConfig: AppConfig)
     extends FrontendController(mcc)
     with I18nSupport {
 
   def view(): Action[AnyContent] = authAction.async { implicit request =>
-    routes.FraudReportingController.selectIdsToReport
-    Future.successful(
-      Ok(
-        ptEnrolmentOnAnotherAccountView(
-          AccountDetails("ddddd", Some("dddd"), "Today", Seq.empty),
-          request.userDetails.hasSAEnrolment
-        )
-      )
-    )
+    sessionCache.getEntry[AccountTypes.Value]("ACCOUNT_TYPE").flatMap {
+      case Some(PT_ASSIGNED_TO_OTHER_USER) =>
+        Future.successful(Ok(ptEnrolmentOnAnotherAccountView()))
+      case _ =>
+        sessionCache.getEntry[String]("redirectURL").map {
+          case Some(redirectUrl) =>
+            Redirect(routes.AccountCheckController.accountCheck(redirectUrl))
+          case None => InternalServerError
+        }
+    }
   }
 }

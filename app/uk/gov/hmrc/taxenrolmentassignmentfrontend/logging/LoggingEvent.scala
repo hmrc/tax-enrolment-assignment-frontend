@@ -86,22 +86,35 @@ object LoggingEvent {
       )
     )
 
-
-  def logUnexpectedResponseFromLandingPage(error: TaxEnrolmentAssignmentErrors): LoggingEvent =
+  def logUnexpectedResponseFromUsersGroupSearch(
+    credId: String,
+    statusReturned: Int,
+    errorMsg: String = "N/A"
+  ): LoggingEvent =
     Error(
       Event(
-        "[LandingPageController][showLandingPage]",
+        "[UsersGroupSearchConnector][getUsersDetails]",
         errorDetails = Some(
-          s"Landing Page Controller returned an error: $error"
+          s"Users Group Search return status of $statusReturned for credID $credId" +
+            s"\nError Message: $errorMsg"
         )
       )
     )
 
-  def logES2ErrorFromEACD(
-                           credId: String,
-                           statusReturned: Int,
-                           eacdErrorMsg: String = "N/A"
-                         ): LoggingEvent =
+  def logUnexpectedResponseFromLandingPage(
+    error: TaxEnrolmentAssignmentErrors
+  ): LoggingEvent =
+    Error(
+      Event(
+        "[LandingPageController][showLandingPage]",
+        errorDetails =
+          Some(s"Landing Page Controller returned an error: $error")
+      )
+    )
+
+  def logES2ErrorFromEACD(credId: String,
+                          statusReturned: Int,
+                          eacdErrorMsg: String = "N/A"): LoggingEvent =
     Error(
       Event(
         "[EACDConnector][queryEnrolmentsAssignedToUser]",

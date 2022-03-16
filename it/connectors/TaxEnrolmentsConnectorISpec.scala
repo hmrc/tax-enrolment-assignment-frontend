@@ -113,4 +113,91 @@ class TaxEnrolmentsConnectorISpec extends IntegrationSpecBase {
       }
     }
   }
+
+
+  "assignPTEnrolmentWithKnownFacts" when {
+
+    val PATH = s"/tax-enrolments/service/HMRC-PT/enrolment"
+
+    s"the user is assigned the enrolment" should {
+      "return Unit" in {
+        stubPutWithAuthorizeHeaders(
+          PATH,
+          AUTHORIZE_HEADER_VALUE,
+          Status.NO_CONTENT
+        )
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        whenReady(
+          connector.assignPTEnrolmentWithKnownFacts(NINO).value
+        ) { response =>
+          response shouldBe Right((): Unit)
+        }
+      }
+    }
+
+    s"the user is not authorized" should {
+      "return an UnexpectedResponseFromTaxEnrolments" in {
+        stubPostWithAuthorizeHeaders(
+          PATH,
+          AUTHORIZE_HEADER_VALUE,
+          Status.UNAUTHORIZED
+        )
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        whenReady(
+          connector.assignPTEnrolmentWithKnownFacts(NINO).value
+        ) { response =>
+          response shouldBe Left(UnexpectedResponseFromTaxEnrolments)
+        }
+      }
+    }
+
+    "a BAD_REQUEST is returned" should {
+      "return an UnexpectedResponseFromTaxEnrolments error" in {
+        stubPostWithAuthorizeHeaders(
+          PATH,
+          AUTHORIZE_HEADER_VALUE,
+          Status.BAD_REQUEST
+        )
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        whenReady(
+          connector.assignPTEnrolmentWithKnownFacts(NINO).value
+        ) { response =>
+          response shouldBe Left(UnexpectedResponseFromTaxEnrolments)
+        }
+      }
+    }
+
+    "a NOT_FOUND is returned" should {
+      "return an UnexpectedResponseFromTaxEnrolments error" in {
+        stubPostWithAuthorizeHeaders(
+          PATH,
+          AUTHORIZE_HEADER_VALUE,
+          Status.NOT_FOUND
+        )
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        whenReady(
+          connector.assignPTEnrolmentWithKnownFacts(NINO).value
+        ) { response =>
+          response shouldBe Left(UnexpectedResponseFromTaxEnrolments)
+        }
+      }
+    }
+
+    "a INTERNAL_SERVER_ERROR is returned" should {
+      "return an UnexpectedResponseFromTaxEnrolments error" in {
+        stubPostWithAuthorizeHeaders(
+          PATH,
+          AUTHORIZE_HEADER_VALUE,
+          Status.INTERNAL_SERVER_ERROR
+        )
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        whenReady(
+          connector.assignPTEnrolmentWithKnownFacts(NINO).value
+        ) { response =>
+          response shouldBe Left(UnexpectedResponseFromTaxEnrolments)
+        }
+      }
+    }
+  }
+
 }

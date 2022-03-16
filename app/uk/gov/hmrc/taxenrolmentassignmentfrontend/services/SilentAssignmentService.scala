@@ -63,7 +63,7 @@ class SilentAssignmentService @Inject()(
                   hc: HeaderCarrier,
                   ec: ExecutionContext): TEAFResult[Unit] = {
     val details = request.userDetails
-    taxEnrolmentsConnector.assignPTEnrolment(details.groupId, details.credId, details.nino)
+    taxEnrolmentsConnector.assignPTEnrolmentWithKnownFacts(details.nino)
   }
 
 }

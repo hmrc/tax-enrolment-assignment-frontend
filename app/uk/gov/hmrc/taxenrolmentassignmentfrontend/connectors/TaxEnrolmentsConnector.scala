@@ -66,7 +66,7 @@ class TaxEnrolmentsConnector @Inject()(httpClient: HttpClient,
   ): TEAFResult[Unit] = EitherT {
 
     val request = AssignHMRCPTRequest(
-      identifiers = IdentifiersOrVerifiers("NINO", nino),
+      identifiers = Seq(IdentifiersOrVerifiers("NINO", nino)),
       verifiers = Seq(IdentifiersOrVerifiers("NINO1", nino)
       )
     )

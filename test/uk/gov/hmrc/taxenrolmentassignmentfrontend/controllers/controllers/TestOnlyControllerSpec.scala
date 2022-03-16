@@ -20,39 +20,11 @@ import play.api.libs.json.{JsString, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
 
 class TestOnlyControllerSpec extends TestFixture {
 
-  private val fakeReq = FakeRequest(
-    "GET",
-    "/tax-enrolment-assignment-frontend/test-only/enrolment-store/enrolments/HMRC-PT~NINO~AB876543F/users"
-  )
-
-  "eS0Call" when {
-    "the request Json contains an enrolment key that matches the nino value" should {
-      "return accepted" in {
-
-        val enrolmentKey = "HMRC-PT~NINO~CP872173B"
-        val jsonResp =
-          UsersAssignedEnrolment(List("6145202884164547"), List.empty)
-        val request = fakeReq.withBody(Json.obj())
-        val res = testOnlyController.es0Call(enrolmentKey)(request)
-        status(res) shouldBe OK
-        contentAsJson(res) shouldBe Json.toJson(jsonResp)
-
-      }
-    }
-    "the request Json contains an enrolment key that does not matched the nino value" should {
-      "return no content" in {
-        val enrolmentKey = "HMRC-PT~NINO~JK592173B"
-        val request = fakeReq.withBody(Json.obj())
-        val res = testOnlyController.es0Call(enrolmentKey)(request)
-        status(res) shouldBe NO_CONTENT
-      }
-    }
-  }
+  private val fakeReq =
+    FakeRequest("GET", "/users-group-search/test-only/users/:credId")
 
   "usersGroupSearchCall" when {
     "the credential is recognised" should {

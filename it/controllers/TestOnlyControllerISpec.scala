@@ -25,61 +25,8 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
 
 class TestOnlyControllerISpec extends IntegrationSpecBase with Status {
 
-  val teaHost = s"localhost:$port"
-
   override def afterAll(): Unit = {
     super.afterAll()
-  }
-
-  s"GET /tax-enrolment-assignment-frontend/test-only/enrolment-store/enrolments/:enrolmentKey/users" should {
-    "retrieve the enrolment key from the uri" when {
-      "the nino attached matches a record with a PT enrolment" should {
-        "redirect to enrolment-check redirectUrl " in {
-
-          val nino = "CP872173B"
-          val enrolmentKey = "HMRC-PT~NINO~" + nino
-          val es0Url =
-            s"/test-only/enrolment-store/enrolments/$enrolmentKey/users"
-
-          val returnUrl = testOnly.routes.TestOnlyController
-            .es0Call(enrolmentKey)
-            .absoluteURL(false, teaHost)
-
-          val jsonResp =
-            UsersAssignedEnrolment(List("6145202884164547"), List.empty)
-
-          val res = buildRequest(es0Url, followRedirects = true)
-            .withHttpHeaders(xSessionId, csrfContent)
-            .withBody(Json.obj())
-            .get()
-
-          whenReady(res) { resp =>
-            resp.status shouldBe OK
-            resp.body shouldBe s"${Json.toJson(jsonResp)}"
-            resp.uri.toString shouldBe returnUrl
-          }
-        }
-      }
-
-      "the nino attached matches a record with a PT enrolment" should {
-        "return no content with empty body" in {
-          val nino = "JT872173B"
-          val enrolmentKey = "HMRC-PT~NINO~" + nino
-          val es0Url =
-            s"/test-only/enrolment-store/enrolments/$enrolmentKey/users"
-
-          val res = buildRequest(es0Url, followRedirects = true)
-            .withHttpHeaders(xSessionId, csrfContent)
-            .withBody(Json.obj())
-            .get()
-
-          whenReady(res) { resp =>
-            resp.status shouldBe NO_CONTENT
-            resp.body shouldBe ""
-          }
-        }
-      }
-    }
   }
 
   s"GET /users-group-search/test-only/users/:credId" should {

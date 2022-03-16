@@ -27,6 +27,11 @@ lazy val microservice = Project(appName, file("."))
     scalaVersion := "2.12.15",
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     PlayKeys.playDefaultPort := 7750,
+    TwirlKeys.templateImports ++= Seq(
+      "uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig",
+      "uk.gov.hmrc.govukfrontend.views.html.components._",
+      "uk.gov.hmrc.hmrcfrontend.views.html.components._"
+    ),
     pipelineStages in Assets := Seq(gzip),
     // ***************
     // Use the silencer plugin to suppress warnings

@@ -60,7 +60,7 @@ object AccountDetails {
   def formatDate(date: String): String = {
     val zonedDateTime = ZonedDateTime.parse(date)
     val datetimeFormatter = {
-      DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG)
+      DateTimeFormatter.ofPattern("d MMMM uuuu")
     }
     if (isToday(zonedDateTime)) {
       "Today"

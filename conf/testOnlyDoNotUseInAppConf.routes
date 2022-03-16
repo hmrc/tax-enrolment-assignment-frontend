@@ -13,3 +13,4 @@
 ->         /                                             prod.Routes
 
 GET        /tax-enrolment-assignment-frontend/test-only/successful                                                             uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController.successfulCall
+GET        /users-group-search/test-only/users/:credId                                                                         uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController.usersGroupSearchCall(credId)

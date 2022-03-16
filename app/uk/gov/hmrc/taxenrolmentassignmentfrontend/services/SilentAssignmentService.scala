@@ -31,6 +31,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUs
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IVNinoStoreEntry
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IVNinoStoreEntry._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.OTHER_VALID_PTA_ACCOUNTS
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -50,18 +51,18 @@ class SilentAssignmentService @Inject()(
   ): Seq[IVNinoStoreEntry] =
     list.filter(_.confidenceLevel.exists(_ >= 200))
 
-  lazy val sessionKey = "OTHER_VALID_PTA_ACCOUNTS"
-
   def getOtherAccountsWithPTAAccess(
     implicit requestWithUserDetails: RequestWithUserDetails[AnyContent],
     hc: HeaderCarrier,
     ec: ExecutionContext
   ): TEAFResult[Seq[IVNinoStoreEntry]] =
     EitherT {
-      sessionCache.getEntry[Seq[IVNinoStoreEntry]](sessionKey).flatMap {
-        case Some(otherCreds) => Future.successful(Right(otherCreds))
-        case None             => getOtherAccountsValidForPTA.value
-      }
+      sessionCache
+        .getEntry[Seq[IVNinoStoreEntry]](OTHER_VALID_PTA_ACCOUNTS)
+        .flatMap {
+          case Some(otherCreds) => Future.successful(Right(otherCreds))
+          case None             => getOtherAccountsValidForPTA.value
+        }
     }
 
   def enrolUser()(implicit request: RequestWithUserDetails[AnyContent],
@@ -96,7 +97,10 @@ class SilentAssignmentService @Inject()(
         getOtherValidPtaAccounts(otherCreds)
       )
     } yield {
-      sessionCache.save[Seq[IVNinoStoreEntry]](sessionKey, otherValidPTACreds)
+      sessionCache.save[Seq[IVNinoStoreEntry]](
+        OTHER_VALID_PTA_ACCOUNTS,
+        otherValidPTACreds
+      )
       otherValidPTACreds
     }
   }

@@ -20,40 +20,54 @@ import com.google.inject.{Inject, Singleton}
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.EnrolCurrentUserIdForm
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{
-  EnrolCurrentUser,
-  PTEnrolmentOnAnotherAccount
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{
+  REDIRECT_URL,
+  USER_ASSIGNED_PT_ENROLMENT
 }
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.UsersGroupSearchService
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnotherAccount
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class PTEnrolmentOnOtherAccountController @Inject()(
   authAction: AuthAction,
   mcc: MessagesControllerComponents,
   sessionCache: TEASessionCache,
+  usersGroupSearchService: UsersGroupSearchService,
   ptEnrolmentOnAnotherAccountView: PTEnrolmentOnAnotherAccount
 )(implicit ec: ExecutionContext, appConfig: AppConfig)
     extends FrontendController(mcc)
     with I18nSupport {
 
   def view(): Action[AnyContent] = authAction.async { implicit request =>
-    sessionCache.getEntry[AccountTypes.Value]("ACCOUNT_TYPE").flatMap {
-      case Some(PT_ASSIGNED_TO_OTHER_USER) =>
-        Future.successful(Ok(ptEnrolmentOnAnotherAccountView()))
-      case _ =>
-        sessionCache.getEntry[String]("redirectURL").map {
-          case Some(redirectUrl) =>
-            Redirect(routes.AccountCheckController.accountCheck(redirectUrl))
-          case None => InternalServerError
-        }
-    }
+    sessionCache
+      .getEntry[UsersAssignedEnrolment](USER_ASSIGNED_PT_ENROLMENT)
+      .flatMap {
+        case Some(response) if response.enrolledCredential.isDefined =>
+          usersGroupSearchService
+            .getAccountDetails(response.enrolledCredential.get)
+            .value
+            .map {
+              case Right(ptAccountDetails) =>
+                Ok(
+                  ptEnrolmentOnAnotherAccountView(
+                    ptAccountDetails,
+                    request.userDetails.hasSAEnrolment
+                  )
+                )
+              case Left(_) => InternalServerError
+            }
+        case _ =>
+          sessionCache.getEntry[String](REDIRECT_URL).map {
+            case Some(redirectUrl) =>
+              Redirect(routes.AccountCheckController.accountCheck(redirectUrl))
+            case None => InternalServerError
+          }
+      }
   }
 }

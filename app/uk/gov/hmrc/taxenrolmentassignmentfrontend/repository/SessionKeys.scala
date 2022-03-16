@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.errors
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.repository
 
-sealed trait TaxEnrolmentAssignmentErrors
+object SessionKeys {
 
-object UnexpectedResponseFromIV extends TaxEnrolmentAssignmentErrors
-object UnexpectedResponseFromEACD extends TaxEnrolmentAssignmentErrors
-object UnexpectedResponseFromTaxEnrolments extends TaxEnrolmentAssignmentErrors
-object UnexpectedResponseFromUsersGroupSearch
-    extends TaxEnrolmentAssignmentErrors
+  val USER_ASSIGNED_PT_ENROLMENT = "USER_ASSIGNED_PT_ENROLMENT"
+  val REDIRECT_URL = "redirectURL"
+  val OTHER_VALID_PTA_ACCOUNTS = "OTHER_VALID_PTA_ACCOUNTS"
+
+  def accountDetailsForCredential(credId: String) = s"AccountDetailsFor$credId"
+
+}

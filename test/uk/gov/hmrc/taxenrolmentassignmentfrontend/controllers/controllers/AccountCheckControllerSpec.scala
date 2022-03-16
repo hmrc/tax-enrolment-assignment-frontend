@@ -49,7 +49,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemp
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class LandingPageControllerSpec extends TestFixture {
+class AccountCheckControllerSpec extends TestFixture {
 
   val mockTeaSessionCache = new TestTeaSessionCache
   val landingView: LandingPage = app.injector.instanceOf[LandingPage]

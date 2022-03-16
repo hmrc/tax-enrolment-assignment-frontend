@@ -25,6 +25,7 @@ import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.EACDConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.USER_ASSIGNED_PT_ENROLMENT
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -39,7 +40,7 @@ class EACDService @Inject()(eacdConnector: EACDConnector,
   ): TEAFResult[UsersAssignedEnrolment] =
     EitherT {
       sessionCache
-        .getEntry[UsersAssignedEnrolment]("USER_ASSIGNED_PT_ENROLMENT")
+        .getEntry[UsersAssignedEnrolment](USER_ASSIGNED_PT_ENROLMENT)
         .flatMap {
           case Some(record) => Future.successful(Right(record))
           case None         => getUsersWithPTEnrolmentFromEACD.value
@@ -55,7 +56,7 @@ class EACDService @Inject()(eacdConnector: EACDConnector,
       .getUsersWithPTEnrolment(requestWithUserDetails.userDetails.nino)
       .map { userWithPTEnrolment =>
         sessionCache.save[UsersAssignedEnrolment](
-          "USER_ASSIGNED_PT_ENROLMENT",
+          USER_ASSIGNED_PT_ENROLMENT,
           userWithPTEnrolment
         )
         userWithPTEnrolment

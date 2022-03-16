@@ -75,9 +75,7 @@ class AccountCheckController @Inject()(
             Redirect(routes.PTEnrolmentOnOtherAccountController.view)
           )
         case Right(MULTIPLE_ACCOUNTS) =>
-          Future.successful(
-            Redirect(routes.LandingPageController.showLandingPage)
-          )
+          Future.successful(Redirect(routes.LandingPageController.view))
         case Left(_) => Future.successful(InternalServerError)
       }
   }

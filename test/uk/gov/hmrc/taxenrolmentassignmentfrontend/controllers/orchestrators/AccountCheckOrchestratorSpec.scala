@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.controllers
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.orchestrators
 
 import cats.data.EitherT
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK, SEE_OTHER}
@@ -49,7 +49,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemp
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class LandingPageControllerSpec extends TestFixture {
+class AccountCheckOrchestratorSpec extends TestFixture {
 
   val mockTeaSessionCache = new TestTeaSessionCache
   val landingView: LandingPage = app.injector.instanceOf[LandingPage]

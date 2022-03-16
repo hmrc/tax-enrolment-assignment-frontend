@@ -19,12 +19,23 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers
 import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
-import uk.gov.hmrc.auth.core.authorise.Predicate
-import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{allEnrolments, credentials, groupIdentifier, nino}
-import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.auth.core._
+import uk.gov.hmrc.auth.core.authorise.Predicate
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{
+  allEnrolments,
+  credentials,
+  groupIdentifier,
+  nino
+}
+import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.UserDetailsFromSession
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{IVNinoStoreEntry, IdentifiersOrVerifiers, UserEnrolment, UsersAssignedEnrolment}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{Enrolment => _, _}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
+  IVNinoStoreEntry,
+  IdentifiersOrVerifiers,
+  UserEnrolment,
+  UsersAssignedEnrolment
+}
 
 object TestData {
 
@@ -74,7 +85,9 @@ object TestData {
   val predicates: Predicate =
     AuthProviders(GovernmentGateway) and ConfidenceLevel.L200
 
-  val retrievals: Retrieval[Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String]] =
+  val retrievals: Retrieval[
+    Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String]
+  ] =
     nino and credentials and allEnrolments and groupIdentifier
 
   def retrievalResponse(
@@ -83,31 +96,76 @@ object TestData {
     enrolments: Enrolments = noEnrolments,
     optGroupId: Option[String] = Some(GROUP_ID)
   ): (((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[String]) =
-    new ~ (new ~(new ~(optNino, optCredentials), enrolments), optGroupId)
+    new ~(new ~(new ~(optNino, optCredentials), enrolments), optGroupId)
 
   val userDetailsNoEnrolments =
-    UserDetailsFromSession(CREDENTIAL_ID, NINO, GROUP_ID, hasPTEnrolment = false, hasSAEnrolment = false)
+    UserDetailsFromSession(
+      CREDENTIAL_ID,
+      NINO,
+      GROUP_ID,
+      hasPTEnrolment = false,
+      hasSAEnrolment = false
+    )
   val userDetailsWithPTEnrolment =
-    UserDetailsFromSession(CREDENTIAL_ID, NINO, GROUP_ID, hasPTEnrolment = true, hasSAEnrolment = false)
+    UserDetailsFromSession(
+      CREDENTIAL_ID,
+      NINO,
+      GROUP_ID,
+      hasPTEnrolment = true,
+      hasSAEnrolment = false
+    )
   val userDetailsWithSAEnrolment =
-    UserDetailsFromSession(CREDENTIAL_ID, NINO, GROUP_ID, hasPTEnrolment = false, hasSAEnrolment = true)
+    UserDetailsFromSession(
+      CREDENTIAL_ID,
+      NINO,
+      GROUP_ID,
+      hasPTEnrolment = false,
+      hasSAEnrolment = true
+    )
   val userDetailsWithPTAndSAEnrolment = {
-    UserDetailsFromSession(CREDENTIAL_ID, NINO, GROUP_ID, hasPTEnrolment = true, hasSAEnrolment = true)
+    UserDetailsFromSession(
+      CREDENTIAL_ID,
+      NINO,
+      GROUP_ID,
+      hasPTEnrolment = true,
+      hasSAEnrolment = true
+    )
   }
 
+  val ivNinoStoreEntryCurrent = IVNinoStoreEntry(CREDENTIAL_ID, Some(200))
   val ivNinoStoreEntry1 = IVNinoStoreEntry("6902202884164548", Some(50))
   val ivNinoStoreEntry2 = IVNinoStoreEntry("8316291481001919", Some(200))
   val ivNinoStoreEntry3 = IVNinoStoreEntry("0493831301037584", Some(200))
   val ivNinoStoreEntry4 = IVNinoStoreEntry("2884521810163541", Some(200))
 
-  val UsersAssignedEnrolment1 = UsersAssignedEnrolment(List("6102202884164541", "credId123"), List.empty)
-  val UsersAssignedEnrolmentEmpty = UsersAssignedEnrolment(List.empty, List.empty)
+  val UsersAssignedEnrolment1 =
+    UsersAssignedEnrolment(List("6102202884164541", "credId123"), List.empty)
+  val UsersAssignedEnrolmentEmpty =
+    UsersAssignedEnrolment(List.empty, List.empty)
 
   val multiIVCreds = List(
-    ivNinoStoreEntry1,
+    ivNinoStoreEntryCurrent ivNinoStoreEntry1,
     ivNinoStoreEntry2,
     ivNinoStoreEntry3,
     ivNinoStoreEntry4
+  )
+
+  // accountDetails
+
+  val accountDetails = AccountDetails(
+    userId = "********6037",
+    email = Some("email1@test.com"),
+    lastLoginDate = "27 February 2022",
+    mfaDetails = List(MFADetails("Text message", "07783924321"))
+  )
+
+  // userGroupSearchResponse
+
+  val usersGroupSearchResponse = UsersGroupResponse(
+    obfuscatedUserId = "********6037",
+    email = Some("email1@test.com"),
+    lastAccessedTimestamp = "2022-02-27T12:00:27Z",
+    additionalFactors = List(AdditonalFactors("sms", Some("07783924321")))
   )
 
   val multiCL200IVCreds = List(
@@ -136,9 +194,9 @@ object TestData {
   )
 
   val identifierTxNum = IdentifiersOrVerifiers("TaxOfficeNumber", "123")
-  val identifierTxRef = IdentifiersOrVerifiers("TaxOfficeReference", "XYZ9876543")
+  val identifierTxRef =
+    IdentifiersOrVerifiers("TaxOfficeReference", "XYZ9876543")
   val identifierUTR = IdentifiersOrVerifiers("UTR", "1234567890")
-
 
   val userEnrolmentIRSA = UserEnrolment(
     service = "IR-SA",
@@ -153,7 +211,8 @@ object TestData {
     state = "Activated",
     friendlyName = "Something",
     failedActivationCount = 1,
-    identifiers = Seq(identifierTxNum, identifierTxRef))
+    identifiers = Seq(identifierTxNum, identifierTxRef)
+  )
 
   def buildFakeRequestWithSessionId(
     method: String,

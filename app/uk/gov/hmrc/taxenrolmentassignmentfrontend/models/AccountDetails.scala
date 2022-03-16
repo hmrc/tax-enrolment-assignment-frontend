@@ -16,24 +16,22 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 
-import java.time
 import java.time.format.{DateTimeFormatter, FormatStyle}
-import java.time.{Instant, ZoneId, ZonedDateTime}
+import java.time.{ZoneId, ZonedDateTime}
 
 import play.api.libs.json.{Format, Json}
 
-case class MFADetails(factorName: String, factorValue: String)
-//{
-//  def this(additonalFactors: AdditonalFactors) =
-//    this(factorName = additonalFactors.factorType match {
-//      case "totp"  => "Authentication app"
-//      case "voice" => "Voice call"
-//      case _       => "Text message"
-//    }, factorValue = additonalFactors.factorType match {
-//      case "totp" => additonalFactors.name.getOrElse("")
-//      case _      => additonalFactors.phoneNumber.getOrElse("")
-//    })
-//}
+case class MFADetails(factorName: String, factorValue: String) {
+  def this(additonalFactors: AdditonalFactors) =
+    this(factorName = additonalFactors.factorType match {
+      case "totp"  => "Authentication app"
+      case "voice" => "Voice call"
+      case _       => "Text message"
+    }, factorValue = additonalFactors.factorType match {
+      case "totp" => additonalFactors.name.getOrElse("")
+      case _      => additonalFactors.phoneNumber.getOrElse("")
+    })
+}
 
 object MFADetails {
   implicit val format: Format[MFADetails] = Json.format[MFADetails]
@@ -42,20 +40,19 @@ object MFADetails {
 case class AccountDetails(userId: String,
                           email: Option[String],
                           lastLoginDate: String,
-                          mfaDetails: Seq[MFADetails])
-//{
-//  def this(usersGroupResponse: UsersGroupResponse) =
-//    this(
-//      userId = usersGroupResponse.obfuscatedUserId,
-//      email = usersGroupResponse.email,
-//      lastLoginDate =
-//        AccountDetails.formatDate(usersGroupResponse.lastAccessedTimestamp),
-//      mfaDetails = usersGroupResponse.additionalFactors.map {
-//        additionalFactor =>
-//          new MFADetails(additionalFactor)
-//      }
-//    )
-//}
+                          mfaDetails: Seq[MFADetails]) {
+  def this(usersGroupResponse: UsersGroupResponse) =
+    this(
+      userId = usersGroupResponse.obfuscatedUserId,
+      email = usersGroupResponse.email,
+      lastLoginDate =
+        AccountDetails.formatDate(usersGroupResponse.lastAccessedTimestamp),
+      mfaDetails = usersGroupResponse.additionalFactors.map {
+        additionalFactor =>
+          new MFADetails(additionalFactor)
+      }
+    )
+}
 
 object AccountDetails {
 

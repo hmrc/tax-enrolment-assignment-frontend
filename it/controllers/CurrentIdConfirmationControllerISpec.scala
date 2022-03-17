@@ -28,8 +28,8 @@ class CurrentIdConfirmationControllerISpec extends IntegrationSpecBase with Stat
     s"/enrol-pt/enrolment-success"
 
   s"GET $urlPath" when {
-    "a user chooses to confirm the another credential to sign in again" should {
-      s"return $OK with the sign in again page" in {
+    "a user chooses to confirm the credentials that are currently being used in the session" should {
+      s"return $OK with the confirmCurrentId page" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")

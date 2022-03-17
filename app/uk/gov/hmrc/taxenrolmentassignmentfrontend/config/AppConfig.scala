@@ -24,6 +24,8 @@ import javax.inject.{Inject, Singleton}
 class AppConfig @Inject()(val config: ServicesConfig) {
   lazy val welshLanguageSupportEnabled: Boolean = config
     .getConfBool("features.welsh-language-support", defBool = false)
+  lazy val taxEnrolmentsLocalEnabled: Boolean = config
+    .getConfBool("features.taxEnrolmentsServiceListLocal", defBool = false)
 
   lazy val IV_BASE_URL
     : String = config.baseUrl("identity-verification") + "/identity-verification"
@@ -32,7 +34,7 @@ class AppConfig @Inject()(val config: ServicesConfig) {
   lazy val TAX_ENROLMENTS_BASE_URL
     : String = config.baseUrl("tax-enrolments") + "/tax-enrolments"
   lazy val useTestOnlyUsersGroupSearch: Boolean =
-    config.getConfBool("users-group-search.isTest", true)
+    config.getConfBool("users-group-search.isTest", defBool = true)
   lazy val usersGroupSearchBaseURL: String =
     s"${config.baseUrl("users-group-search")}/users-group-search"
   lazy val basAuthHost: String =

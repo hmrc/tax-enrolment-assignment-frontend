@@ -264,7 +264,7 @@ class LandingPageControllerSpec extends TestFixture {
             _: ExecutionContext
           ))
           .expects(*, *, *)
-          .returning((Future.successful(Seq(Some(ivNinoStoreEntry4)))))
+          .returning(Future.successful(Seq(Some(ivNinoStoreEntry4), Some(ivNinoStoreEntry3))))
 
         val result = controller
           .showLandingPage(
@@ -310,7 +310,7 @@ class LandingPageControllerSpec extends TestFixture {
             _: ExecutionContext
           ))
           .expects(*, *, *)
-          .returning((Future.successful(Seq(Some(ivNinoStoreEntry4)))))
+          .returning(Future.successful(Seq(Some(ivNinoStoreEntry4), Some(ivNinoStoreEntry3))))
 
         val result = controller
           .showLandingPage(

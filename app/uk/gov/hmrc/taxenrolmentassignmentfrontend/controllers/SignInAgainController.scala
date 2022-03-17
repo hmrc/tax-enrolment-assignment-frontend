@@ -17,7 +17,6 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import play.api.Logging
-import play.api.http.ContentTypeOf.contentTypeOf_Html
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
@@ -31,13 +30,19 @@ import scala.concurrent.{ExecutionContext, Future}
 class SignInAgainController @Inject()(
                                         authAction: AuthAction,
                                         mcc: MessagesControllerComponents,
-                                        signInAgainPage: SignInAgain
+                                        signInAgainPage: SignInAgain,
+                                        signOutController:SignOutController
                                       )(implicit ec: ExecutionContext)
   extends FrontendController(mcc) with Logging with I18nSupport {
 
-  def showSignInAgainPage(): Action[AnyContent] = authAction.async {
-    implicit request =>
-      Future.successful(Ok(signInAgainPage()))
-  }
+  val view: Action[AnyContent] = authAction.async { implicit request =>
 
+    Future.successful(
+      Ok(
+        signInAgainPage(
+        signOutController
+        )
+      )
+    )
+  }
 }

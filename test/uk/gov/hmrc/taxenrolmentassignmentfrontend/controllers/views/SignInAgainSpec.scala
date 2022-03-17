@@ -18,18 +18,21 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.views
 
 import play.api.test.FakeRequest
 import play.twirl.api.HtmlFormat
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignOutController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.messages.{LandingPageMessages, SignInAgainMessages}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.LandingPage
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.messages.SignInAgainMessages
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SignInAgain
 
 class SignInAgainSpec extends TestFixture {
 
-  val landingPageView: LandingPage = app.injector.instanceOf[LandingPage]
-  val result: HtmlFormat.Appendable = landingPageView()(FakeRequest(), testMessages)
+  val testTeaSessionCache = new TestTeaSessionCache
+  val signOutController = new SignOutController(mockAuthAction,mcc,testAppConfig,testTeaSessionCache)
+  val SignInAgainPage: SignInAgain = app.injector.instanceOf[SignInAgain]
+  val result: HtmlFormat.Appendable = SignInAgainPage(signOutController)(FakeRequest(), testMessages)
 
-  "The Landing Page" should {
+  "The SignInAgain Page" should {
     "contain the correct title" in {
-      doc(result).title shouldBe LandingPageMessages.title
+      doc(result).title shouldBe SignInAgainMessages.title
     }
 
     "contain the correct header" in {
@@ -44,7 +47,6 @@ class SignInAgainSpec extends TestFixture {
       doc(result).getElementsByClass("govuk-back-link").text shouldBe SignInAgainMessages.backLink
     }
     "contain the correct sign in again link" in {
-      doc(result).getElementsByClass("govuk-link").text shouldBe SignInAgainMessages.linkText
       doc(result).getElementsByClass("govuk-link").attr("href") shouldBe SignInAgainMessages.link
     }
   }

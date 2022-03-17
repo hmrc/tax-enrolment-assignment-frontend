@@ -21,7 +21,6 @@ enrolmentError.body = Please try again in 15 minutes (real content later TODO)
 multiplePTE.true.title = Tax Enrolment Assignment Frontend - Enrolment Present
 multiplePTE.true.heading = This user has no PT enrolment
 multiplePTE.true.text =  The current user does not have an assigned PT enrolment
-
 signInAgain.title = Sign in again
 signInAgain.heading = You need to sign in again
 signInAgain.linkText = Sign in again

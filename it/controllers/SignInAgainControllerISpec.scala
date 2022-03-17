@@ -14,40 +14,33 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.controllers
+package controllers
 
-import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK, SEE_OTHER}
-import play.api.test.Helpers._
-import uk.gov.hmrc.auth.core.Enrolments
-import uk.gov.hmrc.auth.core.authorise.Predicate
-import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{LandingPageController, testOnly}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromIV
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.LandingPage
-
-import scala.concurrent.{ExecutionContext, Future}
+import helpers.IntegrationSpecBase
+import helpers.TestITData._
+import helpers.WiremockHelper.{stubAuthorizePost, stubPost}
+import play.api.http.Status
 
 class SignInPageControllerISpec extends IntegrationSpecBase with Status {
 
   val teaHost = s"localhost:$port"
   val urlPath =
-    s"/enrol-pt/introduction"
+    s"/enrol-pt/sign-in-again"
 
   s"GET $urlPath" when {
     "a user chooses to use another credential to sign in again" should {
       s"return $OK with the sign in again page" in {
+        val authResponse = authoriseResponseJson()
+        stubAuthorizePost(OK, authResponse.toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val res = buildRequest(urlPath, followRedirects = false)
+        val res = buildRequest(urlPath, followRedirects = true)
           .withHttpHeaders(xSessionId, csrfContent)
           .get()
 
         whenReady(res) { resp =>
           resp.status shouldBe OK
-          resp.title should include("signInAgain.title")
-          resp.body should include("signInAgain.paragraph")
+          resp.body should include("Sign in again")
         }
       }
     }

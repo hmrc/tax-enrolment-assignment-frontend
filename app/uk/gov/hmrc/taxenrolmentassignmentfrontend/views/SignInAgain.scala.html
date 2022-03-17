@@ -15,16 +15,22 @@
  *@
 
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.Layout
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignOutController
 
 
 @this(
 layout: Layout
 )
 
-@()(implicit request: Request[_], messages: Messages)
+@(signOutController:SignOutController)(implicit request: Request[_], messages: Messages)
 
 @layout(pageTitle = Some(messages("signInAgain.title")), Some("?")) {
 
  <h2 class="govuk-heading-xl">@messages("signInAgain.heading")</h2>
- <p class="govuk-body"> <a class="govuk-link" href="@SignOutController.signOut()">@messages("signInAgain.linkText") </a>@messages("signInAgain.paragraph")</p>
+ <p class="govuk-body">
+  <a class="govuk-link" href="@signOutController.signOut()">
+   @messages("signInAgain.linkText")
+  </a>
+  @messages("signInAgain.paragraph")
+ </p>
 }

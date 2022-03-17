@@ -38,7 +38,7 @@ class SignInAgainPageControllerSpec extends TestFixture {
       new SignInAgainController(mockAuthAction, mcc,view,signOutController)
 
     "view" should {
-      "present the current ID confirmation page" in {
+      "present the sign in again page" in {
 
         (mockAuthConnector
           .authorise(

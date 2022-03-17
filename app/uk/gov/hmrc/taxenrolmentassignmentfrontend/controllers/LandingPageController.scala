@@ -64,13 +64,16 @@ class LandingPageController @Inject()(
       } yield (creds, usersWithPT, validPtaAccounts)
 
       testing.value.flatMap {
-        case Right((creds, None, validPtaAccounts)) if creds.length <= 1 && validPtaAccounts.flatten.size == 1 =>
-              silentEnrol()
+        case Right((_, None, validPtaAccounts)) if validPtaAccounts.flatten.size == 1 =>
+          silentEnrol()
         case Right((_, Some(usersWithPT),_)) if usersWithPT == request.userDetails.credId =>
           Future.successful(Redirect(redirectUrl))
-        case Right((_, Some(_),_)) =>   Future.successful(Ok(underConstructionView()))
-        case Right((_, None,_)) =>  Future.successful(Ok(landingPageView()))
-        case Left(error) => Future.successful(InternalServerError)
+        case Right((_, Some(_),_)) =>
+          Future.successful(Ok(underConstructionView()))
+        case Right((_, None,_)) =>
+          Future.successful(Ok(landingPageView()))
+        case Left(error) =>
+          Future.successful(InternalServerError)
       }
   }
 

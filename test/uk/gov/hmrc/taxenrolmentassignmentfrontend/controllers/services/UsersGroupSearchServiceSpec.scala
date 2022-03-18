@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.services
 
 import org.scalatest.concurrent.ScalaFutures
 import play.api.libs.json.Format
-import play.api.mvc.{AnyContent, Request}
+import play.api.mvc.AnyContent
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.UsersGroupSearchConnector
@@ -27,7 +27,6 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromUsersGroupSearch
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.UsersGroupSearchService
 
 import scala.concurrent.{ExecutionContext, Future}

@@ -24,17 +24,13 @@ import uk.gov.hmrc.auth.core.Enrolments
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{
-  LandingPageController,
-  testOnly
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromIV
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.LandingPage
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{
-  LandingPageController,
+  AccountCheckController,
   testOnly
 }
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
@@ -42,85 +38,32 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
   UnexpectedResponseFromIV,
   UnexpectedResponseFromTaxEnrolments
 }
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IVNinoStoreEntry
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.LandingPage
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class AccountCheckControllerSpec extends TestFixture {
 
-  val mockTeaSessionCache = new TestTeaSessionCache
-  val landingView: LandingPage = app.injector.instanceOf[LandingPage]
-  val errorView: ErrorTemplate = app.injector.instanceOf[ErrorTemplate]
-  val mockSilentAssignmentService: SilentAssignmentService =
-    mock[SilentAssignmentService]
+  val teaSessionCache = new TestTeaSessionCache
 
-  val controller = new LandingPageController(
+  val controller = new AccountCheckController(
+    mockAccountCheckOrchestrator,
+    mockSilentAssignmentService,
     mockAuthAction,
     testAppConfig,
-    mockIVConnector,
-    mockEacdConnector,
-    mockSilentAssignmentService,
     mcc,
-    mockTeaSessionCache,
-    landingView,
-    UCView,
+    teaSessionCache,
     errorView
   )
-  "showLandingPage" when {
+
+  "accountCheck" when {
     "a single credential exists for a given nino with no PT enrolment" should {
-      "silently assign the HMRC-PT Enrolment and redirect to PTA" in {
-        (mockEacdConnector
-          .getUsersWithPTEnrolment(_: String)(
-            _: ExecutionContext,
-            _: HeaderCarrier
-          ))
-          .expects(NINO, *, *)
-          .returning(createInboundResult(Some(UsersAssignedEnrolmentEmpty)))
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.successful(retrievalResponse()))
-        (mockIVConnector
-          .getCredentialsWithNino(_: String)(
-            _: ExecutionContext,
-            _: HeaderCarrier
-          ))
-          .expects(NINO, *, *)
-          .returning(createInboundResult(List(ivNinoStoreEntry4)))
-
-        (mockSilentAssignmentService
-          .getValidPtaAccounts(_: Seq[IVNinoStoreEntry])(
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
-          .expects(*, *, *)
-          .returning((Future.successful(Seq(Some(ivNinoStoreEntry4)))))
-
-        (mockSilentAssignmentService
-          .enrolUser()(
-            _: RequestWithUserDetails[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
-          .expects(*, *, *)
-          .returning(
-            EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(Unit))
-          )
+      "silently assign the HMRC-PT Enrolment and redirect to PTA" in new TestHelper {
+        mockAuthCall()
+        mockAccountCheckSuccess(SINGLE_ACCOUNT)
+        mockSilentEnrolSuccess
 
         val result = controller
-          .showLandingPage(
-            testOnly.routes.TestOnlyController.successfulCall.url
-          )
+          .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe SEE_OTHER
@@ -129,56 +72,13 @@ class AccountCheckControllerSpec extends TestFixture {
         )
       }
 
-      "return an error page if there was an error assigning the enrolment" in {
-        (mockEacdConnector
-          .getUsersWithPTEnrolment(_: String)(
-            _: ExecutionContext,
-            _: HeaderCarrier
-          ))
-          .expects(NINO, *, *)
-          .returning(createInboundResult(Some(UsersAssignedEnrolmentEmpty)))
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.successful(retrievalResponse()))
-        (mockIVConnector
-          .getCredentialsWithNino(_: String)(
-            _: ExecutionContext,
-            _: HeaderCarrier
-          ))
-          .expects(NINO, *, *)
-          .returning(createInboundResult(List(ivNinoStoreEntry4)))
-
-        (mockSilentAssignmentService
-          .getValidPtaAccounts(_: Seq[IVNinoStoreEntry])(
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
-          .expects(*, *, *)
-          .returning((Future.successful(Seq(Some(ivNinoStoreEntry4)))))
-
-        (mockSilentAssignmentService
-          .enrolUser()(
-            _: RequestWithUserDetails[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
-          .expects(*, *, *)
-          .returning(
-            createInboundResultError(UnexpectedResponseFromTaxEnrolments)
-          )
+      "return an error page if there was an error assigning the enrolment" in new TestHelper {
+        mockAuthCall()
+        mockAccountCheckSuccess(SINGLE_ACCOUNT)
+        mockSilentEnrolFailure
 
         val result = controller
-          .showLandingPage(
-            testOnly.routes.TestOnlyController.successfulCall.url
-          )
+          .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe OK
@@ -187,40 +87,12 @@ class AccountCheckControllerSpec extends TestFixture {
     }
 
     "a single credential exists for a given nino that is already enrolled for PT" should {
-      "redirect to the return url" in {
-
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
-          .expects(predicates, retrievals, *, *)
-          .returning(
-            Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly))
-          )
-        (mockIVConnector
-          .getCredentialsWithNino(_: String)(
-            _: ExecutionContext,
-            _: HeaderCarrier
-          ))
-          .expects(NINO, *, *)
-          .returning(createInboundResult(List(ivNinoStoreEntry3)))
-        (mockSilentAssignmentService
-          .getValidPtaAccounts(_: Seq[IVNinoStoreEntry])(
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
-          .expects(*, *, *)
-          .returning((Future.successful(Seq(Some(ivNinoStoreEntry3)))))
+      "redirect to the return url" in new TestHelper {
+        mockAuthCall()
+        mockAccountCheckSuccess(PT_ASSIGNED_TO_CURRENT_USER)
 
         val result = controller
-          .showLandingPage(
-            testOnly.routes.TestOnlyController.successfulCall.url
-          )
+          .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe SEE_OTHER
@@ -230,135 +102,45 @@ class AccountCheckControllerSpec extends TestFixture {
       }
     }
 
-    "multiple credentials exists for a given nino and PT enrolment exists on another account" should {
-      "present the underConstruction page" in {
-        (mockEacdConnector
-          .getUsersWithPTEnrolment(_: String)(
-            _: ExecutionContext,
-            _: HeaderCarrier
-          ))
-          .expects(NINO, *, *)
-          .returning(createInboundResult(Some(UsersAssignedEnrolment1)))
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.successful(retrievalResponse()))
-        (mockIVConnector
-          .getCredentialsWithNino(_: String)(
-            _: ExecutionContext,
-            _: HeaderCarrier
-          ))
-          .expects(NINO, *, *)
-          .returning(createInboundResult(multiIVCreds))
-
-        (mockSilentAssignmentService
-          .getValidPtaAccounts(_: Seq[IVNinoStoreEntry])(
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
-          .expects(*, *, *)
-          .returning((Future.successful(Seq(Some(ivNinoStoreEntry4)))))
+    "a PT enrolment exists on another users account" should {
+      "redirect to the PT Enrolment on another account" in new TestHelper {
+        mockAuthCall()
+        mockAccountCheckSuccess(PT_ASSIGNED_TO_OTHER_USER)
 
         val result = controller
-          .showLandingPage(
-            testOnly.routes.TestOnlyController.successfulCall.url
-          )
+          .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(result) shouldBe OK
-        contentAsString(result) shouldBe UCView()(fakeRequest, stubMessages()).toString
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result) shouldBe Some(
+          "/tax-enrolment-assignment-frontend/pt-enrolment-other-account"
+        )
       }
     }
 
     "multiple credential exists for a given nino and no PT enrolment exists" should {
-      "present the landing page" in {
-        (mockEacdConnector
-          .getUsersWithPTEnrolment(_: String)(
-            _: ExecutionContext,
-            _: HeaderCarrier
-          ))
-          .expects(NINO, *, *)
-          .returning(createInboundResult(Some(UsersAssignedEnrolmentEmpty)))
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.successful(retrievalResponse()))
-        (mockIVConnector
-          .getCredentialsWithNino(_: String)(
-            _: ExecutionContext,
-            _: HeaderCarrier
-          ))
-          .expects(NINO, *, *)
-          .returning(createInboundResult(multiIVCreds))
-        (mockSilentAssignmentService
-          .getValidPtaAccounts(_: Seq[IVNinoStoreEntry])(
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
-          .expects(*, *, *)
-          .returning((Future.successful(Seq(Some(ivNinoStoreEntry4)))))
+      "redirect to the landing page" in new TestHelper {
+        mockAuthCall()
+        mockAccountCheckSuccess(MULTIPLE_ACCOUNTS)
 
         val result = controller
-          .showLandingPage(
-            testOnly.routes.TestOnlyController.successfulCall.url
-          )
+          .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(result) shouldBe OK
-        contentAsString(result) shouldBe landingPageView()(
-          fakeRequest,
-          stubMessages()
-        ).toString
-
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result) shouldBe Some(
+          "/tax-enrolment-assignment-frontend/enrol-pt/introduction"
+        )
       }
     }
 
     "a no credentials exists in IV for a given nino" should {
-      "return InternalServerError" in {
-        (mockEacdConnector
-          .getUsersWithPTEnrolment(_: String)(
-            _: ExecutionContext,
-            _: HeaderCarrier
-          ))
-          .expects(NINO, *, *)
-          .returning(createInboundResult(Some(UsersAssignedEnrolment1)))
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.successful(retrievalResponse()))
-        (mockIVConnector
-          .getCredentialsWithNino(_: String)(
-            _: ExecutionContext,
-            _: HeaderCarrier
-          ))
-          .expects(NINO, *, *)
-          .returning(createInboundResultError(UnexpectedResponseFromIV))
+      "return InternalServerError" in new TestHelper {
+        mockAuthCall()
+        mockAccountCheckFailure(UnexpectedResponseFromIV)
 
         val result = controller
-          .showLandingPage(
-            testOnly.routes.TestOnlyController.successfulCall.url
-          )
+          .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
@@ -366,4 +148,64 @@ class AccountCheckControllerSpec extends TestFixture {
     }
   }
 
+  class TestHelper {
+    def mockAuthCall() =
+      (mockAuthConnector
+        .authorise(
+          _: Predicate,
+          _: Retrieval[
+            ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+              String
+            ]
+          ]
+        )(_: HeaderCarrier, _: ExecutionContext))
+        .expects(predicates, retrievals, *, *)
+        .returning(Future.successful(retrievalResponse()))
+
+    def mockAccountCheckFailure(error: TaxEnrolmentAssignmentErrors) = {
+      (mockAccountCheckOrchestrator
+        .getAccountType(
+          _: ExecutionContext,
+          _: HeaderCarrier,
+          _: RequestWithUserDetails[AnyContent]
+        ))
+        .expects(*, *, *)
+        .returning(createInboundResultError(error))
+    }
+
+    def mockAccountCheckSuccess(accountType: AccountTypes.Value) = {
+      (mockAccountCheckOrchestrator
+        .getAccountType(
+          _: ExecutionContext,
+          _: HeaderCarrier,
+          _: RequestWithUserDetails[AnyContent]
+        ))
+        .expects(*, *, *)
+        .returning(createInboundResult(accountType))
+    }
+
+    def mockSilentEnrolSuccess =
+      (mockSilentAssignmentService
+        .enrolUser()(
+          _: RequestWithUserDetails[AnyContent],
+          _: HeaderCarrier,
+          _: ExecutionContext
+        ))
+        .expects(*, *, *)
+        .returning(
+          EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(Unit))
+        )
+
+    def mockSilentEnrolFailure =
+      (mockSilentAssignmentService
+        .enrolUser()(
+          _: RequestWithUserDetails[AnyContent],
+          _: HeaderCarrier,
+          _: ExecutionContext
+        ))
+        .expects(*, *, *)
+        .returning(
+          createInboundResultError(UnexpectedResponseFromTaxEnrolments)
+        )
+  }
 }

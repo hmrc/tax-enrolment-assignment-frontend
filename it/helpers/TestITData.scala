@@ -17,14 +17,20 @@
 package helpers
 
 import play.api.libs.json._
+import play.api.mvc.Session
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core.retrieve.Credentials
+import uk.gov.hmrc.crypto.PlainText
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.UserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models._
 
 object TestITData {
 
   val NINO: String = "JT872173A"
-  val CREDENTIAL_ID: String = "credId123"
+  val CREDENTIAL_ID: String = "6902202884164548"
+  val CREDENTIAL_ID_2: String = "8316291481001919"
+  val CREDENTIAL_ID_3: String = "0493831301037584"
+  val CREDENTIAL_ID_4: String = "2884521810163541"
   val GROUP_ID: String = "GROUPID123"
   val CL50 = 50
   val CL200 = 200
@@ -61,6 +67,7 @@ object TestITData {
 
   val sessionId = "sessionId-eb3158c2-0aff-4ce8-8d1b-f2208ace52fe"
   val xSessionId: (String, String) = "X-Session-ID" -> sessionId
+  val xRequestId: (String, String) = "X-Request-ID" -> sessionId
   val csrfContent: (String, String) = "Csrf-Token" -> "nocheck"
 
   def authoriseResponseJson(optNino: Option[String] = Some(NINO),
@@ -104,12 +111,12 @@ object TestITData {
       |{
       |"credId":"6902202884164548",
       |"nino":"JT872173A",
-      |"confidenceLevel":50,
+      |"confidenceLevel":200,
       |"createdAt":{"$date":1638526944017},
       |"updatedAt":{"$date":1641388390858}},
       |{"credId":"8316291481001919",
       |"nino":"JT872173A",
-      |"confidenceLevel":200,
+      |"confidenceLevel":50,
       |"createdAt":{"$date":1638527029415},
       |"updatedAt":{"$date":1638527029478}},
       |{"credId":"0493831301037584",
@@ -125,20 +132,20 @@ object TestITData {
 
   val ivResponseSingleCredsJsonString: String =
     """[
-      |{"credId":"2884521810163541",
+      |{"credId":"6902202884164548",
       |"nino":"JT872173A",
       |"confidenceLevel":200,
       |"createdAt":{"$date":1638531686457},
       |"updatedAt":{"$date":1638531686525}}]""".stripMargin
 
   val ivNinoStoreEntry1: IVNinoStoreEntry =
-    IVNinoStoreEntry("6902202884164548", Some(CL50))
+    IVNinoStoreEntry(CREDENTIAL_ID, Some(CL200))
   val ivNinoStoreEntry2: IVNinoStoreEntry =
-    IVNinoStoreEntry("8316291481001919", Some(CL200))
+    IVNinoStoreEntry(CREDENTIAL_ID_2, Some(CL50))
   val ivNinoStoreEntry3: IVNinoStoreEntry =
-    IVNinoStoreEntry("0493831301037584", Some(CL200))
+    IVNinoStoreEntry(CREDENTIAL_ID_3, Some(CL200))
   val ivNinoStoreEntry4: IVNinoStoreEntry =
-    IVNinoStoreEntry("2884521810163541", Some(CL200))
+    IVNinoStoreEntry(CREDENTIAL_ID_4, Some(CL200))
 
   val multiIVCreds = List(
     ivNinoStoreEntry1,
@@ -285,8 +292,7 @@ object TestITData {
     """
       |{
       |    "principalUserIds": [
-      |       "ABCEDEFGI1234567",
-      |       "credId123"
+      |       "6902202884164548"
       |    ],
       |    "delegatedUserIds": []
       |}
@@ -296,9 +302,7 @@ object TestITData {
     """
       |{
       |    "principalUserIds": [
-      |    "ABCEDEFGI1234567",
-      |    "ACDCDEFGI2134567"
-      |    ],
+      |    "ABCEDEFGI1234567"],
       |    "delegatedUserIds": []
       |}
       |""".stripMargin
@@ -314,5 +318,14 @@ object TestITData {
   val underConstructionTruePageTitle =
     "Tax Enrolment Assignment Frontend - Enrolment Present"
   val landingPageTitle = "Landing Page"
+
+  val userDetailsNoEnrolments =
+    UserDetailsFromSession(
+      CREDENTIAL_ID,
+      NINO,
+      GROUP_ID,
+      hasPTEnrolment = false,
+      hasSAEnrolment = false
+    )
 
 }

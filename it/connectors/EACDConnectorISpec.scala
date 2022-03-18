@@ -21,10 +21,13 @@ import helpers.TestITData._
 import helpers.WiremockHelper._
 import play.api.http.Status
 import play.api.http.Status.OK
-import play.api.libs.json.Json
+import play.api.libs.json.{JsString, Json}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.EACDConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromEACD
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{UserEnrolmentsListResponse, UsersAssignedEnrolment}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
+  UserEnrolmentsListResponse,
+  UsersAssignedEnrolment
+}
 
 class EACDConnectorISpec extends IntegrationSpecBase {
 
@@ -75,20 +78,22 @@ class EACDConnectorISpec extends IntegrationSpecBase {
         stubGet(PATH, Status.NO_CONTENT, "")
         whenReady(connector.getUsersWithAssignedEnrolment(ENROLMENT_KEY).value) {
           response =>
-            response shouldBe Right(None)
+            response shouldBe Right(UsersAssignedEnrolment(None))
         }
       }
     }
 
     s"a user exists with the $ENROLMENT_KEY" should {
       "return the users credentialId" in {
-        val eacdResponse =
-          UsersAssignedEnrolment(List(CREDENTIAL_ID), List.empty)
+        val eacdResponse = Json.obj(
+          ("principalUserIds", Json.arr(JsString(CREDENTIAL_ID))),
+          ("delegatedUserIds", Json.arr())
+        )
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        stubGet(PATH, Status.OK, Json.toJson(eacdResponse).toString())
+        stubGet(PATH, Status.OK, eacdResponse.toString())
         whenReady(connector.getUsersWithAssignedEnrolment(ENROLMENT_KEY).value) {
           response =>
-            response shouldBe Right(Some(eacdResponse))
+            response shouldBe Right(UsersAssignedEnrolment(Some(CREDENTIAL_ID)))
         }
       }
     }
@@ -127,20 +132,22 @@ class EACDConnectorISpec extends IntegrationSpecBase {
         stubPost(s"/write/.*", OK, """{"x":2}""")
         whenReady(connector.getUsersWithAssignedEnrolment(ENROLMENT_KEY).value) {
           response =>
-            response shouldBe Right(None)
+            response shouldBe Right(UsersAssignedEnrolment(None))
         }
       }
     }
 
     s"a user exists with the $ENROLMENT_KEY" should {
       "return the users credentialId" in {
-        val eacdResponse =
-          UsersAssignedEnrolment(List(CREDENTIAL_ID), List.empty)
-        stubGet(PATH, Status.OK, Json.toJson(eacdResponse).toString())
+        val eacdResponse = Json.obj(
+          ("principalUserIds", Json.arr(JsString(CREDENTIAL_ID))),
+          ("delegatedUserIds", Json.arr())
+        )
+        stubGet(PATH, Status.OK, eacdResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         whenReady(connector.getUsersWithAssignedEnrolment(ENROLMENT_KEY).value) {
           response =>
-            response shouldBe Right(Some(eacdResponse))
+            response shouldBe Right(UsersAssignedEnrolment(Some(CREDENTIAL_ID)))
         }
       }
     }
@@ -222,7 +229,7 @@ class EACDConnectorISpec extends IntegrationSpecBase {
       }
     }
   }
-  
+
   "queryEnrolmentsAssignedToUser" when {
     val USER_ID = "123456"
     val PATH =
@@ -241,8 +248,10 @@ class EACDConnectorISpec extends IntegrationSpecBase {
 
     s"the user has multiple enrolments" should {
       "return a list of enrolments" in {
-        val eacdResponse = UserEnrolmentsListResponse(Seq(userEnrolmentIRPAYE, userEnrolmentIRSA))
-        
+        val eacdResponse = UserEnrolmentsListResponse(
+          Seq(userEnrolmentIRPAYE, userEnrolmentIRSA)
+        )
+
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGetMatching(PATH, Status.OK, Json.toJson(eacdResponse).toString())
         whenReady(connector.queryEnrolmentsAssignedToUser(USER_ID).value) {

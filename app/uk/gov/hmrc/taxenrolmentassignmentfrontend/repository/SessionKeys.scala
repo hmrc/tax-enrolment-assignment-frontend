@@ -18,6 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.repository
 
 object SessionKeys {
 
+  val ACCOUNT_TYPE = "ACCOUNT_TYPE"
   val USER_ASSIGNED_PT_ENROLMENT = "USER_ASSIGNED_PT_ENROLMENT"
   val REDIRECT_URL = "redirectURL"
   val OTHER_VALID_PTA_ACCOUNTS = "OTHER_VALID_PTA_ACCOUNTS"

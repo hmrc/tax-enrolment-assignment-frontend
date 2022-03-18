@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
-import cats.data.EitherT
 import javax.inject.{Inject, Singleton}
 import play.api.Logging
 import play.api.http.ContentTypeOf.contentTypeOf_Html
@@ -24,28 +23,16 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{
-  EACDConnector,
-  IVConnector
-}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.{
   AuthAction,
-  RequestWithUserDetails,
-  UserDetailsFromSession
+  RequestWithUserDetails
 }
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IVNinoStoreEntry
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.AccountCheckOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{
-  LandingPage,
-  UnderConstructionView
-}
 
 import scala.concurrent.{ExecutionContext, Future}
 

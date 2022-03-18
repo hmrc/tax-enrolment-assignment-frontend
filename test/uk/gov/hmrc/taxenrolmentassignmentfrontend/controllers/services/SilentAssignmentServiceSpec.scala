@@ -17,9 +17,9 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.services
 
 import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.time.{Millis, Seconds, Span}
 import play.api.libs.json.Format
 import play.api.mvc.AnyContent
-import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
@@ -27,7 +27,6 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromEACD
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
-  AccountDetails,
   IVNinoStoreEntry,
   UserEnrolmentsListResponse
 }
@@ -37,6 +36,11 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentServi
 import scala.concurrent.{ExecutionContext, Future}
 
 class SilentAssignmentServiceSpec extends TestFixture with ScalaFutures {
+
+  implicit val defaultPatience = PatienceConfig(
+    timeout = Span(TIME_OUT, Seconds),
+    interval = Span(INTERVAL, Millis)
+  )
 
   val service = new SilentAssignmentService(
     mockIVConnector,
@@ -54,33 +58,21 @@ class SilentAssignmentServiceSpec extends TestFixture with ScalaFutures {
   "getOtherAccountsWithPTAAccess" when {
     "a record is in the cache" that {
       "has no other accounts" should {
-        "return a empty list and not call IV" in {
-          (mockTeaSessionCache
-            .getEntry(_: String)(
-              _: RequestWithUserDetails[AnyContent],
-              _: Format[Seq[IVNinoStoreEntry]]
-            ))
-            .expects(OTHER_VALID_PTA_ACCOUNTS, *, *)
-            .returning(Future.successful(Some(Seq.empty)))
+        "return a empty list and not call IV" in new TestHelper {
+          mockGetCacheOtherValdPTAAccounts(Some(Seq.empty[IVNinoStoreEntry]))
 
           val res = service.getOtherAccountsWithPTAAccess
 
           whenReady(res.value) { result =>
-            result shouldBe Right(Seq.empty)
+            result shouldBe Right(Seq.empty[IVNinoStoreEntry])
           }
         }
       }
 
       "has other PTA accessible accounts" should {
-        "return the list of other accounts" in {
+        "return the list of other accounts" in new TestHelper {
           val otherValidPTAAccounts = Seq(ivNinoStoreEntry2, ivNinoStoreEntry3)
-          (mockTeaSessionCache
-            .getEntry(_: String)(
-              _: RequestWithUserDetails[AnyContent],
-              _: Format[Seq[IVNinoStoreEntry]]
-            ))
-            .expects(OTHER_VALID_PTA_ACCOUNTS, *, *)
-            .returning(Future.successful(Some(otherValidPTAAccounts)))
+          mockGetCacheOtherValdPTAAccounts(Some(otherValidPTAAccounts))
 
           val res = service.getOtherAccountsWithPTAAccess
 
@@ -93,195 +85,162 @@ class SilentAssignmentServiceSpec extends TestFixture with ScalaFutures {
 
     "a record is not in the cache" should {
       "save to cache and return an empty list" when {
-        "all CL200 accounts have a business enrolment" in {
-          (mockTeaSessionCache
-            .getEntry(_: String)(
-              _: RequestWithUserDetails[AnyContent],
-              _: Format[Seq[IVNinoStoreEntry]]
-            ))
-            .expects(OTHER_VALID_PTA_ACCOUNTS, *, *)
-            .returning(Future.successful(None))
-          (mockIVConnector
-            .getCredentialsWithNino(_: String)(
-              _: ExecutionContext,
-              _: HeaderCarrier
-            ))
-            .expects(NINO, *, *)
-            .returning(createInboundResult(multiIVCreds))
-          (mockEacdConnector
-            .queryEnrolmentsAssignedToUser(_: String)(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            ))
-            .expects("8316291481001919", *, *)
-            .returning(createInboundResult(Some(businessEnrolmentResponse)))
+        "all CL200 accounts have a business enrolment" in new TestHelper {
+          mockGetCacheOtherValdPTAAccounts(None)
+          mockIVCall(multiIVCreds)
+          mockEACDGetEnrolments(
+            "8316291481001919",
+            Some(businessEnrolmentResponse)
+          )
+          mockEACDGetEnrolments(
+            "0493831301037584",
+            Some(businessEnrolmentResponse)
+          )
+          mockEACDGetEnrolments(
+            "2884521810163541",
+            Some(businessEnrolmentResponse)
+          ).returning(createInboundResult(Some(businessEnrolmentResponse)))
 
-          (mockEacdConnector
-            .queryEnrolmentsAssignedToUser(_: String)(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            ))
-            .expects("0493831301037584", *, *)
-            .returning(createInboundResult(Some(businessEnrolmentResponse)))
-
-          (mockEacdConnector
-            .queryEnrolmentsAssignedToUser(_: String)(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            ))
-            .expects("2884521810163541", *, *)
-            .returning(createInboundResult(Some(businessEnrolmentResponse)))
-
-          (mockTeaSessionCache
-            .save(_: String, _: Seq[IVNinoStoreEntry])(
-              _: RequestWithUserDetails[AnyContent],
-              _: Format[Seq[IVNinoStoreEntry]]
-            ))
-            .expects(OTHER_VALID_PTA_ACCOUNTS, Seq.empty, *, *)
-            .returning(Future(CacheMap(request.sessionID, Map())))
+          mockSaveCacheOtherValidPTAAccounts(Seq.empty[IVNinoStoreEntry])
 
           val res = service.getOtherAccountsWithPTAAccess
 
           whenReady(res.value) { result =>
-            result shouldBe Right(Seq.empty)
+            result shouldBe Right(Seq.empty[IVNinoStoreEntry])
           }
         }
 
-        "there are more than 10 CL200 accounts" in {
-          (mockTeaSessionCache
-            .getEntry(_: String)(
-              _: RequestWithUserDetails[AnyContent],
-              _: Format[Seq[IVNinoStoreEntry]]
-            ))
-            .expects(OTHER_VALID_PTA_ACCOUNTS, *, *)
-            .returning(Future.successful(None))
-
-          (mockIVConnector
-            .getCredentialsWithNino(_: String)(
-              _: ExecutionContext,
-              _: HeaderCarrier
-            ))
-            .expects(NINO, *, *)
-            .returning(createInboundResult(multiCL200IVCreds))
-
-          (mockTeaSessionCache
-            .save(_: String, _: Seq[IVNinoStoreEntry])(
-              _: RequestWithUserDetails[AnyContent],
-              _: Format[Seq[IVNinoStoreEntry]]
-            ))
-            .expects(OTHER_VALID_PTA_ACCOUNTS, Seq.empty, *, *)
-            .returning(Future(CacheMap(request.sessionID, Map())))
+        "there are more than 10 CL200 accounts" in new TestHelper {
+          mockGetCacheOtherValdPTAAccounts(None)
+          mockIVCall(multiCL200IVCreds)
+          mockSaveCacheOtherValidPTAAccounts(Seq.empty[IVNinoStoreEntry])
 
           val res = service.getOtherAccountsWithPTAAccess
 
           whenReady(res.value) { result =>
-            result shouldBe Right(Seq.empty)
+            result shouldBe Right(Seq.empty[IVNinoStoreEntry])
+          }
+        }
+
+        "IV only returns signed in credential" in new TestHelper {
+          mockGetCacheOtherValdPTAAccounts(None)
+          mockIVCall(List(ivNinoStoreEntryCurrent))
+          mockSaveCacheOtherValidPTAAccounts(Seq.empty[IVNinoStoreEntry])
+
+          val res = service.getOtherAccountsWithPTAAccess
+
+          whenReady(res.value) { result =>
+            result shouldBe Right(Seq.empty[IVNinoStoreEntry])
+          }
+        }
+
+        //TODO is this incorrect handling? Should we not ignore the errors and retry
+        "the calls to EACD respond with an error" in new TestHelper {
+          mockGetCacheOtherValdPTAAccounts(None)
+          mockIVCall(multiIVCreds)
+          mockEACDGetEnrolmentsFailure("8316291481001919")
+          mockEACDGetEnrolmentsFailure("0493831301037584")
+          mockEACDGetEnrolmentsFailure("2884521810163541")
+          mockSaveCacheOtherValidPTAAccounts(Seq.empty[IVNinoStoreEntry])
+
+          val res = service.getOtherAccountsWithPTAAccess
+
+          whenReady(res.value) { result =>
+            result shouldBe Right(Seq.empty[IVNinoStoreEntry])
           }
         }
       }
 
+      "save to cache and return the other PTA valid credentials" when {
+        val validPtaList =
+          Seq(ivNinoStoreEntry2, ivNinoStoreEntry3, ivNinoStoreEntry4)
+
+        "the accounts have no enrolments" in new TestHelper {
+          mockGetCacheOtherValdPTAAccounts(None)
+          mockIVCall(multiIVCreds)
+          mockEACDGetEnrolments("8316291481001919", None)
+          mockEACDGetEnrolments("0493831301037584", None)
+          mockEACDGetEnrolments("2884521810163541", None)
+          mockSaveCacheOtherValidPTAAccounts(validPtaList)
+
+          val res = service.getOtherAccountsWithPTAAccess
+
+          whenReady(res.value) { result =>
+            result shouldBe Right(validPtaList)
+          }
+        }
+
+        "the accounts have no business enrolments" in new TestHelper {
+          mockGetCacheOtherValdPTAAccounts(None)
+          mockIVCall(multiIVCreds)
+          mockEACDGetEnrolments("8316291481001919", Some(irsaResponse))
+          mockEACDGetEnrolments("0493831301037584", Some(irsaResponse))
+          mockEACDGetEnrolments("2884521810163541", Some(irsaResponse))
+          mockSaveCacheOtherValidPTAAccounts(validPtaList)
+
+          val res = service.getOtherAccountsWithPTAAccess
+
+          whenReady(res.value) { result =>
+            result shouldBe Right(validPtaList)
+          }
+        }
+      }
     }
   }
 
-  "getValidPtaAccounts" should {
-    "return an empty list" when {
+  class TestHelper {
 
-      //TODO is this incorrect handling? Should we not ignore the errors and retry
-      "if the calls to EACD respond with an error" in {
-        (mockEacdConnector
-          .queryEnrolmentsAssignedToUser(_: String)(
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
-          .expects("8316291481001919", *, *)
-          .returning(createInboundResultError(UnexpectedResponseFromEACD))
+    def mockGetCacheOtherValdPTAAccounts(resp: Option[Seq[IVNinoStoreEntry]]) =
+      (mockTeaSessionCache
+        .getEntry(_: String)(
+          _: RequestWithUserDetails[AnyContent],
+          _: Format[Seq[IVNinoStoreEntry]]
+        ))
+        .expects(OTHER_VALID_PTA_ACCOUNTS, *, *)
+        .returning(Future.successful(resp))
+        .once()
 
-        (mockEacdConnector
-          .queryEnrolmentsAssignedToUser(_: String)(
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
-          .expects("0493831301037584", *, *)
-          .returning(createInboundResultError(UnexpectedResponseFromEACD))
+    def mockIVCall(resp: List[IVNinoStoreEntry]) =
+      (mockIVConnector
+        .getCredentialsWithNino(_: String)(
+          _: ExecutionContext,
+          _: HeaderCarrier
+        ))
+        .expects(NINO, *, *)
+        .returning(createInboundResult(resp))
+        .once()
 
-        (mockEacdConnector
-          .queryEnrolmentsAssignedToUser(_: String)(
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
-          .expects("2884521810163541", *, *)
-          .returning(createInboundResultError(UnexpectedResponseFromEACD))
+    def mockEACDGetEnrolments(credId: String,
+                              resp: Option[UserEnrolmentsListResponse]) =
+      (mockEacdConnector
+        .queryEnrolmentsAssignedToUser(_: String)(
+          _: HeaderCarrier,
+          _: ExecutionContext
+        ))
+        .expects(credId, *, *)
+        .returning(createInboundResult(resp))
+        .once()
 
-        val result = service.getValidPtaAccounts(multiIVCreds)(hc, ec)
-        await(result) shouldBe Seq(None, None, None)
-      }
+    def mockEACDGetEnrolmentsFailure(credId: String) =
+      (mockEacdConnector
+        .queryEnrolmentsAssignedToUser(_: String)(
+          _: HeaderCarrier,
+          _: ExecutionContext
+        ))
+        .expects(credId, *, *)
+        .returning(createInboundResultError(UnexpectedResponseFromEACD))
+        .once()
 
-      "return a populated list" when {
-        val validPtaList = Seq(
-          Some(ivNinoStoreEntry2),
-          Some(ivNinoStoreEntry3),
-          Some(ivNinoStoreEntry4)
-        )
-
-        "the accounts have no enrolments" in {
-          (mockEacdConnector
-            .queryEnrolmentsAssignedToUser(_: String)(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            ))
-            .expects("8316291481001919", *, *)
-            .returning(createInboundResult(None))
-
-          (mockEacdConnector
-            .queryEnrolmentsAssignedToUser(_: String)(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            ))
-            .expects("0493831301037584", *, *)
-            .returning(createInboundResult(None))
-
-          (mockEacdConnector
-            .queryEnrolmentsAssignedToUser(_: String)(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            ))
-            .expects("2884521810163541", *, *)
-            .returning(createInboundResult(None))
-
-          val result = service.getValidPtaAccounts(multiIVCreds)(hc, ec)
-          await(result) shouldBe validPtaList
-
-        }
-
-        "the accounts have no business enrolments" in {
-          (mockEacdConnector
-            .queryEnrolmentsAssignedToUser(_: String)(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            ))
-            .expects("8316291481001919", *, *)
-            .returning(createInboundResult(Some(irsaResponse)))
-
-          (mockEacdConnector
-            .queryEnrolmentsAssignedToUser(_: String)(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            ))
-            .expects("0493831301037584", *, *)
-            .returning(createInboundResult(Some(irsaResponse)))
-
-          (mockEacdConnector
-            .queryEnrolmentsAssignedToUser(_: String)(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            ))
-            .expects("2884521810163541", *, *)
-            .returning(createInboundResult(Some(irsaResponse)))
-
-          val result = service.getValidPtaAccounts(multiIVCreds)(hc, ec)
-          await(result) shouldBe validPtaList
-        }
-      }
-    }
+    def mockSaveCacheOtherValidPTAAccounts(
+      otherValidPtaAccounts: Seq[IVNinoStoreEntry]
+    ) =
+      (mockTeaSessionCache
+        .save(_: String, _: Seq[IVNinoStoreEntry])(
+          _: RequestWithUserDetails[AnyContent],
+          _: Format[Seq[IVNinoStoreEntry]]
+        ))
+        .expects(OTHER_VALID_PTA_ACCOUNTS, otherValidPtaAccounts, *, *)
+        .returning(Future(CacheMap(request.sessionID, Map())))
+        .once()
   }
 }

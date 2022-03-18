@@ -16,7 +16,7 @@
 
 package helpers
 
-import helpers.TestITData.AUTHORIZE_HEADER_VALUE
+import helpers.TestITData._
 import helpers.WiremockHelper.wiremockURL
 import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
@@ -30,8 +30,23 @@ import org.scalatest.{
 }
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.mvc.{
+  AnyContent,
+  CookieHeaderEncoding,
+  Request,
+  SessionCookieBaker
+}
+import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import play.api.{Application, Environment, Mode}
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
+import uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.SessionCookieCrypto
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.{
+  CascadeUpsert,
+  MongoRepository,
+  SessionRepository,
+  TEASessionCache
+}
 
 import scala.concurrent.ExecutionContext
 
@@ -46,7 +61,10 @@ trait IntegrationSpecBase
     with GuiceOneServerPerSuite
     with BeforeAndAfterEach
     with BeforeAndAfterAll
-    with Eventually {
+    with Eventually
+    with FutureAwaits
+    with DefaultAwaitTimeout
+    with SessionCacheOperations {
 
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.global
   lazy implicit val hc: HeaderCarrier = HeaderCarrier(
@@ -85,8 +103,15 @@ trait IntegrationSpecBase
     .configure(config)
     .build
 
-  override def beforeEach(): Unit =
+  val sessionRepository: SessionRepository =
+    app.injector.instanceOf[SessionRepository]
+
+  val cascadeUpsert: CascadeUpsert = app.injector.instanceOf[CascadeUpsert]
+
+  override def beforeEach(): Unit = {
+    await(removeAll(sessionId))
     resetWiremock()
+  }
 
   override def beforeAll(): Unit = {
     super.beforeAll()

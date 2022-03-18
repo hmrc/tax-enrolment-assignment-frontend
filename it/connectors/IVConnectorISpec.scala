@@ -56,7 +56,7 @@ class IVConnectorISpec extends IntegrationSpecBase {
         )
         stubPost(s"/write/.*", OK, """{"x":2}""")
         whenReady(connector.getCredentialsWithNino(NINO).value) { response =>
-          response shouldBe Right(List(ivNinoStoreEntry4))
+          response shouldBe Right(List(ivNinoStoreEntry1))
         }
       }
     }

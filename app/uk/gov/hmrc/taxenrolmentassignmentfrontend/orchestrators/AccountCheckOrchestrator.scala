@@ -38,6 +38,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.{
   RequestWithUserDetails,
   UserDetailsFromSession
 }
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.ACCOUNT_TYPE
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{
   EACDService,
@@ -53,18 +54,16 @@ class AccountCheckOrchestrator @Inject()(
   sessionCache: TEASessionCache
 ) {
 
-  lazy val sessionKey = "ACCOUNT_TYPE"
-
   def getAccountType(
     implicit ec: ExecutionContext,
     hc: HeaderCarrier,
     requestWithUserDetails: RequestWithUserDetails[AnyContent]
   ): TEAFResult[AccountTypes.Value] = EitherT {
-    sessionCache.getEntry[AccountTypes.Value](sessionKey).flatMap {
+    sessionCache.getEntry[AccountTypes.Value](ACCOUNT_TYPE).flatMap {
       case Some(accountType) => Future.successful(Right(accountType))
       case None =>
         generateAccountType.map { accountType =>
-          sessionCache.save[AccountTypes.Value](sessionKey, accountType)
+          sessionCache.save[AccountTypes.Value](ACCOUNT_TYPE, accountType)
           accountType
         }.value
     }

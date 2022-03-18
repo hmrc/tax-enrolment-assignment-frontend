@@ -43,7 +43,7 @@ class SilentAssignmentService @Inject()(
   sessionCache: TEASessionCache
 ) {
 
-  private val saEnrolmentSet: Set[String] =
+  private lazy val saEnrolmentSet: Set[String] =
     Set("IR-SA", "HMRC-MTD-IT", "HMRC-NI")
 
   private def filterCL200Accounts(
@@ -61,7 +61,14 @@ class SilentAssignmentService @Inject()(
         .getEntry[Seq[IVNinoStoreEntry]](OTHER_VALID_PTA_ACCOUNTS)
         .flatMap {
           case Some(otherCreds) => Future.successful(Right(otherCreds))
-          case None             => getOtherAccountsValidForPTA.value
+          case None =>
+            getOtherAccountsValidForPTA.map { otherValidAccounts =>
+              sessionCache.save[Seq[IVNinoStoreEntry]](
+                OTHER_VALID_PTA_ACCOUNTS,
+                otherValidAccounts
+              )
+              otherValidAccounts
+            }.value
         }
     }
 
@@ -85,60 +92,62 @@ class SilentAssignmentService @Inject()(
       allCreds <- ivConnector.getCredentialsWithNino(
         requestWithUserDetails.userDetails.nino
       )
-      otherCreds <- EitherT.right[TaxEnrolmentAssignmentErrors](
-        Future.successful(
-          filterCL200Accounts(
-            allCreds
-              .filterNot(_.credId == requestWithUserDetails.userDetails.credId)
-          )
+      otherValidPTACreds <- EitherT.right[TaxEnrolmentAssignmentErrors](
+        getOtherNoneBusinessAccounts(
+          allCreds,
+          requestWithUserDetails.userDetails.credId
         )
       )
-      otherValidPTACreds <- EitherT.right[TaxEnrolmentAssignmentErrors](
-        getOtherValidPtaAccounts(otherCreds)
-      )
     } yield {
-      sessionCache.save[Seq[IVNinoStoreEntry]](
-        OTHER_VALID_PTA_ACCOUNTS,
-        otherValidPTACreds
-      )
       otherValidPTACreds
     }
   }
 
-  private def getOtherValidPtaAccounts(list: Seq[IVNinoStoreEntry])(
+  private def getOtherNoneBusinessAccounts(list: Seq[IVNinoStoreEntry],
+                                           currentCredId: String)(
+    implicit hc: HeaderCarrier,
+    ec: ExecutionContext
+  ): Future[Seq[IVNinoStoreEntry]] = {
+    val otherCreds = list.filterNot(_.credId == currentCredId)
+    lazy val filteredCL200List: Seq[IVNinoStoreEntry] = filterCL200Accounts(
+      otherCreds
+    )
+    if (otherCreds.nonEmpty && filteredCL200List.nonEmpty && filteredCL200List.size < 10) {
+      filterNoneBusinessAccounts(filteredCL200List)
+    } else {
+      Future.successful(Seq.empty[IVNinoStoreEntry])
+
+    }
+  }
+
+  private def filterNoneBusinessAccounts(list: Seq[IVNinoStoreEntry])(
     implicit hc: HeaderCarrier,
     ec: ExecutionContext
   ): Future[Seq[IVNinoStoreEntry]] = {
 
-    val filteredCL200List: Seq[IVNinoStoreEntry] = filterCL200Accounts(list)
-
-    val validPtaAccountList: Seq[Future[Option[IVNinoStoreEntry]]] =
-      if (filteredCL200List.nonEmpty && filteredCL200List.size < 10) {
-        filteredCL200List.map { ninoEntry =>
-          checkIfAccountValidForPTA(ninoEntry)
-        }
-      } else {
-        Seq(Future.successful(None))
+    val validPtaAccountList = list.map { ninoEntry =>
+      isNotBusinessAccount(ninoEntry).map {
+        case true  => Some(ninoEntry)
+        case false => None
       }
+    }
 
     Future.sequence(validPtaAccountList).map(_.flatten)
   }
 
-  private def checkIfAccountValidForPTA(ninoEntry: IVNinoStoreEntry)(
-    implicit hc: HeaderCarrier,
-    ec: ExecutionContext
-  ): Future[Option[IVNinoStoreEntry]] = {
+  private def isNotBusinessAccount(
+    ninoEntry: IVNinoStoreEntry
+  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Boolean] = {
     eacdConnector
       .queryEnrolmentsAssignedToUser(ninoEntry.credId)
       .value
       .map {
         case Right(Some(enrolmentsList)) =>
-          val hasNoBusinessEnrolments = enrolmentsList.enrolments
+          enrolmentsList.enrolments
             .map(_.service)
             .forall(e => saEnrolmentSet(e))
-          if (hasNoBusinessEnrolments) Some(ninoEntry) else None
-        case Right(None) => Some(ninoEntry)
-        case Left(_)     => None
+        case Right(_) => true
+        case _        => false
       }
   }
 

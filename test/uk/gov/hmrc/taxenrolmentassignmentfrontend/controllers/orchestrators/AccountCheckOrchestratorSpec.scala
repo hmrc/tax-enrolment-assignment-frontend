@@ -16,354 +16,248 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.orchestrators
 
-import cats.data.EitherT
-import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK, SEE_OTHER}
+import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.time.{Millis, Seconds, Span}
+import play.api.libs.json.Format
 import play.api.mvc.AnyContent
-import play.api.test.Helpers._
-import uk.gov.hmrc.auth.core.Enrolments
-import uk.gov.hmrc.auth.core.authorise.Predicate
-import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.cache.client.CacheMap
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
+  MULTIPLE_ACCOUNTS,
+  PT_ASSIGNED_TO_CURRENT_USER,
+  PT_ASSIGNED_TO_OTHER_USER,
+  SINGLE_ACCOUNT
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{
-  LandingPageController,
-  testOnly
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromIV
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.LandingPage
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{
-  LandingPageController,
-  testOnly
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
-  TaxEnrolmentAssignmentErrors,
-  UnexpectedResponseFromIV,
-  UnexpectedResponseFromTaxEnrolments
-}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IVNinoStoreEntry
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.LandingPage
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.AccountCheckOrchestrator
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.ACCOUNT_TYPE
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class AccountCheckOrchestratorSpec extends TestFixture {
+class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
 
-  val mockTeaSessionCache = new TestTeaSessionCache
-  val landingView: LandingPage = app.injector.instanceOf[LandingPage]
-  val errorView: ErrorTemplate = app.injector.instanceOf[ErrorTemplate]
-  val mockSilentAssignmentService: SilentAssignmentService =
-    mock[SilentAssignmentService]
-
-  val controller = new LandingPageController(
-    mockAuthAction,
-    testAppConfig,
-    mockIVConnector,
-    mockEacdConnector,
-    mockSilentAssignmentService,
-    mcc,
-    mockTeaSessionCache,
-    landingView,
-    UCView,
-    errorView
+  implicit val defaultPatience = PatienceConfig(
+    timeout = Span(TIME_OUT, Seconds),
+    interval = Span(INTERVAL, Millis)
   )
-  "showLandingPage" when {
-    "a single credential exists for a given nino with no PT enrolment" should {
-      "silently assign the HMRC-PT Enrolment and redirect to PTA" in {
-        (mockEacdConnector
-          .getUsersWithPTEnrolment(_: String)(
-            _: ExecutionContext,
-            _: HeaderCarrier
-          ))
-          .expects(NINO, *, *)
-          .returning(createInboundResult(Some(UsersAssignedEnrolmentEmpty)))
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.successful(retrievalResponse()))
-        (mockIVConnector
-          .getCredentialsWithNino(_: String)(
-            _: ExecutionContext,
-            _: HeaderCarrier
-          ))
-          .expects(NINO, *, *)
-          .returning(createInboundResult(List(ivNinoStoreEntry4)))
 
-        (mockSilentAssignmentService
-          .getValidPtaAccounts(_: Seq[IVNinoStoreEntry])(
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
-          .expects(*, *, *)
-          .returning((Future.successful(Seq(Some(ivNinoStoreEntry4)))))
+  val orchestrator = new AccountCheckOrchestrator(
+    mockEacdService,
+    mockSilentAssignmentService,
+    mockTeaSessionCache
+  )
 
-        (mockSilentAssignmentService
-          .enrolUser()(
+  s"getAccountType" when {
+    "the accountType is available in the cache" should {
+      "return the accountType" in {
+        (mockTeaSessionCache
+          .getEntry(_: String)(
             _: RequestWithUserDetails[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
+            _: Format[AccountTypes.Value]
           ))
-          .expects(*, *, *)
-          .returning(
-            EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(Unit))
-          )
+          .expects("ACCOUNT_TYPE", *, *)
+          .returning(Future.successful(Some(SINGLE_ACCOUNT)))
 
-        val result = controller
-          .showLandingPage(
-            testOnly.routes.TestOnlyController.successfulCall.url
-          )
-          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
-
-        status(result) shouldBe SEE_OTHER
-        redirectLocation(result) shouldBe Some(
-          "http://localhost:9232/personal-account"
-        )
-      }
-
-      "return an error page if there was an error assigning the enrolment" in {
-        (mockEacdConnector
-          .getUsersWithPTEnrolment(_: String)(
-            _: ExecutionContext,
-            _: HeaderCarrier
-          ))
-          .expects(NINO, *, *)
-          .returning(createInboundResult(Some(UsersAssignedEnrolmentEmpty)))
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.successful(retrievalResponse()))
-        (mockIVConnector
-          .getCredentialsWithNino(_: String)(
-            _: ExecutionContext,
-            _: HeaderCarrier
-          ))
-          .expects(NINO, *, *)
-          .returning(createInboundResult(List(ivNinoStoreEntry4)))
-
-        (mockSilentAssignmentService
-          .getValidPtaAccounts(_: Seq[IVNinoStoreEntry])(
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
-          .expects(*, *, *)
-          .returning((Future.successful(Seq(Some(ivNinoStoreEntry4)))))
-
-        (mockSilentAssignmentService
-          .enrolUser()(
-            _: RequestWithUserDetails[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
-          .expects(*, *, *)
-          .returning(
-            createInboundResultError(UnexpectedResponseFromTaxEnrolments)
-          )
-
-        val result = controller
-          .showLandingPage(
-            testOnly.routes.TestOnlyController.successfulCall.url
-          )
-          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
-
-        status(result) shouldBe OK
-        contentAsString(result) should include("enrolmentError.title")
+        val res = orchestrator.getAccountType
+        whenReady(res.value) { result =>
+          result shouldBe Right(SINGLE_ACCOUNT)
+        }
       }
     }
 
-    "a single credential exists for a given nino that is already enrolled for PT" should {
-      "redirect to the return url" in {
+    "a user has one credential associated with their nino" that {
+      "has no PT enrolment in session or EACD" should {
+        s"return SINGLE_ACCOUNT" in {
+          (mockTeaSessionCache
+            .getEntry(_: String)(
+              _: RequestWithUserDetails[AnyContent],
+              _: Format[AccountTypes.Value]
+            ))
+            .expects("ACCOUNT_TYPE", *, *)
+            .returning(Future.successful(None))
 
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
-          .expects(predicates, retrievals, *, *)
-          .returning(
-            Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly))
+          (mockEacdService
+            .getUsersAssignedPTEnrolment(
+              _: RequestWithUserDetails[AnyContent],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            ))
+            .expects(*, *, *)
+            .returning(createInboundResult(UsersAssignedEnrolmentEmpty))
+
+          (mockSilentAssignmentService
+            .getOtherAccountsWithPTAAccess(
+              _: RequestWithUserDetails[AnyContent],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            ))
+            .expects(*, *, *)
+            .returning(createInboundResult(Seq.empty[IVNinoStoreEntry]))
+
+          (mockTeaSessionCache
+            .save(_: String, _: AccountTypes.Value)(
+              _: RequestWithUserDetails[AnyContent],
+              _: Format[AccountTypes.Value]
+            ))
+            .expects(ACCOUNT_TYPE, SINGLE_ACCOUNT, *, *)
+            .returning(Future(CacheMap(request.sessionID, Map())))
+
+          val res = orchestrator.getAccountType
+
+          whenReady(res.value) { result =>
+            result shouldBe Right(SINGLE_ACCOUNT)
+          }
+        }
+      }
+
+      "has a PT enrolment in the session" should {
+        s"return PT_ASSIGNED_TO_CURRENT_USER" in {
+          (mockTeaSessionCache
+            .getEntry(_: String)(
+              _: RequestWithUserDetails[AnyContent],
+              _: Format[AccountTypes.Value]
+            ))
+            .expects("ACCOUNT_TYPE", *, *)
+            .returning(Future.successful(None))
+
+          val res = orchestrator.getAccountType(
+            ec,
+            hc,
+            request.copy(userDetails = userDetailsWithPTEnrolment)
           )
-        (mockIVConnector
-          .getCredentialsWithNino(_: String)(
-            _: ExecutionContext,
-            _: HeaderCarrier
-          ))
-          .expects(NINO, *, *)
-          .returning(createInboundResult(List(ivNinoStoreEntry3)))
-        (mockSilentAssignmentService
-          .getValidPtaAccounts(_: Seq[IVNinoStoreEntry])(
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
-          .expects(*, *, *)
-          .returning((Future.successful(Seq(Some(ivNinoStoreEntry3)))))
 
-        val result = controller
-          .showLandingPage(
-            testOnly.routes.TestOnlyController.successfulCall.url
-          )
-          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+          (mockTeaSessionCache
+            .save(_: String, _: AccountTypes.Value)(
+              _: RequestWithUserDetails[AnyContent],
+              _: Format[AccountTypes.Value]
+            ))
+            .expects(ACCOUNT_TYPE, PT_ASSIGNED_TO_CURRENT_USER, *, *)
+            .returning(Future(CacheMap(request.sessionID, Map())))
 
-        status(result) shouldBe SEE_OTHER
-        redirectLocation(result) shouldBe Some(
-          "/tax-enrolment-assignment-frontend/test-only/successful"
-        )
+          whenReady(res.value) { result =>
+            result shouldBe Right(PT_ASSIGNED_TO_CURRENT_USER)
+          }
+        }
+      }
+
+      "has PT enrolment in EACD but not the session" should {
+        s"return PT_ASSIGNED_TO_CURRENT_USER" in {
+          (mockTeaSessionCache
+            .getEntry(_: String)(
+              _: RequestWithUserDetails[AnyContent],
+              _: Format[AccountTypes.Value]
+            ))
+            .expects("ACCOUNT_TYPE", *, *)
+            .returning(Future.successful(None))
+
+          (mockEacdService
+            .getUsersAssignedPTEnrolment(
+              _: RequestWithUserDetails[AnyContent],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            ))
+            .expects(*, *, *)
+            .returning(createInboundResult(UsersAssignedEnrolmentCurrentCred))
+
+          (mockTeaSessionCache
+            .save(_: String, _: AccountTypes.Value)(
+              _: RequestWithUserDetails[AnyContent],
+              _: Format[AccountTypes.Value]
+            ))
+            .expects(ACCOUNT_TYPE, PT_ASSIGNED_TO_CURRENT_USER, *, *)
+            .returning(Future(CacheMap(request.sessionID, Map())))
+          val res = orchestrator.getAccountType
+
+          whenReady(res.value) { result =>
+            result shouldBe Right(PT_ASSIGNED_TO_CURRENT_USER)
+          }
+        }
       }
     }
 
-    "multiple credentials exists for a given nino and PT enrolment exists on another account" should {
-      "present the underConstruction page" in {
-        (mockEacdConnector
-          .getUsersWithPTEnrolment(_: String)(
-            _: ExecutionContext,
-            _: HeaderCarrier
-          ))
-          .expects(NINO, *, *)
-          .returning(createInboundResult(Some(UsersAssignedEnrolment1)))
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.successful(retrievalResponse()))
-        (mockIVConnector
-          .getCredentialsWithNino(_: String)(
-            _: ExecutionContext,
-            _: HeaderCarrier
-          ))
-          .expects(NINO, *, *)
-          .returning(createInboundResult(multiIVCreds))
+    "a user has other none business credentials associated with their NINO" that {
+      "includes one with a PT enrolment" should {
+        "return PT_ASSIGNED_TO_OTHER_USER" in {
+          (mockTeaSessionCache
+            .getEntry(_: String)(
+              _: RequestWithUserDetails[AnyContent],
+              _: Format[AccountTypes.Value]
+            ))
+            .expects("ACCOUNT_TYPE", *, *)
+            .returning(Future.successful(None))
 
-        (mockSilentAssignmentService
-          .getValidPtaAccounts(_: Seq[IVNinoStoreEntry])(
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
-          .expects(*, *, *)
-          .returning((Future.successful(Seq(Some(ivNinoStoreEntry4)))))
+          (mockEacdService
+            .getUsersAssignedPTEnrolment(
+              _: RequestWithUserDetails[AnyContent],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            ))
+            .expects(*, *, *)
+            .returning(createInboundResult(UsersAssignedEnrolment1))
 
-        val result = controller
-          .showLandingPage(
-            testOnly.routes.TestOnlyController.successfulCall.url
-          )
-          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+          (mockTeaSessionCache
+            .save(_: String, _: AccountTypes.Value)(
+              _: RequestWithUserDetails[AnyContent],
+              _: Format[AccountTypes.Value]
+            ))
+            .expects(ACCOUNT_TYPE, PT_ASSIGNED_TO_OTHER_USER, *, *)
+            .returning(Future(CacheMap(request.sessionID, Map())))
 
-        status(result) shouldBe OK
-        contentAsString(result) shouldBe UCView()(fakeRequest, stubMessages()).toString
+          val res = orchestrator.getAccountType
+
+          whenReady(res.value) { result =>
+            result shouldBe Right(PT_ASSIGNED_TO_OTHER_USER)
+          }
+        }
       }
-    }
 
-    "multiple credential exists for a given nino and no PT enrolment exists" should {
-      "present the landing page" in {
-        (mockEacdConnector
-          .getUsersWithPTEnrolment(_: String)(
-            _: ExecutionContext,
-            _: HeaderCarrier
-          ))
-          .expects(NINO, *, *)
-          .returning(createInboundResult(Some(UsersAssignedEnrolmentEmpty)))
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.successful(retrievalResponse()))
-        (mockIVConnector
-          .getCredentialsWithNino(_: String)(
-            _: ExecutionContext,
-            _: HeaderCarrier
-          ))
-          .expects(NINO, *, *)
-          .returning(createInboundResult(multiIVCreds))
-        (mockSilentAssignmentService
-          .getValidPtaAccounts(_: Seq[IVNinoStoreEntry])(
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
-          .expects(*, *, *)
-          .returning((Future.successful(Seq(Some(ivNinoStoreEntry4)))))
+      "have no enrolments" should {
+        s"return MULTIPLE_ACCOUNTS" in {
+          (mockTeaSessionCache
+            .getEntry(_: String)(
+              _: RequestWithUserDetails[AnyContent],
+              _: Format[AccountTypes.Value]
+            ))
+            .expects("ACCOUNT_TYPE", *, *)
+            .returning(Future.successful(None))
 
-        val result = controller
-          .showLandingPage(
-            testOnly.routes.TestOnlyController.successfulCall.url
-          )
-          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+          (mockEacdService
+            .getUsersAssignedPTEnrolment(
+              _: RequestWithUserDetails[AnyContent],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            ))
+            .expects(*, *, *)
+            .returning(createInboundResult(UsersAssignedEnrolmentEmpty))
 
-        status(result) shouldBe OK
-        contentAsString(result) shouldBe landingPageView()(
-          fakeRequest,
-          stubMessages()
-        ).toString
+          (mockSilentAssignmentService
+            .getOtherAccountsWithPTAAccess(
+              _: RequestWithUserDetails[AnyContent],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            ))
+            .expects(*, *, *)
+            .returning(createInboundResult(multiIVCreds))
 
-      }
-    }
+          (mockTeaSessionCache
+            .save(_: String, _: AccountTypes.Value)(
+              _: RequestWithUserDetails[AnyContent],
+              _: Format[AccountTypes.Value]
+            ))
+            .expects(ACCOUNT_TYPE, MULTIPLE_ACCOUNTS, *, *)
+            .returning(Future(CacheMap(request.sessionID, Map())))
 
-    "a no credentials exists in IV for a given nino" should {
-      "return InternalServerError" in {
-        (mockEacdConnector
-          .getUsersWithPTEnrolment(_: String)(
-            _: ExecutionContext,
-            _: HeaderCarrier
-          ))
-          .expects(NINO, *, *)
-          .returning(createInboundResult(Some(UsersAssignedEnrolment1)))
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.successful(retrievalResponse()))
-        (mockIVConnector
-          .getCredentialsWithNino(_: String)(
-            _: ExecutionContext,
-            _: HeaderCarrier
-          ))
-          .expects(NINO, *, *)
-          .returning(createInboundResultError(UnexpectedResponseFromIV))
+          val res = orchestrator.getAccountType
 
-        val result = controller
-          .showLandingPage(
-            testOnly.routes.TestOnlyController.successfulCall.url
-          )
-          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
-
-        status(result) shouldBe INTERNAL_SERVER_ERROR
+          whenReady(res.value) { result =>
+            result shouldBe Right(MULTIPLE_ACCOUNTS)
+          }
+        }
       }
     }
   }
-
 }

@@ -138,13 +138,16 @@ object TestData {
   val ivNinoStoreEntry3 = IVNinoStoreEntry("0493831301037584", Some(200))
   val ivNinoStoreEntry4 = IVNinoStoreEntry("2884521810163541", Some(200))
 
+  val UsersAssignedEnrolmentCurrentCred =
+    UsersAssignedEnrolment(Some(CREDENTIAL_ID))
   val UsersAssignedEnrolment1 =
-    UsersAssignedEnrolment(List("6102202884164541", "credId123"), List.empty)
+    UsersAssignedEnrolment(Some("6102202884164541"))
   val UsersAssignedEnrolmentEmpty =
-    UsersAssignedEnrolment(List.empty, List.empty)
+    UsersAssignedEnrolment(None)
 
   val multiIVCreds = List(
-    ivNinoStoreEntryCurrent ivNinoStoreEntry1,
+    ivNinoStoreEntryCurrent,
+    ivNinoStoreEntry1,
     ivNinoStoreEntry2,
     ivNinoStoreEntry3,
     ivNinoStoreEntry4

@@ -27,8 +27,8 @@ class ErrorTemplateSpec extends TestFixture {
   val heading = "test heading"
   val body = "test boddy"
 
-  val errorView: ErrorTemplate = app.injector.instanceOf[ErrorTemplate]
-  val result: HtmlFormat.Appendable = errorView(title, heading, body)(FakeRequest(), testMessages)
+  val result: HtmlFormat.Appendable =
+    errorView(title, heading, body)(FakeRequest(), testMessages)
 
   "The Error Page" should {
     "contain the correct title" in {

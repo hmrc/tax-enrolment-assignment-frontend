@@ -119,7 +119,9 @@ object WiremockHelper extends Eventually with IntegrationPatience {
         .willReturn(aResponse().withStatus(status).withBody(responseBody))
     )
 
-  def stubGetMatching(url: String, status: Integer, responseBody: String): StubMapping =
+  def stubGetMatching(url: String,
+                      status: Integer,
+                      responseBody: String): StubMapping =
     stubFor(
       get(urlEqualTo(url))
         .willReturn(aResponse().withStatus(status).withBody(responseBody))

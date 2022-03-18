@@ -21,6 +21,7 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.i18n._
@@ -43,7 +44,10 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.{
   AuthAction,
   RequestWithUserDetails
 }
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestData.userDetailsWithPTEnrolment
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestData.{
+  userDetailsNoEnrolments,
+  userDetailsWithPTEnrolment
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{
   EACDConnector,
   IVConnector,
@@ -56,7 +60,13 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.{
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.AccountCheckOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{
+  EACDService,
+  SilentAssignmentService
+}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{
   LandingPage,
   UnderConstructionView
@@ -71,11 +81,14 @@ trait TestFixture
     with Matchers
     with Injecting {
 
+  val TIME_OUT = 5
+  val INTERVAL = 5
+
   lazy val injector: Injector = app.injector
   implicit val request: RequestWithUserDetails[AnyContent] =
     new RequestWithUserDetails[AnyContent](
       FakeRequest().asInstanceOf[Request[AnyContent]],
-      userDetailsWithPTEnrolment,
+      userDetailsNoEnrolments,
       "sessionId"
     )
 
@@ -93,9 +106,13 @@ trait TestFixture
   val mockTaxEnrolmentsConnector: TaxEnrolmentsConnector =
     mock[TaxEnrolmentsConnector]
   val mockEacdConnector: EACDConnector = mock[EACDConnector]
+  val mockEacdService: EACDService = mock[EACDService]
   val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
   lazy val requestPath = "somePath"
   val mockTeaSessionCache = mock[TEASessionCache]
+  val mockAccountCheckOrchestrator = mock[AccountCheckOrchestrator]
+  val mockSilentAssignmentService: SilentAssignmentService =
+    mock[SilentAssignmentService]
 
   implicit lazy val fakeRequest: FakeRequest[AnyContentAsEmpty.type] =
     FakeRequest("", requestPath)
@@ -118,6 +135,8 @@ trait TestFixture
     )
   lazy val mcc: MessagesControllerComponents =
     stubMessagesControllerComponents()
+
+  val errorView: ErrorTemplate = app.injector.instanceOf[ErrorTemplate]
 
   def doc(result: Html): Document = Jsoup.parse(contentAsString(result))
 

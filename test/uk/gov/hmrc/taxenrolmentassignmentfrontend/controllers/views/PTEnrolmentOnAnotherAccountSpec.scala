@@ -32,8 +32,6 @@ class PTEnrolmentOnAnotherAccountSpec extends TestFixture {
     inject[PTEnrolmentOnAnotherAccount]
 
   lazy val appConfigForTest = new AppConfig(servicesConfig) {
-    override lazy val signOutUrl: String =
-      PTEnrolmentOtherAccountMesages.signoutUrl
     override lazy val selfAssessmentUrl: String =
       PTEnrolmentOtherAccountMesages.saUrl
   }
@@ -102,7 +100,7 @@ class PTEnrolmentOnAnotherAccountSpec extends TestFixture {
       "contains a link to signin again" in {
         textElement
           .select("a")
-          .attr("href") shouldBe PTEnrolmentOtherAccountMesages.signoutUrl
+          .attr("href") shouldBe "/tax-enrolment-assignment-frontend/logout"
       }
     }
     "contain a summary list" that {

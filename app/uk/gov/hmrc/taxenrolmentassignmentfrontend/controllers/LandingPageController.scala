@@ -32,7 +32,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IVNinoStoreEntry
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{LandingPage, UnderConstructionView}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{InterruptCard, LandingPage, UnderConstructionView}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -48,8 +48,9 @@ class LandingPageController @Inject()(
                                         sessionCache: TEASessionCache,
                                         landingPageView: LandingPage,
                                         underConstructionView: UnderConstructionView,
-                                        errorView: ErrorTemplate
-                                      )(implicit ec: ExecutionContext
+                                        errorView: ErrorTemplate,
+                                        interruptView: InterruptCard
+                                     )(implicit ec: ExecutionContext
                                        )
   extends FrontendController(mcc) with Logging with I18nSupport {
 

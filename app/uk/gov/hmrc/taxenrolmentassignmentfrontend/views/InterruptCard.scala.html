@@ -15,37 +15,16 @@
  *@
 
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.Layout
-@import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.InterruptCard
 
+@*
+* Copyright 2022 HM Revenue & Customs
+*
+*@
 
-@this(
-        layout: Layout,
-        card: InterruptCard,
-        govukButton: GovukButton
-)
-@()(implicit request: Request[_], messages: Messages)
+@this()
 
+@(content: Html)
 
-
-
-
-
-@layout(pageTitle = Some(messages("landingPage.title"))) {
-
-
- @card {
-
-  <h1 class="govuk-heading-xl">@messages("landingPage.heading")</h1>
-  <p class="govuk-body">@messages("landingPage.paragraph")</p>
-
-  <p class="interrupt-card-p"> testing something</p>
-
-  <div class="actions">
-  @govukButton(Button(
-   content = Text(messages("landingPage.continue")),
-   href = Some("?")
-  ))
-  </div>
-
- }
-}
+<div class="interrupt-card">
+ @content
+</div>

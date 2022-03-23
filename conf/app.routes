@@ -7,3 +7,4 @@ GET        /report-IDs/select-IDs         uk.gov.hmrc.taxenrolmentassignmentfron
 GET        /logout                  uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignOutController.signOut()
 
 GET        /assets/*file            controllers.Assets.versioned(path = "/public", file: Asset)
+GET        /enrol-pt/sign-in-again  uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignInAgainController.view

@@ -32,12 +32,15 @@ import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.{
   AnyContent,
+  Cookie,
   CookieHeaderEncoding,
   Request,
+  Session,
   SessionCookieBaker
 }
 import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
 import play.api.{Application, Environment, Mode}
+import uk.gov.hmrc.crypto.PlainText
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
 import uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.SessionCookieCrypto
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
@@ -88,9 +91,10 @@ trait IntegrationSpecBase
     "microservice.services.tax-enrolments.port" -> s"$mockPort",
     "microservice.services.users-group-search.host" -> s"$mockHost",
     "microservice.services.users-group-search.port" -> s"$mockPort",
-    "microservice.services.users-group-search.isTest" -> "true",
+    "microservice.services.users-group-search.isTest" -> "false",
     "microservice.services.personal-tax-account.host" -> s"$wiremockURL",
-    "play.http.router" -> "testOnlyDoNotUseInAppConf.Routes"
+    "play.http.router" -> "testOnlyDoNotUseInAppConf.Routes",
+    "microservice.services.features.taxEnrolmentsServiceListLocal" -> "false"
   )
 
   override implicit val patienceConfig: PatienceConfig = PatienceConfig(
@@ -102,6 +106,19 @@ trait IntegrationSpecBase
     .in(Environment.simple(mode = Mode.Dev))
     .configure(config)
     .build
+
+  val sessionBaker = app.injector.instanceOf[SessionCookieBaker]
+  val cookieHeaderEncoding = app.injector.instanceOf[CookieHeaderEncoding]
+  val sessionCookieCrypto = app.injector.instanceOf[SessionCookieCrypto]
+
+  def createSessionCookieAsString(sessionData: Map[String, String]): String = {
+    val sessionCookie = sessionBaker.encodeAsCookie(Session(sessionData))
+    val encryptedSessionCookieValue =
+      sessionCookieCrypto.crypto.encrypt(PlainText(sessionCookie.value)).value
+    val encryptedSessionCookie =
+      sessionCookie.copy(value = encryptedSessionCookieValue)
+    cookieHeaderEncoding.encodeCookieHeader(Seq(encryptedSessionCookie))
+  }
 
   val sessionRepository: SessionRepository =
     app.injector.instanceOf[SessionRepository]

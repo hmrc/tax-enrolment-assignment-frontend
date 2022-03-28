@@ -23,12 +23,16 @@ import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment.readsCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{
   REDIRECT_URL,
   USER_ASSIGNED_PT_ENROLMENT
 }
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.UsersGroupSearchService
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{
+  EACDService,
+  UsersGroupSearchService
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnotherAccount
 
 import scala.concurrent.ExecutionContext
@@ -37,6 +41,7 @@ import scala.concurrent.ExecutionContext
 class PTEnrolmentOnOtherAccountController @Inject()(
   authAction: AuthAction,
   mcc: MessagesControllerComponents,
+  eacdService: EACDService,
   sessionCache: TEASessionCache,
   usersGroupSearchService: UsersGroupSearchService,
   ptEnrolmentOnAnotherAccountView: PTEnrolmentOnAnotherAccount
@@ -45,10 +50,11 @@ class PTEnrolmentOnOtherAccountController @Inject()(
     with I18nSupport {
 
   def view(): Action[AnyContent] = authAction.async { implicit request =>
-    sessionCache
-      .getEntry[UsersAssignedEnrolment](USER_ASSIGNED_PT_ENROLMENT)
+    eacdService.getUsersAssignedPTEnrolment.value
       .flatMap {
-        case Some(response) if response.enrolledCredential.isDefined =>
+        case Right(response)
+            if response.enrolledCredential
+              .fold(false)(_ != request.userDetails.credId) =>
           usersGroupSearchService
             .getAccountDetails(response.enrolledCredential.get)
             .value
@@ -66,7 +72,8 @@ class PTEnrolmentOnOtherAccountController @Inject()(
           sessionCache.getEntry[String](REDIRECT_URL).map {
             case Some(redirectUrl) =>
               Redirect(routes.AccountCheckController.accountCheck(redirectUrl))
-            case None => InternalServerError
+            case None =>
+              InternalServerError
           }
       }
   }

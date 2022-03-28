@@ -75,13 +75,15 @@ object LoggingEvent {
 
   def logUnexpectedResponseFromTaxEnrolments(
     nino: String,
-    statusReturned: Int
+    statusReturned: Int,
+    errorMsg: String = ""
   ): LoggingEvent =
     Error(
       Event(
         "[TaxEnrolmentsConnector][assignPTEnrolment]",
         errorDetails = Some(
-          s"Tax Enrolments return status of $statusReturned when allocating PT enrolment for users with $nino NINO"
+          s"Tax Enrolments return status of $statusReturned when allocating PT enrolment for users with $nino NINO," +
+            s"Error message - $errorMsg"
         )
       )
     )
@@ -97,6 +99,21 @@ object LoggingEvent {
         errorDetails = Some(
           s"Users Group Search return status of $statusReturned for credID $credId" +
             s"\nError Message: $errorMsg"
+        )
+      )
+    )
+
+  def logUnexpectedResponseFromTaxEnrolmentsKnownFacts(
+                                              nino: String,
+                                              statusReturned: Int,
+                                              errorMsg: String = ""
+                                            ): LoggingEvent =
+    Error(
+      Event(
+        "[TaxEnrolmentsConnector][assignPTEnrolmentWithKnownFacts]",
+        errorDetails = Some(
+          s"Tax Enrolments return status of $statusReturned when allocating PT enrolment for users with $nino NINO," +
+            s"Error message - $errorMsg"
         )
       )
     )

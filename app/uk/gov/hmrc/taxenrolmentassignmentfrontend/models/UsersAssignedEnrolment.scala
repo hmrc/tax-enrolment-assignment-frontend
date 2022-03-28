@@ -22,6 +22,9 @@ case class UsersAssignedEnrolment(enrolledCredential: Option[String])
 
 object UsersAssignedEnrolment {
 
+  val readsCache: Reads[UsersAssignedEnrolment] =
+    Json.reads[UsersAssignedEnrolment]
+
   val reads: Reads[UsersAssignedEnrolment] = (json: JsValue) => {
     for {
       jsObject <- json.validate[JsObject]
@@ -31,5 +34,6 @@ object UsersAssignedEnrolment {
   val writes: Writes[UsersAssignedEnrolment] =
     Json.writes[UsersAssignedEnrolment]
 
-  implicit val format: Format[UsersAssignedEnrolment] = Format(reads, writes)
+  implicit val format: Format[UsersAssignedEnrolment] =
+    Format(readsCache, writes)
 }

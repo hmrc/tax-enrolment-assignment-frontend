@@ -26,8 +26,8 @@ import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromTaxEnrolments
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logUnexpectedResponseFromTaxEnrolments
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.PersonalTaxEnrolment
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{logUnexpectedResponseFromTaxEnrolments, logUnexpectedResponseFromTaxEnrolmentsKnownFacts}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AssignHMRCPTRequest, IdentifiersOrVerifiers, PersonalTaxEnrolment}
 
 import scala.concurrent.ExecutionContext
 
@@ -57,6 +57,34 @@ class TaxEnrolmentsConnector @Inject()(httpClient: HttpClient,
                 .logEvent(logUnexpectedResponseFromTaxEnrolments(nino, status))
               Left(UnexpectedResponseFromTaxEnrolments)
         }
+      )
+  }
+
+  def assignPTEnrolmentWithKnownFacts(nino: String)(
+    implicit ec: ExecutionContext,
+    hc: HeaderCarrier
+  ): TEAFResult[Unit] = EitherT {
+
+    val request = AssignHMRCPTRequest(
+      identifiers = Seq(IdentifiersOrVerifiers("NINO", nino)),
+      verifiers = Seq(IdentifiersOrVerifiers("NINO1", nino)
+      )
+    )
+
+    val serviceName = if(appConfig.taxEnrolmentsLocalEnabled) "IR-SA" else "HMRC-PT"
+    val url = s"${appConfig.TAX_ENROLMENTS_BASE_URL}/service/$serviceName/enrolment"
+
+    httpClient
+      .PUT[AssignHMRCPTRequest, HttpResponse](url, request)
+      .map(
+        httpResponse =>
+          httpResponse.status match {
+            case NO_CONTENT => Right(())
+            case status =>
+              logger
+                .logEvent(logUnexpectedResponseFromTaxEnrolmentsKnownFacts(nino, status, httpResponse.body))
+              Left(UnexpectedResponseFromTaxEnrolments)
+          }
       )
   }
 

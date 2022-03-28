@@ -168,7 +168,7 @@ object TestData {
     obfuscatedUserId = "********6037",
     email = Some("email1@test.com"),
     lastAccessedTimestamp = "2022-02-27T12:00:27Z",
-    additionalFactors = List(AdditonalFactors("sms", Some("07783924321")))
+    additionalFactors = Some(List(AdditonalFactors("sms", Some("07783924321"))))
   )
 
   val multiCL200IVCreds = List(

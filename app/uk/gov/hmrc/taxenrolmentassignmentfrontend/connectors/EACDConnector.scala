@@ -77,6 +77,7 @@ class EACDConnector @Inject()(httpClient: HttpClient,
     implicit ec: ExecutionContext,
     hc: HeaderCarrier
   ): TEAFResult[UsersAssignedEnrolment] = {
+    println("HERE!!!!!!!!!!")
     val enrolmentKey = s"HMRC-PT~NINO~$nino"
     getUsersWithAssignedEnrolment(enrolmentKey)
   }
@@ -92,7 +93,11 @@ class EACDConnector @Inject()(httpClient: HttpClient,
       .map(
         httpResponse =>
           httpResponse.status match {
-            case OK         => Right(httpResponse.json.as[UsersAssignedEnrolment])
+            case OK =>
+              Right(
+                httpResponse.json
+                  .as[UsersAssignedEnrolment](UsersAssignedEnrolment.reads)
+              )
             case NO_CONTENT => Right(UsersAssignedEnrolment(None))
             case status =>
               logger.logEvent(

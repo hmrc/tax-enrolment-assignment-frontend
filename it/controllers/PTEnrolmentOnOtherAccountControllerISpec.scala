@@ -21,6 +21,7 @@ import helpers.WiremockHelper._
 import helpers.TestITData._
 import org.jsoup.Jsoup
 import play.api.http.Status
+import play.api.http.Status.OK
 import play.api.libs.ws.DefaultWSCookie
 import play.api.mvc._
 import play.api.test.Helpers
@@ -34,23 +35,117 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
   SINGLE_ACCOUNT
 }
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.USER_ASSIGNED_PT_ENROLMENT
 
-class LandingPageControllerISpec extends IntegrationSpecBase with Status {
+class PTEnrolmentOnOtherAccountControllerISpec
+    extends IntegrationSpecBase
+    with Status {
 
   val teaHost = s"localhost:$port"
   val returnUrl: String = testOnly.routes.TestOnlyController.successfulCall
     .absoluteURL(false, teaHost)
   val urlPath =
-    s"/enrol-pt/introduction"
+    s"/pt-enrolment-other-account"
 
   val sessionCookie
     : (String, String) = ("COOKIE" -> createSessionCookieAsString(sessionData))
 
   s"GET $urlPath" when {
-    "the session cache has Account type of MULTIPLE_ACCOUNTS" should {
-      s"render the landing page" in {
+    "the session cache has a credential for PT enrolment that is not the signed in account" should {
+      s"render the pt on another account page" in {
         await(
-          save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", MULTIPLE_ACCOUNTS)
+          save[UsersAssignedEnrolment](
+            sessionId,
+            USER_ASSIGNED_PT_ENROLMENT,
+            UsersAssignedEnrolment(Some(CREDENTIAL_ID_2))
+          )
+        )
+        val authResponse = authoriseResponseJson()
+        stubAuthorizePost(OK, authResponse.toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        stubGet(
+          s"/users-group-search/users/$CREDENTIAL_ID_2",
+          OK,
+          usergroupsResponseJson().toString()
+        )
+        val res = buildRequest(urlPath, followRedirects = true)
+          .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .get()
+
+        whenReady(res) { resp =>
+          val page = Jsoup.parse(resp.body)
+
+          resp.status shouldBe OK
+          page.title should include(TestITData.ptEnroledOnOtherAccountPageTitle)
+        }
+      }
+    }
+
+    s"the session cache has a credential for PT enrolment that is the signed in account" should {
+      s"redirect to accountCheck" in {
+        await(save[String](sessionId, "redirectURL", returnUrl))
+        await(
+          save[UsersAssignedEnrolment](
+            sessionId,
+            USER_ASSIGNED_PT_ENROLMENT,
+            UsersAssignedEnrolment(Some(CREDENTIAL_ID))
+          )
+        )
+        val authResponse = authoriseResponseJson()
+        stubAuthorizePost(OK, authResponse.toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        val res = buildRequest(urlPath, followRedirects = false)
+          .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .get()
+
+        whenReady(res) { resp =>
+          val page = Jsoup.parse(resp.body)
+
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include(
+            s"/tax-enrolment-assignment-frontend/no-pt-enrolment"
+          )
+        }
+      }
+    }
+
+    s"the session cache has no credentials with PT enrolment" should {
+      s"redirect to accountCheck" in {
+        await(save[String](sessionId, "redirectURL", returnUrl))
+        val authResponse = authoriseResponseJson()
+        stubAuthorizePost(OK, authResponse.toString())
+        await(
+          save[UsersAssignedEnrolment](
+            sessionId,
+            USER_ASSIGNED_PT_ENROLMENT,
+            UsersAssignedEnrolment(None)
+          )
+        )
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        val res = buildRequest(urlPath, followRedirects = false)
+          .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .get()
+
+        whenReady(res) { resp =>
+          val page = Jsoup.parse(resp.body)
+
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include(
+            s"/tax-enrolment-assignment-frontend/no-pt-enrolment"
+          )
+        }
+      }
+    }
+
+    "the session cache has no redirectUrl" should {
+      "return Internal Server Error" in {
+        await(
+          save[UsersAssignedEnrolment](
+            sessionId,
+            USER_ASSIGNED_PT_ENROLMENT,
+            UsersAssignedEnrolment(None)
+          )
         )
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
@@ -62,51 +157,33 @@ class LandingPageControllerISpec extends IntegrationSpecBase with Status {
         whenReady(res) { resp =>
           val page = Jsoup.parse(resp.body)
 
-          resp.status shouldBe OK
-          page.title should include(TestITData.landingPageTitle)
+          resp.status shouldBe INTERNAL_SERVER_ERROR
         }
       }
     }
 
-    List(PT_ASSIGNED_TO_OTHER_USER, PT_ASSIGNED_TO_CURRENT_USER, SINGLE_ACCOUNT)
-      .foreach { accountType =>
-        s"the session cache has Account type of $accountType" should {
-          s"redirect to accountCheck" in {
-            await(save[String](sessionId, "redirectURL", returnUrl))
-            await(
-              save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", accountType)
-            )
-            val authResponse = authoriseResponseJson()
-            stubAuthorizePost(OK, authResponse.toString())
-            stubPost(s"/write/.*", OK, """{"x":2}""")
-            val res = buildRequest(urlPath, followRedirects = false)
-              .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
-              .get()
-
-            whenReady(res) { resp =>
-              val page = Jsoup.parse(resp.body)
-
-              resp.status shouldBe SEE_OTHER
-              resp.header("Location").get should include(
-                s"/tax-enrolment-assignment-frontend/no-pt-enrolment"
-              )
-            }
-          }
-        }
-      }
-
-    "the session cache is empty" should {
+    "users group search returns an error" should {
       "return Internal Server Error" in {
+        await(
+          save[UsersAssignedEnrolment](
+            sessionId,
+            USER_ASSIGNED_PT_ENROLMENT,
+            UsersAssignedEnrolment(Some(CREDENTIAL_ID_2))
+          )
+        )
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
+        stubGet(
+          s"/users-group-search/users/$CREDENTIAL_ID_2",
+          INTERNAL_SERVER_ERROR,
+          ""
+        )
         val res = buildRequest(urlPath, followRedirects = true)
           .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
-          val page = Jsoup.parse(resp.body)
-
           resp.status shouldBe INTERNAL_SERVER_ERROR
         }
       }

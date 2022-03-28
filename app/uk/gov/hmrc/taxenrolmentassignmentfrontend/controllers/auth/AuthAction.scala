@@ -82,7 +82,9 @@ class AuthAction @Inject()(
             hasSAEnrolment
           )
 
-          val sessionID = request.headers.get("X-Request-ID").getOrElse(UUID.randomUUID().toString)
+          val sessionID = request.session
+            .get("sessionId")
+            .getOrElse(UUID.randomUUID().toString)
           block(RequestWithUserDetails(request, userDetails, sessionID))
 
         case _ =>
@@ -117,7 +119,7 @@ class AuthAction @Inject()(
       appConfig.loginURL,
       Map(
         "continue_url" -> Seq(appConfig.loginCallback),
-        "origin"   -> Seq("tax-enrolment-assignment-frontend")
+        "origin" -> Seq("tax-enrolment-assignment-frontend")
       )
     )
   }

@@ -70,6 +70,8 @@ object TestITData {
   val xRequestId: (String, String) = "X-Request-ID" -> sessionId
   val csrfContent: (String, String) = "Csrf-Token" -> "nocheck"
 
+  val sessionData = Map("sessionId" -> sessionId)
+
   def authoriseResponseJson(optNino: Option[String] = Some(NINO),
                             optCreds: Option[Credentials] = Some(creds),
                             optGroupId: Option[String] = Some(GROUP_ID),
@@ -160,7 +162,7 @@ object TestITData {
     obfuscatedUserId = "********6037",
     email = Some("email1@test.com"),
     lastAccessedTimestamp = "2022-01-16T14:40:05Z",
-    additionalFactors = List(AdditonalFactors("sms", Some("07783924321")))
+    additionalFactors = Some(List(AdditonalFactors("sms", Some("07783924321"))))
   )
 
   def additionalFactorsJson(additionalFactors: List[AdditonalFactors]) =
@@ -180,19 +182,21 @@ object TestITData {
     }
   def usergroupsResponseJson(
     usersGroupResponse: UsersGroupResponse = usersGroupSearchResponse
-  ) = {
-    Json.obj(
+  ): JsObject = {
+    val compulsaryJson = Json.obj(
       ("obfuscatedUserId", JsString(usersGroupResponse.obfuscatedUserId)),
       ("email", JsString(usersGroupResponse.email.get)),
       (
         "lastAccessedTimestamp",
         JsString(usersGroupResponse.lastAccessedTimestamp)
-      ),
-      (
-        "additionalFactors",
-        additionalFactorsJson(usersGroupResponse.additionalFactors)
       )
     )
+    usersGroupResponse.additionalFactors.fold(compulsaryJson) {
+      additionFactors =>
+        compulsaryJson ++ Json.obj(
+          ("additionalFactors", additionalFactorsJson(additionFactors))
+        )
+    }
   }
 
   val eacdUserEnrolmentsJson1: String =
@@ -318,6 +322,8 @@ object TestITData {
   val underConstructionTruePageTitle =
     "Tax Enrolment Assignment Frontend - Enrolment Present"
   val landingPageTitle = "Landing Page"
+  val ptEnroledOnOtherAccountPageTitle =
+    "We have found your personal tax information under a different Government Gateway user ID"
 
   val userDetailsNoEnrolments =
     UserDetailsFromSession(

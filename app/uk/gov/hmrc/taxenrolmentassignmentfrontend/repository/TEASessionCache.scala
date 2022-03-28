@@ -42,7 +42,6 @@ class TEASessionCacheImpl @Inject()(
         optionalCacheMap.getOrElse(CacheMap(request.sessionID, Map()))
       )
       sessionRepository().upsert(updatedCacheMap).map { _ =>
-        println("!!!!!!!!!!!!!!!!!!!!!!!12")
         updatedCacheMap
       }
     }

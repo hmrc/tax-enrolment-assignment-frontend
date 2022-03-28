@@ -94,11 +94,31 @@ object WiremockHelper extends Eventually with IntegrationPatience {
         )
     )
 
+  def stubPutWithAuthorizeHeaders(url: String,
+                                   authorizeHeaderValue: String,
+                                   status: Integer): StubMapping =
+    stubFor(
+      put(urlPathEqualTo(url))
+        .withHeader("Authorization", equalTo(authorizeHeaderValue))
+        .willReturn(
+          aResponse()
+            .withStatus(status)
+        )
+    )
+
   def stubPost(url: String,
                status: Integer,
                responseBody: String): StubMapping =
     stubFor(
       post(urlMatching(url))
+        .willReturn(aResponse().withStatus(status).withBody(responseBody))
+    )
+
+  def stubPut(url: String,
+              status: Integer,
+              responseBody: String): StubMapping =
+    stubFor(
+      put(urlMatching(url))
         .willReturn(aResponse().withStatus(status).withBody(responseBody))
     )
 

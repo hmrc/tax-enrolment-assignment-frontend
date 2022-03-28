@@ -16,8 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
 
-import java.time.format.{DateTimeFormatter, FormatStyle}
-import java.time.{ZoneId, ZonedDateTime}
+import java.time.format.DateTimeFormatter
 
 import play.api.libs.json.{JsArray, JsString, JsValue, Json}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
@@ -32,7 +31,8 @@ object UsersGroupsFixedData {
       "********6037",
       Some("email1@test.com"),
       "2022-01-16T14:40:25Z",
-      additionalFactors = List(AdditonalFactors("sms", Some("07783924321")))
+      additionalFactors =
+        Some(List(AdditonalFactors("sms", Some("07783924321"))))
     )
 
   val credId2 = "6508728649413980"
@@ -41,7 +41,8 @@ object UsersGroupsFixedData {
       "********3980",
       Some("email2@test.com"),
       "2022-01-15T14:40:25Z",
-      additionalFactors = List(AdditonalFactors("sms", Some("07783924322")))
+      additionalFactors =
+        Some(List(AdditonalFactors("sms", Some("07783924322"))))
     )
 
   val credId3 = "2338687273700685"
@@ -50,7 +51,8 @@ object UsersGroupsFixedData {
       "********4229",
       Some("email3@test.com"),
       "2022-01-15T17:40:25Z",
-      additionalFactors = List(AdditonalFactors("voice", Some("07783924312")))
+      additionalFactors =
+        Some(List(AdditonalFactors("voice", Some("07783924312"))))
     )
 
   val credId4 = "5052110129550895"
@@ -60,7 +62,7 @@ object UsersGroupsFixedData {
       Some("email4@test.com"),
       "2022-01-05T14:40:25Z",
       additionalFactors =
-        List(AdditonalFactors("totp", name = Some("HMRC APP")))
+        Some(List(AdditonalFactors("totp", name = Some("HMRC APP"))))
     )
 
   val credId5 = "6408620249920679"
@@ -69,7 +71,8 @@ object UsersGroupsFixedData {
       "********0297",
       Some("email5@test.com"),
       "2022-02-16T14:40:25Z",
-      additionalFactors = List(AdditonalFactors("sms", Some("07783924122")))
+      additionalFactors =
+        Some(List(AdditonalFactors("sms", Some("07783924122"))))
     )
 
   val credId6 = "1447340264123859"
@@ -78,7 +81,8 @@ object UsersGroupsFixedData {
       "********6461",
       Some("email6@test.com"),
       "2021-01-16T14:40:25Z",
-      additionalFactors = List(AdditonalFactors("sms", Some("07783824322")))
+      additionalFactors =
+        Some(List(AdditonalFactors("sms", Some("07783824322"))))
     )
 
   val credId7 = "8970021278265987"
@@ -87,7 +91,8 @@ object UsersGroupsFixedData {
       "********1655",
       Some("email7@test.com"),
       "2022-09-16T14:40:25Z",
-      additionalFactors = List(AdditonalFactors("voice", Some("07783424322")))
+      additionalFactors =
+        Some(List(AdditonalFactors("voice", Some("07783424322"))))
     )
 
   val usersGroupSearchCreds = Map(
@@ -102,22 +107,26 @@ object UsersGroupsFixedData {
 
   def toJson(usersGroupResponse: UsersGroupResponse): JsValue = {
     val datetimeFormatter = DateTimeFormatter.ISO_INSTANT
-    val additionalFactors =
-      usersGroupResponse.additionalFactors.foldLeft[JsArray](Json.arr()) {
-        (a, b) =>
-          val jsObject = if (b.factorType == "totp") {
-            Json.obj(
-              ("factorType", JsString(b.factorType)),
-              ("name", JsString(b.name.getOrElse("")))
-            )
-          } else {
-            Json.obj(
-              ("factorType", JsString(b.factorType)),
-              ("phoneNumber", JsString(b.phoneNumber.getOrElse("")))
-            )
-          }
-          a.append(jsObject)
+
+    def additionalFactorsJsonArray(
+      additionalFactors: List[AdditonalFactors]
+    ): JsArray = {
+      additionalFactors.foldLeft[JsArray](Json.arr()) { (a, b) =>
+        val jsObject = if (b.factorType == "totp") {
+          Json.obj(
+            ("factorType", JsString(b.factorType)),
+            ("name", JsString(b.name.getOrElse("")))
+          )
+        } else {
+          Json.obj(
+            ("factorType", JsString(b.factorType)),
+            ("phoneNumber", JsString(b.phoneNumber.getOrElse("")))
+          )
+        }
+        a.append(jsObject)
       }
+    }
+
     Json.obj(
       ("obfuscatedUserId", JsString(usersGroupResponse.obfuscatedUserId)),
       ("email", JsString(usersGroupResponse.email.get)),
@@ -126,8 +135,12 @@ object UsersGroupsFixedData {
         JsString(
           usersGroupResponse.lastAccessedTimestamp.format(datetimeFormatter)
         )
-      ),
-      ("additionalFactors", additionalFactors)
-    )
+      )
+    ) ++ usersGroupResponse.additionalFactors.fold(Json.obj()) {
+      additionalFactors =>
+        Json.obj(
+          ("additionalFactors", additionalFactorsJsonArray(additionalFactors))
+        )
+    }
   }
 }

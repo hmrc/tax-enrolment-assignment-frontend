@@ -25,7 +25,7 @@ case class AdditonalFactors(factorType: String,
 case class UsersGroupResponse(obfuscatedUserId: String,
                               email: Option[String],
                               lastAccessedTimestamp: String,
-                              additionalFactors: List[AdditonalFactors])
+                              additionalFactors: Option[List[AdditonalFactors]])
 
 object AdditonalFactors {
   implicit val format: Format[AdditonalFactors] = Json.format[AdditonalFactors]

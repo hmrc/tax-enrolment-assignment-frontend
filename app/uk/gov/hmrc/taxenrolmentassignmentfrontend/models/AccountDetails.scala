@@ -47,10 +47,12 @@ case class AccountDetails(userId: String,
       email = usersGroupResponse.email,
       lastLoginDate =
         AccountDetails.formatDate(usersGroupResponse.lastAccessedTimestamp),
-      mfaDetails = usersGroupResponse.additionalFactors.map {
-        additionalFactor =>
-          new MFADetails(additionalFactor)
-      }
+      mfaDetails = usersGroupResponse.additionalFactors
+        .fold[Seq[MFADetails]](Seq.empty[MFADetails]) { additionalFactors =>
+          additionalFactors.map { additionalFactor =>
+            new MFADetails(additionalFactor)
+          }
+        }
     )
 }
 

@@ -21,42 +21,33 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.i18n._
 import play.api.inject.Injector
 import play.api.libs.json.Format
-import play.api.mvc._
+import play.api.mvc.{AnyContent, _}
 import play.api.test.CSRFTokenHelper._
 import play.api.test.Helpers._
 import play.api.test._
-import play.api.mvc.AnyContent
 import play.twirl.api.Html
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.http.cache.client.CacheMap
+import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.IVConnector
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.{
-  AuthAction,
-  RequestWithUserDetails
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestData.{
-  userDetailsNoEnrolments,
-  userDetailsWithPTEnrolment
-}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{
   EACDConnector,
   IVConnector,
   TaxEnrolmentsConnector
 }
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignOutController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.{
   AuthAction,
   RequestWithUserDetails
 }
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestData.userDetailsNoEnrolments
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
@@ -137,6 +128,7 @@ trait TestFixture
     stubMessagesControllerComponents()
 
   val errorView: ErrorTemplate = app.injector.instanceOf[ErrorTemplate]
+  lazy val mockSignOutController = mock[SignOutController]
 
   def doc(result: Html): Document = Jsoup.parse(contentAsString(result))
 

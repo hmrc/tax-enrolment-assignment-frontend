@@ -77,7 +77,6 @@ class EACDConnector @Inject()(httpClient: HttpClient,
     implicit ec: ExecutionContext,
     hc: HeaderCarrier
   ): TEAFResult[UsersAssignedEnrolment] = {
-    println("HERE!!!!!!!!!!")
     val enrolmentKey = s"HMRC-PT~NINO~$nino"
     getUsersWithAssignedEnrolment(enrolmentKey)
   }

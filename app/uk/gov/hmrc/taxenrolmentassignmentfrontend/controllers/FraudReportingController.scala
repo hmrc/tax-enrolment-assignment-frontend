@@ -22,7 +22,6 @@ import play.api.mvc._
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.MFADetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.FraudReporting
 
 import scala.concurrent.Future

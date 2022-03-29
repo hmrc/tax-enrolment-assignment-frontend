@@ -39,13 +39,10 @@ class TestOnlyController @Inject()(mcc: MessagesControllerComponents,
 
   def usersGroupSearchCall(credId: String): Action[AnyContent] = Action.async {
     implicit request =>
-      println("Here")
       UsersGroupsFixedData.usersGroupSearchCreds.get(credId) match {
         case Some(userDetails) =>
-          println("found")
           Future.successful(Ok(UsersGroupsFixedData.toJson(userDetails)))
         case None =>
-          println("not found")
           Future.successful(NotFound)
       }
   }

@@ -39,7 +39,6 @@ class EnrolCurrentUserController @Inject()(
     //ToDo use session cache to get current userId and the userId that contains SA if present on different account
     val fixedCurrentUserId = "*********9871"
     val fixedSAUserId = "*********9872"
-    routes.FraudReportingController.selectIdsToReport
     Future.successful(
       Ok(
         enrolCurrentUserView(

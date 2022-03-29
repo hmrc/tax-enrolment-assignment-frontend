@@ -55,8 +55,6 @@ class EACDService @Inject()(eacdConnector: EACDConnector,
     eacdConnector
       .getUsersWithPTEnrolment(requestWithUserDetails.userDetails.nino)
       .map { userWithPTEnrolment =>
-        println("HERE!!!!!!!!!!2222")
-        println(userWithPTEnrolment)
         sessionCache.save[UsersAssignedEnrolment](
           USER_ASSIGNED_PT_ENROLMENT,
           userWithPTEnrolment

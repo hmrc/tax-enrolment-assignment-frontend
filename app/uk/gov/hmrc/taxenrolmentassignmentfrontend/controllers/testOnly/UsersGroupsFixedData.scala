@@ -25,10 +25,10 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
 }
 
 object UsersGroupsFixedData {
-  val credId1 = "2568836745857979"
+  val credId1 = "4684455594391511"
   val userDetails1 =
     UsersGroupResponse(
-      "********6037",
+      "********3469",
       Some("email1@test.com"),
       "2022-01-16T14:40:25Z",
       additionalFactors =

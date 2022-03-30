@@ -25,6 +25,7 @@ import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.MULTIPLE_ACCOUNTS
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.InvalidUserType
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{
   ACCOUNT_TYPE,
@@ -33,6 +34,8 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.LandingPage
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.UsersGroupSearchService
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -40,7 +43,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class LandingPageController @Inject()(
   authAction: AuthAction,
   mcc: MessagesControllerComponents,
-  sessionCache: TEASessionCache,
+  multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
   logger: EventLoggerService,
   landingPageView: LandingPage
 )(implicit ec: ExecutionContext)
@@ -50,17 +53,18 @@ class LandingPageController @Inject()(
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
   def view: Action[AnyContent] = authAction.async { implicit request =>
-    sessionCache.getEntry[AccountTypes.Value](ACCOUNT_TYPE).flatMap {
-      case Some(MULTIPLE_ACCOUNTS) => Future.successful(Ok(landingPageView()))
-      case _ =>
-        logger.logEvent(
-          logIncorrectUserTypeForLandingPage(request.userDetails.credId)
+    multipleAccountsOrchestrator.getDetailsForLandingPage.value.map {
+      case Right((accountDetails, redirectUrl)) =>
+        Ok(
+          landingPageView(
+            accountDetails.userId,
+            request.userDetails.hasSAEnrolment,
+            redirectUrl
+          )
         )
-        sessionCache.getEntry[String](REDIRECT_URL).map {
-          case Some(redirectUrl) =>
-            Redirect(routes.AccountCheckController.accountCheck(redirectUrl))
-          case None => InternalServerError
-        }
+      case Left(InvalidUserType(redirectUrl)) if redirectUrl.isDefined =>
+        Redirect(routes.AccountCheckController.accountCheck(redirectUrl.get))
+      case Left(_) => InternalServerError
     }
   }
 }

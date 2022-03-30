@@ -34,6 +34,18 @@ object LoggingEvent {
       )
     )
 
+  def logMultipleAccountHolderAssignedEnrolment(
+    credentialId: String
+  ): LoggingEvent =
+    Info(
+      Event(
+        "[AccountCheckController][silentEnrol]",
+        details = Some(
+          s"PT enrolment assigned to credential $credentialId which has multiple accounts"
+        )
+      )
+    )
+
   def logCurrentUserAlreadyHasPTEnrolment(credentialId: String): LoggingEvent =
     Info(
       Event(

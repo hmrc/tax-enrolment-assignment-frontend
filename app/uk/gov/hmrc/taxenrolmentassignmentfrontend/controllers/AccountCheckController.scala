@@ -20,10 +20,17 @@ import javax.inject.{Inject, Singleton}
 import play.api.{Logger, Logging}
 import play.api.http.ContentTypeOf.contentTypeOf_Html
 import play.api.i18n.I18nSupport
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
+import play.api.mvc.{
+  Action,
+  AnyContent,
+  Call,
+  MessagesControllerComponents,
+  Result
+}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.{
@@ -59,29 +66,32 @@ class AccountCheckController @Inject()(
     implicit request =>
       sessionCache.save[String]("redirectURL", redirectUrl)
       accountCheckOrchestrator.getAccountType.value.flatMap {
-        case Right(SINGLE_ACCOUNT) => silentEnrol()
         case Right(PT_ASSIGNED_TO_CURRENT_USER) =>
           Future.successful(Redirect(redirectUrl))
         case Right(PT_ASSIGNED_TO_OTHER_USER) =>
           Future.successful(
             Redirect(routes.PTEnrolmentOnOtherAccountController.view)
           )
-        case Right(MULTIPLE_ACCOUNTS) =>
-          Future.successful(Redirect(routes.LandingPageController.view))
-        case Left(_) => Future.successful(InternalServerError)
+        case Right(accountType) => silentEnrolmentAndRedirect(accountType)
+        case Left(_)            => Future.successful(InternalServerError)
       }
   }
 
-  private def silentEnrol()(
+  private def silentEnrolmentAndRedirect(accountType: AccountTypes.Value)(
     implicit request: RequestWithUserDetails[AnyContent],
     hc: HeaderCarrier
   ): Future[Result] = {
     silentAssignmentService.enrolUser().isRight map {
-      case true =>
+      case true if accountType == SINGLE_ACCOUNT =>
         logger.logEvent(
           logSingleAccountHolderAssignedEnrolment(request.userDetails.credId)
         )
         Redirect(appConfig.redirectPTAUrl)
+      case true =>
+        logger.logEvent(
+          logMultipleAccountHolderAssignedEnrolment(request.userDetails.credId)
+        )
+        Redirect(routes.LandingPageController.view)
       case false =>
         Ok(
           errorView(

@@ -23,3 +23,5 @@ object UnexpectedResponseFromEACD extends TaxEnrolmentAssignmentErrors
 object UnexpectedResponseFromTaxEnrolments extends TaxEnrolmentAssignmentErrors
 object UnexpectedResponseFromUsersGroupSearch
     extends TaxEnrolmentAssignmentErrors
+case class InvalidUserType(redirectUrl: Option[String])
+    extends TaxEnrolmentAssignmentErrors

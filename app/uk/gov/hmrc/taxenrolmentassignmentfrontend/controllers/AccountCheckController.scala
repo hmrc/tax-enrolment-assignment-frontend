@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import javax.inject.{Inject, Singleton}
-import play.api.Logging
+import play.api.{Logger, Logging}
 import play.api.http.ContentTypeOf.contentTypeOf_Html
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
@@ -30,10 +30,12 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.{
   AuthAction,
   RequestWithUserDetails
 }
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.AccountCheckOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -45,11 +47,13 @@ class AccountCheckController @Inject()(
   appConfig: AppConfig,
   mcc: MessagesControllerComponents,
   sessionCache: TEASessionCache,
+  logger: EventLoggerService,
   errorView: ErrorTemplate
 )(implicit ec: ExecutionContext)
     extends FrontendController(mcc)
-    with Logging
     with I18nSupport {
+
+  implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
   def accountCheck(redirectUrl: String): Action[AnyContent] = authAction.async {
     implicit request =>
@@ -73,7 +77,11 @@ class AccountCheckController @Inject()(
     hc: HeaderCarrier
   ): Future[Result] = {
     silentAssignmentService.enrolUser().isRight map {
-      case true => Redirect(appConfig.redirectPTAUrl)
+      case true =>
+        logger.logEvent(
+          logSingleAccountHolderAssignedEnrolment(request.userDetails.credId)
+        )
+        Redirect(appConfig.redirectPTAUrl)
       case false =>
         Ok(
           errorView(

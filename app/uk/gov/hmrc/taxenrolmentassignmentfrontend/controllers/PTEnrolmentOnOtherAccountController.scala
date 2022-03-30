@@ -17,11 +17,13 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import com.google.inject.{Inject, Singleton}
+import play.api.Logger
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment.readsCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{
@@ -34,6 +36,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{
   UsersGroupSearchService
 }
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnotherAccount
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 
 import scala.concurrent.ExecutionContext
 
@@ -44,10 +47,13 @@ class PTEnrolmentOnOtherAccountController @Inject()(
   eacdService: EACDService,
   sessionCache: TEASessionCache,
   usersGroupSearchService: UsersGroupSearchService,
+  logger: EventLoggerService,
   ptEnrolmentOnAnotherAccountView: PTEnrolmentOnAnotherAccount
 )(implicit ec: ExecutionContext, appConfig: AppConfig)
     extends FrontendController(mcc)
     with I18nSupport {
+
+  implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
   def view(): Action[AnyContent] = authAction.async { implicit request =>
     eacdService.getUsersAssignedPTEnrolment.value
@@ -69,6 +75,11 @@ class PTEnrolmentOnOtherAccountController @Inject()(
               case Left(_) => InternalServerError
             }
         case _ =>
+          logger.logEvent(
+            logIncorrectUserTypeForPTAlreadyEnrolledPage(
+              request.userDetails.credId
+            )
+          )
           sessionCache.getEntry[String](REDIRECT_URL).map {
             case Some(redirectUrl) =>
               Redirect(routes.AccountCheckController.accountCheck(redirectUrl))

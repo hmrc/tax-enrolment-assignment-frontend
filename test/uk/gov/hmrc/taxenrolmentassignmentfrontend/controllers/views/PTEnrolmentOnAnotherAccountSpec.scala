@@ -52,9 +52,9 @@ class PTEnrolmentOnAnotherAccountSpec extends TestFixture {
   )
 
   val elementsToMFADetails: Map[Int, MFADetails] = Map(
-    2 -> MFADetails("Text message", "07390328923"),
-    3 -> MFADetails("Voice call", "0193453839"),
-    4 -> MFADetails("Authenticator App", "HRMC APP")
+    3 -> MFADetails("Text message", "07390328923"),
+    4 -> MFADetails("Voice call", "0193453839"),
+    5 -> MFADetails("Authenticator App", "HRMC APP")
   )
 
   val accountDetails = AccountDetails(
@@ -134,6 +134,17 @@ class PTEnrolmentOnAnotherAccountSpec extends TestFixture {
             .getElementsByClass(Selectors.summaryListKey)
             .eachText() shouldNot contain("Email")
         }
+      }
+
+      "includes the last signed in date" in {
+        summaryListRows
+          .get(2)
+          .getElementsByClass(Selectors.summaryListKey)
+          .text() shouldBe "Last signed in"
+        summaryListRows
+          .get(2)
+          .getElementsByClass(Selectors.summaryListValue)
+          .text() shouldBe accountDetails.lastLoginDate
       }
       elementsToMFADetails.foreach {
         case (elementNumber, mfaDetails) =>

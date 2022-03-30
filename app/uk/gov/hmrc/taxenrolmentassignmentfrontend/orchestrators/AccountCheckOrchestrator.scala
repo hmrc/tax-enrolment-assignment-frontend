@@ -19,9 +19,9 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators
 import cats.data.EitherT
 import cats.implicits._
 import com.google.inject.{Inject, Singleton}
+import play.api.Logger
 import play.api.mvc.AnyContent
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.cache.client.SessionCache
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
   MULTIPLE_ACCOUNTS,
@@ -30,13 +30,13 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
   SINGLE_ACCOUNT
 }
 import uk.gov.hmrc.taxenrolmentassignmentfrontend._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{
-  EACDConnector,
-  IVConnector
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.{
-  RequestWithUserDetails,
-  UserDetailsFromSession
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{
+  logAnotherAccountAlreadyHasPTEnrolment,
+  logCurrentUserAlreadyHasPTEnrolment,
+  logCurrentUserhasMultipleAccounts,
+  logCurrentUserhasOneAccount
 }
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.ACCOUNT_TYPE
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
@@ -51,8 +51,11 @@ import scala.concurrent.{ExecutionContext, Future}
 class AccountCheckOrchestrator @Inject()(
   eacdService: EACDService,
   silentAssignmentService: SilentAssignmentService,
+  logger: EventLoggerService,
   sessionCache: TEASessionCache
 ) {
+
+  implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
   def getAccountType(
     implicit ec: ExecutionContext,
@@ -88,6 +91,11 @@ class AccountCheckOrchestrator @Inject()(
     requestWithUserDetails: RequestWithUserDetails[AnyContent]
   ): TEAFResult[Option[AccountTypes.Value]] = {
     if (requestWithUserDetails.userDetails.hasPTEnrolment) {
+      logger.logEvent(
+        logCurrentUserAlreadyHasPTEnrolment(
+          requestWithUserDetails.userDetails.credId
+        )
+      )
       EitherT.right(Future.successful(Some(PT_ASSIGNED_TO_CURRENT_USER)))
     } else {
       eacdService.getUsersAssignedPTEnrolment
@@ -95,8 +103,19 @@ class AccountCheckOrchestrator @Inject()(
           usersAssignedEnrolment =>
             usersAssignedEnrolment.enrolledCredential.map { credId =>
               if (credId == requestWithUserDetails.userDetails.credId) {
+                logger.logEvent(
+                  logCurrentUserAlreadyHasPTEnrolment(
+                    requestWithUserDetails.userDetails.credId
+                  )
+                )
                 PT_ASSIGNED_TO_CURRENT_USER
               } else {
+                logger.logEvent(
+                  logAnotherAccountAlreadyHasPTEnrolment(
+                    requestWithUserDetails.userDetails.credId,
+                    credId
+                  )
+                )
                 PT_ASSIGNED_TO_OTHER_USER
               }
           }
@@ -112,8 +131,18 @@ class AccountCheckOrchestrator @Inject()(
     silentAssignmentService.getOtherAccountsWithPTAAccess.map(
       otherCreds =>
         if (otherCreds.isEmpty) {
+          logger.logEvent(
+            logCurrentUserhasOneAccount(
+              requestWithUserDetails.userDetails.credId
+            )
+          )
           SINGLE_ACCOUNT
         } else {
+          logger.logEvent(
+            logCurrentUserhasMultipleAccounts(
+              requestWithUserDetails.userDetails.credId
+            )
+          )
           MULTIPLE_ACCOUNTS
       }
     )

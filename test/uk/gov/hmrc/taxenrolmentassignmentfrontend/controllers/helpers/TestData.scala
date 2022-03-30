@@ -42,6 +42,7 @@ object TestData {
   val NINO = "testNino"
   val GROUP_ID = "D37DB2E1-CF03-42E8-B151-E17300FFCF78"
   val CREDENTIAL_ID = "credId123"
+  val CREDENTIAL_ID_1 = "6102202884164541"
   val creds = Credentials(CREDENTIAL_ID, GovernmentGateway.toString)
   val noEnrolments = Enrolments(Set.empty[Enrolment])
   val saEnrolmentOnly = Enrolments(
@@ -141,7 +142,7 @@ object TestData {
   val UsersAssignedEnrolmentCurrentCred =
     UsersAssignedEnrolment(Some(CREDENTIAL_ID))
   val UsersAssignedEnrolment1 =
-    UsersAssignedEnrolment(Some("6102202884164541"))
+    UsersAssignedEnrolment(Some(CREDENTIAL_ID_1))
   val UsersAssignedEnrolmentEmpty =
     UsersAssignedEnrolment(None)
 

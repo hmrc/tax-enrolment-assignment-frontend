@@ -48,6 +48,7 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
   val orchestrator = new AccountCheckOrchestrator(
     mockEacdService,
     mockSilentAssignmentService,
+    logger,
     mockTeaSessionCache
   )
 

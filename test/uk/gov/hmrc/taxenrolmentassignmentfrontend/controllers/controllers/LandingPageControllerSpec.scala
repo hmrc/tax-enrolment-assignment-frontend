@@ -50,6 +50,7 @@ class LandingPageControllerSpec extends TestFixture {
     mockAuthAction,
     mcc,
     mockTeaSessionCache,
+    logger,
     landingView
   )
 
@@ -90,7 +91,7 @@ class LandingPageControllerSpec extends TestFixture {
     List(SINGLE_ACCOUNT, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER)
       .foreach { accountType =>
         s"the cache returns an accountType of $accountType" should {
-          "redirect to the landing page" in {
+          "redirect to the account check" in {
             (mockAuthConnector
               .authorise(
                 _: Predicate,

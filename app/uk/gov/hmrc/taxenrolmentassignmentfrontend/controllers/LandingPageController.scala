@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import javax.inject.{Inject, Singleton}
-import play.api.Logging
+import play.api.{Logger, Logging}
 import play.api.http.ContentTypeOf.contentTypeOf_Html
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
@@ -25,12 +25,14 @@ import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.MULTIPLE_ACCOUNTS
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{
   ACCOUNT_TYPE,
   REDIRECT_URL
 }
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.LandingPage
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -39,16 +41,21 @@ class LandingPageController @Inject()(
   authAction: AuthAction,
   mcc: MessagesControllerComponents,
   sessionCache: TEASessionCache,
+  logger: EventLoggerService,
   landingPageView: LandingPage
 )(implicit ec: ExecutionContext)
     extends FrontendController(mcc)
-    with Logging
     with I18nSupport {
+
+  implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
   def view: Action[AnyContent] = authAction.async { implicit request =>
     sessionCache.getEntry[AccountTypes.Value](ACCOUNT_TYPE).flatMap {
       case Some(MULTIPLE_ACCOUNTS) => Future.successful(Ok(landingPageView()))
       case _ =>
+        logger.logEvent(
+          logIncorrectUserTypeForLandingPage(request.userDetails.credId)
+        )
         sessionCache.getEntry[String](REDIRECT_URL).map {
           case Some(redirectUrl) =>
             Redirect(routes.AccountCheckController.accountCheck(redirectUrl))

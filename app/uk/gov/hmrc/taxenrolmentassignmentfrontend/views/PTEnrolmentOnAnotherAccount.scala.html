@@ -42,7 +42,7 @@ govukSummaryList : GovukSummaryList)
 
     <h2 class="govuk-heading-xl">@messages("ptEnrolmentOnOtherAccount.heading")</h2>
     <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.text1")
-        <a href="@routes.SignOutController.signOut">@messages("ptEnrolmentOnOtherAccount.signinAgain")</a>
+        <a href="@routes.SignOutController.signOut" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.signinAgain")</a>
       @messages("ptEnrolmentOnOtherAccount.text2")
     </p>
     <dl class="govuk-summary-list">
@@ -50,17 +50,18 @@ govukSummaryList : GovukSummaryList)
         @if(ptAccountDetails.email.isDefined) {
           @createSummaryListRow(messages("ptEnrolmentOnOtherAccount.email"), ptAccountDetails.email.get)
         }
+        @createSummaryListRow(messages("ptEnrolmentOnOtherAccount.lastLoginDate"), ptAccountDetails.lastLoginDate)
         @for(mfaDetail <- ptAccountDetails.mfaDetails) {
         @createSummaryListRow(mfaDetail.factorName, mfaDetail.factorValue)
         }
     </dl>
     <p class="govuk-body">
-        <a href="@routes.FraudReportingController.selectIdsToReport">@messages("ptEnrolmentOnOtherAccount.notMyUserId")</a>
+        <a href="@routes.FraudReportingController.selectIdsToReport" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.notMyUserId")</a>
     </p>
     @if(currentAccountHasSA) {
         <h3 class="govuk-heading-m">@messages("ptEnrolmentOnOtherAccount.saHeading")</h3>
         <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.saText")
-          <a href="@appConfig.selfAssessmentUrl">@messages("ptEnrolmentOnOtherAccount.saLink")</a>.
+          <a href="@appConfig.selfAssessmentUrl" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.saLink")</a>.
         </p>
     }
 }

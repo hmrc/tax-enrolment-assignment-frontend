@@ -19,6 +19,7 @@ ptEnrolmentOnOtherAccount.signinAgain = sign in again
 ptEnrolmentOnOtherAccount.text2 =  with the following user ID:
 ptEnrolmentOnOtherAccount.userId = User ID
 ptEnrolmentOnOtherAccount.email =  Email
+ptEnrolmentOnOtherAccount.lastLoginDate = Last signed in
 ptEnrolmentOnOtherAccount.notMyUserId = This user ID does not belong to me
 ptEnrolmentOnOtherAccount.saHeading = Access to Self Assessment
 ptEnrolmentOnOtherAccount.saText = Your current user ID can

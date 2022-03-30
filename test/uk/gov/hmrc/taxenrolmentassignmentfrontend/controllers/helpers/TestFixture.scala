@@ -55,7 +55,8 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.AccountCheckOrch
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{
   EACDService,
-  SilentAssignmentService
+  SilentAssignmentService,
+  UsersGroupSearchService
 }
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{
@@ -98,6 +99,8 @@ trait TestFixture
     mock[TaxEnrolmentsConnector]
   val mockEacdConnector: EACDConnector = mock[EACDConnector]
   val mockEacdService: EACDService = mock[EACDService]
+  val mockUsersGroupService: UsersGroupSearchService =
+    mock[UsersGroupSearchService]
   val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
   lazy val requestPath = "somePath"
   val mockTeaSessionCache = mock[TEASessionCache]

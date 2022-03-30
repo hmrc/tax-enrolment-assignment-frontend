@@ -52,6 +52,7 @@ class AccountCheckControllerSpec extends TestFixture {
     testAppConfig,
     mcc,
     teaSessionCache,
+    logger,
     errorView
   )
 

@@ -42,7 +42,8 @@ class TestOnlyController @Inject()(mcc: MessagesControllerComponents,
       UsersGroupsFixedData.usersGroupSearchCreds.get(credId) match {
         case Some(userDetails) =>
           Future.successful(Ok(UsersGroupsFixedData.toJson(userDetails)))
-        case None => Future.successful(NotFound)
+        case None =>
+          Future.successful(NotFound)
       }
   }
 }

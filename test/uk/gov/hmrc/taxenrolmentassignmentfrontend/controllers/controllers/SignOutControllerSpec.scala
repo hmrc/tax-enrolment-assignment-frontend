@@ -24,16 +24,22 @@ import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignOutController
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestData.{predicates, retrievalResponse, retrievals}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestData.{
+  predicates,
+  retrievalResponse,
+  retrievals
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class SignOutControllerSpec extends TestFixture {
 
-  val testTeaSessionCache = new TestTeaSessionCache
-  val controller = new SignOutController(mockAuthAction, mcc, appConfig, testTeaSessionCache)
-  def fakeReq(method: String, url: String = "N/A"): FakeRequest[AnyContentAsEmpty.type] = {
+  val teaSessionCache = new TestTeaSessionCache
+  val controller =
+    new SignOutController(mockAuthAction, mcc, appConfig, teaSessionCache)
+  def fakeReq(method: String,
+              url: String = "N/A"): FakeRequest[AnyContentAsEmpty.type] = {
     FakeRequest(method, url)
       .withSession(
         "sessionId" -> "FAKE_SESSION_ID",
@@ -46,16 +52,22 @@ class SignOutControllerSpec extends TestFixture {
       (mockAuthConnector
         .authorise(
           _: Predicate,
-          _: Retrieval[((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[String]]
+          _: Retrieval[
+            ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+              String
+            ]
+          ]
         )(_: HeaderCarrier, _: ExecutionContext))
         .expects(predicates, retrievals, *, *)
         .returning(Future.successful(retrievalResponse()))
 
-     val result =  controller.signOut().apply(fakeReq("GET"))
+      val result = controller.signOut().apply(fakeReq("GET"))
 
       status(result) shouldBe SEE_OTHER
       headers(result).contains("X-Request-ID") shouldBe false
-      redirectLocation(result) shouldBe Some("http://localhost:9553/bas-gateway/sign-out-without-state")
+      redirectLocation(result) shouldBe Some(
+        "http://localhost:9553/bas-gateway/sign-out-without-state"
+      )
     }
   }
 

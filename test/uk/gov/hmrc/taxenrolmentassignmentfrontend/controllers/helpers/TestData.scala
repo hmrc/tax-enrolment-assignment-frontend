@@ -42,6 +42,7 @@ object TestData {
   val NINO = "testNino"
   val GROUP_ID = "D37DB2E1-CF03-42E8-B151-E17300FFCF78"
   val CREDENTIAL_ID = "credId123"
+  val CREDENTIAL_ID_1 = "6102202884164541"
   val creds = Credentials(CREDENTIAL_ID, GovernmentGateway.toString)
   val noEnrolments = Enrolments(Set.empty[Enrolment])
   val saEnrolmentOnly = Enrolments(
@@ -132,17 +133,21 @@ object TestData {
     )
   }
 
+  val ivNinoStoreEntryCurrent = IVNinoStoreEntry(CREDENTIAL_ID, Some(200))
   val ivNinoStoreEntry1 = IVNinoStoreEntry("6902202884164548", Some(50))
   val ivNinoStoreEntry2 = IVNinoStoreEntry("8316291481001919", Some(200))
   val ivNinoStoreEntry3 = IVNinoStoreEntry("0493831301037584", Some(200))
   val ivNinoStoreEntry4 = IVNinoStoreEntry("2884521810163541", Some(200))
 
+  val UsersAssignedEnrolmentCurrentCred =
+    UsersAssignedEnrolment(Some(CREDENTIAL_ID))
   val UsersAssignedEnrolment1 =
-    UsersAssignedEnrolment(List("6102202884164541", "credId123"), List.empty)
+    UsersAssignedEnrolment(Some(CREDENTIAL_ID_1))
   val UsersAssignedEnrolmentEmpty =
-    UsersAssignedEnrolment(List.empty, List.empty)
+    UsersAssignedEnrolment(None)
 
   val multiIVCreds = List(
+    ivNinoStoreEntryCurrent,
     ivNinoStoreEntry1,
     ivNinoStoreEntry2,
     ivNinoStoreEntry3,
@@ -164,7 +169,7 @@ object TestData {
     obfuscatedUserId = "********6037",
     email = Some("email1@test.com"),
     lastAccessedTimestamp = "2022-02-27T12:00:27Z",
-    additionalFactors = List(AdditonalFactors("sms", Some("07783924321")))
+    additionalFactors = Some(List(AdditonalFactors("sms", Some("07783924321"))))
   )
 
   val multiCL200IVCreds = List(

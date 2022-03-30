@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.services
 
 import org.scalatest.concurrent.ScalaFutures
 import play.api.libs.json.Format
-import play.api.mvc.{AnyContent, Request}
+import play.api.mvc.AnyContent
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.UsersGroupSearchConnector
@@ -27,7 +27,6 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromUsersGroupSearch
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.UsersGroupSearchService
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -35,17 +34,16 @@ import scala.concurrent.{ExecutionContext, Future}
 class UsersGroupSearchServiceSpec extends TestFixture with ScalaFutures {
 
   val mockUsersGroupSearchConnector = mock[UsersGroupSearchConnector]
-  val testTeaSessionCache = mock[TEASessionCache]
 
   val service = new UsersGroupSearchService(
     mockUsersGroupSearchConnector,
-    testTeaSessionCache
+    mockTeaSessionCache
   )
 
   "getAccountDetails" when {
     "the account details are already in the cache" should {
       "not call the users-groups-search and return value from cache" in {
-        (testTeaSessionCache
+        (mockTeaSessionCache
           .getEntry(_: String)(
             _: RequestWithUserDetails[AnyContent],
             _: Format[AccountDetails]
@@ -60,7 +58,7 @@ class UsersGroupSearchServiceSpec extends TestFixture with ScalaFutures {
     }
     "the account details are not already in the cache" should {
       "call the users-groups-search, save to cache and return the account details" in {
-        (testTeaSessionCache
+        (mockTeaSessionCache
           .getEntry(_: String)(
             _: RequestWithUserDetails[AnyContent],
             _: Format[AccountDetails]
@@ -71,7 +69,7 @@ class UsersGroupSearchServiceSpec extends TestFixture with ScalaFutures {
           .getUserDetails(_: String)(_: ExecutionContext, _: HeaderCarrier))
           .expects(CREDENTIAL_ID, *, *)
           .returning(createInboundResult(usersGroupSearchResponse))
-        (testTeaSessionCache
+        (mockTeaSessionCache
           .save(_: String, _: AccountDetails)(
             _: RequestWithUserDetails[AnyContent],
             _: Format[AccountDetails]
@@ -87,7 +85,7 @@ class UsersGroupSearchServiceSpec extends TestFixture with ScalaFutures {
 
     "the account details are not already in the cache and users-group-search returns an error" should {
       "return an error" in {
-        (testTeaSessionCache
+        (mockTeaSessionCache
           .getEntry(_: String)(
             _: RequestWithUserDetails[AnyContent],
             _: Format[AccountDetails]

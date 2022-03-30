@@ -25,21 +25,31 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUs
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class TEASessionCacheImpl @Inject()(val sessionRepository: SessionRepository,
-                             val cascadeUpsert: CascadeUpsert)
-                            (implicit val ec: ExecutionContext) extends TEASessionCache{
+class TEASessionCacheImpl @Inject()(
+  val sessionRepository: SessionRepository,
+  val cascadeUpsert: CascadeUpsert
+)(implicit val ec: ExecutionContext)
+    extends TEASessionCache {
 
-  def save[A](key: String, value: A)
-             (implicit request: RequestWithUserDetails[AnyContent],
-              fmt: Format[A]): Future[CacheMap] = {
+  def save[A](key: String, value: A)(
+    implicit request: RequestWithUserDetails[AnyContent],
+    fmt: Format[A]
+  ): Future[CacheMap] = {
     sessionRepository().get(request.sessionID).flatMap { optionalCacheMap =>
-      val updatedCacheMap = cascadeUpsert(key, value, optionalCacheMap.getOrElse(CacheMap(request.sessionID, Map())))
-      sessionRepository().upsert(updatedCacheMap).map {_ => updatedCacheMap}
+      val updatedCacheMap = cascadeUpsert(
+        key,
+        value,
+        optionalCacheMap.getOrElse(CacheMap(request.sessionID, Map()))
+      )
+      sessionRepository().upsert(updatedCacheMap).map { _ =>
+        updatedCacheMap
+      }
     }
   }
 
-  def remove(key: String)
-            (implicit request: RequestWithUserDetails[AnyContent]): Future[Boolean] = {
+  def remove(
+    key: String
+  )(implicit request: RequestWithUserDetails[AnyContent]): Future[Boolean] = {
     sessionRepository().get(request.sessionID).flatMap { optionalCacheMap =>
       optionalCacheMap.fold(Future(false)) { cacheMap =>
         val newCacheMap = cacheMap copy (data = cacheMap.data - key)
@@ -48,31 +58,52 @@ class TEASessionCacheImpl @Inject()(val sessionRepository: SessionRepository,
     }
   }
 
-  def removeAll()(implicit request: RequestWithUserDetails[AnyContent]): Future[Boolean] = {
-    sessionRepository().upsert(CacheMap(request.sessionID, Map("" -> JsString(""))))
+  def removeAll()(
+    implicit request: RequestWithUserDetails[AnyContent]
+  ): Future[Boolean] = {
+    sessionRepository().upsert(
+      CacheMap(request.sessionID, Map("" -> JsString("")))
+    )
   }
 
-  def fetch()(implicit request: RequestWithUserDetails[AnyContent]): Future[Option[CacheMap]] =
+  def fetch()(
+    implicit request: RequestWithUserDetails[AnyContent]
+  ): Future[Option[CacheMap]] =
     sessionRepository().get(request.sessionID)
 
-  def getEntry[A](key: String)
-                 (implicit request: RequestWithUserDetails[AnyContent],
-                  fmt: Format[A]): Future[Option[A]] = {
+  def getEntry[A](key: String)(
+    implicit request: RequestWithUserDetails[AnyContent],
+    fmt: Format[A]
+  ): Future[Option[A]] = {
     fetch().map { optionalCacheMap =>
-      optionalCacheMap.flatMap { cacheMap => cacheMap.getEntry(key)}
+      optionalCacheMap.flatMap { cacheMap =>
+        cacheMap.getEntry(key)
+      }
     }
   }
 }
 
 @ImplementedBy(classOf[TEASessionCacheImpl])
 trait TEASessionCache {
-  def save[A](key: String, value: A)(implicit request: RequestWithUserDetails[AnyContent], fmt: Format[A]): Future[CacheMap]
+  def save[A](key: String, value: A)(
+    implicit request: RequestWithUserDetails[AnyContent],
+    fmt: Format[A]
+  ): Future[CacheMap]
 
-  def remove(key: String)(implicit request: RequestWithUserDetails[AnyContent]): Future[Boolean]
+  def remove(key: String)(
+    implicit request: RequestWithUserDetails[AnyContent]
+  ): Future[Boolean]
 
-  def removeAll()(implicit request: RequestWithUserDetails[AnyContent]): Future[Boolean]
+  def removeAll()(
+    implicit request: RequestWithUserDetails[AnyContent]
+  ): Future[Boolean]
 
-  def fetch()(implicit request: RequestWithUserDetails[AnyContent]): Future[Option[CacheMap]]
+  def fetch()(
+    implicit request: RequestWithUserDetails[AnyContent]
+  ): Future[Option[CacheMap]]
 
-  def getEntry[A](key: String)(implicit request: RequestWithUserDetails[AnyContent], fmt: Format[A]): Future[Option[A]]
+  def getEntry[A](key: String)(
+    implicit request: RequestWithUserDetails[AnyContent],
+    fmt: Format[A]
+  ): Future[Option[A]]
 }

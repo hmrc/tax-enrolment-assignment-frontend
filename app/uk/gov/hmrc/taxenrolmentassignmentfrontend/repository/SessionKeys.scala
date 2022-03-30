@@ -14,17 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.repository
 
-import play.api.libs.json.{Format, Json, Reads, Writes}
+object SessionKeys {
 
-case class IVNinoStoreEntry(credId: String, confidenceLevel: Option[Int])
+  val ACCOUNT_TYPE = "ACCOUNT_TYPE"
+  val USER_ASSIGNED_PT_ENROLMENT = "USER_ASSIGNED_PT_ENROLMENT"
+  val REDIRECT_URL = "redirectURL"
+  val OTHER_VALID_PTA_ACCOUNTS = "OTHER_VALID_PTA_ACCOUNTS"
 
-object IVNinoStoreEntry {
-  implicit val format: Format[IVNinoStoreEntry] = Json.format[IVNinoStoreEntry]
-
-  implicit val formatList: Format[Seq[IVNinoStoreEntry]] = {
-    Format(Reads.seq[IVNinoStoreEntry], Writes.seq[IVNinoStoreEntry])
-  }
+  def accountDetailsForCredential(credId: String) = s"AccountDetailsFor$credId"
 
 }

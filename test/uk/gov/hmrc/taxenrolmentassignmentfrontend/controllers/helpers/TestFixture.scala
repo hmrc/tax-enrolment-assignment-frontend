@@ -26,26 +26,43 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.i18n._
 import play.api.inject.Injector
 import play.api.libs.json.Format
-import play.api.mvc._
+import play.api.mvc.{AnyContent, _}
 import play.api.test.CSRFTokenHelper._
 import play.api.test.Helpers._
 import play.api.test._
-import play.api.mvc.AnyContent
 import play.twirl.api.Html
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.http.cache.client.CacheMap
+import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{EACDConnector, IVConnector, TaxEnrolmentsConnector}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{
+  EACDConnector,
+  IVConnector,
+  TaxEnrolmentsConnector
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignOutController
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestData.userDetailsWithPTEnrolment
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.{AuthAction, RequestWithUserDetails}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.{
+  AuthAction,
+  RequestWithUserDetails
+}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestData.userDetailsNoEnrolments
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.AccountCheckOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{LandingPage, UnderConstructionView}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{
+  EACDService,
+  SilentAssignmentService,
+  UsersGroupSearchService
+}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{
+  LandingPage,
+  UnderConstructionView
+}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -56,15 +73,19 @@ trait TestFixture
     with Matchers
     with Injecting {
 
+  val TIME_OUT = 5
+  val INTERVAL = 5
+
   lazy val injector: Injector = app.injector
   implicit val request: RequestWithUserDetails[AnyContent] =
     new RequestWithUserDetails[AnyContent](
       FakeRequest().asInstanceOf[Request[AnyContent]],
-      userDetailsWithPTEnrolment,
+      userDetailsNoEnrolments,
       "sessionId"
     )
 
   implicit val ec: ExecutionContext = injector.instanceOf[ExecutionContext]
+  lazy val servicesConfig = injector.instanceOf[ServicesConfig]
   implicit val hc: HeaderCarrier = HeaderCarrier()
   lazy val logger: EventLoggerService = new EventLoggerService()
   implicit val appConfig: AppConfig = injector.instanceOf[AppConfig]
@@ -74,14 +95,25 @@ trait TestFixture
   lazy val landingPageView: LandingPage = inject[LandingPage]
   val mockAuthConnector: AuthConnector = mock[AuthConnector]
   val mockIVConnector: IVConnector = mock[IVConnector]
-  val mockTaxEnrolmentsConnector: TaxEnrolmentsConnector = mock[TaxEnrolmentsConnector]
+  val mockTaxEnrolmentsConnector: TaxEnrolmentsConnector =
+    mock[TaxEnrolmentsConnector]
   val mockEacdConnector: EACDConnector = mock[EACDConnector]
+  val mockEacdService: EACDService = mock[EACDService]
+  val mockUsersGroupService: UsersGroupSearchService =
+    mock[UsersGroupSearchService]
   val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
   lazy val requestPath = "somePath"
+  val mockTeaSessionCache = mock[TEASessionCache]
+  val mockAccountCheckOrchestrator = mock[AccountCheckOrchestrator]
+  val mockSilentAssignmentService: SilentAssignmentService =
+    mock[SilentAssignmentService]
 
   implicit lazy val fakeRequest: FakeRequest[AnyContentAsEmpty.type] =
     FakeRequest("", requestPath)
-      .withSession(SessionKeys.sessionId -> "foo", SessionKeys.authToken -> "token")
+      .withSession(
+        SessionKeys.sessionId -> "foo",
+        SessionKeys.authToken -> "token"
+      )
       .withCSRFToken
       .asInstanceOf[FakeRequest[AnyContentAsEmpty.type]]
   val testAppConfig: AppConfig = app.injector.instanceOf[AppConfig]
@@ -98,10 +130,10 @@ trait TestFixture
   lazy val mcc: MessagesControllerComponents =
     stubMessagesControllerComponents()
 
+  val errorView: ErrorTemplate = app.injector.instanceOf[ErrorTemplate]
   lazy val mockSignOutController = mock[SignOutController]
 
   def doc(result: Html): Document = Jsoup.parse(contentAsString(result))
-
 
   def createInboundResult[T](result: T): TEAFResult[T] =
     EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(result))

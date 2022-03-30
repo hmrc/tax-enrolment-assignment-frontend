@@ -25,6 +25,7 @@ import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.UsersGroupSearchConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.accountDetailsForCredential
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -40,7 +41,7 @@ class UsersGroupSearchService @Inject()(
     hc: HeaderCarrier,
     request: RequestWithUserDetails[AnyContent]
   ): TEAFResult[AccountDetails] = EitherT {
-    val key = sessionKey(credId)
+    val key = accountDetailsForCredential(credId)
     sessionCache.getEntry[AccountDetails](key).flatMap {
       case Some(entry) => Future.successful(Right(entry))
       case None =>
@@ -65,6 +66,4 @@ class UsersGroupSearchService @Inject()(
         case Left(error) => Left(error)
       }
   }
-
-  private def sessionKey(credId: String) = s"AccountDetailsFor$credId"
 }

@@ -44,7 +44,7 @@ class AccountDetailsSpec extends TestFixture {
       obfuscatedUserId = "********6037",
       email = Some("email1@test.com"),
       lastAccessedTimestamp = lastAccessedTime,
-      additionalFactors = additionalFactors
+      additionalFactors = Some(additionalFactors)
     )
   }
 

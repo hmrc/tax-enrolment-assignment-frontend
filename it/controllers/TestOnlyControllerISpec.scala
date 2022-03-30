@@ -33,10 +33,10 @@ class TestOnlyControllerISpec extends IntegrationSpecBase with Status {
     "retrieve the users details" when {
       "the credential is recognised" in {
 
-        val credId = "2568836745857979"
+        val credId = "4684455594391511"
         val url = s"/users-group-search/test-only/users/$credId"
         val expectedResponse =
-          """{"obfuscatedUserId":"********6037","email":"email1@test.com","lastAccessedTimestamp":"2022-01-16T14:40:25Z","additionalFactors":[{"factorType":"sms","phoneNumber":"07783924321"}]}"""
+          """{"obfuscatedUserId":"********3469","email":"email1@test.com","lastAccessedTimestamp":"2022-01-16T14:40:25Z","additionalFactors":[{"factorType":"sms","phoneNumber":"07783924321"}]}"""
         val res = buildTestOnlyRequest(url, followRedirects = true)
           .withHttpHeaders(xSessionId, csrfContent)
           .withBody(Json.obj())

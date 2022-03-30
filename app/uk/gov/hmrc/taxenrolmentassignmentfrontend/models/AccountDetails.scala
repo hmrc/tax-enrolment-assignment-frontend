@@ -16,9 +16,8 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 
-import java.time
 import java.time.format.{DateTimeFormatter, FormatStyle}
-import java.time.{Instant, ZoneId, ZonedDateTime}
+import java.time.{ZoneId, ZonedDateTime}
 
 import play.api.libs.json.{Format, Json}
 
@@ -41,17 +40,19 @@ object MFADetails {
 case class AccountDetails(userId: String,
                           email: Option[String],
                           lastLoginDate: String,
-                          mfaDetails: List[MFADetails]) {
+                          mfaDetails: Seq[MFADetails]) {
   def this(usersGroupResponse: UsersGroupResponse) =
     this(
       userId = usersGroupResponse.obfuscatedUserId,
       email = usersGroupResponse.email,
       lastLoginDate =
         AccountDetails.formatDate(usersGroupResponse.lastAccessedTimestamp),
-      mfaDetails = usersGroupResponse.additionalFactors.map {
-        additionalFactor =>
-          new MFADetails(additionalFactor)
-      }
+      mfaDetails = usersGroupResponse.additionalFactors
+        .fold[Seq[MFADetails]](Seq.empty[MFADetails]) { additionalFactors =>
+          additionalFactors.map { additionalFactor =>
+            new MFADetails(additionalFactor)
+          }
+        }
     )
 }
 

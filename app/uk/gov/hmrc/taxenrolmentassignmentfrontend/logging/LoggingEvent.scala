@@ -17,9 +17,86 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.logging
 
 import play.api.libs.json.{Format, Json}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 
 object LoggingEvent {
+
+  def logSingleAccountHolderAssignedEnrolment(
+    credentialId: String
+  ): LoggingEvent =
+    Info(
+      Event(
+        "[AccountCheckController][silentEnrol]",
+        details = Some(
+          s"PT enrolment assigned to single account credential $credentialId"
+        )
+      )
+    )
+
+  def logCurrentUserAlreadyHasPTEnrolment(credentialId: String): LoggingEvent =
+    Info(
+      Event(
+        "[AccountCheckOrchestrator][getAccountType]",
+        details = Some(
+          s"PT enrolment has already been assigned to the current credential $credentialId"
+        )
+      )
+    )
+
+  def logAnotherAccountAlreadyHasPTEnrolment(
+    credentialId: String,
+    credentialWithPTEnrolment: String
+  ): LoggingEvent =
+    Info(
+      Event(
+        "[AccountCheckOrchestrator][getAccountType]",
+        details = Some(
+          s"Signed in with credential $credentialId has already been assigned to another credential $credentialWithPTEnrolment"
+        )
+      )
+    )
+
+  def logCurrentUserhasMultipleAccounts(credentialId: String): LoggingEvent =
+    Info(
+      Event(
+        "[AccountCheckOrchestrator][getAccountType]",
+        details =
+          Some(s"Signed in credential $credentialId has multiple accounts")
+      )
+    )
+
+  def logCurrentUserhasOneAccount(credentialId: String): LoggingEvent =
+    Info(
+      Event(
+        "[AccountCheckOrchestrator][getAccountType]",
+        details = Some(s"Signed in credential $credentialId has one account")
+      )
+    )
+
+  def logIncorrectUserTypeForLandingPage(credentialId: String): LoggingEvent = {
+    Warn(
+      Event(
+        "[LandingPageController][view]",
+        details = Some(
+          s"credential $credentialId does not have ${AccountTypes.MULTIPLE_ACCOUNTS.toString}"
+        )
+      )
+    )
+  }
+
+  def logIncorrectUserTypeForPTAlreadyEnrolledPage(
+    credentialId: String
+  ): LoggingEvent = {
+    Warn(
+      Event(
+        "[PTEnrolmentOnOtherAccountController][view]",
+        details = Some(
+          s"credential $credentialId does not have ${AccountTypes.PT_ASSIGNED_TO_OTHER_USER.toString}"
+        )
+      )
+    )
+  }
 
   def logAuthenticationFailure(errorDetails: String): LoggingEvent =
     Warn(Event("[AuthAction][invokeBlock]", errorDetails = Some(errorDetails)))
@@ -104,10 +181,10 @@ object LoggingEvent {
     )
 
   def logUnexpectedResponseFromTaxEnrolmentsKnownFacts(
-                                              nino: String,
-                                              statusReturned: Int,
-                                              errorMsg: String = ""
-                                            ): LoggingEvent =
+    nino: String,
+    statusReturned: Int,
+    errorMsg: String = ""
+  ): LoggingEvent =
     Error(
       Event(
         "[TaxEnrolmentsConnector][assignPTEnrolmentWithKnownFacts]",

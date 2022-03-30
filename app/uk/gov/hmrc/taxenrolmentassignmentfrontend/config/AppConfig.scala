@@ -33,8 +33,12 @@ class AppConfig @Inject()(val config: ServicesConfig) {
     : String = config.baseUrl("enrolment-store-proxy") + "/enrolment-store-proxy"
   lazy val TAX_ENROLMENTS_BASE_URL
     : String = config.baseUrl("tax-enrolments") + "/tax-enrolments"
-  lazy val useTestOnlyUsersGroupSearch: Boolean =
+
+  lazy val useTestOnlyUsersGroupSearch: Boolean = {
     config.getConfBool("users-group-search.isTest", defBool = true)
+  }
+  lazy val tenBaseUrl: String =
+    s"${config.baseUrl("tax-enrolment-assignment-frontend")}"
   lazy val usersGroupSearchBaseURL: String =
     s"${config.baseUrl("users-group-search")}/users-group-search"
   lazy val basAuthHost: String =
@@ -47,4 +51,6 @@ class AppConfig @Inject()(val config: ServicesConfig) {
   lazy val redirectPTAUrl: String = config.getString(
     "microservice.services.personal-tax-account.host"
   ) + "/personal-account"
+  //ToDo find real link to SA
+  lazy val selfAssessmentUrl: String = "?"
 }

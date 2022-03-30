@@ -29,10 +29,10 @@ class TestOnlyControllerSpec extends TestFixture {
   "usersGroupSearchCall" when {
     "the credential is recognised" should {
       "return OK with the userdetails" in {
-        val credId = "2568836745857979"
+        val credId = "4684455594391511"
         val expectedResponse = {
           Json.obj(
-            ("obfuscatedUserId", JsString("********6037")),
+            ("obfuscatedUserId", JsString("********3469")),
             ("email", JsString("email1@test.com")),
             ("lastAccessedTimestamp", JsString("2022-01-16T14:40:25Z")),
             (

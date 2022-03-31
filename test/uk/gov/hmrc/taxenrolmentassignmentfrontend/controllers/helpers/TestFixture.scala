@@ -51,7 +51,10 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestData.u
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.AccountCheckOrchestrator
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{
+  AccountCheckOrchestrator,
+  MultipleAccountsOrchestrator
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{
   EACDService,
@@ -105,6 +108,7 @@ trait TestFixture
   lazy val requestPath = "somePath"
   val mockTeaSessionCache = mock[TEASessionCache]
   val mockAccountCheckOrchestrator = mock[AccountCheckOrchestrator]
+  val mockMultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
   val mockSilentAssignmentService: SilentAssignmentService =
     mock[SilentAssignmentService]
 

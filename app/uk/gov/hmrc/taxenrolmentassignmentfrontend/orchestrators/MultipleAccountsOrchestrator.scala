@@ -46,13 +46,13 @@ class MultipleAccountsOrchestrator @Inject()(
     implicit requestWithUserDetails: RequestWithUserDetails[AnyContent],
     hc: HeaderCarrier,
     ec: ExecutionContext
-  ): TEAFResult[(AccountDetails, String)] = {
+  ): TEAFResult[AccountDetails] = {
     for {
-      redirectUrl <- checkAccountTypeAndGetRedirectUrlFromCache
+      _ <- checkAccountTypeAndGetRedirectUrlFromCache
       accountDetails <- usersGroupSearchService.getAccountDetails(
         requestWithUserDetails.userDetails.credId
       )
-    } yield (accountDetails, redirectUrl)
+    } yield accountDetails
 
   }
 
@@ -60,14 +60,14 @@ class MultipleAccountsOrchestrator @Inject()(
     implicit requestWithUserDetails: RequestWithUserDetails[AnyContent],
     hc: HeaderCarrier,
     ec: ExecutionContext
-  ): TEAFResult[String] = EitherT {
+  ): TEAFResult[Unit] = EitherT {
     val res = for {
       accountType <- sessionCache.getEntry[AccountTypes.Value](ACCOUNT_TYPE)
       redirectUrl <- sessionCache.getEntry[String](REDIRECT_URL)
     } yield (accountType, redirectUrl)
 
     res.map {
-      case (Some(MULTIPLE_ACCOUNTS), Some(redirectUrl)) => Right(redirectUrl)
+      case (Some(MULTIPLE_ACCOUNTS), Some(redirectUrl)) => Right((): Unit)
       case (_, optRedirectUrl)                          => Left(InvalidUserType(optRedirectUrl))
     }
   }

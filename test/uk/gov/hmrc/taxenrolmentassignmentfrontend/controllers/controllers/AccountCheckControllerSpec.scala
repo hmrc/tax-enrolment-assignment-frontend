@@ -119,10 +119,11 @@ class AccountCheckControllerSpec extends TestFixture {
       }
     }
 
-    "multiple credential exists for a given nino and no PT enrolment exists" should {
+    "multiple credentials exists for a given nino and no PT enrolment exists" should {
       "redirect to the landing page" in new TestHelper {
         mockAuthCall()
         mockAccountCheckSuccess(MULTIPLE_ACCOUNTS)
+        mockSilentEnrolSuccess
 
         val result = controller
           .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)

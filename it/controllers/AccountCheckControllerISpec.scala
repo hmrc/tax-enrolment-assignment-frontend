@@ -169,6 +169,12 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
             ""
           )
 
+          stubPut(
+            s"/tax-enrolments/service/HMRC-PT/enrolment",
+            Status.NO_CONTENT,
+            ""
+          )
+
           val res = buildRequest(urlPath, followRedirects = false)
             .withHttpHeaders(xSessionId, csrfContent)
             .get()

@@ -44,6 +44,7 @@ class LandingPageController @Inject()(
   authAction: AuthAction,
   mcc: MessagesControllerComponents,
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
+  sessionCache: TEASessionCache,
   logger: EventLoggerService,
   landingPageView: LandingPage
 )(implicit ec: ExecutionContext)
@@ -54,17 +55,23 @@ class LandingPageController @Inject()(
 
   def view: Action[AnyContent] = authAction.async { implicit request =>
     multipleAccountsOrchestrator.getDetailsForLandingPage.value.map {
-      case Right((accountDetails, redirectUrl)) =>
+      case Right(accountDetails) =>
         Ok(
           landingPageView(
             accountDetails.userId,
-            request.userDetails.hasSAEnrolment,
-            redirectUrl
+            request.userDetails.hasSAEnrolment
           )
         )
       case Left(InvalidUserType(redirectUrl)) if redirectUrl.isDefined =>
         Redirect(routes.AccountCheckController.accountCheck(redirectUrl.get))
       case Left(_) => InternalServerError
+    }
+  }
+
+  def continue: Action[AnyContent] = authAction.async { implicit request =>
+    sessionCache.getEntry[String](REDIRECT_URL).map {
+      case Some(redirectUrl) => Redirect(redirectUrl)
+      case None              => InternalServerError
     }
   }
 }

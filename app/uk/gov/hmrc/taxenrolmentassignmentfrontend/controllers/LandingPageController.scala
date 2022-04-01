@@ -17,27 +17,20 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import javax.inject.{Inject, Singleton}
-import play.api.{Logger, Logging}
+import play.api.Logger
 import play.api.http.ContentTypeOf.contentTypeOf_Html
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.MULTIPLE_ACCOUNTS
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.InvalidUserType
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{
-  ACCOUNT_TYPE,
-  REDIRECT_URL
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REDIRECT_URL
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.LandingPage
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.UsersGroupSearchService
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class LandingPageController @Inject()(
@@ -70,8 +63,9 @@ class LandingPageController @Inject()(
 
   def continue: Action[AnyContent] = authAction.async { implicit request =>
     sessionCache.getEntry[String](REDIRECT_URL).map {
-      case Some(redirectUrl) => Redirect(redirectUrl)
-      case None              => InternalServerError
+      case Some(redirectUrl) =>
+        Redirect(redirectUrl)
+      case None => InternalServerError
     }
   }
 }

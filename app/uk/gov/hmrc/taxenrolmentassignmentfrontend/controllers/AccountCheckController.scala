@@ -43,6 +43,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REDIRECT_URL
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -64,7 +65,7 @@ class AccountCheckController @Inject()(
 
   def accountCheck(redirectUrl: String): Action[AnyContent] = authAction.async {
     implicit request =>
-      sessionCache.save[String]("redirectURL", redirectUrl)
+      sessionCache.save[String](REDIRECT_URL, redirectUrl)
       accountCheckOrchestrator.getAccountType.value.flatMap {
         case Right(PT_ASSIGNED_TO_CURRENT_USER) =>
           Future.successful(Redirect(redirectUrl))

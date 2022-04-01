@@ -24,6 +24,9 @@
 )
 @(pageTitle: Option[String] = None, optBackLinkUrl: Option[String] = None)(contentBlock: Html)(implicit request: Request[_], messages: Messages)
 
+@head = {
+<link rel="stylesheet" type="text/css" href="@routes.Assets.versioned("stylesheets/application.css")">
+}
 @hmrcLayout(
  pageTitle = pageTitle,
  nonce = CSPNonce.get,

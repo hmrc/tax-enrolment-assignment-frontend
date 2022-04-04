@@ -19,18 +19,14 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.views
 import play.api.test.FakeRequest
 import play.twirl.api.HtmlFormat
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.messages.{ReportSuspiciousIDMessages}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.messages.ReportSuspiciousIDMessages
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.ReportSuspiciousID
 
 class ReportSuspiciousIDSpec extends TestFixture {
 
   val reportSuspiciousIdView: ReportSuspiciousID =
     app.injector.instanceOf[ReportSuspiciousID]
-  val result: HtmlFormat.Appendable =
-    reportSuspiciousIdView()(FakeRequest(), testMessages)
-
-  val resultSA: HtmlFormat.Appendable =
-    reportSuspiciousIdView(true)(FakeRequest(), testMessages)
 
   object Selectors {
     val backLink = "govuk-back-link"
@@ -41,6 +37,23 @@ class ReportSuspiciousIDSpec extends TestFixture {
     val summaryListValue = "govuk-summary-list__value"
     val links = "govuk-link"
   }
+
+  val mfaDetails = Seq(
+    MFADetails("Text message", "07390328923")
+  )
+
+  val accountDetails = AccountDetails(
+    "********3214",
+    Some("email1@test.com"),
+    "Yesterday",
+    mfaDetails
+  )
+
+  val result: HtmlFormat.Appendable =
+    reportSuspiciousIdView(accountDetails)(FakeRequest(), testMessages)
+
+  val resultSA: HtmlFormat.Appendable =
+    reportSuspiciousIdView(accountDetails,true)(FakeRequest(), testMessages)
 
   "The Report suspicious ID Page" should {
     "have a back link" that {
@@ -67,7 +80,7 @@ class ReportSuspiciousIDSpec extends TestFixture {
         suspiciousIdDetailsRows
           .get(0)
           .getElementsByClass(Selectors.summaryListValue)
-          .text() shouldBe ReportSuspiciousIDMessages.hardCodedValues.userID
+          .text() shouldBe accountDetails.userId
       }
       "includes the email field with correct value" in {
         suspiciousIdDetailsRows
@@ -77,7 +90,7 @@ class ReportSuspiciousIDSpec extends TestFixture {
         suspiciousIdDetailsRows
           .get(1)
           .getElementsByClass(Selectors.summaryListValue)
-          .text() shouldBe ReportSuspiciousIDMessages.hardCodedValues.email
+          .text() shouldBe accountDetails.email.get
       }
       "includes the last signed in field with correct value" in {
         suspiciousIdDetailsRows
@@ -87,27 +100,17 @@ class ReportSuspiciousIDSpec extends TestFixture {
         suspiciousIdDetailsRows
           .get(2)
           .getElementsByClass(Selectors.summaryListValue)
-          .text() shouldBe ReportSuspiciousIDMessages.hardCodedValues.lastSignIn
+          .text() shouldBe accountDetails.lastLoginDate
       }
       "includes the text message field with correct value" in {
         suspiciousIdDetailsRows
           .get(3)
           .getElementsByClass(Selectors.summaryListKey)
-          .text() shouldBe "Text Message"
+          .text() shouldBe "Text message"
         suspiciousIdDetailsRows
           .get(3)
           .getElementsByClass(Selectors.summaryListValue)
-          .text() shouldBe ReportSuspiciousIDMessages.hardCodedValues.textMessage
-      }
-      "includes the authenticator app field with correct value" in {
-        suspiciousIdDetailsRows
-          .get(4)
-          .getElementsByClass(Selectors.summaryListKey)
-          .text() shouldBe "Authenticator app"
-        suspiciousIdDetailsRows
-          .get(4)
-          .getElementsByClass(Selectors.summaryListValue)
-          .text() shouldBe ReportSuspiciousIDMessages.hardCodedValues.authAppName
+          .text() shouldBe accountDetails.mfaDetails.head.factorValue
       }
     }
 

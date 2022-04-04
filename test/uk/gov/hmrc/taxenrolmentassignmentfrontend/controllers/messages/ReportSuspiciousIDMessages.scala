@@ -25,14 +25,6 @@ object ReportSuspiciousIDMessages {
   val button = "Continue"
   val saPText = "You can continue to your personal tax account with your current user ID."
 
-  object hardCodedValues {
-    val userID = "*********8173"
-    val email = "test.email"
-    val lastSignIn = "17 October 2021 at 3:45pm"
-    val textMessage = "******17435"
-    val authAppName = "Google"
-  }
-
   val telephone = Seq("Telephone:","0300 200 3600")
   val outsideUK = Seq("Outside UK:","+44 161 930 8445")
 

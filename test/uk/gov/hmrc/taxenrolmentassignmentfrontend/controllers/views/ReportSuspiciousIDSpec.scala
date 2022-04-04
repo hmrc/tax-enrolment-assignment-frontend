@@ -120,9 +120,6 @@ class ReportSuspiciousIDSpec extends TestFixture {
       paragraph.get(0)
         .text() shouldBe ReportSuspiciousIDMessages.paragraph1
 
-      paragraph.get(1)
-        .text() shouldBe ReportSuspiciousIDMessages.paragraph2
-
       doc(result)
         .select("a." + Selectors.links)
         .get(1)
@@ -168,29 +165,24 @@ class ReportSuspiciousIDSpec extends TestFixture {
         detailsBlockParagraphs
           .get(2)
           .text() shouldBe ReportSuspiciousIDMessages.informationBlock(3)
-        detailsBlockParagraphs
-          .get(3)
-          .text() shouldBe ReportSuspiciousIDMessages.informationBlock(4)
         doc(result)
           .select("details a")
           .text() shouldBe ReportSuspiciousIDMessages.detailBlockLink
       }
     }
 
-    "should not display the continue button when no SA identified" in {
+    "not display the continue button when no SA identified" in {
       doc(result)
-        .select("div.sa > p")
-        .size() shouldBe 0
+        .body().text().contains(ReportSuspiciousIDMessages.saPText) shouldBe false
 
-      doc(result)
-        .select(".govuk-button")
+      doc(result).select(".govuk-button")
         .size() shouldBe 0
     }
 
     "should only display the continue button when SA identified" in {
       doc(resultSA)
-        .select("div.sa > p." + Selectors.body)
-        .get(0)
+        .select("p." + Selectors.body)
+        .get(4)
         .text() shouldBe ReportSuspiciousIDMessages.saPText
 
       doc(resultSA)

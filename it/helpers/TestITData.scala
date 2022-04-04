@@ -32,6 +32,7 @@ object TestITData {
   val CREDENTIAL_ID_3: String = "0493831301037584"
   val CREDENTIAL_ID_4: String = "2884521810163541"
   val GROUP_ID: String = "GROUPID123"
+  val UTR = "1234567890"
   val CL50 = 50
   val CL200 = 200
   val creds: Credentials =

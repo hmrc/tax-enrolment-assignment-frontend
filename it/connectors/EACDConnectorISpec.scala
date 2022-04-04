@@ -153,6 +153,38 @@ class EACDConnectorISpec extends IntegrationSpecBase {
     }
   }
 
+  "getUsersWithSAEnrolment" when {
+    val ENROLMENT_KEY = s"IR-SA~UTR~$UTR"
+    val PATH =
+      s"/enrolment-store-proxy/enrolment-store/enrolments/$ENROLMENT_KEY/users"
+
+    s"no users have the $ENROLMENT_KEY enrolment" should {
+      "return None" in {
+        stubGet(PATH, Status.NO_CONTENT, "")
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        whenReady(connector.getUsersWithAssignedEnrolment(ENROLMENT_KEY).value) {
+          response =>
+            response shouldBe Right(UsersAssignedEnrolment(None))
+        }
+      }
+    }
+
+    s"a user exists with the $ENROLMENT_KEY" should {
+      "return the users credentialId" in {
+        val eacdResponse = Json.obj(
+          ("principalUserIds", Json.arr(JsString(CREDENTIAL_ID))),
+          ("delegatedUserIds", Json.arr())
+        )
+        stubGet(PATH, Status.OK, eacdResponse.toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        whenReady(connector.getUsersWithAssignedEnrolment(ENROLMENT_KEY).value) {
+          response =>
+            response shouldBe Right(UsersAssignedEnrolment(Some(CREDENTIAL_ID)))
+        }
+      }
+    }
+  }
+
   "queryKnownFactsByNinoVerifier" when {
     val PATH =
       s"/enrolment-store-proxy/enrolment-store/enrolments"

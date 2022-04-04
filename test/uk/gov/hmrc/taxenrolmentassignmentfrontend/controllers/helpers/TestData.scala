@@ -43,6 +43,7 @@ object TestData {
   val GROUP_ID = "D37DB2E1-CF03-42E8-B151-E17300FFCF78"
   val CREDENTIAL_ID = "credId123"
   val CREDENTIAL_ID_1 = "6102202884164541"
+  val UTR = "1234567890"
   val creds = Credentials(CREDENTIAL_ID, GovernmentGateway.toString)
   val noEnrolments = Enrolments(Set.empty[Enrolment])
   val saEnrolmentOnly = Enrolments(

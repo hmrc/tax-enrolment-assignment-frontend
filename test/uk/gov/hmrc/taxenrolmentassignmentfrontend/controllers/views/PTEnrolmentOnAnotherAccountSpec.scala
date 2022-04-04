@@ -167,6 +167,9 @@ class PTEnrolmentOnAnotherAccountSpec extends TestFixture {
       "has the correct text" in {
         textElement.text() shouldBe PTEnrolmentOtherAccountMesages.notMyUserId
       }
+      /*
+      //TODO remove fraud reporting ID part after consultation with leads, as it requires other changes such remove couple of tests etc etc
+       */
       "has the link to fraud reporting" in {
         textElement
           .select("a")

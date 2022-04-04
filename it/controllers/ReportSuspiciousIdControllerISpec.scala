@@ -19,20 +19,18 @@ package controllers
 import helpers.IntegrationSpecBase
 import helpers.TestITData._
 import helpers.WiremockHelper._
-import org.jsoup.Jsoup
 import play.api.http.Status
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
 
-class FraudReportingControllerISpec extends IntegrationSpecBase with Status {
+class ReportSuspiciousIdControllerISpec extends IntegrationSpecBase with Status {
 
   val teaHost = s"localhost:$port"
   val urlPath =
-    s"/report-IDs/select-IDs"
+    s"/enrol-pt/report-suspicious-id"
 
   s"GET $urlPath" when {
     "the user is authorised" should {
-      s"render the fraudReporting view" in {
-        val authResponse = authoriseResponseJson(enrolments = ptEnrolmentOnly)
+      s"return 200 and render the report suspicious ID page" in {
+        val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         val res = buildRequest(urlPath, followRedirects = true)
@@ -41,30 +39,12 @@ class FraudReportingControllerISpec extends IntegrationSpecBase with Status {
 
         whenReady(res) { resp =>
           resp.status shouldBe OK
-          val page = Jsoup.parse(resp.body)
-          page.title() should include("Fraud Reporting")
-          page.select("h1").text() shouldBe "Fraud Reporting - Select IDs"
-          page
-            .select("p")
-            .text() shouldBe "Select IDs for accounts not recognised"
+          resp.body should include(
+            "Report a suspicious user ID"
+          )
         }
       }
     }
 
-    "the user has no session" should {
-      s"redirect to login" in {
-        stubAuthorizePostUnauthorised("SessionRecordNotFound")
-        stubPost(s"/write/.*", OK, """{"x":2}""")
-
-        val res = buildRequest(urlPath)
-          .withHttpHeaders(xSessionId, csrfContent)
-          .get()
-
-        whenReady(res) { resp =>
-          resp.status shouldBe SEE_OTHER
-          resp.header("Location").get should include("/bas-gateway/sign-in")
-        }
-      }
-    }
   }
 }

@@ -321,7 +321,8 @@ object TestITData {
 
   val underConstructionTruePageTitle =
     "Tax Enrolment Assignment Frontend - Enrolment Present"
-  val landingPageTitle = "Landing Page"
+  val landingPageTitle =
+    "Only your current user ID can access your personal tax account from now on"
   val ptEnroledOnOtherAccountPageTitle =
     "We have found your personal tax information under a different Government Gateway user ID"
 

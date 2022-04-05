@@ -3,6 +3,7 @@
 ->         /hmrc-frontend           hmrcfrontend.Routes
 GET        /no-pt-enrolment   uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.AccountCheckController.accountCheck(redirectUrl: String)
 GET        /enrol-pt/introduction   uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.LandingPageController.view
+POST       /enrol-pt/introduction   uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.LandingPageController.continue
 GET        /enrol-pt/enrol-current-user-id  uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.EnrolCurrentUserController.view
 GET        /enrol-pt/report-suspicious-id  uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.ReportSuspiciousIdController.view
 GET        /enrol-pt/enrolment-success      uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.CurrentIdConfirmationController.view

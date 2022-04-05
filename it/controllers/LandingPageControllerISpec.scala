@@ -49,12 +49,18 @@ class LandingPageControllerISpec extends IntegrationSpecBase with Status {
   s"GET $urlPath" when {
     "the session cache has Account type of MULTIPLE_ACCOUNTS" should {
       s"render the landing page" in {
+        await(save[String](sessionId, "redirectURL", returnUrl))
         await(
           save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", MULTIPLE_ACCOUNTS)
         )
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
+        stubGet(
+          s"/users-group-search/users/$CREDENTIAL_ID",
+          OK,
+          usergroupsResponseJson().toString()
+        )
         val res = buildRequest(urlPath, followRedirects = true)
           .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()

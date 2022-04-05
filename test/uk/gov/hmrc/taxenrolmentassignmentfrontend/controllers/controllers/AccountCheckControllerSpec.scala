@@ -119,7 +119,7 @@ class AccountCheckControllerSpec extends TestFixture {
       }
     }
 
-    "multiple credential exists for a given nino and no PT enrolment exists" should {
+    "multiple credential exists for a given nino and no enrolments exists" should {
       "redirect to the landing page" in new TestHelper {
         mockAuthCall()
         mockAccountCheckSuccess(MULTIPLE_ACCOUNTS)
@@ -132,6 +132,36 @@ class AccountCheckControllerSpec extends TestFixture {
         redirectLocation(result) shouldBe Some(
           "/tax-enrolment-assignment-frontend/enrol-pt/introduction"
         )
+      }
+    }
+
+    "multiple credential exists for a given nino and current credential has SA enrolment" should {
+      "redirect to the landing page" in new TestHelper {
+        mockAuthCall()
+        mockAccountCheckSuccess(SA_ASSIGNED_TO_CURRENT_USER)
+
+        val result = controller
+          .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
+          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result) shouldBe Some(
+          "/tax-enrolment-assignment-frontend/enrol-pt/introduction"
+        )
+      }
+    }
+
+    "multiple credential exists for a given nino and a non signed in account has SA enrolment" should {
+      "return OK" in new TestHelper {
+        mockAuthCall()
+        mockAccountCheckSuccess(SA_ASSIGNED_TO_OTHER_USER)
+
+        val result = controller
+          .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
+          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+
+        status(result) shouldBe OK
+        contentAsString(result) should include("SA on other account")
       }
     }
 

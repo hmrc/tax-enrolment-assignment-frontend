@@ -27,7 +27,12 @@ object AccountTypes extends Enumeration {
     "PT_ASSIGNED_TO_OTHER_USER"
   )
   val MULTIPLE_ACCOUNTS: AccountTypes.Value = Value("MULTIPLE_ACCOUNTS")
-
+  val SA_ASSIGNED_TO_CURRENT_USER: AccountTypes.Value = Value(
+    "SA_ASSIGNED_TO_CURRENT_USER"
+  )
+  val SA_ASSIGNED_TO_OTHER_USER: AccountTypes.Value = Value(
+    "SA_ASSIGNED_TO_OTHER_USER"
+  )
   implicit val read: Reads[AccountTypes.Value] =
     Reads.enumNameReads(AccountTypes)
 

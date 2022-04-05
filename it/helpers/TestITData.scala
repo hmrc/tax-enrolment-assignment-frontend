@@ -335,4 +335,22 @@ object TestITData {
       hasSAEnrolment = false
     )
 
+  val eacdResponse = s"""{
+                        |    "service": "IR-SA",
+                        |    "enrolments": [{
+                        |        "identifiers": [{
+                        |            "key": "UTR",
+                        |            "value": "1234567890"
+                        |        }],
+                        |        "verifiers": [{
+                        |            "key": "NINO",
+                        |            "value": "AB112233D"
+                        |        },
+                        |        {
+                        |            "key": "Postcode",
+                        |            "value": "SW1A 2AA"
+                        |        }]
+                        |    }]
+                        |}""".stripMargin
+
 }

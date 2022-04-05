@@ -66,7 +66,10 @@ class AccountCheckController @Inject()(
           Future.successful(
             Redirect(routes.PTEnrolmentOnOtherAccountController.view)
           )
-        case Right(MULTIPLE_ACCOUNTS) =>
+        //ToDo redirect to SA on other account when page available
+        case Right(SA_ASSIGNED_TO_OTHER_USER) =>
+          Future.successful(Ok("SA on other account"))
+        case Right(MULTIPLE_ACCOUNTS | SA_ASSIGNED_TO_CURRENT_USER) =>
           Future.successful(Redirect(routes.LandingPageController.view))
         case Left(_) => Future.successful(InternalServerError)
       }

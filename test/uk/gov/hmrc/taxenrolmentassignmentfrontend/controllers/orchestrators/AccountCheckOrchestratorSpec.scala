@@ -27,6 +27,8 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
   MULTIPLE_ACCOUNTS,
   PT_ASSIGNED_TO_CURRENT_USER,
   PT_ASSIGNED_TO_OTHER_USER,
+  SA_ASSIGNED_TO_CURRENT_USER,
+  SA_ASSIGNED_TO_OTHER_USER,
   SINGLE_ACCOUNT
 }
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
@@ -216,8 +218,61 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
         }
       }
 
-      "have no enrolments" should {
-        s"return MULTIPLE_ACCOUNTS" in {
+      "includes a credential (not signed in) with SA enrolment" should {
+        "return SA_ASSIGNED_TO_OTHER_USER" in {
+          (mockTeaSessionCache
+            .getEntry(_: String)(
+              _: RequestWithUserDetails[AnyContent],
+              _: Format[AccountTypes.Value]
+            ))
+            .expects("ACCOUNT_TYPE", *, *)
+            .returning(Future.successful(None))
+
+          (mockEacdService
+            .getUsersAssignedPTEnrolment(
+              _: RequestWithUserDetails[AnyContent],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            ))
+            .expects(*, *, *)
+            .returning(createInboundResult(UsersAssignedEnrolmentEmpty))
+
+          (mockSilentAssignmentService
+            .getOtherAccountsWithPTAAccess(
+              _: RequestWithUserDetails[AnyContent],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            ))
+            .expects(*, *, *)
+            .returning(createInboundResult(multiIVCreds))
+
+          (mockEacdService
+            .getUsersAssignedSAEnrolment(
+              _: RequestWithUserDetails[AnyContent],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            ))
+            .expects(*, *, *)
+            .returning(createInboundResult(UsersAssignedEnrolment1))
+
+          (mockTeaSessionCache
+            .save(_: String, _: AccountTypes.Value)(
+              _: RequestWithUserDetails[AnyContent],
+              _: Format[AccountTypes.Value]
+            ))
+            .expects(ACCOUNT_TYPE, SA_ASSIGNED_TO_OTHER_USER, *, *)
+            .returning(Future(CacheMap(request.sessionID, Map())))
+
+          val res = orchestrator.getAccountType
+
+          whenReady(res.value) { result =>
+            result shouldBe Right(SA_ASSIGNED_TO_OTHER_USER)
+          }
+        }
+      }
+
+      "have no enrolments but the signed in credential has SA in request" should {
+        "return SA_ASSIGNED_TO_CURRENT_USER" in {
           (mockTeaSessionCache
             .getEntry(_: String)(
               _: RequestWithUserDetails[AnyContent],
@@ -249,6 +304,116 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
               _: RequestWithUserDetails[AnyContent],
               _: Format[AccountTypes.Value]
             ))
+            .expects(ACCOUNT_TYPE, SA_ASSIGNED_TO_CURRENT_USER, *, *)
+            .returning(Future(CacheMap(request.sessionID, Map())))
+
+          val res = orchestrator.getAccountType(
+            ec,
+            hc,
+            request.copy(userDetails = userDetailsWithSAEnrolment)
+          )
+
+          whenReady(res.value) { result =>
+            result shouldBe Right(SA_ASSIGNED_TO_CURRENT_USER)
+          }
+        }
+      }
+
+      "have no enrolments but the signed in credential has SA in EACD" should {
+        "return SA_ASSIGNED_TO_CURRENT_USER" in {
+          (mockTeaSessionCache
+            .getEntry(_: String)(
+              _: RequestWithUserDetails[AnyContent],
+              _: Format[AccountTypes.Value]
+            ))
+            .expects("ACCOUNT_TYPE", *, *)
+            .returning(Future.successful(None))
+
+          (mockEacdService
+            .getUsersAssignedPTEnrolment(
+              _: RequestWithUserDetails[AnyContent],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            ))
+            .expects(*, *, *)
+            .returning(createInboundResult(UsersAssignedEnrolmentEmpty))
+
+          (mockSilentAssignmentService
+            .getOtherAccountsWithPTAAccess(
+              _: RequestWithUserDetails[AnyContent],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            ))
+            .expects(*, *, *)
+            .returning(createInboundResult(multiIVCreds))
+
+          (mockEacdService
+            .getUsersAssignedSAEnrolment(
+              _: RequestWithUserDetails[AnyContent],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            ))
+            .expects(*, *, *)
+            .returning(createInboundResult(UsersAssignedEnrolmentCurrentCred))
+
+          (mockTeaSessionCache
+            .save(_: String, _: AccountTypes.Value)(
+              _: RequestWithUserDetails[AnyContent],
+              _: Format[AccountTypes.Value]
+            ))
+            .expects(ACCOUNT_TYPE, SA_ASSIGNED_TO_CURRENT_USER, *, *)
+            .returning(Future(CacheMap(request.sessionID, Map())))
+
+          val res = orchestrator.getAccountType
+
+          whenReady(res.value) { result =>
+            result shouldBe Right(SA_ASSIGNED_TO_CURRENT_USER)
+          }
+        }
+      }
+
+      "have no enrolments" should {
+        s"return MULTIPLE_ACCOUNTS" in {
+          (mockTeaSessionCache
+            .getEntry(_: String)(
+              _: RequestWithUserDetails[AnyContent],
+              _: Format[AccountTypes.Value]
+            ))
+            .expects("ACCOUNT_TYPE", *, *)
+            .returning(Future.successful(None))
+
+          (mockEacdService
+            .getUsersAssignedPTEnrolment(
+              _: RequestWithUserDetails[AnyContent],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            ))
+            .expects(*, *, *)
+            .returning(createInboundResult(UsersAssignedEnrolmentEmpty))
+
+          (mockSilentAssignmentService
+            .getOtherAccountsWithPTAAccess(
+              _: RequestWithUserDetails[AnyContent],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            ))
+            .expects(*, *, *)
+            .returning(createInboundResult(multiIVCreds))
+
+          (mockEacdService
+            .getUsersAssignedSAEnrolment(
+              _: RequestWithUserDetails[AnyContent],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            ))
+            .expects(*, *, *)
+            .returning(createInboundResult(UsersAssignedEnrolmentEmpty))
+
+          (mockTeaSessionCache
+            .save(_: String, _: AccountTypes.Value)(
+              _: RequestWithUserDetails[AnyContent],
+              _: Format[AccountTypes.Value]
+            ))
             .expects(ACCOUNT_TYPE, MULTIPLE_ACCOUNTS, *, *)
             .returning(Future(CacheMap(request.sessionID, Map())))
 
@@ -256,6 +421,59 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
 
           whenReady(res.value) { result =>
             result shouldBe Right(MULTIPLE_ACCOUNTS)
+          }
+        }
+      }
+
+      "includes one with a SA enrolment" should {
+        "return SA_ASSIGNED_TO_OTHER_USER" in {
+          (mockTeaSessionCache
+            .getEntry(_: String)(
+              _: RequestWithUserDetails[AnyContent],
+              _: Format[AccountTypes.Value]
+            ))
+            .expects("ACCOUNT_TYPE", *, *)
+            .returning(Future.successful(None))
+
+          (mockEacdService
+            .getUsersAssignedPTEnrolment(
+              _: RequestWithUserDetails[AnyContent],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            ))
+            .expects(*, *, *)
+            .returning(createInboundResult(UsersAssignedEnrolmentEmpty))
+
+          (mockSilentAssignmentService
+            .getOtherAccountsWithPTAAccess(
+              _: RequestWithUserDetails[AnyContent],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            ))
+            .expects(*, *, *)
+            .returning(createInboundResult(multiIVCreds))
+
+          (mockEacdService
+            .getUsersAssignedSAEnrolment(
+              _: RequestWithUserDetails[AnyContent],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            ))
+            .expects(*, *, *)
+            .returning(createInboundResult(UsersAssignedEnrolment1))
+
+          (mockTeaSessionCache
+            .save(_: String, _: AccountTypes.Value)(
+              _: RequestWithUserDetails[AnyContent],
+              _: Format[AccountTypes.Value]
+            ))
+            .expects(ACCOUNT_TYPE, SA_ASSIGNED_TO_OTHER_USER, *, *)
+            .returning(Future(CacheMap(request.sessionID, Map())))
+
+          val res = orchestrator.getAccountType
+
+          whenReady(res.value) { result =>
+            result shouldBe Right(SA_ASSIGNED_TO_OTHER_USER)
           }
         }
       }

@@ -27,14 +27,19 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
   MULTIPLE_ACCOUNTS,
   PT_ASSIGNED_TO_CURRENT_USER,
   PT_ASSIGNED_TO_OTHER_USER,
+  SA_ASSIGNED_TO_CURRENT_USER,
+  SA_ASSIGNED_TO_OTHER_USER,
   SINGLE_ACCOUNT
 }
 import uk.gov.hmrc.taxenrolmentassignmentfrontend._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{
   logAnotherAccountAlreadyHasPTEnrolment,
+  logAnotherAccountHasSAEnrolment,
   logCurrentUserAlreadyHasPTEnrolment,
+  logCurrentUserHasSAEnrolment,
   logCurrentUserhasMultipleAccounts,
   logCurrentUserhasOneAccount
 }
@@ -80,7 +85,7 @@ class AccountCheckOrchestrator @Inject()(
     checkUsersWithPTEnrolmentAlreadyAssigned.value
       .flatMap {
         case Right(Some(accountTypes)) => Future.successful(Right(accountTypes))
-        case Right(None)               => checkIfSingleOrMultipleAccounts.value
+        case Right(None)               => getNonePTAccountType.value
         case Left(error)               => Future.successful(Left(error))
       }
   }
@@ -123,6 +128,23 @@ class AccountCheckOrchestrator @Inject()(
     }
   }
 
+  private def getNonePTAccountType(
+    implicit requestWithUserDetails: RequestWithUserDetails[AnyContent],
+    hc: HeaderCarrier,
+    ec: ExecutionContext
+  ): TEAFResult[AccountTypes.Value] = {
+    for {
+      singleOrMultipleAccount <- checkIfSingleOrMultipleAccounts
+      accountType <- singleOrMultipleAccount match {
+        case SINGLE_ACCOUNT =>
+          EitherT.right[TaxEnrolmentAssignmentErrors](
+            Future.successful(SINGLE_ACCOUNT)
+          )
+        case _ => checkMultipleAccountType
+      }
+    } yield accountType
+  }
+
   private def checkIfSingleOrMultipleAccounts(
     implicit requestWithUserDetails: RequestWithUserDetails[AnyContent],
     hc: HeaderCarrier,
@@ -146,6 +168,44 @@ class AccountCheckOrchestrator @Inject()(
           MULTIPLE_ACCOUNTS
       }
     )
+  }
+
+  private def checkMultipleAccountType(
+    implicit hc: HeaderCarrier,
+    ec: ExecutionContext,
+    requestWithUserDetails: RequestWithUserDetails[AnyContent]
+  ): TEAFResult[AccountTypes.Value] = {
+    if (requestWithUserDetails.userDetails.hasSAEnrolment) {
+      logger.logEvent(
+        logCurrentUserHasSAEnrolment(requestWithUserDetails.userDetails.credId)
+      )
+      EitherT.right(Future.successful(SA_ASSIGNED_TO_CURRENT_USER))
+    } else {
+      eacdService.getUsersAssignedSAEnrolment
+        .map(
+          usersAssignedEnrolment =>
+            usersAssignedEnrolment.enrolledCredential
+              .map { credId =>
+                if (credId == requestWithUserDetails.userDetails.credId) {
+                  logger.logEvent(
+                    logCurrentUserHasSAEnrolment(
+                      requestWithUserDetails.userDetails.credId
+                    )
+                  )
+                  SA_ASSIGNED_TO_CURRENT_USER
+                } else {
+                  logger.logEvent(
+                    logAnotherAccountHasSAEnrolment(
+                      requestWithUserDetails.userDetails.credId,
+                      credId
+                    )
+                  )
+                  SA_ASSIGNED_TO_OTHER_USER
+                }
+              }
+              .getOrElse(MULTIPLE_ACCOUNTS)
+        )
+    }
   }
 
 }

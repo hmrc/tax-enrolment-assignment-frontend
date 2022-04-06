@@ -32,14 +32,18 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{
   REDIRECT_URL
 }
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.UsersGroupSearchService
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{
+  SilentAssignmentService,
+  UsersGroupSearchService
+}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class MultipleAccountsOrchestrator @Inject()(
   sessionCache: TEASessionCache,
-  usersGroupSearchService: UsersGroupSearchService
+  usersGroupSearchService: UsersGroupSearchService,
+  silentAssignmentService: SilentAssignmentService
 ) {
 
   def getDetailsForLandingPage(
@@ -48,7 +52,7 @@ class MultipleAccountsOrchestrator @Inject()(
     ec: ExecutionContext
   ): TEAFResult[AccountDetails] = {
     for {
-      _ <- checkAccountTypeAndGetRedirectUrlFromCache
+      _ <- checkValidAccountTypeRedirectUrlInCache(List(MULTIPLE_ACCOUNTS))
       accountDetails <- usersGroupSearchService.getAccountDetails(
         requestWithUserDetails.userDetails.credId
       )
@@ -56,19 +60,49 @@ class MultipleAccountsOrchestrator @Inject()(
 
   }
 
-  private def checkAccountTypeAndGetRedirectUrlFromCache(
+  def getDetailsForEnroledAfterReportingFraud(
     implicit requestWithUserDetails: RequestWithUserDetails[AnyContent],
     hc: HeaderCarrier,
     ec: ExecutionContext
-  ): TEAFResult[Unit] = EitherT {
+  ): TEAFResult[AccountDetails] = {
+    for {
+      // ToDo uncomment this line once TEN-114 is merged
+      //  _ <- checkValidAccountTypeRedirectUrlInCache(List(SA_ASSIGNED_TO_OTHER_USER))
+      accountDetails <- usersGroupSearchService.getAccountDetails(
+        requestWithUserDetails.userDetails.credId
+      )
+    } yield accountDetails
+
+  }
+
+  def checkValidAccountTypeAndEnrolForPT(
+                                         // ToDo uncomment this line once TEN-114 is merged
+                                         //  expectedAccountType: AccountTypes.Value
+  )(implicit requestWithUserDetails: RequestWithUserDetails[AnyContent],
+    hc: HeaderCarrier,
+    ec: ExecutionContext): TEAFResult[Unit] = {
+    for {
+// ToDo uncomment this line once TEN-114 is merged
+      //  _ <- checkValidAccountTypeRedirectUrlInCache(List(expectedAccounType))
+      enrolled <- silentAssignmentService.enrolUser()
+    } yield enrolled
+  }
+
+  private def checkValidAccountTypeRedirectUrlInCache(
+    validAccountTypes: List[AccountTypes.Value]
+  )(implicit requestWithUserDetails: RequestWithUserDetails[AnyContent],
+    hc: HeaderCarrier,
+    ec: ExecutionContext): TEAFResult[AccountTypes.Value] = EitherT {
     val res = for {
       accountType <- sessionCache.getEntry[AccountTypes.Value](ACCOUNT_TYPE)
       redirectUrl <- sessionCache.getEntry[String](REDIRECT_URL)
     } yield (accountType, redirectUrl)
 
     res.map {
-      case (Some(MULTIPLE_ACCOUNTS), Some(redirectUrl)) => Right((): Unit)
-      case (_, optRedirectUrl)                          => Left(InvalidUserType(optRedirectUrl))
+      case (Some(accountType), Some(_))
+          if validAccountTypes.contains(accountType) =>
+        Right(accountType)
+      case (_, optRedirectUrl) => Left(InvalidUserType(optRedirectUrl))
     }
   }
 }

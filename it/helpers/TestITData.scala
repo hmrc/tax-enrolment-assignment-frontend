@@ -69,6 +69,8 @@ object TestITData {
   val xSessionId: (String, String) = "X-Session-ID" -> sessionId
   val xRequestId: (String, String) = "X-Request-ID" -> sessionId
   val csrfContent: (String, String) = "Csrf-Token" -> "nocheck"
+  val csrfValue: String =
+    "4ef32f22ffe4f4b8086d24d14551e61abb7a8d05-1513679039403-38e9493c515e868adc1b1e41"
 
   val sessionData = Map("sessionId" -> sessionId)
 
@@ -322,6 +324,8 @@ object TestITData {
   val underConstructionTruePageTitle =
     "Tax Enrolment Assignment Frontend - Enrolment Present"
   val landingPageTitle =
+    "Only your current user ID can access your personal tax account from now on"
+  val enroledAfterFraudReportingPageTitle =
     "Only your current user ID can access your personal tax account from now on"
   val ptEnroledOnOtherAccountPageTitle =
     "We have found your personal tax information under a different Government Gateway user ID"

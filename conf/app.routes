@@ -6,6 +6,9 @@ GET        /enrol-pt/introduction   uk.gov.hmrc.taxenrolmentassignmentfrontend.c
 POST       /enrol-pt/introduction   uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.LandingPageController.continue
 GET        /enrol-pt/enrol-current-user-id  uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.EnrolCurrentUserController.view
 GET        /enrol-pt/report-suspicious-id  uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.ReportSuspiciousIdController.view
+POST        /enrol-pt/report-suspicious-id  uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.ReportSuspiciousIdController.continue
+GET        /enrol-pt/enrol-current-user-id-after-reporting  uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.EnrolledAfterReportingFraudController.view
+POST        /enrol-pt/enrol-current-user-id-after-reporting  uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.EnrolledAfterReportingFraudController.continue
 GET        /enrol-pt/enrolment-success      uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.CurrentIdConfirmationController.view
 GET        /logout                  uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignOutController.signOut()
 GET        /enrol-pt/sign-in-again          uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignInAgainController.view

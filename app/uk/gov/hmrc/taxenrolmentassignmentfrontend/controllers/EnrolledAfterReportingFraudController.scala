@@ -51,12 +51,12 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ReportSuspiciousIdController @Inject()(
+class EnrolledAfterReportingFraudController @Inject()(
   authAction: AuthAction,
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
+  sessionCache: TEASessionCache,
   mcc: MessagesControllerComponents,
-  reportSuspiciousId: ReportSuspiciousID,
-  errorView: ErrorTemplate
+  enroledForPTAfterReportingFraud: EnroledForPTAfterReportingFraud
 )(implicit ec: ExecutionContext, appConfig: AppConfig)
     extends FrontendController(mcc)
     with I18nSupport {
@@ -64,35 +64,22 @@ class ReportSuspiciousIdController @Inject()(
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
   def view(): Action[AnyContent] = authAction.async { implicit request =>
-    val mfaDetails = Seq(MFADetails("Text message", "07390328923"))
-    val fixedAccountDetails = AccountDetails(
-      "********3214",
-      Some("email1@test.com"),
-      "Yesterday",
-      mfaDetails
-    )
-
-    Future.successful(Ok(reportSuspiciousId(fixedAccountDetails, true)))
-  }
-
-  def continue: Action[AnyContent] = authAction.async { implicit request =>
-    multipleAccountsOrchestrator
-      .checkValidAccountTypeAndEnrolForPT()
-      .value
+    multipleAccountsOrchestrator.getDetailsForEnroledAfterReportingFraud.value
       .map {
-        case Right(_) =>
-          Redirect(routes.EnrolledAfterReportingFraudController.view)
+        case Right(accountDetails) =>
+          Ok(enroledForPTAfterReportingFraud(accountDetails.userId))
         case Left(InvalidUserType(redirectUrl)) if redirectUrl.isDefined =>
           Redirect(routes.AccountCheckController.accountCheck(redirectUrl.get))
-        case Left(UnexpectedResponseFromTaxEnrolments) =>
-          Ok(
-            errorView(
-              "enrolmentError.title",
-              "enrolmentError.heading",
-              "enrolmentError.body"
-            )
-          )
         case Left(_) => InternalServerError
       }
   }
+
+  def continue: Action[AnyContent] = authAction.async { implicit request =>
+    sessionCache.getEntry[String](REDIRECT_URL).map {
+      case Some(redirectUrl) =>
+        Redirect(redirectUrl)
+      case None => InternalServerError
+    }
+  }
+
 }

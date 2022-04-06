@@ -79,6 +79,7 @@ trait IntegrationSpecBase
   val mockUrl = s"http://$mockHost:$mockPort"
 
   def config: Map[String, String] = Map(
+    "play.filters.csrf.header.bypassHeaders.Csrf-Token" -> "nocheck",
     "auditing.consumer.baseUri.host" -> s"$mockHost",
     "auditing.consumer.baseUri.port" -> s"$mockPort",
     "microservice.services.auth.host" -> s"$mockHost",

@@ -21,6 +21,7 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.UsersGroupsFixedData
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.EnrolCurrentUserIdForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolCurrentUser
 
@@ -36,9 +37,9 @@ class EnrolCurrentUserController @Inject()(
     with I18nSupport {
 
   def view(): Action[AnyContent] = authAction.async { implicit request =>
-    //ToDo use session cache to get current userId and the userId that contains SA if present on different account
-    val fixedCurrentUserId = "*********9871"
-    val fixedSAUserId = "*********9872"
+    //ToDo use SA service to the userId that contains SA if present on different account
+    val fixedCurrentUserId = request.userDetails.credId
+    val fixedSAUserId = UsersGroupsFixedData.credId7
     Future.successful(
       Ok(
         enrolCurrentUserView(

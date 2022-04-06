@@ -20,8 +20,6 @@ import helpers.IntegrationSpecBase
 import helpers.TestITData.{csrfContent, xSessionId}
 import play.api.http.Status
 import play.api.libs.json.Json
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
 
 class TestOnlyControllerISpec extends IntegrationSpecBase with Status {
 

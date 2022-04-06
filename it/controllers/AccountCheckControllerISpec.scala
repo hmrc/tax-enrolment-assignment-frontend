@@ -220,6 +220,12 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
             ""
           )
 
+          stubPut(
+            s"/tax-enrolments/service/HMRC-PT/enrolment",
+            Status.NO_CONTENT,
+            ""
+          )
+
           val res = buildRequest(urlPath, followRedirects = false)
             .withHttpHeaders(xSessionId, csrfContent)
             .get()
@@ -272,6 +278,12 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
             es0ResponseMatchingCred
           )
 
+          stubPut(
+            s"/tax-enrolments/service/HMRC-PT/enrolment",
+            Status.NO_CONTENT,
+            ""
+          )
+
           val res = buildRequest(urlPath, followRedirects = false)
             .withHttpHeaders(xSessionId, csrfContent)
             .get()
@@ -315,6 +327,11 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
 
           stubPost(
             s"/enrolment-store-proxy/enrolment-store/enrolments",
+            Status.NO_CONTENT,
+            ""
+          )
+          stubPut(
+            s"/tax-enrolments/service/HMRC-PT/enrolment",
             Status.NO_CONTENT,
             ""
           )

@@ -17,9 +17,16 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.messages
 
 object LandingPageMessages {
-  val title = "Landing Page"
-  val heading = "We are changing the way you access your personal tax information"
-  val paragraph: String = "You have other Government Gateway user IDs that have access to your personal tax information. " +
-    "To protect your information we need to limit access to one user ID"
+  val title =
+    "Only your current user ID can access your personal tax account from now on"
+  val heading =
+    "Only your current user ID can access your personal tax account from now on"
+  val paragraphSA: String =
+    "You are currently signed in with the Government Gateway user ID ********3214. This is now the only user ID that can access your personal tax account. Please keep the details of this user ID safe. You also have access to Self Assessment with your current user ID. If you have any other Government Gateway user IDs, they will lose access to your personal tax account."
+  val paragraphNoSA: String =
+    "You are currently signed in with the Government Gateway user ID ********3214. This is now the only user ID that can access your personal tax account. Please keep the details of this user ID safe. If you have any other Government Gateway user IDs, they will lose access to your personal tax account."
+  val heading3: String =
+    "What has happened to my other Government Gateway user IDs?"
   val button = "Continue"
+  val action = "/tax-enrolment-assignment-frontend/enrol-pt/introduction"
 }

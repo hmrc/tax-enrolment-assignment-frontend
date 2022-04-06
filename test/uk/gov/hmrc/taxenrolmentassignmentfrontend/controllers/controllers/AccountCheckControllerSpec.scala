@@ -123,6 +123,7 @@ class AccountCheckControllerSpec extends TestFixture {
       "redirect to the landing page" in new TestHelper {
         mockAuthCall()
         mockAccountCheckSuccess(MULTIPLE_ACCOUNTS)
+        mockSilentEnrolSuccess
 
         val result = controller
           .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
@@ -139,6 +140,7 @@ class AccountCheckControllerSpec extends TestFixture {
       "redirect to the landing page" in new TestHelper {
         mockAuthCall()
         mockAccountCheckSuccess(SA_ASSIGNED_TO_CURRENT_USER)
+        mockSilentEnrolSuccess
 
         val result = controller
           .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)

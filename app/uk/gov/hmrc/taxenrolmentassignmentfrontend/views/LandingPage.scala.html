@@ -14,23 +14,34 @@
  * limitations under the License.
  *@
 
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.Layout
 
 @this(
         layout: Layout,
+        formHelper: FormWithCSRF,
         govukButton: GovukButton
 )
 
-@()(implicit request: Request[_], messages: Messages)
+@(userId: String, hasSA: Boolean)(implicit request: Request[AnyRef], messages: Messages)
 
 @layout(pageTitle = Some(messages("landingPage.title"))) {
 
  <h2 class="govuk-heading-xl">@messages("landingPage.heading")</h2>
- <p class="govuk-body">@messages("landingPage.paragraph")</p>
+ <p class="govuk-body">@messages("landingPage.paragraph1", userId)</p>
+ <p class="govuk-body">@messages("landingPage.paragraph2")</p>
 
- @govukButton(Button(
-  content = Text(messages("landingPage.continue")),
-  href = Some("?")
- ))
+ @if(hasSA) {
+  <p class="govuk-body">@messages("landingPage.paragraphSA")</p>
+ }
 
+ <h3 class="govuk-heading-m">@messages("landingPage.heading2")</h3>
+ <p class="govuk-body">@messages("landingPage.paragraph3")</p>
+
+ @formHelper(action = routes.LandingPageController.continue) {
+  @govukButton(Button(
+   preventDoubleClick = true,
+   content = Text(messages("landingPage.continue"))
+  ))
+ }
 }

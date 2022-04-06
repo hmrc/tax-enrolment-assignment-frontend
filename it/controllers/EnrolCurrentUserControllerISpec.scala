@@ -17,10 +17,9 @@
 package controllers
 
 import helpers.IntegrationSpecBase
-import helpers.WiremockHelper._
 import helpers.TestITData._
+import helpers.WiremockHelper._
 import play.api.http.Status
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
 
 class EnrolCurrentUserControllerISpec extends IntegrationSpecBase with Status {
 

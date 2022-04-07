@@ -8,15 +8,19 @@
 }
 
 .interrupt-card * {
+  width: 100%;
+  padding: 30px;
+  background: #005ea5;
   color: #fff;
+  box-sizing: border-box;
 }
 
 .interrupt-card-p  {
-  color: #005ea5;
+  color: #fff;
 }
 
 .interrupt-card h1 {
-  margin-top: 0;
+  color: #fff;
 }
 
 .interrupt-card li {
@@ -24,7 +28,7 @@
 }
 
 .interrupt-card a {
-  color: inherit;
+  color: #fff;
 }
 
 .interrupt-card a:focus {
@@ -36,9 +40,8 @@
 }
 
 .interrupt-card .actions .govuk-button {
-  background-color: #fff;
-  color: #005ea5;
-  font-weight: bold;
+     background: #fff;
+     color: #000;
 }
 
 @media (max-width: 830px) {

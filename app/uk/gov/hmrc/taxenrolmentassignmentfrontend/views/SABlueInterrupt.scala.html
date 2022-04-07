@@ -26,17 +26,25 @@
 @layout(pageTitle = Some(messages("selfAssessmentInterrupt.title"))) {
 
    @card {
+<!--<div class="interrupt-panel">-->
 
-      <h1 class="interrupt-card h1">@messages("selfAssessmentInterrupt.heading")</h1>
 
-      <p class="interrupt-card-p">@messages("selfAssessmentInterrupt.paragraph1")</p>
-      <p class="interrupt-card-p">@messages("selfAssessmentInterrupt.paragraph2")</p>
+      <h1 class="govuk-heading-xl">@messages("selfAssessmentInterrupt.heading")</h1>
 
-       @govukButton(Button(
-       classes = "govuk-button--white",
-       content = Text(messages("selfAssessmentInterrupt.continue")),
-       href = Some("?")
-       ))
-   }
+      <p class="govuk-body">@messages("selfAssessmentInterrupt.paragraph1")</p>
+      <p class="govuk-body">@messages("selfAssessmentInterrupt.paragraph2")</p>
+
+<div class="actions">
+
+           @govukButton(Button(
+           content = Text(messages("selfAssessmentInterrupt.continue")),
+           href = Some("?")
+           ))
+       }
+
+</div>
+
+
+<!--</div>-->
 
 }

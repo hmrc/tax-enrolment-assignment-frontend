@@ -24,12 +24,52 @@
 )
 @(pageTitle: Option[String] = None, optBackLinkUrl: Option[String] = None)(contentBlock: Html)(implicit request: Request[_], messages: Messages)
 
-@head = {
-<!--<link rel="stylesheet" type="text/scss" href='@routes.Assets.versioned("stylesheets/application.scss")'>-->
-<link href='@controllers.routes.Assets.versioned("stylesheets/application.scss")' media="screen" rel="stylesheet" type="text/scss" />
+@headBlock = {
+<link rel="stylesheet" type="text/css" href='@routes.Assets.versioned("stylesheets/application.css")'>
+<!--<link href='@controllers.routes.Assets.versioned("stylesheets/application.scss")' media="screen" rel="stylesheet" type="text/scss" />-->
 }
+
+@additionalHeadBlock = {
+ <style>
+    /* Interrupt */
+
+   .interrupt-card {
+     background-color: #005ea5;
+     color: #fff;
+     padding: 35px 50px;
+     margin: 30px 0 0 0;
+   }
+
+   .interrupt-panel * {
+     padding: 30px;
+     background: #005ea5;
+     color: #fff;
+     box-sizing: border-box;
+   }
+
+   .interrupt-panel h1,
+   .interrupt-panel h2,
+   .interrupt-panel h3,
+   .interrupt-panel h4,
+   .interrupt-panel h5,
+   .interrupt-panel p,
+   .interrupt-panel a,
+   .interrupt-panel a:active,
+   .interrupt-panel a:link,
+   .interrupt-panel a:visited{
+       color:#fff
+   }
+
+   .interrupt-panel a.govuk-button--white,
+   .interrupt-panel button.govuk-button--white {
+       background: #fff;
+       color: #000;
+   }
+ </style>
+}
+
 @hmrcLayout(
- additionalHeadBlock = Some(head),
+ additionalHeadBlock = Some(headBlock),
  pageTitle = pageTitle,
  nonce = CSPNonce.get,
  serviceName = Some(messages("service.name")),

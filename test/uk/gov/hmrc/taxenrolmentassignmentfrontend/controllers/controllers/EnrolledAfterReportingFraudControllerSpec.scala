@@ -35,14 +35,14 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
   InvalidUserType,
   UnexpectedResponseFromUsersGroupSearch
 }
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnroledForPTAfterReportingFraud
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTAfterReportingFraud
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class EnroledAfterReportingFraudControllerSpec extends TestFixture {
+class EnrolledAfterReportingFraudControllerSpec extends TestFixture {
 
-  val view: EnroledForPTAfterReportingFraud =
-    app.injector.instanceOf[EnroledForPTAfterReportingFraud]
+  val view: EnrolledForPTAfterReportingFraud =
+    app.injector.instanceOf[EnrolledForPTAfterReportingFraud]
 
   val controller = new EnrolledAfterReportingFraudController(
     mockAuthAction,
@@ -70,7 +70,7 @@ class EnroledAfterReportingFraudControllerSpec extends TestFixture {
           )
 
         (mockMultipleAccountsOrchestrator
-          .getDetailsForEnroledAfterReportingFraud(
+          .getDetailsForEnrolledAfterReportingFraud(
             _: RequestWithUserDetails[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
@@ -84,7 +84,7 @@ class EnroledAfterReportingFraudControllerSpec extends TestFixture {
         status(result) shouldBe OK
         Jsoup
           .parse(contentAsString(result))
-          .title() shouldBe "enroledPTAfterReportingFraud.title"
+          .title() shouldBe "enrolledPTAfterReportingFraud.title"
       }
     }
 
@@ -103,7 +103,7 @@ class EnroledAfterReportingFraudControllerSpec extends TestFixture {
           .returning(Future.successful(retrievalResponse()))
 
         (mockMultipleAccountsOrchestrator
-          .getDetailsForEnroledAfterReportingFraud(
+          .getDetailsForEnrolledAfterReportingFraud(
             _: RequestWithUserDetails[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
@@ -142,7 +142,7 @@ class EnroledAfterReportingFraudControllerSpec extends TestFixture {
           .returning(Future.successful(retrievalResponse()))
 
         (mockMultipleAccountsOrchestrator
-          .getDetailsForEnroledAfterReportingFraud(
+          .getDetailsForEnrolledAfterReportingFraud(
             _: RequestWithUserDetails[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
@@ -172,7 +172,7 @@ class EnroledAfterReportingFraudControllerSpec extends TestFixture {
           .returning(Future.successful(retrievalResponse()))
 
         (mockMultipleAccountsOrchestrator
-          .getDetailsForEnroledAfterReportingFraud(
+          .getDetailsForEnrolledAfterReportingFraud(
             _: RequestWithUserDetails[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext

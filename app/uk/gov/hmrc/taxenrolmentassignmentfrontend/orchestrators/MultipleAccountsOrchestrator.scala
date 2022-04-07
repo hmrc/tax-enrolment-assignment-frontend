@@ -68,7 +68,7 @@ class MultipleAccountsOrchestrator @Inject()(
       )
   }
 
-  def getDetailsForEnroledAfterReportingFraud(
+  def getDetailsForEnrolledAfterReportingFraud(
     implicit requestWithUserDetails: RequestWithUserDetails[AnyContent],
     hc: HeaderCarrier,
     ec: ExecutionContext

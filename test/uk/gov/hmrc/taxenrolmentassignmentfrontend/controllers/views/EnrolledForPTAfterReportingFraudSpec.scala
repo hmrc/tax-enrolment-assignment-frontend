@@ -19,13 +19,13 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.views
 import play.api.test.FakeRequest
 import play.twirl.api.HtmlFormat
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.messages.EnroledAfterReportingFraudMessages
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnroledForPTAfterReportingFraud
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.messages.EnrolledAfterReportingFraudMessages
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTAfterReportingFraud
 
-class EnroledForPTAfterReportingFraudSpec extends TestFixture {
+class EnrolledForPTAfterReportingFraudSpec extends TestFixture {
 
-  val view: EnroledForPTAfterReportingFraud =
-    app.injector.instanceOf[EnroledForPTAfterReportingFraud]
+  val view: EnrolledForPTAfterReportingFraud =
+    app.injector.instanceOf[EnrolledForPTAfterReportingFraud]
   val userId = "********3214"
   val html: HtmlFormat.Appendable =
     view(userId)(FakeRequest(), testMessages)
@@ -41,41 +41,41 @@ class EnroledForPTAfterReportingFraudSpec extends TestFixture {
 
   "EnroledForPTAfterReportingFraud" should {
     "contain the correct title" in {
-      document.title shouldBe EnroledAfterReportingFraudMessages.title
+      document.title shouldBe EnrolledAfterReportingFraudMessages.title
     }
     "contain the correct header" in {
       document
         .getElementsByClass("govuk-heading-xl")
-        .text shouldBe EnroledAfterReportingFraudMessages.heading
+        .text shouldBe EnrolledAfterReportingFraudMessages.heading
     }
     "contain the correct body" which {
       val subHeadings = document.getElementsByClass(Selectors.subHeading)
       "has a sub heading for reporting suspicious ID" in {
         subHeadings
           .get(0)
-          .text() shouldBe EnroledAfterReportingFraudMessages.heading2
+          .text() shouldBe EnrolledAfterReportingFraudMessages.heading2
       }
       "has a sub heading for other IDs" in {
         subHeadings
           .get(1)
-          .text() shouldBe EnroledAfterReportingFraudMessages.heading3
+          .text() shouldBe EnrolledAfterReportingFraudMessages.heading3
       }
       "have expected paragraphs" in {
         document
           .getElementsByClass("govuk-body")
-          .text shouldBe EnroledAfterReportingFraudMessages.paragraphs
+          .text shouldBe EnrolledAfterReportingFraudMessages.paragraphs
       }
     }
     "contain the correct button" in {
       document
         .getElementsByClass("govuk-button")
-        .text shouldBe EnroledAfterReportingFraudMessages.button
+        .text shouldBe EnrolledAfterReportingFraudMessages.button
     }
 
     "contains a form with the correct action" in {
       document
         .select(Selectors.form)
-        .attr("action") shouldBe EnroledAfterReportingFraudMessages.action
+        .attr("action") shouldBe EnrolledAfterReportingFraudMessages.action
     }
   }
 }

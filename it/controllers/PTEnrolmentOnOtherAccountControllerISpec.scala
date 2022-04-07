@@ -77,7 +77,9 @@ class PTEnrolmentOnOtherAccountControllerISpec
           val page = Jsoup.parse(resp.body)
 
           resp.status shouldBe OK
-          page.title should include(TestITData.ptEnroledOnOtherAccountPageTitle)
+          page.title should include(
+            TestITData.ptEnrolledOnOtherAccountPageTitle
+          )
         }
       }
     }

@@ -224,7 +224,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
           .expects(CREDENTIAL_ID, *, *, *)
           .returning(createInboundResult(accountDetails))
 
-        val res = orchestrator.getDetailsForEnroledAfterReportingFraud
+        val res = orchestrator.getDetailsForEnrolledAfterReportingFraud
         whenReady(res.value) { result =>
           result shouldBe Right(accountDetails)
         }
@@ -259,7 +259,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
               )
             )
 
-          val res = orchestrator.getDetailsForEnroledAfterReportingFraud
+          val res = orchestrator.getDetailsForEnrolledAfterReportingFraud
           whenReady(res.value) { result =>
             result shouldBe Left(
               InvalidUserType(
@@ -288,7 +288,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
             .expects("redirectURL", *, *)
             .returning(Future.successful(None))
 
-          val res = orchestrator.getDetailsForEnroledAfterReportingFraud
+          val res = orchestrator.getDetailsForEnrolledAfterReportingFraud
           whenReady(res.value) { result =>
             result shouldBe Left(InvalidUserType(None))
           }
@@ -314,7 +314,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
           .expects("redirectURL", *, *)
           .returning(Future.successful(None))
 
-        val res = orchestrator.getDetailsForEnroledAfterReportingFraud
+        val res = orchestrator.getDetailsForEnrolledAfterReportingFraud
         whenReady(res.value) { result =>
           result shouldBe Left(InvalidUserType(None))
         }

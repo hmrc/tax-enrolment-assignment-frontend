@@ -25,22 +25,22 @@
 
 @(userId: String)(implicit request: Request[AnyRef], messages: Messages)
 
-@layout(pageTitle = Some(messages("enroledPTAfterReportingFraud.title"))) {
+@layout(pageTitle = Some(messages("enrolledPTAfterReportingFraud.title"))) {
 
- <h2 class="govuk-heading-xl">@messages("enroledPTAfterReportingFraud.heading")</h2>
- <p class="govuk-body">@messages("enroledPTAfterReportingFraud.paragraph1", userId)</p>
- <p class="govuk-body">@messages("enroledPTAfterReportingFraud.paragraph2")</p>
- <p class="govuk-body">@messages("enroledPTAfterReportingFraud.paragraph3")</p>
-
- <br>
-
- <h3 class="govuk-heading-m">@messages("enroledPTAfterReportingFraud.heading2")</h3>
- <p class="govuk-body">@messages("enroledPTAfterReportingFraud.h2.paragraph1")</p>
+ <h2 class="govuk-heading-xl">@messages("enrolledPTAfterReportingFraud.heading")</h2>
+ <p class="govuk-body">@messages("enrolledPTAfterReportingFraud.paragraph1", userId)</p>
+ <p class="govuk-body">@messages("enrolledPTAfterReportingFraud.paragraph2")</p>
+ <p class="govuk-body">@messages("enrolledPTAfterReportingFraud.paragraph3")</p>
 
  <br>
 
- <h3 class="govuk-heading-m">@messages("enroledPTAfterReportingFraud.heading3")</h3>
- <p class="govuk-body">@messages("enroledPTAfterReportingFraud.h3.paragraph1")</p>
+ <h3 class="govuk-heading-m">@messages("enrolledPTAfterReportingFraud.heading2")</h3>
+ <p class="govuk-body">@messages("enrolledPTAfterReportingFraud.h2.paragraph1")</p>
+
+ <br>
+
+ <h3 class="govuk-heading-m">@messages("enrolledPTAfterReportingFraud.heading3")</h3>
+ <p class="govuk-body">@messages("enrolledPTAfterReportingFraud.h3.paragraph1")</p>
 
 @formHelper(action = routes.EnrolledAfterReportingFraudController.continue) {
   @govukButton(Button(

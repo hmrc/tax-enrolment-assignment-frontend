@@ -28,26 +28,13 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
   InvalidUserType,
   UnexpectedResponseFromTaxEnrolments
 }
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.EnrolCurrentUserIdForm
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
   AccountDetails,
   MFADetails
 }
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REDIRECT_URL
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{
-  EACDService,
-  UsersGroupSearchService
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.ReportSuspiciousID
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{
-  EnroledForPTAfterReportingFraud,
-  PTEnrolmentOnAnotherAccount,
-  ReportSuspiciousID
-}
 
 import scala.concurrent.{ExecutionContext, Future}
 

@@ -23,32 +23,13 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
-  InvalidUserType,
-  UnexpectedResponseFromTaxEnrolments
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.EnrolCurrentUserIdForm
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
-  AccountDetails,
-  MFADetails
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.InvalidUserType
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REDIRECT_URL
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{
-  EACDService,
-  UsersGroupSearchService
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{
-  EnroledForPTAfterReportingFraud,
-  PTEnrolmentOnAnotherAccount,
-  ReportSuspiciousID
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTAfterReportingFraud
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class EnrolledAfterReportingFraudController @Inject()(
@@ -56,7 +37,7 @@ class EnrolledAfterReportingFraudController @Inject()(
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
   sessionCache: TEASessionCache,
   mcc: MessagesControllerComponents,
-  enroledForPTAfterReportingFraud: EnroledForPTAfterReportingFraud
+  enrolledForPTAfterReportingFraud: EnrolledForPTAfterReportingFraud
 )(implicit ec: ExecutionContext, appConfig: AppConfig)
     extends FrontendController(mcc)
     with I18nSupport {
@@ -64,10 +45,10 @@ class EnrolledAfterReportingFraudController @Inject()(
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
   def view(): Action[AnyContent] = authAction.async { implicit request =>
-    multipleAccountsOrchestrator.getDetailsForEnroledAfterReportingFraud.value
+    multipleAccountsOrchestrator.getDetailsForEnrolledAfterReportingFraud.value
       .map {
         case Right(accountDetails) =>
-          Ok(enroledForPTAfterReportingFraud(accountDetails.userId))
+          Ok(enrolledForPTAfterReportingFraud(accountDetails.userId))
         case Left(InvalidUserType(redirectUrl)) if redirectUrl.isDefined =>
           Redirect(routes.AccountCheckController.accountCheck(redirectUrl.get))
         case Left(_) => InternalServerError

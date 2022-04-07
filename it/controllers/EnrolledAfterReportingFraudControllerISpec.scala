@@ -38,7 +38,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
 }
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
 
-class EnroledAfterReportingFraudControllerISpec
+class EnrolledAfterReportingFraudControllerISpec
     extends IntegrationSpecBase
     with Status {
 
@@ -79,7 +79,7 @@ class EnroledAfterReportingFraudControllerISpec
 
           resp.status shouldBe OK
           page.title should include(
-            TestITData.enroledAfterFraudReportingPageTitle
+            TestITData.enrolledAfterFraudReportingPageTitle
           )
         }
       }
@@ -122,30 +122,30 @@ class EnroledAfterReportingFraudControllerISpec
       MULTIPLE_ACCOUNTS,
       SA_ASSIGNED_TO_CURRENT_USER
     ).foreach { accountType =>
-        s"the session cache has Account type of $accountType" should {
-          s"redirect to accountCheck" in {
-            await(save[String](sessionId, "redirectURL", returnUrl))
-            await(
-              save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", accountType)
+      s"the session cache has Account type of $accountType" should {
+        s"redirect to accountCheck" in {
+          await(save[String](sessionId, "redirectURL", returnUrl))
+          await(
+            save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", accountType)
+          )
+          val authResponse = authoriseResponseJson()
+          stubAuthorizePost(OK, authResponse.toString())
+          stubPost(s"/write/.*", OK, """{"x":2}""")
+          val res = buildRequest(urlPath, followRedirects = false)
+            .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+            .get()
+
+          whenReady(res) { resp =>
+            val page = Jsoup.parse(resp.body)
+
+            resp.status shouldBe SEE_OTHER
+            resp.header("Location").get should include(
+              s"/tax-enrolment-assignment-frontend/no-pt-enrolment"
             )
-            val authResponse = authoriseResponseJson()
-            stubAuthorizePost(OK, authResponse.toString())
-            stubPost(s"/write/.*", OK, """{"x":2}""")
-            val res = buildRequest(urlPath, followRedirects = false)
-              .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
-              .get()
-
-            whenReady(res) { resp =>
-              val page = Jsoup.parse(resp.body)
-
-              resp.status shouldBe SEE_OTHER
-              resp.header("Location").get should include(
-                s"/tax-enrolment-assignment-frontend/no-pt-enrolment"
-              )
-            }
           }
         }
       }
+    }
 
     "the session cache is empty" should {
       "return Internal Server Error" in {

@@ -332,9 +332,9 @@ object TestITData {
     "Tax Enrolment Assignment Frontend - Enrolment Present"
   val landingPageTitle =
     "Only your current user ID can access your personal tax account from now on"
-  val enroledAfterFraudReportingPageTitle =
+  val enrolledAfterFraudReportingPageTitle =
     "Only your current user ID can access your personal tax account from now on"
-  val ptEnroledOnOtherAccountPageTitle =
+  val ptEnrolledOnOtherAccountPageTitle =
     "We have found your personal tax information under a different Government Gateway user ID"
 
   val userDetailsNoEnrolments =

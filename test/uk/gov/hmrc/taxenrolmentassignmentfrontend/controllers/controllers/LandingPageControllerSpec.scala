@@ -27,7 +27,6 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.messages.LandingPageMessages
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{
   LandingPageController,
   testOnly

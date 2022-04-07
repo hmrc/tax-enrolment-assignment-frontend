@@ -30,25 +30,15 @@ import org.scalatest.{
 }
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.mvc.{
-  AnyContent,
-  Cookie,
-  CookieHeaderEncoding,
-  Request,
-  Session,
-  SessionCookieBaker
-}
-import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits}
+import play.api.mvc.{CookieHeaderEncoding, Session, SessionCookieBaker}
+import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import play.api.{Application, Environment, Mode}
 import uk.gov.hmrc.crypto.PlainText
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
 import uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.SessionCookieCrypto
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.{
   CascadeUpsert,
-  MongoRepository,
-  SessionRepository,
-  TEASessionCache
+  SessionRepository
 }
 
 import scala.concurrent.ExecutionContext

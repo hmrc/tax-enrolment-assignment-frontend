@@ -23,7 +23,11 @@ import uk.gov.hmrc.http.HeaderCarrier
 import cats.implicits._
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.MULTIPLE_ACCOUNTS
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
+  MULTIPLE_ACCOUNTS,
+  SA_ASSIGNED_TO_CURRENT_USER,
+  SA_ASSIGNED_TO_OTHER_USER
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.InvalidUserType
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
@@ -52,12 +56,16 @@ class MultipleAccountsOrchestrator @Inject()(
     ec: ExecutionContext
   ): TEAFResult[AccountDetails] = {
     for {
-      _ <- checkValidAccountTypeRedirectUrlInCache(List(MULTIPLE_ACCOUNTS))
+      accountType <- checkValidAccountTypeRedirectUrlInCache(
+        List(MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER)
+      )
       accountDetails <- usersGroupSearchService.getAccountDetails(
         requestWithUserDetails.userDetails.credId
       )
-    } yield accountDetails
-
+    } yield
+      accountDetails.copy(
+        hasSA = Some(accountType == SA_ASSIGNED_TO_CURRENT_USER)
+      )
   }
 
   def getDetailsForEnroledAfterReportingFraud(
@@ -66,8 +74,9 @@ class MultipleAccountsOrchestrator @Inject()(
     ec: ExecutionContext
   ): TEAFResult[AccountDetails] = {
     for {
-      // ToDo uncomment this line once TEN-114 is merged
-      //  _ <- checkValidAccountTypeRedirectUrlInCache(List(SA_ASSIGNED_TO_OTHER_USER))
+      _ <- checkValidAccountTypeRedirectUrlInCache(
+        List(SA_ASSIGNED_TO_OTHER_USER)
+      )
       accountDetails <- usersGroupSearchService.getAccountDetails(
         requestWithUserDetails.userDetails.credId
       )
@@ -76,14 +85,12 @@ class MultipleAccountsOrchestrator @Inject()(
   }
 
   def checkValidAccountTypeAndEnrolForPT(
-                                         // ToDo uncomment this line once TEN-114 is merged
-                                         //  expectedAccountType: AccountTypes.Value
+    expectedAccountType: AccountTypes.Value
   )(implicit requestWithUserDetails: RequestWithUserDetails[AnyContent],
     hc: HeaderCarrier,
     ec: ExecutionContext): TEAFResult[Unit] = {
     for {
-// ToDo uncomment this line once TEN-114 is merged
-      //  _ <- checkValidAccountTypeRedirectUrlInCache(List(expectedAccounType))
+      _ <- checkValidAccountTypeRedirectUrlInCache(List(expectedAccountType))
       enrolled <- silentAssignmentService.enrolUser()
     } yield enrolled
   }

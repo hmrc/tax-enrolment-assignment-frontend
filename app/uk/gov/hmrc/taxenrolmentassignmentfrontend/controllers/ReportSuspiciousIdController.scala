@@ -21,6 +21,7 @@ import play.api.Logger
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
@@ -77,7 +78,7 @@ class ReportSuspiciousIdController @Inject()(
 
   def continue: Action[AnyContent] = authAction.async { implicit request =>
     multipleAccountsOrchestrator
-      .checkValidAccountTypeAndEnrolForPT()
+      .checkValidAccountTypeAndEnrolForPT(SA_ASSIGNED_TO_OTHER_USER)
       .value
       .map {
         case Right(_) =>

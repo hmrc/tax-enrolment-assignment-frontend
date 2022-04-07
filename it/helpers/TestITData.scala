@@ -17,10 +17,16 @@
 package helpers
 
 import play.api.libs.json._
-import play.api.mvc.Session
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core.retrieve.Credentials
-import uk.gov.hmrc.crypto.PlainText
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
+  MULTIPLE_ACCOUNTS,
+  PT_ASSIGNED_TO_CURRENT_USER,
+  PT_ASSIGNED_TO_OTHER_USER,
+  SA_ASSIGNED_TO_CURRENT_USER,
+  SA_ASSIGNED_TO_OTHER_USER,
+  SINGLE_ACCOUNT
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.UserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models._
 
@@ -32,6 +38,7 @@ object TestITData {
   val CREDENTIAL_ID_3: String = "0493831301037584"
   val CREDENTIAL_ID_4: String = "2884521810163541"
   val GROUP_ID: String = "GROUPID123"
+  val UTR = "1234567890"
   val CL50 = 50
   val CL200 = 200
   val creds: Credentials =
@@ -338,5 +345,23 @@ object TestITData {
       hasPTEnrolment = false,
       hasSAEnrolment = false
     )
+
+  val eacdResponse = s"""{
+                        |    "service": "IR-SA",
+                        |    "enrolments": [{
+                        |        "identifiers": [{
+                        |            "key": "UTR",
+                        |            "value": "1234567890"
+                        |        }],
+                        |        "verifiers": [{
+                        |            "key": "NINO",
+                        |            "value": "AB112233D"
+                        |        },
+                        |        {
+                        |            "key": "Postcode",
+                        |            "value": "SW1A 2AA"
+                        |        }]
+                        |    }]
+                        |}""".stripMargin
 
 }

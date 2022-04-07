@@ -52,7 +52,7 @@ class LandingPageController @Inject()(
         Ok(
           landingPageView(
             accountDetails.userId,
-            request.userDetails.hasSAEnrolment
+            accountDetails.hasSA.getOrElse(false)
           )
         )
       case Left(InvalidUserType(redirectUrl)) if redirectUrl.isDefined =>

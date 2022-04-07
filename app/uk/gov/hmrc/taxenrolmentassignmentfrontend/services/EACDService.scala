@@ -24,8 +24,12 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.EACDConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.USER_ASSIGNED_PT_ENROLMENT
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{
+  USER_ASSIGNED_PT_ENROLMENT,
+  USER_ASSIGNED_SA_ENROLMENT
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -47,6 +51,20 @@ class EACDService @Inject()(eacdConnector: EACDConnector,
         }
     }
 
+  def getUsersAssignedSAEnrolment(
+    implicit requestWithUserDetails: RequestWithUserDetails[AnyContent],
+    hc: HeaderCarrier,
+    ec: ExecutionContext
+  ): TEAFResult[UsersAssignedEnrolment] =
+    EitherT {
+      sessionCache
+        .getEntry[UsersAssignedEnrolment](USER_ASSIGNED_SA_ENROLMENT)
+        .flatMap {
+          case Some(record) => Future.successful(Right(record))
+          case None         => getUsersWithSAEnrolmentFromEACD.value
+        }
+    }
+
   private def getUsersWithPTEnrolmentFromEACD(
     implicit requestWithUserDetails: RequestWithUserDetails[AnyContent],
     hc: HeaderCarrier,
@@ -61,6 +79,32 @@ class EACDService @Inject()(eacdConnector: EACDConnector,
         )
         userWithPTEnrolment
       }
+  }
+
+  private def getUsersWithSAEnrolmentFromEACD(
+    implicit requestWithUserDetails: RequestWithUserDetails[AnyContent],
+    hc: HeaderCarrier,
+    ec: ExecutionContext
+  ): TEAFResult[UsersAssignedEnrolment] = {
+
+    for {
+      optUTR <- eacdConnector.queryKnownFactsByNinoVerifier(
+        requestWithUserDetails.userDetails.nino
+      )
+      usersWithSAEnrolment <- optUTR match {
+        case Some(utr) => eacdConnector.getUsersWithSAEnrolment(utr)
+        case None =>
+          EitherT.right[TaxEnrolmentAssignmentErrors](
+            Future.successful(UsersAssignedEnrolment(None))
+          )
+      }
+    } yield {
+      sessionCache.save[UsersAssignedEnrolment](
+        USER_ASSIGNED_SA_ENROLMENT,
+        usersWithSAEnrolment
+      )
+      usersWithSAEnrolment
+    }
   }
 
 }

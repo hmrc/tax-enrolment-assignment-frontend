@@ -32,6 +32,8 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
   MULTIPLE_ACCOUNTS,
   PT_ASSIGNED_TO_CURRENT_USER,
   PT_ASSIGNED_TO_OTHER_USER,
+  SA_ASSIGNED_TO_CURRENT_USER,
+  SA_ASSIGNED_TO_OTHER_USER,
   SINGLE_ACCOUNT
 }
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
@@ -53,10 +55,13 @@ class EnroledAfterReportingFraudControllerISpec
     "the session cache has Account type of SA_ASSIGNED_TO_OTHER_USER" should {
       s"render the enroled after fraud reporting page" in {
         await(save[String](sessionId, "redirectURL", returnUrl))
-        //ToDo uncomment when account check in place
-        //        await(
-        //          save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", SA_ASSIGNED_TO_OTHER_USER)
-        //        )
+        await(
+          save[AccountTypes.Value](
+            sessionId,
+            "ACCOUNT_TYPE",
+            SA_ASSIGNED_TO_OTHER_USER
+          )
+        )
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -83,10 +88,13 @@ class EnroledAfterReportingFraudControllerISpec
     "the session cache has Account type of SA_ASSIGNED_TO_OTHER_USER but users group search fails" should {
       s"return INTERNAL SERVER ERROR" in {
         await(save[String](sessionId, "redirectURL", returnUrl))
-        //ToDo uncomment when account check in place
-        //        await(
-        //          save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", SA_ASSIGNED_TO_OTHER_USER)
-        //        )
+        await(
+          save[AccountTypes.Value](
+            sessionId,
+            "ACCOUNT_TYPE",
+            SA_ASSIGNED_TO_OTHER_USER
+          )
+        )
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -107,49 +115,54 @@ class EnroledAfterReportingFraudControllerISpec
       }
     }
 
-    //    List(SINGLE_ACCOUNT, PT_ASSIGNED_TO_OTHER_USER, PT_ASSIGNED_TO_CURRENT_USER, MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER)
-    //      .foreach { accountType =>
-    //        s"the session cache has Account type of $accountType" should {
-    //          s"redirect to accountCheck" in {
-    //            await(save[String](sessionId, "redirectURL", returnUrl))
-    //            await(
-    //              save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", accountType)
-    //            )
-    //            val authResponse = authoriseResponseJson()
-    //            stubAuthorizePost(OK, authResponse.toString())
-    //            stubPost(s"/write/.*", OK, """{"x":2}""")
-    //            val res = buildRequest(urlPath, followRedirects = false)
-    //              .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
-    //              .get()
-    //
-    //            whenReady(res) { resp =>
-    //              val page = Jsoup.parse(resp.body)
-    //
-    //              resp.status shouldBe SEE_OTHER
-    //              resp.header("Location").get should include(
-    //                s"/tax-enrolment-assignment-frontend/no-pt-enrolment"
-    //              )
-    //            }
-    //          }
-    //        }
-    //      }
-    //
-    //    "the session cache is empty" should {
-    //      "return Internal Server Error" in {
-    //        val authResponse = authoriseResponseJson()
-    //        stubAuthorizePost(OK, authResponse.toString())
-    //        stubPost(s"/write/.*", OK, """{"x":2}""")
-    //        val res = buildRequest(urlPath, followRedirects = true)
-    //          .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
-    //          .get()
-    //
-    //        whenReady(res) { resp =>
-    //          val page = Jsoup.parse(resp.body)
-    //
-    //          resp.status shouldBe INTERNAL_SERVER_ERROR
-    //        }
-    //      }
-    //    }
+    List(
+      SINGLE_ACCOUNT,
+      PT_ASSIGNED_TO_OTHER_USER,
+      PT_ASSIGNED_TO_CURRENT_USER,
+      MULTIPLE_ACCOUNTS,
+      SA_ASSIGNED_TO_CURRENT_USER
+    ).foreach { accountType =>
+        s"the session cache has Account type of $accountType" should {
+          s"redirect to accountCheck" in {
+            await(save[String](sessionId, "redirectURL", returnUrl))
+            await(
+              save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", accountType)
+            )
+            val authResponse = authoriseResponseJson()
+            stubAuthorizePost(OK, authResponse.toString())
+            stubPost(s"/write/.*", OK, """{"x":2}""")
+            val res = buildRequest(urlPath, followRedirects = false)
+              .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+              .get()
+
+            whenReady(res) { resp =>
+              val page = Jsoup.parse(resp.body)
+
+              resp.status shouldBe SEE_OTHER
+              resp.header("Location").get should include(
+                s"/tax-enrolment-assignment-frontend/no-pt-enrolment"
+              )
+            }
+          }
+        }
+      }
+
+    "the session cache is empty" should {
+      "return Internal Server Error" in {
+        val authResponse = authoriseResponseJson()
+        stubAuthorizePost(OK, authResponse.toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        val res = buildRequest(urlPath, followRedirects = true)
+          .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .get()
+
+        whenReady(res) { resp =>
+          val page = Jsoup.parse(resp.body)
+
+          resp.status shouldBe INTERNAL_SERVER_ERROR
+        }
+      }
+    }
 
     "the user has a session missing required element NINO" should {
       s"return $UNAUTHORIZED" in {

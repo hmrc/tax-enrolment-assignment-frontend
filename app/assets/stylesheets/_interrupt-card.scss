@@ -1,10 +1,11 @@
 /* Interrupt Card */
 
 .interrupt-card {
-  background-color: #005ea5;
-  color: #fff;
-  padding: 35px 50px;
-  margin: 30px 0 0 0;
+    width:100%;
+    padding:30px;
+    background:#005ea5;
+    color:#fff;
+    box-sizing: border-box;
 }
 
 .interrupt-card * {

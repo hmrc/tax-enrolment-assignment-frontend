@@ -23,28 +23,23 @@
 
 @()(implicit request: Request[_], messages: Messages)
 
-@layout(pageTitle = Some(messages("selfAssessmentInterrupt.title"))) {
+@layout(pageTitle = Some(messages("selfAssessmentInterrupt.title")), mainLayout = None) {
 
    @card {
-<!--<div class="interrupt-panel">-->
-
 
       <h1 class="govuk-heading-xl">@messages("selfAssessmentInterrupt.heading")</h1>
 
       <p class="govuk-body">@messages("selfAssessmentInterrupt.paragraph1")</p>
       <p class="govuk-body">@messages("selfAssessmentInterrupt.paragraph2")</p>
 
-<div class="actions">
+      <div class="actions">
 
-           @govukButton(Button(
-           content = Text(messages("selfAssessmentInterrupt.continue")),
-           href = Some("?")
-           ))
-       }
+               @govukButton(Button(
+               content = Text(messages("selfAssessmentInterrupt.continue")),
+               href = Some("?")
+               ))
 
-</div>
-
-
-<!--</div>-->
+      </div>
+    }
 
 }

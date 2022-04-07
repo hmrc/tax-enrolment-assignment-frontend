@@ -26,6 +26,8 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
   MULTIPLE_ACCOUNTS,
   PT_ASSIGNED_TO_CURRENT_USER,
   PT_ASSIGNED_TO_OTHER_USER,
+  SA_ASSIGNED_TO_CURRENT_USER,
+  SA_ASSIGNED_TO_OTHER_USER,
   SINGLE_ACCOUNT
 }
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
@@ -48,103 +50,113 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
     new MultipleAccountsOrchestrator(mockTeaSessionCache, mockUsersGroupService)
 
   s"getDetailsForLandingPage" when {
-    s"the accountType $MULTIPLE_ACCOUNTS is  and redirectUrl are available in the cache" should {
-      "return the userdetails for the account" in {
-        (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetails[AnyContent],
-            _: Format[AccountTypes.Value]
-          ))
-          .expects("ACCOUNT_TYPE", *, *)
-          .returning(Future.successful(Some(MULTIPLE_ACCOUNTS)))
+    List(MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER).foreach { account =>
+      s"the accountType $account and redirectUrl are available in the cache" should {
+        "return the userdetails for the account" in {
+          (mockTeaSessionCache
+            .getEntry(_: String)(
+              _: RequestWithUserDetails[AnyContent],
+              _: Format[AccountTypes.Value]
+            ))
+            .expects("ACCOUNT_TYPE", *, *)
+            .returning(Future.successful(Some(account)))
 
-        (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetails[AnyContent],
-            _: Format[String]
-          ))
-          .expects("redirectURL", *, *)
-          .returning(
-            Future.successful(
-              Some(testOnly.routes.TestOnlyController.successfulCall.url)
+          (mockTeaSessionCache
+            .getEntry(_: String)(
+              _: RequestWithUserDetails[AnyContent],
+              _: Format[String]
+            ))
+            .expects("redirectURL", *, *)
+            .returning(
+              Future.successful(
+                Some(testOnly.routes.TestOnlyController.successfulCall.url)
+              )
             )
-          )
 
-        (mockUsersGroupService
-          .getAccountDetails(_: String)(
-            _: ExecutionContext,
-            _: HeaderCarrier,
-            _: RequestWithUserDetails[AnyContent]
-          ))
-          .expects(CREDENTIAL_ID, *, *, *)
-          .returning(createInboundResult(accountDetails))
+          (mockUsersGroupService
+            .getAccountDetails(_: String)(
+              _: ExecutionContext,
+              _: HeaderCarrier,
+              _: RequestWithUserDetails[AnyContent]
+            ))
+            .expects(CREDENTIAL_ID, *, *, *)
+            .returning(createInboundResult(accountDetails))
 
-        val res = orchestrator.getDetailsForLandingPage
-        whenReady(res.value) { result =>
-          result shouldBe Right(accountDetails)
+          val res = orchestrator.getDetailsForLandingPage
+          whenReady(res.value) { result =>
+            result shouldBe Right(
+              accountDetails
+                .copy(hasSA = Some(account == SA_ASSIGNED_TO_CURRENT_USER))
+            )
+          }
         }
       }
     }
-    List(SINGLE_ACCOUNT, PT_ASSIGNED_TO_OTHER_USER, PT_ASSIGNED_TO_CURRENT_USER)
-      .foreach { accountType =>
-        s"the accountType is $accountType and redirectUrl are available in the cache" should {
-          "return the InvalidUserType containing redirectUrl" in {
-            (mockTeaSessionCache
-              .getEntry(_: String)(
-                _: RequestWithUserDetails[AnyContent],
-                _: Format[AccountTypes.Value]
-              ))
-              .expects("ACCOUNT_TYPE", *, *)
-              .returning(Future.successful(Some(accountType)))
 
-            (mockTeaSessionCache
-              .getEntry(_: String)(
-                _: RequestWithUserDetails[AnyContent],
-                _: Format[String]
-              ))
-              .expects("redirectURL", *, *)
-              .returning(
-                Future.successful(
-                  Some(testOnly.routes.TestOnlyController.successfulCall.url)
-                )
+    List(
+      SINGLE_ACCOUNT,
+      PT_ASSIGNED_TO_OTHER_USER,
+      PT_ASSIGNED_TO_CURRENT_USER,
+      SA_ASSIGNED_TO_OTHER_USER
+    ).foreach { accountType =>
+      s"the accountType is $accountType and redirectUrl are available in the cache" should {
+        "return the InvalidUserType containing redirectUrl" in {
+          (mockTeaSessionCache
+            .getEntry(_: String)(
+              _: RequestWithUserDetails[AnyContent],
+              _: Format[AccountTypes.Value]
+            ))
+            .expects("ACCOUNT_TYPE", *, *)
+            .returning(Future.successful(Some(accountType)))
+
+          (mockTeaSessionCache
+            .getEntry(_: String)(
+              _: RequestWithUserDetails[AnyContent],
+              _: Format[String]
+            ))
+            .expects("redirectURL", *, *)
+            .returning(
+              Future.successful(
+                Some(testOnly.routes.TestOnlyController.successfulCall.url)
               )
+            )
 
-            val res = orchestrator.getDetailsForLandingPage
-            whenReady(res.value) { result =>
-              result shouldBe Left(
-                InvalidUserType(
-                  Some(testOnly.routes.TestOnlyController.successfulCall.url)
-                )
+          val res = orchestrator.getDetailsForLandingPage
+          whenReady(res.value) { result =>
+            result shouldBe Left(
+              InvalidUserType(
+                Some(testOnly.routes.TestOnlyController.successfulCall.url)
               )
-            }
-          }
-        }
-
-        s"the accountType is $accountType is available in the cache but not the redirectUrl" should {
-          "return the InvalidUserType not containing redirectUrl" in {
-            (mockTeaSessionCache
-              .getEntry(_: String)(
-                _: RequestWithUserDetails[AnyContent],
-                _: Format[AccountTypes.Value]
-              ))
-              .expects("ACCOUNT_TYPE", *, *)
-              .returning(Future.successful(Some(accountType)))
-
-            (mockTeaSessionCache
-              .getEntry(_: String)(
-                _: RequestWithUserDetails[AnyContent],
-                _: Format[String]
-              ))
-              .expects("redirectURL", *, *)
-              .returning(Future.successful(None))
-
-            val res = orchestrator.getDetailsForLandingPage
-            whenReady(res.value) { result =>
-              result shouldBe Left(InvalidUserType(None))
-            }
+            )
           }
         }
       }
+
+      s"the accountType is $accountType is available in the cache but not the redirectUrl" should {
+        "return the InvalidUserType not containing redirectUrl" in {
+          (mockTeaSessionCache
+            .getEntry(_: String)(
+              _: RequestWithUserDetails[AnyContent],
+              _: Format[AccountTypes.Value]
+            ))
+            .expects("ACCOUNT_TYPE", *, *)
+            .returning(Future.successful(Some(accountType)))
+
+          (mockTeaSessionCache
+            .getEntry(_: String)(
+              _: RequestWithUserDetails[AnyContent],
+              _: Format[String]
+            ))
+            .expects("redirectURL", *, *)
+            .returning(Future.successful(None))
+
+          val res = orchestrator.getDetailsForLandingPage
+          whenReady(res.value) { result =>
+            result shouldBe Left(InvalidUserType(None))
+          }
+        }
+      }
+    }
 
     s"the cache is empty" should {
       "return the InvalidUserType containing no redirectUrl" in {

@@ -40,7 +40,8 @@ object MFADetails {
 case class AccountDetails(userId: String,
                           email: Option[String],
                           lastLoginDate: String,
-                          mfaDetails: Seq[MFADetails]) {
+                          mfaDetails: Seq[MFADetails],
+                          hasSA: Option[Boolean] = None) {
   def this(usersGroupResponse: UsersGroupResponse) =
     this(
       userId = usersGroupResponse.obfuscatedUserId,

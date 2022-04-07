@@ -81,6 +81,14 @@ class EACDConnector @Inject()(httpClient: HttpClient,
     getUsersWithAssignedEnrolment(enrolmentKey)
   }
 
+  def getUsersWithSAEnrolment(utr: String)(
+    implicit ec: ExecutionContext,
+    hc: HeaderCarrier
+  ): TEAFResult[UsersAssignedEnrolment] = {
+    val enrolmentKey = s"IR-SA~UTR~$utr"
+    getUsersWithAssignedEnrolment(enrolmentKey)
+  }
+
   def getUsersWithAssignedEnrolment(enrolmentKey: String)(
     implicit ec: ExecutionContext,
     hc: HeaderCarrier

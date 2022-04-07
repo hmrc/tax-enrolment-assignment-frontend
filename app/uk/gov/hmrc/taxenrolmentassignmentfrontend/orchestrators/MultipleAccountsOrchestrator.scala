@@ -23,7 +23,10 @@ import uk.gov.hmrc.http.HeaderCarrier
 import cats.implicits._
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.MULTIPLE_ACCOUNTS
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
+  MULTIPLE_ACCOUNTS,
+  SA_ASSIGNED_TO_CURRENT_USER
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.InvalidUserType
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
@@ -48,27 +51,32 @@ class MultipleAccountsOrchestrator @Inject()(
     ec: ExecutionContext
   ): TEAFResult[AccountDetails] = {
     for {
-      _ <- checkAccountTypeAndGetRedirectUrlFromCache
+      accountType <- checkAccountTypeAndGetRedirectUrlFromCache
       accountDetails <- usersGroupSearchService.getAccountDetails(
         requestWithUserDetails.userDetails.credId
       )
-    } yield accountDetails
-
+    } yield
+      accountDetails.copy(
+        hasSA = Some(accountType == SA_ASSIGNED_TO_CURRENT_USER)
+      )
   }
 
   private def checkAccountTypeAndGetRedirectUrlFromCache(
     implicit requestWithUserDetails: RequestWithUserDetails[AnyContent],
     hc: HeaderCarrier,
     ec: ExecutionContext
-  ): TEAFResult[Unit] = EitherT {
+  ): TEAFResult[AccountTypes.Value] = EitherT {
     val res = for {
       accountType <- sessionCache.getEntry[AccountTypes.Value](ACCOUNT_TYPE)
       redirectUrl <- sessionCache.getEntry[String](REDIRECT_URL)
     } yield (accountType, redirectUrl)
 
     res.map {
-      case (Some(MULTIPLE_ACCOUNTS), Some(redirectUrl)) => Right((): Unit)
-      case (_, optRedirectUrl)                          => Left(InvalidUserType(optRedirectUrl))
+      case (Some(accountType), Some(_))
+          if List(MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER)
+            .contains(accountType) =>
+        Right(accountType)
+      case (_, optRedirectUrl) => Left(InvalidUserType(optRedirectUrl))
     }
   }
 }

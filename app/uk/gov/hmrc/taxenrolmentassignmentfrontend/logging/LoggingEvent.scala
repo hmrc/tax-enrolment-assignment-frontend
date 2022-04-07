@@ -56,6 +56,14 @@ object LoggingEvent {
       )
     )
 
+  def logCurrentUserHasSAEnrolment(credentialId: String): LoggingEvent =
+    Info(
+      Event(
+        "[AccountCheckOrchestrator][getAccountType]",
+        details = Some(s"Current credential $credentialId has SA enrolment.")
+      )
+    )
+
   def logAnotherAccountAlreadyHasPTEnrolment(
     credentialId: String,
     credentialWithPTEnrolment: String
@@ -65,6 +73,19 @@ object LoggingEvent {
         "[AccountCheckOrchestrator][getAccountType]",
         details = Some(
           s"Signed in with credential $credentialId has already been assigned to another credential $credentialWithPTEnrolment"
+        )
+      )
+    )
+
+  def logAnotherAccountHasSAEnrolment(
+    credentialId: String,
+    credentialWithSAEnrolment: String
+  ): LoggingEvent =
+    Info(
+      Event(
+        "[AccountCheckOrchestrator][getAccountType]",
+        details = Some(
+          s"Signed in with credential $credentialId has not got SA enrolment but another credential $credentialWithSAEnrolment does"
         )
       )
     )

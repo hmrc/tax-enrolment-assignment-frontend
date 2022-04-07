@@ -27,7 +27,10 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromEACD
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.USER_ASSIGNED_PT_ENROLMENT
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{
+  USER_ASSIGNED_PT_ENROLMENT,
+  USER_ASSIGNED_SA_ENROLMENT
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.EACDService
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -87,7 +90,7 @@ class EACDServiceSpec extends TestFixture with ScalaFutures {
       }
     }
 
-    "the user assigned PT enrolment are not already in the cache and users-group-search returns an error" should {
+    "the user assigned PT enrolment are not already in the cache and EACD returns an error" should {
       "return an error" in {
         (mockTeaSessionCache
           .getEntry(_: String)(
@@ -104,6 +107,120 @@ class EACDServiceSpec extends TestFixture with ScalaFutures {
           .expects(NINO, *, *)
           .returning(createInboundResultError(UnexpectedResponseFromEACD))
         val result = service.getUsersAssignedPTEnrolment
+        whenReady(result.value) { res =>
+          res shouldBe Left(UnexpectedResponseFromEACD)
+        }
+      }
+    }
+  }
+
+  "getUsersAssignedSAEnrolment" when {
+    "the user assigned SA enrolment are already in the cache" should {
+      "not make a call the eacd and return value from cache" in {
+        (mockTeaSessionCache
+          .getEntry(_: String)(
+            _: RequestWithUserDetails[AnyContent],
+            _: Format[UsersAssignedEnrolment]
+          ))
+          .expects(USER_ASSIGNED_SA_ENROLMENT, *, *)
+          .returning(Future.successful(Some(UsersAssignedEnrolment1)))
+        val result = service.getUsersAssignedSAEnrolment
+        whenReady(result.value) { res =>
+          res shouldBe Right(UsersAssignedEnrolment1)
+        }
+      }
+    }
+
+    "the user assigned SA enrolment are not already in the cache" should {
+      "call the EACD twice to get the UTR and then enrolled credentials, save to cache and return the credentialId" in {
+        (mockTeaSessionCache
+          .getEntry(_: String)(
+            _: RequestWithUserDetails[AnyContent],
+            _: Format[UsersAssignedEnrolment]
+          ))
+          .expects(USER_ASSIGNED_SA_ENROLMENT, *, *)
+          .returning(Future.successful(None))
+        (mockEacdConnector
+          .queryKnownFactsByNinoVerifier(_: String)(
+            _: ExecutionContext,
+            _: HeaderCarrier
+          ))
+          .expects(NINO, *, *)
+          .returning(createInboundResult(Some(UTR)))
+        (mockEacdConnector
+          .getUsersWithSAEnrolment(_: String)(
+            _: ExecutionContext,
+            _: HeaderCarrier
+          ))
+          .expects(UTR, *, *)
+          .returning(createInboundResult(UsersAssignedEnrolment1))
+        (mockTeaSessionCache
+          .save(_: String, _: UsersAssignedEnrolment)(
+            _: RequestWithUserDetails[AnyContent],
+            _: Format[UsersAssignedEnrolment]
+          ))
+          .expects(USER_ASSIGNED_SA_ENROLMENT, UsersAssignedEnrolment1, *, *)
+          .returning(Future(CacheMap(request.sessionID, Map())))
+        val result = service.getUsersAssignedSAEnrolment
+        whenReady(result.value) { res =>
+          res shouldBe Right(UsersAssignedEnrolment1)
+        }
+      }
+    }
+
+    "there is no SA enrolment data in the cache and the user has no SA enrolments associated with their nino" should {
+      "call EACD to get the UTR, then save no creds witth enrolment to cache and return None" in {
+        (mockTeaSessionCache
+          .getEntry(_: String)(
+            _: RequestWithUserDetails[AnyContent],
+            _: Format[UsersAssignedEnrolment]
+          ))
+          .expects(USER_ASSIGNED_SA_ENROLMENT, *, *)
+          .returning(Future.successful(None))
+        (mockEacdConnector
+          .queryKnownFactsByNinoVerifier(_: String)(
+            _: ExecutionContext,
+            _: HeaderCarrier
+          ))
+          .expects(NINO, *, *)
+          .returning(createInboundResult(None))
+
+        (mockTeaSessionCache
+          .save(_: String, _: UsersAssignedEnrolment)(
+            _: RequestWithUserDetails[AnyContent],
+            _: Format[UsersAssignedEnrolment]
+          ))
+          .expects(
+            USER_ASSIGNED_SA_ENROLMENT,
+            UsersAssignedEnrolmentEmpty,
+            *,
+            *
+          )
+          .returning(Future(CacheMap(request.sessionID, Map())))
+        val result = service.getUsersAssignedSAEnrolment
+        whenReady(result.value) { res =>
+          res shouldBe Right(UsersAssignedEnrolmentEmpty)
+        }
+      }
+    }
+
+    "the user assigned SA enrolment are not already in the cache and EACD returns an error" should {
+      "return an error" in {
+        (mockTeaSessionCache
+          .getEntry(_: String)(
+            _: RequestWithUserDetails[AnyContent],
+            _: Format[UsersAssignedEnrolment]
+          ))
+          .expects(USER_ASSIGNED_SA_ENROLMENT, *, *)
+          .returning(Future.successful(None))
+        (mockEacdConnector
+          .queryKnownFactsByNinoVerifier(_: String)(
+            _: ExecutionContext,
+            _: HeaderCarrier
+          ))
+          .expects(NINO, *, *)
+          .returning(createInboundResultError(UnexpectedResponseFromEACD))
+        val result = service.getUsersAssignedSAEnrolment
         whenReady(result.value) { res =>
           res shouldBe Left(UnexpectedResponseFromEACD)
         }

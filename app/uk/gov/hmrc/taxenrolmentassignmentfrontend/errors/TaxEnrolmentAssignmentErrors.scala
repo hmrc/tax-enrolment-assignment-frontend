@@ -20,6 +20,7 @@ sealed trait TaxEnrolmentAssignmentErrors
 
 object UnexpectedResponseFromIV extends TaxEnrolmentAssignmentErrors
 object UnexpectedResponseFromEACD extends TaxEnrolmentAssignmentErrors
+object NoAccountsHaveSA extends TaxEnrolmentAssignmentErrors
 object UnexpectedResponseFromTaxEnrolments extends TaxEnrolmentAssignmentErrors
 object UnexpectedResponseFromUsersGroupSearch
     extends TaxEnrolmentAssignmentErrors

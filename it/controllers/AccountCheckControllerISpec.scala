@@ -141,6 +141,162 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
         }
       }
 
+      "has SA enrolment on an other account" should {
+        s"return OK" in {
+          val authResponse = authoriseResponseJson()
+          stubAuthorizePost(OK, authResponse.toString())
+          stubPost(s"/write/.*", OK, """{"x":2}""")
+          stubGet(
+            s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/users",
+            Status.OK,
+            es0ResponseNoRecordCred
+          )
+          stubGetWithQueryParam(
+            "/identity-verification/nino",
+            "nino",
+            NINO,
+            Status.OK,
+            ivResponseMultiCredsJsonString
+          )
+          stubGetMatching(
+            s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_3/enrolments?type=principal",
+            Status.NO_CONTENT,
+            ""
+          )
+          stubGetMatching(
+            s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_4/enrolments?type=principal",
+            Status.NO_CONTENT,
+            ""
+          )
+
+          stubPost(
+            s"/enrolment-store-proxy/enrolment-store/enrolments",
+            Status.OK,
+            eacdResponse
+          )
+          stubGet(
+            s"/enrolment-store-proxy/enrolment-store/enrolments/IR-SA~UTR~$UTR/users",
+            Status.OK,
+            es0ResponseNotMatchingCred
+          )
+
+          val res = buildRequest(urlPath, followRedirects = false)
+            .withHttpHeaders(xSessionId, csrfContent)
+            .get()
+
+          whenReady(res) { resp =>
+            val page = Jsoup.parse(resp.body)
+
+            resp.status shouldBe OK
+          }
+        }
+      }
+
+      "have no enrolments but current credential has SA enrolment in session" should {
+        s"redirect to enrol-pt/introduction" in {
+          val authResponse = authoriseResponseJson(enrolments = saEnrolmentOnly)
+          stubAuthorizePost(OK, authResponse.toString())
+          stubPost(s"/write/.*", OK, """{"x":2}""")
+          stubGet(
+            s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/users",
+            Status.OK,
+            es0ResponseNoRecordCred
+          )
+          stubGetWithQueryParam(
+            "/identity-verification/nino",
+            "nino",
+            NINO,
+            Status.OK,
+            ivResponseMultiCredsJsonString
+          )
+          stubGetMatching(
+            s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_3/enrolments?type=principal",
+            Status.NO_CONTENT,
+            ""
+          )
+          stubGetMatching(
+            s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_4/enrolments?type=principal",
+            Status.NO_CONTENT,
+            ""
+          )
+
+          stubPut(
+            s"/tax-enrolments/service/HMRC-PT/enrolment",
+            Status.NO_CONTENT,
+            ""
+          )
+
+          val res = buildRequest(urlPath, followRedirects = false)
+            .withHttpHeaders(xSessionId, csrfContent)
+            .get()
+
+          whenReady(res) { resp =>
+            val page = Jsoup.parse(resp.body)
+
+            resp.status shouldBe SEE_OTHER
+            resp.header("Location").get should include("/enrol-pt/introduction")
+          }
+        }
+      }
+
+      "have no enrolments but current credential has SA enrolment in EACD" should {
+        s"redirect to enrol-pt/introduction" in {
+          val authResponse = authoriseResponseJson(enrolments = saEnrolmentOnly)
+          stubAuthorizePost(OK, authResponse.toString())
+          stubPost(s"/write/.*", OK, """{"x":2}""")
+          stubGet(
+            s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/users",
+            Status.OK,
+            es0ResponseNoRecordCred
+          )
+          stubGetWithQueryParam(
+            "/identity-verification/nino",
+            "nino",
+            NINO,
+            Status.OK,
+            ivResponseMultiCredsJsonString
+          )
+          stubGetMatching(
+            s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_3/enrolments?type=principal",
+            Status.NO_CONTENT,
+            ""
+          )
+          stubGetMatching(
+            s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_4/enrolments?type=principal",
+            Status.NO_CONTENT,
+            ""
+          )
+
+          stubPost(
+            s"/enrolment-store-proxy/enrolment-store/enrolments",
+            Status.OK,
+            eacdResponse
+          )
+          stubGet(
+            s"/enrolment-store-proxy/enrolment-store/enrolments/IR-SA~UTR~$UTR/users",
+            Status.OK,
+            es0ResponseMatchingCred
+          )
+
+          stubPut(
+            s"/tax-enrolments/service/HMRC-PT/enrolment",
+            Status.NO_CONTENT,
+            ""
+          )
+
+          val res = buildRequest(urlPath, followRedirects = false)
+            .withHttpHeaders(xSessionId, csrfContent)
+            .get()
+
+          whenReady(res) { resp =>
+            val page = Jsoup.parse(resp.body)
+
+            resp.status shouldBe SEE_OTHER
+            resp.header("Location").get should include("/enrol-pt/introduction")
+          }
+        }
+      }
+
       "have no enrolments" should {
         s"redirect to enrol-pt/introduction" in {
           val authResponse = authoriseResponseJson()
@@ -169,6 +325,11 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
             ""
           )
 
+          stubPost(
+            s"/enrolment-store-proxy/enrolment-store/enrolments",
+            Status.NO_CONTENT,
+            ""
+          )
           stubPut(
             s"/tax-enrolments/service/HMRC-PT/enrolment",
             Status.NO_CONTENT,

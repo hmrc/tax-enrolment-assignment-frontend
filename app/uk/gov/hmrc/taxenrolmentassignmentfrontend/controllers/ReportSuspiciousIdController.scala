@@ -33,6 +33,8 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
   MFADetails
 }
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REPORTED_FRAUD
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.ReportSuspiciousID
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
@@ -41,6 +43,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class ReportSuspiciousIdController @Inject()(
   authAction: AuthAction,
+  sessionCache: TEASessionCache,
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
   mcc: MessagesControllerComponents,
   reportSuspiciousId: ReportSuspiciousID,
@@ -64,12 +67,13 @@ class ReportSuspiciousIdController @Inject()(
   }
 
   def continue: Action[AnyContent] = authAction.async { implicit request =>
+    sessionCache.save[Boolean](REPORTED_FRAUD, true)
     multipleAccountsOrchestrator
       .checkValidAccountTypeAndEnrolForPT(SA_ASSIGNED_TO_OTHER_USER)
       .value
       .map {
         case Right(_) =>
-          Redirect(routes.EnrolledAfterReportingFraudController.view)
+          Redirect(routes.EnrolledPTWithSAOnOtherAccountController.view)
         case Left(InvalidUserType(redirectUrl)) if redirectUrl.isDefined =>
           Redirect(routes.AccountCheckController.accountCheck(redirectUrl.get))
         case Left(UnexpectedResponseFromTaxEnrolments) =>

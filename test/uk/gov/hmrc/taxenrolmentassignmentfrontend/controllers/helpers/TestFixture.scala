@@ -61,11 +61,8 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{
   SilentAssignmentService,
   UsersGroupSearchService
 }
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.UnderConstructionView
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{
-  LandingPage,
-  UnderConstructionView
-}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -95,7 +92,6 @@ trait TestFixture
   lazy val messagesApi: MessagesApi = inject[MessagesApi]
   implicit lazy val messages: Messages = messagesApi.preferred(fakeRequest)
   lazy val UCView: UnderConstructionView = inject[UnderConstructionView]
-  lazy val landingPageView: LandingPage = inject[LandingPage]
   val mockAuthConnector: AuthConnector = mock[AuthConnector]
   val mockIVConnector: IVConnector = mock[IVConnector]
   val mockTaxEnrolmentsConnector: TaxEnrolmentsConnector =

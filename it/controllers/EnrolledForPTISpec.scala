@@ -36,7 +36,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
 }
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
 
-class LandingPageControllerISpec extends IntegrationSpecBase with Status {
+class EnrolledForPTISpec extends IntegrationSpecBase with Status {
 
   val teaHost = s"localhost:$port"
   val returnUrl: String = testOnly.routes.TestOnlyController.successfulCall
@@ -70,7 +70,7 @@ class LandingPageControllerISpec extends IntegrationSpecBase with Status {
           val page = Jsoup.parse(resp.body)
 
           resp.status shouldBe OK
-          page.title should include(TestITData.landingPageTitle)
+          page.title should include(TestITData.enrolledPTPageTitle)
         }
       }
     }

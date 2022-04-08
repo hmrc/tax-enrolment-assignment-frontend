@@ -17,12 +17,14 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.controllers
 
 import play.api.http.Status.OK
+import play.api.libs.json.Format
 import play.api.mvc.AnyContent
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.Enrolments
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
@@ -37,6 +39,8 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
   InvalidUserType,
   UnexpectedResponseFromTaxEnrolments
 }
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REPORTED_FRAUD
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{
   EnrolCurrentUser,
   ReportSuspiciousID
@@ -50,6 +54,7 @@ class ReportSuspiciousIdControllerSpec extends TestFixture {
   val controller =
     new ReportSuspiciousIdController(
       mockAuthAction,
+      mockTeaSessionCache,
       mockMultipleAccountsOrchestrator,
       mcc,
       view,
@@ -96,6 +101,14 @@ class ReportSuspiciousIdControllerSpec extends TestFixture {
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
 
+        (mockTeaSessionCache
+          .save(_: String, _: Boolean)(
+            _: RequestWithUserDetails[AnyContent],
+            _: Format[Boolean]
+          ))
+          .expects(REPORTED_FRAUD, true, *, *)
+          .returning(Future(CacheMap(request.sessionID, Map())))
+
         (mockMultipleAccountsOrchestrator
           .checkValidAccountTypeAndEnrolForPT(_: AccountTypes.Value)(
             _: RequestWithUserDetails[AnyContent],
@@ -111,7 +124,7 @@ class ReportSuspiciousIdControllerSpec extends TestFixture {
 
         status(res) shouldBe SEE_OTHER
         redirectLocation(res) shouldBe Some(
-          "/tax-enrolment-assignment-frontend/enrol-pt/enrol-current-user-id-after-reporting"
+          "/tax-enrolment-assignment-frontend/enrol-pt/enrolment-success-sa-access-not-wanted"
         )
       }
     }
@@ -129,6 +142,14 @@ class ReportSuspiciousIdControllerSpec extends TestFixture {
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
+
+        (mockTeaSessionCache
+          .save(_: String, _: Boolean)(
+            _: RequestWithUserDetails[AnyContent],
+            _: Format[Boolean]
+          ))
+          .expects(REPORTED_FRAUD, true, *, *)
+          .returning(Future(CacheMap(request.sessionID, Map())))
 
         (mockMultipleAccountsOrchestrator
           .checkValidAccountTypeAndEnrolForPT(_: AccountTypes.Value)(
@@ -171,6 +192,14 @@ class ReportSuspiciousIdControllerSpec extends TestFixture {
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
 
+        (mockTeaSessionCache
+          .save(_: String, _: Boolean)(
+            _: RequestWithUserDetails[AnyContent],
+            _: Format[Boolean]
+          ))
+          .expects(REPORTED_FRAUD, true, *, *)
+          .returning(Future(CacheMap(request.sessionID, Map())))
+
         (mockMultipleAccountsOrchestrator
           .checkValidAccountTypeAndEnrolForPT(_: AccountTypes.Value)(
             _: RequestWithUserDetails[AnyContent],
@@ -204,6 +233,14 @@ class ReportSuspiciousIdControllerSpec extends TestFixture {
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
+
+        (mockTeaSessionCache
+          .save(_: String, _: Boolean)(
+            _: RequestWithUserDetails[AnyContent],
+            _: Format[Boolean]
+          ))
+          .expects(REPORTED_FRAUD, true, *, *)
+          .returning(Future(CacheMap(request.sessionID, Map())))
 
         (mockMultipleAccountsOrchestrator
           .checkValidAccountTypeAndEnrolForPT(_: AccountTypes.Value)(

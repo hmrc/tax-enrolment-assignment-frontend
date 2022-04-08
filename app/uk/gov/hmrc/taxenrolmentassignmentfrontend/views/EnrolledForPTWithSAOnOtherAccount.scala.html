@@ -23,26 +23,23 @@
         govukButton: GovukButton
 )
 
-@(userId: String)(implicit request: Request[AnyRef], messages: Messages)
+@(userId: String, saCredential: Option[String] = None)(implicit request: Request[AnyRef], messages: Messages)
 
-@layout(pageTitle = Some(messages("enrolledPTAfterReportingFraud.title"))) {
+@layout(pageTitle = Some(messages("enrolledForPTWithSAOnOtherAccount.title"))) {
 
- <h2 class="govuk-heading-xl">@messages("enrolledPTAfterReportingFraud.heading")</h2>
- <p class="govuk-body">@messages("enrolledPTAfterReportingFraud.paragraph1", userId)</p>
- <p class="govuk-body">@messages("enrolledPTAfterReportingFraud.paragraph2")</p>
- <p class="govuk-body">@messages("enrolledPTAfterReportingFraud.paragraph3")</p>
-
- <br>
-
- <h3 class="govuk-heading-m">@messages("enrolledPTAfterReportingFraud.heading2")</h3>
- <p class="govuk-body">@messages("enrolledPTAfterReportingFraud.h2.paragraph1")</p>
+ <h2 class="govuk-heading-xl">@messages("enrolledForPTWithSAOnOtherAccount.heading")</h2>
+ <p class="govuk-body">@messages("enrolledForPTWithSAOnOtherAccount.paragraph1", userId)</p>
+ <p class="govuk-body">@messages("enrolledForPTWithSAOnOtherAccount.paragraph2")</p>
 
  <br>
 
- <h3 class="govuk-heading-m">@messages("enrolledPTAfterReportingFraud.heading3")</h3>
- <p class="govuk-body">@messages("enrolledPTAfterReportingFraud.h3.paragraph1")</p>
+ <h3 class="govuk-heading-m">@messages("enrolledForPTWithSAOnOtherAccount.heading2")</h3>
+ @if(saCredential.isDefined) {
+ <p class="govuk-body">@messages("enrolledForPTWithSAOnOtherAccount.h2.paragraph1", saCredential.get)</p>
+ }
+ <p class="govuk-body">@messages("enrolledForPTWithSAOnOtherAccount.h2.paragraph2")</p>
 
-@formHelper(action = routes.EnrolledAfterReportingFraudController.continue) {
+@formHelper(action = routes.EnrolledPTWithSAOnOtherAccountController.continue) {
   @govukButton(Button(
    preventDoubleClick = true,
    content = Text(messages("common.continue"))

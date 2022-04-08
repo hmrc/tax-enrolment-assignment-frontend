@@ -37,8 +37,9 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
   SINGLE_ACCOUNT
 }
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.USER_ASSIGNED_SA_ENROLMENT
 
-class EnrolledAfterReportingFraudControllerISpec
+class EnrolledPTWithSAOnOtherAccountControllerISpec
     extends IntegrationSpecBase
     with Status {
 
@@ -46,15 +47,16 @@ class EnrolledAfterReportingFraudControllerISpec
   val returnUrl: String = testOnly.routes.TestOnlyController.successfulCall
     .absoluteURL(false, teaHost)
   val urlPath =
-    s"/enrol-pt/enrol-current-user-id-after-reporting"
+    s"/enrol-pt/enrolment-success-sa-access-not-wanted"
 
   val sessionCookie
     : (String, String) = ("COOKIE" -> createSessionCookieAsString(sessionData))
 
   s"GET $urlPath" when {
     "the session cache has Account type of SA_ASSIGNED_TO_OTHER_USER" should {
-      s"render the enroled after fraud reporting page" in {
+      s"render the enrolledPTPage after fraud reporting page" in {
         await(save[String](sessionId, "redirectURL", returnUrl))
+        await(save[Boolean](sessionId, "reportedFraud", true))
         await(
           save[AccountTypes.Value](
             sessionId,
@@ -78,9 +80,44 @@ class EnrolledAfterReportingFraudControllerISpec
           val page = Jsoup.parse(resp.body)
 
           resp.status shouldBe OK
-          page.title should include(
-            TestITData.enrolledAfterFraudReportingPageTitle
+          page.title should include(TestITData.enrolledPTPageTitle)
+        }
+      }
+    }
+
+    "the session cache has Account type of SA_ASSIGNED_TO_OTHER_USER" should {
+      s"render the enrolledPTPage after user chooses to keep SA separate" in {
+        await(save[String](sessionId, "redirectURL", returnUrl))
+        await(
+          save[AccountTypes.Value](
+            sessionId,
+            "ACCOUNT_TYPE",
+            SA_ASSIGNED_TO_OTHER_USER
           )
+        )
+        await(save(sessionId, USER_ASSIGNED_SA_ENROLMENT, saUsers))
+        val authResponse = authoriseResponseJson()
+        stubAuthorizePost(OK, authResponse.toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        stubGet(
+          s"/users-group-search/users/$CREDENTIAL_ID",
+          OK,
+          usergroupsResponseJson().toString()
+        )
+        stubGet(
+          s"/users-group-search/users/$CREDENTIAL_ID_2",
+          OK,
+          usergroupsResponseJson().toString()
+        )
+        val res = buildRequest(urlPath, followRedirects = true)
+          .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .get()
+
+        whenReady(res) { resp =>
+          val page = Jsoup.parse(resp.body)
+
+          resp.status shouldBe OK
+          page.title should include(TestITData.enrolledPTPageTitle)
         }
       }
     }

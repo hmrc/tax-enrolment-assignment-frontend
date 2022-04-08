@@ -28,33 +28,36 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUs
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{
-  LandingPageController,
+  EnrolledPTWithSAOnOtherAccountController,
   testOnly
 }
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
   InvalidUserType,
   UnexpectedResponseFromUsersGroupSearch
 }
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.LandingPage
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{
+  EnrolledForPTPage,
+  EnrolledForPTWithSAOnOtherAccount
+}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class LandingPageControllerSpec extends TestFixture {
+class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
 
-  val landingView: LandingPage = app.injector.instanceOf[LandingPage]
+  val view: EnrolledForPTWithSAOnOtherAccount =
+    app.injector.instanceOf[EnrolledForPTWithSAOnOtherAccount]
 
-  val controller = new LandingPageController(
+  val controller = new EnrolledPTWithSAOnOtherAccountController(
     mockAuthAction,
-    mcc,
     mockMultipleAccountsOrchestrator,
     mockTeaSessionCache,
-    logger,
-    landingView
+    mcc,
+    view
   )
 
   "view" when {
-    "the user has multiple accounts and is signed in with one with SA" should {
-      "render the landing page" in {
+    "the user has enrolled for PT after reporting fraud" should {
+      "render the EnrolledForPTWithSAOnOtherAccount page without SA" in {
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -70,7 +73,7 @@ class LandingPageControllerSpec extends TestFixture {
           )
 
         (mockMultipleAccountsOrchestrator
-          .getDetailsForLandingPage(
+          .getDetailsForEnrolledPTWithSAOnOtherAccount(
             _: RequestWithUserDetails[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
@@ -78,18 +81,31 @@ class LandingPageControllerSpec extends TestFixture {
           .expects(*, *, *)
           .returning(createInboundResult(accountDetails))
 
+        (mockMultipleAccountsOrchestrator
+          .getSACredentialIfNotFraud(
+            _: RequestWithUserDetails[AnyContent],
+            _: HeaderCarrier,
+            _: ExecutionContext
+          ))
+          .expects(*, *, *)
+          .returning(createInboundResult(None))
+
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe OK
-        Jsoup
+        val content = Jsoup
           .parse(contentAsString(result))
-          .title() shouldBe "landingPage.title"
+
+        content.title() shouldBe "enrolledForPTWithSAOnOtherAccount.title"
+        content.body().text() shouldNot include(
+          "enrolledForPTWithSAOnOtherAccount.h2.paragraph1"
+        )
       }
     }
 
-    "the user has multiple accounts and none have SA" should {
-      "render the landing page" in {
+    "the user has enrolled for PT after choosing to have SA separate" should {
+      "render the EnrolledForPTWithSAOnOtherAccount page with SA details" in {
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -100,10 +116,12 @@ class LandingPageControllerSpec extends TestFixture {
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
-          .returning(Future.successful(retrievalResponse()))
+          .returning(
+            Future.successful(retrievalResponse(enrolments = saEnrolmentOnly))
+          )
 
         (mockMultipleAccountsOrchestrator
-          .getDetailsForLandingPage(
+          .getDetailsForEnrolledPTWithSAOnOtherAccount(
             _: RequestWithUserDetails[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
@@ -111,17 +129,34 @@ class LandingPageControllerSpec extends TestFixture {
           .expects(*, *, *)
           .returning(createInboundResult(accountDetails))
 
+        (mockMultipleAccountsOrchestrator
+          .getSACredentialIfNotFraud(
+            _: RequestWithUserDetails[AnyContent],
+            _: HeaderCarrier,
+            _: ExecutionContext
+          ))
+          .expects(*, *, *)
+          .returning(
+            createInboundResult(
+              Some(accountDetails.copy(userId = "********1234"))
+            )
+          )
+
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe OK
-        Jsoup
+        val content = Jsoup
           .parse(contentAsString(result))
-          .title() shouldBe "landingPage.title"
+
+        content.title() shouldBe "enrolledForPTWithSAOnOtherAccount.title"
+        content.body().text() should include(
+          "enrolledForPTWithSAOnOtherAccount.h2.paragraph1"
+        )
       }
     }
 
-    "the user is not a  multiple accounts usertype and has redirectUrl stored in session" should {
+    "the user is the wrong usertype and has redirectUrl stored in session" should {
       "redirect to accountCheck" in {
         (mockAuthConnector
           .authorise(
@@ -136,7 +171,7 @@ class LandingPageControllerSpec extends TestFixture {
           .returning(Future.successful(retrievalResponse()))
 
         (mockMultipleAccountsOrchestrator
-          .getDetailsForLandingPage(
+          .getDetailsForEnrolledPTWithSAOnOtherAccount(
             _: RequestWithUserDetails[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
@@ -160,7 +195,7 @@ class LandingPageControllerSpec extends TestFixture {
       }
     }
 
-    "the user is not a  multiple accounts usertype and has no redirectUrl stored in session" should {
+    "the user is the wrong usertype and has no redirectUrl stored in session" should {
       "return INTERNAL_SERVER_ERROR" in {
         (mockAuthConnector
           .authorise(
@@ -175,7 +210,7 @@ class LandingPageControllerSpec extends TestFixture {
           .returning(Future.successful(retrievalResponse()))
 
         (mockMultipleAccountsOrchestrator
-          .getDetailsForLandingPage(
+          .getDetailsForEnrolledPTWithSAOnOtherAccount(
             _: RequestWithUserDetails[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
@@ -205,7 +240,7 @@ class LandingPageControllerSpec extends TestFixture {
           .returning(Future.successful(retrievalResponse()))
 
         (mockMultipleAccountsOrchestrator
-          .getDetailsForLandingPage(
+          .getDetailsForEnrolledPTWithSAOnOtherAccount(
             _: RequestWithUserDetails[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext

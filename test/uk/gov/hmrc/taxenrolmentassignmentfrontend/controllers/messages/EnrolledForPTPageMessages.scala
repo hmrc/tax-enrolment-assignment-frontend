@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.messages
 
-object LandingPageMessages {
+object EnrolledForPTPageMessages {
   val title =
     "Only your current user ID can access your personal tax account from now on"
   val heading =

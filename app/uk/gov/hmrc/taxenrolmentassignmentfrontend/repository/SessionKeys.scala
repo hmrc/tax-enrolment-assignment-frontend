@@ -23,6 +23,7 @@ object SessionKeys {
   val USER_ASSIGNED_SA_ENROLMENT = "USER_ASSIGNED_SA_ENROLMENT"
   val REDIRECT_URL = "redirectURL"
   val OTHER_VALID_PTA_ACCOUNTS = "OTHER_VALID_PTA_ACCOUNTS"
+  val REPORTED_FRAUD = "reportedFraud"
 
   def accountDetailsForCredential(credId: String) = s"AccountDetailsFor$credId"
 

@@ -29,11 +29,19 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
   SA_ASSIGNED_TO_OTHER_USER
 }
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.InvalidUserType
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
+  InvalidUserType,
+  TaxEnrolmentAssignmentErrors
+}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
+  AccountDetails,
+  UsersAssignedEnrolment
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{
   ACCOUNT_TYPE,
-  REDIRECT_URL
+  REDIRECT_URL,
+  REPORTED_FRAUD,
+  USER_ASSIGNED_SA_ENROLMENT
 }
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{
@@ -68,7 +76,7 @@ class MultipleAccountsOrchestrator @Inject()(
       )
   }
 
-  def getDetailsForEnrolledAfterReportingFraud(
+  def getDetailsForEnrolledPTWithSAOnOtherAccount(
     implicit requestWithUserDetails: RequestWithUserDetails[AnyContent],
     hc: HeaderCarrier,
     ec: ExecutionContext
@@ -82,6 +90,33 @@ class MultipleAccountsOrchestrator @Inject()(
       )
     } yield accountDetails
 
+  }
+
+  def getSACredentialIfNotFraud(
+    implicit requestWithUserDetails: RequestWithUserDetails[AnyContent],
+    hc: HeaderCarrier,
+    ec: ExecutionContext
+  ): TEAFResult[Option[AccountDetails]] = EitherT {
+    sessionCache.getEntry[Boolean](REPORTED_FRAUD).flatMap {
+      case Some(true) => Future.successful(Right(None))
+      case _          => getSACredentialDetails.value
+    }
+  }
+
+  def getSACredentialDetails(
+    implicit requestWithUserDetails: RequestWithUserDetails[AnyContent],
+    hc: HeaderCarrier,
+    ec: ExecutionContext
+  ): TEAFResult[Option[AccountDetails]] = EitherT {
+    sessionCache
+      .getEntry[UsersAssignedEnrolment](USER_ASSIGNED_SA_ENROLMENT)
+      .flatMap { optCredential =>
+        optCredential.fold[Option[String]](None)(_.enrolledCredential) match {
+          case Some(saCred) =>
+            usersGroupSearchService.getAccountDetails(saCred).map(Some(_)).value
+          case _ => Future.successful(Right(None))
+        }
+      }
   }
 
   def checkValidAccountTypeAndEnrolForPT(

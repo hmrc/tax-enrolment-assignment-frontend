@@ -19,15 +19,20 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.messages
 object ReportSuspiciousIDMessages {
   val title = "Report a suspicious user ID"
   val heading = "Report a suspicious user ID"
-  val paragraph1: String = "You will need to phone us so that we can give you access to your personal tax account. " +
+  val paragraph1
+    : String = "You will need to phone us so that we can give you access to your personal tax account. " +
     "Please download a copy of this information to your device " +
     "or make a note of it as this screen may time out after 15 minutes."
-  val linkParagraphText: String = "download a copy of this information to your device"
+  val linkParagraphText: String =
+    "download a copy of this information to your device"
   val button = "Continue"
-  val saPText = "You can continue to your personal tax account with your current user ID."
+  val action =
+    "/tax-enrolment-assignment-frontend/enrol-pt/report-suspicious-id"
+  val saPText =
+    "You can continue to your personal tax account with your current user ID."
 
-  val telephone = Seq("Telephone:","0300 200 3600")
-  val outsideUK = Seq("Outside UK:","+44 161 930 8445")
+  val telephone = Seq("Telephone:", "0300 200 3600")
+  val outsideUK = Seq("Outside UK:", "+44 161 930 8445")
 
   val informationBlock = Seq(
     "Information about opening hours, call charges and more",
@@ -37,6 +42,5 @@ object ReportSuspiciousIDMessages {
   )
 
   val detailBlockLink = "Relay UK"
-
 
 }

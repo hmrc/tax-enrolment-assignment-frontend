@@ -18,9 +18,11 @@
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.Layout
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.summarylist.SummaryListRow
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 
 @this(
 layout: Layout,
+formHelper: FormWithCSRF,
 govukSummaryList : GovukSummaryList,
 govukDetails : GovukDetails,
 govukButton: GovukButton)
@@ -84,12 +86,14 @@ content = HtmlContent(content)
 
 
 @if(currentAccountHasSA) {
+  @formHelper(action = routes.ReportSuspiciousIdController.continue) {
     <p class="govuk-body">@messages("reportSuspiciousId.sa.text1") </p>
     <br>
     @govukButton(Button(
-    content = Text(messages("common.continue")),
-    href = Some("?")
-    ))
-}
-
+        preventDoubleClick = true,
+        content = Text(messages("common.continue")),
+        )
+      )
+    }
+  }
 }

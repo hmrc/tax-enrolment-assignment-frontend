@@ -27,17 +27,20 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.InvalidUserType
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REDIRECT_URL
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTAfterReportingFraud
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{
+  EnrolledForPTPage,
+  EnrolledForPTWithSAOnOtherAccount
+}
 
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class EnrolledAfterReportingFraudController @Inject()(
+class EnrolledPTWithSAOnOtherAccountController @Inject()(
   authAction: AuthAction,
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
   sessionCache: TEASessionCache,
   mcc: MessagesControllerComponents,
-  enrolledForPTAfterReportingFraud: EnrolledForPTAfterReportingFraud
+  enrolledForPTPage: EnrolledForPTWithSAOnOtherAccount
 )(implicit ec: ExecutionContext, appConfig: AppConfig)
     extends FrontendController(mcc)
     with I18nSupport {
@@ -45,14 +48,18 @@ class EnrolledAfterReportingFraudController @Inject()(
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
   def view(): Action[AnyContent] = authAction.async { implicit request =>
-    multipleAccountsOrchestrator.getDetailsForEnrolledAfterReportingFraud.value
-      .map {
-        case Right(accountDetails) =>
-          Ok(enrolledForPTAfterReportingFraud(accountDetails.userId))
-        case Left(InvalidUserType(redirectUrl)) if redirectUrl.isDefined =>
-          Redirect(routes.AccountCheckController.accountCheck(redirectUrl.get))
-        case Left(_) => InternalServerError
-      }
+    val res = for {
+      currentAccount <- multipleAccountsOrchestrator.getDetailsForEnrolledPTWithSAOnOtherAccount
+      optSAAccount <- multipleAccountsOrchestrator.getSACredentialIfNotFraud
+    } yield (currentAccount.userId, optSAAccount.map(_.userId))
+
+    res.value.map {
+      case Right((currentUserId, optSAUserId)) =>
+        Ok(enrolledForPTPage(currentUserId, optSAUserId))
+      case Left(InvalidUserType(redirectUrl)) if redirectUrl.isDefined =>
+        Redirect(routes.AccountCheckController.accountCheck(redirectUrl.get))
+      case Left(_) => InternalServerError
+    }
   }
 
   def continue: Action[AnyContent] = authAction.async { implicit request =>

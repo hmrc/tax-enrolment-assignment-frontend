@@ -28,18 +28,18 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REDIRECT_URL
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.LandingPage
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTPage
 
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class LandingPageController @Inject()(
+class EnrolledForPTController @Inject()(
   authAction: AuthAction,
   mcc: MessagesControllerComponents,
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
   sessionCache: TEASessionCache,
   logger: EventLoggerService,
-  landingPageView: LandingPage
+  enrolledForPTPage: EnrolledForPTPage
 )(implicit ec: ExecutionContext)
     extends FrontendController(mcc)
     with I18nSupport {
@@ -50,7 +50,7 @@ class LandingPageController @Inject()(
     multipleAccountsOrchestrator.getDetailsForLandingPage.value.map {
       case Right(accountDetails) =>
         Ok(
-          landingPageView(
+          enrolledForPTPage(
             accountDetails.userId,
             accountDetails.hasSA.getOrElse(false)
           )

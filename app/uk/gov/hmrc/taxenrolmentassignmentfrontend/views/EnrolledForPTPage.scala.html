@@ -25,23 +25,23 @@
 
 @(userId: String, hasSA: Boolean)(implicit request: Request[AnyRef], messages: Messages)
 
-@layout(pageTitle = Some(messages("landingPage.title"))) {
+@layout(pageTitle = Some(messages("enrolledForPT.title"))) {
 
- <h2 class="govuk-heading-xl">@messages("landingPage.heading")</h2>
- <p class="govuk-body">@messages("landingPage.paragraph1", userId)</p>
- <p class="govuk-body">@messages("landingPage.paragraph2")</p>
+ <h2 class="govuk-heading-xl">@messages("enrolledForPT.heading")</h2>
+ <p class="govuk-body">@messages("enrolledForPT.paragraph1", userId)</p>
+ <p class="govuk-body">@messages("enrolledForPT.paragraph2")</p>
 
  @if(hasSA) {
-  <p class="govuk-body">@messages("landingPage.paragraphSA")</p>
+  <p class="govuk-body">@messages("enrolledForPT.paragraphSA")</p>
  }
 
- <h3 class="govuk-heading-m">@messages("landingPage.heading2")</h3>
- <p class="govuk-body">@messages("landingPage.paragraph3")</p>
+ <h3 class="govuk-heading-m">@messages("enrolledForPT.heading2")</h3>
+ <p class="govuk-body">@messages("enrolledForPT.paragraph3")</p>
 
- @formHelper(action = routes.LandingPageController.continue) {
+ @formHelper(action = routes.EnrolledForPTController.continue) {
   @govukButton(Button(
    preventDoubleClick = true,
-   content = Text(messages("landingPage.continue"))
+   content = Text(messages("enrolledForPT.continue"))
   ))
  }
 }

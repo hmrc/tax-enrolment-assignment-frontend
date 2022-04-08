@@ -28,33 +28,33 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUs
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{
-  EnrolledAfterReportingFraudController,
+  EnrolledForPTController,
   testOnly
 }
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
   InvalidUserType,
   UnexpectedResponseFromUsersGroupSearch
 }
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTAfterReportingFraud
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTPage
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class EnrolledAfterReportingFraudControllerSpec extends TestFixture {
+class EnrolledForPTControllerSpec extends TestFixture {
 
-  val view: EnrolledForPTAfterReportingFraud =
-    app.injector.instanceOf[EnrolledForPTAfterReportingFraud]
+  val view: EnrolledForPTPage = app.injector.instanceOf[EnrolledForPTPage]
 
-  val controller = new EnrolledAfterReportingFraudController(
+  val controller = new EnrolledForPTController(
     mockAuthAction,
+    mcc,
     mockMultipleAccountsOrchestrator,
     mockTeaSessionCache,
-    mcc,
+    logger,
     view
   )
 
   "view" when {
-    "the user has enrolled for PT after reporting fraud" should {
-      "render the EnroledForPTAfterReportingFraud page" in {
+    "the user has multiple accounts and is signed in with one with SA" should {
+      "render the landing page" in {
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -70,7 +70,7 @@ class EnrolledAfterReportingFraudControllerSpec extends TestFixture {
           )
 
         (mockMultipleAccountsOrchestrator
-          .getDetailsForEnrolledAfterReportingFraud(
+          .getDetailsForLandingPage(
             _: RequestWithUserDetails[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
@@ -84,11 +84,44 @@ class EnrolledAfterReportingFraudControllerSpec extends TestFixture {
         status(result) shouldBe OK
         Jsoup
           .parse(contentAsString(result))
-          .title() shouldBe "enrolledPTAfterReportingFraud.title"
+          .title() shouldBe "enrolledForPT.title"
       }
     }
 
-    "the user is the wrong usertype and has redirectUrl stored in session" should {
+    "the user has multiple accounts and none have SA" should {
+      "render the landing page" in {
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ]
+            ]
+          )(_: HeaderCarrier, _: ExecutionContext))
+          .expects(predicates, retrievals, *, *)
+          .returning(Future.successful(retrievalResponse()))
+
+        (mockMultipleAccountsOrchestrator
+          .getDetailsForLandingPage(
+            _: RequestWithUserDetails[AnyContent],
+            _: HeaderCarrier,
+            _: ExecutionContext
+          ))
+          .expects(*, *, *)
+          .returning(createInboundResult(accountDetails))
+
+        val result = controller.view
+          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+
+        status(result) shouldBe OK
+        Jsoup
+          .parse(contentAsString(result))
+          .title() shouldBe "enrolledForPT.title"
+      }
+    }
+
+    "the user is not a  multiple accounts usertype and has redirectUrl stored in session" should {
       "redirect to accountCheck" in {
         (mockAuthConnector
           .authorise(
@@ -103,7 +136,7 @@ class EnrolledAfterReportingFraudControllerSpec extends TestFixture {
           .returning(Future.successful(retrievalResponse()))
 
         (mockMultipleAccountsOrchestrator
-          .getDetailsForEnrolledAfterReportingFraud(
+          .getDetailsForLandingPage(
             _: RequestWithUserDetails[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
@@ -127,7 +160,7 @@ class EnrolledAfterReportingFraudControllerSpec extends TestFixture {
       }
     }
 
-    "the user is the wrong usertype and has no redirectUrl stored in session" should {
+    "the user is not a  multiple accounts usertype and has no redirectUrl stored in session" should {
       "return INTERNAL_SERVER_ERROR" in {
         (mockAuthConnector
           .authorise(
@@ -142,7 +175,7 @@ class EnrolledAfterReportingFraudControllerSpec extends TestFixture {
           .returning(Future.successful(retrievalResponse()))
 
         (mockMultipleAccountsOrchestrator
-          .getDetailsForEnrolledAfterReportingFraud(
+          .getDetailsForLandingPage(
             _: RequestWithUserDetails[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
@@ -172,7 +205,7 @@ class EnrolledAfterReportingFraudControllerSpec extends TestFixture {
           .returning(Future.successful(retrievalResponse()))
 
         (mockMultipleAccountsOrchestrator
-          .getDetailsForEnrolledAfterReportingFraud(
+          .getDetailsForLandingPage(
             _: RequestWithUserDetails[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext

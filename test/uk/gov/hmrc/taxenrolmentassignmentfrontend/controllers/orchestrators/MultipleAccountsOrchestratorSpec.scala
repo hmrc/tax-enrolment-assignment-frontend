@@ -39,6 +39,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
   InvalidUserType,
   TaxEnrolmentAssignmentErrors
 }
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -192,7 +193,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
     }
   }
 
-  s"getDetailsForEnroledAfterReportingFraud" when {
+  s"getDetailsForEnrolledPTWithSAOnOtherAccount" when {
     s"the accountType SA_ASSIGNED_TO_OTHER_USER is and redirectUrl are available in the cache" should {
       "return the userdetails for the account" in {
         (mockTeaSessionCache
@@ -224,7 +225,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
           .expects(CREDENTIAL_ID, *, *, *)
           .returning(createInboundResult(accountDetails))
 
-        val res = orchestrator.getDetailsForEnrolledAfterReportingFraud
+        val res = orchestrator.getDetailsForEnrolledPTWithSAOnOtherAccount
         whenReady(res.value) { result =>
           result shouldBe Right(accountDetails)
         }
@@ -259,7 +260,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
               )
             )
 
-          val res = orchestrator.getDetailsForEnrolledAfterReportingFraud
+          val res = orchestrator.getDetailsForEnrolledPTWithSAOnOtherAccount
           whenReady(res.value) { result =>
             result shouldBe Left(
               InvalidUserType(
@@ -288,7 +289,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
             .expects("redirectURL", *, *)
             .returning(Future.successful(None))
 
-          val res = orchestrator.getDetailsForEnrolledAfterReportingFraud
+          val res = orchestrator.getDetailsForEnrolledPTWithSAOnOtherAccount
           whenReady(res.value) { result =>
             result shouldBe Left(InvalidUserType(None))
           }
@@ -314,7 +315,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
           .expects("redirectURL", *, *)
           .returning(Future.successful(None))
 
-        val res = orchestrator.getDetailsForEnrolledAfterReportingFraud
+        val res = orchestrator.getDetailsForEnrolledPTWithSAOnOtherAccount
         whenReady(res.value) { result =>
           result shouldBe Left(InvalidUserType(None))
         }
@@ -403,6 +404,113 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
                 )
               }
             }
+          }
+        }
+      }
+    }
+  }
+
+  "getSACredentialIfNotFraud" when {
+    "the user has reported fraud" should {
+      "return None" in {
+        (mockTeaSessionCache
+          .getEntry(_: String)(
+            _: RequestWithUserDetails[AnyContent],
+            _: Format[Boolean]
+          ))
+          .expects("reportedFraud", *, *)
+          .returning(Future.successful(Some(true)))
+
+        val res = orchestrator.getSACredentialIfNotFraud
+
+        whenReady(res.value) { result =>
+          result shouldBe Right(None)
+        }
+      }
+    }
+
+    "the user has not reported fraud" should {
+      "return the account details for the SA user" when {
+        "the sa user is available in the cache" in {
+          (mockTeaSessionCache
+            .getEntry(_: String)(
+              _: RequestWithUserDetails[AnyContent],
+              _: Format[Boolean]
+            ))
+            .expects("reportedFraud", *, *)
+            .returning(Future.successful(None))
+
+          (mockTeaSessionCache
+            .getEntry(_: String)(
+              _: RequestWithUserDetails[AnyContent],
+              _: Format[UsersAssignedEnrolment]
+            ))
+            .expects("USER_ASSIGNED_SA_ENROLMENT", *, *)
+            .returning(Future.successful(Some(UsersAssignedEnrolment1)))
+
+          (mockUsersGroupService
+            .getAccountDetails(_: String)(
+              _: ExecutionContext,
+              _: HeaderCarrier,
+              _: RequestWithUserDetails[AnyContent]
+            ))
+            .expects(CREDENTIAL_ID_1, *, *, *)
+            .returning(createInboundResult(accountDetails))
+
+          val res = orchestrator.getSACredentialIfNotFraud
+
+          whenReady(res.value) { result =>
+            result shouldBe Right(Some(accountDetails))
+          }
+        }
+      }
+
+      "return None" when {
+        "the sa user in the cache is empty" in {
+          (mockTeaSessionCache
+            .getEntry(_: String)(
+              _: RequestWithUserDetails[AnyContent],
+              _: Format[Boolean]
+            ))
+            .expects("reportedFraud", *, *)
+            .returning(Future.successful(None))
+
+          (mockTeaSessionCache
+            .getEntry(_: String)(
+              _: RequestWithUserDetails[AnyContent],
+              _: Format[UsersAssignedEnrolment]
+            ))
+            .expects("USER_ASSIGNED_SA_ENROLMENT", *, *)
+            .returning(Future.successful(Some(UsersAssignedEnrolmentEmpty)))
+
+          val res = orchestrator.getSACredentialIfNotFraud
+
+          whenReady(res.value) { result =>
+            result shouldBe Right(None)
+          }
+        }
+
+        "the cache is empty" in {
+          (mockTeaSessionCache
+            .getEntry(_: String)(
+              _: RequestWithUserDetails[AnyContent],
+              _: Format[Boolean]
+            ))
+            .expects("reportedFraud", *, *)
+            .returning(Future.successful(None))
+
+          (mockTeaSessionCache
+            .getEntry(_: String)(
+              _: RequestWithUserDetails[AnyContent],
+              _: Format[UsersAssignedEnrolment]
+            ))
+            .expects("USER_ASSIGNED_SA_ENROLMENT", *, *)
+            .returning(Future.successful(None))
+
+          val res = orchestrator.getSACredentialIfNotFraud
+
+          whenReady(res.value) { result =>
+            result shouldBe Right(None)
           }
         }
       }

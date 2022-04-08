@@ -95,7 +95,7 @@ class AccountCheckController @Inject()(
         logger.logEvent(
           logMultipleAccountHolderAssignedEnrolment(request.userDetails.credId)
         )
-        Redirect(routes.LandingPageController.view)
+        Redirect(routes.EnrolledForPTController.view)
       case false =>
         Ok(
           errorView(

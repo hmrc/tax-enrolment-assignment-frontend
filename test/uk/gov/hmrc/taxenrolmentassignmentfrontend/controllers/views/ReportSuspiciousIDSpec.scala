@@ -20,7 +20,10 @@ import play.api.test.FakeRequest
 import play.twirl.api.HtmlFormat
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.messages.ReportSuspiciousIDMessages
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
+  AccountDetails,
+  MFADetails
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.ReportSuspiciousID
 
 class ReportSuspiciousIDSpec extends TestFixture {
@@ -38,9 +41,7 @@ class ReportSuspiciousIDSpec extends TestFixture {
     val links = "govuk-link"
   }
 
-  val mfaDetails = Seq(
-    MFADetails("Text message", "07390328923")
-  )
+  val mfaDetails = Seq(MFADetails("Text message", "07390328923"))
 
   val accountDetails = AccountDetails(
     "********3214",
@@ -53,7 +54,7 @@ class ReportSuspiciousIDSpec extends TestFixture {
     reportSuspiciousIdView(accountDetails)(FakeRequest(), testMessages)
 
   val resultSA: HtmlFormat.Appendable =
-    reportSuspiciousIdView(accountDetails,true)(FakeRequest(), testMessages)
+    reportSuspiciousIdView(accountDetails, true)(FakeRequest(), testMessages)
 
   "The Report suspicious ID Page" should {
     "have a back link" that {
@@ -67,11 +68,13 @@ class ReportSuspiciousIDSpec extends TestFixture {
       doc(result).title shouldBe ReportSuspiciousIDMessages.title
     }
     "contains the correct heading" in {
-      doc(result).getElementsByClass(Selectors.heading)
+      doc(result)
+        .getElementsByClass(Selectors.heading)
         .text() shouldBe ReportSuspiciousIDMessages.heading
     }
     "contains a suspicious userId summary details" that {
-      val suspiciousIdDetailsRows = doc(result).getElementsByClass(Selectors.summaryListRow)
+      val suspiciousIdDetailsRows =
+        doc(result).getElementsByClass(Selectors.summaryListRow)
       "includes the userId field with correct value" in {
         suspiciousIdDetailsRows
           .get(0)
@@ -117,7 +120,8 @@ class ReportSuspiciousIDSpec extends TestFixture {
     "contains a valid paragraph for downloading the suspicious details along with download link" in {
       val paragraph = doc(result).select("p." + Selectors.body)
 
-      paragraph.get(0)
+      paragraph
+        .get(0)
         .text() shouldBe ReportSuspiciousIDMessages.paragraph1
 
       doc(result)
@@ -129,20 +133,24 @@ class ReportSuspiciousIDSpec extends TestFixture {
     "contains the contact UK telephone details " in {
       val telephoneBlock = doc(result).select("#telephone dt")
 
-      telephoneBlock.get(0)
+      telephoneBlock
+        .get(0)
         .text() shouldBe ReportSuspiciousIDMessages.telephone(0)
 
-      telephoneBlock.get(1)
+      telephoneBlock
+        .get(1)
         .text() shouldBe ReportSuspiciousIDMessages.telephone(1)
     }
 
     "contains the outside UK contact details " in {
       val outsideUKBlock = doc(result).select("#outsideUk-telephone dt")
 
-      outsideUKBlock.get(0)
+      outsideUKBlock
+        .get(0)
         .text() shouldBe ReportSuspiciousIDMessages.outsideUK(0)
 
-      outsideUKBlock.get(1)
+      outsideUKBlock
+        .get(1)
         .text() shouldBe ReportSuspiciousIDMessages.outsideUK(1)
     }
 
@@ -173,22 +181,31 @@ class ReportSuspiciousIDSpec extends TestFixture {
 
     "not display the continue button when no SA identified" in {
       doc(result)
-        .body().text().contains(ReportSuspiciousIDMessages.saPText) shouldBe false
+        .body()
+        .text()
+        .contains(ReportSuspiciousIDMessages.saPText) shouldBe false
 
-      doc(result).select(".govuk-button")
+      doc(result)
+        .select(".govuk-button")
         .size() shouldBe 0
     }
 
-    "should only display the continue button when SA identified" in {
-      doc(resultSA)
-        .select("p." + Selectors.body)
-        .get(4)
-        .text() shouldBe ReportSuspiciousIDMessages.saPText
+    "should only display the continue button when SA identified" that {
+      "has the expected text" in {
+        doc(resultSA)
+          .select("p." + Selectors.body)
+          .get(4)
+          .text() shouldBe ReportSuspiciousIDMessages.saPText
 
-      doc(resultSA)
-        .getElementsByClass("govuk-button").text shouldBe ReportSuspiciousIDMessages.button
+        doc(resultSA)
+          .getElementsByClass("govuk-button")
+          .text shouldBe ReportSuspiciousIDMessages.button
+      }
     }
-
-
+    "contains a form with the correct action" in {
+      doc(resultSA)
+        .select("form")
+        .attr("action") shouldBe ReportSuspiciousIDMessages.action
+    }
   }
 }

@@ -25,16 +25,18 @@ object EnrolledAfterReportingFraudMessages {
     "You are currently signed in with the Government Gateway user ID ********3214." +
       " This is now the only user ID that can access your personal tax account." +
       " Please keep the details of this user ID safe." +
-      " To protect your personal tax account," +
-      " your current user ID is now the only user ID that can access it." +
-      " Please keep the details of this user ID safe." +
-      " If you have not done so, it is still important you call the helpline as soon as possible to report the suspicious ID." +
       " If you have any other Government Gateway user IDs," +
       " they will lose access to your personal tax account."
-  val heading2: String = "Reporting the suspicious user ID"
-  val heading3: String =
+  val paragraphsSA: String =
+    "You are currently signed in with the Government Gateway user ID ********3214." +
+      " This is now the only user ID that can access your personal tax account." +
+      " Please keep the details of this user ID safe. " +
+      "To access Self Assessment you will need to log in with the user ID ********3215." +
+      " If you have any other Government Gateway user IDs," +
+      " they will lose access to your personal tax account."
+  val heading2: String =
     "What has happened to my other Government Gateway user IDs?"
   val button = "Continue"
   val action =
-    "/tax-enrolment-assignment-frontend/enrol-pt/enrol-current-user-id-after-reporting"
+    "/tax-enrolment-assignment-frontend/enrol-pt/enrolment-success-sa-access-not-wanted"
 }

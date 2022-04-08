@@ -22,7 +22,7 @@ object ContinueWithCurrentIdMessages {
   val paragraph1 = "You are currently signed in with the Government Gateway user ID testCurrentId."
   val paragraph2 = "This is now the only user ID that can access your personal tax account. Please keep the details of this user ID safe."
   val heading2 = "What has happened to my other Government Gateway user IDs?"
-  val paragraph3 = "To access Self Assessment you will need to log in with the user ID Some(TestSAId)."
+  val paragraph3 = "To access Self Assessment you will need to log in with the user ID TestSAId."
   val paragraph4 = "If you have any other Government Gateway user IDs, they will lose access to your personal tax account."
   val button = "Continue"
 }

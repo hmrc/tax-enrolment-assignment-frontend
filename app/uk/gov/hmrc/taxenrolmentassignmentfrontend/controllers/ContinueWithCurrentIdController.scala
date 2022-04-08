@@ -31,7 +31,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class ContinueWithCurrentIdController @Inject()(
                                         authAction: AuthAction,
                                         mcc: MessagesControllerComponents,
-                                        continueWithCurrentIdPage: ContinueWithCurrentId,
+                                        continueWithCurrentIdPage: ContinueWithCurrentId
                                       )(implicit ec: ExecutionContext)
   extends FrontendController(mcc) with Logging with I18nSupport {
 

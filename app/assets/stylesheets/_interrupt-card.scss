@@ -1,0 +1,60 @@
+/* Interrupt Card */
+
+.interrupt-card {
+    width:100%;
+    padding:30px;
+    background:#005ea5;
+    color:#fff;
+    box-sizing: border-box;
+}
+
+.interrupt-card * {
+  color: #fff;
+}
+
+.interrupt-card-p  {
+  color: #fff;
+}
+
+.interrupt-card h1 {
+  color: #fff;
+}
+
+.interrupt-card li {
+  font-size: 30px;
+}
+
+.interrupt-card a {
+  color: #fff;
+}
+
+.interrupt-card a:focus {
+  color: #0b0c0c;
+}
+
+.interrupt-card .actions {
+  margin-top: 30px;
+}
+
+.interrupt-card .actions .govuk-button {
+     background: #fff;
+     color: #000;
+}
+
+@media (max-width: 830px) {
+  .interrupt-card .column-two-thirds {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .interrupt-card li, .interrupt-card p, .interrupt-card a {
+    font-size: inherit;
+  }
+}
+
+@media (max-width: 475px) {
+  .interrupt-card {
+    padding: 20px 10px;
+  }
+}

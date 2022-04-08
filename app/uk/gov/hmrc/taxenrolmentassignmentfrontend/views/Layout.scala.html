@@ -20,15 +20,22 @@
 
 @this(
         appConfig: AppConfig,
-        hmrcLayout: HmrcLayout
+        hmrcLayout: HmrcLayout,
+        defaultMainContent: TwoThirdsMainContent
 )
-@(pageTitle: Option[String] = None, optBackLinkUrl: Option[String] = None)(contentBlock: Html)(implicit request: Request[_], messages: Messages)
+@(pageTitle: Option[String] = None, optBackLinkUrl: Option[String] = None, mainLayout: Option[Html => Html] = Some(defaultMainContent(_)))(contentBlock: Html)(implicit request: Request[_], messages: Messages)
+
+@headBlock = {
+<link rel="stylesheet" type="text/css" href='@routes.Assets.versioned("stylesheets/application.css")'>
+}
 
 @hmrcLayout(
+ additionalHeadBlock = Some(headBlock),
  pageTitle = pageTitle,
  nonce = CSPNonce.get,
  serviceName = Some(messages("service.name")),
  isWelshTranslationAvailable = appConfig.welshLanguageSupportEnabled,
  backLinkUrl = optBackLinkUrl,
- signOutUrl = Some(appConfig.signOutUrl)
+ signOutUrl = Some(appConfig.signOutUrl),
+ mainContentLayout = mainLayout
 )(contentBlock)

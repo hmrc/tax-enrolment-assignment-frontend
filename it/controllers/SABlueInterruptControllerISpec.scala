@@ -25,7 +25,7 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
 
   val teaHost = s"localhost:$port"
   val urlPath =
-    s"/sa-enrolment-other-account/introduction"
+    s"/enrol-pt/other-user-id-has-sa"
 
   s"GET $urlPath" when {
     "a user has an SA Enrolment associated to the credentials on another account" should {

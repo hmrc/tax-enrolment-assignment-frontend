@@ -10,5 +10,5 @@ GET        /enrol-pt/enrolment-success      uk.gov.hmrc.taxenrolmentassignmentfr
 GET        /logout                  uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignOutController.signOut()
 GET        /enrol-pt/sign-in-again          uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignInAgainController.view
 GET        /pt-enrolment-other-account   uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.PTEnrolmentOnOtherAccountController.view
-GET        /sa-enrolment-other-account/introduction   uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SABlueInterruptController.view
+GET        /enrol-pt/other-user-id-has-sa   uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SABlueInterruptController.view
 GET        /assets/*file            controllers.Assets.versioned(path = "/public", file: Asset)

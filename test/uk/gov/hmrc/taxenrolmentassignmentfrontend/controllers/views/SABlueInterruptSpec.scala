@@ -34,15 +34,15 @@ class SABlueInterruptSpec extends TestFixture {
       }
 
       "contain the correct header" in {
-        doc(result).getElementsByClass("interrupt-card h1").text shouldBe SABlueInterruptMessages.selfAssessHeading
+        doc(result).getElementsByClass("govuk-heading-xl").text shouldBe SABlueInterruptMessages.selfAssessHeading
       }
 
       "contain the correct paragraph" in {
-        doc(result).getElementsByClass("interrupt-card-p").text shouldBe SABlueInterruptMessages.selfAssessParagraph
+        doc(result).getElementsByClass("govuk-body").text shouldBe SABlueInterruptMessages.selfAssessParagraph
       }
 
       "contain the correct button" in {
-        doc(result).getElementsByClass("govuk-button").text shouldBe SABlueInterruptMessages.selfAssessButton
+        doc(result).getElementsByClass("actions").text shouldBe SABlueInterruptMessages.selfAssessButton
       }
     }
   }

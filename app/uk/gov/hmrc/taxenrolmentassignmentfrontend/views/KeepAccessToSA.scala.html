@@ -1,0 +1,86 @@
+@*
+ * Copyright 2022 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
+@import uk.gov.hmrc.govukfrontend.views.html.components._
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.Layout
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
+
+@this(
+    layout: Layout,
+    formHelper: FormWithCSRF,
+    govukRadios : GovukRadios,
+    govukErrorSummary: GovukErrorSummary,
+    govukWarningText : GovukWarningText,
+    govukButton: GovukButton
+)
+
+@(form: Form[KeepAccessToSAThroughPTA])(implicit request: Request[AnyRef], messages: Messages)
+
+@formError = @{form.errors.map(_.message).headOption}
+
+@layout(
+    pageTitle = Some(messages("keepAccessToSA.title"))) {
+
+    @formHelper(action = routes.KeepAccessToSAController.continue) {
+        @if(formError.isDefined) {
+            @govukErrorSummary(ErrorSummary(
+              errorList = Seq(
+              ErrorLink(
+                href = Some("#select-continue"),
+                content = Text(messages(formError.get))
+              )
+            ),
+            title = Text(messages("validation.summary.heading")),
+            attributes = Map("id" -> "errors")
+            ))
+        }
+
+        @govukRadios(Radios(
+            fieldset = Some(Fieldset(
+              legend = Some(Legend(
+                content = Text(messages("keepAccessToSA.heading")),
+                classes = "govuk-fieldset__legend--l",
+                isPageHeading = true
+              ))
+            )),
+            errorMessage = formError.map(error => ErrorMessage(
+              content = Text(messages(error))
+            )),
+            idPrefix = Some("select-continue"),
+            name = "select-continue",
+            items = Seq(
+              RadioItem(
+                content = Text(messages("keepAccessToSA.radio.yes")),
+                value = Some("yes"),
+                checked = form("keepAccessToSAThroughPTA").value.contains("yes")
+              ),
+              RadioItem(
+                content = Text(messages("keepAccessToSA.radio.no")),
+                value = Some("no"),
+                checked = form("keepAccessToSAThroughPTA").value.contains("no")
+              )
+            )
+        ))
+
+        <p class="govuk-body govuk-!-margin-bottom-6">
+            <a class="govuk-link--no-visited-state" href="@routes.ReportSuspiciousIdController.view">@messages("keepAccessToSA.noSA")</a>
+        </p>
+        @govukButton(Button(
+          content = Text(messages("common.continue"))
+        ))
+    }
+}

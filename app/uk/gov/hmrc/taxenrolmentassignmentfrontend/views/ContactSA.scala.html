@@ -39,57 +39,59 @@ govukButton: GovukButton)
 }
 
 @content = {
-<p class="govuk-body">@messages("reportSuspiciousId.detailsComponent.text1")</p>
-<p class="govuk-body">@messages("reportSuspiciousId.detailsComponent.text2")
-<a href="https://www.relayuk.bt.com/">@messages("reportSuspiciousId.detailsComponent.link")</a>
-@messages("reportSuspiciousId.detailsComponent.text3")</p>
-<p class="govuk-body">@messages("reportSuspiciousId.detailsComponent.text4")</p>
+<p class="govuk-body">@messages("contactSA.detailsComponent.text1")</p>
+<p class="govuk-body">@messages("contactSA.detailsComponent.text2")
+<a class = "govuk-link" target="_blank" href="https://www.relayuk.bt.com/">@messages("contactSA.detailsComponent.link")</a>
+@messages("contactSA.detailsComponent.text3")</p>
+<p class="govuk-body">@messages("contactSA.detailsComponent.text4")</p>
 }
 
 
 @layout(
-pageTitle = Some(messages("reportSuspiciousId.title")), Some("?")) {
+pageTitle = Some(messages("contactSA.title")), Some("?")) {
 
-<h1 class="govuk-heading-xl">@{messages(s"reportSuspiciousId.heading")}</h1>
+<h1 class="govuk-heading-xl">@{messages(s"contactSA.heading")}</h1>
+
+<p class="govuk-body">
+    @messages("contactSA.text1")
+    @messages("contactSA.text2")
+</p>
+
 <dl class="govuk-summary-list">
 
-    @createRowWith(messages("reportSuspiciousId.userId"), ptAccountDetails.userId)
-    @createRowWith(messages("reportSuspiciousId.email"), ptAccountDetails.email.get)
-    @createRowWith(messages("reportSuspiciousId.lastSignedIn"), ptAccountDetails.lastLoginDate)
+    @createRowWith(messages("contactSA.userId"), ptAccountDetails.userId)
+    @createRowWith(messages("contactSA.email"), ptAccountDetails.email.get)
 
     @for(mfaDetail <- ptAccountDetails.mfaDetails) {
     @createRowWith(mfaDetail.factorName, mfaDetail.factorValue)
     }
 </dl>
 
-<p class="govuk-body">@messages("reportSuspiciousId.text1")
-    <a href="javascript:window.print()" class="govuk-link"> @messages("reportSuspiciousId.text2")</a>
-    @messages("reportSuspiciousId.text3")
-</p>
+
 
 <dl id="telephone" class="govuk-list">
-    <dt>@messages("reportSuspiciousId.telephone.title")</dt>
-    <dt class="govuk-!-font-weight-bold">@messages("reportSuspiciousId.telephone.number")</dt>
+    <dt>@messages("contactSA.telephone.title")</dt>
+    <dt class="govuk-!-font-weight-bold">@messages("contactSA.telephone.number")</dt>
 </dl>
 
 <dl id="outsideUk-telephone" class="govuk-list">
-    <dt>@messages("reportSuspiciousId.outsideUK.title")</dt>
-    <dt class="govuk-!-font-weight-bold">@messages("reportSuspiciousId.outsideUK.number")</dt>
+    <dt>@messages("contactSA.outsideUK.title")</dt>
+    <dt class="govuk-!-font-weight-bold">@messages("contactSA.outsideUK.number")</dt>
 </dl>
 
 @govukDetails(Details(
-summary = Text(messages("reportSuspiciousId.detailsComponent.title")),
+summary = Text(messages("contactSA.detailsComponent.title")),
 content = HtmlContent(content)
 ))
 
-
 @if(currentAccountHasSA) {
-    <p class="govuk-body">@messages("reportSuspiciousId.sa.text1") </p>
-    <br>
-    @govukButton(Button(
-    content = Text(messages("common.continue")),
-    href = Some("?")
-    ))
+<p class="govuk-body">@messages("contactSA.sa.text1") </p>
+<br>
+@govukButton(Button(
+content = Text(messages("common.continue")),
+href = Some("?")
+))
 }
+
 
 }

@@ -323,7 +323,7 @@ object TestITData {
   val landingPageTitle =
     "Only your current user ID can access your personal tax account from now on"
   val ptEnroledOnOtherAccountPageTitle =
-    "We have found your personal tax information under a different Government Gateway user ID"
+    "We have found your personal tax account under a different Government Gateway user ID"
 
   val userDetailsNoEnrolments =
     UserDetailsFromSession(

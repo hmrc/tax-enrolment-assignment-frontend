@@ -21,15 +21,15 @@ import helpers.TestITData._
 import helpers.WiremockHelper._
 import play.api.http.Status
 
-class ReportSuspiciousIdControllerISpec extends IntegrationSpecBase with Status {
+class ContactSAControllerISpec extends IntegrationSpecBase with Status {
 
   val teaHost = s"localhost:$port"
   val urlPath =
-    s"/enrol-pt/report-suspicious-id"
+    s"/enrol-pt/contact-hmrc-sa"
 
   s"GET $urlPath" when {
     "the user is authorised" should {
-      s"return 200 and render the report suspicious ID page" in {
+      s"return 200 and render the contact SA page" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -40,7 +40,7 @@ class ReportSuspiciousIdControllerISpec extends IntegrationSpecBase with Status 
         whenReady(res) { resp =>
           resp.status shouldBe OK
           resp.body should include(
-            "Report a suspicious user ID"
+            "You need to contact us"
           )
         }
       }

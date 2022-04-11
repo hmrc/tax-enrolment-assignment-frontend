@@ -19,14 +19,14 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.views
 import play.api.test.FakeRequest
 import play.twirl.api.HtmlFormat
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.messages.ReportSuspiciousIDMessages
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.messages.ContactSAMessages
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.ReportSuspiciousID
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.ContactSA
 
-class ReportSuspiciousIDSpec extends TestFixture {
+class ContactSASpec extends TestFixture {
 
-  val reportSuspiciousIdView: ReportSuspiciousID =
-    app.injector.instanceOf[ReportSuspiciousID]
+  val reportSuspiciousIdView: ContactSA =
+    app.injector.instanceOf[ContactSA]
 
   object Selectors {
     val backLink = "govuk-back-link"
@@ -43,7 +43,7 @@ class ReportSuspiciousIDSpec extends TestFixture {
   )
 
   val accountDetails = AccountDetails(
-    "********3214",
+    "Ending with 4533",
     Some("email1@test.com"),
     "Yesterday",
     mfaDetails
@@ -64,11 +64,11 @@ class ReportSuspiciousIDSpec extends TestFixture {
       }
     }
     "contains the correct title" in {
-      doc(result).title shouldBe ReportSuspiciousIDMessages.title
+      doc(result).title shouldBe ContactSAMessages.title
     }
     "contains the correct heading" in {
       doc(result).getElementsByClass(Selectors.heading)
-        .text() shouldBe ReportSuspiciousIDMessages.heading
+        .text() shouldBe ContactSAMessages.heading
     }
     "contains a suspicious userId summary details" that {
       val suspiciousIdDetailsRows = doc(result).getElementsByClass(Selectors.summaryListRow)
@@ -92,58 +92,43 @@ class ReportSuspiciousIDSpec extends TestFixture {
           .getElementsByClass(Selectors.summaryListValue)
           .text() shouldBe accountDetails.email.get
       }
-      "includes the last signed in field with correct value" in {
-        suspiciousIdDetailsRows
-          .get(2)
-          .getElementsByClass(Selectors.summaryListKey)
-          .text() shouldBe "Last signed in"
-        suspiciousIdDetailsRows
-          .get(2)
-          .getElementsByClass(Selectors.summaryListValue)
-          .text() shouldBe accountDetails.lastLoginDate
-      }
       "includes the text message field with correct value" in {
         suspiciousIdDetailsRows
-          .get(3)
+          .get(2)
           .getElementsByClass(Selectors.summaryListKey)
           .text() shouldBe "Text message"
         suspiciousIdDetailsRows
-          .get(3)
+          .get(2)
           .getElementsByClass(Selectors.summaryListValue)
           .text() shouldBe accountDetails.mfaDetails.head.factorValue
       }
     }
 
-    "contains a valid paragraph for downloading the suspicious details along with download link" in {
+    "contains a valid paragraph details" in {
       val paragraph = doc(result).select("p." + Selectors.body)
 
       paragraph.get(0)
-        .text() shouldBe ReportSuspiciousIDMessages.paragraph1
-
-      doc(result)
-        .select("a." + Selectors.links)
-        .get(1)
-        .text() shouldBe ReportSuspiciousIDMessages.linkParagraphText
+        .text() shouldBe ContactSAMessages.paragraph1
     }
 
     "contains the contact UK telephone details " in {
       val telephoneBlock = doc(result).select("#telephone dt")
 
       telephoneBlock.get(0)
-        .text() shouldBe ReportSuspiciousIDMessages.telephone(0)
+        .text() shouldBe ContactSAMessages.telephone(0)
 
       telephoneBlock.get(1)
-        .text() shouldBe ReportSuspiciousIDMessages.telephone(1)
+        .text() shouldBe ContactSAMessages.telephone(1)
     }
 
     "contains the outside UK contact details " in {
       val outsideUKBlock = doc(result).select("#outsideUk-telephone dt")
 
       outsideUKBlock.get(0)
-        .text() shouldBe ReportSuspiciousIDMessages.outsideUK(0)
+        .text() shouldBe ContactSAMessages.outsideUK(0)
 
       outsideUKBlock.get(1)
-        .text() shouldBe ReportSuspiciousIDMessages.outsideUK(1)
+        .text() shouldBe ContactSAMessages.outsideUK(1)
     }
 
     "contains the details block with valid details with in" that {
@@ -153,42 +138,51 @@ class ReportSuspiciousIDSpec extends TestFixture {
       "correct title" in {
         doc(result)
           .select(".govuk-details__summary")
-          .text() shouldBe ReportSuspiciousIDMessages.informationBlock(0)
+          .text() shouldBe ContactSAMessages.informationBlock(0)
       }
       "correct information" in {
         detailsBlockParagraphs
           .get(0)
-          .text() shouldBe ReportSuspiciousIDMessages.informationBlock(1)
+          .text() shouldBe ContactSAMessages.informationBlock(1)
         detailsBlockParagraphs
           .get(1)
-          .text() shouldBe ReportSuspiciousIDMessages.informationBlock(2)
+          .text() shouldBe ContactSAMessages.informationBlock(2)
         detailsBlockParagraphs
           .get(2)
-          .text() shouldBe ReportSuspiciousIDMessages.informationBlock(3)
+          .text() shouldBe ContactSAMessages.informationBlock(3)
+      }
+      "correct gov-uk link target and link text for Relay UK link" in {
+        doc(result)
+          .getElementsByClass(Selectors.links).get(1)
+          .attr("target") shouldBe "_blank"
+
         doc(result)
           .select("details a")
-          .text() shouldBe ReportSuspiciousIDMessages.detailBlockLink
+          .text() shouldBe ContactSAMessages.detailBlockLink
       }
     }
 
     "not display the continue button when no SA identified" in {
       doc(result)
-        .body().text().contains(ReportSuspiciousIDMessages.saPText) shouldBe false
+        .body().text().contains(ContactSAMessages.saPText) shouldBe false
 
       doc(result).select(".govuk-button")
         .size() shouldBe 0
     }
 
-    "should only display the continue button when SA identified" in {
+    "only display the continue button when SA identified" in {
       doc(resultSA)
         .select("p." + Selectors.body)
         .get(4)
-        .text() shouldBe ReportSuspiciousIDMessages.saPText
+        .text() shouldBe ContactSAMessages.saPText
 
       doc(resultSA)
-        .getElementsByClass("govuk-button").text shouldBe ReportSuspiciousIDMessages.button
+        .getElementsByClass("govuk-button").text shouldBe ContactSAMessages.button
     }
 
 
+
+
   }
+
 }

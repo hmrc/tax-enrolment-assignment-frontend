@@ -12,7 +12,8 @@ POST       /enrol-pt/enrolment-success-sa-access-not-wanted  uk.gov.hmrc.taxenro
 
 GET        /enrol-pt/enrolment-success      uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.CurrentIdConfirmationController.view
 GET        /logout                  uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignOutController.signOut()
-GET        /enrol-pt/sign-in-again          uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignInAgainController.view
+GET        /enrol-pt/sign-in-again              uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignInWithSAAccountController.view
+POST       /enrol-pt/sign-in-again              uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignInWithSAAccountController.continue
 GET        /no-pt-enrolment   uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.PTEnrolmentOnOtherAccountController.view
 GET        /no-pt-enrolment/contact-hmrc-pta  uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.ReportSuspiciousIDController.viewNoSA
 GET        /enrol-pt/other-user-id-has-sa   uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SABlueInterruptController.view

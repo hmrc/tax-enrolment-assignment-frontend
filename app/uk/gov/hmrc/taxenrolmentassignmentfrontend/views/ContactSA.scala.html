@@ -65,6 +65,8 @@ pageTitle = Some(messages("contactSA.title")), Some("?")) {
     @for(mfaDetail <- ptAccountDetails.mfaDetails) {
     @createRowWith(mfaDetail.factorName, mfaDetail.factorValue)
     }
+    @createRowWith(messages("contactSA.lastLoginDate"), ptAccountDetails.lastLoginDate)
+
 </dl>
 
 

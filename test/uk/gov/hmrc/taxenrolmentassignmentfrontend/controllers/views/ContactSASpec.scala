@@ -102,6 +102,17 @@ class ContactSASpec extends TestFixture {
           .getElementsByClass(Selectors.summaryListValue)
           .text() shouldBe accountDetails.mfaDetails.head.factorValue
       }
+      "includes the last signed in date" in {
+        suspiciousIdDetailsRows
+          .get(3)
+          .getElementsByClass(Selectors.summaryListKey)
+          .text() shouldBe "Last signed in"
+        suspiciousIdDetailsRows
+          .get(3)
+          .getElementsByClass(Selectors.summaryListValue)
+          .text() shouldBe accountDetails.lastLoginDate
+      }
+
     }
 
     "contains a valid paragraph details" in {

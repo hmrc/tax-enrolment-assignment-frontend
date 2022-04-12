@@ -20,6 +20,7 @@ contactSA.title = You need to contact us
 contactSA.heading = You need to contact us
 contactSA.userId = User ID
 contactSA.email = Email
+contactSA.lastLoginDate = Last signed in
 contactSA.text1 = This is so we can give you access to your personal tax account.
 contactSA.text2 = We recommend you take a note of the user ID and email address below as this screen will time out after 15 minutes.
 contactSA.telephone.title = Telephone:

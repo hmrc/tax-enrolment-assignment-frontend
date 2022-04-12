@@ -5,7 +5,7 @@ GET        /no-pt-enrolment   uk.gov.hmrc.taxenrolmentassignmentfrontend.control
 GET        /enrol-pt/introduction   uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.LandingPageController.view
 POST       /enrol-pt/introduction   uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.LandingPageController.continue
 GET        /enrol-pt/enrol-current-user-id  uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.EnrolCurrentUserController.view
-GET        /enrol-pt/report-suspicious-id  uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.ReportSuspiciousIdController.view
+GET        /enrol-pt/contact-hmrc-sa  uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.ReportSuspiciousIDController.view
 GET        /enrol-pt/enrolment-success      uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.CurrentIdConfirmationController.view
 GET        /logout                  uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignOutController.signOut()
 GET        /enrol-pt/sign-in-again          uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignInAgainController.view

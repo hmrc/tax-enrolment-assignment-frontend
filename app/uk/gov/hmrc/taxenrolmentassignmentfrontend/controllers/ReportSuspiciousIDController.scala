@@ -23,23 +23,19 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.EnrolCurrentUserIdForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REDIRECT_URL
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, UsersGroupSearchService}
+
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{PTEnrolmentOnAnotherAccount, ReportSuspiciousID}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ReportSuspiciousIdController @Inject()(
-                                              authAction: AuthAction,
-                                              mcc: MessagesControllerComponents,
-                                              logger: EventLoggerService,
-                                              reportSuspiciousId: ReportSuspiciousID
+class ReportSuspiciousIDController @Inject()(
+                                     authAction: AuthAction,
+                                     mcc: MessagesControllerComponents,
+                                     logger: EventLoggerService,
+                                     reportSuspiciousID: ReportSuspiciousID
                                             )(implicit ec: ExecutionContext, appConfig: AppConfig)
   extends FrontendController(mcc)
     with I18nSupport {
@@ -58,8 +54,8 @@ class ReportSuspiciousIdController @Inject()(
     )
 
     Future.successful(
-      Ok(reportSuspiciousId(
-        fixedAccountDetails, true
+      Ok(reportSuspiciousID(
+        fixedAccountDetails
       ))
     )
   }

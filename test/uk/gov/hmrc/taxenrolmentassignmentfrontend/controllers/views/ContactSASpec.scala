@@ -159,6 +159,10 @@ class ContactSASpec extends TestFixture {
         doc(result)
           .select("details a")
           .text() shouldBe ContactSAMessages.detailBlockLink
+
+        doc(result)
+          .select("details a")
+          .attr("href") shouldBe ContactSAMessages.relayUkLinkUrl
       }
     }
 

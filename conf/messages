@@ -32,6 +32,7 @@ contactSA.detailsComponent.text2 = You can also use
 contactSA.detailsComponent.text3 = if you cannot hear or speak on the phone: dial 18001 then 0300 200 3600.
 contactSA.detailsComponent.text4 = Calls are charged at standard local rates but may be free to call depending on your phone tariff.
 contactSA.detailsComponent.link = Relay UK (opens in new tab)
+contactSA.detailsComponent.link.href = https://www.relayuk.bt.com/
 contactSA.sa.text1 = You can continue to your personal tax account with the user ID you are currently signed in with.
 ptEnrolmentOnOtherAccount.title = We have found your personal tax account under a different Government Gateway user ID
 ptEnrolmentOnOtherAccount.heading = We have found your personal tax account under a different Government Gateway user ID

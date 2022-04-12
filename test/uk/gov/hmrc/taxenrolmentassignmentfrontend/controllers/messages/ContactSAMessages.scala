@@ -37,5 +37,6 @@ object ContactSAMessages {
 
   val saPText = "You can continue to your personal tax account with the user ID you are currently signed in with."
 
+  val relayUkLinkUrl = "https://www.relayuk.bt.com/"
 
 }

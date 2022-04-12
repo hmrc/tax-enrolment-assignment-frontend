@@ -40,8 +40,9 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnotherAccount
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class PTEnrolmentOnOtherAccountController @Inject()(
@@ -49,10 +50,12 @@ class PTEnrolmentOnOtherAccountController @Inject()(
   mcc: MessagesControllerComponents,
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
   ptEnrolmentOnAnotherAccountView: PTEnrolmentOnAnotherAccount,
-  logger: EventLoggerService
+  val logger: EventLoggerService,
+  val errorView: ErrorTemplate
 )(implicit ec: ExecutionContext, appConfig: AppConfig)
     extends FrontendController(mcc)
-    with I18nSupport {
+    with I18nSupport
+    with ControllerHelper {
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
@@ -75,14 +78,7 @@ class PTEnrolmentOnOtherAccountController @Inject()(
       case Left(InvalidUserType(redirectUrl)) if redirectUrl.isDefined =>
         Redirect(routes.AccountCheckController.accountCheck(redirectUrl.get))
       case Left(error) =>
-        logger.logEvent(
-          logUnexpectedErrorOccurred(
-            request.userDetails.credId,
-            "[PTEnrolmentOnOtherAccountController][view]",
-            error
-          )
-        )
-        InternalServerError
+        handleErrors(error, "[PTEnrolmentOnOtherAccountController][view]")
     }
   }
 }

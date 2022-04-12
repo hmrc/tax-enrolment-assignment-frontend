@@ -222,7 +222,7 @@ class ReportSuspiciousIdControllerSpec extends TestFixture {
     }
 
     "the user has not a redirect url in session" should {
-      "return INTERNAL_SERVER_ERROR" in {
+      "render the error page" in {
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -256,7 +256,8 @@ class ReportSuspiciousIdControllerSpec extends TestFixture {
           .continue()
           .apply(buildFakeRequestWithSessionId("POST", "Not Used"))
 
-        status(res) shouldBe INTERNAL_SERVER_ERROR
+        status(res) shouldBe OK
+        contentAsString(res) should include("enrolmentError.title")
       }
     }
   }

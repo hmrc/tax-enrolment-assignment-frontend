@@ -103,7 +103,7 @@ class EnrolledForPTISpec extends IntegrationSpecBase with Status {
       }
 
     "the session cache is empty" should {
-      "return Internal Server Error" in {
+      "render the error page" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -112,15 +112,14 @@ class EnrolledForPTISpec extends IntegrationSpecBase with Status {
           .get()
 
         whenReady(res) { resp =>
-          val page = Jsoup.parse(resp.body)
-
-          resp.status shouldBe INTERNAL_SERVER_ERROR
+          resp.status shouldBe OK
+          resp.body should include("Government Gateway")
         }
       }
     }
 
     "an authorised user with no credential uses the service" should {
-      s"return $INTERNAL_SERVER_ERROR" in {
+      s"render the error page" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -136,13 +135,14 @@ class EnrolledForPTISpec extends IntegrationSpecBase with Status {
           .get()
 
         whenReady(res) { resp =>
-          resp.status shouldBe INTERNAL_SERVER_ERROR
+          resp.status shouldBe OK
+          resp.body should include("Government Gateway")
         }
       }
     }
 
     "an authorised user but IV returns internal error" should {
-      s"return $INTERNAL_SERVER_ERROR" in {
+      s"render the error page" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -158,7 +158,8 @@ class EnrolledForPTISpec extends IntegrationSpecBase with Status {
           .get()
 
         whenReady(res) { resp =>
-          resp.status shouldBe INTERNAL_SERVER_ERROR
+          resp.status shouldBe OK
+          resp.body should include("Government Gateway")
         }
       }
     }
@@ -260,7 +261,8 @@ class EnrolledForPTISpec extends IntegrationSpecBase with Status {
           .post(Json.obj())
 
         whenReady(res) { resp =>
-          resp.status shouldBe INTERNAL_SERVER_ERROR
+          resp.status shouldBe OK
+          resp.body should include("enrolmentError.title")
         }
       }
     }

@@ -168,15 +168,16 @@ class AccountCheckControllerSpec extends TestFixture {
     }
 
     "a no credentials exists in IV for a given nino" should {
-      "return InternalServerError" in new TestHelper {
+      "render the error page" in new TestHelper {
         mockAuthCall()
         mockAccountCheckFailure(UnexpectedResponseFromIV)
 
-        val result = controller
+        val res = controller
           .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(result) shouldBe INTERNAL_SERVER_ERROR
+        status(res) shouldBe OK
+        contentAsString(res) should include("enrolmentError.title")
       }
     }
   }

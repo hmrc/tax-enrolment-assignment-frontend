@@ -52,11 +52,12 @@ class ReportSuspiciousIdController @Inject()(
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
   mcc: MessagesControllerComponents,
   reportSuspiciousId: ReportSuspiciousID,
-  logger: EventLoggerService,
-  errorView: ErrorTemplate
+  val logger: EventLoggerService,
+  val errorView: ErrorTemplate
 )(implicit ec: ExecutionContext, appConfig: AppConfig)
     extends FrontendController(mcc)
-    with I18nSupport {
+    with I18nSupport
+    with ControllerHelper {
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
@@ -83,25 +84,8 @@ class ReportSuspiciousIdController @Inject()(
             logAssignedEnrolmentAfterReportingFraud(request.userDetails.credId)
           )
           Redirect(routes.EnrolledPTWithSAOnOtherAccountController.view)
-        case Left(InvalidUserType(redirectUrl)) if redirectUrl.isDefined =>
-          Redirect(routes.AccountCheckController.accountCheck(redirectUrl.get))
-        case Left(UnexpectedResponseFromTaxEnrolments) =>
-          Ok(
-            errorView(
-              "enrolmentError.title",
-              "enrolmentError.heading",
-              "enrolmentError.body"
-            )
-          )
         case Left(error) =>
-          logger.logEvent(
-            logUnexpectedErrorOccurred(
-              request.userDetails.credId,
-              "[ReportSuspiciousIdController][continue]",
-              error
-            )
-          )
-          InternalServerError
+          handleErrors(error, "[ReportSuspiciousIdController][continue]")
       }
   }
 }

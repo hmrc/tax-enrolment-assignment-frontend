@@ -293,15 +293,6 @@ object LoggingEvent {
   ): LoggingEvent =
     Error(Event(classAndMethod, details = Some(errorType.toString)))
 
-  def logRedirectUrlNotInCache(credentialId: String,
-                               classAndMethod: String): LoggingEvent =
-    Error(
-      Event(
-        classAndMethod,
-        details = Some("redirect url is not present in session")
-      )
-    )
-
   implicit val formats: Format[Event] = Json.format[Event]
 
   sealed trait LoggingEvent {

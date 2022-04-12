@@ -127,7 +127,7 @@ class PTEnrolmentOnOtherAccountControllerISpec
     }
 
     s"the session cache has a credential for PT enrolment that is the signed in account" should {
-      s"return 500" in {
+      s"render the error page" in {
         await(save[String](sessionId, "redirectURL", returnUrl))
         await(
           save[AccountTypes.Value](
@@ -151,15 +151,14 @@ class PTEnrolmentOnOtherAccountControllerISpec
           .get()
 
         whenReady(res) { resp =>
-          val page = Jsoup.parse(resp.body)
-
-          resp.status shouldBe INTERNAL_SERVER_ERROR
+          resp.status shouldBe OK
+          resp.body should include("Government Gateway")
         }
       }
     }
 
     s"the session cache has no credentials with PT enrolment" should {
-      s"return INTERNAL_SERVER_ERROR" in {
+      s"render the error page" in {
         await(save[String](sessionId, "redirectURL", returnUrl))
         await(
           save[AccountTypes.Value](
@@ -183,15 +182,14 @@ class PTEnrolmentOnOtherAccountControllerISpec
           .get()
 
         whenReady(res) { resp =>
-          val page = Jsoup.parse(resp.body)
-
-          resp.status shouldBe INTERNAL_SERVER_ERROR
+          resp.status shouldBe OK
+          resp.body should include("Government Gateway")
         }
       }
     }
 
     "the session cache has no redirectUrl" should {
-      "return Internal Server Error" in {
+      "render the error page" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -200,15 +198,14 @@ class PTEnrolmentOnOtherAccountControllerISpec
           .get()
 
         whenReady(res) { resp =>
-          val page = Jsoup.parse(resp.body)
-
-          resp.status shouldBe INTERNAL_SERVER_ERROR
+          resp.status shouldBe OK
+          resp.body should include("Government Gateway")
         }
       }
     }
 
     "users group search returns an error" should {
-      "return Internal Server Error" in {
+      "render the error page" in {
         await(save[String](sessionId, "redirectURL", returnUrl))
         await(
           save[AccountTypes.Value](
@@ -237,13 +234,14 @@ class PTEnrolmentOnOtherAccountControllerISpec
           .get()
 
         whenReady(res) { resp =>
-          resp.status shouldBe INTERNAL_SERVER_ERROR
+          resp.status shouldBe OK
+          resp.body should include("Government Gateway")
         }
       }
     }
 
     "an authorised user with no credential uses the service" should {
-      s"return $INTERNAL_SERVER_ERROR" in {
+      s"render the error page" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -259,13 +257,14 @@ class PTEnrolmentOnOtherAccountControllerISpec
           .get()
 
         whenReady(res) { resp =>
-          resp.status shouldBe INTERNAL_SERVER_ERROR
+          resp.status shouldBe OK
+          resp.body should include("Government Gateway")
         }
       }
     }
 
     "an authorised user but IV returns internal error" should {
-      s"return $INTERNAL_SERVER_ERROR" in {
+      s"render the error page" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -281,7 +280,8 @@ class PTEnrolmentOnOtherAccountControllerISpec
           .get()
 
         whenReady(res) { resp =>
-          resp.status shouldBe INTERNAL_SERVER_ERROR
+          resp.status shouldBe OK
+          resp.body should include("Government Gateway")
         }
       }
     }

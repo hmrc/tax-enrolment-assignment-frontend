@@ -49,7 +49,8 @@ class EnrolledForPTControllerSpec extends TestFixture {
     mockMultipleAccountsOrchestrator,
     mockTeaSessionCache,
     logger,
-    view
+    view,
+    errorView
   )
 
   "view" when {
@@ -161,7 +162,7 @@ class EnrolledForPTControllerSpec extends TestFixture {
     }
 
     "the user is not a  multiple accounts usertype and has no redirectUrl stored in session" should {
-      "return INTERNAL_SERVER_ERROR" in {
+      "render the error page" in {
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -183,15 +184,16 @@ class EnrolledForPTControllerSpec extends TestFixture {
           .expects(*, *, *)
           .returning(createInboundResultError(InvalidUserType(None)))
 
-        val result = controller.view
+        val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(result) shouldBe INTERNAL_SERVER_ERROR
+        status(res) shouldBe OK
+        contentAsString(res) should include("enrolmentError.title")
       }
     }
 
     "the call to users-group-search fails" should {
-      "return INTERNAL_SERVER_ERROR" in {
+      "render the error view" in {
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -215,10 +217,11 @@ class EnrolledForPTControllerSpec extends TestFixture {
             createInboundResultError(UnexpectedResponseFromUsersGroupSearch)
           )
 
-        val result = controller.view
+        val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(result) shouldBe INTERNAL_SERVER_ERROR
+        status(res) shouldBe OK
+        contentAsString(res) should include("enrolmentError.title")
       }
     }
   }

@@ -123,7 +123,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
     }
 
     "the session cache has Account type of SA_ASSIGNED_TO_OTHER_USER but users group search fails" should {
-      s"return INTERNAL SERVER ERROR" in {
+      s"render the error page" in {
         await(save[String](sessionId, "redirectURL", returnUrl))
         await(
           save[AccountTypes.Value](
@@ -145,9 +145,8 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
           .get()
 
         whenReady(res) { resp =>
-          val page = Jsoup.parse(resp.body)
-
-          resp.status shouldBe INTERNAL_SERVER_ERROR
+          resp.status shouldBe OK
+          resp.body should include("Government Gateway")
         }
       }
     }
@@ -185,7 +184,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
     }
 
     "the session cache is empty" should {
-      "return Internal Server Error" in {
+      "render the error page" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -194,9 +193,8 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
           .get()
 
         whenReady(res) { resp =>
-          val page = Jsoup.parse(resp.body)
-
-          resp.status shouldBe INTERNAL_SERVER_ERROR
+          resp.status shouldBe OK
+          resp.body should include("Government Gateway")
         }
       }
     }
@@ -288,7 +286,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
     }
 
     "the session cache does not contain the redirect url" should {
-      s"redirect to the redirect url" in {
+      s"render the error page" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -298,7 +296,8 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
           .post(Json.obj())
 
         whenReady(res) { resp =>
-          resp.status shouldBe INTERNAL_SERVER_ERROR
+          resp.status shouldBe OK
+          resp.body should include("Government Gateway")
         }
       }
     }

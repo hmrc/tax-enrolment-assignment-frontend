@@ -51,7 +51,8 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
     mcc,
     mockMultipleAccountsOrchestrator,
     view,
-    logger
+    logger,
+    errorView
   )
 
   "view" when {
@@ -178,7 +179,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
     }
 
     "the current user has a no PT enrolment on other account but session says it is other account" should {
-      "return internal server error" in {
+      "render the error page" in {
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -211,15 +212,16 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
           .expects(*, *, *)
           .returning(createInboundResultError(NoPTEnrolmentWhenOneExpected))
 
-        val result = controller.view
+        val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(result) shouldBe INTERNAL_SERVER_ERROR
+        status(res) shouldBe OK
+        contentAsString(res) should include("enrolmentError.title")
       }
     }
 
     s"the cache no redirectUrl" should {
-      "return InternalServerError" in {
+      "render the error page" in {
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -241,10 +243,11 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
           .expects(List(PT_ASSIGNED_TO_OTHER_USER), *, *, *)
           .returning(createInboundResultError(InvalidUserType(None)))
 
-        val result = controller.view
+        val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(result) shouldBe INTERNAL_SERVER_ERROR
+        status(res) shouldBe OK
+        contentAsString(res) should include("enrolmentError.title")
       }
     }
   }

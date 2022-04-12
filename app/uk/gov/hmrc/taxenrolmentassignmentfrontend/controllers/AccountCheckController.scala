@@ -55,11 +55,12 @@ class AccountCheckController @Inject()(
   appConfig: AppConfig,
   mcc: MessagesControllerComponents,
   sessionCache: TEASessionCache,
-  logger: EventLoggerService,
-  errorView: ErrorTemplate
+  val logger: EventLoggerService,
+  val errorView: ErrorTemplate
 )(implicit ec: ExecutionContext)
     extends FrontendController(mcc)
-    with I18nSupport {
+    with I18nSupport
+    with ControllerHelper {
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
@@ -84,14 +85,9 @@ class AccountCheckController @Inject()(
           Future.successful(Ok("SA on other account"))
         case Right(accountType) => silentEnrolmentAndRedirect(accountType)
         case Left(error) =>
-          logger.logEvent(
-            logUnexpectedErrorOccurred(
-              request.userDetails.credId,
-              "[AccountCheckController][accountCheck]",
-              error
-            )
+          Future.successful(
+            handleErrors(error, "[AccountCheckController][accountCheck]")
           )
-          Future.successful(InternalServerError)
       }
   }
 

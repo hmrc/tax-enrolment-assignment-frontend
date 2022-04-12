@@ -53,7 +53,8 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
     mockTeaSessionCache,
     mcc,
     view,
-    logger
+    logger,
+    errorView
   )
 
   "view" when {
@@ -197,7 +198,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
     }
 
     "the user is the wrong usertype and has no redirectUrl stored in session" should {
-      "return INTERNAL_SERVER_ERROR" in {
+      "render the error view" in {
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -219,15 +220,16 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
           .expects(*, *, *)
           .returning(createInboundResultError(InvalidUserType(None)))
 
-        val result = controller.view
+        val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(result) shouldBe INTERNAL_SERVER_ERROR
+        status(res) shouldBe OK
+        contentAsString(res) should include("enrolmentError.title")
       }
     }
 
     "the call to users-group-search fails" should {
-      "return INTERNAL_SERVER_ERROR" in {
+      "render error view" in {
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -251,10 +253,11 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
             createInboundResultError(UnexpectedResponseFromUsersGroupSearch)
           )
 
-        val result = controller.view
+        val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(result) shouldBe INTERNAL_SERVER_ERROR
+        status(res) shouldBe OK
+        contentAsString(res) should include("enrolmentError.title")
       }
     }
   }

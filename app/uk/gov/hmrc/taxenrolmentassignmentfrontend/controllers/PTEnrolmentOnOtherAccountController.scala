@@ -21,8 +21,10 @@ import play.api.Logger
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.PT_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.InvalidUserType
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment.readsCache
@@ -37,6 +39,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{
 }
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnotherAccount
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
 
 import scala.concurrent.ExecutionContext
 
@@ -44,11 +47,9 @@ import scala.concurrent.ExecutionContext
 class PTEnrolmentOnOtherAccountController @Inject()(
   authAction: AuthAction,
   mcc: MessagesControllerComponents,
-  eacdService: EACDService,
-  sessionCache: TEASessionCache,
-  usersGroupSearchService: UsersGroupSearchService,
-  logger: EventLoggerService,
-  ptEnrolmentOnAnotherAccountView: PTEnrolmentOnAnotherAccount
+  multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
+  ptEnrolmentOnAnotherAccountView: PTEnrolmentOnAnotherAccount,
+  logger: EventLoggerService
 )(implicit ec: ExecutionContext, appConfig: AppConfig)
     extends FrontendController(mcc)
     with I18nSupport {
@@ -56,36 +57,32 @@ class PTEnrolmentOnOtherAccountController @Inject()(
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
   def view(): Action[AnyContent] = authAction.async { implicit request =>
-    eacdService.getUsersAssignedPTEnrolment.value
-      .flatMap {
-        case Right(response)
-            if response.enrolledCredential
-              .fold(false)(_ != request.userDetails.credId) =>
-          usersGroupSearchService
-            .getAccountDetails(response.enrolledCredential.get)
-            .value
-            .map {
-              case Right(ptAccountDetails) =>
-                Ok(
-                  ptEnrolmentOnAnotherAccountView(
-                    ptAccountDetails,
-                    request.userDetails.hasSAEnrolment
-                  )
-                )
-              case Left(_) => InternalServerError
-            }
-        case _ =>
-          logger.logEvent(
-            logIncorrectUserTypeForPTAlreadyEnrolledPage(
-              request.userDetails.credId
-            )
+    val res = for {
+      _ <- multipleAccountsOrchestrator.checkValidAccountTypeRedirectUrlInCache(
+        List(PT_ASSIGNED_TO_OTHER_USER)
+      )
+      accountDetails <- multipleAccountsOrchestrator.getPTCredentialDetails
+    } yield accountDetails
+
+    res.value.map {
+      case Right(ptAccountDetails) =>
+        Ok(
+          ptEnrolmentOnAnotherAccountView(
+            ptAccountDetails,
+            request.userDetails.hasSAEnrolment
           )
-          sessionCache.getEntry[String](REDIRECT_URL).map {
-            case Some(redirectUrl) =>
-              Redirect(routes.AccountCheckController.accountCheck(redirectUrl))
-            case None =>
-              InternalServerError
-          }
-      }
+        )
+      case Left(InvalidUserType(redirectUrl)) if redirectUrl.isDefined =>
+        Redirect(routes.AccountCheckController.accountCheck(redirectUrl.get))
+      case Left(error) =>
+        logger.logEvent(
+          logUnexpectedErrorOccurred(
+            request.userDetails.credId,
+            "[PTEnrolmentOnOtherAccountController][view]",
+            error
+          )
+        )
+        InternalServerError
+    }
   }
 }

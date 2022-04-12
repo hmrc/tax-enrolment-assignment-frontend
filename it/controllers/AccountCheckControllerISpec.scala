@@ -193,7 +193,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
       }
 
       "have no enrolments but current credential has SA enrolment in session" should {
-        s"redirect to enrol-pt/introduction" in {
+        s"redirect to enrol-pt/enrolment-success-no-sa" in {
           val authResponse = authoriseResponseJson(enrolments = saEnrolmentOnly)
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -234,13 +234,15 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
             val page = Jsoup.parse(resp.body)
 
             resp.status shouldBe SEE_OTHER
-            resp.header("Location").get should include("/enrol-pt/introduction")
+            resp.header("Location").get should include(
+              "/enrol-pt/enrolment-success-no-sa"
+            )
           }
         }
       }
 
       "have no enrolments but current credential has SA enrolment in EACD" should {
-        s"redirect to enrol-pt/introduction" in {
+        s"redirect to enrol-pt/enrolment-success-no-sa" in {
           val authResponse = authoriseResponseJson(enrolments = saEnrolmentOnly)
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -292,13 +294,15 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
             val page = Jsoup.parse(resp.body)
 
             resp.status shouldBe SEE_OTHER
-            resp.header("Location").get should include("/enrol-pt/introduction")
+            resp.header("Location").get should include(
+              "/enrol-pt/enrolment-success-no-sa"
+            )
           }
         }
       }
 
       "have no enrolments" should {
-        s"redirect to enrol-pt/introduction" in {
+        s"redirect to enrol-pt/enrolment-success-no-sa" in {
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -344,7 +348,9 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
             val page = Jsoup.parse(resp.body)
 
             resp.status shouldBe SEE_OTHER
-            resp.header("Location").get should include("/enrol-pt/introduction")
+            resp.header("Location").get should include(
+              "/enrol-pt/enrolment-success-no-sa"
+            )
           }
         }
       }

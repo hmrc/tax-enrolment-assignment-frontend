@@ -21,17 +21,25 @@ import com.google.inject.{Inject, Singleton}
 import play.api.mvc.AnyContent
 import uk.gov.hmrc.http.HeaderCarrier
 import cats.implicits._
+import play.api.Logger
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
   MULTIPLE_ACCOUNTS,
+  PT_ASSIGNED_TO_OTHER_USER,
   SA_ASSIGNED_TO_CURRENT_USER,
   SA_ASSIGNED_TO_OTHER_USER
 }
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
   InvalidUserType,
+  NoPTEnrolmentWhenOneExpected,
   TaxEnrolmentAssignmentErrors
+}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{
+  logIncorrectUserType,
+  logNoUserFoundWithPTEnrolment
 }
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
   AccountDetails,
@@ -41,6 +49,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{
   ACCOUNT_TYPE,
   REDIRECT_URL,
   REPORTED_FRAUD,
+  USER_ASSIGNED_PT_ENROLMENT,
   USER_ASSIGNED_SA_ENROLMENT
 }
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
@@ -55,10 +64,13 @@ import scala.concurrent.{ExecutionContext, Future}
 class MultipleAccountsOrchestrator @Inject()(
   sessionCache: TEASessionCache,
   usersGroupSearchService: UsersGroupSearchService,
-  silentAssignmentService: SilentAssignmentService
+  silentAssignmentService: SilentAssignmentService,
+  logger: EventLoggerService
 ) {
 
-  def getDetailsForLandingPage(
+  implicit val baseLogger: Logger = Logger(this.getClass.getName)
+
+  def getDetailsForEnrolledPT(
     implicit requestWithUserDetails: RequestWithUserDetails[AnyContent],
     hc: HeaderCarrier,
     ec: ExecutionContext
@@ -119,6 +131,29 @@ class MultipleAccountsOrchestrator @Inject()(
       }
   }
 
+  def getPTCredentialDetails(
+    implicit requestWithUserDetails: RequestWithUserDetails[AnyContent],
+    hc: HeaderCarrier,
+    ec: ExecutionContext
+  ): TEAFResult[AccountDetails] = EitherT {
+    sessionCache
+      .getEntry[UsersAssignedEnrolment](USER_ASSIGNED_PT_ENROLMENT)
+      .flatMap { optCredential =>
+        optCredential.fold[Option[String]](None)(_.enrolledCredential) match {
+          case Some(saCred)
+              if saCred != requestWithUserDetails.userDetails.credId =>
+            usersGroupSearchService.getAccountDetails(saCred).value
+          case _ =>
+            logger.logEvent(
+              logNoUserFoundWithPTEnrolment(
+                requestWithUserDetails.userDetails.credId
+              )
+            )
+            Future.successful(Left(NoPTEnrolmentWhenOneExpected))
+        }
+      }
+  }
+
   def checkValidAccountTypeAndEnrolForPT(
     expectedAccountType: AccountTypes.Value
   )(implicit requestWithUserDetails: RequestWithUserDetails[AnyContent],
@@ -130,7 +165,7 @@ class MultipleAccountsOrchestrator @Inject()(
     } yield enrolled
   }
 
-  private def checkValidAccountTypeRedirectUrlInCache(
+  def checkValidAccountTypeRedirectUrlInCache(
     validAccountTypes: List[AccountTypes.Value]
   )(implicit requestWithUserDetails: RequestWithUserDetails[AnyContent],
     hc: HeaderCarrier,
@@ -144,7 +179,15 @@ class MultipleAccountsOrchestrator @Inject()(
       case (Some(accountType), Some(_))
           if validAccountTypes.contains(accountType) =>
         Right(accountType)
-      case (_, optRedirectUrl) => Left(InvalidUserType(optRedirectUrl))
+      case (optAccountType, optRedirectUrl) =>
+        logger.logEvent(
+          logIncorrectUserType(
+            requestWithUserDetails.userDetails.credId,
+            validAccountTypes,
+            optAccountType
+          )
+        )
+        Left(InvalidUserType(optRedirectUrl))
     }
   }
 }

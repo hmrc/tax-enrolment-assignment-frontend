@@ -32,6 +32,8 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
   MULTIPLE_ACCOUNTS,
   PT_ASSIGNED_TO_CURRENT_USER,
   PT_ASSIGNED_TO_OTHER_USER,
+  SA_ASSIGNED_TO_CURRENT_USER,
+  SA_ASSIGNED_TO_OTHER_USER,
   SINGLE_ACCOUNT
 }
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
@@ -54,6 +56,14 @@ class PTEnrolmentOnOtherAccountControllerISpec
   s"GET $urlPath" when {
     "the session cache has a credential for PT enrolment that is not the signed in account" should {
       s"render the pt on another account page" in {
+        await(save[String](sessionId, "redirectURL", returnUrl))
+        await(
+          save[AccountTypes.Value](
+            sessionId,
+            "ACCOUNT_TYPE",
+            PT_ASSIGNED_TO_OTHER_USER
+          )
+        )
         await(
           save[UsersAssignedEnrolment](
             sessionId,
@@ -84,9 +94,48 @@ class PTEnrolmentOnOtherAccountControllerISpec
       }
     }
 
+    List(
+      SINGLE_ACCOUNT,
+      PT_ASSIGNED_TO_CURRENT_USER,
+      MULTIPLE_ACCOUNTS,
+      SA_ASSIGNED_TO_OTHER_USER,
+      SA_ASSIGNED_TO_CURRENT_USER
+    ).foreach { accountType =>
+      s"the session cache has a credential with account type ${accountType.toString}" should {
+        s"redirect to account check page" in {
+          await(save[String](sessionId, "redirectURL", returnUrl))
+          await(
+            save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", accountType)
+          )
+          val authResponse = authoriseResponseJson()
+          stubAuthorizePost(OK, authResponse.toString())
+          stubPost(s"/write/.*", OK, """{"x":2}""")
+          val res = buildRequest(urlPath, followRedirects = false)
+            .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+            .get()
+
+          whenReady(res) { resp =>
+            val page = Jsoup.parse(resp.body)
+
+            resp.status shouldBe SEE_OTHER
+            resp.header("Location").get should include(
+              s"/tax-enrolment-assignment-frontend/no-pt-enrolment"
+            )
+          }
+        }
+      }
+    }
+
     s"the session cache has a credential for PT enrolment that is the signed in account" should {
-      s"redirect to accountCheck" in {
+      s"return 500" in {
         await(save[String](sessionId, "redirectURL", returnUrl))
+        await(
+          save[AccountTypes.Value](
+            sessionId,
+            "ACCOUNT_TYPE",
+            PT_ASSIGNED_TO_OTHER_USER
+          )
+        )
         await(
           save[UsersAssignedEnrolment](
             sessionId,
@@ -104,17 +153,21 @@ class PTEnrolmentOnOtherAccountControllerISpec
         whenReady(res) { resp =>
           val page = Jsoup.parse(resp.body)
 
-          resp.status shouldBe SEE_OTHER
-          resp.header("Location").get should include(
-            s"/tax-enrolment-assignment-frontend/no-pt-enrolment"
-          )
+          resp.status shouldBe INTERNAL_SERVER_ERROR
         }
       }
     }
 
     s"the session cache has no credentials with PT enrolment" should {
-      s"redirect to accountCheck" in {
+      s"return INTERNAL_SERVER_ERROR" in {
         await(save[String](sessionId, "redirectURL", returnUrl))
+        await(
+          save[AccountTypes.Value](
+            sessionId,
+            "ACCOUNT_TYPE",
+            PT_ASSIGNED_TO_OTHER_USER
+          )
+        )
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         await(
@@ -132,23 +185,13 @@ class PTEnrolmentOnOtherAccountControllerISpec
         whenReady(res) { resp =>
           val page = Jsoup.parse(resp.body)
 
-          resp.status shouldBe SEE_OTHER
-          resp.header("Location").get should include(
-            s"/tax-enrolment-assignment-frontend/no-pt-enrolment"
-          )
+          resp.status shouldBe INTERNAL_SERVER_ERROR
         }
       }
     }
 
     "the session cache has no redirectUrl" should {
       "return Internal Server Error" in {
-        await(
-          save[UsersAssignedEnrolment](
-            sessionId,
-            USER_ASSIGNED_PT_ENROLMENT,
-            UsersAssignedEnrolment(None)
-          )
-        )
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -166,6 +209,14 @@ class PTEnrolmentOnOtherAccountControllerISpec
 
     "users group search returns an error" should {
       "return Internal Server Error" in {
+        await(save[String](sessionId, "redirectURL", returnUrl))
+        await(
+          save[AccountTypes.Value](
+            sessionId,
+            "ACCOUNT_TYPE",
+            PT_ASSIGNED_TO_OTHER_USER
+          )
+        )
         await(
           save[UsersAssignedEnrolment](
             sessionId,

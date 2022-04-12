@@ -2,8 +2,8 @@
 
 ->         /hmrc-frontend           hmrcfrontend.Routes
 GET        /no-pt-enrolment   uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.AccountCheckController.accountCheck(redirectUrl: String)
-GET        /enrol-pt/introduction   uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.EnrolledForPTController.view
-POST       /enrol-pt/introduction   uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.EnrolledForPTController.continue
+GET        /enrol-pt/enrolment-success-no-sa   uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.EnrolledForPTController.view
+POST       /enrol-pt/enrolment-success-no-sa   uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.EnrolledForPTController.continue
 GET        /enrol-pt/enrol-current-user-id  uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.EnrolCurrentUserController.view
 GET        /enrol-pt/report-suspicious-id  uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.ReportSuspiciousIdController.view
 POST        /enrol-pt/report-suspicious-id  uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.ReportSuspiciousIdController.continue

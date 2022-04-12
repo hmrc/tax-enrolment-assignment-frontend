@@ -58,6 +58,7 @@ class ReportSuspiciousIdControllerSpec extends TestFixture {
       mockMultipleAccountsOrchestrator,
       mcc,
       view,
+      logger,
       errorView
     )
 

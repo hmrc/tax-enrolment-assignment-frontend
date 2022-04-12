@@ -34,6 +34,16 @@ object LoggingEvent {
       )
     )
 
+  def logRedirectingToReturnUrl(credentialId: String,
+                                classAndMethod: String): LoggingEvent = Info(
+    Event(
+      classAndMethod,
+      details = Some(
+        s"User with credential $credentialId is being redirected to return url"
+      )
+    )
+  )
+
   def logMultipleAccountHolderAssignedEnrolment(
     credentialId: String
   ): LoggingEvent =
@@ -42,6 +52,18 @@ object LoggingEvent {
         "[AccountCheckController][silentEnrol]",
         details = Some(
           s"PT enrolment assigned to credential $credentialId which has multiple accounts"
+        )
+      )
+    )
+
+  def logAssignedEnrolmentAfterReportingFraud(
+    credentialId: String,
+  ): LoggingEvent =
+    Info(
+      Event(
+        "[ReportSuspiciousIdController][continue]",
+        details = Some(
+          s"PT enrolment assigned to credential $credentialId after reporting fraud on account with Self Assessment"
         )
       )
     )
@@ -107,29 +129,41 @@ object LoggingEvent {
       )
     )
 
-  def logIncorrectUserTypeForLandingPage(credentialId: String): LoggingEvent = {
+  def logIncorrectUserType(
+    credentialId: String,
+    expectedUserType: List[AccountTypes.Value],
+    actualUserType: Option[AccountTypes.Value]
+  ): LoggingEvent = {
+    val expectedUserTypeString = expectedUserType.foldLeft[String]("") {
+      (a, b) =>
+        if (a.isEmpty) {
+          b.toString
+        } else {
+          s"$a or ${b.toString}"
+        }
+    }
+
+    val actualAccountTypeString =
+      actualUserType.fold("no account type found")(_.toString)
+    val errorMessage =
+      s"User type of $expectedUserTypeString required but ${actualAccountTypeString} found"
     Warn(
       Event(
-        "[LandingPageController][view]",
-        details = Some(
-          s"credential $credentialId does not have ${AccountTypes.MULTIPLE_ACCOUNTS.toString}"
-        )
+        "[MultipleAccountsOrchestrator][checkValidAccountTypeRedirectUrlInCache]",
+        details = Some(errorMessage)
       )
     )
   }
 
-  def logIncorrectUserTypeForPTAlreadyEnrolledPage(
-    credentialId: String
-  ): LoggingEvent = {
-    Warn(
+  def logNoUserFoundWithPTEnrolment(credentialId: String): LoggingEvent =
+    Error(
       Event(
-        "[PTEnrolmentOnOtherAccountController][view]",
+        "[MultipleAccountsOrchestrator][checkValidAccountTypeRedirectUrlInCache]",
         details = Some(
-          s"credential $credentialId does not have ${AccountTypes.PT_ASSIGNED_TO_OTHER_USER.toString}"
+          s"No PT enrolment found when user has account type of PT on other account for credential $credentialId"
         )
       )
     )
-  }
 
   def logAuthenticationFailure(errorDetails: String): LoggingEvent =
     Warn(Event("[AuthAction][invokeBlock]", errorDetails = Some(errorDetails)))
@@ -249,6 +283,22 @@ object LoggingEvent {
           s"EACD returned status of $statusReturned when searching for enrolments associated with credId $credId." +
             s"\nError Message: $eacdErrorMsg"
         )
+      )
+    )
+
+  def logUnexpectedErrorOccurred(
+    credentialId: String,
+    classAndMethod: String,
+    errorType: TaxEnrolmentAssignmentErrors
+  ): LoggingEvent =
+    Error(Event(classAndMethod, details = Some(errorType.toString)))
+
+  def logRedirectUrlNotInCache(credentialId: String,
+                               classAndMethod: String): LoggingEvent =
+    Error(
+      Event(
+        classAndMethod,
+        details = Some("redirect url is not present in session")
       )
     )
 

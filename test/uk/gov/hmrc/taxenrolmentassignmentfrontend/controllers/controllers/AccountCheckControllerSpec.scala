@@ -131,7 +131,7 @@ class AccountCheckControllerSpec extends TestFixture {
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some(
-          "/tax-enrolment-assignment-frontend/enrol-pt/introduction"
+          "/tax-enrolment-assignment-frontend/enrol-pt/enrolment-success-no-sa"
         )
       }
     }
@@ -148,7 +148,7 @@ class AccountCheckControllerSpec extends TestFixture {
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some(
-          "/tax-enrolment-assignment-frontend/enrol-pt/introduction"
+          "/tax-enrolment-assignment-frontend/enrol-pt/enrolment-success-no-sa"
         )
       }
     }

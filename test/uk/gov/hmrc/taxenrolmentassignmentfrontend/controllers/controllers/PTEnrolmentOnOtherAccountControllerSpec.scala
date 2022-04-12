@@ -24,12 +24,18 @@ import uk.gov.hmrc.auth.core.Enrolments
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.PT_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{
   PTEnrolmentOnOtherAccountController,
   testOnly
+}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
+  InvalidUserType,
+  NoPTEnrolmentWhenOneExpected
 }
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnotherAccount
 
@@ -43,11 +49,9 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
   val controller = new PTEnrolmentOnOtherAccountController(
     mockAuthAction,
     mcc,
-    mockEacdService,
-    mockTeaSessionCache,
-    mockUsersGroupService,
-    logger,
-    view
+    mockMultipleAccountsOrchestrator,
+    view,
+    logger
   )
 
   "view" when {
@@ -65,22 +69,22 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
 
-        (mockEacdService
-          .getUsersAssignedPTEnrolment(
+        (mockMultipleAccountsOrchestrator
+          .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
+            _: RequestWithUserDetails[AnyContent],
+            _: HeaderCarrier,
+            _: ExecutionContext
+          ))
+          .expects(List(PT_ASSIGNED_TO_OTHER_USER), *, *, *)
+          .returning(createInboundResult(PT_ASSIGNED_TO_OTHER_USER))
+
+        (mockMultipleAccountsOrchestrator
+          .getPTCredentialDetails(
             _: RequestWithUserDetails[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
           .expects(*, *, *)
-          .returning(createInboundResult(UsersAssignedEnrolment1))
-
-        (mockUsersGroupService
-          .getAccountDetails(_: String)(
-            _: ExecutionContext,
-            _: HeaderCarrier,
-            _: RequestWithUserDetails[AnyContent]
-          ))
-          .expects(CREDENTIAL_ID_1, *, *, *)
           .returning(createInboundResult(accountDetails))
 
         val result = controller.view
@@ -110,23 +114,22 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
           .returning(
             Future.successful(retrievalResponse(enrolments = saEnrolmentOnly))
           )
+        (mockMultipleAccountsOrchestrator
+          .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
+            _: RequestWithUserDetails[AnyContent],
+            _: HeaderCarrier,
+            _: ExecutionContext
+          ))
+          .expects(List(PT_ASSIGNED_TO_OTHER_USER), *, *, *)
+          .returning(createInboundResult(PT_ASSIGNED_TO_OTHER_USER))
 
-        (mockEacdService
-          .getUsersAssignedPTEnrolment(
+        (mockMultipleAccountsOrchestrator
+          .getPTCredentialDetails(
             _: RequestWithUserDetails[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
           .expects(*, *, *)
-          .returning(createInboundResult(UsersAssignedEnrolment1))
-
-        (mockUsersGroupService
-          .getAccountDetails(_: String)(
-            _: ExecutionContext,
-            _: HeaderCarrier,
-            _: RequestWithUserDetails[AnyContent]
-          ))
-          .expects(CREDENTIAL_ID_1, *, *, *)
           .returning(createInboundResult(accountDetails))
 
         val result = controller.view
@@ -141,8 +144,8 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
       }
     }
 
-    "the current user has a PT enrolment" should {
-      "redirect to the account check" in {
+    "the user does not have an account type of PT_ASSIGNED_TO_OTHER_USER" should {
+      "redirect to account check" in {
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -153,43 +156,29 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
-          .returning(
-            Future.successful(retrievalResponse(enrolments = saEnrolmentOnly))
-          )
+          .returning(Future.successful(retrievalResponse()))
 
-        (mockEacdService
-          .getUsersAssignedPTEnrolment(
+        (mockMultipleAccountsOrchestrator
+          .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
             _: RequestWithUserDetails[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
-          .expects(*, *, *)
-          .returning(createInboundResult(UsersAssignedEnrolmentCurrentCred))
-
-        (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetails[AnyContent],
-            _: Format[String]
-          ))
-          .expects("redirectURL", *, *)
-          .returning(
-            Future.successful(
-              Some(testOnly.routes.TestOnlyController.successfulCall.url)
-            )
-          )
+          .expects(List(PT_ASSIGNED_TO_OTHER_USER), *, *, *)
+          .returning(createInboundResultError(InvalidUserType(Some("/test"))))
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some(
-          "/tax-enrolment-assignment-frontend/no-pt-enrolment?redirectUrl=%2Ftax-enrolment-assignment-frontend%2Ftest-only%2Fsuccessful"
+          "/tax-enrolment-assignment-frontend/no-pt-enrolment?redirectUrl=%2Ftest"
         )
       }
     }
 
-    "the current user has no PT enrolments assigned" should {
-      "redirect to the account check" in {
+    "the current user has a no PT enrolment on other account but session says it is other account" should {
+      "return internal server error" in {
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -204,34 +193,28 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
             Future.successful(retrievalResponse(enrolments = saEnrolmentOnly))
           )
 
-        (mockEacdService
-          .getUsersAssignedPTEnrolment(
+        (mockMultipleAccountsOrchestrator
+          .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
+            _: RequestWithUserDetails[AnyContent],
+            _: HeaderCarrier,
+            _: ExecutionContext
+          ))
+          .expects(List(PT_ASSIGNED_TO_OTHER_USER), *, *, *)
+          .returning(createInboundResult(PT_ASSIGNED_TO_OTHER_USER))
+
+        (mockMultipleAccountsOrchestrator
+          .getPTCredentialDetails(
             _: RequestWithUserDetails[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
           .expects(*, *, *)
-          .returning(createInboundResult(UsersAssignedEnrolmentEmpty))
-
-        (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetails[AnyContent],
-            _: Format[String]
-          ))
-          .expects("redirectURL", *, *)
-          .returning(
-            Future.successful(
-              Some(testOnly.routes.TestOnlyController.successfulCall.url)
-            )
-          )
+          .returning(createInboundResultError(NoPTEnrolmentWhenOneExpected))
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(result) shouldBe SEE_OTHER
-        redirectLocation(result) shouldBe Some(
-          "/tax-enrolment-assignment-frontend/no-pt-enrolment?redirectUrl=%2Ftax-enrolment-assignment-frontend%2Ftest-only%2Fsuccessful"
-        )
+        status(result) shouldBe INTERNAL_SERVER_ERROR
       }
     }
 
@@ -249,22 +232,14 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
 
-        (mockEacdService
-          .getUsersAssignedPTEnrolment(
+        (mockMultipleAccountsOrchestrator
+          .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
             _: RequestWithUserDetails[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
-          .expects(*, *, *)
-          .returning(createInboundResult(UsersAssignedEnrolmentEmpty))
-
-        (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetails[AnyContent],
-            _: Format[String]
-          ))
-          .expects("redirectURL", *, *)
-          .returning(Future.successful(None))
+          .expects(List(PT_ASSIGNED_TO_OTHER_USER), *, *, *)
+          .returning(createInboundResultError(InvalidUserType(None)))
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))

@@ -70,7 +70,7 @@ class EnrolledForPTControllerSpec extends TestFixture {
           )
 
         (mockMultipleAccountsOrchestrator
-          .getDetailsForLandingPage(
+          .getDetailsForEnrolledPT(
             _: RequestWithUserDetails[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
@@ -103,7 +103,7 @@ class EnrolledForPTControllerSpec extends TestFixture {
           .returning(Future.successful(retrievalResponse()))
 
         (mockMultipleAccountsOrchestrator
-          .getDetailsForLandingPage(
+          .getDetailsForEnrolledPT(
             _: RequestWithUserDetails[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
@@ -136,7 +136,7 @@ class EnrolledForPTControllerSpec extends TestFixture {
           .returning(Future.successful(retrievalResponse()))
 
         (mockMultipleAccountsOrchestrator
-          .getDetailsForLandingPage(
+          .getDetailsForEnrolledPT(
             _: RequestWithUserDetails[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
@@ -175,7 +175,7 @@ class EnrolledForPTControllerSpec extends TestFixture {
           .returning(Future.successful(retrievalResponse()))
 
         (mockMultipleAccountsOrchestrator
-          .getDetailsForLandingPage(
+          .getDetailsForEnrolledPT(
             _: RequestWithUserDetails[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
@@ -205,7 +205,7 @@ class EnrolledForPTControllerSpec extends TestFixture {
           .returning(Future.successful(retrievalResponse()))
 
         (mockMultipleAccountsOrchestrator
-          .getDetailsForLandingPage(
+          .getDetailsForEnrolledPT(
             _: RequestWithUserDetails[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext

@@ -25,6 +25,11 @@ import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.InvalidUserType
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{
+  logRedirectUrlNotInCache,
+  logRedirectingToReturnUrl,
+  logUnexpectedErrorOccurred
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REDIRECT_URL
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
@@ -47,7 +52,7 @@ class EnrolledForPTController @Inject()(
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
   def view: Action[AnyContent] = authAction.async { implicit request =>
-    multipleAccountsOrchestrator.getDetailsForLandingPage.value.map {
+    multipleAccountsOrchestrator.getDetailsForEnrolledPT.value.map {
       case Right(accountDetails) =>
         Ok(
           enrolledForPTPage(
@@ -57,15 +62,36 @@ class EnrolledForPTController @Inject()(
         )
       case Left(InvalidUserType(redirectUrl)) if redirectUrl.isDefined =>
         Redirect(routes.AccountCheckController.accountCheck(redirectUrl.get))
-      case Left(_) => InternalServerError
+      case Left(error) =>
+        logger.logEvent(
+          logUnexpectedErrorOccurred(
+            request.userDetails.credId,
+            "[EnrolledForPTController][view]",
+            error
+          )
+        )
+        InternalServerError
     }
   }
 
   def continue: Action[AnyContent] = authAction.async { implicit request =>
     sessionCache.getEntry[String](REDIRECT_URL).map {
       case Some(redirectUrl) =>
+        logger.logEvent(
+          logRedirectingToReturnUrl(
+            request.userDetails.credId,
+            "[EnrolledForPTController][continue]"
+          )
+        )
         Redirect(redirectUrl)
-      case None => InternalServerError
+      case None =>
+        logger.logEvent(
+          logRedirectUrlNotInCache(
+            request.userDetails.credId,
+            "[EnrolledForPTController][continue]"
+          )
+        )
+        InternalServerError
     }
   }
 }

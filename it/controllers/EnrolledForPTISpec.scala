@@ -42,7 +42,7 @@ class EnrolledForPTISpec extends IntegrationSpecBase with Status {
   val returnUrl: String = testOnly.routes.TestOnlyController.successfulCall
     .absoluteURL(false, teaHost)
   val urlPath =
-    s"/enrol-pt/introduction"
+    s"/enrol-pt/enrolment-success-no-sa"
 
   val sessionCookie
     : (String, String) = ("COOKIE" -> createSessionCookieAsString(sessionData))

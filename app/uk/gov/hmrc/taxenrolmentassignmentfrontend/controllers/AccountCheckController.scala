@@ -68,6 +68,12 @@ class AccountCheckController @Inject()(
       sessionCache.save[String](REDIRECT_URL, redirectUrl)
       accountCheckOrchestrator.getAccountType.value.flatMap {
         case Right(PT_ASSIGNED_TO_CURRENT_USER) =>
+          logger.logEvent(
+            logRedirectingToReturnUrl(
+              request.userDetails.credId,
+              "[AccountCheckController][accountCheck]"
+            )
+          )
           Future.successful(Redirect(redirectUrl))
         case Right(PT_ASSIGNED_TO_OTHER_USER) =>
           Future.successful(
@@ -77,7 +83,15 @@ class AccountCheckController @Inject()(
         case Right(SA_ASSIGNED_TO_OTHER_USER) =>
           Future.successful(Ok("SA on other account"))
         case Right(accountType) => silentEnrolmentAndRedirect(accountType)
-        case Left(_)            => Future.successful(InternalServerError)
+        case Left(error) =>
+          logger.logEvent(
+            logUnexpectedErrorOccurred(
+              request.userDetails.credId,
+              "[AccountCheckController][accountCheck]",
+              error
+            )
+          )
+          Future.successful(InternalServerError)
       }
   }
 
@@ -89,6 +103,12 @@ class AccountCheckController @Inject()(
       case true if accountType == SINGLE_ACCOUNT =>
         logger.logEvent(
           logSingleAccountHolderAssignedEnrolment(request.userDetails.credId)
+        )
+        logger.logEvent(
+          logRedirectingToReturnUrl(
+            request.userDetails.credId,
+            "[AccountCheckController][accountCheck]"
+          )
         )
         Redirect(appConfig.redirectPTAUrl)
       case true =>

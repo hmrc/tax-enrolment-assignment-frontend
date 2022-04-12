@@ -28,5 +28,6 @@ object EnrolledForPTPageMessages {
   val heading3: String =
     "What has happened to my other Government Gateway user IDs?"
   val button = "Continue"
-  val action = "/tax-enrolment-assignment-frontend/enrol-pt/introduction"
+  val action =
+    "/tax-enrolment-assignment-frontend/enrol-pt/enrolment-success-no-sa"
 }

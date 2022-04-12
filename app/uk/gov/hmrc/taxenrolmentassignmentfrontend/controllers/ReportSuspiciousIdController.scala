@@ -28,6 +28,11 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
   InvalidUserType,
   UnexpectedResponseFromTaxEnrolments
 }
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{
+  logAssignedEnrolmentAfterReportingFraud,
+  logUnexpectedErrorOccurred
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
   AccountDetails,
   MFADetails
@@ -47,6 +52,7 @@ class ReportSuspiciousIdController @Inject()(
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
   mcc: MessagesControllerComponents,
   reportSuspiciousId: ReportSuspiciousID,
+  logger: EventLoggerService,
   errorView: ErrorTemplate
 )(implicit ec: ExecutionContext, appConfig: AppConfig)
     extends FrontendController(mcc)
@@ -73,6 +79,9 @@ class ReportSuspiciousIdController @Inject()(
       .value
       .map {
         case Right(_) =>
+          logger.logEvent(
+            logAssignedEnrolmentAfterReportingFraud(request.userDetails.credId)
+          )
           Redirect(routes.EnrolledPTWithSAOnOtherAccountController.view)
         case Left(InvalidUserType(redirectUrl)) if redirectUrl.isDefined =>
           Redirect(routes.AccountCheckController.accountCheck(redirectUrl.get))
@@ -84,7 +93,15 @@ class ReportSuspiciousIdController @Inject()(
               "enrolmentError.body"
             )
           )
-        case Left(_) => InternalServerError
+        case Left(error) =>
+          logger.logEvent(
+            logUnexpectedErrorOccurred(
+              request.userDetails.credId,
+              "[ReportSuspiciousIdController][continue]",
+              error
+            )
+          )
+          InternalServerError
       }
   }
 }

@@ -26,3 +26,4 @@ object UnexpectedResponseFromUsersGroupSearch
     extends TaxEnrolmentAssignmentErrors
 case class InvalidUserType(redirectUrl: Option[String])
     extends TaxEnrolmentAssignmentErrors
+object NoPTEnrolmentWhenOneExpected extends TaxEnrolmentAssignmentErrors

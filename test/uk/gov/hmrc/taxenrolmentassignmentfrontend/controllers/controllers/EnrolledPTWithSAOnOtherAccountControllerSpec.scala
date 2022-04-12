@@ -52,7 +52,8 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
     mockMultipleAccountsOrchestrator,
     mockTeaSessionCache,
     mcc,
-    view
+    view,
+    logger
   )
 
   "view" when {

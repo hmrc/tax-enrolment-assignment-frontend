@@ -37,6 +37,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixtur
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
   InvalidUserType,
+  NoPTEnrolmentWhenOneExpected,
   TaxEnrolmentAssignmentErrors
 }
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
@@ -55,10 +56,11 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
     new MultipleAccountsOrchestrator(
       mockTeaSessionCache,
       mockUsersGroupService,
-      mockSilentAssignmentService
+      mockSilentAssignmentService,
+      logger
     )
 
-  s"getDetailsForLandingPage" when {
+  s"getDetailsForEnrolledPT" when {
     List(MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER).foreach { account =>
       s"the accountType $account and redirectUrl are available in the cache" should {
         "return the userdetails for the account" in {
@@ -91,7 +93,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
             .expects(CREDENTIAL_ID, *, *, *)
             .returning(createInboundResult(accountDetails))
 
-          val res = orchestrator.getDetailsForLandingPage
+          val res = orchestrator.getDetailsForEnrolledPT
           whenReady(res.value) { result =>
             result shouldBe Right(
               accountDetails
@@ -130,7 +132,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
               )
             )
 
-          val res = orchestrator.getDetailsForLandingPage
+          val res = orchestrator.getDetailsForEnrolledPT
           whenReady(res.value) { result =>
             result shouldBe Left(
               InvalidUserType(
@@ -159,7 +161,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
             .expects("redirectURL", *, *)
             .returning(Future.successful(None))
 
-          val res = orchestrator.getDetailsForLandingPage
+          val res = orchestrator.getDetailsForEnrolledPT
           whenReady(res.value) { result =>
             result shouldBe Left(InvalidUserType(None))
           }
@@ -185,7 +187,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
           .expects("redirectURL", *, *)
           .returning(Future.successful(None))
 
-        val res = orchestrator.getDetailsForLandingPage
+        val res = orchestrator.getDetailsForEnrolledPT
         whenReady(res.value) { result =>
           result shouldBe Left(InvalidUserType(None))
         }
@@ -512,6 +514,89 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
           whenReady(res.value) { result =>
             result shouldBe Right(None)
           }
+        }
+      }
+    }
+  }
+
+  "getPTCredentialDetails" when {
+    "a pt enrolment exists for a different credential" should {
+      "return the account details for the PT user" in {
+        (mockTeaSessionCache
+          .getEntry(_: String)(
+            _: RequestWithUserDetails[AnyContent],
+            _: Format[UsersAssignedEnrolment]
+          ))
+          .expects("USER_ASSIGNED_PT_ENROLMENT", *, *)
+          .returning(Future.successful(Some(UsersAssignedEnrolment1)))
+
+        (mockUsersGroupService
+          .getAccountDetails(_: String)(
+            _: ExecutionContext,
+            _: HeaderCarrier,
+            _: RequestWithUserDetails[AnyContent]
+          ))
+          .expects(CREDENTIAL_ID_1, *, *, *)
+          .returning(createInboundResult(accountDetails))
+
+        val res = orchestrator.getPTCredentialDetails
+
+        whenReady(res.value) { result =>
+          result shouldBe Right(accountDetails)
+        }
+      }
+    }
+
+    "a pt enrolment exists for the signed in credential" should {
+      "return NoPTEnrolmentWhenOneExpected" in {
+        (mockTeaSessionCache
+          .getEntry(_: String)(
+            _: RequestWithUserDetails[AnyContent],
+            _: Format[UsersAssignedEnrolment]
+          ))
+          .expects("USER_ASSIGNED_PT_ENROLMENT", *, *)
+          .returning(Future.successful(Some(UsersAssignedEnrolmentCurrentCred)))
+
+        val res = orchestrator.getPTCredentialDetails
+
+        whenReady(res.value) { result =>
+          result shouldBe Left(NoPTEnrolmentWhenOneExpected)
+        }
+      }
+    }
+
+    "no pt enrolment exists" should {
+      "return NoPTEnrolmentWhenOneExpected" in {
+        (mockTeaSessionCache
+          .getEntry(_: String)(
+            _: RequestWithUserDetails[AnyContent],
+            _: Format[UsersAssignedEnrolment]
+          ))
+          .expects("USER_ASSIGNED_PT_ENROLMENT", *, *)
+          .returning(Future.successful(Some(UsersAssignedEnrolmentEmpty)))
+
+        val res = orchestrator.getPTCredentialDetails
+
+        whenReady(res.value) { result =>
+          result shouldBe Left(NoPTEnrolmentWhenOneExpected)
+        }
+      }
+    }
+
+    "the cache is empty" should {
+      "return NoPTEnrolmentWhenOneExpected" in {
+        (mockTeaSessionCache
+          .getEntry(_: String)(
+            _: RequestWithUserDetails[AnyContent],
+            _: Format[UsersAssignedEnrolment]
+          ))
+          .expects("USER_ASSIGNED_PT_ENROLMENT", *, *)
+          .returning(Future.successful(None))
+
+        val res = orchestrator.getPTCredentialDetails
+
+        whenReady(res.value) { result =>
+          result shouldBe Left(NoPTEnrolmentWhenOneExpected)
         }
       }
     }

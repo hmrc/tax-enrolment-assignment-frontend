@@ -92,27 +92,26 @@ class ReportSuspiciousIDSpec extends TestFixture {
           .getElementsByClass(Selectors.summaryListValue)
           .text() shouldBe accountDetails.email.get
       }
-      "includes the text message field with correct value" in {
-        suspiciousIdDetailsRows
-          .get(2)
-          .getElementsByClass(Selectors.summaryListKey)
-          .text() shouldBe "Text message"
-        suspiciousIdDetailsRows
-          .get(2)
-          .getElementsByClass(Selectors.summaryListValue)
-          .text() shouldBe accountDetails.mfaDetails.head.factorValue
-      }
       "includes the last signed in date" in {
         suspiciousIdDetailsRows
-          .get(3)
+          .get(2)
           .getElementsByClass(Selectors.summaryListKey)
           .text() shouldBe "Last signed in"
         suspiciousIdDetailsRows
-          .get(3)
+          .get(2)
           .getElementsByClass(Selectors.summaryListValue)
           .text() shouldBe accountDetails.lastLoginDate
       }
-
+      "includes the text message field with correct value" in {
+        suspiciousIdDetailsRows
+          .get(3)
+          .getElementsByClass(Selectors.summaryListKey)
+          .text() shouldBe "Text message"
+        suspiciousIdDetailsRows
+          .get(3)
+          .getElementsByClass(Selectors.summaryListValue)
+          .text() shouldBe accountDetails.mfaDetails.head.factorValue
+      }
     }
 
     "contains a valid paragraph details" in {

@@ -34,7 +34,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
   val returnUrl: String = testOnly.routes.TestOnlyController.successfulCall
     .absoluteURL(false, teaHost)
   val urlPath =
-    s"/no-pt-enrolment?redirectUrl=${testOnly.routes.TestOnlyController.successfulCall
+    s"?redirectUrl=${testOnly.routes.TestOnlyController.successfulCall
       .absoluteURL(false, teaHost)}"
 
   s"GET $urlPath" when {
@@ -117,7 +117,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
 
     "a user has other credentials associated with their NINO" that {
       "includes one with a PT enrolment" should {
-        "redirect to pt-enrolment-other-account" in {
+        "redirect to /no-pt-enrolment" in {
           stubAuthorizePost(OK, authoriseResponseJson().toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
           stubGet(
@@ -134,9 +134,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
             val page = Jsoup.parse(resp.body)
 
             resp.status shouldBe SEE_OTHER
-            resp.header("Location").get should include(
-              "/pt-enrolment-other-account"
-            )
+            resp.header("Location").get should include("/no-pt-enrolment")
           }
         }
       }

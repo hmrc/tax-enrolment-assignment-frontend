@@ -104,7 +104,7 @@ class AccountCheckControllerSpec extends TestFixture {
     }
 
     "a PT enrolment exists on another users account" should {
-      "redirect to the PT Enrolment on another account" in new TestHelper {
+      "redirect to /no-pt-enrolment" in new TestHelper {
         mockAuthCall()
         mockAccountCheckSuccess(PT_ASSIGNED_TO_OTHER_USER)
 
@@ -114,7 +114,7 @@ class AccountCheckControllerSpec extends TestFixture {
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some(
-          "/tax-enrolment-assignment-frontend/pt-enrolment-other-account"
+          "/tax-enrolment-assignment-frontend/no-pt-enrolment"
         )
       }
     }

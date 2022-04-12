@@ -158,7 +158,7 @@ object LoggingEvent {
   def logNoUserFoundWithPTEnrolment(credentialId: String): LoggingEvent =
     Error(
       Event(
-        "[MultipleAccountsOrchestrator][checkValidAccountTypeRedirectUrlInCache]",
+        "[MultipleAccountsOrchestrator][getPTCredentialDetails]",
         details = Some(
           s"No PT enrolment found when user has account type of PT on other account for credential $credentialId"
         )

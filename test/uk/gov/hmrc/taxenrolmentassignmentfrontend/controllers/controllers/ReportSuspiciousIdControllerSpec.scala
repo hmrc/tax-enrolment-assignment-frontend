@@ -174,7 +174,7 @@ class ReportSuspiciousIdControllerSpec extends TestFixture {
         status(res) shouldBe SEE_OTHER
         redirectLocation(res) shouldBe
           Some(
-            "/tax-enrolment-assignment-frontend/no-pt-enrolment?redirectUrl=%2Ftax-enrolment-assignment-frontend%2Ftest-only%2Fsuccessful"
+            "/tax-enrolment-assignment-frontend?redirectUrl=%2Ftax-enrolment-assignment-frontend%2Ftest-only%2Fsuccessful"
           )
       }
     }

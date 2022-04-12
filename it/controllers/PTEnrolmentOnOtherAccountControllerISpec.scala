@@ -48,7 +48,7 @@ class PTEnrolmentOnOtherAccountControllerISpec
   val returnUrl: String = testOnly.routes.TestOnlyController.successfulCall
     .absoluteURL(false, teaHost)
   val urlPath =
-    s"/pt-enrolment-other-account"
+    s"/no-pt-enrolment"
 
   val sessionCookie
     : (String, String) = ("COOKIE" -> createSessionCookieAsString(sessionData))
@@ -119,7 +119,7 @@ class PTEnrolmentOnOtherAccountControllerISpec
 
             resp.status shouldBe SEE_OTHER
             resp.header("Location").get should include(
-              s"/tax-enrolment-assignment-frontend/no-pt-enrolment"
+              s"/tax-enrolment-assignment-frontend"
             )
           }
         }

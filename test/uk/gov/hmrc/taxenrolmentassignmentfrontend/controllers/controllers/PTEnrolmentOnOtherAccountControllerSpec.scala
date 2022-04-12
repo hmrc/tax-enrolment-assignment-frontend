@@ -172,7 +172,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some(
-          "/tax-enrolment-assignment-frontend/no-pt-enrolment?redirectUrl=%2Ftest"
+          "/tax-enrolment-assignment-frontend?redirectUrl=%2Ftest"
         )
       }
     }

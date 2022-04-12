@@ -27,16 +27,26 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.{
   EnrolCurrentUserIdForm,
   KeepAccessToSAThroughPTAForm
 }
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{
   EnrolCurrentUser,
   KeepAccessToSA
 }
+
+import scala.xml.Document
 
 class KeepAccessToSASpec extends TestFixture {
 
   lazy val view: KeepAccessToSA = inject[KeepAccessToSA]
 
   val form = KeepAccessToSAThroughPTAForm.keepAccessToSAThroughPTAForm
+
+  def documentPopForm(isYes: Boolean = true) = {
+    val popForm = KeepAccessToSAThroughPTAForm.keepAccessToSAThroughPTAForm
+      .fill(KeepAccessToSAThroughPTA(isYes))
+    val popView = view(popForm)(FakeRequest(), testMessages)
+    doc(popView)
+  }
 
   object Selectors {
     val heading = "govuk-fieldset__heading"
@@ -51,7 +61,7 @@ class KeepAccessToSASpec extends TestFixture {
   }
 
   "KeepAccessToSA" when {
-    "the form has no errors" should {
+    "the form is not prepopulated and has no error" should {
       val html =
         view(form)(FakeRequest(), testMessages)
       val document = doc(html)
@@ -62,11 +72,11 @@ class KeepAccessToSASpec extends TestFixture {
       "have the expected heading" in {
         document
           .getElementsByClass(Selectors.heading)
-          .text shouldBe KeepAccessToSAMessages.title
+          .text shouldBe KeepAccessToSAMessages.heading
       }
       "have radio buttons" that {
         val radioButtons = document.getElementsByClass(Selectors.radios)
-        "have the option to select Yes" in {
+        "have the option to select Yes and is unchecked" in {
           val radioButton1 = radioButtons
             .get(0)
           radioButton1
@@ -75,6 +85,9 @@ class KeepAccessToSASpec extends TestFixture {
           radioButton1
             .getElementsByClass(Selectors.radioInput)
             .attr("value") shouldBe "yes"
+          radioButton1
+            .getElementsByClass(Selectors.radioInput)
+            .hasAttr("checked") shouldBe false
         }
         "have the option to select No" in {
           val radioButton2 = radioButtons
@@ -85,6 +98,9 @@ class KeepAccessToSASpec extends TestFixture {
           radioButton2
             .getElementsByClass(Selectors.radioInput)
             .attr("value") shouldBe "no"
+          radioButton2
+            .getElementsByClass(Selectors.radioInput)
+            .hasAttr("checked") shouldBe false
         }
       }
 
@@ -110,6 +126,127 @@ class KeepAccessToSASpec extends TestFixture {
 
       "contains a form with the correct action" in {
         document
+          .select(Selectors.form)
+          .attr("action") shouldBe KeepAccessToSAMessages.action
+      }
+    }
+
+    "the form is prepopulated and has no error" should {
+      val documentYes = documentPopForm(true)
+      val documentNo = documentPopForm(false)
+      "have the expected title" in {
+        documentYes.title() shouldBe KeepAccessToSAMessages.title
+        documentNo.title() shouldBe KeepAccessToSAMessages.title
+      }
+
+      "have the expected heading" in {
+        documentYes
+          .getElementsByClass(Selectors.heading)
+          .text shouldBe KeepAccessToSAMessages.heading
+        documentNo
+          .getElementsByClass(Selectors.heading)
+          .text shouldBe KeepAccessToSAMessages.heading
+      }
+      "have radio buttons" that {
+        val radioButtonsYes = documentYes.getElementsByClass(Selectors.radios)
+        val radioButtonsNo = documentNo.getElementsByClass(Selectors.radios)
+        "have the option to select Yes and is checked" when {
+          "the form is populated with yes" in {
+            val radioButton1 = radioButtonsYes
+              .get(0)
+            radioButton1
+              .getElementsByClass(Selectors.radioLables)
+              .text() shouldBe KeepAccessToSAMessages.radioYes
+            radioButton1
+              .getElementsByClass(Selectors.radioInput)
+              .attr("value") shouldBe "yes"
+            radioButton1
+              .getElementsByClass(Selectors.radioInput)
+              .hasAttr("checked") shouldBe true
+          }
+        }
+        "have the option to select No and is unchecked" when {
+          "the form is populated with yes" in {
+            val radioButton2 = radioButtonsYes
+              .get(1)
+            radioButton2
+              .getElementsByClass(Selectors.radioLables)
+              .text() shouldBe KeepAccessToSAMessages.radioNo
+            radioButton2
+              .getElementsByClass(Selectors.radioInput)
+              .attr("value") shouldBe "no"
+            radioButton2
+              .getElementsByClass(Selectors.radioInput)
+              .hasAttr("checked") shouldBe false
+          }
+        }
+        "have the option to select Yes and is unchecked" when {
+          "the form is populated with no" in {
+            val radioButton1 = radioButtonsNo
+              .get(0)
+            radioButton1
+              .getElementsByClass(Selectors.radioLables)
+              .text() shouldBe KeepAccessToSAMessages.radioYes
+            radioButton1
+              .getElementsByClass(Selectors.radioInput)
+              .attr("value") shouldBe "yes"
+            radioButton1
+              .getElementsByClass(Selectors.radioInput)
+              .hasAttr("checked") shouldBe false
+          }
+        }
+        "have the option to select No and is checked" when {
+          "the form is populated with yes" in {
+            val radioButton2 = radioButtonsNo
+              .get(1)
+            radioButton2
+              .getElementsByClass(Selectors.radioLables)
+              .text() shouldBe KeepAccessToSAMessages.radioNo
+            radioButton2
+              .getElementsByClass(Selectors.radioInput)
+              .attr("value") shouldBe "no"
+            radioButton2
+              .getElementsByClass(Selectors.radioInput)
+              .hasAttr("checked") shouldBe true
+          }
+        }
+      }
+
+      "contains a link for not having SA" that {
+        val textElementYes = documentYes
+          .getElementsByClass(Selectors.body)
+          .get(0)
+        val textElementNo = documentYes
+          .getElementsByClass(Selectors.body)
+          .get(0)
+        "has the correct text" in {
+          textElementYes.text() shouldBe KeepAccessToSAMessages.noSALink
+          textElementNo.text() shouldBe KeepAccessToSAMessages.noSALink
+        }
+
+        "has the link to fraud reporting" in {
+          textElementYes
+            .select("a")
+            .attr("href") shouldBe KeepAccessToSAMessages.fraudReportingUrl
+          textElementNo
+            .select("a")
+            .attr("href") shouldBe KeepAccessToSAMessages.fraudReportingUrl
+        }
+      }
+      "contain the correct button" in {
+        documentYes
+          .getElementsByClass(Selectors.button)
+          .text shouldBe KeepAccessToSAMessages.button
+        documentNo
+          .getElementsByClass(Selectors.button)
+          .text shouldBe KeepAccessToSAMessages.button
+      }
+
+      "contains a form with the correct action" in {
+        documentYes
+          .select(Selectors.form)
+          .attr("action") shouldBe KeepAccessToSAMessages.action
+        documentNo
           .select(Selectors.form)
           .attr("action") shouldBe KeepAccessToSAMessages.action
       }

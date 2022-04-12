@@ -61,11 +61,11 @@ pageTitle = Some(messages("ReportSuspiciousID.title")), Some("?")) {
 
     @createRowWith(messages("ReportSuspiciousID.userId"), ptAccountDetails.userId)
     @createRowWith(messages("ReportSuspiciousID.email"), ptAccountDetails.email.get)
-
+    @createRowWith(messages("ReportSuspiciousID.lastLoginDate"), ptAccountDetails.lastLoginDate)
     @for(mfaDetail <- ptAccountDetails.mfaDetails) {
     @createRowWith(mfaDetail.factorName, mfaDetail.factorValue)
     }
-    @createRowWith(messages("ReportSuspiciousID.lastLoginDate"), ptAccountDetails.lastLoginDate)
+
 
 </dl>
 

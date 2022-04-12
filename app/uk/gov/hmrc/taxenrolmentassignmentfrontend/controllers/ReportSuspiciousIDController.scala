@@ -26,16 +26,16 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails}
 
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{PTEnrolmentOnAnotherAccount, ContactSA}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{PTEnrolmentOnAnotherAccount, ReportSuspiciousID}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ContactSAController @Inject()(
+class ReportSuspiciousIDController @Inject()(
                                      authAction: AuthAction,
                                      mcc: MessagesControllerComponents,
                                      logger: EventLoggerService,
-                                     contactSA: ContactSA
+                                     reportSuspiciousID: ReportSuspiciousID
                                             )(implicit ec: ExecutionContext, appConfig: AppConfig)
   extends FrontendController(mcc)
     with I18nSupport {
@@ -54,7 +54,7 @@ class ContactSAController @Inject()(
     )
 
     Future.successful(
-      Ok(contactSA(
+      Ok(reportSuspiciousID(
         fixedAccountDetails
       ))
     )

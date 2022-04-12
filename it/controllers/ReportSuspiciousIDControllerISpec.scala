@@ -21,7 +21,7 @@ import helpers.TestITData._
 import helpers.WiremockHelper._
 import play.api.http.Status
 
-class ContactSAControllerISpec extends IntegrationSpecBase with Status {
+class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Status {
 
   val teaHost = s"localhost:$port"
   val urlPath =

@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.messages
 
-object ContactSAMessages {
+object ReportSuspiciousIDMessages {
   val title = "You need to contact us"
   val heading = "You need to contact us"
   val paragraph1: String = "This is so we can give you access to your personal tax account. " +

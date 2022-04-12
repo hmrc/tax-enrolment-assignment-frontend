@@ -19,14 +19,14 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.views
 import play.api.test.FakeRequest
 import play.twirl.api.HtmlFormat
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.messages.ContactSAMessages
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.messages.ReportSuspiciousIDMessages
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.ContactSA
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.ReportSuspiciousID
 
-class ContactSASpec extends TestFixture {
+class ReportSuspiciousIDSpec extends TestFixture {
 
-  val reportSuspiciousIdView: ContactSA =
-    app.injector.instanceOf[ContactSA]
+  val reportSuspiciousIdView: ReportSuspiciousID =
+    app.injector.instanceOf[ReportSuspiciousID]
 
   object Selectors {
     val backLink = "govuk-back-link"
@@ -64,11 +64,11 @@ class ContactSASpec extends TestFixture {
       }
     }
     "contains the correct title" in {
-      doc(result).title shouldBe ContactSAMessages.title
+      doc(result).title shouldBe ReportSuspiciousIDMessages.title
     }
     "contains the correct heading" in {
       doc(result).getElementsByClass(Selectors.heading)
-        .text() shouldBe ContactSAMessages.heading
+        .text() shouldBe ReportSuspiciousIDMessages.heading
     }
     "contains a suspicious userId summary details" that {
       val suspiciousIdDetailsRows = doc(result).getElementsByClass(Selectors.summaryListRow)
@@ -119,27 +119,27 @@ class ContactSASpec extends TestFixture {
       val paragraph = doc(result).select("p." + Selectors.body)
 
       paragraph.get(0)
-        .text() shouldBe ContactSAMessages.paragraph1
+        .text() shouldBe ReportSuspiciousIDMessages.paragraph1
     }
 
     "contains the contact UK telephone details " in {
       val telephoneBlock = doc(result).select("#telephone dt")
 
       telephoneBlock.get(0)
-        .text() shouldBe ContactSAMessages.telephone(0)
+        .text() shouldBe ReportSuspiciousIDMessages.telephone(0)
 
       telephoneBlock.get(1)
-        .text() shouldBe ContactSAMessages.telephone(1)
+        .text() shouldBe ReportSuspiciousIDMessages.telephone(1)
     }
 
     "contains the outside UK contact details " in {
       val outsideUKBlock = doc(result).select("#outsideUk-telephone dt")
 
       outsideUKBlock.get(0)
-        .text() shouldBe ContactSAMessages.outsideUK(0)
+        .text() shouldBe ReportSuspiciousIDMessages.outsideUK(0)
 
       outsideUKBlock.get(1)
-        .text() shouldBe ContactSAMessages.outsideUK(1)
+        .text() shouldBe ReportSuspiciousIDMessages.outsideUK(1)
     }
 
     "contains the details block with valid details with in" that {
@@ -149,18 +149,18 @@ class ContactSASpec extends TestFixture {
       "correct title" in {
         doc(result)
           .select(".govuk-details__summary")
-          .text() shouldBe ContactSAMessages.informationBlock(0)
+          .text() shouldBe ReportSuspiciousIDMessages.informationBlock(0)
       }
       "correct information" in {
         detailsBlockParagraphs
           .get(0)
-          .text() shouldBe ContactSAMessages.informationBlock(1)
+          .text() shouldBe ReportSuspiciousIDMessages.informationBlock(1)
         detailsBlockParagraphs
           .get(1)
-          .text() shouldBe ContactSAMessages.informationBlock(2)
+          .text() shouldBe ReportSuspiciousIDMessages.informationBlock(2)
         detailsBlockParagraphs
           .get(2)
-          .text() shouldBe ContactSAMessages.informationBlock(3)
+          .text() shouldBe ReportSuspiciousIDMessages.informationBlock(3)
       }
       "correct gov-uk link target and link text for Relay UK link" in {
         doc(result)
@@ -169,17 +169,17 @@ class ContactSASpec extends TestFixture {
 
         doc(result)
           .select("details a")
-          .text() shouldBe ContactSAMessages.detailBlockLink
+          .text() shouldBe ReportSuspiciousIDMessages.detailBlockLink
 
         doc(result)
           .select("details a")
-          .attr("href") shouldBe ContactSAMessages.relayUkLinkUrl
+          .attr("href") shouldBe ReportSuspiciousIDMessages.relayUkLinkUrl
       }
     }
 
     "not display the continue button when no SA identified" in {
       doc(result)
-        .body().text().contains(ContactSAMessages.saPText) shouldBe false
+        .body().text().contains(ReportSuspiciousIDMessages.saPText) shouldBe false
 
       doc(result).select(".govuk-button")
         .size() shouldBe 0
@@ -189,10 +189,10 @@ class ContactSASpec extends TestFixture {
       doc(resultSA)
         .select("p." + Selectors.body)
         .get(4)
-        .text() shouldBe ContactSAMessages.saPText
+        .text() shouldBe ReportSuspiciousIDMessages.saPText
 
       doc(resultSA)
-        .getElementsByClass("govuk-button").text shouldBe ContactSAMessages.button
+        .getElementsByClass("govuk-button").text shouldBe ReportSuspiciousIDMessages.button
     }
 
 

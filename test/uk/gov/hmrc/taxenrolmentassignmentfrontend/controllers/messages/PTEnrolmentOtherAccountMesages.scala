@@ -19,16 +19,16 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.messages
 object PTEnrolmentOtherAccountMesages {
 
   val title =
-    "We have found your personal tax information under a different Government Gateway user ID"
+    "We have found your personal tax account under a different Government Gateway user ID"
   val heading =
-    "We have found your personal tax information under a different Government Gateway user ID"
+    "We have found your personal tax account under a different Government Gateway user ID"
   val text1 =
     "To access your personal tax information you need to sign in again with the following user ID:"
   val signoutUrl = "http://test/signout"
   val notMyUserId = "This user ID does not belong to me"
   //TODO remove fraud reporting url after consultation with leads, as it requires other changes such remove couple of tests etc etc
   val fraudReportingUrl =
-    "#"
+    "/tax-enrolment-assignment-frontend/no-pt-enrolment/contact-hmrc-pta"
   val saHeading = "Access to Self Assessment"
   val saText = "Your current user ID can access Self Assessment."
   val saUrl = "http://test/self-assessment"

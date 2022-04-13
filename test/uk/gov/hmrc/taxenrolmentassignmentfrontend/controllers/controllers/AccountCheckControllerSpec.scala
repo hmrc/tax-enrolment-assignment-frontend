@@ -104,7 +104,7 @@ class AccountCheckControllerSpec extends TestFixture {
     }
 
     "a PT enrolment exists on another users account" should {
-      "redirect to the PT Enrolment on another account" in new TestHelper {
+      "redirect to /no-pt-enrolment" in new TestHelper {
         mockAuthCall()
         mockAccountCheckSuccess(PT_ASSIGNED_TO_OTHER_USER)
 
@@ -114,7 +114,7 @@ class AccountCheckControllerSpec extends TestFixture {
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some(
-          "/tax-enrolment-assignment-frontend/pt-enrolment-other-account"
+          "/tax-enrolment-assignment-frontend/no-pt-enrolment"
         )
       }
     }
@@ -131,7 +131,7 @@ class AccountCheckControllerSpec extends TestFixture {
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some(
-          "/tax-enrolment-assignment-frontend/enrol-pt/introduction"
+          "/tax-enrolment-assignment-frontend/enrol-pt/enrolment-success-no-sa"
         )
       }
     }
@@ -148,7 +148,7 @@ class AccountCheckControllerSpec extends TestFixture {
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some(
-          "/tax-enrolment-assignment-frontend/enrol-pt/introduction"
+          "/tax-enrolment-assignment-frontend/enrol-pt/enrolment-success-no-sa"
         )
       }
     }
@@ -168,15 +168,16 @@ class AccountCheckControllerSpec extends TestFixture {
     }
 
     "a no credentials exists in IV for a given nino" should {
-      "return InternalServerError" in new TestHelper {
+      "render the error page" in new TestHelper {
         mockAuthCall()
         mockAccountCheckFailure(UnexpectedResponseFromIV)
 
-        val result = controller
+        val res = controller
           .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(result) shouldBe INTERNAL_SERVER_ERROR
+        status(res) shouldBe OK
+        contentAsString(res) should include("enrolmentError.title")
       }
     }
   }

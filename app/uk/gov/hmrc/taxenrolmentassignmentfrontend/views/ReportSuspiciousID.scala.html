@@ -18,14 +18,16 @@
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.Layout
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.summarylist.SummaryListRow
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 
 @this(
 layout: Layout,
+formHelper: FormWithCSRF,
 govukSummaryList : GovukSummaryList,
 govukDetails : GovukDetails,
 govukButton: GovukButton)
 
-@(ptAccountDetails: AccountDetails, currentAccountHasSA: Boolean = false)(implicit request: Request[_], messages: Messages)
+@(ptAccountDetails: AccountDetails, saOnOtherAccountJourney: Boolean = false)(implicit request: Request[_], messages: Messages)
 
 @createRowWith(key: String, value: String) =  {
 <div class="govuk-summary-list__row">
@@ -39,57 +41,62 @@ govukButton: GovukButton)
 }
 
 @content = {
-<p class="govuk-body">@messages("reportSuspiciousId.detailsComponent.text1")</p>
-<p class="govuk-body">@messages("reportSuspiciousId.detailsComponent.text2")
-<a href="https://www.relayuk.bt.com/">@messages("reportSuspiciousId.detailsComponent.link")</a>
-@messages("reportSuspiciousId.detailsComponent.text3")</p>
-<p class="govuk-body">@messages("reportSuspiciousId.detailsComponent.text4")</p>
+<p class="govuk-body">@messages("ReportSuspiciousID.detailsComponent.text1")</p>
+<p class="govuk-body">@messages("ReportSuspiciousID.detailsComponent.text2")
+<a class = "govuk-link" target="_blank" href=@messages("ReportSuspiciousID.detailsComponent.link.href")>@messages("ReportSuspiciousID.detailsComponent.link")</a>
+@messages("ReportSuspiciousID.detailsComponent.text3")</p>
+<p class="govuk-body">@messages("ReportSuspiciousID.detailsComponent.text4")</p>
 }
 
 
 @layout(
-pageTitle = Some(messages("reportSuspiciousId.title")), Some("?")) {
+pageTitle = Some(messages("ReportSuspiciousID.title")), Some("?")) {
 
-<h1 class="govuk-heading-xl">@{messages(s"reportSuspiciousId.heading")}</h1>
+<h1 class="govuk-heading-xl">@{messages(s"ReportSuspiciousID.heading")}</h1>
+
+<p class="govuk-body">
+    @messages("ReportSuspiciousID.text1")
+    @messages("ReportSuspiciousID.text2")
+</p>
+
 <dl class="govuk-summary-list">
 
-    @createRowWith(messages("reportSuspiciousId.userId"), ptAccountDetails.userId)
-    @createRowWith(messages("reportSuspiciousId.email"), ptAccountDetails.email.get)
-    @createRowWith(messages("reportSuspiciousId.lastSignedIn"), ptAccountDetails.lastLoginDate)
-
+    @createRowWith(messages("ReportSuspiciousID.userId"), ptAccountDetails.userId)
+    @createRowWith(messages("ReportSuspiciousID.email"), ptAccountDetails.email.get)
+    @createRowWith(messages("ReportSuspiciousID.lastLoginDate"), ptAccountDetails.lastLoginDate)
     @for(mfaDetail <- ptAccountDetails.mfaDetails) {
     @createRowWith(mfaDetail.factorName, mfaDetail.factorValue)
     }
+
+
 </dl>
 
-<p class="govuk-body">@messages("reportSuspiciousId.text1")
-    <a href="javascript:window.print()" class="govuk-link"> @messages("reportSuspiciousId.text2")</a>
-    @messages("reportSuspiciousId.text3")
-</p>
+
 
 <dl id="telephone" class="govuk-list">
-    <dt>@messages("reportSuspiciousId.telephone.title")</dt>
-    <dt class="govuk-!-font-weight-bold">@messages("reportSuspiciousId.telephone.number")</dt>
+    <dt>@messages("ReportSuspiciousID.telephone.title")</dt>
+    <dt class="govuk-!-font-weight-bold">@messages("ReportSuspiciousID.telephone.number")</dt>
 </dl>
 
 <dl id="outsideUk-telephone" class="govuk-list">
-    <dt>@messages("reportSuspiciousId.outsideUK.title")</dt>
-    <dt class="govuk-!-font-weight-bold">@messages("reportSuspiciousId.outsideUK.number")</dt>
+    <dt>@messages("ReportSuspiciousID.outsideUK.title")</dt>
+    <dt class="govuk-!-font-weight-bold">@messages("ReportSuspiciousID.outsideUK.number")</dt>
 </dl>
 
 @govukDetails(Details(
-summary = Text(messages("reportSuspiciousId.detailsComponent.title")),
+summary = Text(messages("ReportSuspiciousID.detailsComponent.title")),
 content = HtmlContent(content)
 ))
 
-
-@if(currentAccountHasSA) {
-    <p class="govuk-body">@messages("reportSuspiciousId.sa.text1") </p>
+@if(saOnOtherAccountJourney) {
+  @formHelper(action = routes.ReportSuspiciousIDController.continue) {
+    <p class="govuk-body">@messages("ReportSuspiciousID.sa.text1") </p>
     <br>
     @govukButton(Button(
-    content = Text(messages("common.continue")),
-    href = Some("?")
-    ))
-}
-
+        preventDoubleClick = true,
+        content = Text(messages("common.continue")),
+        )
+      )
+    }
+  }
 }

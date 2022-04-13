@@ -19,17 +19,18 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.views
 import play.api.test.FakeRequest
 import play.twirl.api.HtmlFormat
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.messages.LandingPageMessages
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.LandingPage
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.messages.EnrolledForPTPageMessages
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTPage
 
-class LandingPageSpec extends TestFixture {
+class EnrolledForPTPageSpec extends TestFixture {
 
-  val landingPage: LandingPage = app.injector.instanceOf[LandingPage]
+  val enrolledForPTPage: EnrolledForPTPage =
+    app.injector.instanceOf[EnrolledForPTPage]
   val userId = "********3214"
   val htmlWithSA: HtmlFormat.Appendable =
-    landingPageView(userId, true)(FakeRequest(), testMessages)
+    enrolledForPTPage(userId, true)(FakeRequest(), testMessages)
   val htmlWithNoSA: HtmlFormat.Appendable =
-    landingPageView(userId, false)(FakeRequest(), testMessages)
+    enrolledForPTPage(userId, false)(FakeRequest(), testMessages)
   val documentWithSA = doc(htmlWithSA)
   val documentWithNoSA = doc(htmlWithNoSA)
 
@@ -41,65 +42,65 @@ class LandingPageSpec extends TestFixture {
     val form = "form"
   }
 
-  "The Landing Page" when {
+  "EnrolledForPTPage" when {
     "the user has SA" should {
       "contain the correct title" in {
-        documentWithSA.title shouldBe LandingPageMessages.title
+        documentWithSA.title shouldBe EnrolledForPTPageMessages.title
       }
       "contain the correct header" in {
         documentWithSA
           .getElementsByClass(Selectors.heading)
-          .text shouldBe LandingPageMessages.heading
+          .text shouldBe EnrolledForPTPageMessages.heading
       }
       "contain the correct body" in {
         documentWithSA
           .getElementsByClass(Selectors.body)
-          .text shouldBe LandingPageMessages.paragraphSA
+          .text shouldBe EnrolledForPTPageMessages.paragraphSA
       }
 
       "contain the correct h3 heading" in {
         documentWithSA
           .getElementsByClass(Selectors.saHeading)
-          .text shouldBe LandingPageMessages.heading3
+          .text shouldBe EnrolledForPTPageMessages.heading3
       }
 
       "contain the correct button" in {
         documentWithSA
           .getElementsByClass(Selectors.button)
-          .text shouldBe LandingPageMessages.button
+          .text shouldBe EnrolledForPTPageMessages.button
       }
 
       "contains a form with the correct action" in {
         documentWithSA
           .select(Selectors.form)
-          .attr("action") shouldBe LandingPageMessages.action
+          .attr("action") shouldBe EnrolledForPTPageMessages.action
       }
     }
 
     "the user has no SA" should {
       "contain the correct title" in {
-        documentWithNoSA.title shouldBe LandingPageMessages.title
+        documentWithNoSA.title shouldBe EnrolledForPTPageMessages.title
       }
       "contain the correct header" in {
         documentWithNoSA
           .getElementsByClass("govuk-heading-xl")
-          .text shouldBe LandingPageMessages.heading
+          .text shouldBe EnrolledForPTPageMessages.heading
       }
       "contain the correct body" in {
         documentWithNoSA
           .getElementsByClass("govuk-body")
-          .text shouldBe LandingPageMessages.paragraphNoSA
+          .text shouldBe EnrolledForPTPageMessages.paragraphNoSA
       }
       "contain the correct button" in {
         documentWithNoSA
           .getElementsByClass("govuk-button")
-          .text shouldBe LandingPageMessages.button
+          .text shouldBe EnrolledForPTPageMessages.button
       }
 
       "contains a form with the correct action" in {
         documentWithSA
           .select(Selectors.form)
-          .attr("action") shouldBe LandingPageMessages.action
+          .attr("action") shouldBe EnrolledForPTPageMessages.action
       }
     }
   }

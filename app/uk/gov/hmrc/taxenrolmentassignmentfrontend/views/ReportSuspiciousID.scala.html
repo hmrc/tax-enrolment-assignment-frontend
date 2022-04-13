@@ -27,7 +27,7 @@ govukSummaryList : GovukSummaryList,
 govukDetails : GovukDetails,
 govukButton: GovukButton)
 
-@(ptAccountDetails: AccountDetails, saOnOtherAccount: Boolean = false)(implicit request: Request[_], messages: Messages)
+@(ptAccountDetails: AccountDetails, saOnOtherAccountJourney: Boolean = false)(implicit request: Request[_], messages: Messages)
 
 @createRowWith(key: String, value: String) =  {
 <div class="govuk-summary-list__row">
@@ -88,7 +88,7 @@ summary = Text(messages("ReportSuspiciousID.detailsComponent.title")),
 content = HtmlContent(content)
 ))
 
-@if(saOnOtherAccount) {
+@if(saOnOtherAccountJourney) {
   @formHelper(action = routes.ReportSuspiciousIDController.continue) {
     <p class="govuk-body">@messages("ReportSuspiciousID.sa.text1") </p>
     <br>

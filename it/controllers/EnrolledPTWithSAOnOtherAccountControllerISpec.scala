@@ -87,6 +87,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
 
     "the session cache has Account type of SA_ASSIGNED_TO_OTHER_USER" should {
       s"render the enrolledPTPage after user chooses to keep SA separate" in {
+        await(removeAll(sessionId))
         await(save[String](sessionId, "redirectURL", returnUrl))
         await(
           save[AccountTypes.Value](

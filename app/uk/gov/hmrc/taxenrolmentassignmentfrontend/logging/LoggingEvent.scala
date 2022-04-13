@@ -165,19 +165,6 @@ object LoggingEvent {
       )
     )
 
-  def logIncorrectUserTypeForSASignInAgainPage(
-    credentialId: String
-  ): LoggingEvent = {
-    Warn(
-      Event(
-        "[SignInAgainController][view]",
-        details = Some(
-          s"credential $credentialId does not have ${AccountTypes.SA_ASSIGNED_TO_OTHER_USER.toString}"
-        )
-      )
-    )
-  }
-
   def logAuthenticationFailure(errorDetails: String): LoggingEvent =
     Warn(Event("[AuthAction][invokeBlock]", errorDetails = Some(errorDetails)))
 

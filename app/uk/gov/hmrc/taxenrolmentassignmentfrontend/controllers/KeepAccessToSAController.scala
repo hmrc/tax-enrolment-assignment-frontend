@@ -23,20 +23,27 @@ import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.KeepAccessToSA
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
 import scala.concurrent.Future
 
 @Singleton
 class KeepAccessToSAController @Inject()(
   authAction: AuthAction,
+  multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
   mcc: MessagesControllerComponents,
-  keepAccessToSA: KeepAccessToSA
+  val logger: EventLoggerService,
+  keepAccessToSA: KeepAccessToSA,
+  val errorView: ErrorTemplate
 )(implicit config: AppConfig)
     extends FrontendController(mcc)
-    with I18nSupport {
+    with I18nSupport
+    with ControllerHelper {
 
   def view(): Action[AnyContent] =
     authAction.async { implicit request =>

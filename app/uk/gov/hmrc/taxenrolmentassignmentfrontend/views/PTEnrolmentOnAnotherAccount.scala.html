@@ -57,9 +57,8 @@ govukSummaryList : GovukSummaryList)
     </dl>
 
 <!--//TODO remove fraud reporting url after consultation with leads, as it requires other changes such remove couple of tests etc etc-->
-
     <p class="govuk-body">
-        <a href="#" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.notMyUserId")</a>
+        <a href="@routes.ReportSuspiciousIDController.viewNoSA" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.notMyUserId")</a>
     </p>
     @if(currentAccountHasSA) {
         <h3 class="govuk-heading-m">@messages("ptEnrolmentOnOtherAccount.saHeading")</h3>

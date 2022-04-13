@@ -34,6 +34,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUs
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
   InvalidUserType,
   NoPTEnrolmentWhenOneExpected,
+  NoSAEnrolmentWhenOneExpected,
   TaxEnrolmentAssignmentErrors
 }
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
@@ -112,7 +113,7 @@ class MultipleAccountsOrchestrator @Inject()(
   ): TEAFResult[Option[AccountDetails]] = EitherT {
     sessionCache.getEntry[Boolean](REPORTED_FRAUD).flatMap {
       case Some(true) => Future.successful(Right(None))
-      case _          => getSACredentialDetails.value
+      case _          => getSACredentialDetails.map(Some(_)).value
     }
   }
 
@@ -120,14 +121,14 @@ class MultipleAccountsOrchestrator @Inject()(
     implicit requestWithUserDetails: RequestWithUserDetails[AnyContent],
     hc: HeaderCarrier,
     ec: ExecutionContext
-  ): TEAFResult[Option[AccountDetails]] = EitherT {
+  ): TEAFResult[AccountDetails] = EitherT {
     sessionCache
       .getEntry[UsersAssignedEnrolment](USER_ASSIGNED_SA_ENROLMENT)
       .flatMap { optCredential =>
         optCredential.fold[Option[String]](None)(_.enrolledCredential) match {
           case Some(saCred) =>
-            usersGroupSearchService.getAccountDetails(saCred).map(Some(_)).value
-          case _ => Future.successful(Right(None))
+            usersGroupSearchService.getAccountDetails(saCred).value
+          case _ => Future.successful(Left(NoSAEnrolmentWhenOneExpected))
         }
       }
   }

@@ -146,7 +146,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
 
         whenReady(res) { resp =>
           resp.status shouldBe OK
-          resp.body should include("Government Gateway")
+          resp.body should include("There was a problem")
         }
       }
     }
@@ -194,7 +194,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
 
         whenReady(res) { resp =>
           resp.status shouldBe OK
-          resp.body should include("Government Gateway")
+          resp.body should include("There was a problem")
         }
       }
     }
@@ -297,7 +297,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
 
         whenReady(res) { resp =>
           resp.status shouldBe OK
-          resp.body should include("Government Gateway")
+          resp.body should include("There was a problem")
         }
       }
     }

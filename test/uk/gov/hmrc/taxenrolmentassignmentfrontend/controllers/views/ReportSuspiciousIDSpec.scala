@@ -44,7 +44,7 @@ class ReportSuspiciousIDSpec extends TestFixture {
   val mfaDetails = Seq(MFADetails("Text message", "07390328923"))
 
   val accountDetails = AccountDetails(
-    "********3214",
+    "Ending with 4533",
     Some("email1@test.com"),
     "Yesterday",
     mfaDetails
@@ -95,7 +95,7 @@ class ReportSuspiciousIDSpec extends TestFixture {
           .getElementsByClass(Selectors.summaryListValue)
           .text() shouldBe accountDetails.email.get
       }
-      "includes the last signed in field with correct value" in {
+      "includes the last signed in date" in {
         suspiciousIdDetailsRows
           .get(2)
           .getElementsByClass(Selectors.summaryListKey)
@@ -117,17 +117,12 @@ class ReportSuspiciousIDSpec extends TestFixture {
       }
     }
 
-    "contains a valid paragraph for downloading the suspicious details along with download link" in {
+    "contains a valid paragraph details" in {
       val paragraph = doc(result).select("p." + Selectors.body)
 
       paragraph
         .get(0)
         .text() shouldBe ReportSuspiciousIDMessages.paragraph1
-
-      doc(result)
-        .select("a." + Selectors.links)
-        .get(1)
-        .text() shouldBe ReportSuspiciousIDMessages.linkParagraphText
     }
 
     "contains the contact UK telephone details " in {
@@ -173,9 +168,20 @@ class ReportSuspiciousIDSpec extends TestFixture {
         detailsBlockParagraphs
           .get(2)
           .text() shouldBe ReportSuspiciousIDMessages.informationBlock(3)
+      }
+      "correct gov-uk link target and link text for Relay UK link" in {
+        doc(result)
+          .getElementsByClass(Selectors.links)
+          .get(1)
+          .attr("target") shouldBe "_blank"
+
         doc(result)
           .select("details a")
           .text() shouldBe ReportSuspiciousIDMessages.detailBlockLink
+
+        doc(result)
+          .select("details a")
+          .attr("href") shouldBe ReportSuspiciousIDMessages.relayUkLinkUrl
       }
     }
 
@@ -186,22 +192,21 @@ class ReportSuspiciousIDSpec extends TestFixture {
         .contains(ReportSuspiciousIDMessages.saPText) shouldBe false
 
       doc(result)
-        .select(".govuk-button")
+        .select("govuk-button")
         .size() shouldBe 0
     }
 
-    "should only display the continue button when SA identified" that {
-      "has the expected text" in {
-        doc(resultSA)
-          .select("p." + Selectors.body)
-          .get(4)
-          .text() shouldBe ReportSuspiciousIDMessages.saPText
+    "only display the continue button when SA identified" in {
+      doc(resultSA)
+        .select("p." + Selectors.body)
+        .get(4)
+        .text() shouldBe ReportSuspiciousIDMessages.saPText
 
-        doc(resultSA)
-          .getElementsByClass("govuk-button")
-          .text shouldBe ReportSuspiciousIDMessages.button
-      }
+      doc(resultSA)
+        .getElementsByClass("govuk-button")
+        .text shouldBe ReportSuspiciousIDMessages.button
     }
+
     "contains a form with the correct action" in {
       doc(resultSA)
         .select("form")

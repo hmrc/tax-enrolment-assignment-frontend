@@ -113,7 +113,7 @@ class EnrolledForPTISpec extends IntegrationSpecBase with Status {
 
         whenReady(res) { resp =>
           resp.status shouldBe OK
-          resp.body should include("Government Gateway")
+          resp.body should include("There was a problem")
         }
       }
     }
@@ -136,7 +136,7 @@ class EnrolledForPTISpec extends IntegrationSpecBase with Status {
 
         whenReady(res) { resp =>
           resp.status shouldBe OK
-          resp.body should include("Government Gateway")
+          resp.body should include("There was a problem")
         }
       }
     }
@@ -159,7 +159,7 @@ class EnrolledForPTISpec extends IntegrationSpecBase with Status {
 
         whenReady(res) { resp =>
           resp.status shouldBe OK
-          resp.body should include("Government Gateway")
+          resp.body should include("There was a problem")
         }
       }
     }
@@ -251,7 +251,7 @@ class EnrolledForPTISpec extends IntegrationSpecBase with Status {
     }
 
     "the session cache does not contain the redirect url" should {
-      s"redirect to the redirect url" in {
+      s"render the error page" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -262,7 +262,7 @@ class EnrolledForPTISpec extends IntegrationSpecBase with Status {
 
         whenReady(res) { resp =>
           resp.status shouldBe OK
-          resp.body should include("enrolmentError.title")
+          resp.body should include("There was a problem")
         }
       }
     }

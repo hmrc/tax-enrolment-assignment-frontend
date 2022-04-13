@@ -38,6 +38,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
   InvalidUserType,
   NoPTEnrolmentWhenOneExpected,
+  NoSAEnrolmentWhenOneExpected,
   TaxEnrolmentAssignmentErrors
 }
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
@@ -467,7 +468,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
         }
       }
 
-      "return None" when {
+      "return NoPTEnrolmentWhenOneExpected" when {
         "the sa user in the cache is empty" in {
           (mockTeaSessionCache
             .getEntry(_: String)(
@@ -488,7 +489,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
           val res = orchestrator.getSACredentialIfNotFraud
 
           whenReady(res.value) { result =>
-            result shouldBe Right(None)
+            result shouldBe Left(NoSAEnrolmentWhenOneExpected)
           }
         }
 
@@ -512,7 +513,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
           val res = orchestrator.getSACredentialIfNotFraud
 
           whenReady(res.value) { result =>
-            result shouldBe Right(None)
+            result shouldBe Left(NoSAEnrolmentWhenOneExpected)
           }
         }
       }

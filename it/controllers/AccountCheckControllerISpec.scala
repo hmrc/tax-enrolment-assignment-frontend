@@ -101,7 +101,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
             ""
           )
 
-          stubGet(s"/personal-account", OK, "Government Gateway")
+          stubGet(s"/personal-account", OK, "There was a problem")
 
           val res = buildRequest(urlPath, followRedirects = true)
             .withHttpHeaders(xSessionId, csrfContent)
@@ -109,7 +109,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
 
           whenReady(res) { resp =>
             resp.status shouldBe OK
-            resp.body should include("Government Gateway")
+            resp.body should include("There was a problem")
           }
         }
       }
@@ -372,7 +372,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
 
         whenReady(res) { resp =>
           resp.status shouldBe OK
-          resp.body should include("Government Gateway")
+          resp.body should include("There was a problem")
         }
       }
     }
@@ -395,7 +395,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
 
         whenReady(res) { resp =>
           resp.status shouldBe OK
-          resp.body should include("Government Gateway")
+          resp.body should include("There was a problem")
         }
       }
     }

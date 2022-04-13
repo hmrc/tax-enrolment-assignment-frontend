@@ -21,18 +21,14 @@ import play.api.Logger
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
+  PT_ASSIGNED_TO_OTHER_USER,
+  SA_ASSIGNED_TO_OTHER_USER
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
-  InvalidUserType,
-  UnexpectedResponseFromTaxEnrolments
-}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{
-  logAssignedEnrolmentAfterReportingFraud,
-  logUnexpectedErrorOccurred
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logAssignedEnrolmentAfterReportingFraud
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
   AccountDetails,
   MFADetails
@@ -46,12 +42,12 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemp
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ReportSuspiciousIdController @Inject()(
+class ReportSuspiciousIDController @Inject()(
   authAction: AuthAction,
   sessionCache: TEASessionCache,
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
   mcc: MessagesControllerComponents,
-  reportSuspiciousId: ReportSuspiciousID,
+  reportSuspiciousID: ReportSuspiciousID,
   val logger: EventLoggerService,
   val errorView: ErrorTemplate
 )(implicit ec: ExecutionContext, appConfig: AppConfig)
@@ -61,16 +57,36 @@ class ReportSuspiciousIdController @Inject()(
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
-  def view(): Action[AnyContent] = authAction.async { implicit request =>
-    val mfaDetails = Seq(MFADetails("Text message", "07390328923"))
-    val fixedAccountDetails = AccountDetails(
-      "********3214",
-      Some("email1@test.com"),
-      "Yesterday",
-      mfaDetails
-    )
+  def viewNoSA(): Action[AnyContent] = authAction.async { implicit request =>
+    val res = for {
+      _ <- multipleAccountsOrchestrator.checkValidAccountTypeRedirectUrlInCache(
+        List(PT_ASSIGNED_TO_OTHER_USER)
+      )
+      ptAccount <- multipleAccountsOrchestrator.getPTCredentialDetails
+    } yield ptAccount
 
-    Future.successful(Ok(reportSuspiciousId(fixedAccountDetails, true)))
+    res.value.map {
+      case Right(ptAccount) =>
+        Ok(reportSuspiciousID(ptAccount))
+      case Left(error) =>
+        handleErrors(error, "[ReportSuspiciousIDController][viewNoSA]")
+    }
+  }
+
+  def viewSA(): Action[AnyContent] = authAction.async { implicit request =>
+    val res = for {
+      _ <- multipleAccountsOrchestrator.checkValidAccountTypeRedirectUrlInCache(
+        List(SA_ASSIGNED_TO_OTHER_USER)
+      )
+      saAccount <- multipleAccountsOrchestrator.getSACredentialDetails
+    } yield saAccount
+
+    res.value.map {
+      case Right(saAccount) =>
+        Ok(reportSuspiciousID(saAccount, true))
+      case Left(error) =>
+        handleErrors(error, "[ReportSuspiciousIDController][viewSA]")
+    }
   }
 
   def continue: Action[AnyContent] = authAction.async { implicit request =>

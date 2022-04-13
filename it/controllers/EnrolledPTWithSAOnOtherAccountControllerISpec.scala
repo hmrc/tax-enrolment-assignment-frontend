@@ -87,7 +87,6 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
 
     "the session cache has Account type of SA_ASSIGNED_TO_OTHER_USER" should {
       s"render the enrolledPTPage after user chooses to keep SA separate" in {
-        await(removeAll(sessionId))
         await(save[String](sessionId, "redirectURL", returnUrl))
         await(
           save[AccountTypes.Value](
@@ -133,11 +132,14 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
             SA_ASSIGNED_TO_OTHER_USER
           )
         )
-        val authResponse = authoriseResponseJson()
+
+        val authResponse = authoriseResponseJson(
+          optCreds = Some(creds.copy(providerId = CREDENTIAL_ID_3))
+        )
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGet(
-          s"/users-group-search/users/$CREDENTIAL_ID",
+          s"/users-group-search/users/$CREDENTIAL_ID_3",
           INTERNAL_SERVER_ERROR,
           ""
         )

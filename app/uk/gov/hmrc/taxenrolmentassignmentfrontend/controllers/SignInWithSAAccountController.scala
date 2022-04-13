@@ -20,13 +20,15 @@ import play.api.Logger
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REDIRECT_URL
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, UsersGroupSearchService}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SignInWithSAAccount
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
@@ -35,50 +37,31 @@ import scala.concurrent.ExecutionContext
 class SignInWithSAAccountController @Inject()(
                                         authAction: AuthAction,
                                         mcc: MessagesControllerComponents,
-                                        signInWithSAAccountPage: SignInWithSAAccount,
-                                        signOutController:SignOutController,
-                                        reportSuspiciousIDController: ReportSuspiciousIDController,
-                                        eacdService: EACDService,
+                                        multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
+                                        signInWithSAAccount: SignInWithSAAccount,
                                         sessionCache: TEASessionCache,
-                                        logger: EventLoggerService,
-                                        usersGroupSearchService: UsersGroupSearchService
-                                     )(implicit ec: ExecutionContext)
-  extends FrontendController(mcc) with I18nSupport {
+                                        val logger: EventLoggerService,
+                                        val errorView: ErrorTemplate)(implicit ec: ExecutionContext)
+  extends FrontendController(mcc)
+    with ControllerHelper
+    with I18nSupport {
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
   def view(): Action[AnyContent] = authAction.async { implicit request =>
+    val res = for {
+      _ <- multipleAccountsOrchestrator.checkValidAccountTypeRedirectUrlInCache(
+        List(SA_ASSIGNED_TO_OTHER_USER)
+      )
+      saAccount <- multipleAccountsOrchestrator.getSACredentialDetails
+    } yield saAccount
 
-    eacdService.getUsersAssignedSAEnrolment.value
-      .flatMap {
-        case Right(response)
-          if response.enrolledCredential
-            .fold(false)(_ != request.userDetails.credId) =>
-          usersGroupSearchService
-            .getAccountDetails(response.enrolledCredential.get)
-            .value
-            .map {
-              case Right(saAccountDetails) =>
-                  Ok(
-                    signInWithSAAccountPage(
-                      saAccountDetails
-                    )
-                  )
-              case Left(_) => InternalServerError
-            }
-        case _ =>
-          logger.logEvent(
-            logIncorrectUserTypeForSASignInAgainPage(
-              request.userDetails.credId
-            )
-          )
-          sessionCache.getEntry[String](REDIRECT_URL).map {
-            case Some(redirectUrl) =>
-              Redirect(routes.AccountCheckController.accountCheck(redirectUrl))
-            case None =>
-              InternalServerError
-          }
-      }
+    res.value.map {
+      case Right(saAccount) =>
+        Ok(signInWithSAAccount(saAccount))
+      case Left(error) =>
+        handleErrors(error, "[SignInWithSAAccountController][view]")
+    }
   }
 
   def continue: Action[AnyContent] = authAction.async { implicit request =>

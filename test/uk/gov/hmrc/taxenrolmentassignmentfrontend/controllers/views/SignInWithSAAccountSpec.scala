@@ -28,7 +28,15 @@ class SignInWithSAAccountSpec extends TestFixture {
 
   lazy val testTeaSessionCache = new TestTeaSessionCache
   lazy val signOutController = new SignOutController(mockAuthAction,mcc,testAppConfig,testTeaSessionCache)
-  lazy val reportSuspiciousIDController = new ReportSuspiciousIDController(mockAuthAction,mcc,logger,reportSuspiciousIDPage)
+  lazy val reportSuspiciousIDController = new ReportSuspiciousIDController(
+    mockAuthAction,
+    mockTeaSessionCache,
+    mockMultipleAccountsOrchestrator,
+    mcc,
+    reportSuspiciousIDPage,
+    logger,
+    errorView
+  )
   lazy val signInAgainPage: SignInWithSAAccount =inject[SignInWithSAAccount]
   lazy val reportSuspiciousIDPage: ReportSuspiciousID =inject[ReportSuspiciousID]
   lazy val result: HtmlFormat.Appendable = signInAgainPage(accountDetails)(FakeRequest(), testMessages)

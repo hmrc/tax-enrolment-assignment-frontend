@@ -70,15 +70,17 @@ class EACDService @Inject()(eacdConnector: EACDConnector,
     hc: HeaderCarrier,
     ec: ExecutionContext
   ): TEAFResult[UsersAssignedEnrolment] = {
-    eacdConnector
-      .getUsersWithPTEnrolment(requestWithUserDetails.userDetails.nino)
-      .map { userWithPTEnrolment =>
-        sessionCache.save[UsersAssignedEnrolment](
-          USER_ASSIGNED_PT_ENROLMENT,
-          userWithPTEnrolment
-        )
-        userWithPTEnrolment
-      }
+    for {
+      userWithPTEnrolment <- eacdConnector
+        .getUsersWithPTEnrolment(requestWithUserDetails.userDetails.nino)
+      _ <- EitherT.right[TaxEnrolmentAssignmentErrors](
+        sessionCache
+          .save[UsersAssignedEnrolment](
+            USER_ASSIGNED_PT_ENROLMENT,
+            userWithPTEnrolment
+          )
+      )
+    } yield userWithPTEnrolment
   }
 
   private def getUsersWithSAEnrolmentFromEACD(
@@ -98,11 +100,13 @@ class EACDService @Inject()(eacdConnector: EACDConnector,
             Future.successful(UsersAssignedEnrolment(None))
           )
       }
-    } yield {
-      sessionCache.save[UsersAssignedEnrolment](
-        USER_ASSIGNED_SA_ENROLMENT,
-        usersWithSAEnrolment
+      _ <- EitherT.right[TaxEnrolmentAssignmentErrors](
+        sessionCache.save[UsersAssignedEnrolment](
+          USER_ASSIGNED_SA_ENROLMENT,
+          usersWithSAEnrolment
+        )
       )
+    } yield {
       usersWithSAEnrolment
     }
   }

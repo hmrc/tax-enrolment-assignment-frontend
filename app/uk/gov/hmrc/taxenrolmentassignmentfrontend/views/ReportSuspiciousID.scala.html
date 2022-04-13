@@ -18,14 +18,16 @@
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.Layout
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.summarylist.SummaryListRow
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 
 @this(
 layout: Layout,
+formHelper: FormWithCSRF,
 govukSummaryList : GovukSummaryList,
 govukDetails : GovukDetails,
 govukButton: GovukButton)
 
-@(ptAccountDetails: AccountDetails, currentAccountHasSA: Boolean = false)(implicit request: Request[_], messages: Messages)
+@(ptAccountDetails: AccountDetails, saOnOtherAccountJourney: Boolean = false)(implicit request: Request[_], messages: Messages)
 
 @createRowWith(key: String, value: String) =  {
 <div class="govuk-summary-list__row">
@@ -86,14 +88,15 @@ summary = Text(messages("ReportSuspiciousID.detailsComponent.title")),
 content = HtmlContent(content)
 ))
 
-@if(currentAccountHasSA) {
-<p class="govuk-body">@messages("ReportSuspiciousID.sa.text1") </p>
-<br>
-@govukButton(Button(
-content = Text(messages("common.continue")),
-href = Some("?")
-))
-}
-
-
+@if(saOnOtherAccountJourney) {
+  @formHelper(action = routes.ReportSuspiciousIDController.continue) {
+    <p class="govuk-body">@messages("ReportSuspiciousID.sa.text1") </p>
+    <br>
+    @govukButton(Button(
+        preventDoubleClick = true,
+        content = Text(messages("common.continue")),
+        )
+      )
+    }
+  }
 }

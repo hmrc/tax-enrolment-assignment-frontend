@@ -21,42 +21,87 @@ import play.api.Logger
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
+  PT_ASSIGNED_TO_OTHER_USER,
+  SA_ASSIGNED_TO_OTHER_USER
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails}
-
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{PTEnrolmentOnAnotherAccount, ReportSuspiciousID}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logAssignedEnrolmentAfterReportingFraud
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
+  AccountDetails,
+  MFADetails
+}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REPORTED_FRAUD
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.ReportSuspiciousID
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ReportSuspiciousIDController @Inject()(
-                                     authAction: AuthAction,
-                                     mcc: MessagesControllerComponents,
-                                     logger: EventLoggerService,
-                                     reportSuspiciousID: ReportSuspiciousID
-                                            )(implicit ec: ExecutionContext, appConfig: AppConfig)
-  extends FrontendController(mcc)
-    with I18nSupport {
+  authAction: AuthAction,
+  sessionCache: TEASessionCache,
+  multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
+  mcc: MessagesControllerComponents,
+  reportSuspiciousID: ReportSuspiciousID,
+  val logger: EventLoggerService,
+  val errorView: ErrorTemplate
+)(implicit ec: ExecutionContext, appConfig: AppConfig)
+    extends FrontendController(mcc)
+    with I18nSupport
+    with ControllerHelper {
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
-  def view(): Action[AnyContent] = authAction.async { implicit request =>
-    val mfaDetails = Seq(
-      MFADetails("Text message", "07390328923")
-    )
-    val fixedAccountDetails = AccountDetails(
-      "********3214",
-      Some("email1@test.com"),
-      "Yesterday",
-      mfaDetails
-    )
+  def viewNoSA(): Action[AnyContent] = authAction.async { implicit request =>
+    val res = for {
+      _ <- multipleAccountsOrchestrator.checkValidAccountTypeRedirectUrlInCache(
+        List(PT_ASSIGNED_TO_OTHER_USER)
+      )
+      ptAccount <- multipleAccountsOrchestrator.getPTCredentialDetails
+    } yield ptAccount
 
-    Future.successful(
-      Ok(reportSuspiciousID(
-        fixedAccountDetails
-      ))
-    )
+    res.value.map {
+      case Right(ptAccount) =>
+        Ok(reportSuspiciousID(ptAccount))
+      case Left(error) =>
+        handleErrors(error, "[ReportSuspiciousIDController][viewNoSA]")
+    }
+  }
+
+  def viewSA(): Action[AnyContent] = authAction.async { implicit request =>
+    val res = for {
+      _ <- multipleAccountsOrchestrator.checkValidAccountTypeRedirectUrlInCache(
+        List(SA_ASSIGNED_TO_OTHER_USER)
+      )
+      saAccount <- multipleAccountsOrchestrator.getSACredentialDetails
+    } yield saAccount
+
+    res.value.map {
+      case Right(saAccount) =>
+        Ok(reportSuspiciousID(saAccount, true))
+      case Left(error) =>
+        handleErrors(error, "[ReportSuspiciousIDController][viewSA]")
+    }
+  }
+
+  def continue: Action[AnyContent] = authAction.async { implicit request =>
+    sessionCache.save[Boolean](REPORTED_FRAUD, true)
+    multipleAccountsOrchestrator
+      .checkValidAccountTypeAndEnrolForPT(SA_ASSIGNED_TO_OTHER_USER)
+      .value
+      .map {
+        case Right(_) =>
+          logger.logEvent(
+            logAssignedEnrolmentAfterReportingFraud(request.userDetails.credId)
+          )
+          Redirect(routes.EnrolledPTWithSAOnOtherAccountController.view)
+        case Left(error) =>
+          handleErrors(error, "[ReportSuspiciousIdController][continue]")
+      }
   }
 }

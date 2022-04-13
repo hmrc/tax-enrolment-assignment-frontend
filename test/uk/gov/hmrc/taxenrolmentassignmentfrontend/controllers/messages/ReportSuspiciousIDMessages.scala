@@ -17,14 +17,15 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.messages
 
 object ReportSuspiciousIDMessages {
+
   val title = "You need to contact us"
   val heading = "You need to contact us"
-  val paragraph1: String = "This is so we can give you access to your personal tax account. " +
+  val paragraph1
+    : String = "This is so we can give you access to your personal tax account. " +
     "We recommend you take a note of the user ID and email address below as this screen will time out after 15 minutes."
   val button = "Continue"
-
-  val telephone = Seq("Telephone:","0300 200 3600")
-  val outsideUK = Seq("Outside UK:","+44 161 930 8445")
+  val telephone = Seq("Telephone:", "0300 200 3600")
+  val outsideUK = Seq("Outside UK:", "+44 161 930 8445")
 
   val informationBlock = Seq(
     "Information about opening hours, call charges and more",
@@ -35,8 +36,12 @@ object ReportSuspiciousIDMessages {
 
   val detailBlockLink = "Relay UK (opens in new tab)"
 
-  val saPText = "You can continue to your personal tax account with the user ID you are currently signed in with."
+  val saPText =
+    "You can continue to your personal tax account with the user ID you are currently signed in with."
 
   val relayUkLinkUrl = "https://www.relayuk.bt.com/"
+
+  val action =
+    "/tax-enrolment-assignment-frontend/enrol-pt/contact-hmrc-sa"
 
 }

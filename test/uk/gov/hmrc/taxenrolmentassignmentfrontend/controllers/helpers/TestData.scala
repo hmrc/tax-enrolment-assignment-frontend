@@ -28,6 +28,14 @@ import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{
   nino
 }
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
+  MULTIPLE_ACCOUNTS,
+  PT_ASSIGNED_TO_CURRENT_USER,
+  PT_ASSIGNED_TO_OTHER_USER,
+  SA_ASSIGNED_TO_CURRENT_USER,
+  SA_ASSIGNED_TO_OTHER_USER,
+  SINGLE_ACCOUNT
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.UserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{Enrolment => _, _}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
@@ -224,4 +232,13 @@ object TestData {
     url: String = ""
   ): FakeRequest[AnyContentAsEmpty.type] =
     FakeRequest(method, url).withSession("sessionId" -> "FAKE_SESSION_ID")
+
+  val all_account_types = List(
+    SINGLE_ACCOUNT,
+    PT_ASSIGNED_TO_OTHER_USER,
+    PT_ASSIGNED_TO_CURRENT_USER,
+    MULTIPLE_ACCOUNTS,
+    SA_ASSIGNED_TO_CURRENT_USER,
+    SA_ASSIGNED_TO_OTHER_USER
+  )
 }

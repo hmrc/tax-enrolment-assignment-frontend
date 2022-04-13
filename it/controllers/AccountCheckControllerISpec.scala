@@ -34,7 +34,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
   val returnUrl: String = testOnly.routes.TestOnlyController.successfulCall
     .absoluteURL(false, teaHost)
   val urlPath =
-    s"/no-pt-enrolment?redirectUrl=${testOnly.routes.TestOnlyController.successfulCall
+    s"?redirectUrl=${testOnly.routes.TestOnlyController.successfulCall
       .absoluteURL(false, teaHost)}"
 
   s"GET $urlPath" when {
@@ -101,7 +101,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
             ""
           )
 
-          stubGet(s"/personal-account", OK, "Government Gateway")
+          stubGet(s"/personal-account", OK, "There was a problem")
 
           val res = buildRequest(urlPath, followRedirects = true)
             .withHttpHeaders(xSessionId, csrfContent)
@@ -109,7 +109,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
 
           whenReady(res) { resp =>
             resp.status shouldBe OK
-            resp.body should include("Government Gateway")
+            resp.body should include("There was a problem")
           }
         }
       }
@@ -117,7 +117,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
 
     "a user has other credentials associated with their NINO" that {
       "includes one with a PT enrolment" should {
-        "redirect to pt-enrolment-other-account" in {
+        "redirect to /no-pt-enrolment" in {
           stubAuthorizePost(OK, authoriseResponseJson().toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
           stubGet(
@@ -134,9 +134,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
             val page = Jsoup.parse(resp.body)
 
             resp.status shouldBe SEE_OTHER
-            resp.header("Location").get should include(
-              "/pt-enrolment-other-account"
-            )
+            resp.header("Location").get should include("/no-pt-enrolment")
           }
         }
       }
@@ -193,7 +191,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
       }
 
       "have no enrolments but current credential has SA enrolment in session" should {
-        s"redirect to enrol-pt/introduction" in {
+        s"redirect to enrol-pt/enrolment-success-no-sa" in {
           val authResponse = authoriseResponseJson(enrolments = saEnrolmentOnly)
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -234,13 +232,15 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
             val page = Jsoup.parse(resp.body)
 
             resp.status shouldBe SEE_OTHER
-            resp.header("Location").get should include("/enrol-pt/introduction")
+            resp.header("Location").get should include(
+              "/enrol-pt/enrolment-success-no-sa"
+            )
           }
         }
       }
 
       "have no enrolments but current credential has SA enrolment in EACD" should {
-        s"redirect to enrol-pt/introduction" in {
+        s"redirect to enrol-pt/enrolment-success-no-sa" in {
           val authResponse = authoriseResponseJson(enrolments = saEnrolmentOnly)
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -292,13 +292,15 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
             val page = Jsoup.parse(resp.body)
 
             resp.status shouldBe SEE_OTHER
-            resp.header("Location").get should include("/enrol-pt/introduction")
+            resp.header("Location").get should include(
+              "/enrol-pt/enrolment-success-no-sa"
+            )
           }
         }
       }
 
       "have no enrolments" should {
-        s"redirect to enrol-pt/introduction" in {
+        s"redirect to enrol-pt/enrolment-success-no-sa" in {
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -344,14 +346,16 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
             val page = Jsoup.parse(resp.body)
 
             resp.status shouldBe SEE_OTHER
-            resp.header("Location").get should include("/enrol-pt/introduction")
+            resp.header("Location").get should include(
+              "/enrol-pt/enrolment-success-no-sa"
+            )
           }
         }
       }
     }
 
     "an authorised user with no credential uses the service" should {
-      s"return $INTERNAL_SERVER_ERROR" in {
+      s"render the error page" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -367,13 +371,14 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
           .get()
 
         whenReady(res) { resp =>
-          resp.status shouldBe INTERNAL_SERVER_ERROR
+          resp.status shouldBe OK
+          resp.body should include("There was a problem")
         }
       }
     }
 
     "an authorised user but IV returns internal error" should {
-      s"return $INTERNAL_SERVER_ERROR" in {
+      s"render the error page" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -389,7 +394,8 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
           .get()
 
         whenReady(res) { resp =>
-          resp.status shouldBe INTERNAL_SERVER_ERROR
+          resp.status shouldBe OK
+          resp.body should include("There was a problem")
         }
       }
     }

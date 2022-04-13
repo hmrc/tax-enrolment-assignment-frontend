@@ -16,56 +16,70 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
-import javax.inject.{Inject, Singleton}
+import com.google.inject.{Inject, Singleton}
 import play.api.Logger
-import play.api.http.ContentTypeOf.contentTypeOf_Html
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.InvalidUserType
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.NoRedirectUrlInCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logRedirectingToReturnUrl
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REDIRECT_URL
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.LandingPage
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTWithSAOnOtherAccount
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class LandingPageController @Inject()(
+class EnrolledPTWithSAOnOtherAccountController @Inject()(
   authAction: AuthAction,
-  mcc: MessagesControllerComponents,
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
   sessionCache: TEASessionCache,
-  logger: EventLoggerService,
-  landingPageView: LandingPage
-)(implicit ec: ExecutionContext)
+  mcc: MessagesControllerComponents,
+  enrolledForPTPage: EnrolledForPTWithSAOnOtherAccount,
+  val logger: EventLoggerService,
+  val errorView: ErrorTemplate
+)(implicit ec: ExecutionContext, appConfig: AppConfig)
     extends FrontendController(mcc)
-    with I18nSupport {
+    with I18nSupport
+    with ControllerHelper {
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
-  def view: Action[AnyContent] = authAction.async { implicit request =>
-    multipleAccountsOrchestrator.getDetailsForLandingPage.value.map {
-      case Right(accountDetails) =>
-        Ok(
-          landingPageView(
-            accountDetails.userId,
-            accountDetails.hasSA.getOrElse(false)
-          )
-        )
-      case Left(InvalidUserType(redirectUrl)) if redirectUrl.isDefined =>
-        Redirect(routes.AccountCheckController.accountCheck(redirectUrl.get))
-      case Left(_) => InternalServerError
+  def view(): Action[AnyContent] = authAction.async { implicit request =>
+    val res = for {
+      currentAccount <- multipleAccountsOrchestrator.getDetailsForEnrolledPTWithSAOnOtherAccount
+      optSAAccount <- multipleAccountsOrchestrator.getSACredentialIfNotFraud
+    } yield (currentAccount.userId, optSAAccount.map(_.userId))
+
+    res.value.map {
+      case Right((currentUserId, optSAUserId)) =>
+        Ok(enrolledForPTPage(currentUserId, optSAUserId))
+      case Left(error) =>
+        handleErrors(error, "[EnrolledPTWithSAOnOtherAccountController][view]")
     }
   }
 
   def continue: Action[AnyContent] = authAction.async { implicit request =>
     sessionCache.getEntry[String](REDIRECT_URL).map {
       case Some(redirectUrl) =>
+        logger.logEvent(
+          logRedirectingToReturnUrl(
+            request.userDetails.credId,
+            "[EnrolledWithSAOnOtherAccountController][continue]"
+          )
+        )
         Redirect(redirectUrl)
-      case None => InternalServerError
+      case None =>
+        handleErrors(
+          NoRedirectUrlInCache,
+          "[EnrolledPTWithSAOnOtherAccountController][continue]"
+        )
     }
   }
+
 }

@@ -28,7 +28,7 @@ object PTEnrolmentOtherAccountMesages {
   val notMyUserId = "This user ID does not belong to me"
   //TODO remove fraud reporting url after consultation with leads, as it requires other changes such remove couple of tests etc etc
   val fraudReportingUrl =
-    "/tax-enrolment-assignment-frontend/enrol-pt/contact-hmrc-sa"
+    "/tax-enrolment-assignment-frontend/no-pt-enrolment/contact-hmrc-pta"
   val saHeading = "Access to Self Assessment"
   val saText = "Your current user ID can access Self Assessment."
   val saUrl = "http://test/self-assessment"

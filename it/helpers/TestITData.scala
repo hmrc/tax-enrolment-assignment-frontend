@@ -19,6 +19,14 @@ package helpers
 import play.api.libs.json._
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core.retrieve.Credentials
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
+  MULTIPLE_ACCOUNTS,
+  PT_ASSIGNED_TO_CURRENT_USER,
+  PT_ASSIGNED_TO_OTHER_USER,
+  SA_ASSIGNED_TO_CURRENT_USER,
+  SA_ASSIGNED_TO_OTHER_USER,
+  SINGLE_ACCOUNT
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.UserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models._
 
@@ -68,6 +76,8 @@ object TestITData {
   val xSessionId: (String, String) = "X-Session-ID" -> sessionId
   val xRequestId: (String, String) = "X-Request-ID" -> sessionId
   val csrfContent: (String, String) = "Csrf-Token" -> "nocheck"
+  val csrfValue: String =
+    "4ef32f22ffe4f4b8086d24d14551e61abb7a8d05-1513679039403-38e9493c515e868adc1b1e41"
 
   val sessionData = Map("sessionId" -> sessionId)
 
@@ -318,12 +328,16 @@ object TestITData {
       |}
       |""".stripMargin
 
+  val saUsers = UsersAssignedEnrolment(Some(CREDENTIAL_ID_2))
+
   val underConstructionTruePageTitle =
     "Tax Enrolment Assignment Frontend - Enrolment Present"
-  val landingPageTitle =
+  val enrolledPTPageTitle =
     "Only your current user ID can access your personal tax account from now on"
-  val ptEnroledOnOtherAccountPageTitle =
+  val ptEnrolledOnOtherAccountPageTitle =
     "We have found your personal tax account under a different Government Gateway user ID"
+  val reportSuspiciousIDPageTitle =
+    "You need to contact us"
 
   val userDetailsNoEnrolments =
     UserDetailsFromSession(

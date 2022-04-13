@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.messages
 
-object LandingPageMessages {
+object EnrolledForPTPageMessages {
   val title =
     "Only your current user ID can access your personal tax account from now on"
   val heading =
@@ -28,5 +28,6 @@ object LandingPageMessages {
   val heading3: String =
     "What has happened to my other Government Gateway user IDs?"
   val button = "Continue"
-  val action = "/tax-enrolment-assignment-frontend/enrol-pt/introduction"
+  val action =
+    "/tax-enrolment-assignment-frontend/enrol-pt/enrolment-success-no-sa"
 }

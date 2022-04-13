@@ -132,11 +132,14 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
             SA_ASSIGNED_TO_OTHER_USER
           )
         )
-        val authResponse = authoriseResponseJson()
+
+        val authResponse = authoriseResponseJson(
+          optCreds = Some(creds.copy(providerId = CREDENTIAL_ID_3))
+        )
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGet(
-          s"/users-group-search/users/$CREDENTIAL_ID",
+          s"/users-group-search/users/$CREDENTIAL_ID_3",
           INTERNAL_SERVER_ERROR,
           ""
         )

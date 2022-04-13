@@ -117,8 +117,8 @@ trait IntegrationSpecBase
   val cascadeUpsert: CascadeUpsert = app.injector.instanceOf[CascadeUpsert]
 
   override def beforeEach(): Unit = {
-    await(removeAll(sessionId))
     resetWiremock()
+    await(removeAll(sessionId))
   }
 
   override def beforeAll(): Unit = {

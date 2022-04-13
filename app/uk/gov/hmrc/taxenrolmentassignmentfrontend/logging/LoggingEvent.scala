@@ -57,7 +57,7 @@ object LoggingEvent {
     )
 
   def logAssignedEnrolmentAfterReportingFraud(
-    credentialId: String,
+    credentialId: String
   ): LoggingEvent =
     Info(
       Event(

@@ -94,7 +94,7 @@ class KeepAccessToSAController @Inject()(
                 .checkValidAccountTypeRedirectUrlInCache(
                   List(SA_ASSIGNED_TO_OTHER_USER)
                 )
-                .map(_ => routes.SignInAgainController.view)
+                .map(_ => routes.SignInWithSAAccountController.view)
             } else {
               multipleAccountsOrchestrator
                 .checkValidAccountTypeAndEnrolForPT(SA_ASSIGNED_TO_OTHER_USER)

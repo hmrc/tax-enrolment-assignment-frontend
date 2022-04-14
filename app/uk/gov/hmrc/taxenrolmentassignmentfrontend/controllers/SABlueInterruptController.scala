@@ -17,26 +17,61 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import com.google.inject.{Inject, Singleton}
+import play.api.Logger
 import play.api.i18n.I18nSupport
 import play.api.mvc._
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SABlueInterrupt
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class SABlueInterruptController @Inject()(
   authAction: AuthAction,
   mcc: MessagesControllerComponents,
-  saBlueInterrupt: SABlueInterrupt
-)(implicit config: AppConfig)
+  multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
+  val logger: EventLoggerService,
+  saBlueInterrupt: SABlueInterrupt,
+  val errorView: ErrorTemplate
+)(implicit config: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc)
-    with I18nSupport {
+    with I18nSupport
+    with ControllerHelper {
+
+  implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
   def view(): Action[AnyContent] =
     authAction.async { implicit request =>
-      Future.successful(Ok(saBlueInterrupt()))
+      multipleAccountsOrchestrator
+        .checkValidAccountTypeRedirectUrlInCache(
+          List(SA_ASSIGNED_TO_OTHER_USER)
+        )
+        .value
+        .map {
+          case Right(x) =>
+            Ok(saBlueInterrupt())
+          case Left(error) =>
+            handleErrors(error, "[SABlueInterruptController][view]")
+        }
+    }
+
+  def continue(): Action[AnyContent] =
+    authAction.async { implicit request =>
+      multipleAccountsOrchestrator
+        .checkValidAccountTypeRedirectUrlInCache(
+          List(SA_ASSIGNED_TO_OTHER_USER)
+        )
+        .value
+        .map {
+          case Right(_) => Redirect(routes.KeepAccessToSAController.view)
+          case Left(error) =>
+            handleErrors(error, "[SABlueInterruptController][continue]")
+        }
     }
 }

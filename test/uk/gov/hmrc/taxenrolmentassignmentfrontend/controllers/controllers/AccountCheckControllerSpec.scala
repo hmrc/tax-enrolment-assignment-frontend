@@ -120,7 +120,7 @@ class AccountCheckControllerSpec extends TestFixture {
     }
 
     "multiple credential exists for a given nino and no enrolments exists" should {
-      "redirect to the landing page" in new TestHelper {
+      "redirect to the EnrolledForPT page" in new TestHelper {
         mockAuthCall()
         mockAccountCheckSuccess(MULTIPLE_ACCOUNTS)
         mockSilentEnrolSuccess
@@ -137,7 +137,7 @@ class AccountCheckControllerSpec extends TestFixture {
     }
 
     "multiple credential exists for a given nino and current credential has SA enrolment" should {
-      "redirect to the landing page" in new TestHelper {
+      "redirect to the EnrolledForPT page" in new TestHelper {
         mockAuthCall()
         mockAccountCheckSuccess(SA_ASSIGNED_TO_CURRENT_USER)
         mockSilentEnrolSuccess
@@ -154,7 +154,7 @@ class AccountCheckControllerSpec extends TestFixture {
     }
 
     "multiple credential exists for a given nino and a non signed in account has SA enrolment" should {
-      "return OK" in new TestHelper {
+      "redirect to blue interupt page" in new TestHelper {
         mockAuthCall()
         mockAccountCheckSuccess(SA_ASSIGNED_TO_OTHER_USER)
 
@@ -162,8 +162,10 @@ class AccountCheckControllerSpec extends TestFixture {
           .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(result) shouldBe OK
-        contentAsString(result) should include("SA on other account")
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result) shouldBe Some(
+          "/tax-enrolment-assignment-frontend/enrol-pt/other-user-id-has-sa"
+        )
       }
     }
 

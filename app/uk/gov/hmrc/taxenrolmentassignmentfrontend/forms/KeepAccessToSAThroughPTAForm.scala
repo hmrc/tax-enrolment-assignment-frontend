@@ -31,7 +31,7 @@ object KeepAccessToSAThroughPTAForm {
       "keepAccessToSAThroughPTA" -> default[String](text, "")
         .verifying(
           nonEmpty(errorMessage = "keepAccessToSA.error.required"),
-          pattern("yes|no".r, "keepAccessToSA.error.required")
+          pattern("yes|no".r, error = "keepAccessToSA.error.required")
         )
         .transform[Boolean](_ == "yes", x => if (x) "yes" else "no")
     )(KeepAccessToSAThroughPTA.apply)(KeepAccessToSAThroughPTA.unapply)

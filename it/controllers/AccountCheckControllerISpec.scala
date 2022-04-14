@@ -140,7 +140,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
       }
 
       "has SA enrolment on an other account" should {
-        s"return OK" in {
+        s"retdirect to blue interupt page" in {
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -183,9 +183,10 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
             .get()
 
           whenReady(res) { resp =>
-            val page = Jsoup.parse(resp.body)
-
-            resp.status shouldBe OK
+            resp.status shouldBe SEE_OTHER
+            resp.header("Location").get should include(
+              "/enrol-pt/other-user-id-has-sa"
+            )
           }
         }
       }

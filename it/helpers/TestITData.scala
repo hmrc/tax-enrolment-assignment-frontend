@@ -339,6 +339,9 @@ object TestITData {
   val reportSuspiciousIDPageTitle =
     "You need to contact us"
 
+  val keepAccessToSAPageTitle =
+    "Do you want to keep access to Self Assessment from your personal tax account?"
+
   val signInAgainPageTitle =
     "You need to sign in again with your Self Assessment user ID"
 

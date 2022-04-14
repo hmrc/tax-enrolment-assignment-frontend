@@ -16,10 +16,12 @@
 
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.Layout
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 
 @this(layout: Layout,
       govukButton: GovukButton,
-      card: InterruptCard)
+      card: InterruptCard,
+      formHelper: FormWithCSRF)
 
 @()(implicit request: Request[_], messages: Messages)
 
@@ -32,14 +34,13 @@
       <p class="govuk-body">@messages("selfAssessmentInterrupt.paragraph1")</p>
       <p class="govuk-body">@messages("selfAssessmentInterrupt.paragraph2")</p>
 
+    @formHelper(action = routes.SABlueInterruptController.continue) {
       <div class="actions">
-
                @govukButton(Button(
-               content = Text(messages("selfAssessmentInterrupt.continue")),
-               href = Some("?")
+               content = Text(messages("selfAssessmentInterrupt.continue"))
                ))
-
       </div>
     }
+   }
 
 }

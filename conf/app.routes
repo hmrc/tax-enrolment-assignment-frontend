@@ -17,6 +17,7 @@ POST       /enrol-pt/sign-in-again              uk.gov.hmrc.taxenrolmentassignme
 GET        /no-pt-enrolment   uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.PTEnrolmentOnOtherAccountController.view
 GET        /no-pt-enrolment/contact-hmrc-pta  uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.ReportSuspiciousIDController.viewNoSA
 GET        /enrol-pt/other-user-id-has-sa   uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SABlueInterruptController.view
+POST        /enrol-pt/other-user-id-has-sa   uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SABlueInterruptController.continue
 GET        /enrol-pt/other-user-id-has-sa/keep-access-to-sa-from-pta   uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.KeepAccessToSAController.view
 POST        /enrol-pt/other-user-id-has-sa/keep-access-to-sa-from-pta   uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.KeepAccessToSAController.continue
 GET        /assets/*file            controllers.Assets.versioned(path = "/public", file: Asset)

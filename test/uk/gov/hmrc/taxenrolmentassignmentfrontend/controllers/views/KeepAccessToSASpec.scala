@@ -16,24 +16,12 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.views
 
-import play.api.data.Form
 import play.api.test.FakeRequest
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.messages.{
-  KeepAccessToSAMessages,
-  LandingPageMessages
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.{
-  EnrolCurrentUserIdForm,
-  KeepAccessToSAThroughPTAForm
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.messages.KeepAccessToSAMessages
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{
-  EnrolCurrentUser,
-  KeepAccessToSA
-}
-
-import scala.xml.Document
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.KeepAccessToSA
 
 class KeepAccessToSASpec extends TestFixture {
 

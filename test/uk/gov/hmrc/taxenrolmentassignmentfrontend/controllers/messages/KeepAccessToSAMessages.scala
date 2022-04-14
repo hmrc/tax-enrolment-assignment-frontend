@@ -27,7 +27,7 @@ object KeepAccessToSAMessages {
   val radioNo = "No"
   val noSALink = "I do not complete Self Assessment Online"
   val fraudReportingUrl =
-    "/tax-enrolment-assignment-frontend/enrol-pt/report-suspicious-id"
+    "/tax-enrolment-assignment-frontend/enrol-pt/contact-hmrc-sa"
   val errorTitle = "There is a problem"
   val errorMessage = "Select option to continue"
   val button = "Continue"

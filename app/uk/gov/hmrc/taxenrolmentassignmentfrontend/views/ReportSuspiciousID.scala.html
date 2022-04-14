@@ -19,26 +19,18 @@
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.summarylist.SummaryListRow
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.helpers.CreateSummaryRow
 
 @this(
 layout: Layout,
 formHelper: FormWithCSRF,
 govukSummaryList : GovukSummaryList,
 govukDetails : GovukDetails,
-govukButton: GovukButton)
+govukButton: GovukButton,
+summaryRow: CreateSummaryRow
+)
 
 @(ptAccountDetails: AccountDetails, saOnOtherAccountJourney: Boolean = false)(implicit request: Request[_], messages: Messages)
-
-@createRowWith(key: String, value: String) =  {
-<div class="govuk-summary-list__row">
-    <dt class="govuk-summary-list__key">
-        @key
-    </dt>
-    <dd class="govuk-summary-list__value">
-        @value
-    </dd>
-</div>
-}
 
 @content = {
 <p class="govuk-body">@messages("ReportSuspiciousID.detailsComponent.text1")</p>
@@ -61,11 +53,11 @@ pageTitle = Some(messages("ReportSuspiciousID.title")), Some("?")) {
 
 <dl class="govuk-summary-list">
 
-    @createRowWith(messages("ReportSuspiciousID.userId"), ptAccountDetails.userId)
-    @createRowWith(messages("ReportSuspiciousID.email"), ptAccountDetails.email.get)
-    @createRowWith(messages("ReportSuspiciousID.lastLoginDate"), ptAccountDetails.lastLoginDate)
+    @summaryRow("common.userId", ptAccountDetails.userId)
+    @summaryRow("ReportSuspiciousID.email", ptAccountDetails.email.get)
+    @summaryRow("ReportSuspiciousID.lastLoginDate", ptAccountDetails.lastLoginDate)
     @for(mfaDetail <- ptAccountDetails.mfaDetails) {
-    @createRowWith(mfaDetail.factorName, mfaDetail.factorValue)
+    @summaryRow(mfaDetail.factorNameKey, mfaDetail.factorValue)
     }
 
 

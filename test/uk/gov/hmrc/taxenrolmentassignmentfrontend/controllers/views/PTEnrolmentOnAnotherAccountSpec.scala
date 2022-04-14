@@ -46,19 +46,19 @@ class PTEnrolmentOnAnotherAccountSpec extends TestFixture {
   }
 
   val mfaDetails = Seq(
-    MFADetails("Text message", "07390328923"),
-    MFADetails("Voice call", "0193453839"),
-    MFADetails("Authenticator App", "HRMC APP")
+    MFADetails("mfaDetails.text", "28923"),
+    MFADetails("mfaDetails.voice", "53839"),
+    MFADetails("mfaDetails.totp", "HRMC APP")
   )
 
   val elementsToMFADetails: Map[Int, MFADetails] = Map(
-    3 -> MFADetails("Text message", "07390328923"),
-    4 -> MFADetails("Voice call", "0193453839"),
-    5 -> MFADetails("Authenticator App", "HRMC APP")
+    3 -> MFADetails("Text message", "Ending with 28923"),
+    4 -> MFADetails("Voice call", "Ending with 53839"),
+    5 -> MFADetails("Authenticator app", "HRMC APP")
   )
 
   val accountDetails = AccountDetails(
-    "********3214",
+    "3214",
     Some("email1@test.com"),
     "Yesterday",
     mfaDetails
@@ -114,7 +114,7 @@ class PTEnrolmentOnAnotherAccountSpec extends TestFixture {
         summaryListRows
           .get(0)
           .getElementsByClass(Selectors.summaryListValue)
-          .text() shouldBe accountDetails.userId
+          .text() shouldBe s"Ending with ${accountDetails.userId}"
       }
       "includes the email" when {
         "the email is present in accountDetails" in {
@@ -148,11 +148,11 @@ class PTEnrolmentOnAnotherAccountSpec extends TestFixture {
       }
       elementsToMFADetails.foreach {
         case (elementNumber, mfaDetails) =>
-          s"include the ${mfaDetails.factorName}" in {
+          s"include the ${mfaDetails.factorNameKey}" in {
             summaryListRows
               .get(elementNumber)
               .getElementsByClass(Selectors.summaryListKey)
-              .text() shouldBe mfaDetails.factorName
+              .text() shouldBe mfaDetails.factorNameKey
             summaryListRows
               .get(elementNumber)
               .getElementsByClass(Selectors.summaryListValue)

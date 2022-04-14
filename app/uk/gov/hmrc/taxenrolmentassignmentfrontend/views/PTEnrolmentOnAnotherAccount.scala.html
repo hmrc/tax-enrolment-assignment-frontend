@@ -19,23 +19,16 @@
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.summarylist.SummaryListRow
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.helpers.CreateSummaryRow
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.Layout
 
 @this(
 layout: Layout,
-govukSummaryList : GovukSummaryList)
+govukSummaryList : GovukSummaryList,
+summaryRow: CreateSummaryRow
+)
 
 @(ptAccountDetails: AccountDetails, currentAccountHasSA: Boolean)(implicit request: Request[AnyRef], messages: Messages, appConfig: AppConfig)
-
-@createSummaryListRow(key: String, value: String) =  {
-    <div class="govuk-summary-list__row">
-      <dt class="govuk-summary-list__key">
-        @key
-      </dt>
-      <dd class="govuk-summary-list__value">
-        @value
-      </dd>
-    </div>
-}
 
 @layout(
     pageTitle = Some(messages("ptEnrolmentOnOtherAccount.title")), None) {
@@ -46,13 +39,13 @@ govukSummaryList : GovukSummaryList)
       @messages("ptEnrolmentOnOtherAccount.text2")
     </p>
     <dl class="govuk-summary-list">
-        @createSummaryListRow(messages("ptEnrolmentOnOtherAccount.userId"), ptAccountDetails.userId)
+        @summaryRow("common.userId", ptAccountDetails.userId)
         @if(ptAccountDetails.email.isDefined) {
-          @createSummaryListRow(messages("ptEnrolmentOnOtherAccount.email"), ptAccountDetails.email.get)
+          @summaryRow("ptEnrolmentOnOtherAccount.email", ptAccountDetails.email.get)
         }
-        @createSummaryListRow(messages("ptEnrolmentOnOtherAccount.lastLoginDate"), ptAccountDetails.lastLoginDate)
+        @summaryRow("ptEnrolmentOnOtherAccount.lastLoginDate", ptAccountDetails.lastLoginDate)
         @for(mfaDetail <- ptAccountDetails.mfaDetails) {
-        @createSummaryListRow(mfaDetail.factorName, mfaDetail.factorValue)
+        @summaryRow(mfaDetail.factorNameKey, mfaDetail.factorValue)
         }
     </dl>
 

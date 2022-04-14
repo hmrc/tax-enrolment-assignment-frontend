@@ -32,9 +32,9 @@ class AccountDetailsSpec extends TestFixture {
   val additionalFactorVoice = AdditonalFactors("voice", Some("07783924321"))
   val additionalFactorTotp = AdditonalFactors("totp", name = Some("HMRC App"))
 
-  val mfaDetailsText = MFADetails("Text message", "07783924321")
-  val mfaDetailsVoice = MFADetails("Voice call", "07783924321")
-  val mfaDetailsTotp = MFADetails("Authentication app", "HMRC App")
+  val mfaDetailsText = MFADetails("mfaDetails.text", "24321")
+  val mfaDetailsVoice = MFADetails("mfaDetails.voice", "24321")
+  val mfaDetailsTotp = MFADetails("mfaDetails.totp", "HMRC App")
 
   def usersGroupResponse(
     lastAccessedTime: String,
@@ -51,7 +51,7 @@ class AccountDetailsSpec extends TestFixture {
   def accountDetails(formattedLastLoginDate: String,
                      mfaDetails: List[MFADetails]): AccountDetails = {
     AccountDetails(
-      "********6037",
+      "6037",
       Some("email1@test.com"),
       formattedLastLoginDate,
       mfaDetails
@@ -103,7 +103,7 @@ class AccountDetailsSpec extends TestFixture {
             usersGroupResponse(lastAccessedDate, List(additionalFactorTotp))
 
           val expectedResult =
-            accountDetails("27 February 2022", List(mfaDetailsTotp))
+            accountDetails("27 February 2022 at 12:00 PM", List(mfaDetailsTotp))
 
           val res = new AccountDetails(ugsResp)
 
@@ -127,7 +127,7 @@ class AccountDetailsSpec extends TestFixture {
             )
 
           val expectedResult = accountDetails(
-            "27 February 2022",
+            "27 February 2022 at 12:00 PM",
             List(mfaDetailsText, mfaDetailsVoice, mfaDetailsTotp)
           )
 

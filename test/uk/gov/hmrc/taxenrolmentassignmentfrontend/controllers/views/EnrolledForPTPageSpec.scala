@@ -26,7 +26,7 @@ class EnrolledForPTPageSpec extends TestFixture {
 
   val enrolledForPTPage: EnrolledForPTPage =
     app.injector.instanceOf[EnrolledForPTPage]
-  val userId = "********3214"
+  val userId = "3214"
   val htmlWithSA: HtmlFormat.Appendable =
     enrolledForPTPage(userId, true)(FakeRequest(), testMessages)
   val htmlWithNoSA: HtmlFormat.Appendable =

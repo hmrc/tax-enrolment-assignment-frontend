@@ -68,6 +68,18 @@ object LoggingEvent {
       )
     )
 
+  def logUserSignsInAgainWithSAAccount(
+    credentialId: String
+  ): LoggingEvent =
+    Info(
+      Event(
+        "[SignInWithSAAccountController][continue]",
+        details = Some(
+          s"User with credential $credentialId chose to sign in again with their SA account"
+        )
+      )
+    )
+
   def logCurrentUserAlreadyHasPTEnrolment(credentialId: String): LoggingEvent =
     Info(
       Event(

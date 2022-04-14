@@ -18,6 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.controllers
 
 
   import play.api.http.Status.{OK, SEE_OTHER}
+  import play.api.libs.json.Format
   import play.api.mvc.AnyContent
   import play.api.test.Helpers.{contentAsString, defaultAwaitTimeout, redirectLocation, status}
   import uk.gov.hmrc.auth.core.Enrolments
@@ -29,7 +30,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.controllers
   import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
   import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestData._
   import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
-  import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{ReportSuspiciousIDController, SignInWithSAAccountController, SignOutController}
+  import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{ReportSuspiciousIDController, SignInWithSAAccountController, SignOutController, testOnly}
   import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{InvalidUserType, NoSAEnrolmentWhenOneExpected}
   import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{ReportSuspiciousID, SignInWithSAAccount}
 
@@ -202,6 +203,80 @@ class SignInAgainPageControllerSpec extends TestFixture {
 
         status(result) shouldBe OK
         contentAsString(result) should include("enrolmentError.title")
+      }
+    }
+  }
+  "continue" when {
+    "the user has a redirectUrl in cache" should {
+      "redirect to AccountCheck" in {
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ]
+            ]
+          )(_: HeaderCarrier, _: ExecutionContext))
+          .expects(predicates, retrievals, *, *)
+          .returning(Future.successful(retrievalResponse()))
+
+        (mockTeaSessionCache
+          .getEntry(_: String)(
+            _: RequestWithUserDetails[AnyContent],
+            _: Format[String]
+          ))
+          .expects("redirectURL", *, *)
+          .returning(
+            Future.successful(
+              Some(testOnly.routes.TestOnlyController.successfulCall.url)
+            )
+          )
+
+        val res = controller
+          .continue()
+          .apply(buildFakeRequestWithSessionId("POST", "Not Used"))
+
+        status(res) shouldBe SEE_OTHER
+        redirectLocation(res) shouldBe
+          Some(
+            "/tax-enrolment-assignment-frontend/test-only/successful"
+          )
+      }
+    }
+
+    "the user has not got a redirect url in session" should {
+      "render the error page" in {
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ]
+            ]
+          )(_: HeaderCarrier, _: ExecutionContext))
+          .expects(predicates, retrievals, *, *)
+          .returning(Future.successful(retrievalResponse()))
+
+        (mockTeaSessionCache
+          .getEntry(_: String)(
+            _: RequestWithUserDetails[AnyContent],
+            _: Format[String]
+          ))
+          .expects("redirectURL", *, *)
+          .returning(
+            Future.successful(
+              None
+            )
+          )
+
+        val res = controller
+          .continue()
+          .apply(buildFakeRequestWithSessionId("POST", "Not Used"))
+
+        status(res) shouldBe OK
+        contentAsString(res) should include("enrolmentError.title")
       }
     }
   }

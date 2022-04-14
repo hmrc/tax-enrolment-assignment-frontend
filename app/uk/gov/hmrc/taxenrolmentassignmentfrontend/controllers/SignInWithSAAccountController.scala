@@ -22,6 +22,7 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.NoRedirectUrlInCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
@@ -67,8 +68,11 @@ class SignInWithSAAccountController @Inject()(
   def continue: Action[AnyContent] = authAction.async { implicit request =>
     sessionCache.getEntry[String](REDIRECT_URL).map {
       case Some(redirectUrl) =>
+        logger.logEvent(
+          logUserSignsInAgainWithSAAccount(request.userDetails.credId)
+        )
         Redirect(redirectUrl)
-      case None => InternalServerError
+      case None => handleErrors( NoRedirectUrlInCache, "[SignInWithSAAccountController][continue]" )
     }
   }
 }

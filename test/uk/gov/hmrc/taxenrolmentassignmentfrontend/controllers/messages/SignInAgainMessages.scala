@@ -17,10 +17,11 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.messages
 
 object SignInAgainMessages {
-  val title = "Sign in again"
-  val heading = "You need to sign in again"
-  val linkText = "Sign in again"
-  val paragraph: String = s"$linkText with the Government Gateway user ID you want to use to access your personal tax information."
+  val title = "You need to sign in again with your Self Assessment user ID"
+  val heading1 = "You need to sign in again with your Self Assessment user ID"
+  val paragraph = "This is so that you can keep access to Self Assessment from your personal tax account."
+  val heading2 = "User ID with Self Assessment access"
   val backLink = "Back"
-  val link = "http://localhost:9553/bas-gateway/sign-out-without-state"
+  val continue = "Continue"
+  val linkText = "The above user ID does not belong to me"
 }

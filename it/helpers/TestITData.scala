@@ -339,6 +339,9 @@ object TestITData {
   val reportSuspiciousIDPageTitle =
     "You need to contact us"
 
+  val signInAgainPageTitle =
+    "You need to sign in again with your Self Assessment user ID"
+
   val userDetailsNoEnrolments =
     UserDetailsFromSession(
       CREDENTIAL_ID,

@@ -243,7 +243,7 @@ class KeepAccessToSASpec extends TestFixture {
     "there are form errors" should {
       val formWithErrors =
         KeepAccessToSAThroughPTAForm.keepAccessToSAThroughPTAForm.bind(
-          Map("keepAccessToSAThroughPTA" -> "")
+          Map("select-continue" -> "")
         )
       val html =
         view(formWithErrors)(FakeRequest(), testMessages)

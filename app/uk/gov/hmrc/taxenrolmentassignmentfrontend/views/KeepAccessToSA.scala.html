@@ -66,12 +66,12 @@
               RadioItem(
                 content = Text(messages("keepAccessToSA.radio.yes")),
                 value = Some("yes"),
-                checked = form("keepAccessToSAThroughPTA").value.contains("yes")
+                checked = form("select-continue").value.contains("yes")
               ),
               RadioItem(
                 content = Text(messages("keepAccessToSA.radio.no")),
                 value = Some("no"),
-                checked = form("keepAccessToSAThroughPTA").value.contains("no")
+                checked = form("select-continue").value.contains("no")
               )
             )
         ))

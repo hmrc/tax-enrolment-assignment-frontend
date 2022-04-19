@@ -258,7 +258,7 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
         whenReady(res) { resp =>
           resp.status shouldBe SEE_OTHER
           resp.header("Location").get should include(
-            "/tax-enrolment-assignment-frontend/other-user-id-has-sa/keep-access-to-sa-from-pta"
+            "/tax-enrolment-assignment-frontend/enrol-pt/other-user-id-has-sa/keep-access-to-sa-from-pta"
           )
         }
       }

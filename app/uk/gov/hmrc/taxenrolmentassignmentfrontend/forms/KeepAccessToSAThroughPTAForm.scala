@@ -28,7 +28,7 @@ object KeepAccessToSAThroughPTAForm {
 
   val keepAccessToSAThroughPTAForm: Form[KeepAccessToSAThroughPTA] = Form(
     mapping(
-      "keepAccessToSAThroughPTA" -> default[String](text, "")
+      "select-continue" -> default[String](text, "")
         .verifying(
           nonEmpty(errorMessage = "keepAccessToSA.error.required"),
           pattern("yes|no".r, error = "keepAccessToSA.error.required")

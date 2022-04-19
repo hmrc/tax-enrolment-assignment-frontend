@@ -33,7 +33,7 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
   val returnUrl: String = testOnly.routes.TestOnlyController.successfulCall
     .absoluteURL(false, teaHost)
   val urlPath =
-    s"/enrol-pt/sign-in-again"
+    s"/enrol-pt/other-user-id-has-sa/sign-in-again "
 
   val sessionCookie
   : (String, String) = ("COOKIE" -> createSessionCookieAsString(sessionData))
@@ -101,7 +101,7 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
 
               resp.status shouldBe SEE_OTHER
               resp.header("Location").get should include(
-                s"/tax-enrolment-assignment-frontend"
+                s"/protect-tax-info"
               )
             }
           }

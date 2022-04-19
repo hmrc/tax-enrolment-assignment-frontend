@@ -22,11 +22,11 @@ Run Performance Tests see [here](https://github.com/hmrc/tax-enrolment-assignmen
 
 ## API
 
-| Path - internal routes prefixed by `/tax-enrolment-assignment-frontend` | Supported Methods | Type | Description |
+| Path - internal routes prefixed by `/protect-tax-info` | Supported Methods | Type | Description |
 |-------|:-------------------:|:-------|-------------|
 |`/account-check`| GET | Internal | Endpoint get account check. |
 |`/multiple-accounts-check`| GET | Internal | Endpoint to get multiple accounts check. |
-|`/tax-enrolment-assignment-frontend/test-only/successful `| GET | Test | Endpoint to get a successful redirect. |
+|`/protect-tax-info/test-only/successful `| GET | Test | Endpoint to get a successful redirect. |
 ### License
 
 This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html").

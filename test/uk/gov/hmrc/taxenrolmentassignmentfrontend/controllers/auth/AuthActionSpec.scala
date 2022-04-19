@@ -30,8 +30,8 @@ import uk.gov.hmrc.auth.core.{
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 
 import scala.concurrent.{ExecutionContext, Future}
 

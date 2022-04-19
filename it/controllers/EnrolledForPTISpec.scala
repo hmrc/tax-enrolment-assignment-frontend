@@ -95,7 +95,7 @@ class EnrolledForPTISpec extends IntegrationSpecBase with Status {
 
               resp.status shouldBe SEE_OTHER
               resp.header("Location").get should include(
-                s"/tax-enrolment-assignment-frontend"
+                s"/protect-tax-info"
               )
             }
           }

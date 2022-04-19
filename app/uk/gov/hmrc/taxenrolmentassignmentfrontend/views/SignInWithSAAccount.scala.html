@@ -17,27 +17,18 @@
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.Layout
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.helpers.CreateSummaryRow
 
 
 @this(
   layout: Layout,
   govukSummaryList : GovukSummaryList,
   govukButton: GovukButton,
-  formHelper: FormWithCSRF
+  formHelper: FormWithCSRF,
+  summaryRow: CreateSummaryRow
 )
 
 @(saAccountDetails: AccountDetails)(implicit request: Request[_], messages: Messages)
-
-@createSummaryListRow(key: String, value: String) =  {
-<div class="govuk-summary-list__row">
- <dt class="govuk-summary-list__key">
-  @key
- </dt>
- <dd class="govuk-summary-list__value">
-  @value
- </dd>
-</div>
-}
 
 @layout(pageTitle = Some(messages("signInAgain.title")), Some("?")) {
 
@@ -45,13 +36,13 @@
  <p class="govuk-body">@messages("signInAgain.paragraph")</p>
  <h3 class="govuk-heading-m">@messages("signInAgain.heading2")</h3>
  <dl class="govuk-summary-list">
-  @createSummaryListRow(messages("signInAgain.userId"), saAccountDetails.userId)
+  @summaryRow("common.userId", saAccountDetails.userId)
   @if(saAccountDetails.email.isDefined) {
-  @createSummaryListRow(messages("signInAgain.email"), saAccountDetails.email.get)
+  @summaryRow("signInAgain.email", saAccountDetails.email.get)
   }
-  @createSummaryListRow(messages("signInAgain.lastLoginDate"), saAccountDetails.lastLoginDate)
+  @summaryRow("signInAgain.lastLoginDate", saAccountDetails.lastLoginDate)
   @for(mfaDetail <- saAccountDetails.mfaDetails) {
-  @createSummaryListRow(mfaDetail.factorName, mfaDetail.factorValue)
+  @summaryRow(mfaDetail.factorNameKey, mfaDetail.factorValue)
   }
  </dl>
 

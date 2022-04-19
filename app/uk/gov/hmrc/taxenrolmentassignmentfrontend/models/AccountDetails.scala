@@ -16,20 +16,20 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 
-import java.time.format.{DateTimeFormatter, FormatStyle}
-import java.time.{ZoneId, ZonedDateTime}
-
 import play.api.libs.json.{Format, Json}
 
-case class MFADetails(factorName: String, factorValue: String) {
+import java.time.format.DateTimeFormatter
+import java.time.{ZoneId, ZonedDateTime}
+
+case class MFADetails(factorNameKey: String, factorValue: String) {
   def this(additonalFactors: AdditonalFactors) =
-    this(factorName = additonalFactors.factorType match {
-      case "totp"  => "Authentication app"
-      case "voice" => "Voice call"
-      case _       => "Text message"
+    this(factorNameKey = additonalFactors.factorType match {
+      case "totp"  => "mfaDetails.totp"
+      case "voice" => "mfaDetails.voice"
+      case _       => "mfaDetails.text"
     }, factorValue = additonalFactors.factorType match {
       case "totp" => additonalFactors.name.getOrElse("")
-      case _      => additonalFactors.phoneNumber.getOrElse("")
+      case _      => additonalFactors.trimmedPhoneNumber
     })
 }
 
@@ -44,7 +44,7 @@ case class AccountDetails(userId: String,
                           hasSA: Option[Boolean] = None) {
   def this(usersGroupResponse: UsersGroupResponse) =
     this(
-      userId = usersGroupResponse.obfuscatedUserId,
+      userId = AccountDetails.trimmedUserId(usersGroupResponse.obfuscatedUserId),
       email = usersGroupResponse.email,
       lastLoginDate =
         AccountDetails.formatDate(usersGroupResponse.lastAccessedTimestamp),
@@ -59,17 +59,21 @@ case class AccountDetails(userId: String,
 
 object AccountDetails {
 
+  def trimmedUserId(obfuscatedId: String): String = obfuscatedId.replaceAll("[*]", "")
+
   def formatDate(date: String): String = {
     val zonedDateTime = ZonedDateTime.parse(date)
     val datetimeFormatter = {
-      DateTimeFormatter.ofPattern("d MMMM uuuu")
+      DateTimeFormatter.ofPattern("d MMMM uuuu - h:mm a")
     }
     if (isToday(zonedDateTime)) {
       "Today"
     } else if (isYesterday(zonedDateTime)) {
       "Yesterday"
     } else {
-      zonedDateTime.format(datetimeFormatter)
+      zonedDateTime
+        .format(datetimeFormatter)
+        .replaceFirst("[-]", "at")
     }
   }
 

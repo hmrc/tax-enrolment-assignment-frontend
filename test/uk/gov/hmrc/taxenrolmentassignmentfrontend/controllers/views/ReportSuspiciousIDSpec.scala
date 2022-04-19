@@ -41,10 +41,10 @@ class ReportSuspiciousIDSpec extends TestFixture {
     val links = "govuk-link"
   }
 
-  val mfaDetails = Seq(MFADetails("Text message", "07390328923"))
+  val mfaDetails = Seq(MFADetails("mfaDetails.text", "28923"))
 
   val accountDetails = AccountDetails(
-    "Ending with 4533",
+    "4533",
     Some("email1@test.com"),
     "Yesterday",
     mfaDetails
@@ -83,7 +83,7 @@ class ReportSuspiciousIDSpec extends TestFixture {
         suspiciousIdDetailsRows
           .get(0)
           .getElementsByClass(Selectors.summaryListValue)
-          .text() shouldBe accountDetails.userId
+          .text() shouldBe s"Ending with ${accountDetails.userId}"
       }
       "includes the email field with correct value" in {
         suspiciousIdDetailsRows
@@ -113,7 +113,7 @@ class ReportSuspiciousIDSpec extends TestFixture {
         suspiciousIdDetailsRows
           .get(3)
           .getElementsByClass(Selectors.summaryListValue)
-          .text() shouldBe accountDetails.mfaDetails.head.factorValue
+          .text() shouldBe s"Ending with ${accountDetails.mfaDetails.head.factorValue}"
       }
     }
 

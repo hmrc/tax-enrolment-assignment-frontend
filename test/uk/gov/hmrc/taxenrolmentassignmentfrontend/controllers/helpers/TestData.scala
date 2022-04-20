@@ -165,12 +165,13 @@ object TestData {
 
   // accountDetails
 
-  val accountDetails = AccountDetails(
-    userId = "********6037",
+  val accountDetails: AccountDetails = AccountDetails(
+    userId = "6037",
     email = Some("email1@test.com"),
-    lastLoginDate = "27 February 2022",
-    mfaDetails = List(MFADetails("Text message", "07783924321"))
+    lastLoginDate = "27 February 2022 at 12:00 PM",
+    mfaDetails = List(MFADetails("mfaDetails.text", "24321"))
   )
+
 
   // userGroupSearchResponse
 

@@ -100,15 +100,17 @@ object UsersGroupsFixedData {
       "********5867",
       Some("email8@test.com"),
       "2022-09-16T14:40:25Z",
-      additionalFactors = Some(List(AdditonalFactors("totp", Some("HMRC App"))))
+      additionalFactors =
+        Some(List(AdditonalFactors("totp", name = Some("HMRC App"))))
     )
   val credId9 = "4334822488849220"
   val userDetails9 =
     UsersGroupResponse(
       "********7550",
-      Some("email8@test.com"),
+      Some("email9@test.com"),
       "2022-09-16T14:40:25Z",
-      additionalFactors = Some(List(AdditonalFactors("totp", Some("HMRC App"))))
+      additionalFactors =
+        Some(List(AdditonalFactors("totp", name = Some("HMRC App"))))
     )
 
   val usersGroupSearchCreds = Map(

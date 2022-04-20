@@ -337,7 +337,7 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
 
           val res = buildRequest(urlPath, followRedirects = false)
             .withHttpHeaders(csrfContent, xSessionId, xRequestId, sessionCookie)
-            .post(Json.obj("keepAccessToSAThroughPTA" -> "yes"))
+            .post(Json.obj("select-continue" -> "yes"))
 
           whenReady(res) { resp =>
             resp.status shouldBe SEE_OTHER
@@ -370,7 +370,7 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
 
           val res = buildRequest(urlPath, followRedirects = false)
             .withHttpHeaders(csrfContent, xSessionId, xRequestId, sessionCookie)
-            .post(Json.obj("keepAccessToSAThroughPTA" -> "no"))
+            .post(Json.obj("select-continue" -> "no"))
 
           whenReady(res) { resp =>
             resp.status shouldBe SEE_OTHER
@@ -403,7 +403,7 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
 
           val res = buildRequest(urlPath, followRedirects = false)
             .withHttpHeaders(csrfContent, xSessionId, xRequestId, sessionCookie)
-            .post(Json.obj("keepAccessToSAThroughPTA" -> "no"))
+            .post(Json.obj("select-continue" -> "no"))
 
           whenReady(res) { resp =>
             resp.status shouldBe OK
@@ -438,7 +438,7 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
                 xRequestId,
                 sessionCookie
               )
-              .post(Json.obj("keepAccessToSAThroughPTA" -> "yes"))
+              .post(Json.obj("select-continue" -> "yes"))
 
             whenReady(res) { resp =>
               val page = Jsoup.parse(resp.body)
@@ -465,7 +465,7 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
                 xRequestId,
                 sessionCookie
               )
-              .post(Json.obj("keepAccessToSAThroughPTA" -> "no"))
+              .post(Json.obj("select-continue" -> "no"))
 
             whenReady(res) { resp =>
               val page = Jsoup.parse(resp.body)
@@ -489,7 +489,7 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
 
           val res = buildRequest(urlPath, followRedirects = true)
             .withHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
-            .post(Json.obj("keepAccessToSAThroughPTA" -> "yes"))
+            .post(Json.obj("select-continue" -> "yes"))
 
           whenReady(res) { resp =>
             resp.status shouldBe OK
@@ -504,7 +504,7 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
 
           val res = buildRequest(urlPath, followRedirects = true)
             .withHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
-            .post(Json.obj("keepAccessToSAThroughPTA" -> "no"))
+            .post(Json.obj("select-continue" -> "no"))
 
           whenReady(res) { resp =>
             resp.status shouldBe OK
@@ -522,7 +522,7 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
 
         val res = buildRequest(urlPath, followRedirects = true)
           .withHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
-          .post(Json.obj("keepAccessToSAThroughPTA" -> "error"))
+          .post(Json.obj("select-continue" -> "error"))
 
         whenReady(res) { resp =>
           resp.status shouldBe BAD_REQUEST

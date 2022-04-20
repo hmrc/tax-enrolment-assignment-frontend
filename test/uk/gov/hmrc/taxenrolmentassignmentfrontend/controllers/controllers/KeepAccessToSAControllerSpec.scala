@@ -324,7 +324,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
           val res = controller.continue
             .apply(
               buildFakePOSTRequestWithSessionId(
-                data = Map("keepAccessToSAThroughPTA" -> "yes")
+                data = Map("select-continue" -> "yes")
               )
             )
 
@@ -367,7 +367,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
           val res = controller.continue
             .apply(
               buildFakePOSTRequestWithSessionId(
-                data = Map("keepAccessToSAThroughPTA" -> "yes")
+                data = Map("select-continue" -> "yes")
               )
             )
 
@@ -405,7 +405,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
           val res = controller.continue
             .apply(
               buildFakePOSTRequestWithSessionId(
-                data = Map("keepAccessToSAThroughPTA" -> "yes")
+                data = Map("select-continue" -> "yes")
               )
             )
 
@@ -454,7 +454,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
           val res = controller.continue
             .apply(
               buildFakePOSTRequestWithSessionId(
-                data = Map("keepAccessToSAThroughPTA" -> "no")
+                data = Map("select-continue" -> "no")
               )
             )
 
@@ -495,7 +495,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
           val res = controller.continue
             .apply(
               buildFakePOSTRequestWithSessionId(
-                data = Map("keepAccessToSAThroughPTA" -> "no")
+                data = Map("select-continue" -> "no")
               )
             )
 
@@ -531,7 +531,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
           val res = controller.continue
             .apply(
               buildFakePOSTRequestWithSessionId(
-                data = Map("keepAccessToSAThroughPTA" -> "no")
+                data = Map("select-continue" -> "no")
               )
             )
 
@@ -567,7 +567,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
           val res = controller.continue
             .apply(
               buildFakePOSTRequestWithSessionId(
-                data = Map("keepAccessToSAThroughPTA" -> "no")
+                data = Map("select-continue" -> "no")
               )
             )
 
@@ -593,7 +593,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
         val res = controller.continue
           .apply(
             buildFakePOSTRequestWithSessionId(
-              data = Map("keepAccessToSAThroughPTA" -> "error")
+              data = Map("select-continue" -> "error")
             )
           )
 

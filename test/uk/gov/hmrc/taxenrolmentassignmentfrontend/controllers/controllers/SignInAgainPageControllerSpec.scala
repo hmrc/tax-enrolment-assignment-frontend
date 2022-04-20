@@ -16,29 +16,49 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.controllers
 
+import play.api.http.Status.{OK, SEE_OTHER}
+import play.api.libs.json.Format
+import play.api.mvc.AnyContent
+import play.api.test.Helpers.{
+  contentAsString,
+  defaultAwaitTimeout,
+  redirectLocation,
+  status
+}
+import uk.gov.hmrc.auth.core.Enrolments
+import uk.gov.hmrc.auth.core.authorise.Predicate
+import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestData._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{
+  ReportSuspiciousIDController,
+  SignInWithSAAccountController,
+  SignOutController,
+  testOnly
+}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
+  InvalidUserType,
+  NoSAEnrolmentWhenOneExpected
+}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{
+  ReportSuspiciousID,
+  SignInWithSAAccount
+}
 
-  import play.api.http.Status.{OK, SEE_OTHER}
-  import play.api.libs.json.Format
-  import play.api.mvc.AnyContent
-  import play.api.test.Helpers.{contentAsString, defaultAwaitTimeout, redirectLocation, status}
-  import uk.gov.hmrc.auth.core.Enrolments
-  import uk.gov.hmrc.auth.core.authorise.Predicate
-  import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
-  import uk.gov.hmrc.http.HeaderCarrier
-  import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-  import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
-  import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
-  import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestData._
-  import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
-  import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{ReportSuspiciousIDController, SignInWithSAAccountController, SignOutController, testOnly}
-  import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{InvalidUserType, NoSAEnrolmentWhenOneExpected}
-  import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{ReportSuspiciousID, SignInWithSAAccount}
-
-  import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future}
 
 class SignInAgainPageControllerSpec extends TestFixture {
   val view: SignInWithSAAccount = app.injector.instanceOf[SignInWithSAAccount]
-  val signOutController = new SignOutController(mockAuthAction, mcc, testAppConfig, mockTeaSessionCache)
+  val signOutController = new SignOutController(
+    mockAuthAction,
+    mcc,
+    testAppConfig,
+    mockTeaSessionCache
+  )
   lazy val reportSuspiciousIDController = new ReportSuspiciousIDController(
     mockAuthAction,
     mockTeaSessionCache,
@@ -49,7 +69,8 @@ class SignInAgainPageControllerSpec extends TestFixture {
     errorView
   )
 
-  lazy val reportSuspiciousIDPage: ReportSuspiciousID =inject[ReportSuspiciousID]
+  lazy val reportSuspiciousIDPage: ReportSuspiciousID =
+    inject[ReportSuspiciousID]
 
   val controller =
     new SignInWithSAAccountController(
@@ -68,7 +89,9 @@ class SignInAgainPageControllerSpec extends TestFixture {
         (mockAuthConnector
           .authorise(
             _: Predicate,
-            _: Retrieval[Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String]]
+            _: Retrieval[
+              Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String]
+            ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
@@ -91,7 +114,9 @@ class SignInAgainPageControllerSpec extends TestFixture {
           .expects(*, *, *)
           .returning(createInboundResult(accountDetails))
 
-        val result = controller.view().apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+        val result = controller
+          .view()
+          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe OK
         contentAsString(result) should include("signInAgain.title")
@@ -120,8 +145,6 @@ class SignInAgainPageControllerSpec extends TestFixture {
           ))
           .expects(List(SA_ASSIGNED_TO_OTHER_USER), *, *, *)
           .returning(createInboundResultError(InvalidUserType(Some("/test"))))
-
-
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -174,7 +197,6 @@ class SignInAgainPageControllerSpec extends TestFixture {
       }
     }
 
-
     s"the cache no redirectUrl" should {
       "return InternalServerError" in {
         (mockAuthConnector
@@ -208,7 +230,7 @@ class SignInAgainPageControllerSpec extends TestFixture {
   }
   "continue" when {
     "the user has a redirectUrl in cache" should {
-      "redirect to AccountCheck" in {
+      "redirect to logout" in {
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -239,9 +261,7 @@ class SignInAgainPageControllerSpec extends TestFixture {
 
         status(res) shouldBe SEE_OTHER
         redirectLocation(res) shouldBe
-          Some(
-            "/tax-enrolment-assignment-frontend/test-only/successful"
-          )
+          Some("/tax-enrolment-assignment-frontend/logout")
       }
     }
 
@@ -265,11 +285,7 @@ class SignInAgainPageControllerSpec extends TestFixture {
             _: Format[String]
           ))
           .expects("redirectURL", *, *)
-          .returning(
-            Future.successful(
-              None
-            )
-          )
+          .returning(Future.successful(None))
 
         val res = controller
           .continue()

@@ -14,12 +14,19 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.Layout
-
 @this()
 
-@(content: Html)
+@(key: String, value: String)(implicit messages: Messages)
 
-<div class="interrupt-card">
- @content
+<div class="govuk-summary-list__row">
+    <dt class="govuk-summary-list__key">
+        @messages(key)
+    </dt>
+    <dd class="govuk-summary-list__value">
+        @if(key == "mfaDetails.voice" || key == "mfaDetails.text" || key == "common.userId"){
+            @messages("common.endingWith", value)
+        }else{
+            @value
+        }
+    </dd>
 </div>

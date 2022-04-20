@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.views
 
+import org.jsoup.nodes.Document
 import play.api.test.FakeRequest
 import play.twirl.api.HtmlFormat
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TestFixture
@@ -26,14 +27,14 @@ class EnrolledForPTWithSAOnOtherAccountSpec extends TestFixture {
 
   val view: EnrolledForPTWithSAOnOtherAccount =
     app.injector.instanceOf[EnrolledForPTWithSAOnOtherAccount]
-  val userId = "********3214"
-  val saUserId = "********3215"
+  val userId = "3214"
+  val saUserId = "3215"
   val html: HtmlFormat.Appendable =
     view(userId)(FakeRequest(), testMessages)
-  val document = doc(html)
+  val document: Document = doc(html)
   val htmlSA: HtmlFormat.Appendable =
     view(userId, Some(saUserId))(FakeRequest(), testMessages)
-  val documentSA = doc(htmlSA)
+  val documentSA: Document = doc(htmlSA)
 
   object Selectors {
     val heading = "govuk-heading-xl"

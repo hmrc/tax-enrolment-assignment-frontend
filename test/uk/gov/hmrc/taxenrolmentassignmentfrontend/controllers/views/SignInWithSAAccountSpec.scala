@@ -100,7 +100,7 @@ class SignInWithSAAccountSpec extends TestFixture {
         summaryListRows
           .get(0)
           .getElementsByClass(Selectors.summaryListValue)
-          .text() shouldBe accountDetails.userId
+          .text() shouldBe s"Ending with ${accountDetails.userId}"
       }
       "includes the email" when {
         "the email is present in accountDetails" in {
@@ -127,11 +127,11 @@ class SignInWithSAAccountSpec extends TestFixture {
       }
       elementsToMFADetails.foreach {
         case (elementNumber, mfaDetails) =>
-          s"include the ${mfaDetails.factorName}" in {
+          s"include the key - ${mfaDetails.factorNameKey}" in {
             summaryListRows
               .get(elementNumber)
               .getElementsByClass(Selectors.summaryListKey)
-              .text() shouldBe mfaDetails.factorName
+              .text() shouldBe mfaDetails.factorNameKey
             summaryListRows
               .get(elementNumber)
               .getElementsByClass(Selectors.summaryListValue)

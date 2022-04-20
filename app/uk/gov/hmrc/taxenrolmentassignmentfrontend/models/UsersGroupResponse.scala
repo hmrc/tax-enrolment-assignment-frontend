@@ -20,7 +20,10 @@ import play.api.libs.json.{Format, Json}
 
 case class AdditonalFactors(factorType: String,
                             phoneNumber: Option[String] = None,
-                            name: Option[String] = None)
+                            name: Option[String] = None) {
+  val FIVE = 5
+  def trimmedPhoneNumber: String = phoneNumber.fold(""){_.trim.takeRight(FIVE)}
+}
 
 case class UsersGroupResponse(obfuscatedUserId: String,
                               email: Option[String],

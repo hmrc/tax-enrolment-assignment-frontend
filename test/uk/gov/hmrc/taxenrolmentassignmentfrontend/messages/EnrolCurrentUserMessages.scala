@@ -14,24 +14,20 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.messages
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.messages
 
-object KeepAccessToSAMessages {
+object EnrolCurrentUserMessages {
 
   val continue = "Continue"
   val title =
-    "Do you want to keep access to Self Assessment from your personal tax account?"
+    "Which Government Gateway user ID do you want to use to access your personal tax information?"
   val heading =
-    "Do you want to keep access to Self Assessment from your personal tax account?"
-  val radioYes = "Yes"
-  val radioNo = "No"
-  val noSALink = "I do not complete Self Assessment Online"
-  val fraudReportingUrl =
-    "/protect-tax-info/enrol-pt/contact-hmrc-sa"
+    "Which Government Gateway user ID do you want to use to access your personal tax information?"
+  def radioCurrentUserId(id: String) = s"My current user ID $id"
+  val radioOtherUserId = "Another user ID"
+  def warning(id: String) =
+    s"Warning You have access to Self Assessment under user ID $id. We recommend signing back in with this user ID so that you can access Self Assessment from your personal tax account."
   val errorTitle = "There is a problem"
-  val errorMessage = "Select option to continue"
+  val errorMessage = "Confirm which Government Gateway user ID you want to use"
   val button = "Continue"
-  val action =
-    "/protect-tax-info/enrol-pt/other-user-id-has-sa/keep-access-to-sa-from-pta"
-
 }

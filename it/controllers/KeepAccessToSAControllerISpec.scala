@@ -211,9 +211,7 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
               val page = Jsoup.parse(resp.body)
 
               resp.status shouldBe SEE_OTHER
-              resp.header("Location").get should include(
-                s"/tax-enrolment-assignment-frontend"
-              )
+              resp.header("Location").get should include(s"/protect-tax-info")
             }
           }
         }
@@ -342,7 +340,7 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
           whenReady(res) { resp =>
             resp.status shouldBe SEE_OTHER
             resp.header("Location").get should include(
-              "/enrol-pt/sign-in-again"
+              "/enrol-pt/other-user-id-has-sa/sign-in-again"
             )
           }
         }
@@ -444,9 +442,7 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
               val page = Jsoup.parse(resp.body)
 
               resp.status shouldBe SEE_OTHER
-              resp.header("Location").get should include(
-                s"/tax-enrolment-assignment-frontend"
-              )
+              resp.header("Location").get should include(s"/protect-tax-info")
             }
           }
           "no is selected" in {
@@ -471,9 +467,7 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
               val page = Jsoup.parse(resp.body)
 
               resp.status shouldBe SEE_OTHER
-              resp.header("Location").get should include(
-                s"/tax-enrolment-assignment-frontend"
-              )
+              resp.header("Location").get should include(s"/protect-tax-info")
             }
           }
         }

@@ -103,13 +103,7 @@ class AccountCheckController @Inject()(
         )
         Redirect(routes.EnrolledForPTController.view)
       case false =>
-        Ok(
-          errorView(
-            "enrolmentError.title",
-            "enrolmentError.heading",
-            "enrolmentError.body"
-          )
-        )
+        InternalServerError(errorView())
     }
   }
 

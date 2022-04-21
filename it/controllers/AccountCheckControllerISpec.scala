@@ -34,8 +34,10 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
   val returnUrl: String = testOnly.routes.TestOnlyController.successfulCall
     .absoluteURL(false, teaHost)
   val urlPath =
-    s"?redirectUrl=${testOnly.routes.TestOnlyController.successfulCall
-      .absoluteURL(false, teaHost)}"
+    s"?redirectUrl=${
+      testOnly.routes.TestOnlyController.successfulCall
+        .absoluteURL(false, teaHost)
+    }"
 
   s"GET $urlPath" when {
     "a user has one credential associated with their nino" that {
@@ -101,7 +103,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
             ""
           )
 
-          stubGet(s"/personal-account", OK, "There was a problem")
+          stubGet(s"/personal-account", OK, "On PTA")
 
           val res = buildRequest(urlPath, followRedirects = true)
             .withHttpHeaders(xSessionId, csrfContent)
@@ -109,7 +111,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
 
           whenReady(res) { resp =>
             resp.status shouldBe OK
-            resp.body should include("There was a problem")
+            resp.body should include("On PTA")
           }
         }
       }
@@ -372,7 +374,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
 
         whenReady(res) { resp =>
           resp.status shouldBe OK
-          resp.body should include("There was a problem")
+          resp.body should include("Sorry, there is a problem with the service")
         }
       }
     }
@@ -395,13 +397,13 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
 
         whenReady(res) { resp =>
           resp.status shouldBe OK
-          resp.body should include("There was a problem")
+          resp.body should include("Sorry, there is a problem with the service")
         }
       }
     }
 
     "the user has a session missing required element NINO" should {
-      s"return $UNAUTHORIZED" in {
+      s"return $SEE_OTHER" in {
         val authResponse = authoriseResponseJson(optNino = None)
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -410,13 +412,14 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
           buildRequest(urlPath).withHttpHeaders(xSessionId, csrfContent).get()
 
         whenReady(res) { resp =>
-          resp.status shouldBe UNAUTHORIZED
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include("/unauthorised")
         }
       }
     }
 
     "the user has a session missing required element Credentials" should {
-      s"return $UNAUTHORIZED" in {
+      s"return $SEE_OTHER" in {
         val authResponse = authoriseResponseJson(optCreds = None)
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -425,13 +428,14 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
           buildRequest(urlPath).withHttpHeaders(xSessionId, csrfContent).get()
 
         whenReady(res) { resp =>
-          resp.status shouldBe UNAUTHORIZED
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include("/unauthorised")
         }
       }
     }
 
     "the user has a insufficient confidence level" should {
-      s"return $UNAUTHORIZED" in {
+      s"return $SEE_OTHER" in {
         stubAuthorizePostUnauthorised(insufficientConfidenceLevel)
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
@@ -439,7 +443,8 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
           buildRequest(urlPath).withHttpHeaders(xSessionId, csrfContent).get()
 
         whenReady(res) { resp =>
-          resp.status shouldBe UNAUTHORIZED
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include("/unauthorised")
         }
       }
     }

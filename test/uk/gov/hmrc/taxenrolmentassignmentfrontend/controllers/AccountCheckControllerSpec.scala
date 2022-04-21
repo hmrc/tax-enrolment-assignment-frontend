@@ -74,7 +74,7 @@ class AccountCheckControllerSpec extends TestFixture {
           .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(result) shouldBe OK
+        status(result) shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) should include("enrolmentError.title")
       }
     }

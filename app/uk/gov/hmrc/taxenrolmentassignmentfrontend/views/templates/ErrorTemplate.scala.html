@@ -14,13 +14,22 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.govukfrontend.views.html.components.Text
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.Layout
 
 @this(layout: Layout)
 
-@(pageTitleKey: String, headingKey: String, messageKey: String)(implicit request: Request[_], messages: Messages)
-@layout(pageTitle = Some(messages(pageTitleKey))) {
-    <h1 class="govuk-heading-xl">@{Text(messages(headingKey)).asHtml}</h1>
-    <p class="govuk-body">@{Text(messages(messageKey)).asHtml}</p>
+@()(implicit request: Request[_], messages: Messages)
+@layout(pageTitle = Some(messages("enrolmentError.title"))) {
+
+ <h1 class="govuk-heading-xl">@messages("enrolmentError.heading")</h1>
+
+ <p class="govuk-body">@messages("enrolmentError.paragraph1")</p>
+
+ <p class="govuk-body">
+  <a class="govuk-link" id="techSupportLink" href="https://www.gov.uk/government/organisations/hm-revenue-customs/contact/online-services-helpdesk">
+  @messages("enrolmentError.paragraph2.linkText")
+  </a>
+  @messages("enrolmentError.paragraph2.text")
+ </p>
+
 }

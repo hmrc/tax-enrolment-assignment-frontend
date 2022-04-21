@@ -41,7 +41,7 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
         whenReady(res) { resp =>
           resp.status shouldBe OK
           resp.body should include(
-            "Before you continue to your personal tax account"
+            "You currently have more than one Government Gateway user ID with access to you personal tax account"
           )
         }
       }

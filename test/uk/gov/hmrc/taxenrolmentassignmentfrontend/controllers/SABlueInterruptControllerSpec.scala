@@ -28,7 +28,10 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OT
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.InvalidUserType
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{
+  TestFixture,
+  UrlPaths
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SABlueInterrupt
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -88,8 +91,8 @@ class SABlueInterruptControllerSpec extends TestFixture {
       }
     }
 
-    "the user does not have an account type of SA_ASSIGNED_TO_OTHER_USER" should {
-      "redirect to account check" in {
+    s"the user does not have an account type of $SA_ASSIGNED_TO_OTHER_USER" should {
+      s"redirect to ${UrlPaths.accountCheckPath}" in {
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -109,16 +112,16 @@ class SABlueInterruptControllerSpec extends TestFixture {
             _: ExecutionContext
           ))
           .expects(List(SA_ASSIGNED_TO_OTHER_USER), *, *, *)
-          .returning(createInboundResultError(InvalidUserType(Some("/test"))))
+          .returning(
+            createInboundResultError(InvalidUserType(Some(UrlPaths.returnUrl)))
+          )
 
         val result = controller
           .view()
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe SEE_OTHER
-        redirectLocation(result) shouldBe Some(
-          "/protect-tax-info?redirectUrl=%2Ftest"
-        )
+        redirectLocation(result) shouldBe Some(UrlPaths.accountCheckPath)
       }
     }
 
@@ -155,9 +158,9 @@ class SABlueInterruptControllerSpec extends TestFixture {
     }
   }
 
-  "post" when {
+  "continue" when {
     "a user has SA on another account" should {
-      "redirect to keepAccessToSA" in {
+      s"redirect to ${UrlPaths.saOnOtherAccountKeepAccessToSAPath}" in {
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -185,13 +188,13 @@ class SABlueInterruptControllerSpec extends TestFixture {
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some(
-          "/protect-tax-info/enrol-pt/other-user-id-has-sa/keep-access-to-sa-from-pta"
+          UrlPaths.saOnOtherAccountKeepAccessToSAPath
         )
       }
     }
 
-    "the user does not have an account type of SA_ASSIGNED_TO_OTHER_USER" should {
-      "redirect to account check" in {
+    s"the user does not have an account type of $SA_ASSIGNED_TO_OTHER_USER" should {
+      s"redirect to ${UrlPaths.accountCheckPath}" in {
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -211,16 +214,16 @@ class SABlueInterruptControllerSpec extends TestFixture {
             _: ExecutionContext
           ))
           .expects(List(SA_ASSIGNED_TO_OTHER_USER), *, *, *)
-          .returning(createInboundResultError(InvalidUserType(Some("/test"))))
+          .returning(
+            createInboundResultError(InvalidUserType(Some(UrlPaths.returnUrl)))
+          )
 
         val result = controller
           .continue()
           .apply(buildFakePOSTRequestWithSessionId(Map.empty))
 
         status(result) shouldBe SEE_OTHER
-        redirectLocation(result) shouldBe Some(
-          "/protect-tax-info?redirectUrl=%2Ftest"
-        )
+        redirectLocation(result) shouldBe Some(UrlPaths.accountCheckPath)
       }
     }
 

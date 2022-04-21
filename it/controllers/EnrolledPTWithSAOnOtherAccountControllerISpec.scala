@@ -16,46 +16,28 @@
 
 package controllers
 
-import helpers.{IntegrationSpecBase, TestITData}
-import helpers.WiremockHelper._
+import helpers.TestHelper
 import helpers.TestITData._
+import helpers.WiremockHelper._
+import helpers.messages._
 import org.jsoup.Jsoup
 import play.api.http.Status
 import play.api.libs.json.Json
-import play.api.libs.ws.DefaultWSCookie
-import play.api.mvc._
-import play.api.test.Helpers
-import play.libs.ws.WSCookie
-import uk.gov.hmrc.crypto.PlainText
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
-  MULTIPLE_ACCOUNTS,
-  PT_ASSIGNED_TO_CURRENT_USER,
-  PT_ASSIGNED_TO_OTHER_USER,
-  SA_ASSIGNED_TO_CURRENT_USER,
-  SA_ASSIGNED_TO_OTHER_USER,
-  SINGLE_ACCOUNT
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.USER_ASSIGNED_SA_ENROLMENT
 
 class EnrolledPTWithSAOnOtherAccountControllerISpec
-    extends IntegrationSpecBase
+    extends TestHelper
     with Status {
 
-  val teaHost = s"localhost:$port"
-  val returnUrl: String = testOnly.routes.TestOnlyController.successfulCall
-    .absoluteURL(false, teaHost)
-  val urlPath =
-    s"/enrol-pt/enrolment-success-sa-access-not-wanted"
-
-  val sessionCookie
-    : (String, String) = ("COOKIE" -> createSessionCookieAsString(sessionData))
+  val urlPath: String =
+    UrlPaths.enrolledPTSAOnOtherAccountPath
 
   s"GET $urlPath" when {
-    "the session cache has Account type of SA_ASSIGNED_TO_OTHER_USER" should {
-      s"render the enrolledPTPage after fraud reporting page" in {
-        await(save[String](sessionId, "redirectURL", returnUrl))
+    s"the session cache has Account type of $SA_ASSIGNED_TO_OTHER_USER and the user has reported fraud" should {
+      s"render the enrolledPTPage with no self assessment information" in {
+        await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
         await(save[Boolean](sessionId, "reportedFraud", true))
         await(
           save[AccountTypes.Value](
@@ -80,14 +62,19 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
           val page = Jsoup.parse(resp.body)
 
           resp.status shouldBe OK
-          page.title should include(TestITData.enrolledPTPageTitle)
+          page.title should include(
+            EnrolledPTWithSAOnOtherAccountMessages.title
+          )
+          page
+            .getElementsByClass("govuk-body")
+            .text() shouldBe EnrolledPTWithSAOnOtherAccountMessages.paragraphs
         }
       }
     }
 
-    "the session cache has Account type of SA_ASSIGNED_TO_OTHER_USER" should {
-      s"render the enrolledPTPage after user chooses to keep SA separate" in {
-        await(save[String](sessionId, "redirectURL", returnUrl))
+    s"the session cache has Account type of $SA_ASSIGNED_TO_OTHER_USER and no fraud reported" should {
+      s"render the enrolledPTPage that includes SA details" in {
+        await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
         await(
           save[AccountTypes.Value](
             sessionId,
@@ -116,15 +103,19 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
         whenReady(res) { resp =>
           val page = Jsoup.parse(resp.body)
 
-          resp.status shouldBe OK
-          page.title should include(TestITData.enrolledPTPageTitle)
+          page.title should include(
+            EnrolledPTWithSAOnOtherAccountMessages.title
+          )
+          page
+            .getElementsByClass("govuk-body")
+            .text() shouldBe EnrolledPTWithSAOnOtherAccountMessages.paragraphsSA
         }
       }
     }
 
-    "the session cache has Account type of SA_ASSIGNED_TO_OTHER_USER but users group search fails" should {
+    s"the session cache has Account type of $SA_ASSIGNED_TO_OTHER_USER but users group search fails" should {
       s"render the error page" in {
-        await(save[String](sessionId, "redirectURL", returnUrl))
+        await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
         await(
           save[AccountTypes.Value](
             sessionId,
@@ -162,24 +153,22 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
       SA_ASSIGNED_TO_CURRENT_USER
     ).foreach { accountType =>
       s"the session cache has Account type of $accountType" should {
-        s"redirect to accountCheck" in {
-          await(save[String](sessionId, "redirectURL", returnUrl))
+        s"redirect to ${UrlPaths.accountCheckPath}" in {
+          await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
           await(
             save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", accountType)
           )
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
-          val res = buildRequest(urlPath, followRedirects = false)
+          val res = buildRequest(urlPath)
             .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
             .get()
 
           whenReady(res) { resp =>
-            val page = Jsoup.parse(resp.body)
-
             resp.status shouldBe SEE_OTHER
             resp.header("Location").get should include(
-              s"/protect-tax-info"
+              UrlPaths.accountCheckPath
             )
           }
         }
@@ -272,7 +261,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
   s"POST $urlPath" when {
     "the session cache contains the redirect url" should {
       s"redirect to the redirect url" in {
-        await(save[String](sessionId, "redirectURL", returnUrl))
+        await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -283,7 +272,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
 
         whenReady(res) { resp =>
           resp.status shouldBe OK
-          resp.uri.toString shouldBe returnUrl
+          resp.uri.toString shouldBe UrlPaths.returnUrl
         }
       }
     }

@@ -26,9 +26,22 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.PT_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{InvalidUserType, NoPTEnrolmentWhenOneExpected}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{accountDetails, buildFakeRequestWithSessionId, predicates, retrievalResponse, retrievals, saEnrolmentOnly}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
+  InvalidUserType,
+  NoPTEnrolmentWhenOneExpected
+}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{
+  accountDetails,
+  buildFakeRequestWithSessionId,
+  predicates,
+  retrievalResponse,
+  retrievals,
+  saEnrolmentOnly
+}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{
+  TestFixture,
+  UrlPaths
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnotherAccount
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -137,8 +150,8 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
       }
     }
 
-    "the user does not have an account type of PT_ASSIGNED_TO_OTHER_USER" should {
-      "redirect to account check" in {
+    s"the user does not have an account type of $PT_ASSIGNED_TO_OTHER_USER" should {
+      s"redirect to ${UrlPaths.accountCheckPath}" in {
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -158,15 +171,15 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
             _: ExecutionContext
           ))
           .expects(List(PT_ASSIGNED_TO_OTHER_USER), *, *, *)
-          .returning(createInboundResultError(InvalidUserType(Some("/test"))))
+          .returning(
+            createInboundResultError(InvalidUserType(Some(UrlPaths.returnUrl)))
+          )
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe SEE_OTHER
-        redirectLocation(result) shouldBe Some(
-          "/protect-tax-info?redirectUrl=%2Ftest"
-        )
+        redirectLocation(result) shouldBe Some(UrlPaths.accountCheckPath)
       }
     }
 

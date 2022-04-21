@@ -18,14 +18,12 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import org.jsoup.Jsoup
 import play.api.http.Status.OK
-import play.api.libs.json.Format
 import play.api.mvc.AnyContent
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.Enrolments
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
@@ -33,10 +31,13 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
   InvalidUserType,
   UnexpectedResponseFromTaxEnrolments
 }
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm.keepAccessToSAThroughPTAForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{
+  TestFixture,
+  UrlPaths
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.KeepAccessToSA
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -50,7 +51,6 @@ class KeepAccessToSAControllerSpec extends TestFixture {
     mockMultipleAccountsOrchestrator,
     mcc,
     logger,
-    mockTeaSessionCache,
     view,
     errorView
   )
@@ -73,21 +73,13 @@ class KeepAccessToSAControllerSpec extends TestFixture {
           )
 
         (mockMultipleAccountsOrchestrator
-          .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
+          .getDetailsForKeepAccessToSA(
             _: RequestWithUserDetails[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
-          .expects(List(SA_ASSIGNED_TO_OTHER_USER), *, *, *)
-          .returning(createInboundResult(SA_ASSIGNED_TO_OTHER_USER))
-
-        (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetails[AnyContent],
-            _: Format[KeepAccessToSAThroughPTA]
-          ))
-          .expects(KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM, *, *)
-          .returning(Future.successful(None))
+          .expects(*, *, *)
+          .returning(createInboundResult(keepAccessToSAThroughPTAForm))
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -123,21 +115,17 @@ class KeepAccessToSAControllerSpec extends TestFixture {
           )
 
         (mockMultipleAccountsOrchestrator
-          .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
+          .getDetailsForKeepAccessToSA(
             _: RequestWithUserDetails[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
-          .expects(List(SA_ASSIGNED_TO_OTHER_USER), *, *, *)
-          .returning(createInboundResult(SA_ASSIGNED_TO_OTHER_USER))
-
-        (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetails[AnyContent],
-            _: Format[KeepAccessToSAThroughPTA]
-          ))
-          .expects(KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM, *, *)
-          .returning(Future.successful(Some(KeepAccessToSAThroughPTA(true))))
+          .expects(*, *, *)
+          .returning(
+            createInboundResult(
+              keepAccessToSAThroughPTAForm.fill(KeepAccessToSAThroughPTA(true))
+            )
+          )
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -173,21 +161,17 @@ class KeepAccessToSAControllerSpec extends TestFixture {
           )
 
         (mockMultipleAccountsOrchestrator
-          .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
+          .getDetailsForKeepAccessToSA(
             _: RequestWithUserDetails[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
-          .expects(List(SA_ASSIGNED_TO_OTHER_USER), *, *, *)
-          .returning(createInboundResult(SA_ASSIGNED_TO_OTHER_USER))
-
-        (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetails[AnyContent],
-            _: Format[KeepAccessToSAThroughPTA]
-          ))
-          .expects(KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM, *, *)
-          .returning(Future.successful(Some(KeepAccessToSAThroughPTA(false))))
+          .expects(*, *, *)
+          .returning(
+            createInboundResult(
+              keepAccessToSAThroughPTAForm.fill(KeepAccessToSAThroughPTA(false))
+            )
+          )
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -207,7 +191,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
     }
 
     "the user does not have SA on another account" should {
-      "redirect to accountCheck" in {
+      s"redirect to ${UrlPaths.accountCheckPath}" in {
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -221,27 +205,21 @@ class KeepAccessToSAControllerSpec extends TestFixture {
           .returning(Future.successful(retrievalResponse()))
 
         (mockMultipleAccountsOrchestrator
-          .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
+          .getDetailsForKeepAccessToSA(
             _: RequestWithUserDetails[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
-          .expects(List(SA_ASSIGNED_TO_OTHER_USER), *, *, *)
+          .expects(*, *, *)
           .returning(
-            createInboundResultError(
-              InvalidUserType(
-                Some(testOnly.routes.TestOnlyController.successfulCall.url)
-              )
-            )
+            createInboundResultError(InvalidUserType(Some(UrlPaths.returnUrl)))
           )
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe SEE_OTHER
-        redirectLocation(result) shouldBe Some(
-          "/protect-tax-info?redirectUrl=%2Fprotect-tax-info%2Ftest-only%2Fsuccessful"
-        )
+        redirectLocation(result) shouldBe Some(UrlPaths.accountCheckPath)
       }
     }
 
@@ -260,12 +238,12 @@ class KeepAccessToSAControllerSpec extends TestFixture {
           .returning(Future.successful(retrievalResponse()))
 
         (mockMultipleAccountsOrchestrator
-          .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
+          .getDetailsForKeepAccessToSA(
             _: RequestWithUserDetails[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
-          .expects(List(SA_ASSIGNED_TO_OTHER_USER), *, *, *)
+          .expects(*, *, *)
           .returning(createInboundResultError(InvalidUserType(None)))
 
         val res = controller.view
@@ -279,7 +257,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
 
   "continue" when {
     "the user has selected Yes" should {
-      "redirect to signin again" when {
+      s"redirect to ${UrlPaths.saOnOtherAccountSigninAgainPath}" when {
         "they have SA on another account" in {
           (mockAuthConnector
             .authorise(
@@ -294,28 +272,13 @@ class KeepAccessToSAControllerSpec extends TestFixture {
             .returning(Future.successful(retrievalResponse()))
 
           (mockMultipleAccountsOrchestrator
-            .checkValidAccountTypeRedirectUrlInCache(
-              _: List[AccountTypes.Value]
-            )(
+            .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
               _: RequestWithUserDetails[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
-            .expects(List(SA_ASSIGNED_TO_OTHER_USER), *, *, *)
-            .returning(createInboundResult(SA_ASSIGNED_TO_OTHER_USER))
-
-          (mockTeaSessionCache
-            .save(_: String, _: KeepAccessToSAThroughPTA)(
-              _: RequestWithUserDetails[AnyContent],
-              _: Format[KeepAccessToSAThroughPTA]
-            ))
-            .expects(
-              KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM,
-              KeepAccessToSAThroughPTA(true),
-              *,
-              *
-            )
-            .returning(Future(CacheMap(request.sessionID, Map())))
+            .expects(KeepAccessToSAThroughPTA(true), *, *, *)
+            .returning(createInboundResult(true))
 
           val res = controller.continue
             .apply(
@@ -326,11 +289,11 @@ class KeepAccessToSAControllerSpec extends TestFixture {
 
           status(res) shouldBe SEE_OTHER
           redirectLocation(res) shouldBe Some(
-            "/protect-tax-info/enrol-pt/other-user-id-has-sa/sign-in-again"
+            UrlPaths.saOnOtherAccountSigninAgainPath
           )
         }
       }
-      "redirect to account check" when {
+      s"redirect to ${UrlPaths.accountCheckPath}" when {
         "they don't have SA on another account" in {
           (mockAuthConnector
             .authorise(
@@ -344,19 +307,15 @@ class KeepAccessToSAControllerSpec extends TestFixture {
             .expects(predicates, retrievals, *, *)
             .returning(Future.successful(retrievalResponse()))
           (mockMultipleAccountsOrchestrator
-            .checkValidAccountTypeRedirectUrlInCache(
-              _: List[AccountTypes.Value]
-            )(
+            .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
               _: RequestWithUserDetails[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
-            .expects(List(SA_ASSIGNED_TO_OTHER_USER), *, *, *)
+            .expects(KeepAccessToSAThroughPTA(true), *, *, *)
             .returning(
               createInboundResultError(
-                InvalidUserType(
-                  Some(testOnly.routes.TestOnlyController.successfulCall.url)
-                )
+                InvalidUserType(Some(UrlPaths.returnUrl))
               )
             )
 
@@ -368,9 +327,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
             )
 
           status(res) shouldBe SEE_OTHER
-          redirectLocation(res) shouldBe Some(
-            "/protect-tax-info?redirectUrl=%2Fprotect-tax-info%2Ftest-only%2Fsuccessful"
-          )
+          redirectLocation(res) shouldBe Some(UrlPaths.accountCheckPath)
         }
       }
 
@@ -388,14 +345,12 @@ class KeepAccessToSAControllerSpec extends TestFixture {
             .expects(predicates, retrievals, *, *)
             .returning(Future.successful(retrievalResponse()))
           (mockMultipleAccountsOrchestrator
-            .checkValidAccountTypeRedirectUrlInCache(
-              _: List[AccountTypes.Value]
-            )(
+            .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
               _: RequestWithUserDetails[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
-            .expects(List(SA_ASSIGNED_TO_OTHER_USER), *, *, *)
+            .expects(KeepAccessToSAThroughPTA(true), *, *, *)
             .returning(createInboundResultError(InvalidUserType(None)))
 
           val res = controller.continue
@@ -412,7 +367,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
     }
 
     "the user has selected No" should {
-      "be enrolled for PT and redirect to EnrolledPTWithSAOnOtherAccount" when {
+      s"be enrolled for PT and redirect to ${UrlPaths.enrolledPTSAOnOtherAccountPath}" when {
         "they have SA on another account" in {
           (mockAuthConnector
             .authorise(
@@ -426,26 +381,13 @@ class KeepAccessToSAControllerSpec extends TestFixture {
             .expects(predicates, retrievals, *, *)
             .returning(Future.successful(retrievalResponse()))
           (mockMultipleAccountsOrchestrator
-            .checkValidAccountTypeAndEnrolForPT(_: AccountTypes.Value)(
+            .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
               _: RequestWithUserDetails[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
-            .expects(SA_ASSIGNED_TO_OTHER_USER, *, *, *)
-            .returning(createInboundResult((): Unit))
-
-          (mockTeaSessionCache
-            .save(_: String, _: KeepAccessToSAThroughPTA)(
-              _: RequestWithUserDetails[AnyContent],
-              _: Format[KeepAccessToSAThroughPTA]
-            ))
-            .expects(
-              KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM,
-              KeepAccessToSAThroughPTA(false),
-              *,
-              *
-            )
-            .returning(Future(CacheMap(request.sessionID, Map())))
+            .expects(KeepAccessToSAThroughPTA(false), *, *, *)
+            .returning(createInboundResult(false))
 
           val res = controller.continue
             .apply(
@@ -456,11 +398,11 @@ class KeepAccessToSAControllerSpec extends TestFixture {
 
           status(res) shouldBe SEE_OTHER
           redirectLocation(res) shouldBe Some(
-            "/protect-tax-info/enrol-pt/enrolment-success-sa-access-not-wanted"
+            UrlPaths.enrolledPTSAOnOtherAccountPath
           )
         }
       }
-      "redirect to account check" when {
+      s"redirect to ${UrlPaths.accountCheckPath}" when {
         "they don't have SA on another account" in {
           (mockAuthConnector
             .authorise(
@@ -474,17 +416,15 @@ class KeepAccessToSAControllerSpec extends TestFixture {
             .expects(predicates, retrievals, *, *)
             .returning(Future.successful(retrievalResponse()))
           (mockMultipleAccountsOrchestrator
-            .checkValidAccountTypeAndEnrolForPT(_: AccountTypes.Value)(
+            .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
               _: RequestWithUserDetails[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
-            .expects(SA_ASSIGNED_TO_OTHER_USER, *, *, *)
+            .expects(KeepAccessToSAThroughPTA(false), *, *, *)
             .returning(
               createInboundResultError(
-                InvalidUserType(
-                  Some(testOnly.routes.TestOnlyController.successfulCall.url)
-                )
+                InvalidUserType(Some(UrlPaths.returnUrl))
               )
             )
 
@@ -496,9 +436,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
             )
 
           status(res) shouldBe SEE_OTHER
-          redirectLocation(res) shouldBe Some(
-            "/protect-tax-info?redirectUrl=%2Fprotect-tax-info%2Ftest-only%2Fsuccessful"
-          )
+          redirectLocation(res) shouldBe Some(UrlPaths.accountCheckPath)
         }
       }
 
@@ -516,12 +454,12 @@ class KeepAccessToSAControllerSpec extends TestFixture {
             .expects(predicates, retrievals, *, *)
             .returning(Future.successful(retrievalResponse()))
           (mockMultipleAccountsOrchestrator
-            .checkValidAccountTypeAndEnrolForPT(_: AccountTypes.Value)(
+            .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
               _: RequestWithUserDetails[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
-            .expects(SA_ASSIGNED_TO_OTHER_USER, *, *, *)
+            .expects(KeepAccessToSAThroughPTA(false), *, *, *)
             .returning(createInboundResultError(InvalidUserType(None)))
 
           val res = controller.continue
@@ -550,12 +488,12 @@ class KeepAccessToSAControllerSpec extends TestFixture {
             .expects(predicates, retrievals, *, *)
             .returning(Future.successful(retrievalResponse()))
           (mockMultipleAccountsOrchestrator
-            .checkValidAccountTypeAndEnrolForPT(_: AccountTypes.Value)(
+            .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
               _: RequestWithUserDetails[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
-            .expects(SA_ASSIGNED_TO_OTHER_USER, *, *, *)
+            .expects(KeepAccessToSAThroughPTA(false), *, *, *)
             .returning(
               createInboundResultError(UnexpectedResponseFromTaxEnrolments)
             )

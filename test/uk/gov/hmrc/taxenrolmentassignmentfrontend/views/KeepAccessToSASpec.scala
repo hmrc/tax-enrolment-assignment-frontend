@@ -17,9 +17,9 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.views
 
 import play.api.test.FakeRequest
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.messages.KeepAccessToSAMessages
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.KeepAccessToSAMessages
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.KeepAccessToSA
 

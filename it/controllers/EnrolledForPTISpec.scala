@@ -16,17 +16,12 @@
 
 package controllers
 
-import helpers.{IntegrationSpecBase, TestITData}
-import helpers.WiremockHelper._
 import helpers.TestITData._
+import helpers.WiremockHelper._
+import helpers.{TestHelper, TestITData}
 import org.jsoup.Jsoup
 import play.api.http.Status
 import play.api.libs.json.Json
-import play.api.libs.ws.DefaultWSCookie
-import play.api.mvc._
-import play.api.test.Helpers
-import play.libs.ws.WSCookie
-import uk.gov.hmrc.crypto.PlainText
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
   MULTIPLE_ACCOUNTS,
@@ -34,23 +29,16 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
   PT_ASSIGNED_TO_OTHER_USER,
   SINGLE_ACCOUNT
 }
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
+import helpers.messages._
 
-class EnrolledForPTISpec extends IntegrationSpecBase with Status {
+class EnrolledForPTISpec extends TestHelper with Status {
 
-  val teaHost = s"localhost:$port"
-  val returnUrl: String = testOnly.routes.TestOnlyController.successfulCall
-    .absoluteURL(false, teaHost)
-  val urlPath =
-    s"/enrol-pt/enrolment-success-no-sa"
-
-  val sessionCookie
-    : (String, String) = ("COOKIE" -> createSessionCookieAsString(sessionData))
+  val urlPath = UrlPaths.enrolledPTNoSAOnAnyAccountPath
 
   s"GET $urlPath" when {
-    "the session cache has Account type of MULTIPLE_ACCOUNTS" should {
-      s"render the landing page" in {
-        await(save[String](sessionId, "redirectURL", returnUrl))
+    s"the session cache has Account type of $MULTIPLE_ACCOUNTS" should {
+      s"render the EnrolledForPT page" in {
+        await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
         await(
           save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", MULTIPLE_ACCOUNTS)
         )
@@ -70,7 +58,7 @@ class EnrolledForPTISpec extends IntegrationSpecBase with Status {
           val page = Jsoup.parse(resp.body)
 
           resp.status shouldBe OK
-          page.title should include(TestITData.enrolledPTPageTitle)
+          page.title should include(EnrolledForPTPageMessages.title)
         }
       }
     }
@@ -78,8 +66,8 @@ class EnrolledForPTISpec extends IntegrationSpecBase with Status {
     List(PT_ASSIGNED_TO_OTHER_USER, PT_ASSIGNED_TO_CURRENT_USER, SINGLE_ACCOUNT)
       .foreach { accountType =>
         s"the session cache has Account type of $accountType" should {
-          s"redirect to accountCheck" in {
-            await(save[String](sessionId, "redirectURL", returnUrl))
+          s"redirect to ${UrlPaths.accountCheckPath}" in {
+            await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
             await(
               save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", accountType)
             )
@@ -95,7 +83,7 @@ class EnrolledForPTISpec extends IntegrationSpecBase with Status {
 
               resp.status shouldBe SEE_OTHER
               resp.header("Location").get should include(
-                s"/protect-tax-info"
+                UrlPaths.accountCheckPath
               )
             }
           }
@@ -234,7 +222,7 @@ class EnrolledForPTISpec extends IntegrationSpecBase with Status {
   s"POST $urlPath" when {
     "the session cache contains the redirect url" should {
       s"redirect to the redirect url" in {
-        await(save[String](sessionId, "redirectURL", returnUrl))
+        await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -245,7 +233,7 @@ class EnrolledForPTISpec extends IntegrationSpecBase with Status {
 
         whenReady(res) { resp =>
           resp.status shouldBe OK
-          resp.uri.toString shouldBe returnUrl
+          resp.uri.toString shouldBe UrlPaths.returnUrl
         }
       }
     }

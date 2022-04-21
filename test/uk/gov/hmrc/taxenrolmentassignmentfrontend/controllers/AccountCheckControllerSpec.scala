@@ -38,7 +38,10 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{
   retrievalResponse,
   retrievals
 }
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{
+  TestFixture,
+  UrlPaths
+}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -59,7 +62,7 @@ class AccountCheckControllerSpec extends TestFixture {
 
   "accountCheck" when {
     "a single credential exists for a given nino with no PT enrolment" should {
-      "silently assign the HMRC-PT Enrolment and redirect to PTA" in new TestHelper {
+      s"silently assign the HMRC-PT Enrolment and redirect to ${UrlPaths.PTA}" in new TestHelper {
         mockAuthCall()
         mockAccountCheckSuccess(SINGLE_ACCOUNT)
         mockSilentEnrolSuccess
@@ -69,9 +72,7 @@ class AccountCheckControllerSpec extends TestFixture {
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe SEE_OTHER
-        redirectLocation(result) shouldBe Some(
-          "http://localhost:9232/personal-account"
-        )
+        redirectLocation(result) shouldBe Some(UrlPaths.PTA)
       }
 
       "return an error page if there was an error assigning the enrolment" in new TestHelper {
@@ -89,7 +90,7 @@ class AccountCheckControllerSpec extends TestFixture {
     }
 
     "a single credential exists for a given nino that is already enrolled for PT" should {
-      "redirect to the return url" in new TestHelper {
+      s"redirect to ${UrlPaths.returnUrl}" in new TestHelper {
         mockAuthCall()
         mockAccountCheckSuccess(PT_ASSIGNED_TO_CURRENT_USER)
 
@@ -98,14 +99,12 @@ class AccountCheckControllerSpec extends TestFixture {
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe SEE_OTHER
-        redirectLocation(result) shouldBe Some(
-          "/protect-tax-info/test-only/successful"
-        )
+        redirectLocation(result) shouldBe Some(UrlPaths.returnUrl)
       }
     }
 
     "a PT enrolment exists on another users account" should {
-      "redirect to /no-pt-enrolment" in new TestHelper {
+      s"redirect to ${UrlPaths.ptOnOtherAccountPath}" in new TestHelper {
         mockAuthCall()
         mockAccountCheckSuccess(PT_ASSIGNED_TO_OTHER_USER)
 
@@ -114,14 +113,12 @@ class AccountCheckControllerSpec extends TestFixture {
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe SEE_OTHER
-        redirectLocation(result) shouldBe Some(
-          "/protect-tax-info/no-pt-enrolment"
-        )
+        redirectLocation(result) shouldBe Some(UrlPaths.ptOnOtherAccountPath)
       }
     }
 
     "multiple credential exists for a given nino and no enrolments exists" should {
-      "redirect to the EnrolledForPT page" in new TestHelper {
+      s"redirect to ${UrlPaths.enrolledPTNoSAOnAnyAccountPath}" in new TestHelper {
         mockAuthCall()
         mockAccountCheckSuccess(MULTIPLE_ACCOUNTS)
         mockSilentEnrolSuccess
@@ -132,13 +129,13 @@ class AccountCheckControllerSpec extends TestFixture {
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some(
-          "/protect-tax-info/enrol-pt/enrolment-success-no-sa"
+          UrlPaths.enrolledPTNoSAOnAnyAccountPath
         )
       }
     }
 
     "multiple credential exists for a given nino and current credential has SA enrolment" should {
-      "redirect to the EnrolledForPT page" in new TestHelper {
+      s"redirect to ${UrlPaths.enrolledPTNoSAOnAnyAccountPath}" in new TestHelper {
         mockAuthCall()
         mockAccountCheckSuccess(SA_ASSIGNED_TO_CURRENT_USER)
         mockSilentEnrolSuccess
@@ -149,13 +146,13 @@ class AccountCheckControllerSpec extends TestFixture {
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some(
-          "/protect-tax-info/enrol-pt/enrolment-success-no-sa"
+          UrlPaths.enrolledPTNoSAOnAnyAccountPath
         )
       }
     }
 
     "multiple credential exists for a given nino and a non signed in account has SA enrolment" should {
-      "redirect to blue interupt page" in new TestHelper {
+      s"redirect ${UrlPaths.saOnOtherAccountInterruptPath}" in new TestHelper {
         mockAuthCall()
         mockAccountCheckSuccess(SA_ASSIGNED_TO_OTHER_USER)
 
@@ -165,7 +162,7 @@ class AccountCheckControllerSpec extends TestFixture {
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some(
-          "/protect-tax-info/enrol-pt/other-user-id-has-sa"
+          UrlPaths.saOnOtherAccountInterruptPath
         )
       }
     }

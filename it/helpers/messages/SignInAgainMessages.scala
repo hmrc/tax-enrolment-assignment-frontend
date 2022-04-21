@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms
+package helpers.messages
 
-import play.api.libs.json.{Format, Json}
-
-case class EnrolCurrentUserId(enrolCurrentUserId: Boolean)
-
-object EnrolCurrentUserId {
-  implicit val format: Format[EnrolCurrentUserId] =
-    Json.format[EnrolCurrentUserId]
+object SignInAgainMessages {
+  val title = "You need to sign in again with your Self Assessment user ID"
+  val heading1 = "You need to sign in again with your Self Assessment user ID"
+  val paragraph =
+    "This is so that you can keep access to Self Assessment from your personal tax account."
+  val heading2 = "User ID with Self Assessment access"
+  val backLink = "Back"
+  val continue = "Continue"
+  val linkText = "The above user ID does not belong to me"
 }

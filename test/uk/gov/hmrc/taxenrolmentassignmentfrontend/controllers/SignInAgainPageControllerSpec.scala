@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
-import org.jsoup.Jsoup
 import play.api.libs.json.Format
 import play.api.mvc.AnyContent
 import play.api.test.Helpers.{status, _}
@@ -32,7 +31,10 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
   NoSAEnrolmentWhenOneExpected
 }
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{
+  TestFixture,
+  UrlPaths
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{
   ReportSuspiciousID,
   SignInWithSAAccount
@@ -112,8 +114,8 @@ class SignInAgainPageControllerSpec extends TestFixture {
       }
     }
 
-    "the user does not have an account type of SA_ASSIGNED_TO_OTHER_USER" should {
-      "redirect to the account check" in {
+    s"the user does not have an account type of $SA_ASSIGNED_TO_OTHER_USER" should {
+      s"redirect to ${UrlPaths.accountCheckPath}" in {
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -133,15 +135,15 @@ class SignInAgainPageControllerSpec extends TestFixture {
             _: ExecutionContext
           ))
           .expects(List(SA_ASSIGNED_TO_OTHER_USER), *, *, *)
-          .returning(createInboundResultError(InvalidUserType(Some("/test"))))
+          .returning(
+            createInboundResultError(InvalidUserType(Some(UrlPaths.returnUrl)))
+          )
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe SEE_OTHER
-        redirectLocation(result) shouldBe Some(
-          "/protect-tax-info?redirectUrl=%2Ftest"
-        )
+        redirectLocation(result) shouldBe Some(UrlPaths.accountCheckPath)
       }
     }
 
@@ -219,7 +221,7 @@ class SignInAgainPageControllerSpec extends TestFixture {
   }
   "continue" when {
     "the user has a redirectUrl in cache" should {
-      "redirect to logout" in {
+      s"redirect to ${UrlPaths.logoutPath}" in {
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -238,11 +240,7 @@ class SignInAgainPageControllerSpec extends TestFixture {
             _: Format[String]
           ))
           .expects("redirectURL", *, *)
-          .returning(
-            Future.successful(
-              Some(testOnly.routes.TestOnlyController.successfulCall.url)
-            )
-          )
+          .returning(Future.successful(Some(UrlPaths.returnUrl)))
 
         val res = controller
           .continue()
@@ -250,7 +248,7 @@ class SignInAgainPageControllerSpec extends TestFixture {
 
         status(res) shouldBe SEE_OTHER
         redirectLocation(res) shouldBe
-          Some("/protect-tax-info/logout")
+          Some(UrlPaths.logoutPath)
       }
     }
 

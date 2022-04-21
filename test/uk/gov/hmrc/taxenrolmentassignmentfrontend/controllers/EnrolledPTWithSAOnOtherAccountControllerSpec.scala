@@ -25,9 +25,22 @@ import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{InvalidUserType, UnexpectedResponseFromUsersGroupSearch}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{accountDetails, buildFakeRequestWithSessionId, predicates, retrievalResponse, retrievals, saEnrolmentOnly}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
+  InvalidUserType,
+  UnexpectedResponseFromUsersGroupSearch
+}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{
+  accountDetails,
+  buildFakeRequestWithSessionId,
+  predicates,
+  retrievalResponse,
+  retrievals,
+  saEnrolmentOnly
+}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{
+  TestFixture,
+  UrlPaths
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTWithSAOnOtherAccount
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -149,7 +162,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
     }
 
     "the user is the wrong usertype and has redirectUrl stored in session" should {
-      "redirect to accountCheck" in {
+      s"redirect to ${UrlPaths.accountCheckPath}" in {
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -170,20 +183,14 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
           ))
           .expects(*, *, *)
           .returning(
-            createInboundResultError(
-              InvalidUserType(
-                Some(testOnly.routes.TestOnlyController.successfulCall.url)
-              )
-            )
+            createInboundResultError(InvalidUserType(Some(UrlPaths.returnUrl)))
           )
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe SEE_OTHER
-        redirectLocation(result) shouldBe Some(
-          "/protect-tax-info?redirectUrl=%2Fprotect-tax-info%2Ftest-only%2Fsuccessful"
-        )
+        redirectLocation(result) shouldBe Some(UrlPaths.accountCheckPath)
       }
     }
 

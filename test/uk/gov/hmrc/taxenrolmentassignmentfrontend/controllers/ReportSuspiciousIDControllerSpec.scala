@@ -26,11 +26,29 @@ import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_OTHER_USER}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
+  PT_ASSIGNED_TO_OTHER_USER,
+  SA_ASSIGNED_TO_OTHER_USER
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{InvalidUserType, NoPTEnrolmentWhenOneExpected, NoSAEnrolmentWhenOneExpected, UnexpectedResponseFromTaxEnrolments}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{accountDetails, buildFakeRequestWithSessionId, predicates, retrievalResponse, retrievals, saEnrolmentOnly}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
+  InvalidUserType,
+  NoPTEnrolmentWhenOneExpected,
+  NoSAEnrolmentWhenOneExpected,
+  UnexpectedResponseFromTaxEnrolments
+}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{
+  accountDetails,
+  buildFakeRequestWithSessionId,
+  predicates,
+  retrievalResponse,
+  retrievals,
+  saEnrolmentOnly
+}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{
+  TestFixture,
+  UrlPaths
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REPORTED_FRAUD
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.ReportSuspiciousID
 
@@ -93,7 +111,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
     }
 
     "the user does not have an account type of PT_ASSIGNED_TO_OTHER_USER" should {
-      "redirect to account check" in {
+      s"redirect to ${UrlPaths.accountCheckPath}" in {
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -113,16 +131,16 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
             _: ExecutionContext
           ))
           .expects(List(PT_ASSIGNED_TO_OTHER_USER), *, *, *)
-          .returning(createInboundResultError(InvalidUserType(Some("/test"))))
+          .returning(
+            createInboundResultError(InvalidUserType(Some(UrlPaths.returnUrl)))
+          )
 
         val result = controller
           .viewNoSA()
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe SEE_OTHER
-        redirectLocation(result) shouldBe Some(
-          "/protect-tax-info?redirectUrl=%2Ftest"
-        )
+        redirectLocation(result) shouldBe Some(UrlPaths.accountCheckPath)
       }
     }
 
@@ -244,8 +262,8 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
       }
     }
 
-    "the user does not have an account type of SA_ASSIGNED_TO_OTHER_USER" should {
-      "redirect to account check" in {
+    s"the user does not have an account type of $SA_ASSIGNED_TO_OTHER_USER" should {
+      s"redirect to ${UrlPaths.accountCheckPath}" in {
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -265,16 +283,16 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
             _: ExecutionContext
           ))
           .expects(List(SA_ASSIGNED_TO_OTHER_USER), *, *, *)
-          .returning(createInboundResultError(InvalidUserType(Some("/test"))))
+          .returning(
+            createInboundResultError(InvalidUserType(Some(UrlPaths.returnUrl)))
+          )
 
         val result = controller
           .viewSA()
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe SEE_OTHER
-        redirectLocation(result) shouldBe Some(
-          "/protect-tax-info?redirectUrl=%2Ftest"
-        )
+        redirectLocation(result) shouldBe Some(UrlPaths.accountCheckPath)
       }
     }
 
@@ -354,7 +372,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
 
   "continue" when {
     "the user has SA assigned to another user and enrolment to PT is successful" should {
-      "redirect to EnrolledAfterReportingFraud" in {
+      s"redirect to ${UrlPaths.enrolledPTSAOnOtherAccountPath}" in {
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -390,13 +408,13 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
 
         status(res) shouldBe SEE_OTHER
         redirectLocation(res) shouldBe Some(
-          "/protect-tax-info/enrol-pt/enrolment-success-sa-access-not-wanted"
+          UrlPaths.enrolledPTSAOnOtherAccountPath
         )
       }
     }
 
     "the user has not got SA assigned to another user" should {
-      "redirect to AccountCheck" in {
+      s"redirect to ${UrlPaths.accountCheckPath}" in {
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -425,11 +443,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
           ))
           .expects(SA_ASSIGNED_TO_OTHER_USER, *, *, *)
           .returning(
-            createInboundResultError(
-              InvalidUserType(
-                Some(testOnly.routes.TestOnlyController.successfulCall.url)
-              )
-            )
+            createInboundResultError(InvalidUserType(Some(UrlPaths.returnUrl)))
           )
 
         val res = controller
@@ -438,9 +452,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
 
         status(res) shouldBe SEE_OTHER
         redirectLocation(res) shouldBe
-          Some(
-            "/protect-tax-info?redirectUrl=%2Fprotect-tax-info%2Ftest-only%2Fsuccessful"
-          )
+          Some(UrlPaths.accountCheckPath)
       }
     }
 

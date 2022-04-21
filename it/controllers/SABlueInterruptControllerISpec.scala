@@ -16,7 +16,7 @@
 
 package controllers
 
-import helpers.IntegrationSpecBase
+import helpers.TestHelper
 import helpers.TestITData._
 import helpers.WiremockHelper.{
   stubAuthorizePost,
@@ -24,35 +24,20 @@ import helpers.WiremockHelper.{
   stubGetWithQueryParam,
   stubPost
 }
+import helpers.messages._
 import org.jsoup.Jsoup
 import play.api.http.Status
 import play.api.libs.json.Json
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
-  MULTIPLE_ACCOUNTS,
-  PT_ASSIGNED_TO_CURRENT_USER,
-  PT_ASSIGNED_TO_OTHER_USER,
-  SA_ASSIGNED_TO_CURRENT_USER,
-  SA_ASSIGNED_TO_OTHER_USER,
-  SINGLE_ACCOUNT
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 
-class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
-
-  val teaHost = s"localhost:$port"
-  val urlPath =
-    s"/enrol-pt/other-user-id-has-sa"
-  val returnUrl: String = testOnly.routes.TestOnlyController.successfulCall
-    .absoluteURL(false, teaHost)
-
-  val sessionCookie
-    : (String, String) = ("COOKIE" -> createSessionCookieAsString(sessionData))
+class SABlueInterruptControllerISpec extends TestHelper with Status {
+  val urlPath: String = UrlPaths.saOnOtherAccountInterruptPath
 
   s"GET $urlPath" when {
     "the session cache has a credential for SA enrolment that is not the signed in account" should {
       s"render the report blue interupt page" in {
-        await(save[String](sessionId, "redirectURL", returnUrl))
+        await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
         await(
           save[AccountTypes.Value](
             sessionId,
@@ -63,7 +48,7 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        val res = buildRequest(urlPath, followRedirects = false)
+        val res = buildRequest(urlPath)
           .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
 
@@ -71,9 +56,7 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
           val page = Jsoup.parse(resp.body)
 
           resp.status shouldBe OK
-          page.title should include(
-            "Before you continue to your personal tax account"
-          )
+          page.title should include(SABlueInterruptMessages.selfAssessTitle)
         }
       }
     }
@@ -86,21 +69,23 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
       SA_ASSIGNED_TO_CURRENT_USER
     ).foreach { accountType =>
       s"the session cache has a credential with account type ${accountType.toString}" should {
-        s"redirect to account check page" in {
-          await(save[String](sessionId, "redirectURL", returnUrl))
+        s"redirect to ${UrlPaths.accountCheckPath}" in {
+          await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
           await(
             save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", accountType)
           )
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
-          val res = buildRequest(urlPath, followRedirects = false)
+          val res = buildRequest(urlPath)
             .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
             .get()
 
           whenReady(res) { resp =>
             resp.status shouldBe SEE_OTHER
-            resp.header("Location").get should include(s"/protect-tax-info")
+            resp.header("Location").get should include(
+              UrlPaths.accountCheckPath
+            )
           }
         }
       }
@@ -111,7 +96,7 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        val res = buildRequest(urlPath, followRedirects = false)
+        val res = buildRequest(urlPath)
           .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
 
@@ -134,7 +119,7 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
           Status.NOT_FOUND,
           ""
         )
-        val res = buildRequest(urlPath, followRedirects = false)
+        val res = buildRequest(urlPath)
           .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
 
@@ -157,7 +142,7 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
           Status.INTERNAL_SERVER_ERROR,
           ""
         )
-        val res = buildRequest(urlPath, followRedirects = false)
+        val res = buildRequest(urlPath)
           .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
 
@@ -237,8 +222,8 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
 
   s"POST $urlPath" when {
     "the session cache has a credential for SA enrolment that is not the signed in account" should {
-      s"render the report blue interupt page" in {
-        await(save[String](sessionId, "redirectURL", returnUrl))
+      s"redirect to ${UrlPaths.saOnOtherAccountKeepAccessToSAPath}" in {
+        await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
         await(
           save[AccountTypes.Value](
             sessionId,
@@ -249,14 +234,14 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        val res = buildRequest(urlPath, followRedirects = false)
+        val res = buildRequest(urlPath)
           .withHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
           .post(Json.obj())
 
         whenReady(res) { resp =>
           resp.status shouldBe SEE_OTHER
           resp.header("Location").get should include(
-            "/protect-tax-info/enrol-pt/other-user-id-has-sa/keep-access-to-sa-from-pta"
+            UrlPaths.saOnOtherAccountKeepAccessToSAPath
           )
         }
       }
@@ -270,21 +255,23 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
       SA_ASSIGNED_TO_CURRENT_USER
     ).foreach { accountType =>
       s"the session cache has a credential with account type ${accountType.toString}" should {
-        s"redirect to account check page" in {
-          await(save[String](sessionId, "redirectURL", returnUrl))
+        s"redirect to ${UrlPaths.accountCheckPath}" in {
+          await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
           await(
             save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", accountType)
           )
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
-          val res = buildRequest(urlPath, followRedirects = false)
+          val res = buildRequest(urlPath)
             .withHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
             .post(Json.obj())
 
           whenReady(res) { resp =>
             resp.status shouldBe SEE_OTHER
-            resp.header("Location").get should include(s"/protect-tax-info")
+            resp.header("Location").get should include(
+              UrlPaths.accountCheckPath
+            )
           }
         }
       }
@@ -295,7 +282,7 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        val res = buildRequest(urlPath, followRedirects = false)
+        val res = buildRequest(urlPath)
           .withHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
           .post(Json.obj())
 
@@ -318,7 +305,7 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
           Status.NOT_FOUND,
           ""
         )
-        val res = buildRequest(urlPath, followRedirects = false)
+        val res = buildRequest(urlPath)
           .withHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
           .post(Json.obj())
 
@@ -341,7 +328,7 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
           Status.INTERNAL_SERVER_ERROR,
           ""
         )
-        val res = buildRequest(urlPath, followRedirects = false)
+        val res = buildRequest(urlPath)
           .withHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
           .post(Json.obj())
 
@@ -359,7 +346,7 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
         val res =
-          buildRequest(urlPath, followRedirects = false)
+          buildRequest(urlPath)
             .withHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
             .post(Json.obj())
 
@@ -376,7 +363,7 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
         val res =
-          buildRequest(urlPath, followRedirects = false)
+          buildRequest(urlPath)
             .withHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
             .post(Json.obj())
 
@@ -392,7 +379,7 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
         val res =
-          buildRequest(urlPath, followRedirects = false)
+          buildRequest(urlPath)
             .withHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
             .post(Json.obj())
 
@@ -407,7 +394,7 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
         stubAuthorizePostUnauthorised(sessionNotFound)
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val res = buildRequest(urlPath, followRedirects = false)
+        val res = buildRequest(urlPath)
           .withHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
           .post(Json.obj())
 

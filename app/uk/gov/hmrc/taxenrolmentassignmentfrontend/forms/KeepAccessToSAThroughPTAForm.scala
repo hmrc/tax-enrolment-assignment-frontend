@@ -19,20 +19,14 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.forms
 import play.api.data.Form
 import play.api.data.Forms.{default, mapping, text}
 import play.api.data.validation.Constraints._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.{
-  EnrolCurrentUserId,
-  KeepAccessToSAThroughPTA
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
 
 object KeepAccessToSAThroughPTAForm {
 
   val keepAccessToSAThroughPTAForm: Form[KeepAccessToSAThroughPTA] = Form(
     mapping(
       "select-continue" -> default[String](text, "")
-        .verifying(
-          nonEmpty(errorMessage = "keepAccessToSA.error.required"),
-          pattern("yes|no".r, error = "keepAccessToSA.error.required")
-        )
+        .verifying(pattern("yes|no".r, error = "keepAccessToSA.error.required"))
         .transform[Boolean](_ == "yes", x => if (x) "yes" else "no")
     )(KeepAccessToSAThroughPTA.apply)(KeepAccessToSAThroughPTA.unapply)
   )

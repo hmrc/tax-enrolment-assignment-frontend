@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.messages
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.messages
 
 object KeepAccessToSAMessages {
 

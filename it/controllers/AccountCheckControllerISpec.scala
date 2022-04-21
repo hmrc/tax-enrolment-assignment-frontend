@@ -16,31 +16,19 @@
 
 package controllers
 
-import helpers.{IntegrationSpecBase, TestITData}
-import helpers.WiremockHelper._
+import helpers.TestHelper
 import helpers.TestITData._
-import org.jsoup.Jsoup
+import helpers.WiremockHelper._
 import play.api.http.Status
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
-import play.api.test.Helpers.await
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.PT_ASSIGNED_TO_CURRENT_USER
 
-import scala.concurrent.Await
+class AccountCheckControllerISpec extends TestHelper with Status {
 
-class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
-
-  val teaHost = s"localhost:$port"
-  val returnUrl: String = testOnly.routes.TestOnlyController.successfulCall
-    .absoluteURL(false, teaHost)
-  val urlPath =
-    s"?redirectUrl=${testOnly.routes.TestOnlyController.successfulCall
-      .absoluteURL(false, teaHost)}"
+  val urlPath: String = UrlPaths.accountCheckPath
 
   s"GET $urlPath" when {
     "a user has one credential associated with their nino" that {
       "has a PT enrolment in the session" should {
-        s"redirect to returnUrl" in {
+        s"redirect to $UrlPaths.returnUrl" in {
           val authResponse = authoriseResponseJson(enrolments = ptEnrolmentOnly)
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -51,13 +39,13 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
 
           whenReady(res) { resp =>
             resp.status shouldBe OK
-            resp.uri.toString shouldBe returnUrl
+            resp.uri.toString shouldBe UrlPaths.returnUrl
           }
         }
       }
 
       "has PT enrolment in EACD but not the session" should {
-        s"redirect to returnUrl" in {
+        s"redirect to $UrlPaths.returnUrl" in {
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -72,13 +60,13 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
 
           whenReady(res) { resp =>
             resp.status shouldBe OK
-            resp.uri.toString shouldBe returnUrl
+            resp.uri.toString shouldBe UrlPaths.returnUrl
           }
         }
       }
 
       "has no PT enrolment in session or EACD" should {
-        s"silently enrol for PT and redirect to returnUrl" in {
+        s"silently enrol for PT and redirect to personal tax" in {
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -101,7 +89,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
             ""
           )
 
-          stubGet(s"/personal-account", OK, "There was a problem")
+          stubGet(s"/personal-account", OK, "Access Personal Tax")
 
           val res = buildRequest(urlPath, followRedirects = true)
             .withHttpHeaders(xSessionId, csrfContent)
@@ -109,7 +97,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
 
           whenReady(res) { resp =>
             resp.status shouldBe OK
-            resp.body should include("There was a problem")
+            resp.body should include("Access Personal Tax")
           }
         }
       }
@@ -117,7 +105,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
 
     "a user has other credentials associated with their NINO" that {
       "includes one with a PT enrolment" should {
-        "redirect to /no-pt-enrolment" in {
+        s"redirect to ${UrlPaths.ptOnOtherAccountPath}" in {
           stubAuthorizePost(OK, authoriseResponseJson().toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
           stubGet(
@@ -126,21 +114,21 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
             es0ResponseNotMatchingCred
           )
 
-          val res = buildRequest(urlPath, followRedirects = false)
+          val res = buildRequest(urlPath)
             .withHttpHeaders(xSessionId, csrfContent)
             .get()
 
           whenReady(res) { resp =>
-            val page = Jsoup.parse(resp.body)
-
             resp.status shouldBe SEE_OTHER
-            resp.header("Location").get should include("/no-pt-enrolment")
+            resp.header("Location").get should include(
+              UrlPaths.ptOnOtherAccountPath
+            )
           }
         }
       }
 
       "has SA enrolment on an other account" should {
-        s"retdirect to blue interupt page" in {
+        s"redirect to ${UrlPaths.saOnOtherAccountInterruptPath}" in {
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -178,21 +166,21 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
             es0ResponseNotMatchingCred
           )
 
-          val res = buildRequest(urlPath, followRedirects = false)
+          val res = buildRequest(urlPath)
             .withHttpHeaders(xSessionId, csrfContent)
             .get()
 
           whenReady(res) { resp =>
             resp.status shouldBe SEE_OTHER
             resp.header("Location").get should include(
-              "/enrol-pt/other-user-id-has-sa"
+              UrlPaths.saOnOtherAccountInterruptPath
             )
           }
         }
       }
 
       "have no enrolments but current credential has SA enrolment in session" should {
-        s"redirect to enrol-pt/enrolment-success-no-sa" in {
+        s"redirect to ${UrlPaths.enrolledPTNoSAOnAnyAccountPath}" in {
           val authResponse = authoriseResponseJson(enrolments = saEnrolmentOnly)
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -225,23 +213,21 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
             ""
           )
 
-          val res = buildRequest(urlPath, followRedirects = false)
+          val res = buildRequest(urlPath)
             .withHttpHeaders(xSessionId, csrfContent)
             .get()
 
           whenReady(res) { resp =>
-            val page = Jsoup.parse(resp.body)
-
             resp.status shouldBe SEE_OTHER
             resp.header("Location").get should include(
-              "/enrol-pt/enrolment-success-no-sa"
+              UrlPaths.enrolledPTNoSAOnAnyAccountPath
             )
           }
         }
       }
 
       "have no enrolments but current credential has SA enrolment in EACD" should {
-        s"redirect to enrol-pt/enrolment-success-no-sa" in {
+        s"redirect to ${UrlPaths.enrolledPTNoSAOnAnyAccountPath}" in {
           val authResponse = authoriseResponseJson(enrolments = saEnrolmentOnly)
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -285,23 +271,21 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
             ""
           )
 
-          val res = buildRequest(urlPath, followRedirects = false)
+          val res = buildRequest(urlPath)
             .withHttpHeaders(xSessionId, csrfContent)
             .get()
 
           whenReady(res) { resp =>
-            val page = Jsoup.parse(resp.body)
-
             resp.status shouldBe SEE_OTHER
             resp.header("Location").get should include(
-              "/enrol-pt/enrolment-success-no-sa"
+              UrlPaths.enrolledPTNoSAOnAnyAccountPath
             )
           }
         }
       }
 
       "have no enrolments" should {
-        s"redirect to enrol-pt/enrolment-success-no-sa" in {
+        s"redirect to ${UrlPaths.enrolledPTNoSAOnAnyAccountPath}" in {
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -339,16 +323,14 @@ class AccountCheckControllerISpec extends IntegrationSpecBase with Status {
             ""
           )
 
-          val res = buildRequest(urlPath, followRedirects = false)
+          val res = buildRequest(urlPath)
             .withHttpHeaders(xSessionId, csrfContent)
             .get()
 
           whenReady(res) { resp =>
-            val page = Jsoup.parse(resp.body)
-
             resp.status shouldBe SEE_OTHER
             resp.header("Location").get should include(
-              "/enrol-pt/enrolment-success-no-sa"
+              UrlPaths.enrolledPTNoSAOnAnyAccountPath
             )
           }
         }

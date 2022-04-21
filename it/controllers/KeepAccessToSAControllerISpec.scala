@@ -172,8 +172,6 @@ class KeepAccessToSAControllerISpec extends TestHelper with Status {
             .get()
 
           whenReady(res) { resp =>
-            val page = Jsoup.parse(resp.body)
-
             resp.status shouldBe SEE_OTHER
             resp.header("Location").get should include(
               UrlPaths.accountCheckPath

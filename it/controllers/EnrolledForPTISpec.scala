@@ -16,9 +16,10 @@
 
 package controllers
 
+import helpers.TestHelper
 import helpers.TestITData._
 import helpers.WiremockHelper._
-import helpers.{TestHelper, TestITData}
+import helpers.messages._
 import org.jsoup.Jsoup
 import play.api.http.Status
 import play.api.libs.json.Json
@@ -29,7 +30,6 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
   PT_ASSIGNED_TO_OTHER_USER,
   SINGLE_ACCOUNT
 }
-import helpers.messages._
 
 class EnrolledForPTISpec extends TestHelper with Status {
 
@@ -74,7 +74,7 @@ class EnrolledForPTISpec extends TestHelper with Status {
             val authResponse = authoriseResponseJson()
             stubAuthorizePost(OK, authResponse.toString())
             stubPost(s"/write/.*", OK, """{"x":2}""")
-            val res = buildRequest(urlPath, followRedirects = false)
+            val res = buildRequest(urlPath)
               .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
               .get()
 

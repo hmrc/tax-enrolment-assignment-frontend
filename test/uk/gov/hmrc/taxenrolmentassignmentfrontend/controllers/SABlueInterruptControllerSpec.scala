@@ -64,7 +64,7 @@ class SABlueInterruptControllerSpec extends TestFixture {
           .text() shouldBe "selfAssessmentInterrupt.heading"
         page
           .select("p")
-          .text() shouldBe "selfAssessmentInterrupt.paragraph1 " ++ "selfAssessmentInterrupt.paragraph2"
+          .text() shouldBe "selfAssessmentInterrupt.paragraph1"
       }
     }
   }

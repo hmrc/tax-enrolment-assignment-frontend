@@ -165,6 +165,11 @@ object TestITData {
     additionalFactors = Some(List(AdditonalFactors("sms", Some("07783924321"))))
   )
 
+  val usersGroupSearchResponsePTEnrolment =
+    usersGroupSearchResponse.copy(obfuscatedUserId = "********1234")
+  val usersGroupSearchResponseSAEnrolment =
+    usersGroupSearchResponse.copy(obfuscatedUserId = "********1243")
+
   def additionalFactorsJson(additionalFactors: List[AdditonalFactors]) =
     additionalFactors.foldLeft[JsArray](Json.arr()) { (a, b) =>
       val jsObject = if (b.factorType == "totp") {

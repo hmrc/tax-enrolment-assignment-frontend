@@ -43,6 +43,7 @@ class MultipleAccountsOrchestrator @Inject()(
   sessionCache: TEASessionCache,
   usersGroupSearchService: UsersGroupsSearchService,
   silentAssignmentService: SilentAssignmentService,
+  eacdService: EACDService,
   logger: EventLoggerService
 ) {
 
@@ -196,4 +197,42 @@ class MultipleAccountsOrchestrator @Inject()(
             )
           }
     }
+
+  def getSAForPTAlreadyEnrolledDetails(
+                                        implicit requestWithUserDetails: RequestWithUserDetailsFromSession[AnyContent],
+                                        hc: HeaderCarrier,
+                                        ec: ExecutionContext
+                                      ): TEAFResult[PTEnrolmentOtherAccountViewModel] =
+    for {
+      _ <- checkValidAccountTypeRedirectUrlInCache(
+        List(PT_ASSIGNED_TO_OTHER_USER)
+      )
+      currentAccountDetails <- usersGroupSearchService.getAccountDetails(
+        requestWithUserDetails.userDetails.credId
+      )
+      ptAccountDetails <- getPTCredentialDetails
+      saDetails <- if (requestWithUserDetails.userDetails.hasSAEnrolment) {
+        EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(None))
+      } else {
+        eacdService.getUsersAssignedSAEnrolment.map(
+          user => user.enrolledCredential
+        )
+      }
+      saOnOtherAccountDetails <- saDetails match {
+        case Some(credId) =>
+          usersGroupSearchService.getAccountDetails(credId).map(Some(_))
+        case None =>
+          EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(None))
+      }
+
+    } yield
+      PTEnrolmentOtherAccountViewModel(
+        currentAccountDetails,
+        ptAccountDetails,
+        if (requestWithUserDetails.userDetails.hasSAEnrolment) {
+          Some(currentAccountDetails.userId)
+        } else {
+          saOnOtherAccountDetails.map(_.userId)
+        }
+      )
   }

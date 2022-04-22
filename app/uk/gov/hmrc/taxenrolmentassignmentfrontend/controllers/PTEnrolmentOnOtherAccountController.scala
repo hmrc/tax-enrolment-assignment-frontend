@@ -49,19 +49,14 @@ class PTEnrolmentOnOtherAccountController @Inject()(
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
   def view(): Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).async { implicit request =>
-    val res = for {
-      _ <- EitherT{Future.successful(multipleAccountsOrchestrator.checkValidAccountType(
-        List(PT_ASSIGNED_TO_OTHER_USER)
-      ))}
-      accountDetails <- multipleAccountsOrchestrator.getPTCredentialDetails
-    } yield accountDetails
+
+    val res = multipleAccountsOrchestrator.getSAForPTAlreadyEnrolledDetails
 
     res.value.map {
-      case Right(ptAccountDetails) =>
+      case Right(accountDetails) =>
         Ok(
           ptEnrolmentOnAnotherAccountView(
-            ptAccountDetails,
-            request.userDetails.hasSAEnrolment
+            accountDetails
           )
         )
       case Left(error) =>

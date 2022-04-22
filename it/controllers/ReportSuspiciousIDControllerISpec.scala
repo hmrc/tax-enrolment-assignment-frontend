@@ -65,7 +65,7 @@ class ReportSuspiciousIDControllerISpec
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGet(
           s"/users-groups-search/users/$CREDENTIAL_ID_2",
-          OK,
+          NON_AUTHORITATIVE_INFORMATION,
           usergroupsResponseJson().toString()
         )
         val res = buildRequest(urlPathSA, followRedirects = true)
@@ -365,7 +365,7 @@ class ReportSuspiciousIDControllerISpec
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGet(
           s"/users-groups-search/users/$CREDENTIAL_ID_2",
-          OK,
+          NON_AUTHORITATIVE_INFORMATION,
           usergroupsResponseJson().toString()
         )
         val res = buildRequest(urlPathPT, followRedirects = true)

@@ -19,7 +19,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors
 import cats.data.EitherT
 import com.google.inject.{Inject, Singleton}
 import play.api.Logger
-import play.api.http.Status.OK
+import play.api.http.Status.NON_AUTHORITATIVE_INFORMATION
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
 import uk.gov.hmrc.service.TEAFResult
@@ -53,7 +53,8 @@ class UsersGroupsSearchConnector @Inject()(httpClient: HttpClient,
       .map(
         httpResponse =>
           httpResponse.status match {
-            case OK => Right(httpResponse.json.as[UsersGroupResponse])
+            case NON_AUTHORITATIVE_INFORMATION =>
+              Right(httpResponse.json.as[UsersGroupResponse])
             case status =>
               logger.logEvent(
                 logUnexpectedResponseFromUsersGroupsSearch(credId, status)

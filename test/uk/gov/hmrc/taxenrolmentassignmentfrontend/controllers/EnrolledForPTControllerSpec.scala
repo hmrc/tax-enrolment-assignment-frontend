@@ -187,7 +187,7 @@ class EnrolledForPTControllerSpec extends TestFixture {
         val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(res) shouldBe OK
+        status(res) shouldBe INTERNAL_SERVER_ERROR
         contentAsString(res) should include("enrolmentError.title")
       }
     }
@@ -220,7 +220,7 @@ class EnrolledForPTControllerSpec extends TestFixture {
         val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(res) shouldBe OK
+        status(res) shouldBe INTERNAL_SERVER_ERROR
         contentAsString(res) should include("enrolmentError.title")
       }
     }

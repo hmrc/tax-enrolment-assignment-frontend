@@ -152,7 +152,7 @@ class SABlueInterruptControllerSpec extends TestFixture {
           .view()
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(res) shouldBe OK
+        status(res) shouldBe INTERNAL_SERVER_ERROR
         contentAsString(res) should include("enrolmentError.title")
       }
     }
@@ -254,7 +254,7 @@ class SABlueInterruptControllerSpec extends TestFixture {
           .continue()
           .apply(buildFakePOSTRequestWithSessionId(Map.empty))
 
-        status(result) shouldBe OK
+        status(result) shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) should include("enrolmentError.title")
       }
     }

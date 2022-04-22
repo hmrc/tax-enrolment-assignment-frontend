@@ -103,10 +103,9 @@ trait TestFixture
       .withCSRFToken
       .asInstanceOf[FakeRequest[AnyContentAsEmpty.type]]
   val testAppConfig: AppConfig = app.injector.instanceOf[AppConfig]
-  lazy val mockAuthAction =
-    new AuthAction(mockAuthConnector, testBodyParser, logger, testAppConfig)
-  implicit lazy val testMessages: Messages =
-    messagesApi.preferred(FakeRequest())
+  val errorView: ErrorTemplate = app.injector.instanceOf[ErrorTemplate]
+  lazy val mockAuthAction = new AuthAction(mockAuthConnector, testBodyParser, logger, testAppConfig)
+  implicit lazy val testMessages: Messages = messagesApi.preferred(FakeRequest())
 
   val messagesActionBuilder: MessagesActionBuilder =
     new DefaultMessagesActionBuilderImpl(
@@ -116,7 +115,6 @@ trait TestFixture
   lazy val mcc: MessagesControllerComponents =
     stubMessagesControllerComponents()
 
-  val errorView: ErrorTemplate = app.injector.instanceOf[ErrorTemplate]
   lazy val mockSignOutController = mock[SignOutController]
 
   def doc(result: Html): Document = Jsoup.parse(contentAsString(result))

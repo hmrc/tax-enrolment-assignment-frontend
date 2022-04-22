@@ -24,8 +24,6 @@ import uk.gov.hmrc.auth.core.Enrolments
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
   InvalidUserType,
@@ -249,7 +247,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
         val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(res) shouldBe OK
+        status(res) shouldBe INTERNAL_SERVER_ERROR
         contentAsString(res) should include("enrolmentError.title")
       }
     }
@@ -360,7 +358,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
               )
             )
 
-          status(res) shouldBe OK
+          status(res) shouldBe INTERNAL_SERVER_ERROR
           contentAsString(res) should include("enrolmentError.title")
         }
       }
@@ -469,7 +467,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
               )
             )
 
-          status(res) shouldBe OK
+          status(res) shouldBe INTERNAL_SERVER_ERROR
           contentAsString(res) should include("enrolmentError.title")
         }
       }
@@ -505,7 +503,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
               )
             )
 
-          status(res) shouldBe OK
+          status(res) shouldBe INTERNAL_SERVER_ERROR
           contentAsString(res) should include("enrolmentError.title")
         }
       }

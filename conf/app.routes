@@ -37,3 +37,5 @@ GET        /no-pt-enrolment                                     uk.gov.hmrc.taxe
 GET        /no-pt-enrolment/contact-hmrc-pta                    uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.ReportSuspiciousIDController.viewNoSA
 
 GET        /logout                                              uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignOutController.signOut()
+
+GET        /unauthorised                                        uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.AuthorisationController.notAuthorised()

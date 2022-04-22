@@ -18,12 +18,15 @@ package helpers
 
 import helpers.TestITData.sessionData
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{routes, testOnly}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
 trait TestHelper extends IntegrationSpecBase {
 
   val teaHost = s"localhost:$port"
   val sessionCookie
     : (String, String) = ("COOKIE" -> createSessionCookieAsString(sessionData))
+
+  val errorView = app.injector.instanceOf[ErrorTemplate]
 
   object UrlPaths {
     val returnUrl: String = testOnly.routes.TestOnlyController.successfulCall
@@ -46,6 +49,7 @@ trait TestHelper extends IntegrationSpecBase {
     val ptOnOtherAccountPath =
       routes.PTEnrolmentOnOtherAccountController.view.url
     val logoutPath = routes.SignOutController.signOut.url
+    val unauthorizedPath = routes.AuthorisationController.notAuthorised.url
   }
 
 }

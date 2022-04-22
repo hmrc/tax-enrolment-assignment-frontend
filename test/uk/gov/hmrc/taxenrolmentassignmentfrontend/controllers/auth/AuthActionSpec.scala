@@ -20,25 +20,20 @@ import org.scalatest.Assertion
 import play.api.test.Helpers._
 import play.api.mvc.{Result, Results}
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{contentAsString, status, redirectLocation}
-import uk.gov.hmrc.auth.core.{
-  Enrolments,
-  InsufficientConfidenceLevel,
-  SessionRecordNotFound,
-  UnsupportedAuthProvider
-}
+import play.api.test.Helpers.{contentAsString, redirectLocation, status}
+import uk.gov.hmrc.auth.core.{Enrolments, InsufficientConfidenceLevel, SessionRecordNotFound, UnsupportedAuthProvider}
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class AuthActionSpec extends TestFixture {
 
-  def authAction: AuthAction =
-    new AuthAction(mockAuthConnector, testBodyParser, logger, appConfig)
+  def authAction: AuthAction = new AuthAction(mockAuthConnector, testBodyParser, logger, appConfig)
 
   def defaultAsyncBody(
     requestTestCase: RequestWithUserDetails[_] => Assertion
@@ -148,7 +143,8 @@ class AuthActionSpec extends TestFixture {
           defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
         )(FakeRequest())
 
-        status(result) shouldBe UNAUTHORIZED
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result) shouldBe Some("/protect-tax-info/unauthorised")
       }
     }
 
@@ -166,7 +162,8 @@ class AuthActionSpec extends TestFixture {
           defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
         )(FakeRequest())
 
-        status(result) shouldBe UNAUTHORIZED
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result) shouldBe Some("/protect-tax-info/unauthorised")
       }
     }
 
@@ -188,7 +185,8 @@ class AuthActionSpec extends TestFixture {
           defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
         )(FakeRequest())
 
-        status(result) shouldBe UNAUTHORIZED
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result) shouldBe Some("/protect-tax-info/unauthorised")
       }
     }
 
@@ -228,7 +226,8 @@ class AuthActionSpec extends TestFixture {
           defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
         )(FakeRequest())
 
-        status(result) shouldBe UNAUTHORIZED
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result) shouldBe Some("/protect-tax-info/unauthorised")
       }
     }
 
@@ -246,7 +245,8 @@ class AuthActionSpec extends TestFixture {
           defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
         )(FakeRequest())
 
-        status(result) shouldBe UNAUTHORIZED
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result) shouldBe Some("/protect-tax-info/unauthorised")
       }
     }
   }

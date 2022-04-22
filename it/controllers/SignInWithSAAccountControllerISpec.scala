@@ -131,8 +131,8 @@ class SignInWithSAAccountControllerISpec extends TestHelper with Status {
             .get()
 
           whenReady(res) { resp =>
-            resp.status shouldBe OK
-            resp.body should include("There was a problem")
+            resp.status shouldBe INTERNAL_SERVER_ERROR
+            resp.body should include(ErrorTemplateMessages.title)
           }
         }
       }
@@ -162,8 +162,8 @@ class SignInWithSAAccountControllerISpec extends TestHelper with Status {
             .get()
 
           whenReady(res) { resp =>
-            resp.status shouldBe OK
-            resp.body should include("There was a problem")
+            resp.status shouldBe INTERNAL_SERVER_ERROR
+            resp.body should include(ErrorTemplateMessages.title)
           }
         }
       }
@@ -178,8 +178,8 @@ class SignInWithSAAccountControllerISpec extends TestHelper with Status {
             .get()
 
           whenReady(res) { resp =>
-            resp.status shouldBe OK
-            resp.body should include("There was a problem")
+            resp.status shouldBe INTERNAL_SERVER_ERROR
+            resp.body should include(ErrorTemplateMessages.title)
           }
         }
       }
@@ -214,8 +214,8 @@ class SignInWithSAAccountControllerISpec extends TestHelper with Status {
             .get()
 
           whenReady(res) { resp =>
-            resp.status shouldBe OK
-            resp.body should include("There was a problem")
+            resp.status shouldBe INTERNAL_SERVER_ERROR
+            resp.body should include(ErrorTemplateMessages.title)
           }
         }
       }
@@ -237,8 +237,8 @@ class SignInWithSAAccountControllerISpec extends TestHelper with Status {
             .get()
 
           whenReady(res) { resp =>
-            resp.status shouldBe OK
-            resp.body should include("There was a problem")
+            resp.status shouldBe INTERNAL_SERVER_ERROR
+            resp.body should include(ErrorTemplateMessages.title)
           }
         }
       }
@@ -260,14 +260,14 @@ class SignInWithSAAccountControllerISpec extends TestHelper with Status {
             .get()
 
           whenReady(res) { resp =>
-            resp.status shouldBe OK
-            resp.body should include("There was a problem")
+            resp.status shouldBe INTERNAL_SERVER_ERROR
+            resp.body should include(ErrorTemplateMessages.title)
           }
         }
       }
 
       "the user has a session missing required element NINO" should {
-        s"return $UNAUTHORIZED" in {
+        s"return $SEE_OTHER" in {
           val authResponse = authoriseResponseJson(optNino = None)
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -283,13 +283,16 @@ class SignInWithSAAccountControllerISpec extends TestHelper with Status {
               .get()
 
           whenReady(res) { resp =>
-            resp.status shouldBe UNAUTHORIZED
+            resp.status shouldBe SEE_OTHER
+            resp.header("Location").get should include(
+              UrlPaths.unauthorizedPath
+            )
           }
         }
       }
 
       "the user has a session missing required element Credentials" should {
-        s"return $UNAUTHORIZED" in {
+        s"return $SEE_OTHER" in {
           val authResponse = authoriseResponseJson(optCreds = None)
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -305,13 +308,16 @@ class SignInWithSAAccountControllerISpec extends TestHelper with Status {
               .get()
 
           whenReady(res) { resp =>
-            resp.status shouldBe UNAUTHORIZED
+            resp.status shouldBe SEE_OTHER
+            resp.header("Location").get should include(
+              UrlPaths.unauthorizedPath
+            )
           }
         }
       }
 
       "the user has a insufficient confidence level" should {
-        s"return $UNAUTHORIZED" in {
+        s"return $SEE_OTHER" in {
           stubAuthorizePostUnauthorised(insufficientConfidenceLevel)
           stubPost(s"/write/.*", OK, """{"x":2}""")
 
@@ -326,7 +332,10 @@ class SignInWithSAAccountControllerISpec extends TestHelper with Status {
               .get()
 
           whenReady(res) { resp =>
-            resp.status shouldBe UNAUTHORIZED
+            resp.status shouldBe SEE_OTHER
+            resp.header("Location").get should include(
+              UrlPaths.unauthorizedPath
+            )
           }
         }
       }

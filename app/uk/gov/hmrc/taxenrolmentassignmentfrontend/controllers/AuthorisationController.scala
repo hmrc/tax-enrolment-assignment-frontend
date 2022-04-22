@@ -14,25 +14,22 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.config
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
-import play.api.i18n.MessagesApi
-import play.api.mvc.Request
-import play.twirl.api.Html
-import uk.gov.hmrc.play.bootstrap.frontend.http.FrontendErrorHandler
+import play.api.i18n.I18nSupport
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
 import javax.inject.{Inject, Singleton}
+import scala.concurrent.Future
 
 @Singleton
-class ErrorHandler @Inject()(errorTemplate: ErrorTemplate,
-                             val messagesApi: MessagesApi)
-    extends FrontendErrorHandler {
-
-  override def standardErrorTemplate(
-    pageTitle: String,
-    heading: String,
-    message: String
-  )(implicit request: Request[_]): Html =
-    errorTemplate()
+class AuthorisationController @Inject()(mcc: MessagesControllerComponents,
+                                        errorView: ErrorTemplate
+                                       ) extends FrontendController(mcc) with I18nSupport {
+  def notAuthorised: Action[AnyContent] = Action.async {
+    implicit request =>
+      Future.successful(Unauthorized(errorView()))
+  }
 }

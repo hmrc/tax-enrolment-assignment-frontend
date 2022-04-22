@@ -183,7 +183,7 @@ class SignInAgainPageControllerSpec extends TestFixture {
           .view()
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(res) shouldBe OK
+        status(res) shouldBe INTERNAL_SERVER_ERROR
         contentAsString(res) should include("enrolmentError.title")
       }
     }
@@ -214,7 +214,7 @@ class SignInAgainPageControllerSpec extends TestFixture {
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(result) shouldBe OK
+        status(result) shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) should include("enrolmentError.title")
       }
     }
@@ -278,7 +278,7 @@ class SignInAgainPageControllerSpec extends TestFixture {
           .continue()
           .apply(buildFakeRequestWithSessionId("POST", "Not Used"))
 
-        status(res) shouldBe OK
+        status(res) shouldBe INTERNAL_SERVER_ERROR
         contentAsString(res) should include("enrolmentError.title")
       }
     }

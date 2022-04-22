@@ -80,9 +80,9 @@ trait IntegrationSpecBase
     "microservice.services.enrolment-store-proxy.port" -> s"$mockPort",
     "microservice.services.tax-enrolments.host" -> s"$mockHost",
     "microservice.services.tax-enrolments.port" -> s"$mockPort",
-    "microservice.services.users-group-search.host" -> s"$mockHost",
-    "microservice.services.users-group-search.port" -> s"$mockPort",
-    "microservice.services.users-group-search.isTest" -> "false",
+    "microservice.services.users-groups-search.host" -> s"$mockHost",
+    "microservice.services.users-groups-search.port" -> s"$mockPort",
+    "microservice.services.users-groups-search.isTest" -> "false",
     "microservice.services.personal-tax-account.host" -> s"$wiremockURL",
     "play.http.router" -> "testOnlyDoNotUseInAppConf.Routes",
     "microservice.services.features.taxEnrolmentsServiceListLocal" -> "false"

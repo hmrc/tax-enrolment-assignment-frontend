@@ -30,15 +30,17 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys._
 
 class ReportSuspiciousIDControllerISpec
-  extends IntegrationSpecBase
+    extends IntegrationSpecBase
     with Status {
 
   val teaHost = s"localhost:$port"
   val urlPathSA = s"/enrol-pt/contact-hmrc-sa"
   val urlPathPT = s"/no-pt-enrolment/contact-hmrc-pta"
-  val returnUrl: String = testOnly.routes.TestOnlyController.successfulCall.absoluteURL(false, teaHost)
+  val returnUrl: String = testOnly.routes.TestOnlyController.successfulCall
+    .absoluteURL(false, teaHost)
 
-  val sessionCookie: (String, String) = ("COOKIE" -> createSessionCookieAsString(sessionData))
+  val sessionCookie
+    : (String, String) = ("COOKIE" -> createSessionCookieAsString(sessionData))
 
   s"GET $urlPathSA" when {
     "the session cache has a credential for SA enrolment that is not the signed in account" should {
@@ -62,7 +64,7 @@ class ReportSuspiciousIDControllerISpec
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGet(
-          s"/users-group-search/users/$CREDENTIAL_ID_2",
+          s"/users-groups-search/users/$CREDENTIAL_ID_2",
           OK,
           usergroupsResponseJson().toString()
         )
@@ -104,9 +106,7 @@ class ReportSuspiciousIDControllerISpec
             val page = Jsoup.parse(resp.body)
 
             resp.status shouldBe SEE_OTHER
-            resp.header("Location").get should include(
-              s"/protect-tax-info"
-            )
+            resp.header("Location").get should include(s"/protect-tax-info")
           }
         }
       }
@@ -211,7 +211,7 @@ class ReportSuspiciousIDControllerISpec
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGet(
-          s"/users-group-search/users/$CREDENTIAL_ID_2",
+          s"/users-groups-search/users/$CREDENTIAL_ID_2",
           INTERNAL_SERVER_ERROR,
           ""
         )
@@ -364,7 +364,7 @@ class ReportSuspiciousIDControllerISpec
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGet(
-          s"/users-group-search/users/$CREDENTIAL_ID_2",
+          s"/users-groups-search/users/$CREDENTIAL_ID_2",
           OK,
           usergroupsResponseJson().toString()
         )
@@ -406,9 +406,7 @@ class ReportSuspiciousIDControllerISpec
             val page = Jsoup.parse(resp.body)
 
             resp.status shouldBe SEE_OTHER
-            resp.header("Location").get should include(
-              s"/protect-tax-info"
-            )
+            resp.header("Location").get should include(s"/protect-tax-info")
           }
         }
       }
@@ -513,7 +511,7 @@ class ReportSuspiciousIDControllerISpec
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGet(
-          s"/users-group-search/users/$CREDENTIAL_ID_2",
+          s"/users-groups-search/users/$CREDENTIAL_ID_2",
           INTERNAL_SERVER_ERROR,
           ""
         )
@@ -729,9 +727,7 @@ class ReportSuspiciousIDControllerISpec
             val page = Jsoup.parse(resp.body)
 
             resp.status shouldBe SEE_OTHER
-            resp.header("Location").get should include(
-              s"/protect-tax-info"
-            )
+            resp.header("Location").get should include(s"/protect-tax-info")
           }
         }
       }

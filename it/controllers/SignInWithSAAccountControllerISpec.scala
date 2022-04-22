@@ -17,17 +17,32 @@
 package controllers
 
 import helpers.TestITData._
-import helpers.WiremockHelper.{stubAuthorizePost, stubAuthorizePostUnauthorised, stubGet, stubGetWithQueryParam, stubPost}
+import helpers.WiremockHelper.{
+  stubAuthorizePost,
+  stubAuthorizePostUnauthorised,
+  stubGet,
+  stubGetWithQueryParam,
+  stubPost
+}
 import helpers.{IntegrationSpecBase, TestITData}
 import org.jsoup.Jsoup
 import play.api.http.Status
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
+  MULTIPLE_ACCOUNTS,
+  PT_ASSIGNED_TO_CURRENT_USER,
+  PT_ASSIGNED_TO_OTHER_USER,
+  SA_ASSIGNED_TO_CURRENT_USER,
+  SA_ASSIGNED_TO_OTHER_USER,
+  SINGLE_ACCOUNT
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.USER_ASSIGNED_SA_ENROLMENT
 
-class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status {
+class SignInWithSAAccountControllerISpec
+    extends IntegrationSpecBase
+    with Status {
 
   val teaHost = s"localhost:$port"
   val returnUrl: String = testOnly.routes.TestOnlyController.successfulCall
@@ -36,7 +51,7 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
     s"/enrol-pt/other-user-id-has-sa/sign-in-again "
 
   val sessionCookie
-  : (String, String) = ("COOKIE" -> createSessionCookieAsString(sessionData))
+    : (String, String) = ("COOKIE" -> createSessionCookieAsString(sessionData))
 
   s"GET $urlPath" when {
     "the session cache has a credential for SA enrolment that is not the signed in account" should {
@@ -60,7 +75,7 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGet(
-          s"/users-group-search/users/$CREDENTIAL_ID_2",
+          s"/users-groups-search/users/$CREDENTIAL_ID_2",
           OK,
           usergroupsResponseJson().toString()
         )
@@ -100,14 +115,11 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
               val page = Jsoup.parse(resp.body)
 
               resp.status shouldBe SEE_OTHER
-              resp.header("Location").get should include(
-                s"/protect-tax-info"
-              )
+              resp.header("Location").get should include(s"/protect-tax-info")
             }
           }
         }
       }
-
 
       s"the session cache has a credential for SA enrolment that is the signed in account" should {
         s"render the error page" in {
@@ -135,7 +147,9 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
 
           whenReady(res) { resp =>
             resp.status shouldBe OK
-            resp.body should include("Sorry, there is a problem with the service")
+            resp.body should include(
+              "Sorry, there is a problem with the service"
+            )
           }
         }
       }
@@ -166,7 +180,9 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
 
           whenReady(res) { resp =>
             resp.status shouldBe OK
-            resp.body should include("Sorry, there is a problem with the service")
+            resp.body should include(
+              "Sorry, there is a problem with the service"
+            )
           }
         }
       }
@@ -182,7 +198,9 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
 
           whenReady(res) { resp =>
             resp.status shouldBe OK
-            resp.body should include("Sorry, there is a problem with the service")
+            resp.body should include(
+              "Sorry, there is a problem with the service"
+            )
           }
         }
       }
@@ -208,7 +226,7 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
           stubGet(
-            s"/users-group-search/users/$CREDENTIAL_ID_2",
+            s"/users-groups-search/users/$CREDENTIAL_ID_2",
             INTERNAL_SERVER_ERROR,
             ""
           )
@@ -218,7 +236,9 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
 
           whenReady(res) { resp =>
             resp.status shouldBe OK
-            resp.body should include("Sorry, there is a problem with the service")
+            resp.body should include(
+              "Sorry, there is a problem with the service"
+            )
           }
         }
       }
@@ -241,7 +261,9 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
 
           whenReady(res) { resp =>
             resp.status shouldBe OK
-            resp.body should include("Sorry, there is a problem with the service")
+            resp.body should include(
+              "Sorry, there is a problem with the service"
+            )
           }
         }
       }
@@ -264,7 +286,9 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
 
           whenReady(res) { resp =>
             resp.status shouldBe OK
-            resp.body should include("Sorry, there is a problem with the service")
+            resp.body should include(
+              "Sorry, there is a problem with the service"
+            )
           }
         }
       }
@@ -277,7 +301,12 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
 
           val res =
             buildRequest(urlPath)
-              .withHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
+              .withHttpHeaders(
+                xSessionId,
+                xRequestId,
+                csrfContent,
+                sessionCookie
+              )
               .get()
 
           whenReady(res) { resp =>
@@ -295,7 +324,12 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
 
           val res =
             buildRequest(urlPath)
-              .withHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
+              .withHttpHeaders(
+                xSessionId,
+                xRequestId,
+                csrfContent,
+                sessionCookie
+              )
               .get()
 
           whenReady(res) { resp =>
@@ -312,7 +346,12 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
 
           val res =
             buildRequest(urlPath)
-              .withHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
+              .withHttpHeaders(
+                xSessionId,
+                xRequestId,
+                csrfContent,
+                sessionCookie
+              )
               .get()
 
           whenReady(res) { resp =>

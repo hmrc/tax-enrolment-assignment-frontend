@@ -17,12 +17,11 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.services
 
 import cats.data.EitherT
-import cats.implicits._
 import com.google.inject.{Inject, Singleton}
 import play.api.mvc.AnyContent
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.service.TEAFResult
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.UsersGroupSearchConnector
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.UsersGroupsSearchConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.accountDetailsForCredential
@@ -31,8 +30,8 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class UsersGroupSearchService @Inject()(
-  usersGroupSearchConnector: UsersGroupSearchConnector,
+class UsersGroupsSearchService @Inject()(
+  usersGroupsSearchConnector: UsersGroupsSearchConnector,
   sessionCache: TEASessionCache
 ) {
 
@@ -55,7 +54,7 @@ class UsersGroupSearchService @Inject()(
     hc: HeaderCarrier,
     request: RequestWithUserDetails[AnyContent]
   ): TEAFResult[AccountDetails] = EitherT {
-    usersGroupSearchConnector
+    usersGroupsSearchConnector
       .getUserDetails(credId)
       .value
       .map {

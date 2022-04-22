@@ -41,7 +41,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.USER_ASSIGNED_PT_ENROLMENT
 
 class PTEnrolmentOnOtherAccountControllerISpec
-  extends IntegrationSpecBase
+    extends IntegrationSpecBase
     with Status {
 
   val teaHost = s"localhost:$port"
@@ -51,7 +51,7 @@ class PTEnrolmentOnOtherAccountControllerISpec
     s"/no-pt-enrolment"
 
   val sessionCookie
-  : (String, String) = ("COOKIE" -> createSessionCookieAsString(sessionData))
+    : (String, String) = ("COOKIE" -> createSessionCookieAsString(sessionData))
 
   s"GET $urlPath" when {
     "the session cache has a credential for PT enrolment that is not the signed in account" should {
@@ -75,7 +75,7 @@ class PTEnrolmentOnOtherAccountControllerISpec
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGet(
-          s"/users-group-search/users/$CREDENTIAL_ID_2",
+          s"/users-groups-search/users/$CREDENTIAL_ID_2",
           OK,
           usergroupsResponseJson().toString()
         )
@@ -118,9 +118,7 @@ class PTEnrolmentOnOtherAccountControllerISpec
             val page = Jsoup.parse(resp.body)
 
             resp.status shouldBe SEE_OTHER
-            resp.header("Location").get should include(
-              s"/protect-tax-info"
-            )
+            resp.header("Location").get should include(s"/protect-tax-info")
           }
         }
       }
@@ -225,7 +223,7 @@ class PTEnrolmentOnOtherAccountControllerISpec
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGet(
-          s"/users-group-search/users/$CREDENTIAL_ID_2",
+          s"/users-groups-search/users/$CREDENTIAL_ID_2",
           INTERNAL_SERVER_ERROR,
           ""
         )

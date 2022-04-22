@@ -68,9 +68,7 @@ object LoggingEvent {
       )
     )
 
-  def logUserSignsInAgainWithSAAccount(
-    credentialId: String
-  ): LoggingEvent =
+  def logUserSignsInAgainWithSAAccount(credentialId: String): LoggingEvent =
     Info(
       Event(
         "[SignInWithSAAccountController][continue]",
@@ -244,7 +242,7 @@ object LoggingEvent {
       )
     )
 
-  def logUnexpectedResponseFromUsersGroupSearch(
+  def logUnexpectedResponseFromUsersGroupsSearch(
     credId: String,
     statusReturned: Int,
     errorMsg: String = "N/A"
@@ -253,7 +251,7 @@ object LoggingEvent {
       Event(
         "[UsersGroupSearchConnector][getUsersDetails]",
         errorDetails = Some(
-          s"Users Group Search return status of $statusReturned for credID $credId" +
+          s"Users Groups Search return status of $statusReturned for credID $credId" +
             s"\nError Message: $errorMsg"
         )
       )

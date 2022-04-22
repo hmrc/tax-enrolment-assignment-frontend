@@ -23,6 +23,7 @@ import helpers.messages._
 import org.jsoup.Jsoup
 import play.api.http.Status
 import play.api.libs.json.Json
+import play.api.libs.ws.DefaultWSCookie
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
@@ -30,10 +31,8 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys._
 
 class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
 
-  val urlPathSA: String =
-    UrlPaths.reportFraudSAAccountPath
-  val urlPathPT: String =
-    UrlPaths.reportFraudPTAccountPath
+  val urlPathSA: String = UrlPaths.reportFraudSAAccountPath
+  val urlPathPT: String = UrlPaths.reportFraudPTAccountPath
 
   s"GET $urlPathSA" when {
     "the session cache has a credential for SA enrolment that is not the signed in account" should {
@@ -62,7 +61,8 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
           usergroupsResponseJson().toString()
         )
         val res = buildRequest(urlPathSA, followRedirects = true)
-          .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -91,8 +91,10 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
-          val res = buildRequest(urlPathSA)
-            .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+
+          val res = buildRequest(urlPathSA, followRedirects = false)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
             .get()
 
           whenReady(res) { resp =>
@@ -125,8 +127,10 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        val res = buildRequest(urlPathSA)
-          .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+
+        val res = buildRequest(urlPathSA, followRedirects = false)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -156,8 +160,10 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
           )
         )
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        val res = buildRequest(urlPathSA)
-          .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+
+        val res = buildRequest(urlPathSA, followRedirects = false)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -173,7 +179,8 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         val res = buildRequest(urlPathSA, followRedirects = true)
-          .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -209,7 +216,8 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
           ""
         )
         val res = buildRequest(urlPathSA, followRedirects = true)
-          .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -232,7 +240,8 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
           ""
         )
         val res = buildRequest(urlPathSA, followRedirects = true)
-          .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -255,7 +264,8 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
           ""
         )
         val res = buildRequest(urlPathSA, followRedirects = true)
-          .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -273,7 +283,8 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
 
         val res =
           buildRequest(urlPathSA)
-            .withHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
             .get()
 
         whenReady(res) { resp =>
@@ -291,7 +302,8 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
 
         val res =
           buildRequest(urlPathSA)
-            .withHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
             .get()
 
         whenReady(res) { resp =>
@@ -308,7 +320,8 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
 
         val res =
           buildRequest(urlPathSA)
-            .withHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
             .get()
 
         whenReady(res) { resp =>
@@ -324,7 +337,8 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
         val res = buildRequest(urlPathSA)
-          .withHttpHeaders(xSessionId, xRequestId, csrfContent)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, csrfContent)
           .get()
 
         whenReady(res) { resp =>
@@ -362,7 +376,8 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
           usergroupsResponseJson().toString()
         )
         val res = buildRequest(urlPathPT, followRedirects = true)
-          .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -391,8 +406,10 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
-          val res = buildRequest(urlPathPT)
-            .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+
+          val res = buildRequest(urlPathPT, followRedirects = false)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
             .get()
 
           whenReady(res) { resp =>
@@ -425,8 +442,10 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        val res = buildRequest(urlPathPT)
-          .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+
+        val res = buildRequest(urlPathPT, followRedirects = false)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -456,8 +475,10 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
           )
         )
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        val res = buildRequest(urlPathPT)
-          .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+
+        val res = buildRequest(urlPathPT, followRedirects = false)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -473,7 +494,8 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         val res = buildRequest(urlPathPT, followRedirects = true)
-          .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -509,7 +531,8 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
           ""
         )
         val res = buildRequest(urlPathPT, followRedirects = true)
-          .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -532,7 +555,8 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
           ""
         )
         val res = buildRequest(urlPathPT, followRedirects = true)
-          .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -555,7 +579,8 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
           ""
         )
         val res = buildRequest(urlPathPT, followRedirects = true)
-          .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -573,7 +598,8 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
 
         val res =
           buildRequest(urlPathPT)
-            .withHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
             .get()
 
         whenReady(res) { resp =>
@@ -591,7 +617,8 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
 
         val res =
           buildRequest(urlPathPT)
-            .withHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
             .get()
 
         whenReady(res) { resp =>
@@ -608,7 +635,8 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
 
         val res =
           buildRequest(urlPathPT)
-            .withHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
             .get()
 
         whenReady(res) { resp =>
@@ -624,7 +652,8 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
         val res = buildRequest(urlPathPT)
-          .withHttpHeaders(xSessionId, xRequestId, csrfContent)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, csrfContent)
           .get()
 
         whenReady(res) { resp =>
@@ -654,8 +683,10 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
           Status.NO_CONTENT,
           ""
         )
-        val res = buildRequest(urlPathSA)
-          .withHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
+
+        val res = buildRequest(urlPathSA, followRedirects = false)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
           .post(Json.obj())
 
         whenReady(res) { resp =>
@@ -685,8 +716,10 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
           Status.INTERNAL_SERVER_ERROR,
           ""
         )
-        val res = buildRequest(urlPathSA)
-          .withHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
+
+        val res = buildRequest(urlPathSA, followRedirects = false)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
           .post(Json.obj())
 
         whenReady(res) { resp =>
@@ -712,8 +745,10 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
-          val res = buildRequest(urlPathSA)
-            .withHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
+
+          val res = buildRequest(urlPathSA, followRedirects = false)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
             .post(Json.obj())
 
           whenReady(res) { resp =>
@@ -732,7 +767,8 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         val res = buildRequest(urlPathSA, followRedirects = true)
-          .withHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
           .post(Json.obj())
 
         whenReady(res) { resp =>

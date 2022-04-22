@@ -20,6 +20,7 @@ import helpers.IntegrationSpecBase
 import helpers.TestITData.{csrfContent, xSessionId}
 import play.api.http.Status
 import play.api.libs.json.Json
+import play.api.libs.ws.DefaultWSCookie
 
 class TestOnlyControllerISpec extends IntegrationSpecBase with Status {
 
@@ -36,7 +37,8 @@ class TestOnlyControllerISpec extends IntegrationSpecBase with Status {
         val expectedResponse =
           """{"obfuscatedUserId":"********3469","email":"email1@test.com","lastAccessedTimestamp":"2022-01-16T14:40:25Z","additionalFactors":[{"factorType":"sms","phoneNumber":"07783924321"}]}"""
         val res = buildTestOnlyRequest(url, followRedirects = true)
-          .withHttpHeaders(xSessionId, csrfContent)
+          .addCookies(DefaultWSCookie("mdtp", authCookie))
+          .addHttpHeaders(xSessionId, csrfContent)
           .withBody(Json.obj())
           .get()
 
@@ -51,7 +53,8 @@ class TestOnlyControllerISpec extends IntegrationSpecBase with Status {
           val credId = "2568836745857973"
           val url = s"/users-groups-search/test-only/users/$credId"
           val res = buildTestOnlyRequest(url, followRedirects = true)
-            .withHttpHeaders(xSessionId, csrfContent)
+            .addCookies(DefaultWSCookie("mdtp", authCookie))
+            .addHttpHeaders(xSessionId, csrfContent)
             .withBody(Json.obj())
             .get()
 

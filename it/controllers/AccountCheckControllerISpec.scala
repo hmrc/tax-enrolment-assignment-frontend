@@ -21,6 +21,7 @@ import helpers.TestITData._
 import helpers.WiremockHelper._
 import helpers.messages._
 import play.api.http.Status
+import play.api.libs.ws.DefaultWSCookie
 
 class AccountCheckControllerISpec extends TestHelper with Status {
 
@@ -29,13 +30,14 @@ class AccountCheckControllerISpec extends TestHelper with Status {
   s"GET $urlPath" when {
     "a user has one credential associated with their nino" that {
       "has a PT enrolment in the session" should {
-        s"redirect to $UrlPaths.returnUrl" in {
+        s"redirect to ${UrlPaths.returnUrl}" in {
           val authResponse = authoriseResponseJson(enrolments = ptEnrolmentOnly)
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
 
           val res = buildRequest(urlPath, followRedirects = true)
-            .withHttpHeaders(xSessionId, csrfContent)
+            .addCookies(DefaultWSCookie("mdtp", authCookie))
+            .addHttpHeaders(xSessionId, csrfContent)
             .get()
 
           whenReady(res) { resp =>
@@ -46,7 +48,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
       }
 
       "has PT enrolment in EACD but not the session" should {
-        s"redirect to $UrlPaths.returnUrl" in {
+        s"redirect to ${UrlPaths.returnUrl}" in {
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -56,7 +58,8 @@ class AccountCheckControllerISpec extends TestHelper with Status {
             es0ResponseMatchingCred
           )
           val res = buildRequest(urlPath, followRedirects = true)
-            .withHttpHeaders(xSessionId, csrfContent)
+            .addCookies(DefaultWSCookie("mdtp", authCookie))
+            .addHttpHeaders(xSessionId, csrfContent)
             .get()
 
           whenReady(res) { resp =>
@@ -93,7 +96,8 @@ class AccountCheckControllerISpec extends TestHelper with Status {
           stubGet(s"/personal-account", OK, "On PTA")
 
           val res = buildRequest(urlPath, followRedirects = true)
-            .withHttpHeaders(xSessionId, csrfContent)
+            .addCookies(DefaultWSCookie("mdtp", authCookie))
+            .addHttpHeaders(xSessionId, csrfContent)
             .get()
 
           whenReady(res) { resp =>
@@ -116,7 +120,8 @@ class AccountCheckControllerISpec extends TestHelper with Status {
           )
 
           val res = buildRequest(urlPath)
-            .withHttpHeaders(xSessionId, csrfContent)
+            .addCookies(DefaultWSCookie("mdtp", authCookie))
+            .addHttpHeaders(xSessionId, csrfContent)
             .get()
 
           whenReady(res) { resp =>
@@ -168,7 +173,8 @@ class AccountCheckControllerISpec extends TestHelper with Status {
           )
 
           val res = buildRequest(urlPath)
-            .withHttpHeaders(xSessionId, csrfContent)
+            .addCookies(DefaultWSCookie("mdtp", authCookie))
+            .addHttpHeaders(xSessionId, csrfContent)
             .get()
 
           whenReady(res) { resp =>
@@ -215,7 +221,8 @@ class AccountCheckControllerISpec extends TestHelper with Status {
           )
 
           val res = buildRequest(urlPath)
-            .withHttpHeaders(xSessionId, csrfContent)
+            .addCookies(DefaultWSCookie("mdtp", authCookie))
+            .addHttpHeaders(xSessionId, csrfContent)
             .get()
 
           whenReady(res) { resp =>
@@ -273,7 +280,8 @@ class AccountCheckControllerISpec extends TestHelper with Status {
           )
 
           val res = buildRequest(urlPath)
-            .withHttpHeaders(xSessionId, csrfContent)
+            .addCookies(DefaultWSCookie("mdtp", authCookie))
+            .addHttpHeaders(xSessionId, csrfContent)
             .get()
 
           whenReady(res) { resp =>
@@ -325,7 +333,8 @@ class AccountCheckControllerISpec extends TestHelper with Status {
           )
 
           val res = buildRequest(urlPath)
-            .withHttpHeaders(xSessionId, csrfContent)
+            .addCookies(DefaultWSCookie("mdtp", authCookie))
+            .addHttpHeaders(xSessionId, csrfContent)
             .get()
 
           whenReady(res) { resp =>
@@ -351,7 +360,8 @@ class AccountCheckControllerISpec extends TestHelper with Status {
           ""
         )
         val res = buildRequest(urlPath, followRedirects = true)
-          .withHttpHeaders(xSessionId, csrfContent)
+          .addCookies(DefaultWSCookie("mdtp", authCookie))
+          .addHttpHeaders(xSessionId, csrfContent)
           .get()
 
         whenReady(res) { resp =>
@@ -374,7 +384,8 @@ class AccountCheckControllerISpec extends TestHelper with Status {
           ""
         )
         val res = buildRequest(urlPath, followRedirects = true)
-          .withHttpHeaders(xSessionId, csrfContent)
+          .addCookies(DefaultWSCookie("mdtp", authCookie))
+          .addHttpHeaders(xSessionId, csrfContent)
           .get()
 
         whenReady(res) { resp =>
@@ -391,7 +402,8 @@ class AccountCheckControllerISpec extends TestHelper with Status {
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
         val res =
-          buildRequest(urlPath).withHttpHeaders(xSessionId, csrfContent).get()
+          buildRequest(urlPath).addCookies(DefaultWSCookie("mdtp", authCookie))
+            .addHttpHeaders(xSessionId, csrfContent).get()
 
         whenReady(res) { resp =>
           resp.status shouldBe SEE_OTHER
@@ -407,7 +419,8 @@ class AccountCheckControllerISpec extends TestHelper with Status {
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
         val res =
-          buildRequest(urlPath).withHttpHeaders(xSessionId, csrfContent).get()
+          buildRequest(urlPath).addCookies(DefaultWSCookie("mdtp", authCookie))
+            .addHttpHeaders(xSessionId, csrfContent).get()
 
         whenReady(res) { resp =>
           resp.status shouldBe SEE_OTHER
@@ -422,7 +435,9 @@ class AccountCheckControllerISpec extends TestHelper with Status {
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
         val res =
-          buildRequest(urlPath).withHttpHeaders(xSessionId, csrfContent).get()
+          buildRequest(urlPath)
+            .addCookies(DefaultWSCookie("mdtp", authCookie))
+            .addHttpHeaders(xSessionId, csrfContent).get()
 
         whenReady(res) { resp =>
           resp.status shouldBe SEE_OTHER
@@ -437,7 +452,8 @@ class AccountCheckControllerISpec extends TestHelper with Status {
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
         val res = buildRequest(urlPath)
-          .withHttpHeaders(xSessionId, csrfContent)
+          .addCookies(DefaultWSCookie("mdtp", authCookie))
+          .addHttpHeaders(xSessionId, csrfContent)
           .get()
 
         whenReady(res) { resp =>

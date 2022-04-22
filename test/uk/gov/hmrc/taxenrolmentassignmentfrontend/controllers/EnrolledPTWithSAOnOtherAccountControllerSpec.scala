@@ -27,16 +27,9 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
   InvalidUserType,
-  UnexpectedResponseFromUsersGroupSearch
+  UnexpectedResponseFromUsersGroupsSearch
 }
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{
-  accountDetails,
-  buildFakeRequestWithSessionId,
-  predicates,
-  retrievalResponse,
-  retrievals,
-  saEnrolmentOnly
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{
   TestFixture,
   UrlPaths
@@ -247,7 +240,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
           ))
           .expects(*, *, *)
           .returning(
-            createInboundResultError(UnexpectedResponseFromUsersGroupSearch)
+            createInboundResultError(UnexpectedResponseFromUsersGroupsSearch)
           )
 
         val res = controller.view

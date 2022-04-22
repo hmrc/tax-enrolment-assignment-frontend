@@ -22,7 +22,7 @@ object UnexpectedResponseFromIV extends TaxEnrolmentAssignmentErrors
 object UnexpectedResponseFromEACD extends TaxEnrolmentAssignmentErrors
 object NoAccountsHaveSA extends TaxEnrolmentAssignmentErrors
 object UnexpectedResponseFromTaxEnrolments extends TaxEnrolmentAssignmentErrors
-object UnexpectedResponseFromUsersGroupSearch
+object UnexpectedResponseFromUsersGroupsSearch
     extends TaxEnrolmentAssignmentErrors
 case class InvalidUserType(redirectUrl: Option[String])
     extends TaxEnrolmentAssignmentErrors

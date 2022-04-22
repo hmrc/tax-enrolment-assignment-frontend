@@ -46,8 +46,8 @@ class EnrolledForPTISpec extends TestHelper with Status {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGet(
-          s"/users-group-search/users/$CREDENTIAL_ID",
-          OK,
+          s"/users-groups-search/users/$CREDENTIAL_ID",
+          NON_AUTHORITATIVE_INFORMATION,
           usergroupsResponseJson().toString()
         )
         val res = buildRequest(urlPath, followRedirects = true)

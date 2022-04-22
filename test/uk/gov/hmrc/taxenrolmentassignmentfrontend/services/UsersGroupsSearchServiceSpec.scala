@@ -22,21 +22,21 @@ import play.api.mvc.AnyContent
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.UsersGroupSearchConnector
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.UsersGroupsSearchConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromUsersGroupSearch
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromUsersGroupsSearch
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.UsersGroupSearchService
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.UsersGroupsSearchService
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class UsersGroupSearchServiceSpec extends TestFixture with ScalaFutures {
+class UsersGroupsSearchServiceSpec extends TestFixture with ScalaFutures {
 
-  val mockUsersGroupSearchConnector = mock[UsersGroupSearchConnector]
+  val mockUsersGroupsSearchConnector = mock[UsersGroupsSearchConnector]
 
-  val service = new UsersGroupSearchService(
-    mockUsersGroupSearchConnector,
+  val service = new UsersGroupsSearchService(
+    mockUsersGroupsSearchConnector,
     mockTeaSessionCache
   )
 
@@ -65,7 +65,7 @@ class UsersGroupSearchServiceSpec extends TestFixture with ScalaFutures {
           ))
           .expects(s"AccountDetailsFor$CREDENTIAL_ID", *, *)
           .returning(Future.successful(None))
-        (mockUsersGroupSearchConnector
+        (mockUsersGroupsSearchConnector
           .getUserDetails(_: String)(_: ExecutionContext, _: HeaderCarrier))
           .expects(CREDENTIAL_ID, *, *)
           .returning(createInboundResult(usersGroupSearchResponse))
@@ -92,15 +92,15 @@ class UsersGroupSearchServiceSpec extends TestFixture with ScalaFutures {
           ))
           .expects(s"AccountDetailsFor$CREDENTIAL_ID", *, *)
           .returning(Future.successful(None))
-        (mockUsersGroupSearchConnector
+        (mockUsersGroupsSearchConnector
           .getUserDetails(_: String)(_: ExecutionContext, _: HeaderCarrier))
           .expects(CREDENTIAL_ID, *, *)
           .returning(
-            createInboundResultError(UnexpectedResponseFromUsersGroupSearch)
+            createInboundResultError(UnexpectedResponseFromUsersGroupsSearch)
           )
         val result = service.getAccountDetails(CREDENTIAL_ID)
         whenReady(result.value) { res =>
-          res shouldBe Left(UnexpectedResponseFromUsersGroupSearch)
+          res shouldBe Left(UnexpectedResponseFromUsersGroupsSearch)
         }
       }
     }

@@ -18,13 +18,7 @@ package controllers
 
 import helpers.TestHelper
 import helpers.TestITData._
-import helpers.WiremockHelper.{
-  stubAuthorizePost,
-  stubAuthorizePostUnauthorised,
-  stubGet,
-  stubGetWithQueryParam,
-  stubPost
-}
+import helpers.WiremockHelper._
 import helpers.messages._
 import org.jsoup.Jsoup
 import play.api.http.Status
@@ -60,8 +54,8 @@ class SignInWithSAAccountControllerISpec extends TestHelper with Status {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGet(
-          s"/users-group-search/users/$CREDENTIAL_ID_2",
-          OK,
+          s"/users-groups-search/users/$CREDENTIAL_ID_2",
+          NON_AUTHORITATIVE_INFORMATION,
           usergroupsResponseJson().toString()
         )
         val res = buildRequest(urlPath, followRedirects = true)
@@ -205,7 +199,7 @@ class SignInWithSAAccountControllerISpec extends TestHelper with Status {
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
           stubGet(
-            s"/users-group-search/users/$CREDENTIAL_ID_2",
+            s"/users-groups-search/users/$CREDENTIAL_ID_2",
             INTERNAL_SERVER_ERROR,
             ""
           )

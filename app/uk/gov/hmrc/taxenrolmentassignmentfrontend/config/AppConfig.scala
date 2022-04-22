@@ -35,12 +35,12 @@ class AppConfig @Inject()(val config: ServicesConfig) {
     : String = config.baseUrl("tax-enrolments") + "/tax-enrolments"
 
   lazy val useTestOnlyUsersGroupSearch: Boolean = {
-    config.getConfBool("users-group-search.isTest", defBool = true)
+    config.getConfBool("users-groups-search.isTest", defBool = true)
   }
   lazy val tenBaseUrl: String =
     s"${config.baseUrl("tax-enrolment-assignment-frontend")}"
-  lazy val usersGroupSearchBaseURL: String =
-    s"${config.baseUrl("users-group-search")}/users-group-search"
+  lazy val usersGroupsSearchBaseURL: String =
+    s"${config.baseUrl("users-groups-search")}/users-groups-search"
   lazy val basAuthHost: String =
     s"${config.getConfString("bas-gateway-frontend.host", "")}"
   lazy val loginCallback: String =

@@ -57,8 +57,8 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGet(
-          s"/users-group-search/users/$CREDENTIAL_ID_2",
-          OK,
+          s"/users-groups-search/users/$CREDENTIAL_ID_2",
+          NON_AUTHORITATIVE_INFORMATION,
           usergroupsResponseJson().toString()
         )
         val res = buildRequest(urlPathSA, followRedirects = true)
@@ -204,7 +204,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGet(
-          s"/users-group-search/users/$CREDENTIAL_ID_2",
+          s"/users-groups-search/users/$CREDENTIAL_ID_2",
           INTERNAL_SERVER_ERROR,
           ""
         )
@@ -357,8 +357,8 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGet(
-          s"/users-group-search/users/$CREDENTIAL_ID_2",
-          OK,
+          s"/users-groups-search/users/$CREDENTIAL_ID_2",
+          NON_AUTHORITATIVE_INFORMATION,
           usergroupsResponseJson().toString()
         )
         val res = buildRequest(urlPathPT, followRedirects = true)
@@ -504,7 +504,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGet(
-          s"/users-group-search/users/$CREDENTIAL_ID_2",
+          s"/users-groups-search/users/$CREDENTIAL_ID_2",
           INTERNAL_SERVER_ERROR,
           ""
         )

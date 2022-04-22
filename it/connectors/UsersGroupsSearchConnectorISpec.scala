@@ -20,17 +20,17 @@ import helpers.IntegrationSpecBase
 import helpers.TestITData._
 import helpers.WiremockHelper._
 import play.api.http.Status._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.UsersGroupSearchConnector
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromUsersGroupSearch
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.UsersGroupsSearchConnector
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromUsersGroupsSearch
 
-class UsersGroupSearchConnectorISpec extends IntegrationSpecBase {
+class UsersGroupsSearchConnectorISpec extends IntegrationSpecBase {
 
-  lazy val connector: UsersGroupSearchConnector =
-    app.injector.instanceOf[UsersGroupSearchConnector]
+  lazy val connector: UsersGroupsSearchConnector =
+    app.injector.instanceOf[UsersGroupsSearchConnector]
 
   "getUserDetails" when {
     val PATH =
-      s"/users-group-search/users/$CREDENTIAL_ID"
+      s"/users-groups-search/users/$CREDENTIAL_ID"
     s"no errors occur" should {
       "return the user details" in {
         stubGet(PATH, OK, usergroupsResponseJson().toString())
@@ -41,12 +41,12 @@ class UsersGroupSearchConnectorISpec extends IntegrationSpecBase {
       }
     }
 
-    s"the user has no record in users-group-search" should {
+    s"the user has no record in users-groups-search" should {
       "return an UnexpectedResponseFromUsersGroupSearch" in {
         stubGet(PATH, NOT_FOUND, "")
         stubPost(s"/write/.*", OK, """{"x":2}""")
         whenReady(connector.getUserDetails(CREDENTIAL_ID).value) { response =>
-          response shouldBe Left(UnexpectedResponseFromUsersGroupSearch)
+          response shouldBe Left(UnexpectedResponseFromUsersGroupsSearch)
         }
       }
     }
@@ -56,7 +56,7 @@ class UsersGroupSearchConnectorISpec extends IntegrationSpecBase {
         stubGet(PATH, BAD_REQUEST, "")
         stubPost(s"/write/.*", OK, """{"x":2}""")
         whenReady(connector.getUserDetails(CREDENTIAL_ID).value) { response =>
-          response shouldBe Left(UnexpectedResponseFromUsersGroupSearch)
+          response shouldBe Left(UnexpectedResponseFromUsersGroupsSearch)
         }
       }
     }
@@ -66,7 +66,7 @@ class UsersGroupSearchConnectorISpec extends IntegrationSpecBase {
         stubGet(PATH, UNAUTHORIZED, "")
         stubPost(s"/write/.*", OK, """{"x":2}""")
         whenReady(connector.getUserDetails(CREDENTIAL_ID).value) { response =>
-          response shouldBe Left(UnexpectedResponseFromUsersGroupSearch)
+          response shouldBe Left(UnexpectedResponseFromUsersGroupsSearch)
         }
       }
     }
@@ -76,7 +76,7 @@ class UsersGroupSearchConnectorISpec extends IntegrationSpecBase {
         stubGet(PATH, INTERNAL_SERVER_ERROR, "")
         stubPost(s"/write/.*", OK, """{"x":2}""")
         whenReady(connector.getUserDetails(CREDENTIAL_ID).value) { response =>
-          response shouldBe Left(UnexpectedResponseFromUsersGroupSearch)
+          response shouldBe Left(UnexpectedResponseFromUsersGroupsSearch)
         }
       }
     }

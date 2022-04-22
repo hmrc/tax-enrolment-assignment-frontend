@@ -57,7 +57,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{
   EACDService,
   SilentAssignmentService,
-  UsersGroupSearchService
+  UsersGroupsSearchService
 }
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -65,7 +65,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class MultipleAccountsOrchestrator @Inject()(
   sessionCache: TEASessionCache,
-  usersGroupSearchService: UsersGroupSearchService,
+  usersGroupSearchService: UsersGroupsSearchService,
   silentAssignmentService: SilentAssignmentService,
   logger: EventLoggerService
 ) {

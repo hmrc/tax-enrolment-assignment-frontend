@@ -45,7 +45,7 @@ class EnrolledForPTISpec extends IntegrationSpecBase with Status {
     s"/enrol-pt/enrolment-success-no-sa"
 
   val sessionCookie
-  : (String, String) = ("COOKIE" -> createSessionCookieAsString(sessionData))
+    : (String, String) = ("COOKIE" -> createSessionCookieAsString(sessionData))
 
   s"GET $urlPath" when {
     "the session cache has Account type of MULTIPLE_ACCOUNTS" should {
@@ -58,7 +58,7 @@ class EnrolledForPTISpec extends IntegrationSpecBase with Status {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGet(
-          s"/users-group-search/users/$CREDENTIAL_ID",
+          s"/users-groups-search/users/$CREDENTIAL_ID",
           OK,
           usergroupsResponseJson().toString()
         )
@@ -94,9 +94,7 @@ class EnrolledForPTISpec extends IntegrationSpecBase with Status {
               val page = Jsoup.parse(resp.body)
 
               resp.status shouldBe SEE_OTHER
-              resp.header("Location").get should include(
-                s"/protect-tax-info"
-              )
+              resp.header("Location").get should include(s"/protect-tax-info")
             }
           }
         }

@@ -40,7 +40,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.USER_ASSIGNED_SA_ENROLMENT
 
 class EnrolledPTWithSAOnOtherAccountControllerISpec
-  extends IntegrationSpecBase
+    extends IntegrationSpecBase
     with Status {
 
   val teaHost = s"localhost:$port"
@@ -50,7 +50,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
     s"/enrol-pt/enrolment-success-sa-access-not-wanted"
 
   val sessionCookie
-  : (String, String) = ("COOKIE" -> createSessionCookieAsString(sessionData))
+    : (String, String) = ("COOKIE" -> createSessionCookieAsString(sessionData))
 
   s"GET $urlPath" when {
     "the session cache has Account type of SA_ASSIGNED_TO_OTHER_USER" should {
@@ -68,7 +68,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGet(
-          s"/users-group-search/users/$CREDENTIAL_ID",
+          s"/users-groups-search/users/$CREDENTIAL_ID",
           OK,
           usergroupsResponseJson().toString()
         )
@@ -100,12 +100,12 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGet(
-          s"/users-group-search/users/$CREDENTIAL_ID",
+          s"/users-groups-search/users/$CREDENTIAL_ID",
           OK,
           usergroupsResponseJson().toString()
         )
         stubGet(
-          s"/users-group-search/users/$CREDENTIAL_ID_2",
+          s"/users-groups-search/users/$CREDENTIAL_ID_2",
           OK,
           usergroupsResponseJson().toString()
         )
@@ -139,7 +139,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGet(
-          s"/users-group-search/users/$CREDENTIAL_ID_3",
+          s"/users-groups-search/users/$CREDENTIAL_ID_3",
           INTERNAL_SERVER_ERROR,
           ""
         )
@@ -178,9 +178,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
             val page = Jsoup.parse(resp.body)
 
             resp.status shouldBe SEE_OTHER
-            resp.header("Location").get should include(
-              s"/protect-tax-info"
-            )
+            resp.header("Location").get should include(s"/protect-tax-info")
           }
         }
       }

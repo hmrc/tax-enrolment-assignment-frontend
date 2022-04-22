@@ -42,9 +42,9 @@ class AppConfig @Inject()(val config: ServicesConfig) {
   lazy val usersGroupsSearchBaseURL: String =
     s"${config.baseUrl("users-groups-search")}/users-groups-search"
   lazy val basAuthHost: String =
-    s"${config.getConfString("bas-gateway.host", "")}"
+    s"${config.getConfString("bas-gateway-frontend.host", "")}"
   lazy val loginCallback: String =
-    config.getConfString("bas-gateway.continue-callback.url", "")
+    config.getConfString("bas-gateway-frontend.continue-callback.url", "")
   lazy val loginURL: String = s"$basAuthHost/bas-gateway/sign-in"
   lazy val signOutUrl: String =
     s"$basAuthHost/bas-gateway/sign-out-without-state"

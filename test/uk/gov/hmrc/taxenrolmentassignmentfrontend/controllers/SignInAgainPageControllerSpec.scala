@@ -16,10 +16,9 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
-import play.api.http.Status.{OK, SEE_OTHER}
 import play.api.libs.json.Format
 import play.api.mvc.AnyContent
-import play.api.test.Helpers.{contentAsString, defaultAwaitTimeout, redirectLocation, status}
+import play.api.test.Helpers.{status, _}
 import uk.gov.hmrc.auth.core.Enrolments
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
@@ -27,16 +26,30 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{InvalidUserType, NoSAEnrolmentWhenOneExpected}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{accountDetails, buildFakeRequestWithSessionId, predicates, retrievalResponse, retrievals}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{ReportSuspiciousID, SignInWithSAAccount}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
+  InvalidUserType,
+  NoSAEnrolmentWhenOneExpected
+}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{
+  TestFixture,
+  UrlPaths
+}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{
+  ReportSuspiciousID,
+  SignInWithSAAccount
+}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class SignInAgainPageControllerSpec extends TestFixture {
   val view: SignInWithSAAccount = app.injector.instanceOf[SignInWithSAAccount]
-  val signOutController = new SignOutController(mockAuthAction, mcc, testAppConfig, mockTeaSessionCache)
+  val signOutController = new SignOutController(
+    mockAuthAction,
+    mcc,
+    testAppConfig,
+    mockTeaSessionCache
+  )
   lazy val reportSuspiciousIDController = new ReportSuspiciousIDController(
     mockAuthAction,
     mockTeaSessionCache,
@@ -47,7 +60,8 @@ class SignInAgainPageControllerSpec extends TestFixture {
     errorView
   )
 
-  lazy val reportSuspiciousIDPage: ReportSuspiciousID =inject[ReportSuspiciousID]
+  lazy val reportSuspiciousIDPage: ReportSuspiciousID =
+    inject[ReportSuspiciousID]
 
   val controller =
     new SignInWithSAAccountController(
@@ -66,7 +80,9 @@ class SignInAgainPageControllerSpec extends TestFixture {
         (mockAuthConnector
           .authorise(
             _: Predicate,
-            _: Retrieval[Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String]]
+            _: Retrieval[
+              Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String]
+            ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
@@ -89,15 +105,17 @@ class SignInAgainPageControllerSpec extends TestFixture {
           .expects(*, *, *)
           .returning(createInboundResult(accountDetails))
 
-        val result = controller.view().apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+        val result = controller
+          .view()
+          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe OK
         contentAsString(result) should include("signInAgain.title")
       }
     }
 
-    "the user does not have an account type of SA_ASSIGNED_TO_OTHER_USER" should {
-      "redirect to the account check" in {
+    s"the user does not have an account type of $SA_ASSIGNED_TO_OTHER_USER" should {
+      s"redirect to ${UrlPaths.accountCheckPath}" in {
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -117,17 +135,15 @@ class SignInAgainPageControllerSpec extends TestFixture {
             _: ExecutionContext
           ))
           .expects(List(SA_ASSIGNED_TO_OTHER_USER), *, *, *)
-          .returning(createInboundResultError(InvalidUserType(Some("/test"))))
-
-
+          .returning(
+            createInboundResultError(InvalidUserType(Some(UrlPaths.returnUrl)))
+          )
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe SEE_OTHER
-        redirectLocation(result) shouldBe Some(
-          "/protect-tax-info?redirectUrl=%2Ftest"
-        )
+        redirectLocation(result) shouldBe Some(UrlPaths.accountCheckPath)
       }
     }
 
@@ -167,11 +183,10 @@ class SignInAgainPageControllerSpec extends TestFixture {
           .view()
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(res) shouldBe OK
+        status(res) shouldBe INTERNAL_SERVER_ERROR
         contentAsString(res) should include("enrolmentError.title")
       }
     }
-
 
     s"the cache no redirectUrl" should {
       "return InternalServerError" in {
@@ -199,14 +214,14 @@ class SignInAgainPageControllerSpec extends TestFixture {
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(result) shouldBe OK
+        status(result) shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) should include("enrolmentError.title")
       }
     }
   }
   "continue" when {
     "the user has a redirectUrl in cache" should {
-      "redirect to AccountCheck" in {
+      s"redirect to ${UrlPaths.logoutPath}" in {
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -225,11 +240,7 @@ class SignInAgainPageControllerSpec extends TestFixture {
             _: Format[String]
           ))
           .expects("redirectURL", *, *)
-          .returning(
-            Future.successful(
-              Some(testOnly.routes.TestOnlyController.successfulCall.url)
-            )
-          )
+          .returning(Future.successful(Some(UrlPaths.returnUrl)))
 
         val res = controller
           .continue()
@@ -237,9 +248,7 @@ class SignInAgainPageControllerSpec extends TestFixture {
 
         status(res) shouldBe SEE_OTHER
         redirectLocation(res) shouldBe
-          Some(
-            "/protect-tax-info/test-only/successful"
-          )
+          Some(UrlPaths.logoutPath)
       }
     }
 
@@ -263,17 +272,13 @@ class SignInAgainPageControllerSpec extends TestFixture {
             _: Format[String]
           ))
           .expects("redirectURL", *, *)
-          .returning(
-            Future.successful(
-              None
-            )
-          )
+          .returning(Future.successful(None))
 
         val res = controller
           .continue()
           .apply(buildFakeRequestWithSessionId("POST", "Not Used"))
 
-        status(res) shouldBe OK
+        status(res) shouldBe INTERNAL_SERVER_ERROR
         contentAsString(res) should include("enrolmentError.title")
       }
     }

@@ -21,23 +21,24 @@ import play.api.Logger
 import play.api.i18n.I18nSupport
 import play.api.mvc._
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SABlueInterrupt
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.KeepAccessToSA
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class SABlueInterruptController @Inject()(
+class KeepAccessToSAController @Inject()(
   authAction: AuthAction,
-  mcc: MessagesControllerComponents,
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
+  mcc: MessagesControllerComponents,
   val logger: EventLoggerService,
-  saBlueInterrupt: SABlueInterrupt,
+  keepAccessToSA: KeepAccessToSA,
   val errorView: ErrorTemplate
 )(implicit config: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc)
@@ -48,30 +49,34 @@ class SABlueInterruptController @Inject()(
 
   def view(): Action[AnyContent] =
     authAction.async { implicit request =>
-      multipleAccountsOrchestrator
-        .checkValidAccountTypeRedirectUrlInCache(
-          List(SA_ASSIGNED_TO_OTHER_USER)
-        )
-        .value
-        .map {
-          case Right(x) =>
-            Ok(saBlueInterrupt())
-          case Left(error) =>
-            handleErrors(error, "[SABlueInterruptController][view]")
-        }
+      multipleAccountsOrchestrator.getDetailsForKeepAccessToSA.value.map {
+        case Right(form) => Ok(keepAccessToSA(form))
+        case Left(error) =>
+          handleErrors(error, "[KeepAccessToSAController][view]")
+      }
     }
 
-  def continue(): Action[AnyContent] =
-    authAction.async { implicit request =>
-      multipleAccountsOrchestrator
-        .checkValidAccountTypeRedirectUrlInCache(
-          List(SA_ASSIGNED_TO_OTHER_USER)
+  def continue: Action[AnyContent] = authAction.async {
+    implicit requestWithUserDetails =>
+      KeepAccessToSAThroughPTAForm.keepAccessToSAThroughPTAForm.bindFromRequest
+        .fold(
+          formWithErrors => {
+            Future.successful(BadRequest(keepAccessToSA(formWithErrors)))
+          },
+          keepAccessToSA => {
+
+            multipleAccountsOrchestrator
+              .handleKeepAccessToSAChoice(keepAccessToSA)
+              .value
+              .map {
+                case Right(true) =>
+                  Redirect(routes.SignInWithSAAccountController.view)
+                case Right(false) =>
+                  Redirect(routes.EnrolledPTWithSAOnOtherAccountController.view)
+                case Left(error) =>
+                  handleErrors(error, "[KeepAccessToSAController][continue]")
+              }
+          }
         )
-        .value
-        .map {
-          case Right(_) => Redirect(routes.KeepAccessToSAController.view)
-          case Left(error) =>
-            handleErrors(error, "[SABlueInterruptController][continue]")
-        }
-    }
+  }
 }

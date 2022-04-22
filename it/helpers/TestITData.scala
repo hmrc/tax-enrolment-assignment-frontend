@@ -19,14 +19,6 @@ package helpers
 import play.api.libs.json._
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core.retrieve.Credentials
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
-  MULTIPLE_ACCOUNTS,
-  PT_ASSIGNED_TO_CURRENT_USER,
-  PT_ASSIGNED_TO_OTHER_USER,
-  SA_ASSIGNED_TO_CURRENT_USER,
-  SA_ASSIGNED_TO_OTHER_USER,
-  SINGLE_ACCOUNT
-}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.UserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models._
 
@@ -338,6 +330,9 @@ object TestITData {
     "We have found your personal tax account under a different Government Gateway user ID"
   val reportSuspiciousIDPageTitle =
     "You need to contact us"
+
+  val keepAccessToSAPageTitle =
+    "Do you want to keep access to Self Assessment from your personal tax account?"
 
   val signInAgainPageTitle =
     "You need to sign in again with your Self Assessment user ID"

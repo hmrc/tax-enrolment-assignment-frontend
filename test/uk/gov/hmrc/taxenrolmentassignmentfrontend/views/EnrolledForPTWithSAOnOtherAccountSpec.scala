@@ -20,7 +20,7 @@ import org.jsoup.nodes.Document
 import play.api.test.FakeRequest
 import play.twirl.api.HtmlFormat
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.EnrolledAfterReportingFraudMessages
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.EnrolledPTWithSAOnOtherAccountMessages
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTWithSAOnOtherAccount
 
 class EnrolledForPTWithSAOnOtherAccountSpec extends TestFixture {
@@ -47,71 +47,71 @@ class EnrolledForPTWithSAOnOtherAccountSpec extends TestFixture {
   "EnrolledForPTWithSAOnOtherAccount" when {
     "the user has choosen to keep SA separate" should {
       "contain the correct title" in {
-        documentSA.title shouldBe EnrolledAfterReportingFraudMessages.title
+        documentSA.title shouldBe EnrolledPTWithSAOnOtherAccountMessages.title
       }
       "contain the correct header" in {
         documentSA
           .getElementsByClass("govuk-heading-xl")
-          .text shouldBe EnrolledAfterReportingFraudMessages.heading
+          .text shouldBe EnrolledPTWithSAOnOtherAccountMessages.heading
       }
       "contain the correct body" which {
         val subHeadings = documentSA.getElementsByClass(Selectors.subHeading)
         "has a sub heading for other IDs" in {
           subHeadings
             .get(0)
-            .text() shouldBe EnrolledAfterReportingFraudMessages.heading2
+            .text() shouldBe EnrolledPTWithSAOnOtherAccountMessages.heading2
         }
         "have expected paragraphs that includes SA" in {
           documentSA
             .getElementsByClass("govuk-body")
-            .text shouldBe EnrolledAfterReportingFraudMessages.paragraphsSA
+            .text shouldBe EnrolledPTWithSAOnOtherAccountMessages.paragraphsSA
         }
       }
       "contain the correct button" in {
         documentSA
           .getElementsByClass("govuk-button")
-          .text shouldBe EnrolledAfterReportingFraudMessages.button
+          .text shouldBe EnrolledPTWithSAOnOtherAccountMessages.button
       }
 
       "contains a form with the correct action" in {
         documentSA
           .select(Selectors.form)
-          .attr("action") shouldBe EnrolledAfterReportingFraudMessages.action
+          .attr("action") shouldBe EnrolledPTWithSAOnOtherAccountMessages.action
       }
     }
 
     "the user has come from fraud reporting" should {
       "contain the correct title" in {
-        document.title shouldBe EnrolledAfterReportingFraudMessages.title
+        document.title shouldBe EnrolledPTWithSAOnOtherAccountMessages.title
       }
       "contain the correct header" in {
         document
           .getElementsByClass("govuk-heading-xl")
-          .text shouldBe EnrolledAfterReportingFraudMessages.heading
+          .text shouldBe EnrolledPTWithSAOnOtherAccountMessages.heading
       }
       "contain the correct body" which {
         val subHeadings = document.getElementsByClass(Selectors.subHeading)
         "has a sub heading for other IDs" in {
           subHeadings
             .get(0)
-            .text() shouldBe EnrolledAfterReportingFraudMessages.heading2
+            .text() shouldBe EnrolledPTWithSAOnOtherAccountMessages.heading2
         }
         "have expected paragraphs that don't include SA" in {
           document
             .getElementsByClass("govuk-body")
-            .text shouldBe EnrolledAfterReportingFraudMessages.paragraphs
+            .text shouldBe EnrolledPTWithSAOnOtherAccountMessages.paragraphs
         }
       }
       "contain the correct button" in {
         document
           .getElementsByClass("govuk-button")
-          .text shouldBe EnrolledAfterReportingFraudMessages.button
+          .text shouldBe EnrolledPTWithSAOnOtherAccountMessages.button
       }
 
       "contains a form with the correct action" in {
         document
           .select(Selectors.form)
-          .attr("action") shouldBe EnrolledAfterReportingFraudMessages.action
+          .attr("action") shouldBe EnrolledPTWithSAOnOtherAccountMessages.action
       }
     }
   }

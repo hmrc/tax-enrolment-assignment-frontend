@@ -14,18 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.repository
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms
 
-object SessionKeys {
+import play.api.libs.json.{Format, Json}
 
-  val ACCOUNT_TYPE = "ACCOUNT_TYPE"
-  val USER_ASSIGNED_PT_ENROLMENT = "USER_ASSIGNED_PT_ENROLMENT"
-  val USER_ASSIGNED_SA_ENROLMENT = "USER_ASSIGNED_SA_ENROLMENT"
-  val REDIRECT_URL = "redirectURL"
-  val OTHER_VALID_PTA_ACCOUNTS = "OTHER_VALID_PTA_ACCOUNTS"
-  val REPORTED_FRAUD = "reportedFraud"
-  val KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM = "KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM"
+case class KeepAccessToSAThroughPTA(keepAccessToSAThroughPTA: Boolean)
 
-  def accountDetailsForCredential(credId: String) = s"AccountDetailsFor$credId"
-
+object KeepAccessToSAThroughPTA {
+  implicit val format: Format[KeepAccessToSAThroughPTA] =
+    Json.format[KeepAccessToSAThroughPTA]
 }

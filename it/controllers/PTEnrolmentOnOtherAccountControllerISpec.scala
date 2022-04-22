@@ -16,17 +16,12 @@
 
 package controllers
 
-import helpers.{IntegrationSpecBase, TestITData}
-import helpers.WiremockHelper._
+import helpers.TestHelper
 import helpers.TestITData._
+import helpers.WiremockHelper._
+import helpers.messages._
 import org.jsoup.Jsoup
 import play.api.http.Status
-import play.api.http.Status.OK
-import play.api.libs.ws.DefaultWSCookie
-import play.api.mvc._
-import play.api.test.Helpers
-import play.libs.ws.WSCookie
-import uk.gov.hmrc.crypto.PlainText
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
   MULTIPLE_ACCOUNTS,
@@ -36,27 +31,17 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
   SA_ASSIGNED_TO_OTHER_USER,
   SINGLE_ACCOUNT
 }
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.USER_ASSIGNED_PT_ENROLMENT
 
-class PTEnrolmentOnOtherAccountControllerISpec
-    extends IntegrationSpecBase
-    with Status {
+class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
 
-  val teaHost = s"localhost:$port"
-  val returnUrl: String = testOnly.routes.TestOnlyController.successfulCall
-    .absoluteURL(false, teaHost)
-  val urlPath =
-    s"/no-pt-enrolment"
-
-  val sessionCookie
-    : (String, String) = ("COOKIE" -> createSessionCookieAsString(sessionData))
+  val urlPath: String = UrlPaths.ptOnOtherAccountPath
 
   s"GET $urlPath" when {
-    "the session cache has a credential for PT enrolment that is not the signed in account" should {
+    s"the session cache has an accountType of $PT_ASSIGNED_TO_OTHER_USER" should {
       s"render the pt on another account page" in {
-        await(save[String](sessionId, "redirectURL", returnUrl))
+        await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
         await(
           save[AccountTypes.Value](
             sessionId,
@@ -87,9 +72,7 @@ class PTEnrolmentOnOtherAccountControllerISpec
           val page = Jsoup.parse(resp.body)
 
           resp.status shouldBe OK
-          page.title should include(
-            TestITData.ptEnrolledOnOtherAccountPageTitle
-          )
+          page.title should include(PTEnrolmentOtherAccountMesages.title)
         }
       }
     }
@@ -102,23 +85,23 @@ class PTEnrolmentOnOtherAccountControllerISpec
       SA_ASSIGNED_TO_CURRENT_USER
     ).foreach { accountType =>
       s"the session cache has a credential with account type ${accountType.toString}" should {
-        s"redirect to account check page" in {
-          await(save[String](sessionId, "redirectURL", returnUrl))
+        s"redirect to ${UrlPaths.accountCheckPath}" in {
+          await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
           await(
             save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", accountType)
           )
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
-          val res = buildRequest(urlPath, followRedirects = false)
+          val res = buildRequest(urlPath)
             .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
             .get()
 
           whenReady(res) { resp =>
-            val page = Jsoup.parse(resp.body)
-
             resp.status shouldBe SEE_OTHER
-            resp.header("Location").get should include(s"/protect-tax-info")
+            resp.header("Location").get should include(
+              UrlPaths.accountCheckPath
+            )
           }
         }
       }
@@ -126,7 +109,7 @@ class PTEnrolmentOnOtherAccountControllerISpec
 
     s"the session cache has a credential for PT enrolment that is the signed in account" should {
       s"render the error page" in {
-        await(save[String](sessionId, "redirectURL", returnUrl))
+        await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
         await(
           save[AccountTypes.Value](
             sessionId,
@@ -144,20 +127,20 @@ class PTEnrolmentOnOtherAccountControllerISpec
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        val res = buildRequest(urlPath, followRedirects = false)
+        val res = buildRequest(urlPath)
           .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
-          resp.status shouldBe OK
-          resp.body should include("Sorry, there is a problem with the service")
+          resp.status shouldBe INTERNAL_SERVER_ERROR
+          resp.body should include(ErrorTemplateMessages.title)
         }
       }
     }
 
     s"the session cache has no credentials with PT enrolment" should {
       s"render the error page" in {
-        await(save[String](sessionId, "redirectURL", returnUrl))
+        await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
         await(
           save[AccountTypes.Value](
             sessionId,
@@ -175,13 +158,13 @@ class PTEnrolmentOnOtherAccountControllerISpec
           )
         )
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        val res = buildRequest(urlPath, followRedirects = false)
+        val res = buildRequest(urlPath)
           .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
-          resp.status shouldBe OK
-          resp.body should include("Sorry, there is a problem with the service")
+          resp.status shouldBe INTERNAL_SERVER_ERROR
+          resp.body should include(ErrorTemplateMessages.title)
         }
       }
     }
@@ -196,15 +179,15 @@ class PTEnrolmentOnOtherAccountControllerISpec
           .get()
 
         whenReady(res) { resp =>
-          resp.status shouldBe OK
-          resp.body should include("Sorry, there is a problem with the service")
+          resp.status shouldBe INTERNAL_SERVER_ERROR
+          resp.body should include(ErrorTemplateMessages.title)
         }
       }
     }
 
     "users group search returns an error" should {
       "render the error page" in {
-        await(save[String](sessionId, "redirectURL", returnUrl))
+        await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
         await(
           save[AccountTypes.Value](
             sessionId,
@@ -232,8 +215,8 @@ class PTEnrolmentOnOtherAccountControllerISpec
           .get()
 
         whenReady(res) { resp =>
-          resp.status shouldBe OK
-          resp.body should include("Sorry, there is a problem with the service")
+          resp.status shouldBe INTERNAL_SERVER_ERROR
+          resp.body should include(ErrorTemplateMessages.title)
         }
       }
     }
@@ -255,8 +238,8 @@ class PTEnrolmentOnOtherAccountControllerISpec
           .get()
 
         whenReady(res) { resp =>
-          resp.status shouldBe OK
-          resp.body should include("Sorry, there is a problem with the service")
+          resp.status shouldBe INTERNAL_SERVER_ERROR
+          resp.body should include(ErrorTemplateMessages.title)
         }
       }
     }
@@ -278,14 +261,14 @@ class PTEnrolmentOnOtherAccountControllerISpec
           .get()
 
         whenReady(res) { resp =>
-          resp.status shouldBe OK
-          resp.body should include("Sorry, there is a problem with the service")
+          resp.status shouldBe INTERNAL_SERVER_ERROR
+          resp.body should include(ErrorTemplateMessages.title)
         }
       }
     }
 
     "the user has a session missing required element NINO" should {
-      s"return $SEE_OTHER" in {
+      s"redirect to ${UrlPaths.unauthorizedPath}" in {
         val authResponse = authoriseResponseJson(optNino = None)
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -297,13 +280,13 @@ class PTEnrolmentOnOtherAccountControllerISpec
 
         whenReady(res) { resp =>
           resp.status shouldBe SEE_OTHER
-          resp.header("Location").get should include("/unauthorised")
+          resp.header("Location").get should include(UrlPaths.unauthorizedPath)
         }
       }
     }
 
     "the user has a session missing required element Credentials" should {
-      s"return $SEE_OTHER" in {
+      s"redirect to ${UrlPaths.unauthorizedPath}" in {
         val authResponse = authoriseResponseJson(optCreds = None)
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -315,13 +298,13 @@ class PTEnrolmentOnOtherAccountControllerISpec
 
         whenReady(res) { resp =>
           resp.status shouldBe SEE_OTHER
-          resp.header("Location").get should include("/unauthorised")
+          resp.header("Location").get should include(UrlPaths.unauthorizedPath)
         }
       }
     }
 
     "the user has a insufficient confidence level" should {
-      s"return $SEE_OTHER" in {
+      s"redirect to ${UrlPaths.unauthorizedPath}" in {
         stubAuthorizePostUnauthorised(insufficientConfidenceLevel)
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
@@ -332,7 +315,7 @@ class PTEnrolmentOnOtherAccountControllerISpec
 
         whenReady(res) { resp =>
           resp.status shouldBe SEE_OTHER
-          resp.header("Location").get should include("/unauthorised")
+          resp.header("Location").get should include(UrlPaths.unauthorizedPath)
         }
       }
     }

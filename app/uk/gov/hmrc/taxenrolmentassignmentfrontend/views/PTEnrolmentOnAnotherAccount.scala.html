@@ -25,19 +25,25 @@
 @this(
 layout: Layout,
 govukSummaryList : GovukSummaryList,
-summaryRow: CreateSummaryRow
+summaryRow: CreateSummaryRow,
+govukInsetText : GovukInsetText
 )
 
-@(ptAccountDetails: AccountDetails, currentAccountHasSA: Boolean)(implicit request: Request[AnyRef], messages: Messages, appConfig: AppConfig)
+@(currentUserId: String, ptAccountDetails: AccountDetails, saAccountDetails: Option[AccountDetails], currentAccountHasSA: Boolean, otherAccountHasSA: Boolean, ptEnrolledAccountHasSA: Boolean)(implicit request: Request[AnyRef], messages: Messages, appConfig: AppConfig)
 
 @layout(
     pageTitle = Some(messages("ptEnrolmentOnOtherAccount.title")), None) {
 
-    <h2 class="govuk-heading-xl">@messages("ptEnrolmentOnOtherAccount.heading")</h2>
+    <h1 class="govuk-heading-xl">@messages("ptEnrolmentOnOtherAccount.heading")</h1>
+
+    <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.paragraph1", ptAccountDetails.userId)</p>
+    <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.paragraph2", currentUserId)</p>
+
     <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.text1")
-        <a href="@routes.SignOutController.signOut" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.signinAgain")</a>
+        <a href="@routes.SignOutController.signOut" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.signInAgain")</a>
       @messages("ptEnrolmentOnOtherAccount.text2")
     </p>
+
     <dl class="govuk-summary-list">
         @summaryRow("common.userId", ptAccountDetails.userId)
         @if(ptAccountDetails.email.isDefined) {
@@ -50,13 +56,38 @@ summaryRow: CreateSummaryRow
     </dl>
 
 <!--//TODO remove fraud reporting url after consultation with leads, as it requires other changes such remove couple of tests etc etc-->
-    <p class="govuk-body">
-        <a href="@routes.ReportSuspiciousIDController.viewNoSA" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.notMyUserId")</a>
-    </p>
+
+    <div id="inset_text">
+
+        @govukInsetText(InsetText(
+        content = Text(messages("ptEnrolmentOnOtherAccount.linkText", routes.ReportSuspiciousIDController.viewNoSA))
+        ))
+
+    </div>
+
+    @if(ptEnrolledAccountHasSA) {
+        <h3 class="govuk-heading-m">@messages("ptEnrolmentOnOtherAccount.saHeading")</h3>
+
+        <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.saText1")
+          <a href="@routes.SignOutController.signOut" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.signInAgain")</a>.
+            @messages("ptEnrolmentOnOtherAccount.saText2")
+        </p>
+    }
+
     @if(currentAccountHasSA) {
         <h3 class="govuk-heading-m">@messages("ptEnrolmentOnOtherAccount.saHeading")</h3>
-        <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.saText")
+
+        <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.saText3")
           <a href="@appConfig.selfAssessmentUrl" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.saLink")</a>.
+        </p>
+    }
+
+    @if(otherAccountHasSA) {
+        <h3 class="govuk-heading-m">@messages("ptEnrolmentOnOtherAccount.saHeading")</h3>
+
+        <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.saText4")
+          <a href="@routes.SignOutController.signOut" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.signInAgain")</a>.
+            @messages("ptEnrolmentOnOtherAccount.saText5", saAccountDetails.get.userId)
         </p>
     }
 }

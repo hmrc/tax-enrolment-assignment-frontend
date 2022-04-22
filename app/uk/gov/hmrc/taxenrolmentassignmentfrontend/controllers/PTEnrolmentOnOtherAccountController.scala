@@ -21,7 +21,6 @@ import play.api.Logger
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.PT_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.InvalidUserType
@@ -48,19 +47,19 @@ class PTEnrolmentOnOtherAccountController @Inject()(
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
   def view(): Action[AnyContent] = authAction.async { implicit request =>
-    val res = for {
-      _ <- multipleAccountsOrchestrator.checkValidAccountTypeRedirectUrlInCache(
-        List(PT_ASSIGNED_TO_OTHER_USER)
-      )
-      accountDetails <- multipleAccountsOrchestrator.getPTCredentialDetails
-    } yield accountDetails
+
+    val res = multipleAccountsOrchestrator.getSAForPTAlreadyEnrolledDetails
 
     res.value.map {
-      case Right(ptAccountDetails) =>
+      case Right(accountDetails) =>
         Ok(
           ptEnrolmentOnAnotherAccountView(
-            ptAccountDetails,
-            request.userDetails.hasSAEnrolment
+            request.userDetails.credId,
+            accountDetails._1,
+            accountDetails._2,
+            request.userDetails.hasSAEnrolment,
+            accountDetails._2.get.hasSA.get,
+            accountDetails._1.hasSA.get
           )
         )
       case Left(InvalidUserType(redirectUrl)) if redirectUrl.isDefined =>

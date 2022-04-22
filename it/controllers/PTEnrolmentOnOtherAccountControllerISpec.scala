@@ -28,17 +28,10 @@ import play.api.test.Helpers
 import play.libs.ws.WSCookie
 import uk.gov.hmrc.crypto.PlainText
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
-  MULTIPLE_ACCOUNTS,
-  PT_ASSIGNED_TO_CURRENT_USER,
-  PT_ASSIGNED_TO_OTHER_USER,
-  SA_ASSIGNED_TO_CURRENT_USER,
-  SA_ASSIGNED_TO_OTHER_USER,
-  SINGLE_ACCOUNT
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.USER_ASSIGNED_PT_ENROLMENT
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_ASSIGNED_PT_ENROLMENT, USER_ASSIGNED_SA_ENROLMENT}
 
 class PTEnrolmentOnOtherAccountControllerISpec
     extends IntegrationSpecBase
@@ -69,6 +62,13 @@ class PTEnrolmentOnOtherAccountControllerISpec
             sessionId,
             USER_ASSIGNED_PT_ENROLMENT,
             UsersAssignedEnrolment(Some(CREDENTIAL_ID_2))
+          )
+        )
+        await(
+          save[UsersAssignedEnrolment](
+            sessionId,
+            USER_ASSIGNED_SA_ENROLMENT,
+            UsersAssignedEnrolment(Some(CREDENTIAL_ID))
           )
         )
         val authResponse = authoriseResponseJson()

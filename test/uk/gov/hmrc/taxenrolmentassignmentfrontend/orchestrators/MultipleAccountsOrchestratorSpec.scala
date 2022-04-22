@@ -22,7 +22,6 @@ import org.scalatest.time.{Millis, Seconds, Span}
 import play.api.libs.json.Format
 import play.api.mvc.AnyContent
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.taxenrolmentassignmentfrontend
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
@@ -46,6 +45,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
       mockTeaSessionCache,
       mockUsersGroupService,
       mockSilentAssignmentService,
+      mockEacdService,
       logger
     )
 

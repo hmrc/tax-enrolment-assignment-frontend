@@ -27,7 +27,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.PT_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{InvalidUserType, NoPTEnrolmentWhenOneExpected}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{accountDetails, buildFakeRequestWithSessionId, predicates, retrievalResponse, retrievals, saEnrolmentOnly}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{accountDetails, accountDetailsOtherUser, buildFakeRequestWithSessionId, predicates, retrievalResponse, retrievals, saEnrolmentOnly}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnotherAccount
 
@@ -80,11 +80,29 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
           .expects(*, *, *)
           .returning(createInboundResult(accountDetails))
 
+        (mockMultipleAccountsOrchestrator
+          .getSACredentialDetails(
+            _: RequestWithUserDetails[AnyContent],
+            _: HeaderCarrier,
+            _: ExecutionContext
+          ))
+          .expects(*, *, *)
+          .returning(createInboundResult(accountDetails))
+
+        (mockMultipleAccountsOrchestrator
+          .getDetailsForEnrolledPTWithSAOnOtherAccount(
+            _: RequestWithUserDetails[AnyContent],
+            _: HeaderCarrier,
+            _: ExecutionContext
+          ))
+          .expects(*, *, *)
+          .returning(createInboundResult(accountDetailsOtherUser))
+
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe OK
-        contentAsString(result) shouldBe view(accountDetails, false)(
+        contentAsString(result) shouldBe view("tesUserId1", accountDetails, Some(accountDetailsOtherUser), true, false, false )(
           fakeRequest,
           stubMessages(),
           appConfig
@@ -125,11 +143,30 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
           .expects(*, *, *)
           .returning(createInboundResult(accountDetails))
 
+
+        (mockMultipleAccountsOrchestrator
+          .getSACredentialDetails(
+            _: RequestWithUserDetails[AnyContent],
+            _: HeaderCarrier,
+            _: ExecutionContext
+          ))
+          .expects(*, *, *)
+          .returning(createInboundResult(accountDetails))
+
+        (mockMultipleAccountsOrchestrator
+          .getDetailsForEnrolledPTWithSAOnOtherAccount(
+            _: RequestWithUserDetails[AnyContent],
+            _: HeaderCarrier,
+            _: ExecutionContext
+          ))
+          .expects(*, *, *)
+          .returning(createInboundResult(accountDetailsOtherUser))
+
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe OK
-        contentAsString(result) shouldBe view(accountDetails, true)(
+        contentAsString(result) shouldBe view("tesUserId1", accountDetails, Some(accountDetailsOtherUser), true, false, false )(
           fakeRequest,
           stubMessages(),
           appConfig

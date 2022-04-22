@@ -18,6 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.views
 
 import play.api.test.FakeRequest
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.accountDetailsOtherUser
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.PTEnrolmentOtherAccountMesages
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails}
@@ -62,12 +63,20 @@ class PTEnrolmentOnAnotherAccountSpec extends TestFixture {
   )
 
   val htmlWithSA =
-    view(accountDetails, true)(FakeRequest(), testMessages, appConfigForTest)
+    view("tesUserId1", accountDetails, Some(accountDetailsOtherUser), false, true, false )(FakeRequest(), testMessages, appConfigForTest)
+
+  val htmlSignedInWithSA =
+    view("tesUserId1", accountDetails, Some(accountDetailsOtherUser), true, false, false )(FakeRequest(), testMessages, appConfigForTest)
+
+  val htmlOtherAccountWithSA =
+    view("tesUserId1",accountDetails,Some(accountDetailsOtherUser), false,false, true)(FakeRequest(), testMessages, appConfigForTest)
 
   val documentWithSA = doc(htmlWithSA)
+  val documentSignedInWithSA = doc(htmlSignedInWithSA)
+  val documentOtherAccountWithSA = doc(htmlOtherAccountWithSA)
 
   val htmlNoEmail =
-    view(accountDetails.copy(email = None), false)(
+    view("tesUserId1",accountDetails.copy(email = None), Some(accountDetailsOtherUser), false, false, false)(
       FakeRequest(),
       testMessages,
       appConfigForTest
@@ -75,7 +84,7 @@ class PTEnrolmentOnAnotherAccountSpec extends TestFixture {
   val documentNoEmail = doc(htmlNoEmail)
 
   val html =
-    view(accountDetails, false)(FakeRequest(), testMessages, appConfigForTest)
+    view("tesUserId1", accountDetails,None, false, false, false )(FakeRequest(), testMessages, appConfigForTest)
   val document = doc(html)
 
   "PTEnrolmentOnAnotherAccount" should {
@@ -95,7 +104,9 @@ class PTEnrolmentOnAnotherAccountSpec extends TestFixture {
         textElement.text shouldBe PTEnrolmentOtherAccountMesages.text1
       }
       "contains a link to signin again" in {
-        textElement
+        documentWithSA
+          .getElementsByClass(Selectors.body)
+          .get(2)
           .select("a")
           .attr("href") shouldBe "/protect-tax-info/logout"
       }
@@ -159,26 +170,25 @@ class PTEnrolmentOnAnotherAccountSpec extends TestFixture {
     }
     "contains a link for if userId not recognised" that {
       val textElement = documentWithSA
-        .getElementsByClass(Selectors.body)
-        .get(1)
+        .getElementById("inset_text")
       "has the correct text" in {
         textElement.text() shouldBe PTEnrolmentOtherAccountMesages.notMyUserId
       }
       /*
       //TODO remove fraud reporting ID part after consultation with leads, as it requires other changes such remove couple of tests etc etc
        */
-      "has the link to fraud reporting" in {
-        textElement
-          .select("a")
-          .attr("href") shouldBe PTEnrolmentOtherAccountMesages.fraudReportingUrl
-      }
+//      "has the link to fraud reporting" in {
+//        documentWithSA
+//          .getElementById("inset_text")
+//          .attr("href") shouldBe PTEnrolmentOtherAccountMesages.fraudReportingUrl
+//      }
     }
 
     "contain self-assessment information" when {
-      "currentAccountHasSA is true" that {
+      "ptEnrolledAccountHasSA" that {
         val textElement = documentWithSA
           .getElementsByClass(Selectors.body)
-          .get(2)
+          .get(3)
         "has the expected heading" in {
           documentWithSA
             .getElementsByClass(Selectors.saHeading)
@@ -186,6 +196,43 @@ class PTEnrolmentOnAnotherAccountSpec extends TestFixture {
         }
         "has the expected text" in {
           textElement.text() shouldBe PTEnrolmentOtherAccountMesages.saText
+        }
+        "has a link to self-assessment" in {
+          textElement
+            .select("a")
+            .attr("href") shouldBe PTEnrolmentOtherAccountMesages.saUrl
+        }
+      }
+      "otherAccountHasSA" that {
+        val textElement = documentOtherAccountWithSA
+          .getElementsByClass(Selectors.body)
+          .get(3)
+        "has the expected heading" in {
+          documentWithSA
+            .getElementsByClass(Selectors.saHeading)
+            .text() shouldBe PTEnrolmentOtherAccountMesages.saHeading
+        }
+        "has the expected text" in {
+          textElement.text() shouldBe PTEnrolmentOtherAccountMesages.saText2
+        }
+        "has a link to self-assessment" in {
+          textElement
+            .select("a")
+            .attr("href") shouldBe PTEnrolmentOtherAccountMesages.saUrl
+        }
+      }
+
+        "currentAccountHasSA is true" that {
+        val textElement = documentSignedInWithSA
+          .getElementsByClass(Selectors.body)
+          .get(3)
+        "has the expected heading" in {
+          documentWithSA
+            .getElementsByClass(Selectors.saHeading)
+            .text() shouldBe PTEnrolmentOtherAccountMesages.saHeading
+        }
+        "has the expected text" in {
+          textElement.text() shouldBe PTEnrolmentOtherAccountMesages.saText3
         }
         "has a link to self-assessment" in {
           textElement
@@ -201,8 +248,8 @@ class PTEnrolmentOnAnotherAccountSpec extends TestFixture {
           .size() shouldBe 0
         document
           .getElementsByClass(Selectors.body)
-          .size() shouldBe 2
+          .size() shouldBe 3
       }
     }
   }
-}
+  }

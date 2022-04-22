@@ -67,6 +67,7 @@ class MultipleAccountsOrchestrator @Inject()(
   sessionCache: TEASessionCache,
   usersGroupSearchService: UsersGroupSearchService,
   silentAssignmentService: SilentAssignmentService,
+  eacdService: EACDService,
   logger: EventLoggerService
 ) {
 
@@ -192,4 +193,29 @@ class MultipleAccountsOrchestrator @Inject()(
         Left(InvalidUserType(optRedirectUrl))
     }
   }
+
+
+
+
+  def getOptionSACredentialDetails(
+                                    implicit requestWithUserDetails: RequestWithUserDetails[AnyContent],
+                                    hc: HeaderCarrier,
+                                    ec: ExecutionContext) : TEAFResult[Option[AccountDetails]]=
+      for {
+        saDetails <- eacdService.getUsersAssignedSAEnrolment.map(user => user.enrolledCredential)
+        saAccountDetails <- usersGroupSearchService.getAccountDetails(saDetails.get)
+
+      } yield Some(saAccountDetails)
+
+  def getSAForPTAlreadyEnrolledDetails()(
+    implicit requestWithUserDetails: RequestWithUserDetails[AnyContent],
+    hc: HeaderCarrier,
+    ec: ExecutionContext): TEAFResult[(AccountDetails, Option[AccountDetails])] = for {
+      _ <- checkValidAccountTypeRedirectUrlInCache(
+        List(PT_ASSIGNED_TO_OTHER_USER)
+      )
+      ptAccountDetails <- getPTCredentialDetails
+      saAccountDetails <- getOptionSACredentialDetails
+
+    } yield (ptAccountDetails, saAccountDetails)
 }

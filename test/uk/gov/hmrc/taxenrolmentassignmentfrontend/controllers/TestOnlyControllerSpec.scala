@@ -47,7 +47,7 @@ class TestOnlyControllerSpec extends TestFixture {
           )
         }
         val res = testOnlyController.usersGroupSearchCall(credId)(fakeReq)
-        status(res) shouldBe OK
+        status(res) shouldBe NON_AUTHORITATIVE_INFORMATION
         contentAsJson(res) shouldBe expectedResponse
 
       }

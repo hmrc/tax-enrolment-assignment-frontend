@@ -76,7 +76,7 @@ class SignInWithSAAccountControllerISpec
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGet(
           s"/users-groups-search/users/$CREDENTIAL_ID_2",
-          OK,
+          NON_AUTHORITATIVE_INFORMATION,
           usergroupsResponseJson().toString()
         )
         val res = buildRequest(urlPath, followRedirects = true)

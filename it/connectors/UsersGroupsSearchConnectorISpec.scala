@@ -33,7 +33,11 @@ class UsersGroupsSearchConnectorISpec extends IntegrationSpecBase {
       s"/users-groups-search/users/$CREDENTIAL_ID"
     s"no errors occur" should {
       "return the user details" in {
-        stubGet(PATH, OK, usergroupsResponseJson().toString())
+        stubGet(
+          PATH,
+          NON_AUTHORITATIVE_INFORMATION,
+          usergroupsResponseJson().toString()
+        )
         stubPost(s"/write/.*", OK, """{"x":2}""")
         whenReady(connector.getUserDetails(CREDENTIAL_ID).value) { response =>
           response shouldBe Right(usersGroupSearchResponse)

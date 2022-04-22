@@ -41,7 +41,7 @@ class TestOnlyControllerISpec extends IntegrationSpecBase with Status {
           .get()
 
         whenReady(res) { resp =>
-          resp.status shouldBe OK
+          resp.status shouldBe NON_AUTHORITATIVE_INFORMATION
           resp.body shouldBe expectedResponse
         }
       }

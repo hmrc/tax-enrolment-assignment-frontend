@@ -59,7 +59,7 @@ class EnrolledForPTISpec extends IntegrationSpecBase with Status {
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGet(
           s"/users-groups-search/users/$CREDENTIAL_ID",
-          OK,
+          NON_AUTHORITATIVE_INFORMATION,
           usergroupsResponseJson().toString()
         )
         val res = buildRequest(urlPath, followRedirects = true)

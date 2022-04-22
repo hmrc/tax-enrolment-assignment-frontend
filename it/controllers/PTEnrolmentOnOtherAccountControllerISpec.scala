@@ -41,7 +41,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.USER_ASSIGNED_PT_ENROLMENT
 
 class PTEnrolmentOnOtherAccountControllerISpec
-    extends IntegrationSpecBase
+  extends IntegrationSpecBase
     with Status {
 
   val teaHost = s"localhost:$port"
@@ -51,7 +51,7 @@ class PTEnrolmentOnOtherAccountControllerISpec
     s"/no-pt-enrolment"
 
   val sessionCookie
-    : (String, String) = ("COOKIE" -> createSessionCookieAsString(sessionData))
+  : (String, String) = ("COOKIE" -> createSessionCookieAsString(sessionData))
 
   s"GET $urlPath" when {
     "the session cache has a credential for PT enrolment that is not the signed in account" should {
@@ -152,7 +152,7 @@ class PTEnrolmentOnOtherAccountControllerISpec
 
         whenReady(res) { resp =>
           resp.status shouldBe OK
-          resp.body should include("There was a problem")
+          resp.body should include("Sorry, there is a problem with the service")
         }
       }
     }
@@ -183,7 +183,7 @@ class PTEnrolmentOnOtherAccountControllerISpec
 
         whenReady(res) { resp =>
           resp.status shouldBe OK
-          resp.body should include("There was a problem")
+          resp.body should include("Sorry, there is a problem with the service")
         }
       }
     }
@@ -199,7 +199,7 @@ class PTEnrolmentOnOtherAccountControllerISpec
 
         whenReady(res) { resp =>
           resp.status shouldBe OK
-          resp.body should include("There was a problem")
+          resp.body should include("Sorry, there is a problem with the service")
         }
       }
     }
@@ -235,7 +235,7 @@ class PTEnrolmentOnOtherAccountControllerISpec
 
         whenReady(res) { resp =>
           resp.status shouldBe OK
-          resp.body should include("There was a problem")
+          resp.body should include("Sorry, there is a problem with the service")
         }
       }
     }
@@ -258,7 +258,7 @@ class PTEnrolmentOnOtherAccountControllerISpec
 
         whenReady(res) { resp =>
           resp.status shouldBe OK
-          resp.body should include("There was a problem")
+          resp.body should include("Sorry, there is a problem with the service")
         }
       }
     }
@@ -281,13 +281,13 @@ class PTEnrolmentOnOtherAccountControllerISpec
 
         whenReady(res) { resp =>
           resp.status shouldBe OK
-          resp.body should include("There was a problem")
+          resp.body should include("Sorry, there is a problem with the service")
         }
       }
     }
 
     "the user has a session missing required element NINO" should {
-      s"return $UNAUTHORIZED" in {
+      s"return $SEE_OTHER" in {
         val authResponse = authoriseResponseJson(optNino = None)
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -298,13 +298,14 @@ class PTEnrolmentOnOtherAccountControllerISpec
             .get()
 
         whenReady(res) { resp =>
-          resp.status shouldBe UNAUTHORIZED
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include("/unauthorised")
         }
       }
     }
 
     "the user has a session missing required element Credentials" should {
-      s"return $UNAUTHORIZED" in {
+      s"return $SEE_OTHER" in {
         val authResponse = authoriseResponseJson(optCreds = None)
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -315,13 +316,14 @@ class PTEnrolmentOnOtherAccountControllerISpec
             .get()
 
         whenReady(res) { resp =>
-          resp.status shouldBe UNAUTHORIZED
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include("/unauthorised")
         }
       }
     }
 
     "the user has a insufficient confidence level" should {
-      s"return $UNAUTHORIZED" in {
+      s"return $SEE_OTHER" in {
         stubAuthorizePostUnauthorised(insufficientConfidenceLevel)
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
@@ -331,7 +333,8 @@ class PTEnrolmentOnOtherAccountControllerISpec
             .get()
 
         whenReady(res) { resp =>
-          resp.status shouldBe UNAUTHORIZED
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include("/unauthorised")
         }
       }
     }

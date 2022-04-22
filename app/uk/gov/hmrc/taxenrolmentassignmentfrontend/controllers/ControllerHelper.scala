@@ -51,11 +51,7 @@ trait ControllerHelper {
           )
         )
         Ok(
-          errorView(
-            "enrolmentError.title",
-            "enrolmentError.heading",
-            "enrolmentError.body"
-          )
+          errorView()
         )
     }
   }

@@ -19,27 +19,29 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.views
 import play.api.test.FakeRequest
 import play.twirl.api.HtmlFormat
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.ErrorTemplateMessages
 
 class ErrorTemplateSpec extends TestFixture {
 
-  val title = "test title"
-  val heading = "test heading"
-  val body = "test boddy"
-
-  val result: HtmlFormat.Appendable =
-    errorView(title, heading, body)(FakeRequest(), testMessages)
+  val result: HtmlFormat.Appendable = errorView()(FakeRequest(), testMessages)
 
   "The Error Page" should {
     "contain the correct title" in {
-      doc(result).title shouldBe title
+      doc(result).title shouldBe ErrorTemplateMessages.title
     }
 
     "contain the correct header" in {
-      doc(result).getElementsByClass("govuk-heading-xl").text shouldBe heading
+      doc(result).getElementsByClass("govuk-heading-xl").text shouldBe ErrorTemplateMessages.heading
     }
 
     "contain the correct paragraph" in {
-      doc(result).getElementsByClass("govuk-body").text shouldBe body
+      doc(result).getElementsByClass("govuk-body").get(0).text shouldBe ErrorTemplateMessages.paragraph1
+      doc(result).getElementsByClass("govuk-body").get(1).text shouldBe ErrorTemplateMessages.paragraph2Text
+    }
+
+    "contain the right link" in {
+      doc(result).getElementById("techSupportLink").attr("href") shouldBe ErrorTemplateMessages.paragraph2Link
+      doc(result).getElementById("techSupportLink").text() shouldBe ErrorTemplateMessages.paragraph2LinkText
     }
   }
 }

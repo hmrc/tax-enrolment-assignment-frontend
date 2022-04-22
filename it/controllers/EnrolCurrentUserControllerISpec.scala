@@ -47,7 +47,7 @@ class EnrolCurrentUserControllerISpec extends IntegrationSpecBase with Status {
     }
 
     "the user has a session missing required element NINO" should {
-      s"return $UNAUTHORIZED" in {
+      s"return $SEE_OTHER" in {
         val authResponse = authoriseResponseJson(optNino = None)
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -56,13 +56,14 @@ class EnrolCurrentUserControllerISpec extends IntegrationSpecBase with Status {
           buildRequest(urlPath).withHttpHeaders(xSessionId, csrfContent).get()
 
         whenReady(res) { resp =>
-          resp.status shouldBe UNAUTHORIZED
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include("/unauthorised")
         }
       }
     }
 
     "the user has a session missing required element Credentials" should {
-      s"return $UNAUTHORIZED" in {
+      s"return $SEE_OTHER" in {
         val authResponse = authoriseResponseJson(optCreds = None)
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -71,13 +72,14 @@ class EnrolCurrentUserControllerISpec extends IntegrationSpecBase with Status {
           buildRequest(urlPath).withHttpHeaders(xSessionId, csrfContent).get()
 
         whenReady(res) { resp =>
-          resp.status shouldBe UNAUTHORIZED
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include("/unauthorised")
         }
       }
     }
 
     "the user has a insufficient confidence level" should {
-      s"return $UNAUTHORIZED" in {
+      s"return $SEE_OTHER" in {
         stubAuthorizePostUnauthorised(insufficientConfidenceLevel)
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
@@ -85,7 +87,8 @@ class EnrolCurrentUserControllerISpec extends IntegrationSpecBase with Status {
           buildRequest(urlPath).withHttpHeaders(xSessionId, csrfContent).get()
 
         whenReady(res) { resp =>
-          resp.status shouldBe UNAUTHORIZED
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include("/unauthorised")
         }
       }
     }

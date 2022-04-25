@@ -45,7 +45,7 @@ class SignOutController @Inject()(
         appConfig.signOutUrl,
         queryStringParams = Map(
           "continue" -> Seq(
-            testOnly.routes.TestOnlyController.successfulCall.url
+            testOnly.routes.TestOnlyController.successfulCall.absoluteURL()
           )
         )
       )

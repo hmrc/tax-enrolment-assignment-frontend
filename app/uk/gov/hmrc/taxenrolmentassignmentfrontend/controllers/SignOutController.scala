@@ -40,7 +40,16 @@ class SignOutController @Inject()(
 
   def signOut(): Action[AnyContent] = authAction.async { implicit request =>
     sessionCache.removeAll()
-    Future.successful(Redirect(appConfig.signOutUrl))
+    Future.successful(
+      Redirect(
+        appConfig.signOutUrl,
+        queryStringParams = Map(
+          "continue" -> Seq(
+            testOnly.routes.TestOnlyController.successfulCall.url
+          )
+        )
+      )
+    )
   }
 
 }

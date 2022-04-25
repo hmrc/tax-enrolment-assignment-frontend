@@ -65,7 +65,7 @@ class SignOutControllerSpec extends TestFixture {
       status(result) shouldBe SEE_OTHER
       headers(result).contains("X-Request-ID") shouldBe false
       redirectLocation(result) shouldBe Some(
-        "http://localhost:9553/bas-gateway/sign-out-without-state?continue=%2Fprotect-tax-info%2Ftest-only%2Fsuccessful"
+        "http://localhost:9553/bas-gateway/sign-out-without-state?continue=http%3A%2F%2Flocalhost%2Fprotect-tax-info%2Ftest-only%2Fsuccessful"
       )
     }
   }

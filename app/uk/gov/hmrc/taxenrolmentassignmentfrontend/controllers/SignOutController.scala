@@ -29,17 +29,18 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class SignOutController @Inject()(
-                                       authAction: AuthAction,
-                                       mcc: MessagesControllerComponents,
-                                       appConfig: AppConfig,
-                                       sessionCache: TEASessionCache
-                                       )(implicit ec: ExecutionContext)
-  extends FrontendController(mcc) with Logging with I18nSupport {
+  authAction: AuthAction,
+  mcc: MessagesControllerComponents,
+  appConfig: AppConfig,
+  sessionCache: TEASessionCache
+)(implicit ec: ExecutionContext)
+    extends FrontendController(mcc)
+    with Logging
+    with I18nSupport {
 
-  def signOut(): Action[AnyContent] = authAction.async {
-    implicit request =>
-      sessionCache.removeAll()
-      Future.successful(Redirect(appConfig.signOutUrl).removingFromSession("X-Request-ID", "Session-Id"))
+  def signOut(): Action[AnyContent] = authAction.async { implicit request =>
+    sessionCache.removeAll()
+    Future.successful(Redirect(appConfig.signOutUrl))
   }
 
 }

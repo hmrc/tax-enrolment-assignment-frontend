@@ -23,7 +23,11 @@ import uk.gov.hmrc.auth.core.Enrolments
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{predicates, retrievalResponse, retrievals}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{
+  predicates,
+  retrievalResponse,
+  retrievals
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -61,7 +65,7 @@ class SignOutControllerSpec extends TestFixture {
       status(result) shouldBe SEE_OTHER
       headers(result).contains("X-Request-ID") shouldBe false
       redirectLocation(result) shouldBe Some(
-        "http://localhost:9553/bas-gateway/sign-out-without-state"
+        "http://localhost:9553/bas-gateway/sign-out-without-state?continue=%2Fprotect-tax-info%2Ftest-only%2Fsuccessful"
       )
     }
   }

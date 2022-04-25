@@ -50,7 +50,7 @@ class PTEnrolmentOnAnotherAccountSpec extends TestFixture {
 
   val elementsToMFADetails: Map[Int, MFADetails] = Map(
     3 -> MFADetails("Text message", "Ending with 28923"),
-    4 -> MFADetails("Voice call", "Ending with 53839"),
+    4 -> MFADetails("Phone number", "Ending with 53839"),
     5 -> MFADetails("Authenticator app", "HRMC APP")
   )
 

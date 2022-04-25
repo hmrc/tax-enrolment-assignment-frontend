@@ -14,18 +14,16 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.repository
+package helpers.messages
 
-object SessionKeys {
+object ErrorTemplateMessages {
 
-  val ACCOUNT_TYPE = "ACCOUNT_TYPE"
-  val USER_ASSIGNED_PT_ENROLMENT = "USER_ASSIGNED_PT_ENROLMENT"
-  val USER_ASSIGNED_SA_ENROLMENT = "USER_ASSIGNED_SA_ENROLMENT"
-  val REDIRECT_URL = "redirectURL"
-  val OTHER_VALID_PTA_ACCOUNTS = "OTHER_VALID_PTA_ACCOUNTS"
-  val REPORTED_FRAUD = "reportedFraud"
-  val KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM = "KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM"
-
-  def accountDetailsForCredential(credId: String) = s"AccountDetailsFor$credId"
-
+  val title = "Sorry, there is a problem with the service"
+  val heading = "Sorry, there is a problem with the service"
+  val paragraph1 = "Try again later."
+  val paragraph2Text =
+    "Contact the technical support helpdesk if you keep experiencing this problem."
+  val paragraph2LinkText = "Contact the technical support helpdesk"
+  val paragraph2Link =
+    "https://www.gov.uk/government/organisations/hm-revenue-customs/contact/online-services-helpdesk"
 }

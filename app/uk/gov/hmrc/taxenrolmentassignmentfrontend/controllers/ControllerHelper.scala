@@ -19,7 +19,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 import play.api.Logger
 import play.api.i18n.Messages
 import play.api.mvc.Result
-import play.api.mvc.Results.{Ok, Redirect}
+import play.api.mvc.Results.{InternalServerError, Ok, Redirect}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
   InvalidUserType,
@@ -50,9 +50,7 @@ trait ControllerHelper {
             error
           )
         )
-        Ok(
-          errorView()
-        )
+        InternalServerError(errorView())
     }
   }
 }

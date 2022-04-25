@@ -29,15 +29,11 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
   InvalidUserType,
   UnexpectedResponseFromUsersGroupsSearch
 }
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{
-  accountDetails,
-  buildFakeRequestWithSessionId,
-  predicates,
-  retrievalResponse,
-  retrievals,
-  saEnrolmentOnly
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{
+  TestFixture,
+  UrlPaths
 }
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTWithSAOnOtherAccount
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -159,7 +155,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
     }
 
     "the user is the wrong usertype and has redirectUrl stored in session" should {
-      "redirect to accountCheck" in {
+      s"redirect to ${UrlPaths.accountCheckPath}" in {
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -180,20 +176,14 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
           ))
           .expects(*, *, *)
           .returning(
-            createInboundResultError(
-              InvalidUserType(
-                Some(testOnly.routes.TestOnlyController.successfulCall.url)
-              )
-            )
+            createInboundResultError(InvalidUserType(Some(UrlPaths.returnUrl)))
           )
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe SEE_OTHER
-        redirectLocation(result) shouldBe Some(
-          "/protect-tax-info?redirectUrl=%2Fprotect-tax-info%2Ftest-only%2Fsuccessful"
-        )
+        redirectLocation(result) shouldBe Some(UrlPaths.accountCheckPath)
       }
     }
 
@@ -223,7 +213,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
         val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(res) shouldBe OK
+        status(res) shouldBe INTERNAL_SERVER_ERROR
         contentAsString(res) should include("enrolmentError.title")
       }
     }
@@ -256,7 +246,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
         val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(res) shouldBe OK
+        status(res) shouldBe INTERNAL_SERVER_ERROR
         contentAsString(res) should include("enrolmentError.title")
       }
     }

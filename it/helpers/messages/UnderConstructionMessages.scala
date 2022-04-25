@@ -14,18 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.repository
+package helpers.messages
 
-object SessionKeys {
+object UnderConstructionMessages {
 
-  val ACCOUNT_TYPE = "ACCOUNT_TYPE"
-  val USER_ASSIGNED_PT_ENROLMENT = "USER_ASSIGNED_PT_ENROLMENT"
-  val USER_ASSIGNED_SA_ENROLMENT = "USER_ASSIGNED_SA_ENROLMENT"
-  val REDIRECT_URL = "redirectURL"
-  val OTHER_VALID_PTA_ACCOUNTS = "OTHER_VALID_PTA_ACCOUNTS"
-  val REPORTED_FRAUD = "reportedFraud"
-  val KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM = "KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM"
-
-  def accountDetailsForCredential(credId: String) = s"AccountDetailsFor$credId"
+  val title = "Tax Enrolment Assignment Frontend - Enrolment Present"
+  val heading = "This user has no PT enrolment"
+  val p = "The current user does not have an assigned PT enrolment"
 
 }

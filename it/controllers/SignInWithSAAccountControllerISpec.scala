@@ -16,47 +16,26 @@
 
 package controllers
 
+import helpers.TestHelper
 import helpers.TestITData._
-import helpers.WiremockHelper.{
-  stubAuthorizePost,
-  stubAuthorizePostUnauthorised,
-  stubGet,
-  stubGetWithQueryParam,
-  stubPost
-}
-import helpers.{IntegrationSpecBase, TestITData}
+import helpers.WiremockHelper._
+import helpers.messages._
 import org.jsoup.Jsoup
 import play.api.http.Status
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
-  MULTIPLE_ACCOUNTS,
-  PT_ASSIGNED_TO_CURRENT_USER,
-  PT_ASSIGNED_TO_OTHER_USER,
-  SA_ASSIGNED_TO_CURRENT_USER,
-  SA_ASSIGNED_TO_OTHER_USER,
-  SINGLE_ACCOUNT
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.USER_ASSIGNED_SA_ENROLMENT
 
-class SignInWithSAAccountControllerISpec
-    extends IntegrationSpecBase
-    with Status {
+class SignInWithSAAccountControllerISpec extends TestHelper with Status {
 
-  val teaHost = s"localhost:$port"
-  val returnUrl: String = testOnly.routes.TestOnlyController.successfulCall
-    .absoluteURL(false, teaHost)
-  val urlPath =
-    s"/enrol-pt/other-user-id-has-sa/sign-in-again "
-
-  val sessionCookie
-    : (String, String) = ("COOKIE" -> createSessionCookieAsString(sessionData))
+  val urlPath: String =
+    UrlPaths.saOnOtherAccountSigninAgainPath
 
   s"GET $urlPath" when {
     "the session cache has a credential for SA enrolment that is not the signed in account" should {
       s"return $OK with the sign in again page" in {
-        await(save[String](sessionId, "redirectURL", returnUrl))
+        await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
         await(
           save[AccountTypes.Value](
             sessionId,
@@ -87,7 +66,7 @@ class SignInWithSAAccountControllerISpec
           val page = Jsoup.parse(resp.body)
 
           resp.status shouldBe OK
-          page.title should include(TestITData.signInAgainPageTitle)
+          page.title should include(SignInAgainMessages.title)
         }
       }
 
@@ -99,23 +78,23 @@ class SignInWithSAAccountControllerISpec
         SA_ASSIGNED_TO_CURRENT_USER
       ).foreach { accountType =>
         s"the session cache has a credential with account type ${accountType.toString}" should {
-          s"redirect to account check page" in {
-            await(save[String](sessionId, "redirectURL", returnUrl))
+          s"redirect to ${UrlPaths.accountCheckPath}" in {
+            await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
             await(
               save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", accountType)
             )
             val authResponse = authoriseResponseJson()
             stubAuthorizePost(OK, authResponse.toString())
             stubPost(s"/write/.*", OK, """{"x":2}""")
-            val res = buildRequest(urlPath, followRedirects = false)
+            val res = buildRequest(urlPath)
               .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
               .get()
 
             whenReady(res) { resp =>
-              val page = Jsoup.parse(resp.body)
-
               resp.status shouldBe SEE_OTHER
-              resp.header("Location").get should include(s"/protect-tax-info")
+              resp.header("Location").get should include(
+                UrlPaths.accountCheckPath
+              )
             }
           }
         }
@@ -123,7 +102,7 @@ class SignInWithSAAccountControllerISpec
 
       s"the session cache has a credential for SA enrolment that is the signed in account" should {
         s"render the error page" in {
-          await(save[String](sessionId, "redirectURL", returnUrl))
+          await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
           await(
             save[AccountTypes.Value](
               sessionId,
@@ -141,22 +120,20 @@ class SignInWithSAAccountControllerISpec
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
-          val res = buildRequest(urlPath, followRedirects = false)
+          val res = buildRequest(urlPath)
             .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
             .get()
 
           whenReady(res) { resp =>
-            resp.status shouldBe OK
-            resp.body should include(
-              "Sorry, there is a problem with the service"
-            )
+            resp.status shouldBe INTERNAL_SERVER_ERROR
+            resp.body should include(ErrorTemplateMessages.title)
           }
         }
       }
 
       s"the session cache has no credentials with SA enrolment" should {
         s"render the error page" in {
-          await(save[String](sessionId, "redirectURL", returnUrl))
+          await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
           await(
             save[AccountTypes.Value](
               sessionId,
@@ -174,15 +151,13 @@ class SignInWithSAAccountControllerISpec
             )
           )
           stubPost(s"/write/.*", OK, """{"x":2}""")
-          val res = buildRequest(urlPath, followRedirects = false)
+          val res = buildRequest(urlPath)
             .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
             .get()
 
           whenReady(res) { resp =>
-            resp.status shouldBe OK
-            resp.body should include(
-              "Sorry, there is a problem with the service"
-            )
+            resp.status shouldBe INTERNAL_SERVER_ERROR
+            resp.body should include(ErrorTemplateMessages.title)
           }
         }
       }
@@ -197,17 +172,15 @@ class SignInWithSAAccountControllerISpec
             .get()
 
           whenReady(res) { resp =>
-            resp.status shouldBe OK
-            resp.body should include(
-              "Sorry, there is a problem with the service"
-            )
+            resp.status shouldBe INTERNAL_SERVER_ERROR
+            resp.body should include(ErrorTemplateMessages.title)
           }
         }
       }
 
       "users group search returns an error" should {
         "render the error page" in {
-          await(save[String](sessionId, "redirectURL", returnUrl))
+          await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
           await(
             save[AccountTypes.Value](
               sessionId,
@@ -235,10 +208,8 @@ class SignInWithSAAccountControllerISpec
             .get()
 
           whenReady(res) { resp =>
-            resp.status shouldBe OK
-            resp.body should include(
-              "Sorry, there is a problem with the service"
-            )
+            resp.status shouldBe INTERNAL_SERVER_ERROR
+            resp.body should include(ErrorTemplateMessages.title)
           }
         }
       }
@@ -260,10 +231,8 @@ class SignInWithSAAccountControllerISpec
             .get()
 
           whenReady(res) { resp =>
-            resp.status shouldBe OK
-            resp.body should include(
-              "Sorry, there is a problem with the service"
-            )
+            resp.status shouldBe INTERNAL_SERVER_ERROR
+            resp.body should include(ErrorTemplateMessages.title)
           }
         }
       }
@@ -285,10 +254,8 @@ class SignInWithSAAccountControllerISpec
             .get()
 
           whenReady(res) { resp =>
-            resp.status shouldBe OK
-            resp.body should include(
-              "Sorry, there is a problem with the service"
-            )
+            resp.status shouldBe INTERNAL_SERVER_ERROR
+            resp.body should include(ErrorTemplateMessages.title)
           }
         }
       }
@@ -311,7 +278,9 @@ class SignInWithSAAccountControllerISpec
 
           whenReady(res) { resp =>
             resp.status shouldBe SEE_OTHER
-            resp.header("Location").get should include("/unauthorised")
+            resp.header("Location").get should include(
+              UrlPaths.unauthorizedPath
+            )
           }
         }
       }
@@ -334,7 +303,9 @@ class SignInWithSAAccountControllerISpec
 
           whenReady(res) { resp =>
             resp.status shouldBe SEE_OTHER
-            resp.header("Location").get should include("/unauthorised")
+            resp.header("Location").get should include(
+              UrlPaths.unauthorizedPath
+            )
           }
         }
       }
@@ -356,7 +327,9 @@ class SignInWithSAAccountControllerISpec
 
           whenReady(res) { resp =>
             resp.status shouldBe SEE_OTHER
-            resp.header("Location").get should include("/unauthorised")
+            resp.header("Location").get should include(
+              UrlPaths.unauthorizedPath
+            )
           }
         }
       }

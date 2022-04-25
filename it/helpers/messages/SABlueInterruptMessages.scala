@@ -14,18 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.repository
+package helpers.messages
 
-object SessionKeys {
-
-  val ACCOUNT_TYPE = "ACCOUNT_TYPE"
-  val USER_ASSIGNED_PT_ENROLMENT = "USER_ASSIGNED_PT_ENROLMENT"
-  val USER_ASSIGNED_SA_ENROLMENT = "USER_ASSIGNED_SA_ENROLMENT"
-  val REDIRECT_URL = "redirectURL"
-  val OTHER_VALID_PTA_ACCOUNTS = "OTHER_VALID_PTA_ACCOUNTS"
-  val REPORTED_FRAUD = "reportedFraud"
-  val KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM = "KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM"
-
-  def accountDetailsForCredential(credId: String) = s"AccountDetailsFor$credId"
-
+object SABlueInterruptMessages {
+  val selfAssessTitle =
+    "We are changing the way you access your personal tax account"
+  val selfAssessHeading =
+    "We are changing the way you access your personal tax account"
+  val selfAssessParagraph
+    : String = "You currently have more than one Government Gateway user ID with access to you personal tax account." +
+    " To protect your information, we are limiting access to one user ID from now on."
+  val selfAssessButton = "Continue"
 }

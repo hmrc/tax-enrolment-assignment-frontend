@@ -14,24 +14,24 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.messages
+package helpers.messages
 
-object EnrolledAfterReportingFraudMessages {
+object EnrolledPTWithSAOnOtherAccountMessages {
   val title =
     "Only your current user ID can access your personal tax account from now on"
   val heading =
     "Only your current user ID can access your personal tax account from now on"
   val paragraphs: String =
-    "You are currently signed in with the Government Gateway user ID ending with 3214." +
+    "You are currently signed in with the Government Gateway user ID ending with 6037." +
       " This is now the only user ID that can access your personal tax account." +
       " Please keep the details of this user ID safe." +
       " If you have any other Government Gateway user IDs," +
       " they will lose access to your personal tax account."
   val paragraphsSA: String =
-    "You are currently signed in with the Government Gateway user ID ending with 3214." +
+    "You are currently signed in with the Government Gateway user ID ending with 6037." +
       " This is now the only user ID that can access your personal tax account." +
       " Please keep the details of this user ID safe. " +
-      "To access Self Assessment you will need to log in with the user ID ending with 3215." +
+      "To access Self Assessment you will need to log in with the user ID ending with 6037." +
       " If you have any other Government Gateway user IDs," +
       " they will lose access to your personal tax account."
   val heading2: String =

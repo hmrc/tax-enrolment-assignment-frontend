@@ -16,11 +16,22 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.messages
 
-object CurrentIdConfirmationPageMessages {
-  val title = "Your personal tax information can only be accessed from one Government Gateway user ID"
-  val heading = "Your personal tax information can only be accessed from one Government Gateway user ID"
-  val paragraph: String = "You are currently signed in with the Government Gateway user ID currentId." +
-    " From now on, you can only access your personal tax information with this user ID."+
-    " To access Self Assessment you can still use the ID SaCred, however this user ID will no longer access your personal tax account."
+object KeepAccessToSAMessages {
+
+  val continue = "Continue"
+  val title =
+    "Do you want to keep access to Self Assessment from your personal tax account?"
+  val heading =
+    "Do you want to keep access to Self Assessment from your personal tax account?"
+  val radioYes = "Yes"
+  val radioNo = "No"
+  val noSALink = "I do not complete Self Assessment Online"
+  val fraudReportingUrl =
+    "/protect-tax-info/enrol-pt/contact-hmrc-sa"
+  val errorTitle = "There is a problem"
+  val errorMessage = "Select option to continue"
   val button = "Continue"
+  val action =
+    "/protect-tax-info/enrol-pt/other-user-id-has-sa/keep-access-to-sa-from-pta"
+
 }

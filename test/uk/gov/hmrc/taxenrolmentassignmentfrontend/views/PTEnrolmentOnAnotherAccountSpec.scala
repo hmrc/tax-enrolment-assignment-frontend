@@ -44,7 +44,7 @@ class PTEnrolmentOnAnotherAccountSpec extends TestFixture {
   }
 
   val mfaDetails = Seq(
-    MFADetails("mfaDetails.text", "28923"),
+    MFADetails("mfaDetails.text", "26543"),
     MFADetails("mfaDetails.voice", "53839"),
     MFADetails("mfaDetails.totp", "HRMC APP")
   )
@@ -56,18 +56,32 @@ class PTEnrolmentOnAnotherAccountSpec extends TestFixture {
   )
 
   val testAccountDetails = AccountDetails(
-    userId = "2341",
+    userId = USER_ID,
     email = Some("email.otherUser@test.com"),
     lastLoginDate = "27 February 2022 at 12:00 PM",
     mfaDetails
   )
+  val testAccountDetailsWithSA = AccountDetails(
+    userId = PT_USER_ID,
+    email = Some("email.otherUser@test.com"),
+    lastLoginDate = "27 February 2022 at 12:00 PM",
+    mfaDetails,
+    hasSA = Some(true)
+  )
 
+  val accountDetailsWithNoEmail: AccountDetails = AccountDetails(
+    userId = "9871",
+    email = None,
+    lastLoginDate = "27 February 2022 at 12:00 PM",
+    mfaDetails = List(MFADetails("mfaDetails.text", "26543"))
+  )
 
-  val htmlWithSA =
-    view(ptEnrolmentDataModel(Some(USER_ID), testAccountDetails))(FakeRequest(), testMessages, appConfigForTest)
 
   val htmlSignedInWithSA =
-    view(ptEnrolmentDataModel(Some(USER_ID),testAccountDetails))(FakeRequest(), testMessages, appConfigForTest)
+    view(ptEnrolmentDataModel(Some(USER_ID),testAccountDetailsWithSA))(FakeRequest(), testMessages, appConfigForTest)
+
+  val htmlWithSA =
+    view(ptEnrolmentDataModel(Some(PT_USER_ID), testAccountDetailsWithSA))(FakeRequest(), testMessages, appConfigForTest)
 
   val htmlOtherAccountWithSA =
     view(ptEnrolmentDataModel(Some(PT_USER_ID),testAccountDetails))(FakeRequest(), testMessages, appConfigForTest)
@@ -77,7 +91,7 @@ class PTEnrolmentOnAnotherAccountSpec extends TestFixture {
   val documentOtherAccountWithSA = doc(htmlOtherAccountWithSA)
 
   val htmlNoEmail =
-    view(ptEnrolmentDataModelNoEmail(Some(NO_EMAIL_USER_ID)))(
+    view(ptEnrolmentDataModel(Some(NO_EMAIL_USER_ID),accountDetailsWithNoEmail))(
       FakeRequest(),
       testMessages,
       appConfigForTest
@@ -123,7 +137,7 @@ class PTEnrolmentOnAnotherAccountSpec extends TestFixture {
         summaryListRows
           .get(0)
           .getElementsByClass(Selectors.summaryListValue)
-          .text() shouldBe s"Ending with ${testAccountDetails.userId}"
+          .text() shouldBe s"Ending with ${testAccountDetailsWithSA.userId}"
       }
       "includes the email" when {
         "the email is present in accountDetails" in {
@@ -178,7 +192,7 @@ class PTEnrolmentOnAnotherAccountSpec extends TestFixture {
     }
 
     "contain self-assessment information" when {
-      "another account outside the session holds the PT enrolment session and also has access" that {
+      "another account outside the session holds the PT enrolment session and also has access to SA" that {
         val textElement = documentOtherAccountWithSA
           .getElementsByClass(Selectors.body)
           .get(3)

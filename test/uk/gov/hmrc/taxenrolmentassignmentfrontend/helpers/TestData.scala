@@ -152,45 +152,24 @@ object TestData {
   // accountDetails
 
   val accountDetails: AccountDetails = AccountDetails(
-    userId = "6037",
+    userId =USER_ID,
     email = Some("email1@test.com"),
     lastLoginDate = "27 February 2022 at 12:00 PM",
     mfaDetails = List(MFADetails("mfaDetails.text", "24321"))
   )
 
   val accountDetailsWithPT: AccountDetails = AccountDetails(
-    userId = "2341",
+    userId = PT_USER_ID,
     email = Some("email.otherUser@test.com"),
     lastLoginDate = "27 February 2022 at 12:00 PM",
     mfaDetails = List(MFADetails("mfaDetails.text", "26543")),
     hasSA = Some(true)
   )
 
-  val accountDetailsWithNoEmail: AccountDetails = AccountDetails(
-    userId = "9871",
-    email = None,
-    lastLoginDate = "27 February 2022 at 12:00 PM",
-    mfaDetails = List(MFADetails("mfaDetails.text", "26543"))
-  )
 
-
-
-def ptEnrolmentDataModel(saUserCred : Option[String], currentAccountDetails:AccountDetails = accountDetails): PTEnrolmentOtherAccountViewModel  = PTEnrolmentOtherAccountViewModel(
-  currentAccountDetails =currentAccountDetails ,
-  ptAccountDetails = accountDetailsWithPT,
-  saUserCred = saUserCred
-)
-
-
-def ptEnrolmentDataModelNoEmail(saUserCred : Option[String]): PTEnrolmentOtherAccountViewModel  = PTEnrolmentOtherAccountViewModel(
-  currentAccountDetails = accountDetails ,
-  ptAccountDetails = accountDetailsWithNoEmail,
-  saUserCred = saUserCred
-)
-
-def ptEnrolmentDataModelNoSA(saUserCred : Option[String]): PTEnrolmentOtherAccountViewModel  = PTEnrolmentOtherAccountViewModel(
-  currentAccountDetails = accountDetails ,
-  ptAccountDetails = accountDetailsWithNoEmail,
+def ptEnrolmentDataModel(saUserCred : Option[String], ptAccountDetails:AccountDetails = accountDetailsWithPT): PTEnrolmentOtherAccountViewModel  = PTEnrolmentOtherAccountViewModel(
+  currentAccountDetails =accountDetails ,
+  ptAccountDetails = ptAccountDetails,
   saUserCred = saUserCred
 )
 

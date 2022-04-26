@@ -68,7 +68,7 @@ govukInsetText : GovukInsetText
 
     <h3 class="govuk-heading-m">@messages("ptEnrolmentOnOtherAccount.saHeading")</h3>
 
-     if(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.currentAccountDetails.userId)){
+     @if(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.currentAccountDetails.userId)){
     <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.saText3")
         <a href="@appConfig.selfAssessmentUrl" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.saLink")</a>.
     </p>
@@ -79,11 +79,12 @@ govukInsetText : GovukInsetText
         <a href="@routes.SignOutController.signOut" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.signInAgain")</a>.
         @messages("ptEnrolmentOnOtherAccount.saText2")
     </p>
-    } else
-    <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.saText4")
-        <a href="@routes.SignOutController.signOut" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.signInAgain")</a>.
-        @messages("ptEnrolmentOnOtherAccount.saText5", ptEnrolmentOtherAccountViewModel.saUserCred.get)
-    </p>
+    } else{
+        <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.saText4")
+            <a href="@routes.SignOutController.signOut" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.signInAgain")</a>.
+            @messages("ptEnrolmentOnOtherAccount.saText5", ptEnrolmentOtherAccountViewModel.saUserCred.get)
+        </p>
+      }
     }
 
 

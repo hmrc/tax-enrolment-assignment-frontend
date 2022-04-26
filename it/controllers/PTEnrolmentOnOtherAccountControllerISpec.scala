@@ -47,7 +47,63 @@ class PTEnrolmentOnOtherAccountControllerISpec
     : (String, String) = ("COOKIE" -> createSessionCookieAsString(sessionData))
 
   s"GET $urlPath" when {
-    "the session cache has a credential for PT enrolment that is not the signed in account" should {
+
+    "the signed in user has SA enrolment in session and PT enrolment on another account" should {
+      s"render the pt on another account page" in {
+        await(save[String](sessionId, "redirectURL", returnUrl))
+        await(
+          save[AccountTypes.Value](
+            sessionId,
+            "ACCOUNT_TYPE",
+            PT_ASSIGNED_TO_OTHER_USER
+          )
+        )
+        await(
+          save[UsersAssignedEnrolment](
+            sessionId,
+            USER_ASSIGNED_PT_ENROLMENT,
+            UsersAssignedEnrolment(Some(CREDENTIAL_ID_2))
+          )
+        )
+        await(
+          save[UsersAssignedEnrolment](
+            sessionId,
+            USER_ASSIGNED_SA_ENROLMENT,
+            UsersAssignedEnrolment(Some(CREDENTIAL_ID_2))
+          )
+        )
+
+
+        val authResponse = authoriseResponseJson()
+        stubAuthorizePost(OK, authResponse.toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        stubGet(
+          s"/users-group-search/users/$CREDENTIAL_ID",
+          OK,
+          usergroupsResponseJson().toString()
+        )
+        stubGet(
+          s"/users-group-search/users/$CREDENTIAL_ID_2",
+          OK,
+          usergroupsResponseJson().toString()
+        )
+        val res = buildRequest(urlPath, followRedirects = true)
+          .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .get()
+
+        whenReady(res) { resp =>
+          val page = Jsoup.parse(resp.body)
+
+          resp.status shouldBe OK
+          page.title should include(
+            TestITData.ptEnrolledOnOtherAccountPageTitle
+          )
+          resp.body should include("The user ID you are currently signed in with can")
+        }
+      }
+    }
+
+    "the user signed in user has SA enrolment and a PT enrolment on another account" should {
       s"render the pt on another account page" in {
         await(save[String](sessionId, "redirectURL", returnUrl))
         await(
@@ -71,11 +127,79 @@ class PTEnrolmentOnOtherAccountControllerISpec
             UsersAssignedEnrolment(Some(CREDENTIAL_ID))
           )
         )
+
+
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGet(
           s"/users-group-search/users/$CREDENTIAL_ID_2",
+          OK,
+          usergroupsResponseJson().toString()
+        )
+        stubGet(
+          s"/users-group-search/users/$CREDENTIAL_ID",
+          OK,
+          usergroupsResponseJson().toString()
+        )
+
+        val res = buildRequest(urlPath, followRedirects = true)
+          .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .get()
+
+        whenReady(res) { resp =>
+          val page = Jsoup.parse(resp.body)
+
+          resp.status shouldBe OK
+          page.title should include(
+            TestITData.ptEnrolledOnOtherAccountPageTitle
+          )
+          resp.body should include("To access your Self Assessment sign in again")
+        }
+      }
+    }
+
+    "the user signed in has SA enrolment and PT enrolment on two other seperate accounts" should {
+      s"render the pt on another account page" in {
+        await(save[String](sessionId, "redirectURL", returnUrl))
+        await(
+          save[AccountTypes.Value](
+            sessionId,
+            "ACCOUNT_TYPE",
+            PT_ASSIGNED_TO_OTHER_USER
+          )
+        )
+        await(
+          save[UsersAssignedEnrolment](
+            sessionId,
+            USER_ASSIGNED_PT_ENROLMENT,
+            UsersAssignedEnrolment(Some(CREDENTIAL_ID))
+          )
+        )
+        await(
+          save[UsersAssignedEnrolment](
+            sessionId,
+            USER_ASSIGNED_SA_ENROLMENT,
+            UsersAssignedEnrolment(Some(CREDENTIAL_ID_2))
+          )
+        )
+
+
+        val authResponse = authoriseResponseJson()
+        stubAuthorizePost(OK, authResponse.toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        stubGet(
+          s"/users-group-search/users/$CREDENTIAL_ID",
+          OK,
+          usergroupsResponseJson().toString()
+        )
+        stubGet(
+          s"/users-group-search/users/$CREDENTIAL_ID_2",
+          OK,
+          usergroupsResponseJson().toString()
+        )
+        stubGet(
+          s"/users-group-search/users/$CREDENTIAL_ID_3",
           OK,
           usergroupsResponseJson().toString()
         )
@@ -90,6 +214,51 @@ class PTEnrolmentOnOtherAccountControllerISpec
           page.title should include(
             TestITData.ptEnrolledOnOtherAccountPageTitle
           )
+          resp.body should include("To access your Self Assessment you need to")
+        }
+      }
+    }
+
+    "the user signed in user has PT enrolment, however does not have SA enrolment associated with the account" should {
+      s"render the pt on another account page" in {
+        await(save[String](sessionId, "redirectURL", returnUrl))
+        await(
+          save[AccountTypes.Value](
+            sessionId,
+            "ACCOUNT_TYPE",
+            PT_ASSIGNED_TO_OTHER_USER
+          )
+        )
+        await(
+          save[UsersAssignedEnrolment](
+            sessionId,
+            USER_ASSIGNED_PT_ENROLMENT,
+            UsersAssignedEnrolment(Some(CREDENTIAL_ID_2))
+          )
+        )
+
+
+        val authResponse = authoriseResponseJson()
+        stubAuthorizePost(OK, authResponse.toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        stubGet(
+          s"/users-group-search/users/$CREDENTIAL_ID_2",
+          OK,
+          usergroupsResponseJson().toString()
+        )
+
+        val res = buildRequest(urlPath, followRedirects = true)
+          .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .get()
+
+        whenReady(res) { resp =>
+          val page = Jsoup.parse(resp.body)
+
+          resp.status shouldBe OK
+          page.title should include(
+            TestITData.ptEnrolledOnOtherAccountPageTitle
+          )
+          resp.body shouldNot include("Access To Self Assessment")
         }
       }
     }

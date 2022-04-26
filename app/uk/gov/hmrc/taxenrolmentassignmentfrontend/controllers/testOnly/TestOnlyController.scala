@@ -46,8 +46,7 @@ class TestOnlyController @Inject()(mcc: MessagesControllerComponents,
               UsersGroupsFixedData.toJson(userDetails)
             )
           )
-        case None =>
-          Future.successful(NotFound)
+        case None => Future.successful(NotFound)
       }
   }
 }

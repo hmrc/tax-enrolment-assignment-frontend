@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.models.formats
 
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.{Json, Writes}
+import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier}
 
-case class Enrolment(identifiers: List[IdentifiersOrVerifiers])
-
-object Enrolment {
-  implicit val format: Format[Enrolment] = Json.format[Enrolment]
+object EnrolmentsFormats {
+  private implicit val enrolmentIdentifierWrites: Writes[EnrolmentIdentifier] = Json.writes[EnrolmentIdentifier]
+  implicit val writes: Writes[Set[Enrolment]] = Writes.set(Json.writes[Enrolment])
 }

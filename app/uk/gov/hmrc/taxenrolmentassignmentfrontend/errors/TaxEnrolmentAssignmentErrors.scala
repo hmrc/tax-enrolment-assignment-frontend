@@ -29,3 +29,4 @@ case class InvalidUserType(redirectUrl: Option[String])
 object NoPTEnrolmentWhenOneExpected extends TaxEnrolmentAssignmentErrors
 object NoSAEnrolmentWhenOneExpected extends TaxEnrolmentAssignmentErrors
 object NoRedirectUrlInCache extends TaxEnrolmentAssignmentErrors
+object UnexpectedResponseAssigningTemporaryPTAEnrolment extends TaxEnrolmentAssignmentErrors

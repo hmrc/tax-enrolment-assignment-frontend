@@ -23,6 +23,7 @@ import helpers.messages._
 import org.jsoup.Jsoup
 import play.api.http.Status
 import play.api.libs.json.Json
+import play.api.libs.ws.DefaultWSCookie
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.USER_ASSIGNED_SA_ENROLMENT
@@ -55,7 +56,8 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
           usergroupsResponseJson().toString()
         )
         val res = buildRequest(urlPath, followRedirects = true)
-          .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -97,7 +99,8 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
           usergroupsResponseJson().toString()
         )
         val res = buildRequest(urlPath, followRedirects = true)
-          .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -135,7 +138,8 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
           ""
         )
         val res = buildRequest(urlPath, followRedirects = true)
-          .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -161,8 +165,10 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
-          val res = buildRequest(urlPath)
-            .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+
+          val res = buildRequest(urlPath, followRedirects = false)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
             .get()
 
           whenReady(res) { resp =>
@@ -181,7 +187,8 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         val res = buildRequest(urlPath, followRedirects = true)
-          .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -199,7 +206,8 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
 
         val res =
           buildRequest(urlPath)
-            .withHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
             .get()
 
         whenReady(res) { resp =>
@@ -217,7 +225,8 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
 
         val res =
           buildRequest(urlPath)
-            .withHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
             .get()
 
         whenReady(res) { resp =>
@@ -234,7 +243,8 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
 
         val res =
           buildRequest(urlPath)
-            .withHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
             .get()
 
         whenReady(res) { resp =>
@@ -250,7 +260,8 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
         val res = buildRequest(urlPath)
-          .withHttpHeaders(xSessionId, xRequestId, csrfContent)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, csrfContent)
           .get()
 
         whenReady(res) { resp =>
@@ -270,7 +281,8 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
         val res = buildRequest(urlPath, followRedirects = true)
-          .withHttpHeaders(csrfContent, xSessionId, xRequestId, sessionCookie)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(csrfContent, xSessionId, xRequestId, sessionCookie)
           .post(Json.obj())
 
         whenReady(res) { resp =>
@@ -287,7 +299,8 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
         val res = buildRequest(urlPath, followRedirects = true)
-          .withHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
           .post(Json.obj())
 
         whenReady(res) { resp =>

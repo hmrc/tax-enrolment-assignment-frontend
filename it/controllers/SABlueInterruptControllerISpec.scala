@@ -30,13 +30,14 @@ import play.api.http.Status
 import play.api.libs.json.Json
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
+import play.api.libs.ws.DefaultWSCookie
 
 class SABlueInterruptControllerISpec extends TestHelper with Status {
   val urlPath: String = UrlPaths.saOnOtherAccountInterruptPath
 
   s"GET $urlPath" when {
     "the session cache has a credential for SA enrolment that is not the signed in account" should {
-      s"render the report blue interupt page" in {
+      s"render the report blue interrupt page" in {
         await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
         await(
           save[AccountTypes.Value](
@@ -48,8 +49,10 @@ class SABlueInterruptControllerISpec extends TestHelper with Status {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        val res = buildRequest(urlPath)
-          .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+
+        val res = buildRequest(urlPath,followRedirects = true)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, csrfContent)
           .get()
 
         whenReady(res) { resp =>
@@ -78,7 +81,8 @@ class SABlueInterruptControllerISpec extends TestHelper with Status {
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
           val res = buildRequest(urlPath)
-            .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
             .get()
 
           whenReady(res) { resp =>
@@ -97,7 +101,8 @@ class SABlueInterruptControllerISpec extends TestHelper with Status {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         val res = buildRequest(urlPath)
-          .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -120,7 +125,8 @@ class SABlueInterruptControllerISpec extends TestHelper with Status {
           ""
         )
         val res = buildRequest(urlPath)
-          .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -143,7 +149,8 @@ class SABlueInterruptControllerISpec extends TestHelper with Status {
           ""
         )
         val res = buildRequest(urlPath)
-          .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -161,7 +168,8 @@ class SABlueInterruptControllerISpec extends TestHelper with Status {
 
         val res =
           buildRequest(urlPath)
-            .withHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
             .get()
 
         whenReady(res) { resp =>
@@ -179,7 +187,8 @@ class SABlueInterruptControllerISpec extends TestHelper with Status {
 
         val res =
           buildRequest(urlPath)
-            .withHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
             .get()
 
         whenReady(res) { resp =>
@@ -196,7 +205,8 @@ class SABlueInterruptControllerISpec extends TestHelper with Status {
 
         val res =
           buildRequest(urlPath)
-            .withHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
             .get()
 
         whenReady(res) { resp =>
@@ -212,7 +222,8 @@ class SABlueInterruptControllerISpec extends TestHelper with Status {
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
         val res = buildRequest(urlPath)
-          .withHttpHeaders(xSessionId, xRequestId, csrfContent)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, csrfContent)
           .get()
 
         whenReady(res) { resp =>
@@ -238,7 +249,8 @@ class SABlueInterruptControllerISpec extends TestHelper with Status {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         val res = buildRequest(urlPath)
-          .withHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
           .post(Json.obj())
 
         whenReady(res) { resp =>
@@ -267,7 +279,8 @@ class SABlueInterruptControllerISpec extends TestHelper with Status {
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
           val res = buildRequest(urlPath)
-            .withHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
             .post(Json.obj())
 
           whenReady(res) { resp =>
@@ -286,7 +299,8 @@ class SABlueInterruptControllerISpec extends TestHelper with Status {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         val res = buildRequest(urlPath)
-          .withHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
           .post(Json.obj())
 
         whenReady(res) { resp =>
@@ -309,7 +323,8 @@ class SABlueInterruptControllerISpec extends TestHelper with Status {
           ""
         )
         val res = buildRequest(urlPath)
-          .withHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
           .post(Json.obj())
 
         whenReady(res) { resp =>
@@ -332,7 +347,8 @@ class SABlueInterruptControllerISpec extends TestHelper with Status {
           ""
         )
         val res = buildRequest(urlPath)
-          .withHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
           .post(Json.obj())
 
         whenReady(res) { resp =>
@@ -350,7 +366,8 @@ class SABlueInterruptControllerISpec extends TestHelper with Status {
 
         val res =
           buildRequest(urlPath)
-            .withHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
             .post(Json.obj())
 
         whenReady(res) { resp =>
@@ -368,7 +385,8 @@ class SABlueInterruptControllerISpec extends TestHelper with Status {
 
         val res =
           buildRequest(urlPath)
-            .withHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
             .post(Json.obj())
 
         whenReady(res) { resp =>
@@ -385,7 +403,8 @@ class SABlueInterruptControllerISpec extends TestHelper with Status {
 
         val res =
           buildRequest(urlPath)
-            .withHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
             .post(Json.obj())
 
         whenReady(res) { resp =>
@@ -401,7 +420,8 @@ class SABlueInterruptControllerISpec extends TestHelper with Status {
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
         val res = buildRequest(urlPath)
-          .withHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
           .post(Json.obj())
 
         whenReady(res) { resp =>

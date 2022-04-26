@@ -24,12 +24,10 @@ import org.jsoup.Jsoup
 import play.api.http.Status
 import play.api.libs.json.Json
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
-  MULTIPLE_ACCOUNTS,
-  PT_ASSIGNED_TO_CURRENT_USER,
-  PT_ASSIGNED_TO_OTHER_USER,
-  SINGLE_ACCOUNT
-}
+
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
+import play.api.libs.ws.DefaultWSCookie
 
 class EnrolledForPTISpec extends TestHelper with Status {
 
@@ -51,7 +49,8 @@ class EnrolledForPTISpec extends TestHelper with Status {
           usergroupsResponseJson().toString()
         )
         val res = buildRequest(urlPath, followRedirects = true)
-          .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId)
           .get()
 
         whenReady(res) { resp =>
@@ -74,8 +73,10 @@ class EnrolledForPTISpec extends TestHelper with Status {
             val authResponse = authoriseResponseJson()
             stubAuthorizePost(OK, authResponse.toString())
             stubPost(s"/write/.*", OK, """{"x":2}""")
+
             val res = buildRequest(urlPath)
-              .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+              .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+              .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
               .get()
 
             whenReady(res) { resp =>
@@ -94,7 +95,8 @@ class EnrolledForPTISpec extends TestHelper with Status {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         val res = buildRequest(urlPath, followRedirects = true)
-          .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .addCookies(DefaultWSCookie("mdtp", authCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -117,7 +119,8 @@ class EnrolledForPTISpec extends TestHelper with Status {
           ""
         )
         val res = buildRequest(urlPath, followRedirects = true)
-          .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .addCookies(DefaultWSCookie("mdtp", authCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -140,7 +143,8 @@ class EnrolledForPTISpec extends TestHelper with Status {
           ""
         )
         val res = buildRequest(urlPath, followRedirects = true)
-          .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .addCookies(DefaultWSCookie("mdtp", authCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -158,7 +162,8 @@ class EnrolledForPTISpec extends TestHelper with Status {
 
         val res =
           buildRequest(urlPath)
-            .withHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
+            .addCookies(DefaultWSCookie("mdtp", authCookie))
+            .addHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
             .get()
 
         whenReady(res) { resp =>
@@ -176,7 +181,8 @@ class EnrolledForPTISpec extends TestHelper with Status {
 
         val res =
           buildRequest(urlPath)
-            .withHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
+            .addCookies(DefaultWSCookie("mdtp", authCookie))
+            .addHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
             .get()
 
         whenReady(res) { resp =>
@@ -193,7 +199,8 @@ class EnrolledForPTISpec extends TestHelper with Status {
 
         val res =
           buildRequest(urlPath)
-            .withHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
+            .addCookies(DefaultWSCookie("mdtp", authCookie))
+            .addHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
             .get()
 
         whenReady(res) { resp =>
@@ -209,7 +216,8 @@ class EnrolledForPTISpec extends TestHelper with Status {
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
         val res = buildRequest(urlPath)
-          .withHttpHeaders(xSessionId, xRequestId, csrfContent)
+          .addCookies(DefaultWSCookie("mdtp", authCookie))
+          .addHttpHeaders(xSessionId, xRequestId, csrfContent)
           .get()
 
         whenReady(res) { resp =>
@@ -229,7 +237,8 @@ class EnrolledForPTISpec extends TestHelper with Status {
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
         val res = buildRequest(urlPath, followRedirects = true)
-          .withHttpHeaders(csrfContent, xSessionId, xRequestId, sessionCookie)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(csrfContent, xSessionId, xRequestId, sessionCookie)
           .post(Json.obj())
 
         whenReady(res) { resp =>
@@ -246,7 +255,8 @@ class EnrolledForPTISpec extends TestHelper with Status {
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
         val res = buildRequest(urlPath, followRedirects = true)
-          .withHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
+          .addCookies(DefaultWSCookie("mdtp", authCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
           .post(Json.obj())
 
         whenReady(res) { resp =>

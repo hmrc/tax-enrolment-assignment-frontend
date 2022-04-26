@@ -16,11 +16,11 @@
 
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 @import uk.gov.hmrc.govukfrontend.views.html.components._
-@import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.summarylist.SummaryListRow
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.helpers.CreateSummaryRow
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.Layout
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.models._
 
 @this(
 layout: Layout,
@@ -29,15 +29,16 @@ summaryRow: CreateSummaryRow,
 govukInsetText : GovukInsetText
 )
 
-@(currentUserId: String, ptAccountDetails: AccountDetails, saAccountDetails: Option[AccountDetails], currentAccountHasSA: Boolean, otherAccountHasSA: Boolean, ptEnrolledAccountHasSA: Boolean)(implicit request: Request[AnyRef], messages: Messages, appConfig: AppConfig)
+@(ptEnrolmentOtherAccountViewModel: PTEnrolmentOtherAccountViewModel)(implicit request: Request[AnyRef], messages: Messages, appConfig: AppConfig)
+
 
 @layout(
     pageTitle = Some(messages("ptEnrolmentOnOtherAccount.title")), None) {
 
     <h1 class="govuk-heading-xl">@messages("ptEnrolmentOnOtherAccount.heading")</h1>
 
-    <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.paragraph1", ptAccountDetails.userId)</p>
-    <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.paragraph2", currentUserId)</p>
+    <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.paragraph1", ptEnrolmentOtherAccountViewModel.ptAccountDetails.userId)</p>
+    <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.paragraph2", ptEnrolmentOtherAccountViewModel.currentAccountDetails.userId)</p>
 
     <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.text1")
         <a href="@routes.SignOutController.signOut" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.signInAgain")</a>
@@ -45,17 +46,15 @@ govukInsetText : GovukInsetText
     </p>
 
     <dl class="govuk-summary-list">
-        @summaryRow("common.userId", ptAccountDetails.userId)
-        @if(ptAccountDetails.email.isDefined) {
-          @summaryRow("ptEnrolmentOnOtherAccount.email", ptAccountDetails.email.get)
+        @summaryRow("common.userId", ptEnrolmentOtherAccountViewModel.ptAccountDetails.userId)
+        @if(ptEnrolmentOtherAccountViewModel.ptAccountDetails.email.isDefined) {
+          @summaryRow("ptEnrolmentOnOtherAccount.email", ptEnrolmentOtherAccountViewModel.ptAccountDetails.email.get)
         }
-        @summaryRow("ptEnrolmentOnOtherAccount.lastLoginDate", ptAccountDetails.lastLoginDate)
-        @for(mfaDetail <- ptAccountDetails.mfaDetails) {
+        @summaryRow("ptEnrolmentOnOtherAccount.lastLoginDate", ptEnrolmentOtherAccountViewModel.ptAccountDetails.lastLoginDate)
+        @for(mfaDetail <- ptEnrolmentOtherAccountViewModel.ptAccountDetails.mfaDetails) {
         @summaryRow(mfaDetail.factorNameKey, mfaDetail.factorValue)
         }
     </dl>
-
-<!--//TODO remove fraud reporting url after consultation with leads, as it requires other changes such remove couple of tests etc etc-->
 
     <div id="inset_text">
 
@@ -65,29 +64,27 @@ govukInsetText : GovukInsetText
 
     </div>
 
-    @if(ptEnrolledAccountHasSA) {
-        <h3 class="govuk-heading-m">@messages("ptEnrolmentOnOtherAccount.saHeading")</h3>
+    @if(ptEnrolmentOtherAccountViewModel.saUserCred.isDefined){
 
-        <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.saText1")
-          <a href="@routes.SignOutController.signOut" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.signInAgain")</a>.
-            @messages("ptEnrolmentOnOtherAccount.saText2")
-        </p>
+    <h3 class="govuk-heading-m">@messages("ptEnrolmentOnOtherAccount.saHeading")</h3>
+
+     if(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.currentAccountDetails.userId)){
+    <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.saText3")
+        <a href="@appConfig.selfAssessmentUrl" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.saLink")</a>.
+    </p>
+
+    } else if(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.ptAccountDetails.userId)){
+
+    <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.saText1")
+        <a href="@routes.SignOutController.signOut" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.signInAgain")</a>.
+        @messages("ptEnrolmentOnOtherAccount.saText2")
+    </p>
+    } else
+    <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.saText4")
+        <a href="@routes.SignOutController.signOut" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.signInAgain")</a>.
+        @messages("ptEnrolmentOnOtherAccount.saText5", ptEnrolmentOtherAccountViewModel.saUserCred.get)
+    </p>
     }
 
-    @if(currentAccountHasSA) {
-        <h3 class="govuk-heading-m">@messages("ptEnrolmentOnOtherAccount.saHeading")</h3>
 
-        <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.saText3")
-          <a href="@appConfig.selfAssessmentUrl" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.saLink")</a>.
-        </p>
-    }
-
-    @if(otherAccountHasSA) {
-        <h3 class="govuk-heading-m">@messages("ptEnrolmentOnOtherAccount.saHeading")</h3>
-
-        <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.saText4")
-          <a href="@routes.SignOutController.signOut" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.signInAgain")</a>.
-            @messages("ptEnrolmentOnOtherAccount.saText5", saAccountDetails.get.userId)
-        </p>
-    }
 }

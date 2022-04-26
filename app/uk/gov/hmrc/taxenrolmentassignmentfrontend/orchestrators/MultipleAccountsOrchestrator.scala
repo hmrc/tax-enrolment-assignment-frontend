@@ -24,41 +24,15 @@ import cats.implicits._
 import play.api.Logger
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
-  MULTIPLE_ACCOUNTS,
-  PT_ASSIGNED_TO_OTHER_USER,
-  SA_ASSIGNED_TO_CURRENT_USER,
-  SA_ASSIGNED_TO_OTHER_USER
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
-  InvalidUserType,
-  NoPTEnrolmentWhenOneExpected,
-  NoSAEnrolmentWhenOneExpected,
-  TaxEnrolmentAssignmentErrors
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{InvalidUserType, NoPTEnrolmentWhenOneExpected, NoSAEnrolmentWhenOneExpected, TaxEnrolmentAssignmentErrors}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{
-  logIncorrectUserType,
-  logNoUserFoundWithPTEnrolment
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
-  AccountDetails,
-  UsersAssignedEnrolment
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{
-  ACCOUNT_TYPE,
-  REDIRECT_URL,
-  REPORTED_FRAUD,
-  USER_ASSIGNED_PT_ENROLMENT,
-  USER_ASSIGNED_SA_ENROLMENT
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{logIncorrectUserType, logNoUserFoundWithPTEnrolment, logUserSignsInAgainWithSAAccount}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, PTEnrolmentOtherAccountViewModel, UsersAssignedEnrolment}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL, REPORTED_FRAUD, USER_ASSIGNED_PT_ENROLMENT, USER_ASSIGNED_SA_ENROLMENT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{
-  EACDService,
-  SilentAssignmentService,
-  UsersGroupSearchService
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, SilentAssignmentService, UsersGroupSearchService}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -195,27 +169,33 @@ class MultipleAccountsOrchestrator @Inject()(
   }
 
 
-
-
-  def getOptionSACredentialDetails(
-                                    implicit requestWithUserDetails: RequestWithUserDetails[AnyContent],
-                                    hc: HeaderCarrier,
-                                    ec: ExecutionContext) : TEAFResult[Option[AccountDetails]]=
-      for {
-        saDetails <- eacdService.getUsersAssignedSAEnrolment.map(user => user.enrolledCredential)
-        saAccountDetails <- usersGroupSearchService.getAccountDetails(saDetails.get)
-
-      } yield Some(saAccountDetails)
-
-  def getSAForPTAlreadyEnrolledDetails()(
+  def getSAForPTAlreadyEnrolledDetails(
     implicit requestWithUserDetails: RequestWithUserDetails[AnyContent],
     hc: HeaderCarrier,
-    ec: ExecutionContext): TEAFResult[(AccountDetails, Option[AccountDetails])] = for {
+    ec: ExecutionContext): TEAFResult[PTEnrolmentOtherAccountViewModel] = for {
       _ <- checkValidAccountTypeRedirectUrlInCache(
         List(PT_ASSIGNED_TO_OTHER_USER)
       )
+      currentAccountDetails <- usersGroupSearchService.getAccountDetails(requestWithUserDetails.userDetails.credId)
       ptAccountDetails <- getPTCredentialDetails
-      saAccountDetails <- getOptionSACredentialDetails
+      saDetails <-
+        if(requestWithUserDetails.userDetails.hasSAEnrolment) {
+          EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(None))
+        }else {
+          eacdService.getUsersAssignedSAEnrolment.map(user => user.enrolledCredential)
+        }
+     saOnOtherAccountDetails <- saDetails match {
+       case Some(credId) => usersGroupSearchService.getAccountDetails(credId).map(Some(_))
+       case None => EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(None))
+     }
 
-    } yield (ptAccountDetails, saAccountDetails)
+    } yield PTEnrolmentOtherAccountViewModel(
+    currentAccountDetails,
+    ptAccountDetails,
+    if(requestWithUserDetails.userDetails.hasSAEnrolment) {
+      Some(currentAccountDetails.userId)
+    }else {
+      saOnOtherAccountDetails.map(_.userId)
+    }
+  )
 }

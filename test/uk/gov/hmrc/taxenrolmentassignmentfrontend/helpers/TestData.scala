@@ -33,6 +33,9 @@ object TestData {
   val NINO = "testNino"
   val GROUP_ID = "D37DB2E1-CF03-42E8-B151-E17300FFCF78"
   val CREDENTIAL_ID = "credId123"
+  val USER_ID = "6037"
+  val PT_USER_ID = "2341"
+  val NO_EMAIL_USER_ID = "9871"
   val CREDENTIAL_ID_1 = "6102202884164541"
   val UTR = "1234567890"
   val creds = Credentials(CREDENTIAL_ID, GovernmentGateway.toString)
@@ -155,13 +158,41 @@ object TestData {
     mfaDetails = List(MFADetails("mfaDetails.text", "24321"))
   )
 
-  val accountDetailsOtherUser: AccountDetails = AccountDetails(
-    userId = "5046",
+  val accountDetailsWithPT: AccountDetails = AccountDetails(
+    userId = "2341",
     email = Some("email.otherUser@test.com"),
+    lastLoginDate = "27 February 2022 at 12:00 PM",
+    mfaDetails = List(MFADetails("mfaDetails.text", "26543")),
+    hasSA = Some(true)
+  )
+
+  val accountDetailsWithNoEmail: AccountDetails = AccountDetails(
+    userId = "9871",
+    email = None,
     lastLoginDate = "27 February 2022 at 12:00 PM",
     mfaDetails = List(MFADetails("mfaDetails.text", "26543"))
   )
 
+
+
+def ptEnrolmentDataModel(saUserCred : Option[String], currentAccountDetails:AccountDetails = accountDetails): PTEnrolmentOtherAccountViewModel  = PTEnrolmentOtherAccountViewModel(
+  currentAccountDetails =currentAccountDetails ,
+  ptAccountDetails = accountDetailsWithPT,
+  saUserCred = saUserCred
+)
+
+
+def ptEnrolmentDataModelNoEmail(saUserCred : Option[String]): PTEnrolmentOtherAccountViewModel  = PTEnrolmentOtherAccountViewModel(
+  currentAccountDetails = accountDetails ,
+  ptAccountDetails = accountDetailsWithNoEmail,
+  saUserCred = saUserCred
+)
+
+def ptEnrolmentDataModelNoSA(saUserCred : Option[String]): PTEnrolmentOtherAccountViewModel  = PTEnrolmentOtherAccountViewModel(
+  currentAccountDetails = accountDetails ,
+  ptAccountDetails = accountDetailsWithNoEmail,
+  saUserCred = saUserCred
+)
 
   // userGroupSearchResponse
 

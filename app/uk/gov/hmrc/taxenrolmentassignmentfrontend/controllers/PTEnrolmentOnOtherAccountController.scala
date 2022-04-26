@@ -54,12 +54,7 @@ class PTEnrolmentOnOtherAccountController @Inject()(
       case Right(accountDetails) =>
         Ok(
           ptEnrolmentOnAnotherAccountView(
-            request.userDetails.credId,
-            accountDetails._1,
-            accountDetails._2,
-            request.userDetails.hasSAEnrolment,
-            accountDetails._2.get.hasSA.get,
-            accountDetails._1.hasSA.get
+            accountDetails
           )
         )
       case Left(InvalidUserType(redirectUrl)) if redirectUrl.isDefined =>

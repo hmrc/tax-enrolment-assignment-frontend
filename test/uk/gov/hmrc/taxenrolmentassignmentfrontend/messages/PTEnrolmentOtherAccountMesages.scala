@@ -23,7 +23,7 @@ object PTEnrolmentOtherAccountMesages {
   val heading =
     "We have found your personal tax account under a different Government Gateway user ID"
   val text1 =
-    "To protect your information, access to your personal tax account was limited to the user ID below, ending with 3214."
+    "To protect your information, access to your personal tax account was limited to the user ID below, ending with 2341."
   val signoutUrl = "http://test/signout"
   val notMyUserId = "The above user ID does not belong to me"
   //TODO remove fraud reporting url after consultation with leads, as it requires other changes such remove couple of tests etc etc

@@ -285,7 +285,7 @@ object LoggingEvent {
 
   def logES2ErrorFromEACD(credId: String,
                           statusReturned: Int,
-                          eacdErrorMsg: String = "N/A"): LoggingEvent =
+                          eacdErrorMsg: String = "N/A"): LoggingEvent = {
     Error(
       Event(
         "[EACDConnector][queryEnrolmentsAssignedToUser]",
@@ -295,6 +295,17 @@ object LoggingEvent {
         )
       )
     )
+  }
+    def logUnexpectedErrorFromAuthWhenUsingLegacyEndpoint(httpStatus: Int): LoggingEvent = {
+      Error(
+        Event(
+          "[LegacyAuthConnector][updateEnrolments]",
+          errorDetails = Some(
+            s"Auth Returned unexpected status $httpStatus when attemping to put enrolments"
+          )
+        )
+      )
+    }
 
   def logUnexpectedErrorOccurred(
     credentialId: String,

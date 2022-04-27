@@ -110,7 +110,8 @@ object WiremockHelper extends Eventually with IntegrationPatience {
                status: Integer,
                responseBody: String): StubMapping =
     stubFor(
-      post(urlMatching(url))
+      post(
+        urlMatching(url))
         .willReturn(aResponse().withStatus(status).withBody(responseBody))
     )
 
@@ -119,7 +120,11 @@ object WiremockHelper extends Eventually with IntegrationPatience {
       put(urlMatching(url))
         .willReturn(aResponse().withStatus(status).withBody(responseBody))
     )
-
+  def stubPutWithRequestBody(url: String, status: Integer, requestBody: String, responseBody: String): StubMapping =
+    stubFor(
+      put(urlMatching(url)).withRequestBody(equalToJson(requestBody))
+        .willReturn(aResponse().withStatus(status).withBody(responseBody))
+    )
   def stubGetWithQueryParam(url: String,
                             queryParamKey: String,
                             queryParamValue: String,
@@ -174,5 +179,4 @@ trait WiremockHelper extends ServerProvider {
                            followRedirects: Boolean = false): WSRequest =
     ws.url(s"http://localhost:$port$path")
       .withFollowRedirects(followRedirects)
-
 }

@@ -45,7 +45,7 @@ class SABlueInterruptControllerSpec extends TestFixture {
       mockMultipleAccountsOrchestrator,
       logger,
       blueSAView,
-      errorView
+      errorHandler
     )
 
   "view" when {

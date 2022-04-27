@@ -18,31 +18,29 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions
 
 import com.google.inject.Inject
 import play.api.Logger
-import play.api.mvc.{ActionBuilder, ActionFunction, ActionRefiner, ActionTransformer, AnyContent, BodyParsers, Request, Result, WrappedRequest}
+import play.api.mvc._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.ErrorHandler
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedErrorWhenGettingUserType
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.AccountCheckOrchestrator
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 
 import scala.concurrent.{ExecutionContext, Future}
 
-
+case class AccountDetailsFromMongo(accountType: AccountTypes.Value)
 case class RequestWithUserDetailsFromSessionAndMongo[A](request: Request[A],
                                                         userDetails: UserDetailsFromSession,
                                                         sessionID: String,
-                                                        accountType: AccountTypes.Value)
+                                                        accountDetailsFromMongo: AccountDetailsFromMongo)
   extends WrappedRequest[A](request)
 
-trait GetAccountTypeAction
+trait AccountMongoDetailsActionTrait
     extends ActionRefiner[RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo]
 
-class AccountTypeAction @Inject()(accountCheckOrchestrator: AccountCheckOrchestrator,
-                                  val parser: BodyParsers.Default,
-                                  errorHandler: ErrorHandler)(implicit val executionContext: ExecutionContext) extends GetAccountTypeAction {
+class AccountMongoDetailsAction @Inject()(accountCheckOrchestrator: AccountCheckOrchestrator,
+                                          val parser: BodyParsers.Default,
+                                          errorHandler: ErrorHandler)(implicit val executionContext: ExecutionContext) extends AccountMongoDetailsActionTrait {
 
   val origin: String = "tax-enrolment-assignment-frontend"
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
@@ -51,7 +49,11 @@ class AccountTypeAction @Inject()(accountCheckOrchestrator: AccountCheckOrchestr
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequestAndSession(request, request.session)
     accountCheckOrchestrator.getAccountType(executionContext, hc, request).value
       .map {
-        case Right(accountType) => Right(RequestWithUserDetailsFromSessionAndMongo(request.request, request.userDetails, request.sessionID, accountType))
+        case Right(accountType) => Right(
+          RequestWithUserDetailsFromSessionAndMongo(
+            request.request, request.userDetails, request.sessionID, AccountDetailsFromMongo(accountType)
+          )
+        )
         case Left(_) =>
           Left(errorHandler
             .handleErrors(UnexpectedErrorWhenGettingUserType, "[AccountTypeAction][invokeBlock]")(request, baseLogger))

@@ -44,7 +44,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
     mcc,
     logger,
     view,
-    errorView
+    errorHandler
   )
 
   "view" when {

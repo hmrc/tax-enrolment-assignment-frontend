@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.views
 
 import play.api.test.FakeRequest
 import play.twirl.api.HtmlFormat
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{ReportSuspiciousIDController, SignOutController}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignOutController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.SignInAgainMessages
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails}
@@ -28,17 +28,8 @@ class SignInWithSAAccountSpec extends TestFixture {
 
   lazy val testTeaSessionCache = new TestTeaSessionCache
   lazy val signOutController = new SignOutController(mockAuthAction,mcc,testAppConfig,testTeaSessionCache)
-  lazy val reportSuspiciousIDController = new ReportSuspiciousIDController(
-    mockAuthAction,
-    mockTeaSessionCache,
-    mockMultipleAccountsOrchestrator,
-    mcc,
-    reportSuspiciousIDPage,
-    logger,
-    errorView
-  )
-  lazy val signInAgainPage: SignInWithSAAccount =inject[SignInWithSAAccount]
-  lazy val reportSuspiciousIDPage: ReportSuspiciousID =inject[ReportSuspiciousID]
+  lazy val signInAgainPage: SignInWithSAAccount = inject[SignInWithSAAccount]
+  lazy val reportSuspiciousIDPage: ReportSuspiciousID = inject[ReportSuspiciousID]
   lazy val result: HtmlFormat.Appendable = signInAgainPage(accountDetails)(FakeRequest(), testMessages)
 
   object Selectors {

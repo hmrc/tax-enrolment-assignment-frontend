@@ -47,7 +47,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
       mcc,
       view,
       logger,
-      errorView
+      errorHandler
     )
 
   "viewNoSA" when {

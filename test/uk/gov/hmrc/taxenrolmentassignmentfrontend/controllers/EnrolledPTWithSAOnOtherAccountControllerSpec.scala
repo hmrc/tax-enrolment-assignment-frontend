@@ -44,7 +44,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
     mcc,
     view,
     logger,
-    errorView
+    errorHandler
   )
 
   "view" when {

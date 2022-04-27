@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions
 
 import org.scalatest.Assertion
 import play.api.test.Helpers._

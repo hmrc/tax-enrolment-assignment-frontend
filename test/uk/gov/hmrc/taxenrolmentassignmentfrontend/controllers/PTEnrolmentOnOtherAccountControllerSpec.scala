@@ -44,7 +44,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
     mockMultipleAccountsOrchestrator,
     view,
     logger,
-    errorView
+    errorHandler
   )
 
   "view" when {

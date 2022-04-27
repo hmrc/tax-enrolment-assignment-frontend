@@ -48,7 +48,7 @@ class SignInAgainPageControllerSpec extends TestFixture {
     mcc,
     reportSuspiciousIDPage,
     logger,
-    errorView
+    errorHandler
   )
 
   lazy val reportSuspiciousIDPage: ReportSuspiciousID =
@@ -62,7 +62,7 @@ class SignInAgainPageControllerSpec extends TestFixture {
       view,
       mockTeaSessionCache,
       logger,
-      errorView
+      errorHandler
     )
 
   "view" when {

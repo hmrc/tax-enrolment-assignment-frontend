@@ -33,6 +33,8 @@ class AppConfig @Inject()(val config: ServicesConfig) {
     : String = config.baseUrl("enrolment-store-proxy") + "/enrolment-store-proxy"
   lazy val TAX_ENROLMENTS_BASE_URL
     : String = config.baseUrl("tax-enrolments") + "/tax-enrolments"
+  lazy val AUTH_BASE_URL
+  : String = config.baseUrl("auth")
 
   lazy val useTestOnlyUsersGroupSearch: Boolean = {
     config.getConfBool("users-groups-search.isTest", defBool = true)

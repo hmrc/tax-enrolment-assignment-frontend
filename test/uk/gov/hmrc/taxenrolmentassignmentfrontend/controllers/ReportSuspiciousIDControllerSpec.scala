@@ -26,29 +26,11 @@ import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
-  PT_ASSIGNED_TO_OTHER_USER,
-  SA_ASSIGNED_TO_OTHER_USER
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
-  InvalidUserType,
-  NoPTEnrolmentWhenOneExpected,
-  NoSAEnrolmentWhenOneExpected,
-  UnexpectedResponseFromTaxEnrolments
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{
-  accountDetails,
-  buildFakeRequestWithSessionId,
-  predicates,
-  retrievalResponse,
-  retrievals,
-  saEnrolmentOnly
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{
-  TestFixture,
-  UrlPaths
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_OTHER_USER}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{InvalidUserType, NoPTEnrolmentWhenOneExpected, NoSAEnrolmentWhenOneExpected, UnexpectedResponseFromTaxEnrolments}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{accountDetails, buildFakeRequestWithSessionId, predicates, retrievalResponse, retrievals, saEnrolmentOnly}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REPORTED_FRAUD
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.ReportSuspiciousID
 
@@ -85,7 +67,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -94,7 +76,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getPTCredentialDetails(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -126,7 +108,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -162,7 +144,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -171,7 +153,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getPTCredentialDetails(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -203,7 +185,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -237,7 +219,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -246,7 +228,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getSACredentialDetails(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -278,7 +260,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -312,7 +294,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -321,7 +303,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getSACredentialDetails(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -353,7 +335,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -387,7 +369,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
 
         (mockTeaSessionCache
           .save(_: String, _: Boolean)(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: Format[Boolean]
           ))
           .expects(REPORTED_FRAUD, true, *, *)
@@ -395,7 +377,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .checkValidAccountTypeAndEnrolForPT(_: AccountTypes.Value)(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -429,7 +411,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
 
         (mockTeaSessionCache
           .save(_: String, _: Boolean)(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: Format[Boolean]
           ))
           .expects(REPORTED_FRAUD, true, *, *)
@@ -437,7 +419,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .checkValidAccountTypeAndEnrolForPT(_: AccountTypes.Value)(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -472,7 +454,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
 
         (mockTeaSessionCache
           .save(_: String, _: Boolean)(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: Format[Boolean]
           ))
           .expects(REPORTED_FRAUD, true, *, *)
@@ -480,7 +462,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .checkValidAccountTypeAndEnrolForPT(_: AccountTypes.Value)(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -514,7 +496,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
 
         (mockTeaSessionCache
           .save(_: String, _: Boolean)(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: Format[Boolean]
           ))
           .expects(REPORTED_FRAUD, true, *, *)
@@ -522,7 +504,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .checkValidAccountTypeAndEnrolForPT(_: AccountTypes.Value)(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))

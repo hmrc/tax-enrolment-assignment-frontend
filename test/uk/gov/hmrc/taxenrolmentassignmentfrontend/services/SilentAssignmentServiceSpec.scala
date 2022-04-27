@@ -22,7 +22,7 @@ import play.api.libs.json.Format
 import play.api.mvc.AnyContent
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.cache.client.CacheMap
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromEACD
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
@@ -190,7 +190,7 @@ class SilentAssignmentServiceSpec extends TestFixture with ScalaFutures {
     def mockGetCacheOtherValdPTAAccounts(resp: Option[Seq[IVNinoStoreEntry]]) =
       (mockTeaSessionCache
         .getEntry(_: String)(
-          _: RequestWithUserDetails[AnyContent],
+          _: RequestWithUserDetailsFromSession[AnyContent],
           _: Format[Seq[IVNinoStoreEntry]]
         ))
         .expects(OTHER_VALID_PTA_ACCOUNTS, *, *)
@@ -233,7 +233,7 @@ class SilentAssignmentServiceSpec extends TestFixture with ScalaFutures {
     ) =
       (mockTeaSessionCache
         .save(_: String, _: Seq[IVNinoStoreEntry])(
-          _: RequestWithUserDetails[AnyContent],
+          _: RequestWithUserDetailsFromSession[AnyContent],
           _: Format[Seq[IVNinoStoreEntry]]
         ))
         .expects(OTHER_VALID_PTA_ACCOUNTS, otherValidPtaAccounts, *, *)

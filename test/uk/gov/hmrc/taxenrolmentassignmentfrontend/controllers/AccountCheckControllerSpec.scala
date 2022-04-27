@@ -26,22 +26,10 @@ import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
-  TaxEnrolmentAssignmentErrors,
-  UnexpectedResponseFromIV,
-  UnexpectedResponseFromTaxEnrolments
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{
-  buildFakeRequestWithSessionId,
-  predicates,
-  retrievalResponse,
-  retrievals
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{
-  TestFixture,
-  UrlPaths
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{TaxEnrolmentAssignmentErrors, UnexpectedResponseFromIV, UnexpectedResponseFromTaxEnrolments}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{buildFakeRequestWithSessionId, predicates, retrievalResponse, retrievals}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, UrlPaths}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -201,7 +189,7 @@ class AccountCheckControllerSpec extends TestFixture {
         .getAccountType(
           _: ExecutionContext,
           _: HeaderCarrier,
-          _: RequestWithUserDetails[AnyContent]
+          _: RequestWithUserDetailsFromSession[AnyContent]
         ))
         .expects(*, *, *)
         .returning(createInboundResultError(error))
@@ -212,7 +200,7 @@ class AccountCheckControllerSpec extends TestFixture {
         .getAccountType(
           _: ExecutionContext,
           _: HeaderCarrier,
-          _: RequestWithUserDetails[AnyContent]
+          _: RequestWithUserDetailsFromSession[AnyContent]
         ))
         .expects(*, *, *)
         .returning(createInboundResult(accountType))
@@ -221,7 +209,7 @@ class AccountCheckControllerSpec extends TestFixture {
     def mockSilentEnrolSuccess =
       (mockSilentAssignmentService
         .enrolUser()(
-          _: RequestWithUserDetails[AnyContent],
+          _: RequestWithUserDetailsFromSession[AnyContent],
           _: HeaderCarrier,
           _: ExecutionContext
         ))
@@ -233,7 +221,7 @@ class AccountCheckControllerSpec extends TestFixture {
     def mockSilentEnrolFailure =
       (mockSilentAssignmentService
         .enrolUser()(
-          _: RequestWithUserDetails[AnyContent],
+          _: RequestWithUserDetailsFromSession[AnyContent],
           _: HeaderCarrier,
           _: ExecutionContext
         ))

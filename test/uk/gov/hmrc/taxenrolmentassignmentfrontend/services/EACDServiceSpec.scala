@@ -22,7 +22,7 @@ import play.api.libs.json.Format
 import play.api.mvc.AnyContent
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.cache.client.CacheMap
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromEACD
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
@@ -46,7 +46,7 @@ class EACDServiceSpec extends TestFixture with ScalaFutures {
       "not make a call the eacd and return value from cache" in {
         (mockTeaSessionCache
           .getEntry(_: String)(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: Format[UsersAssignedEnrolment]
           ))
           .expects(USER_ASSIGNED_PT_ENROLMENT, *, *)
@@ -61,7 +61,7 @@ class EACDServiceSpec extends TestFixture with ScalaFutures {
       "call the EACD, save to cache and return the account details" in {
         (mockTeaSessionCache
           .getEntry(_: String)(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: Format[UsersAssignedEnrolment]
           ))
           .expects(USER_ASSIGNED_PT_ENROLMENT, *, *)
@@ -75,7 +75,7 @@ class EACDServiceSpec extends TestFixture with ScalaFutures {
           .returning(createInboundResult(UsersAssignedEnrolment1))
         (mockTeaSessionCache
           .save(_: String, _: UsersAssignedEnrolment)(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: Format[UsersAssignedEnrolment]
           ))
           .expects(USER_ASSIGNED_PT_ENROLMENT, UsersAssignedEnrolment1, *, *)
@@ -91,7 +91,7 @@ class EACDServiceSpec extends TestFixture with ScalaFutures {
       "return an error" in {
         (mockTeaSessionCache
           .getEntry(_: String)(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: Format[UsersAssignedEnrolment]
           ))
           .expects(USER_ASSIGNED_PT_ENROLMENT, *, *)
@@ -116,7 +116,7 @@ class EACDServiceSpec extends TestFixture with ScalaFutures {
       "not make a call the eacd and return value from cache" in {
         (mockTeaSessionCache
           .getEntry(_: String)(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: Format[UsersAssignedEnrolment]
           ))
           .expects(USER_ASSIGNED_SA_ENROLMENT, *, *)
@@ -132,7 +132,7 @@ class EACDServiceSpec extends TestFixture with ScalaFutures {
       "call the EACD twice to get the UTR and then enrolled credentials, save to cache and return the credentialId" in {
         (mockTeaSessionCache
           .getEntry(_: String)(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: Format[UsersAssignedEnrolment]
           ))
           .expects(USER_ASSIGNED_SA_ENROLMENT, *, *)
@@ -153,7 +153,7 @@ class EACDServiceSpec extends TestFixture with ScalaFutures {
           .returning(createInboundResult(UsersAssignedEnrolment1))
         (mockTeaSessionCache
           .save(_: String, _: UsersAssignedEnrolment)(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: Format[UsersAssignedEnrolment]
           ))
           .expects(USER_ASSIGNED_SA_ENROLMENT, UsersAssignedEnrolment1, *, *)
@@ -169,7 +169,7 @@ class EACDServiceSpec extends TestFixture with ScalaFutures {
       "call EACD to get the UTR, then save no creds witth enrolment to cache and return None" in {
         (mockTeaSessionCache
           .getEntry(_: String)(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: Format[UsersAssignedEnrolment]
           ))
           .expects(USER_ASSIGNED_SA_ENROLMENT, *, *)
@@ -184,7 +184,7 @@ class EACDServiceSpec extends TestFixture with ScalaFutures {
 
         (mockTeaSessionCache
           .save(_: String, _: UsersAssignedEnrolment)(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: Format[UsersAssignedEnrolment]
           ))
           .expects(
@@ -205,7 +205,7 @@ class EACDServiceSpec extends TestFixture with ScalaFutures {
       "return an error" in {
         (mockTeaSessionCache
           .getEntry(_: String)(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: Format[UsersAssignedEnrolment]
           ))
           .expects(USER_ASSIGNED_SA_ENROLMENT, *, *)

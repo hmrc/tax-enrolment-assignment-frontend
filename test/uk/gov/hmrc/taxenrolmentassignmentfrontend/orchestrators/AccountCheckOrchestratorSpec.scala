@@ -24,7 +24,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IVNinoStoreEntry
@@ -52,7 +52,7 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
       "return the accountType" in {
         (mockTeaSessionCache
           .getEntry(_: String)(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: Format[AccountTypes.Value]
           ))
           .expects("ACCOUNT_TYPE", *, *)
@@ -70,7 +70,7 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
         s"return SINGLE_ACCOUNT" in {
           (mockTeaSessionCache
             .getEntry(_: String)(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: Format[AccountTypes.Value]
             ))
             .expects("ACCOUNT_TYPE", *, *)
@@ -78,7 +78,7 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
 
           (mockEacdService
             .getUsersAssignedPTEnrolment(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
@@ -87,7 +87,7 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
 
           (mockSilentAssignmentService
             .getOtherAccountsWithPTAAccess(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
@@ -96,7 +96,7 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
 
           (mockTeaSessionCache
             .save(_: String, _: AccountTypes.Value)(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: Format[AccountTypes.Value]
             ))
             .expects(ACCOUNT_TYPE, SINGLE_ACCOUNT, *, *)
@@ -114,7 +114,7 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
         s"return PT_ASSIGNED_TO_CURRENT_USER" in {
           (mockTeaSessionCache
             .getEntry(_: String)(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: Format[AccountTypes.Value]
             ))
             .expects("ACCOUNT_TYPE", *, *)
@@ -128,7 +128,7 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
 
           (mockTeaSessionCache
             .save(_: String, _: AccountTypes.Value)(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: Format[AccountTypes.Value]
             ))
             .expects(ACCOUNT_TYPE, PT_ASSIGNED_TO_CURRENT_USER, *, *)
@@ -144,7 +144,7 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
         s"return PT_ASSIGNED_TO_CURRENT_USER" in {
           (mockTeaSessionCache
             .getEntry(_: String)(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: Format[AccountTypes.Value]
             ))
             .expects("ACCOUNT_TYPE", *, *)
@@ -152,7 +152,7 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
 
           (mockEacdService
             .getUsersAssignedPTEnrolment(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
@@ -161,7 +161,7 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
 
           (mockTeaSessionCache
             .save(_: String, _: AccountTypes.Value)(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: Format[AccountTypes.Value]
             ))
             .expects(ACCOUNT_TYPE, PT_ASSIGNED_TO_CURRENT_USER, *, *)
@@ -180,7 +180,7 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
         "return PT_ASSIGNED_TO_OTHER_USER" in {
           (mockTeaSessionCache
             .getEntry(_: String)(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: Format[AccountTypes.Value]
             ))
             .expects("ACCOUNT_TYPE", *, *)
@@ -188,7 +188,7 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
 
           (mockEacdService
             .getUsersAssignedPTEnrolment(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
@@ -197,7 +197,7 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
 
           (mockTeaSessionCache
             .save(_: String, _: AccountTypes.Value)(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: Format[AccountTypes.Value]
             ))
             .expects(ACCOUNT_TYPE, PT_ASSIGNED_TO_OTHER_USER, *, *)
@@ -215,7 +215,7 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
         "return SA_ASSIGNED_TO_OTHER_USER" in {
           (mockTeaSessionCache
             .getEntry(_: String)(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: Format[AccountTypes.Value]
             ))
             .expects("ACCOUNT_TYPE", *, *)
@@ -223,7 +223,7 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
 
           (mockEacdService
             .getUsersAssignedPTEnrolment(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
@@ -232,7 +232,7 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
 
           (mockSilentAssignmentService
             .getOtherAccountsWithPTAAccess(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
@@ -241,7 +241,7 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
 
           (mockEacdService
             .getUsersAssignedSAEnrolment(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
@@ -250,7 +250,7 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
 
           (mockTeaSessionCache
             .save(_: String, _: AccountTypes.Value)(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: Format[AccountTypes.Value]
             ))
             .expects(ACCOUNT_TYPE, SA_ASSIGNED_TO_OTHER_USER, *, *)
@@ -268,7 +268,7 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
         "return SA_ASSIGNED_TO_CURRENT_USER" in {
           (mockTeaSessionCache
             .getEntry(_: String)(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: Format[AccountTypes.Value]
             ))
             .expects("ACCOUNT_TYPE", *, *)
@@ -276,7 +276,7 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
 
           (mockEacdService
             .getUsersAssignedPTEnrolment(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
@@ -285,7 +285,7 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
 
           (mockSilentAssignmentService
             .getOtherAccountsWithPTAAccess(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
@@ -294,7 +294,7 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
 
           (mockTeaSessionCache
             .save(_: String, _: AccountTypes.Value)(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: Format[AccountTypes.Value]
             ))
             .expects(ACCOUNT_TYPE, SA_ASSIGNED_TO_CURRENT_USER, *, *)
@@ -316,7 +316,7 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
         "return SA_ASSIGNED_TO_CURRENT_USER" in {
           (mockTeaSessionCache
             .getEntry(_: String)(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: Format[AccountTypes.Value]
             ))
             .expects("ACCOUNT_TYPE", *, *)
@@ -324,7 +324,7 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
 
           (mockEacdService
             .getUsersAssignedPTEnrolment(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
@@ -333,7 +333,7 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
 
           (mockSilentAssignmentService
             .getOtherAccountsWithPTAAccess(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
@@ -342,7 +342,7 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
 
           (mockEacdService
             .getUsersAssignedSAEnrolment(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
@@ -351,7 +351,7 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
 
           (mockTeaSessionCache
             .save(_: String, _: AccountTypes.Value)(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: Format[AccountTypes.Value]
             ))
             .expects(ACCOUNT_TYPE, SA_ASSIGNED_TO_CURRENT_USER, *, *)
@@ -369,7 +369,7 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
         s"return MULTIPLE_ACCOUNTS" in {
           (mockTeaSessionCache
             .getEntry(_: String)(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: Format[AccountTypes.Value]
             ))
             .expects("ACCOUNT_TYPE", *, *)
@@ -377,7 +377,7 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
 
           (mockEacdService
             .getUsersAssignedPTEnrolment(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
@@ -386,7 +386,7 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
 
           (mockSilentAssignmentService
             .getOtherAccountsWithPTAAccess(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
@@ -395,7 +395,7 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
 
           (mockEacdService
             .getUsersAssignedSAEnrolment(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
@@ -404,7 +404,7 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
 
           (mockTeaSessionCache
             .save(_: String, _: AccountTypes.Value)(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: Format[AccountTypes.Value]
             ))
             .expects(ACCOUNT_TYPE, MULTIPLE_ACCOUNTS, *, *)
@@ -422,7 +422,7 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
         "return SA_ASSIGNED_TO_OTHER_USER" in {
           (mockTeaSessionCache
             .getEntry(_: String)(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: Format[AccountTypes.Value]
             ))
             .expects("ACCOUNT_TYPE", *, *)
@@ -430,7 +430,7 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
 
           (mockEacdService
             .getUsersAssignedPTEnrolment(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
@@ -439,7 +439,7 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
 
           (mockSilentAssignmentService
             .getOtherAccountsWithPTAAccess(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
@@ -448,7 +448,7 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
 
           (mockEacdService
             .getUsersAssignedSAEnrolment(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
@@ -457,7 +457,7 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
 
           (mockTeaSessionCache
             .save(_: String, _: AccountTypes.Value)(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: Format[AccountTypes.Value]
             ))
             .expects(ACCOUNT_TYPE, SA_ASSIGNED_TO_OTHER_USER, *, *)

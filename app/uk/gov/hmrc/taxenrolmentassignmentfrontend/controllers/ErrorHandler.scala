@@ -16,28 +16,22 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
+import com.google.inject.Inject
 import play.api.Logger
 import play.api.i18n.Messages
 import play.api.mvc.Result
 import play.api.mvc.Results.{InternalServerError, Ok, Redirect}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
-  InvalidUserType,
-  TaxEnrolmentAssignmentErrors
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{InvalidUserType, TaxEnrolmentAssignmentErrors}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logUnexpectedErrorOccurred
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
-trait ControllerHelper {
-
-  val errorView: ErrorTemplate
-  val logger: EventLoggerService
+class ErrorHandler @Inject()(errorView: ErrorTemplate, logger: EventLoggerService)(implicit messages: Messages) {
 
   def handleErrors(error: TaxEnrolmentAssignmentErrors, classAndMethod: String)(
-    implicit request: RequestWithUserDetails[_],
+    implicit request: RequestWithUserDetailsFromSession[_],
     baseLogger: Logger,
-    messages: Messages
   ): Result = {
     error match {
       case InvalidUserType(redirectUrl) if redirectUrl.isDefined =>

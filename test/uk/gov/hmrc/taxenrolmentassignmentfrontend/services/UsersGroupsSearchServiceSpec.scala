@@ -21,8 +21,8 @@ import play.api.libs.json.Format
 import play.api.mvc.AnyContent
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.cache.client.CacheMap
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.UsersGroupsSearchConnector
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromUsersGroupsSearch
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
@@ -45,7 +45,7 @@ class UsersGroupsSearchServiceSpec extends TestFixture with ScalaFutures {
       "not call the users-groups-search and return value from cache" in {
         (mockTeaSessionCache
           .getEntry(_: String)(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: Format[AccountDetails]
           ))
           .expects(s"AccountDetailsFor$CREDENTIAL_ID", *, *)
@@ -60,7 +60,7 @@ class UsersGroupsSearchServiceSpec extends TestFixture with ScalaFutures {
       "call the users-groups-search, save to cache and return the account details" in {
         (mockTeaSessionCache
           .getEntry(_: String)(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: Format[AccountDetails]
           ))
           .expects(s"AccountDetailsFor$CREDENTIAL_ID", *, *)
@@ -71,7 +71,7 @@ class UsersGroupsSearchServiceSpec extends TestFixture with ScalaFutures {
           .returning(createInboundResult(usersGroupSearchResponse))
         (mockTeaSessionCache
           .save(_: String, _: AccountDetails)(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: Format[AccountDetails]
           ))
           .expects(s"AccountDetailsFor$CREDENTIAL_ID", accountDetails, *, *)
@@ -87,7 +87,7 @@ class UsersGroupsSearchServiceSpec extends TestFixture with ScalaFutures {
       "return an error" in {
         (mockTeaSessionCache
           .getEntry(_: String)(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: Format[AccountDetails]
           ))
           .expects(s"AccountDetailsFor$CREDENTIAL_ID", *, *)

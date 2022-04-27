@@ -23,7 +23,7 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.PT_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthAction
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.InvalidUserType
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
@@ -39,11 +39,10 @@ class PTEnrolmentOnOtherAccountController @Inject()(
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
   ptEnrolmentOnAnotherAccountView: PTEnrolmentOnAnotherAccount,
   val logger: EventLoggerService,
-  val errorView: ErrorTemplate
+  errorHandler: ErrorHandler
 )(implicit ec: ExecutionContext, appConfig: AppConfig)
     extends FrontendController(mcc)
-    with I18nSupport
-    with ControllerHelper {
+    with I18nSupport {
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
@@ -66,7 +65,7 @@ class PTEnrolmentOnOtherAccountController @Inject()(
       case Left(InvalidUserType(redirectUrl)) if redirectUrl.isDefined =>
         Redirect(routes.AccountCheckController.accountCheck(redirectUrl.get))
       case Left(error) =>
-        handleErrors(error, "[PTEnrolmentOnOtherAccountController][view]")
+        errorHandler.handleErrors(error, "[PTEnrolmentOnOtherAccountController][view]")
     }
   }
 }

@@ -24,16 +24,10 @@ import uk.gov.hmrc.auth.core.Enrolments
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
-  InvalidUserType,
-  UnexpectedResponseFromUsersGroupsSearch
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{InvalidUserType, UnexpectedResponseFromUsersGroupsSearch}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{
-  TestFixture,
-  UrlPaths
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTWithSAOnOtherAccount
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -72,7 +66,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getDetailsForEnrolledPTWithSAOnOtherAccount(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -81,7 +75,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getSACredentialIfNotFraud(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -120,7 +114,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getDetailsForEnrolledPTWithSAOnOtherAccount(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -129,7 +123,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getSACredentialIfNotFraud(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -170,7 +164,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getDetailsForEnrolledPTWithSAOnOtherAccount(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -203,7 +197,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getDetailsForEnrolledPTWithSAOnOtherAccount(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -234,7 +228,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getDetailsForEnrolledPTWithSAOnOtherAccount(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))

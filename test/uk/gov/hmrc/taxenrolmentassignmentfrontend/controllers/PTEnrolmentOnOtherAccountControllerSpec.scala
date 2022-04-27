@@ -25,23 +25,10 @@ import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.PT_ASSIGNED_TO_OTHER_USER
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
-  InvalidUserType,
-  NoPTEnrolmentWhenOneExpected
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{
-  accountDetails,
-  buildFakeRequestWithSessionId,
-  predicates,
-  retrievalResponse,
-  retrievals,
-  saEnrolmentOnly
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{
-  TestFixture,
-  UrlPaths
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{InvalidUserType, NoPTEnrolmentWhenOneExpected}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{accountDetails, buildFakeRequestWithSessionId, predicates, retrievalResponse, retrievals, saEnrolmentOnly}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnotherAccount
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -77,7 +64,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -86,7 +73,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getPTCredentialDetails(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -122,7 +109,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
           )
         (mockMultipleAccountsOrchestrator
           .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -131,7 +118,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getPTCredentialDetails(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -166,7 +153,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -201,7 +188,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -210,7 +197,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getPTCredentialDetails(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -241,7 +228,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))

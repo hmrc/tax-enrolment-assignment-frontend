@@ -22,7 +22,7 @@ import play.api.i18n.I18nSupport
 import play.api.mvc._
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthAction
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
@@ -39,11 +39,10 @@ class KeepAccessToSAController @Inject()(
   mcc: MessagesControllerComponents,
   val logger: EventLoggerService,
   keepAccessToSA: KeepAccessToSA,
-  val errorView: ErrorTemplate
+  errorHandler: ErrorHandler,
 )(implicit config: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc)
-    with I18nSupport
-    with ControllerHelper {
+    with I18nSupport {
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
@@ -52,7 +51,7 @@ class KeepAccessToSAController @Inject()(
       multipleAccountsOrchestrator.getDetailsForKeepAccessToSA.value.map {
         case Right(form) => Ok(keepAccessToSA(form))
         case Left(error) =>
-          handleErrors(error, "[KeepAccessToSAController][view]")
+          errorHandler.handleErrors(error, "[KeepAccessToSAController][view]")
       }
     }
 
@@ -74,7 +73,7 @@ class KeepAccessToSAController @Inject()(
                 case Right(false) =>
                   Redirect(routes.EnrolledPTWithSAOnOtherAccountController.view)
                 case Left(error) =>
-                  handleErrors(error, "[KeepAccessToSAController][continue]")
+                  errorHandler.handleErrors(error, "[KeepAccessToSAController][continue]")
               }
           }
         )

@@ -25,6 +25,7 @@ import uk.gov.hmrc.auth.core.{Enrolments, InsufficientConfidenceLevel, SessionRe
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AuthAction, RequestWithUserDetailsFromSession}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
@@ -36,8 +37,8 @@ class AuthActionSpec extends TestFixture {
   def authAction: AuthAction = new AuthAction(mockAuthConnector, testBodyParser, logger, appConfig)
 
   def defaultAsyncBody(
-    requestTestCase: RequestWithUserDetails[_] => Assertion
-  ): RequestWithUserDetails[_] => Result = testRequest => {
+    requestTestCase: RequestWithUserDetailsFromSession[_] => Assertion
+  ): RequestWithUserDetailsFromSession[_] => Result = testRequest => {
     requestTestCase(testRequest)
     Results.Ok("Successful")
   }

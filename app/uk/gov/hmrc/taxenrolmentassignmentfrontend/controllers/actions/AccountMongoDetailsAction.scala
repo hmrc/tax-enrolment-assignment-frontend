@@ -41,8 +41,6 @@ trait AccountMongoDetailsActionTrait
 class AccountMongoDetailsAction @Inject()(accountCheckOrchestrator: AccountCheckOrchestrator,
                                           val parser: BodyParsers.Default,
                                           errorHandler: ErrorHandler)(implicit val executionContext: ExecutionContext) extends AccountMongoDetailsActionTrait {
-
-  val origin: String = "tax-enrolment-assignment-frontend"
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
   override protected def refine[A](request: RequestWithUserDetailsFromSession[A]): Future[Either[Result, RequestWithUserDetailsFromSessionAndMongo[A]]] = {

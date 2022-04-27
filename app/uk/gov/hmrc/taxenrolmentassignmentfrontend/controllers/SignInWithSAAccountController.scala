@@ -21,7 +21,7 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthAction
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.NoRedirectUrlInCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
@@ -42,10 +42,9 @@ class SignInWithSAAccountController @Inject()(
   signInWithSAAccount: SignInWithSAAccount,
   sessionCache: TEASessionCache,
   val logger: EventLoggerService,
-  val errorView: ErrorTemplate
+  errorHandler: ErrorHandler
 )(implicit ec: ExecutionContext)
     extends FrontendController(mcc)
-    with ControllerHelper
     with I18nSupport {
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
@@ -62,19 +61,19 @@ class SignInWithSAAccountController @Inject()(
       case Right(saAccount) =>
         Ok(signInWithSAAccount(saAccount))
       case Left(error) =>
-        handleErrors(error, "[SignInWithSAAccountController][view]")
+        errorHandler.handleErrors(error, "[SignInWithSAAccountController][view]")
     }
   }
 
   def continue: Action[AnyContent] = authAction.async { implicit request =>
     sessionCache.getEntry[String](REDIRECT_URL).map {
-      case Some(redirectUrl) =>
+      case Some(_) =>
         logger.logEvent(
           logUserSignsInAgainWithSAAccount(request.userDetails.credId)
         )
         Redirect(routes.SignOutController.signOut())
       case None =>
-        handleErrors(
+        errorHandler.handleErrors(
           NoRedirectUrlInCache,
           "[SignInWithSAAccountController][continue]"
         )

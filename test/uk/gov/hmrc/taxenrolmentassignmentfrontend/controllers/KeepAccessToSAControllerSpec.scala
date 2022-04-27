@@ -24,17 +24,11 @@ import uk.gov.hmrc.auth.core.Enrolments
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
-  InvalidUserType,
-  UnexpectedResponseFromTaxEnrolments
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{InvalidUserType, UnexpectedResponseFromTaxEnrolments}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm.keepAccessToSAThroughPTAForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{
-  TestFixture,
-  UrlPaths
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.KeepAccessToSA
 
@@ -50,7 +44,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
     mcc,
     logger,
     view,
-    errorView
+    errorHandler
   )
 
   "view" when {
@@ -72,7 +66,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getDetailsForKeepAccessToSA(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -114,7 +108,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getDetailsForKeepAccessToSA(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -160,7 +154,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getDetailsForKeepAccessToSA(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -204,7 +198,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getDetailsForKeepAccessToSA(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -237,7 +231,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getDetailsForKeepAccessToSA(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -271,7 +265,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
 
           (mockMultipleAccountsOrchestrator
             .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
@@ -306,7 +300,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
             .returning(Future.successful(retrievalResponse()))
           (mockMultipleAccountsOrchestrator
             .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
@@ -344,7 +338,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
             .returning(Future.successful(retrievalResponse()))
           (mockMultipleAccountsOrchestrator
             .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
@@ -380,7 +374,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
             .returning(Future.successful(retrievalResponse()))
           (mockMultipleAccountsOrchestrator
             .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
@@ -415,7 +409,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
             .returning(Future.successful(retrievalResponse()))
           (mockMultipleAccountsOrchestrator
             .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
@@ -453,7 +447,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
             .returning(Future.successful(retrievalResponse()))
           (mockMultipleAccountsOrchestrator
             .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
@@ -487,7 +481,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
             .returning(Future.successful(retrievalResponse()))
           (mockMultipleAccountsOrchestrator
             .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
-              _: RequestWithUserDetails[AnyContent],
+              _: RequestWithUserDetailsFromSession[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))

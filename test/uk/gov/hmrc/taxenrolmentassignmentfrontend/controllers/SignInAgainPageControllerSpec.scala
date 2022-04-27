@@ -25,20 +25,11 @@ import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
-  InvalidUserType,
-  NoSAEnrolmentWhenOneExpected
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{InvalidUserType, NoSAEnrolmentWhenOneExpected}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{
-  TestFixture,
-  UrlPaths
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{
-  ReportSuspiciousID,
-  SignInWithSAAccount
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, UrlPaths}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{ReportSuspiciousID, SignInWithSAAccount}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -57,7 +48,7 @@ class SignInAgainPageControllerSpec extends TestFixture {
     mcc,
     reportSuspiciousIDPage,
     logger,
-    errorView
+    errorHandler
   )
 
   lazy val reportSuspiciousIDPage: ReportSuspiciousID =
@@ -71,7 +62,7 @@ class SignInAgainPageControllerSpec extends TestFixture {
       view,
       mockTeaSessionCache,
       logger,
-      errorView
+      errorHandler
     )
 
   "view" when {
@@ -89,7 +80,7 @@ class SignInAgainPageControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -98,7 +89,7 @@ class SignInAgainPageControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getSACredentialDetails(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -130,7 +121,7 @@ class SignInAgainPageControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -163,7 +154,7 @@ class SignInAgainPageControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -172,7 +163,7 @@ class SignInAgainPageControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getSACredentialDetails(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -204,7 +195,7 @@ class SignInAgainPageControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -236,7 +227,7 @@ class SignInAgainPageControllerSpec extends TestFixture {
 
         (mockTeaSessionCache
           .getEntry(_: String)(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: Format[String]
           ))
           .expects("redirectURL", *, *)
@@ -268,7 +259,7 @@ class SignInAgainPageControllerSpec extends TestFixture {
 
         (mockTeaSessionCache
           .getEntry(_: String)(
-            _: RequestWithUserDetails[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: Format[String]
           ))
           .expects("redirectURL", *, *)

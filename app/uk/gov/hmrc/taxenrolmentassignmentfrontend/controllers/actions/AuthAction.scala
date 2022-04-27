@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions
 
 import play.api.Logger
 import play.api.mvc.Results._
@@ -37,17 +37,18 @@ import scala.concurrent.{ExecutionContext, Future}
 case class UserDetailsFromSession(credId: String,
                                   nino: String,
                                   groupId: String,
+                                  enrolments: Enrolments,
                                   hasPTEnrolment: Boolean,
                                   hasSAEnrolment: Boolean)
 
-case class RequestWithUserDetails[A](request: Request[A],
-                                     userDetails: UserDetailsFromSession,
-                                     sessionID: String)
+case class RequestWithUserDetailsFromSession[A](request: Request[A],
+                                                userDetails: UserDetailsFromSession,
+                                                sessionID: String)
     extends WrappedRequest[A](request)
 
 trait AuthIdentifierAction
-    extends ActionBuilder[RequestWithUserDetails, AnyContent]
-    with ActionFunction[Request, RequestWithUserDetails]
+    extends ActionBuilder[RequestWithUserDetailsFromSession, AnyContent]
+    with ActionFunction[Request, RequestWithUserDetailsFromSession]
 
 @Singleton
 class AuthAction @Inject()(
@@ -64,7 +65,7 @@ class AuthAction @Inject()(
 
   override def invokeBlock[A](
     request: Request[A],
-    block: RequestWithUserDetails[A] => Future[Result]
+    block: RequestWithUserDetailsFromSession[A] => Future[Result]
   ): Future[Result] = {
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequestAndSession(request, request.session)
 
@@ -79,6 +80,7 @@ class AuthAction @Inject()(
             credentials.providerId,
             nino,
             groupId,
+            enrolments,
             hasPTEnrolment,
             hasSAEnrolment
           )
@@ -86,7 +88,7 @@ class AuthAction @Inject()(
           val sessionID = request.session
             .get("sessionId")
             .getOrElse(UUID.randomUUID().toString)
-          block(RequestWithUserDetails(request, userDetails, sessionID))
+          block(RequestWithUserDetailsFromSession(request, userDetails, sessionID))
 
         case _ =>
           logger.logEvent(

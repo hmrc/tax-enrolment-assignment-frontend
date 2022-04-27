@@ -23,32 +23,15 @@ import play.api.Logger
 import play.api.mvc.AnyContent
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.service.TEAFResult
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
-  MULTIPLE_ACCOUNTS,
-  PT_ASSIGNED_TO_CURRENT_USER,
-  PT_ASSIGNED_TO_OTHER_USER,
-  SA_ASSIGNED_TO_CURRENT_USER,
-  SA_ASSIGNED_TO_OTHER_USER,
-  SINGLE_ACCOUNT
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{
-  logAnotherAccountAlreadyHasPTEnrolment,
-  logAnotherAccountHasSAEnrolment,
-  logCurrentUserAlreadyHasPTEnrolment,
-  logCurrentUserHasSAEnrolment,
-  logCurrentUserhasMultipleAccounts,
-  logCurrentUserhasOneAccount
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{logAnotherAccountAlreadyHasPTEnrolment, logAnotherAccountHasSAEnrolment, logCurrentUserAlreadyHasPTEnrolment, logCurrentUserHasSAEnrolment, logCurrentUserhasMultipleAccounts, logCurrentUserhasOneAccount}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.ACCOUNT_TYPE
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{
-  EACDService,
-  SilentAssignmentService
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, SilentAssignmentService}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -65,7 +48,7 @@ class AccountCheckOrchestrator @Inject()(
   def getAccountType(
     implicit ec: ExecutionContext,
     hc: HeaderCarrier,
-    requestWithUserDetails: RequestWithUserDetails[AnyContent]
+    requestWithUserDetails: RequestWithUserDetailsFromSession[_]
   ): TEAFResult[AccountTypes.Value] = EitherT {
     sessionCache.getEntry[AccountTypes.Value](ACCOUNT_TYPE).flatMap {
       case Some(accountType) => Future.successful(Right(accountType))
@@ -80,7 +63,7 @@ class AccountCheckOrchestrator @Inject()(
   private def generateAccountType(
     implicit ec: ExecutionContext,
     hc: HeaderCarrier,
-    requestWithUserDetails: RequestWithUserDetails[AnyContent]
+    requestWithUserDetails: RequestWithUserDetailsFromSession[_]
   ): TEAFResult[AccountTypes.Value] = EitherT {
     checkUsersWithPTEnrolmentAlreadyAssigned.value
       .flatMap {
@@ -93,7 +76,7 @@ class AccountCheckOrchestrator @Inject()(
   private def checkUsersWithPTEnrolmentAlreadyAssigned(
     implicit hc: HeaderCarrier,
     ec: ExecutionContext,
-    requestWithUserDetails: RequestWithUserDetails[AnyContent]
+    requestWithUserDetails: RequestWithUserDetailsFromSession[_]
   ): TEAFResult[Option[AccountTypes.Value]] = {
     if (requestWithUserDetails.userDetails.hasPTEnrolment) {
       logger.logEvent(
@@ -129,9 +112,9 @@ class AccountCheckOrchestrator @Inject()(
   }
 
   private def getNonePTAccountType(
-    implicit requestWithUserDetails: RequestWithUserDetails[AnyContent],
-    hc: HeaderCarrier,
-    ec: ExecutionContext
+                                    implicit requestWithUserDetails: RequestWithUserDetailsFromSession[_],
+                                    hc: HeaderCarrier,
+                                    ec: ExecutionContext
   ): TEAFResult[AccountTypes.Value] = {
     for {
       singleOrMultipleAccount <- checkIfSingleOrMultipleAccounts
@@ -146,9 +129,9 @@ class AccountCheckOrchestrator @Inject()(
   }
 
   private def checkIfSingleOrMultipleAccounts(
-    implicit requestWithUserDetails: RequestWithUserDetails[AnyContent],
-    hc: HeaderCarrier,
-    ec: ExecutionContext
+                                               implicit requestWithUserDetails: RequestWithUserDetailsFromSession[_],
+                                               hc: HeaderCarrier,
+                                               ec: ExecutionContext
   ): TEAFResult[AccountTypes.Value] = {
     silentAssignmentService.getOtherAccountsWithPTAAccess.map(
       otherCreds =>
@@ -173,7 +156,7 @@ class AccountCheckOrchestrator @Inject()(
   private def checkMultipleAccountType(
     implicit hc: HeaderCarrier,
     ec: ExecutionContext,
-    requestWithUserDetails: RequestWithUserDetails[AnyContent]
+    requestWithUserDetails: RequestWithUserDetailsFromSession[_]
   ): TEAFResult[AccountTypes.Value] = {
     if (requestWithUserDetails.userDetails.hasSAEnrolment) {
       logger.logEvent(

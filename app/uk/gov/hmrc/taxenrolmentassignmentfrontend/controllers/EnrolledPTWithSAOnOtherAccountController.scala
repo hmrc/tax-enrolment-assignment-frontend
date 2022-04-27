@@ -22,7 +22,7 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthAction
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.NoRedirectUrlInCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logRedirectingToReturnUrl
@@ -42,11 +42,10 @@ class EnrolledPTWithSAOnOtherAccountController @Inject()(
   mcc: MessagesControllerComponents,
   enrolledForPTPage: EnrolledForPTWithSAOnOtherAccount,
   val logger: EventLoggerService,
-  val errorView: ErrorTemplate
+  errorHandler: ErrorHandler
 )(implicit ec: ExecutionContext, appConfig: AppConfig)
     extends FrontendController(mcc)
-    with I18nSupport
-    with ControllerHelper {
+    with I18nSupport {
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
@@ -60,7 +59,7 @@ class EnrolledPTWithSAOnOtherAccountController @Inject()(
       case Right((currentUserId, optSAUserId)) =>
         Ok(enrolledForPTPage(currentUserId, optSAUserId))
       case Left(error) =>
-        handleErrors(error, "[EnrolledPTWithSAOnOtherAccountController][view]")
+        errorHandler.handleErrors(error, "[EnrolledPTWithSAOnOtherAccountController][view]")
     }
   }
 
@@ -75,7 +74,7 @@ class EnrolledPTWithSAOnOtherAccountController @Inject()(
         )
         Redirect(redirectUrl)
       case None =>
-        handleErrors(
+        errorHandler.handleErrors(
           NoRedirectUrlInCache,
           "[EnrolledPTWithSAOnOtherAccountController][continue]"
         )

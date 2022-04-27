@@ -22,7 +22,7 @@ import play.api.http.ContentTypeOf.contentTypeOf_Html
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthAction
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.NoRedirectUrlInCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logRedirectingToReturnUrl
@@ -42,11 +42,10 @@ class EnrolledForPTController @Inject()(
   sessionCache: TEASessionCache,
   val logger: EventLoggerService,
   enrolledForPTPage: EnrolledForPTPage,
-  val errorView: ErrorTemplate
+  errorHandler: ErrorHandler
 )(implicit ec: ExecutionContext)
     extends FrontendController(mcc)
-    with I18nSupport
-    with ControllerHelper {
+    with I18nSupport {
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
@@ -60,7 +59,7 @@ class EnrolledForPTController @Inject()(
           )
         )
       case Left(error) =>
-        handleErrors(error, "[EnrolledForPTController][view]")
+        errorHandler.handleErrors(error, "[EnrolledForPTController][view]")
     }
   }
 
@@ -75,7 +74,7 @@ class EnrolledForPTController @Inject()(
         )
         Redirect(redirectUrl)
       case None =>
-        handleErrors(
+        errorHandler.handleErrors(
           NoRedirectUrlInCache,
           "[EnrolledForPTController][continue]"
         )

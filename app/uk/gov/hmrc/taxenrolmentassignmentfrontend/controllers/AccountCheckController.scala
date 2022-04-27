@@ -25,7 +25,7 @@ import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.{AuthAction, RequestWithUserDetails}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AuthAction, RequestWithUserDetailsFromSession}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.AccountCheckOrchestrator
@@ -46,11 +46,11 @@ class AccountCheckController @Inject()(
   mcc: MessagesControllerComponents,
   sessionCache: TEASessionCache,
   val logger: EventLoggerService,
-  val errorView: ErrorTemplate
+  errorHandler: ErrorHandler,
+  errorView: ErrorTemplate
 )(implicit ec: ExecutionContext)
     extends FrontendController(mcc)
-    with I18nSupport
-    with ControllerHelper {
+    with I18nSupport {
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
@@ -75,13 +75,13 @@ class AccountCheckController @Inject()(
         case Right(accountType) => silentEnrolmentAndRedirect(accountType)
         case Left(error) =>
           Future.successful(
-            handleErrors(error, "[AccountCheckController][accountCheck]")
+            errorHandler.handleErrors(error, "[AccountCheckController][accountCheck]")
           )
       }
   }
 
   private def silentEnrolmentAndRedirect(accountType: AccountTypes.Value)(
-    implicit request: RequestWithUserDetails[AnyContent],
+    implicit request: RequestWithUserDetailsFromSession[AnyContent],
     hc: HeaderCarrier
   ): Future[Result] = {
     silentAssignmentService.enrolUser().isRight map {

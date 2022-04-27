@@ -22,7 +22,7 @@ import play.api.mvc.AnyContent
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.UsersGroupsSearchConnector
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.accountDetailsForCredential
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
@@ -38,7 +38,7 @@ class UsersGroupsSearchService @Inject()(
   def getAccountDetails(credId: String)(
     implicit ec: ExecutionContext,
     hc: HeaderCarrier,
-    request: RequestWithUserDetails[AnyContent]
+    request: RequestWithUserDetailsFromSession[AnyContent]
   ): TEAFResult[AccountDetails] = EitherT {
     val key = accountDetailsForCredential(credId)
     sessionCache.getEntry[AccountDetails](key).flatMap {
@@ -52,7 +52,7 @@ class UsersGroupsSearchService @Inject()(
                                                     key: String)(
     implicit ec: ExecutionContext,
     hc: HeaderCarrier,
-    request: RequestWithUserDetails[AnyContent]
+    request: RequestWithUserDetailsFromSession[AnyContent]
   ): TEAFResult[AccountDetails] = EitherT {
     usersGroupsSearchConnector
       .getUserDetails(credId)

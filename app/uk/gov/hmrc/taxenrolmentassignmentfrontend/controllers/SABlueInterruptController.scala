@@ -23,7 +23,7 @@ import play.api.mvc._
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthAction
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SABlueInterrupt
@@ -38,11 +38,10 @@ class SABlueInterruptController @Inject()(
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
   val logger: EventLoggerService,
   saBlueInterrupt: SABlueInterrupt,
-  val errorView: ErrorTemplate
+  errorHandler: ErrorHandler
 )(implicit config: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc)
-    with I18nSupport
-    with ControllerHelper {
+    with I18nSupport {
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
@@ -57,7 +56,7 @@ class SABlueInterruptController @Inject()(
           case Right(x) =>
             Ok(saBlueInterrupt())
           case Left(error) =>
-            handleErrors(error, "[SABlueInterruptController][view]")
+            errorHandler.handleErrors(error, "[SABlueInterruptController][view]")
         }
     }
 
@@ -71,7 +70,7 @@ class SABlueInterruptController @Inject()(
         .map {
           case Right(_) => Redirect(routes.KeepAccessToSAController.view)
           case Left(error) =>
-            handleErrors(error, "[SABlueInterruptController][continue]")
+            errorHandler.handleErrors(error, "[SABlueInterruptController][continue]")
         }
     }
 }

@@ -23,7 +23,7 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_OTHER_USER}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.AuthAction
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthAction
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logAssignedEnrolmentAfterReportingFraud
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
@@ -42,11 +42,10 @@ class ReportSuspiciousIDController @Inject()(
   mcc: MessagesControllerComponents,
   reportSuspiciousID: ReportSuspiciousID,
   val logger: EventLoggerService,
-  val errorView: ErrorTemplate
+  errorHandler: ErrorHandler
 )(implicit ec: ExecutionContext, appConfig: AppConfig)
     extends FrontendController(mcc)
-    with I18nSupport
-    with ControllerHelper {
+    with I18nSupport {
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
@@ -62,7 +61,7 @@ class ReportSuspiciousIDController @Inject()(
       case Right(ptAccount) =>
         Ok(reportSuspiciousID(ptAccount))
       case Left(error) =>
-        handleErrors(error, "[ReportSuspiciousIDController][viewNoSA]")
+        errorHandler.handleErrors(error, "[ReportSuspiciousIDController][viewNoSA]")
     }
   }
 
@@ -78,7 +77,7 @@ class ReportSuspiciousIDController @Inject()(
       case Right(saAccount) =>
         Ok(reportSuspiciousID(saAccount, true))
       case Left(error) =>
-        handleErrors(error, "[ReportSuspiciousIDController][viewSA]")
+        errorHandler.handleErrors(error, "[ReportSuspiciousIDController][viewSA]")
     }
   }
 
@@ -94,7 +93,7 @@ class ReportSuspiciousIDController @Inject()(
           )
           Redirect(routes.EnrolledPTWithSAOnOtherAccountController.view)
         case Left(error) =>
-          handleErrors(error, "[ReportSuspiciousIdController][continue]")
+          errorHandler.handleErrors(error, "[ReportSuspiciousIdController][continue]")
       }
   }
 }

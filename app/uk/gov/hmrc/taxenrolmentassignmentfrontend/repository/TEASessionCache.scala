@@ -20,7 +20,7 @@ import com.google.inject.{ImplementedBy, Inject}
 import play.api.libs.json.{Format, JsString}
 import play.api.mvc.AnyContent
 import uk.gov.hmrc.http.cache.client.CacheMap
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -31,7 +31,7 @@ class TEASessionCacheImpl @Inject()(
     extends TEASessionCache {
 
   def save[A](key: String, value: A)(
-    implicit request: RequestWithUserDetails[AnyContent],
+    implicit request: RequestWithUserDetailsFromSession[_],
     fmt: Format[A]
   ): Future[CacheMap] = {
     sessionRepository().get(request.sessionID).flatMap { optionalCacheMap =>
@@ -48,7 +48,7 @@ class TEASessionCacheImpl @Inject()(
 
   def remove(
     key: String
-  )(implicit request: RequestWithUserDetails[AnyContent]): Future[Boolean] = {
+  )(implicit request: RequestWithUserDetailsFromSession[_]): Future[Boolean] = {
     sessionRepository().get(request.sessionID).flatMap { optionalCacheMap =>
       optionalCacheMap.fold(Future(false)) { cacheMap =>
         val newCacheMap = cacheMap copy (data = cacheMap.data - key)
@@ -58,7 +58,7 @@ class TEASessionCacheImpl @Inject()(
   }
 
   def removeAll()(
-    implicit request: RequestWithUserDetails[AnyContent]
+    implicit request: RequestWithUserDetailsFromSession[_]
   ): Future[Boolean] = {
     sessionRepository().upsert(
       CacheMap(request.sessionID, Map("" -> JsString("")))
@@ -66,12 +66,12 @@ class TEASessionCacheImpl @Inject()(
   }
 
   def fetch()(
-    implicit request: RequestWithUserDetails[AnyContent]
+    implicit request: RequestWithUserDetailsFromSession[_]
   ): Future[Option[CacheMap]] =
     sessionRepository().get(request.sessionID)
 
   def getEntry[A](key: String)(
-    implicit request: RequestWithUserDetails[AnyContent],
+    implicit request: RequestWithUserDetailsFromSession[_],
     fmt: Format[A]
   ): Future[Option[A]] = {
     fetch().map { optionalCacheMap =>
@@ -85,24 +85,24 @@ class TEASessionCacheImpl @Inject()(
 @ImplementedBy(classOf[TEASessionCacheImpl])
 trait TEASessionCache {
   def save[A](key: String, value: A)(
-    implicit request: RequestWithUserDetails[AnyContent],
+    implicit request: RequestWithUserDetailsFromSession[_],
     fmt: Format[A]
   ): Future[CacheMap]
 
   def remove(key: String)(
-    implicit request: RequestWithUserDetails[AnyContent]
+    implicit request: RequestWithUserDetailsFromSession[_]
   ): Future[Boolean]
 
   def removeAll()(
-    implicit request: RequestWithUserDetails[AnyContent]
+    implicit request: RequestWithUserDetailsFromSession[_]
   ): Future[Boolean]
 
   def fetch()(
-    implicit request: RequestWithUserDetails[AnyContent]
+    implicit request: RequestWithUserDetailsFromSession[_]
   ): Future[Option[CacheMap]]
 
   def getEntry[A](key: String)(
-    implicit request: RequestWithUserDetails[AnyContent],
+    implicit request: RequestWithUserDetailsFromSession[_],
     fmt: Format[A]
   ): Future[Option[A]]
 }

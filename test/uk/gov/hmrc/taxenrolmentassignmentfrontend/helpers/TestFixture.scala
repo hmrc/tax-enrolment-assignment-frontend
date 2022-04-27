@@ -37,30 +37,16 @@ import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{
-  EACDConnector,
-  IVConnector,
-  TaxEnrolmentsConnector
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignOutController
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.{
-  AuthAction,
-  RequestWithUserDetails
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{EACDConnector, IVConnector, TaxEnrolmentsConnector}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{ErrorHandler, SignOutController}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AuthAction, RequestWithUserDetailsFromSession}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.userDetailsNoEnrolments
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{
-  AccountCheckOrchestrator,
-  MultipleAccountsOrchestrator
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{
-  EACDService,
-  SilentAssignmentService,
-  UsersGroupsSearchService
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, SilentAssignmentService, UsersGroupsSearchService}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.UnderConstructionView
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
@@ -77,8 +63,8 @@ trait TestFixture
   val INTERVAL = 5
 
   lazy val injector: Injector = app.injector
-  implicit val request: RequestWithUserDetails[AnyContent] =
-    new RequestWithUserDetails[AnyContent](
+  implicit val request: RequestWithUserDetailsFromSession[AnyContent] =
+    new RequestWithUserDetailsFromSession[AnyContent](
       FakeRequest().asInstanceOf[Request[AnyContent]],
       userDetailsNoEnrolments,
       "sessionId"
@@ -117,11 +103,13 @@ trait TestFixture
       .withCSRFToken
       .asInstanceOf[FakeRequest[AnyContentAsEmpty.type]]
   val testAppConfig: AppConfig = app.injector.instanceOf[AppConfig]
+
   val errorView: ErrorTemplate = app.injector.instanceOf[ErrorTemplate]
   lazy val mockAuthAction =
     new AuthAction(mockAuthConnector, testBodyParser, logger, testAppConfig)
   implicit lazy val testMessages: Messages =
     messagesApi.preferred(FakeRequest())
+
 
   val messagesActionBuilder: MessagesActionBuilder =
     new DefaultMessagesActionBuilderImpl(
@@ -130,6 +118,7 @@ trait TestFixture
     )
   lazy val mcc: MessagesControllerComponents =
     stubMessagesControllerComponents()
+  lazy val errorHandler: ErrorHandler = new ErrorHandler(errorView, logger, mcc)
 
   lazy val mockSignOutController = mock[SignOutController]
 
@@ -146,25 +135,25 @@ trait TestFixture
 
   class TestTeaSessionCache extends TEASessionCache {
     override def save[A](key: String, value: A)(
-      implicit request: RequestWithUserDetails[AnyContent],
+      implicit request: RequestWithUserDetailsFromSession[_],
       fmt: Format[A]
     ): Future[CacheMap] = Future(CacheMap(request.sessionID, Map()))
 
     override def remove(key: String)(
-      implicit request: RequestWithUserDetails[AnyContent]
+      implicit request: RequestWithUserDetailsFromSession[_]
     ): Future[Boolean] = ???
 
     override def removeAll()(
-      implicit request: RequestWithUserDetails[AnyContent]
+      implicit request: RequestWithUserDetailsFromSession[_]
     ): Future[Boolean] = Future.successful(true)
 
     override def fetch()(
-      implicit request: RequestWithUserDetails[AnyContent]
+      implicit request: RequestWithUserDetailsFromSession[_]
     ): Future[Option[CacheMap]] =
       Future(Some(CacheMap(request.sessionID, Map())))
 
     override def getEntry[A](key: String)(
-      implicit request: RequestWithUserDetails[AnyContent],
+      implicit request: RequestWithUserDetailsFromSession[_],
       fmt: Format[A]
     ): Future[Option[A]] = Future.successful(None)
   }

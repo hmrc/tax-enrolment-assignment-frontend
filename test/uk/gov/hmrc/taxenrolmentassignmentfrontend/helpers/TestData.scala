@@ -24,7 +24,7 @@ import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{allEnrolments, credentials, groupIdentifier, nino}
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.UserDetailsFromSession
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.UserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{EACDEnrolment => _, _}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{IVNinoStoreEntry, IdentifiersOrVerifiers, UserEnrolment, UsersAssignedEnrolment}
 
@@ -80,8 +80,7 @@ object TestData {
 
   val retrievals: Retrieval[
     Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String]
-  ] =
-    nino and credentials and allEnrolments and groupIdentifier
+  ] = nino and credentials and allEnrolments and groupIdentifier
 
   def retrievalResponse(
     optNino: Option[String] = Some(NINO),
@@ -96,22 +95,25 @@ object TestData {
       CREDENTIAL_ID,
       NINO,
       GROUP_ID,
+      enrolments = Enrolments(Set.empty[Enrolment]),
       hasPTEnrolment = false,
-      hasSAEnrolment = false
+      hasSAEnrolment = false,
     )
   val userDetailsWithPTEnrolment =
     UserDetailsFromSession(
       CREDENTIAL_ID,
       NINO,
       GROUP_ID,
+      enrolments = ptEnrolmentOnly,
       hasPTEnrolment = true,
       hasSAEnrolment = false
-    )
+      )
   val userDetailsWithSAEnrolment =
     UserDetailsFromSession(
       CREDENTIAL_ID,
       NINO,
       GROUP_ID,
+      enrolments = saEnrolmentOnly,
       hasPTEnrolment = false,
       hasSAEnrolment = true
     )
@@ -120,6 +122,7 @@ object TestData {
       CREDENTIAL_ID,
       NINO,
       GROUP_ID,
+      enrolments = saAndptEnrolments,
       hasPTEnrolment = true,
       hasSAEnrolment = true
     )
@@ -146,17 +149,12 @@ object TestData {
     ivNinoStoreEntry4
   )
 
-  // accountDetails
-
   val accountDetails: AccountDetails = AccountDetails(
     userId = "6037",
     email = Some("email1@test.com"),
     lastLoginDate = "27 February 2022 at 12:00 PM",
     mfaDetails = List(MFADetails("mfaDetails.text", "24321"))
   )
-
-
-  // userGroupSearchResponse
 
   val usersGroupSearchResponse = UsersGroupResponse(
     obfuscatedUserId = "********6037",

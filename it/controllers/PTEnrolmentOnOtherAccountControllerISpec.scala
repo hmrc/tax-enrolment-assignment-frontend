@@ -28,10 +28,20 @@ import play.api.test.Helpers
 import play.libs.ws.WSCookie
 import uk.gov.hmrc.crypto.PlainText
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
+  MULTIPLE_ACCOUNTS,
+  PT_ASSIGNED_TO_CURRENT_USER,
+  PT_ASSIGNED_TO_OTHER_USER,
+  SA_ASSIGNED_TO_CURRENT_USER,
+  SA_ASSIGNED_TO_OTHER_USER,
+  SINGLE_ACCOUNT
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_ASSIGNED_PT_ENROLMENT, USER_ASSIGNED_SA_ENROLMENT}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{
+  USER_ASSIGNED_PT_ENROLMENT,
+  USER_ASSIGNED_SA_ENROLMENT
+}
 
 class PTEnrolmentOnOtherAccountControllerISpec
     extends IntegrationSpecBase
@@ -65,16 +75,8 @@ class PTEnrolmentOnOtherAccountControllerISpec
             UsersAssignedEnrolment(Some(CREDENTIAL_ID_2))
           )
         )
-        await(
-          save[UsersAssignedEnrolment](
-            sessionId,
-            USER_ASSIGNED_SA_ENROLMENT,
-            UsersAssignedEnrolment(Some(CREDENTIAL_ID_2))
-          )
-        )
 
-
-        val authResponse = authoriseResponseJson()
+        val authResponse = authoriseResponseJson(enrolments = saEnrolmentOnly)
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGet(
@@ -85,7 +87,7 @@ class PTEnrolmentOnOtherAccountControllerISpec
         stubGet(
           s"/users-group-search/users/$CREDENTIAL_ID_2",
           OK,
-          usergroupsResponseJson().toString()
+          usergroupsResponseJson(usersGroupSearchResponsePTEnrolment).toString()
         )
         val res = buildRequest(urlPath, followRedirects = true)
           .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
@@ -98,12 +100,14 @@ class PTEnrolmentOnOtherAccountControllerISpec
           page.title should include(
             TestITData.ptEnrolledOnOtherAccountPageTitle
           )
-          resp.body should include("The user ID you are currently signed in with can")
+          resp.body should include(
+            "The user ID you are currently signed in with can"
+          )
         }
       }
     }
 
-    "the user signed in user has SA enrolment and a PT enrolment on another account" should {
+    "the signed in user has SA enrolment and a PT enrolment on another account" should {
       s"render the pt on another account page" in {
         await(save[String](sessionId, "redirectURL", returnUrl))
         await(
@@ -124,10 +128,9 @@ class PTEnrolmentOnOtherAccountControllerISpec
           save[UsersAssignedEnrolment](
             sessionId,
             USER_ASSIGNED_SA_ENROLMENT,
-            UsersAssignedEnrolment(Some(CREDENTIAL_ID))
+            UsersAssignedEnrolment(Some(CREDENTIAL_ID_2))
           )
         )
-
 
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
@@ -135,7 +138,7 @@ class PTEnrolmentOnOtherAccountControllerISpec
         stubGet(
           s"/users-group-search/users/$CREDENTIAL_ID_2",
           OK,
-          usergroupsResponseJson().toString()
+          usergroupsResponseJson(usersGroupSearchResponsePTEnrolment).toString()
         )
         stubGet(
           s"/users-group-search/users/$CREDENTIAL_ID",
@@ -154,7 +157,9 @@ class PTEnrolmentOnOtherAccountControllerISpec
           page.title should include(
             TestITData.ptEnrolledOnOtherAccountPageTitle
           )
-          resp.body should include("To access your Self Assessment sign in again")
+          resp.body should include(
+            "To access your Self Assessment sign in again with the above user ID."
+          )
         }
       }
     }
@@ -173,17 +178,16 @@ class PTEnrolmentOnOtherAccountControllerISpec
           save[UsersAssignedEnrolment](
             sessionId,
             USER_ASSIGNED_PT_ENROLMENT,
-            UsersAssignedEnrolment(Some(CREDENTIAL_ID))
+            UsersAssignedEnrolment(Some(CREDENTIAL_ID_2))
           )
         )
         await(
           save[UsersAssignedEnrolment](
             sessionId,
             USER_ASSIGNED_SA_ENROLMENT,
-            UsersAssignedEnrolment(Some(CREDENTIAL_ID_2))
+            UsersAssignedEnrolment(Some(CREDENTIAL_ID_3))
           )
         )
-
 
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
@@ -196,12 +200,12 @@ class PTEnrolmentOnOtherAccountControllerISpec
         stubGet(
           s"/users-group-search/users/$CREDENTIAL_ID_2",
           OK,
-          usergroupsResponseJson().toString()
+          usergroupsResponseJson(usersGroupSearchResponsePTEnrolment).toString()
         )
         stubGet(
           s"/users-group-search/users/$CREDENTIAL_ID_3",
           OK,
-          usergroupsResponseJson().toString()
+          usergroupsResponseJson(usersGroupSearchResponseSAEnrolment).toString()
         )
         val res = buildRequest(urlPath, followRedirects = true)
           .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
@@ -219,7 +223,7 @@ class PTEnrolmentOnOtherAccountControllerISpec
       }
     }
 
-    "the user signed in user has PT enrolment, however does not have SA enrolment associated with the account" should {
+    "the signed in user has PT enrolment, however does not have SA enrolment associated with the account" should {
       s"render the pt on another account page" in {
         await(save[String](sessionId, "redirectURL", returnUrl))
         await(
@@ -236,7 +240,6 @@ class PTEnrolmentOnOtherAccountControllerISpec
             UsersAssignedEnrolment(Some(CREDENTIAL_ID_2))
           )
         )
-
 
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
@@ -287,9 +290,7 @@ class PTEnrolmentOnOtherAccountControllerISpec
             val page = Jsoup.parse(resp.body)
 
             resp.status shouldBe SEE_OTHER
-            resp.header("Location").get should include(
-              s"/protect-tax-info"
-            )
+            resp.header("Location").get should include(s"/protect-tax-info")
           }
         }
       }

@@ -39,7 +39,7 @@ class KeepAccessToSAController @Inject()(
   mcc: MessagesControllerComponents,
   val logger: EventLoggerService,
   keepAccessToSA: KeepAccessToSA,
-  errorHandler: ErrorHandler,
+  errorHandler: ErrorHandler
 )(implicit config: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc)
     with I18nSupport {

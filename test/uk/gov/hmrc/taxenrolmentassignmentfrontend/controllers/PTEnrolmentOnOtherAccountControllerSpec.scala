@@ -24,9 +24,22 @@ import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.RequestWithUserDetails
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{InvalidUserType, NoPTEnrolmentWhenOneExpected}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
+  InvalidUserType,
+  NoPTEnrolmentWhenOneExpected
+}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{
+  buildFakeRequestWithSessionId,
+  predicates,
+  retrievalResponse,
+  retrievals,
+  saEnrolmentOnly,
+  _
+}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{
+  TestFixture,
+  UrlPaths
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnotherAccount
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -44,7 +57,6 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
     logger,
     errorView
   )
-
 
   "view" when {
     "the user with no SA has another account with PT enrolment" should {
@@ -168,7 +180,6 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
 
         val ptEnrolmentModel = ptEnrolmentDataModel(Some(PT_USER_ID))
 
-
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -209,7 +220,6 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
 
         val ptEnrolmentModel = ptEnrolmentDataModel(Some("8764"))
 
-
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -248,8 +258,6 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
     "the user does not have an account type of PT_ASSIGNED_TO_OTHER_USER" should {
       "redirect to account check" in {
         val ptEnrolmentModel = ptEnrolmentDataModel(Some(USER_ID))
-
-
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -269,15 +277,15 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
             _: ExecutionContext
           ))
           .expects(*, *, *)
-          .returning(createInboundResultError(InvalidUserType(Some("/test"))))
+          .returning(
+            createInboundResultError(InvalidUserType(Some(UrlPaths.returnUrl)))
+          )
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe SEE_OTHER
-        redirectLocation(result) shouldBe Some(
-          "/protect-tax-info?redirectUrl=%2Ftest"
-        )
+        redirectLocation(result) shouldBe Some(UrlPaths.accountCheckPath)
       }
     }
 
@@ -312,7 +320,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
         val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(res) shouldBe OK
+        status(res) shouldBe INTERNAL_SERVER_ERROR
         contentAsString(res) should include("enrolmentError.title")
       }
     }
@@ -343,7 +351,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
         val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(res) shouldBe OK
+        status(res) shouldBe INTERNAL_SERVER_ERROR
         contentAsString(res) should include("enrolmentError.title")
       }
     }

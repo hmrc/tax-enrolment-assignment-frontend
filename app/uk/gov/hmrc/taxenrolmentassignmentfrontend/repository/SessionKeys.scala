@@ -24,6 +24,7 @@ object SessionKeys {
   val REDIRECT_URL = "redirectURL"
   val OTHER_VALID_PTA_ACCOUNTS = "OTHER_VALID_PTA_ACCOUNTS"
   val REPORTED_FRAUD = "reportedFraud"
+  val KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM = "KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM"
 
   def accountDetailsForCredential(credId: String) = s"AccountDetailsFor$credId"
 

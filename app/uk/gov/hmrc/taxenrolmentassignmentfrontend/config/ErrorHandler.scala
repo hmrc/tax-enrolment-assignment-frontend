@@ -34,5 +34,5 @@ class ErrorHandler @Inject()(errorTemplate: ErrorTemplate,
     heading: String,
     message: String
   )(implicit request: Request[_]): Html =
-    errorTemplate(pageTitle, heading, message)
+    errorTemplate()
 }

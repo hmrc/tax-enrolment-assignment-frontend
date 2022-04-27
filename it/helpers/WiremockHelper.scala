@@ -95,8 +95,8 @@ object WiremockHelper extends Eventually with IntegrationPatience {
     )
 
   def stubPutWithAuthorizeHeaders(url: String,
-                                   authorizeHeaderValue: String,
-                                   status: Integer): StubMapping =
+                                  authorizeHeaderValue: String,
+                                  status: Integer): StubMapping =
     stubFor(
       put(urlPathEqualTo(url))
         .withHeader("Authorization", equalTo(authorizeHeaderValue))
@@ -114,9 +114,7 @@ object WiremockHelper extends Eventually with IntegrationPatience {
         .willReturn(aResponse().withStatus(status).withBody(responseBody))
     )
 
-  def stubPut(url: String,
-              status: Integer,
-              responseBody: String): StubMapping =
+  def stubPut(url: String, status: Integer, responseBody: String): StubMapping =
     stubFor(
       put(urlMatching(url))
         .willReturn(aResponse().withStatus(status).withBody(responseBody))
@@ -135,7 +133,7 @@ object WiremockHelper extends Eventually with IntegrationPatience {
 
   def stubGet(url: String, status: Integer, responseBody: String): StubMapping =
     stubFor(
-      get(urlPathEqualTo(url))
+      get(urlEqualTo(url))
         .willReturn(aResponse().withStatus(status).withBody(responseBody))
     )
 
@@ -167,9 +165,11 @@ trait WiremockHelper extends ServerProvider {
 
   def resetWiremock(): Unit = WireMock.reset()
 
-  def buildRequest(path: String, followRedirects: Boolean = false): WSRequest =
-    ws.url(s"http://localhost:$port/protect-tax-info$path")
+  def buildRequest(path: String,
+                   followRedirects: Boolean = false): WSRequest = {
+    ws.url(s"http://localhost:$port$path")
       .withFollowRedirects(followRedirects)
+  }
 
   def buildTestOnlyRequest(path: String,
                            followRedirects: Boolean = false): WSRequest =

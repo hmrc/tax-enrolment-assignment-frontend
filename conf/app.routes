@@ -6,8 +6,6 @@ GET        /assets/*file            controllers.Assets.versioned(path = "/public
 
 GET        /                                                    uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.AccountCheckController.accountCheck(redirectUrl: String)
 
-GET        /enrol-pt/enrolment-success                          uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.CurrentIdConfirmationController.view
-
 #GET        /enrol-pt/enrolment-success-sa-user-id               uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.???
 
 GET        /enrol-pt/enrolment-success-no-sa                    uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.EnrolledForPTController.view
@@ -18,13 +16,17 @@ GET        /enrol-pt/enrolment-success-sa-access-not-wanted     uk.gov.hmrc.taxe
 
 POST       /enrol-pt/enrolment-success-sa-access-not-wanted     uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.EnrolledPTWithSAOnOtherAccountController.continue
 
-GET        /enrol-pt/enrol-current-user-id                      uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.EnrolCurrentUserController.view
-
 GET        /enrol-pt/contact-hmrc-sa                            uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.ReportSuspiciousIDController.viewSA
 
 POST       /enrol-pt/contact-hmrc-sa                            uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.ReportSuspiciousIDController.continue
 
 GET        /enrol-pt/other-user-id-has-sa                       uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SABlueInterruptController.view
+
+POST       /enrol-pt/other-user-id-has-sa                       uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SABlueInterruptController.continue
+
+GET        /enrol-pt/other-user-id-has-sa/keep-access-to-sa-from-pta   uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.KeepAccessToSAController.view
+
+POST       /enrol-pt/other-user-id-has-sa/keep-access-to-sa-from-pta   uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.KeepAccessToSAController.continue
 
 GET        /enrol-pt/other-user-id-has-sa/sign-in-again         uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignInWithSAAccountController.view
 
@@ -35,3 +37,5 @@ GET        /no-pt-enrolment                                     uk.gov.hmrc.taxe
 GET        /no-pt-enrolment/contact-hmrc-pta                    uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.ReportSuspiciousIDController.viewNoSA
 
 GET        /logout                                              uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignOutController.signOut()
+
+GET        /unauthorised                                        uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.AuthorisationController.notAuthorised()

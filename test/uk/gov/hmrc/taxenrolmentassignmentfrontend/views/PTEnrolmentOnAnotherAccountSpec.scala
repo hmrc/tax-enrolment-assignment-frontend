@@ -21,7 +21,10 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.PTEnrolmentOtherAccountMesages
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
+  AccountDetails,
+  MFADetails
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnotherAccount
 
 class PTEnrolmentOnAnotherAccountSpec extends TestFixture {
@@ -44,14 +47,14 @@ class PTEnrolmentOnAnotherAccountSpec extends TestFixture {
   }
 
   val mfaDetails = Seq(
-    MFADetails("mfaDetails.text", "26543"),
+    MFADetails("mfaDetails.text", "28923"),
     MFADetails("mfaDetails.voice", "53839"),
     MFADetails("mfaDetails.totp", "HRMC APP")
   )
 
   val elementsToMFADetails: Map[Int, MFADetails] = Map(
-    3 -> MFADetails("Text message", "Ending with 26543"),
-    4 -> MFADetails("Voice call", "Ending with 53839"),
+    3 -> MFADetails("Text message", "Ending with 28923"),
+    4 -> MFADetails("Phone number", "Ending with 53839"),
     5 -> MFADetails("Authenticator app", "HRMC APP")
   )
 
@@ -76,30 +79,43 @@ class PTEnrolmentOnAnotherAccountSpec extends TestFixture {
     mfaDetails = List(MFADetails("mfaDetails.text", "26543"))
   )
 
-
   val htmlSignedInWithSA =
-    view(ptEnrolmentDataModel(Some(USER_ID),testAccountDetailsWithSA))(FakeRequest(), testMessages, appConfigForTest)
+    view(ptEnrolmentDataModel(Some(USER_ID), testAccountDetailsWithSA))(
+      FakeRequest(),
+      testMessages,
+      appConfigForTest
+    )
 
   val htmlWithSA =
-    view(ptEnrolmentDataModel(Some(PT_USER_ID), testAccountDetailsWithSA))(FakeRequest(), testMessages, appConfigForTest)
+    view(ptEnrolmentDataModel(Some(PT_USER_ID), testAccountDetailsWithSA))(
+      FakeRequest(),
+      testMessages,
+      appConfigForTest
+    )
 
   val htmlOtherAccountWithSA =
-    view(ptEnrolmentDataModel(Some(PT_USER_ID),testAccountDetails))(FakeRequest(), testMessages, appConfigForTest)
+    view(ptEnrolmentDataModel(Some(PT_USER_ID), testAccountDetails))(
+      FakeRequest(),
+      testMessages,
+      appConfigForTest
+    )
 
   val documentWithSA = doc(htmlWithSA)
   val documentSignedInWithSA = doc(htmlSignedInWithSA)
   val documentOtherAccountWithSA = doc(htmlOtherAccountWithSA)
 
   val htmlNoEmail =
-    view(ptEnrolmentDataModel(Some(NO_EMAIL_USER_ID),accountDetailsWithNoEmail))(
+    view(
+      ptEnrolmentDataModel(Some(NO_EMAIL_USER_ID), accountDetailsWithNoEmail)
+    )(FakeRequest(), testMessages, appConfigForTest)
+  val documentNoEmail = doc(htmlNoEmail)
+
+  val html =
+    view(ptEnrolmentDataModel(None, testAccountDetails))(
       FakeRequest(),
       testMessages,
       appConfigForTest
     )
-  val documentNoEmail = doc(htmlNoEmail)
-
-  val html =
-    view(ptEnrolmentDataModel(None, testAccountDetails))(FakeRequest(), testMessages, appConfigForTest)
   val document = doc(html)
 
   "PTEnrolmentOnAnotherAccount" should {
@@ -173,7 +189,7 @@ class PTEnrolmentOnAnotherAccountSpec extends TestFixture {
         case (elementNumber, mfaDetails) =>
           s"include the ${mfaDetails.factorNameKey}" in {
             summaryListRows
-                .get(elementNumber)
+              .get(elementNumber)
               .getElementsByClass(Selectors.summaryListKey)
               .text() shouldBe mfaDetails.factorNameKey
             summaryListRows
@@ -259,4 +275,4 @@ class PTEnrolmentOnAnotherAccountSpec extends TestFixture {
       }
     }
   }
-  }
+}

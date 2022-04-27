@@ -70,9 +70,8 @@ class AccountCheckController @Inject()(
           Future.successful(
             Redirect(routes.PTEnrolmentOnOtherAccountController.view)
           )
-        //ToDo redirect to SA on other account when page available
         case Right(SA_ASSIGNED_TO_OTHER_USER) =>
-          Future.successful(Ok("SA on other account"))
+          Future.successful(Redirect(routes.SABlueInterruptController.view))
         case Right(accountType) => silentEnrolmentAndRedirect(accountType)
         case Left(error) =>
           Future.successful(
@@ -103,13 +102,7 @@ class AccountCheckController @Inject()(
         )
         Redirect(routes.EnrolledForPTController.view)
       case false =>
-        Ok(
-          errorView(
-            "enrolmentError.title",
-            "enrolmentError.heading",
-            "enrolmentError.body"
-          )
-        )
+        InternalServerError(errorView())
     }
   }
 

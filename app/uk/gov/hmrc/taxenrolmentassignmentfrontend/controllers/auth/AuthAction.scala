@@ -26,6 +26,7 @@ import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 
@@ -65,9 +66,8 @@ class AuthAction @Inject()(
     request: Request[A],
     block: RequestWithUserDetails[A] => Future[Result]
   ): Future[Result] = {
-    implicit val hc: HeaderCarrier = {
-      HeaderCarrierConverter.fromRequestAndSession(request, request.session)
-    }
+    implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequestAndSession(request, request.session)
+
     authorised(AuthProviders(GovernmentGateway) and ConfidenceLevel.L200)
       .retrieve(nino and credentials and allEnrolments and groupIdentifier) {
         case Some(nino) ~ Some(credentials) ~ enrolments ~ Some(groupId) =>
@@ -94,7 +94,7 @@ class AuthAction @Inject()(
               s"session missing credential or NINO field for uri: ${request.uri}"
             )
           )
-          Future.successful(Unauthorized)
+          Future.successful(Redirect(routes.AuthorisationController.notAuthorised().url))
       } recover {
       case er: NoActiveSession =>
         logger.logEvent(
@@ -110,8 +110,7 @@ class AuthAction @Inject()(
             s"Auth exception: ${er.getMessage} for  uri ${request.uri}"
           )
         )
-        //TODO Redirect to the error page
-        Unauthorized(er.getMessage)
+        Redirect(routes.AuthorisationController.notAuthorised().url)
     }
   }
 

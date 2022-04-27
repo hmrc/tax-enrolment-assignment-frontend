@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers
 
-import play.api.mvc.AnyContentAsEmpty
+import play.api.mvc.{AnyContentAsEmpty, AnyContentAsFormUrlEncoded}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core._
@@ -233,6 +233,13 @@ def ptEnrolmentDataModel(saUserCred : Option[String], ptAccountDetails:AccountDe
     url: String = ""
   ): FakeRequest[AnyContentAsEmpty.type] =
     FakeRequest(method, url).withSession("sessionId" -> "FAKE_SESSION_ID")
+
+  def buildFakePOSTRequestWithSessionId(
+    data: Map[String, String]
+  ): FakeRequest[AnyContentAsFormUrlEncoded] =
+    FakeRequest("POST", "Not Used")
+      .withSession("sessionId" -> "FAKE_SESSION_ID")
+      .withFormUrlEncodedBody(data.toSeq: _*)
 
   val all_account_types = List(
     SINGLE_ACCOUNT,

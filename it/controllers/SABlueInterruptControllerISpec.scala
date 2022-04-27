@@ -16,33 +16,417 @@
 
 package controllers
 
-import helpers.IntegrationSpecBase
+import helpers.TestHelper
 import helpers.TestITData._
-import helpers.WiremockHelper.{stubAuthorizePost, stubPost}
+import helpers.WiremockHelper.{
+  stubAuthorizePost,
+  stubAuthorizePostUnauthorised,
+  stubGetWithQueryParam,
+  stubPost
+}
+import helpers.messages._
+import org.jsoup.Jsoup
 import play.api.http.Status
+import play.api.libs.json.Json
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
+import play.api.libs.ws.DefaultWSCookie
 
-class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
-
-  val teaHost = s"localhost:$port"
-  val urlPath =
-    s"/enrol-pt/other-user-id-has-sa"
+class SABlueInterruptControllerISpec extends TestHelper with Status {
+  val urlPath: String = UrlPaths.saOnOtherAccountInterruptPath
 
   s"GET $urlPath" when {
-    "a user has an SA Enrolment associated to the credentials on another account" should {
-      s"return $OK with the SABlueInterrupt page" in {
+    "the session cache has a credential for SA enrolment that is not the signed in account" should {
+      s"render the report blue interrupt page" in {
+        await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
+        await(
+          save[AccountTypes.Value](
+            sessionId,
+            "ACCOUNT_TYPE",
+            SA_ASSIGNED_TO_OTHER_USER
+          )
+        )
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
         val res = buildRequest(urlPath,followRedirects = true)
-          .withHttpHeaders(xSessionId, csrfContent)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, csrfContent)
           .get()
 
         whenReady(res) { resp =>
+          val page = Jsoup.parse(resp.body)
+
           resp.status shouldBe OK
-          resp.body should include(
-            "Before you continue to your personal tax account"
+          page.title should include(SABlueInterruptMessages.selfAssessTitle)
+        }
+      }
+    }
+
+    List(
+      SINGLE_ACCOUNT,
+      PT_ASSIGNED_TO_CURRENT_USER,
+      MULTIPLE_ACCOUNTS,
+      PT_ASSIGNED_TO_OTHER_USER,
+      SA_ASSIGNED_TO_CURRENT_USER
+    ).foreach { accountType =>
+      s"the session cache has a credential with account type ${accountType.toString}" should {
+        s"redirect to ${UrlPaths.accountCheckPath}" in {
+          await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
+          await(
+            save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", accountType)
           )
+          val authResponse = authoriseResponseJson()
+          stubAuthorizePost(OK, authResponse.toString())
+          stubPost(s"/write/.*", OK, """{"x":2}""")
+          val res = buildRequest(urlPath)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
+            .get()
+
+          whenReady(res) { resp =>
+            resp.status shouldBe SEE_OTHER
+            resp.header("Location").get should include(
+              UrlPaths.accountCheckPath
+            )
+          }
+        }
+      }
+    }
+
+    "the session cache has no redirectUrl" should {
+      "render the error page" in {
+        val authResponse = authoriseResponseJson()
+        stubAuthorizePost(OK, authResponse.toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        val res = buildRequest(urlPath)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .get()
+
+        whenReady(res) { resp =>
+          resp.status shouldBe INTERNAL_SERVER_ERROR
+          resp.body should include(ErrorTemplateMessages.title)
+        }
+      }
+    }
+
+    "an authorised user with no credential uses the service" should {
+      s"render the error page" in {
+        val authResponse = authoriseResponseJson()
+        stubAuthorizePost(OK, authResponse.toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        stubGetWithQueryParam(
+          "/identity-verification/nino",
+          "nino",
+          NINO,
+          Status.NOT_FOUND,
+          ""
+        )
+        val res = buildRequest(urlPath)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .get()
+
+        whenReady(res) { resp =>
+          resp.status shouldBe INTERNAL_SERVER_ERROR
+          resp.body should include(ErrorTemplateMessages.title)
+        }
+      }
+    }
+
+    "an authorised user but IV returns internal error" should {
+      s"render the error page" in {
+        val authResponse = authoriseResponseJson()
+        stubAuthorizePost(OK, authResponse.toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        stubGetWithQueryParam(
+          "/identity-verification/nino",
+          "nino",
+          NINO,
+          Status.INTERNAL_SERVER_ERROR,
+          ""
+        )
+        val res = buildRequest(urlPath)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .get()
+
+        whenReady(res) { resp =>
+          resp.status shouldBe INTERNAL_SERVER_ERROR
+          resp.body should include(ErrorTemplateMessages.title)
+        }
+      }
+    }
+
+    "the user has a session missing required element NINO" should {
+      s"redirect to ${UrlPaths.unauthorizedPath}" in {
+        val authResponse = authoriseResponseJson(optNino = None)
+        stubAuthorizePost(OK, authResponse.toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+
+        val res =
+          buildRequest(urlPath)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
+            .get()
+
+        whenReady(res) { resp =>
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include(UrlPaths.unauthorizedPath)
+        }
+      }
+    }
+
+    "the user has a session missing required element Credentials" should {
+      s"redirect to ${UrlPaths.unauthorizedPath}" in {
+        val authResponse = authoriseResponseJson(optCreds = None)
+        stubAuthorizePost(OK, authResponse.toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+
+        val res =
+          buildRequest(urlPath)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
+            .get()
+
+        whenReady(res) { resp =>
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include(UrlPaths.unauthorizedPath)
+        }
+      }
+    }
+
+    "the user has a insufficient confidence level" should {
+      s"redirect to ${UrlPaths.unauthorizedPath}" in {
+        stubAuthorizePostUnauthorised(insufficientConfidenceLevel)
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+
+        val res =
+          buildRequest(urlPath)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
+            .get()
+
+        whenReady(res) { resp =>
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include(UrlPaths.unauthorizedPath)
+        }
+      }
+    }
+
+    "the user has no active session" should {
+      s"redirect to login" in {
+        stubAuthorizePostUnauthorised(sessionNotFound)
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+
+        val res = buildRequest(urlPath)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, csrfContent)
+          .get()
+
+        whenReady(res) { resp =>
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include("/bas-gateway/sign-in")
+        }
+      }
+    }
+  }
+
+  s"POST $urlPath" when {
+    "the session cache has a credential for SA enrolment that is not the signed in account" should {
+      s"redirect to ${UrlPaths.saOnOtherAccountKeepAccessToSAPath}" in {
+        await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
+        await(
+          save[AccountTypes.Value](
+            sessionId,
+            "ACCOUNT_TYPE",
+            SA_ASSIGNED_TO_OTHER_USER
+          )
+        )
+        val authResponse = authoriseResponseJson()
+        stubAuthorizePost(OK, authResponse.toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        val res = buildRequest(urlPath)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
+          .post(Json.obj())
+
+        whenReady(res) { resp =>
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include(
+            UrlPaths.saOnOtherAccountKeepAccessToSAPath
+          )
+        }
+      }
+    }
+
+    List(
+      SINGLE_ACCOUNT,
+      PT_ASSIGNED_TO_CURRENT_USER,
+      MULTIPLE_ACCOUNTS,
+      PT_ASSIGNED_TO_OTHER_USER,
+      SA_ASSIGNED_TO_CURRENT_USER
+    ).foreach { accountType =>
+      s"the session cache has a credential with account type ${accountType.toString}" should {
+        s"redirect to ${UrlPaths.accountCheckPath}" in {
+          await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
+          await(
+            save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", accountType)
+          )
+          val authResponse = authoriseResponseJson()
+          stubAuthorizePost(OK, authResponse.toString())
+          stubPost(s"/write/.*", OK, """{"x":2}""")
+          val res = buildRequest(urlPath)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
+            .post(Json.obj())
+
+          whenReady(res) { resp =>
+            resp.status shouldBe SEE_OTHER
+            resp.header("Location").get should include(
+              UrlPaths.accountCheckPath
+            )
+          }
+        }
+      }
+    }
+
+    "the session cache has no redirectUrl" should {
+      "render the error page" in {
+        val authResponse = authoriseResponseJson()
+        stubAuthorizePost(OK, authResponse.toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        val res = buildRequest(urlPath)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
+          .post(Json.obj())
+
+        whenReady(res) { resp =>
+          resp.status shouldBe INTERNAL_SERVER_ERROR
+          resp.body should include(ErrorTemplateMessages.title)
+        }
+      }
+    }
+
+    "an authorised user with no credential uses the service" should {
+      s"render the error page" in {
+        val authResponse = authoriseResponseJson()
+        stubAuthorizePost(OK, authResponse.toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        stubGetWithQueryParam(
+          "/identity-verification/nino",
+          "nino",
+          NINO,
+          Status.NOT_FOUND,
+          ""
+        )
+        val res = buildRequest(urlPath)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
+          .post(Json.obj())
+
+        whenReady(res) { resp =>
+          resp.status shouldBe INTERNAL_SERVER_ERROR
+          resp.body should include(ErrorTemplateMessages.title)
+        }
+      }
+    }
+
+    "an authorised user but IV returns internal error" should {
+      s"render the error page" in {
+        val authResponse = authoriseResponseJson()
+        stubAuthorizePost(OK, authResponse.toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        stubGetWithQueryParam(
+          "/identity-verification/nino",
+          "nino",
+          NINO,
+          Status.INTERNAL_SERVER_ERROR,
+          ""
+        )
+        val res = buildRequest(urlPath)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
+          .post(Json.obj())
+
+        whenReady(res) { resp =>
+          resp.status shouldBe INTERNAL_SERVER_ERROR
+          resp.body should include(ErrorTemplateMessages.title)
+        }
+      }
+    }
+
+    "the user has a session missing required element NINO" should {
+      s"redirect to ${UrlPaths.unauthorizedPath}" in {
+        val authResponse = authoriseResponseJson(optNino = None)
+        stubAuthorizePost(OK, authResponse.toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+
+        val res =
+          buildRequest(urlPath)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
+            .post(Json.obj())
+
+        whenReady(res) { resp =>
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include(UrlPaths.unauthorizedPath)
+        }
+      }
+    }
+
+    "the user has a session missing required element Credentials" should {
+      s"redirect to ${UrlPaths.unauthorizedPath}" in {
+        val authResponse = authoriseResponseJson(optCreds = None)
+        stubAuthorizePost(OK, authResponse.toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+
+        val res =
+          buildRequest(urlPath)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
+            .post(Json.obj())
+
+        whenReady(res) { resp =>
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include(UrlPaths.unauthorizedPath)
+        }
+      }
+    }
+
+    "the user has a insufficient confidence level" should {
+      s"redirect to ${UrlPaths.unauthorizedPath}" in {
+        stubAuthorizePostUnauthorised(insufficientConfidenceLevel)
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+
+        val res =
+          buildRequest(urlPath)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
+            .post(Json.obj())
+
+        whenReady(res) { resp =>
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include(UrlPaths.unauthorizedPath)
+        }
+      }
+    }
+
+    "the user has no active session" should {
+      s"redirect to login" in {
+        stubAuthorizePostUnauthorised(sessionNotFound)
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+
+        val res = buildRequest(urlPath)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
+          .post(Json.obj())
+
+        whenReady(res) { resp =>
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include("/bas-gateway/sign-in")
         }
       }
     }

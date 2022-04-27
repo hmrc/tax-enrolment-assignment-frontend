@@ -16,32 +16,27 @@
 
 package controllers
 
+import helpers.TestHelper
 import helpers.TestITData._
-import helpers.WiremockHelper.{stubAuthorizePost, stubAuthorizePostUnauthorised, stubGet, stubGetWithQueryParam, stubPost}
-import helpers.{IntegrationSpecBase, TestITData}
+import helpers.WiremockHelper._
+import helpers.messages._
 import org.jsoup.Jsoup
 import play.api.http.Status
+import play.api.libs.ws.DefaultWSCookie
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.USER_ASSIGNED_SA_ENROLMENT
+import play.api.libs.ws.DefaultWSCookie
 
-class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status {
+class SignInWithSAAccountControllerISpec extends TestHelper with Status {
 
-  val teaHost = s"localhost:$port"
-  val returnUrl: String = testOnly.routes.TestOnlyController.successfulCall
-    .absoluteURL(false, teaHost)
-  val urlPath =
-    s"/enrol-pt/other-user-id-has-sa/sign-in-again "
-
-  val sessionCookie
-  : (String, String) = ("COOKIE" -> createSessionCookieAsString(sessionData))
+  val urlPath: String = UrlPaths.saOnOtherAccountSigninAgainPath
 
   s"GET $urlPath" when {
     "the session cache has a credential for SA enrolment that is not the signed in account" should {
       s"return $OK with the sign in again page" in {
-        await(save[String](sessionId, "redirectURL", returnUrl))
+        await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
         await(
           save[AccountTypes.Value](
             sessionId,
@@ -60,19 +55,20 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGet(
-          s"/users-group-search/users/$CREDENTIAL_ID_2",
-          OK,
+          s"/users-groups-search/users/$CREDENTIAL_ID_2",
+          NON_AUTHORITATIVE_INFORMATION,
           usergroupsResponseJson().toString()
         )
         val res = buildRequest(urlPath, followRedirects = true)
-          .withHttpHeaders(xSessionId, csrfContent, sessionCookie)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, csrfContent, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
           val page = Jsoup.parse(resp.body)
 
           resp.status shouldBe OK
-          page.title should include(TestITData.signInAgainPageTitle)
+          page.title should include(SignInAgainMessages.title)
         }
       }
 
@@ -84,34 +80,33 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
         SA_ASSIGNED_TO_CURRENT_USER
       ).foreach { accountType =>
         s"the session cache has a credential with account type ${accountType.toString}" should {
-          s"redirect to account check page" in {
-            await(save[String](sessionId, "redirectURL", returnUrl))
+          s"redirect to ${UrlPaths.accountCheckPath}" in {
+            await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
             await(
               save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", accountType)
             )
             val authResponse = authoriseResponseJson()
             stubAuthorizePost(OK, authResponse.toString())
             stubPost(s"/write/.*", OK, """{"x":2}""")
+
             val res = buildRequest(urlPath, followRedirects = false)
-              .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+              .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+              .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
               .get()
 
             whenReady(res) { resp =>
-              val page = Jsoup.parse(resp.body)
-
               resp.status shouldBe SEE_OTHER
               resp.header("Location").get should include(
-                s"/protect-tax-info"
+                UrlPaths.accountCheckPath
               )
             }
           }
         }
       }
 
-
       s"the session cache has a credential for SA enrolment that is the signed in account" should {
         s"render the error page" in {
-          await(save[String](sessionId, "redirectURL", returnUrl))
+          await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
           await(
             save[AccountTypes.Value](
               sessionId,
@@ -129,20 +124,22 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
+
           val res = buildRequest(urlPath, followRedirects = false)
-            .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
             .get()
 
           whenReady(res) { resp =>
-            resp.status shouldBe OK
-            resp.body should include("There was a problem")
+            resp.status shouldBe INTERNAL_SERVER_ERROR
+            resp.body should include(ErrorTemplateMessages.title)
           }
         }
       }
 
       s"the session cache has no credentials with SA enrolment" should {
         s"render the error page" in {
-          await(save[String](sessionId, "redirectURL", returnUrl))
+          await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
           await(
             save[AccountTypes.Value](
               sessionId,
@@ -160,13 +157,15 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
             )
           )
           stubPost(s"/write/.*", OK, """{"x":2}""")
+
           val res = buildRequest(urlPath, followRedirects = false)
-            .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
             .get()
 
           whenReady(res) { resp =>
-            resp.status shouldBe OK
-            resp.body should include("There was a problem")
+            resp.status shouldBe INTERNAL_SERVER_ERROR
+            resp.body should include(ErrorTemplateMessages.title)
           }
         }
       }
@@ -177,19 +176,20 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
           val res = buildRequest(urlPath, followRedirects = true)
-            .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
             .get()
 
           whenReady(res) { resp =>
-            resp.status shouldBe OK
-            resp.body should include("There was a problem")
+            resp.status shouldBe INTERNAL_SERVER_ERROR
+            resp.body should include(ErrorTemplateMessages.title)
           }
         }
       }
 
       "users group search returns an error" should {
         "render the error page" in {
-          await(save[String](sessionId, "redirectURL", returnUrl))
+          await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
           await(
             save[AccountTypes.Value](
               sessionId,
@@ -208,17 +208,18 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
           stubGet(
-            s"/users-group-search/users/$CREDENTIAL_ID_2",
+            s"/users-groups-search/users/$CREDENTIAL_ID_2",
             INTERNAL_SERVER_ERROR,
             ""
           )
           val res = buildRequest(urlPath, followRedirects = true)
-            .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
             .get()
 
           whenReady(res) { resp =>
-            resp.status shouldBe OK
-            resp.body should include("There was a problem")
+            resp.status shouldBe INTERNAL_SERVER_ERROR
+            resp.body should include(ErrorTemplateMessages.title)
           }
         }
       }
@@ -236,12 +237,13 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
             ""
           )
           val res = buildRequest(urlPath, followRedirects = true)
-            .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
             .get()
 
           whenReady(res) { resp =>
-            resp.status shouldBe OK
-            resp.body should include("There was a problem")
+            resp.status shouldBe INTERNAL_SERVER_ERROR
+            resp.body should include(ErrorTemplateMessages.title)
           }
         }
       }
@@ -259,62 +261,75 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
             ""
           )
           val res = buildRequest(urlPath, followRedirects = true)
-            .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
             .get()
 
           whenReady(res) { resp =>
-            resp.status shouldBe OK
-            resp.body should include("There was a problem")
+            resp.status shouldBe INTERNAL_SERVER_ERROR
+            resp.body should include(ErrorTemplateMessages.title)
           }
         }
       }
 
       "the user has a session missing required element NINO" should {
-        s"return $UNAUTHORIZED" in {
+        s"return $SEE_OTHER" in {
           val authResponse = authoriseResponseJson(optNino = None)
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
 
           val res =
             buildRequest(urlPath)
-              .withHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
+              .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+              .addHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
               .get()
 
           whenReady(res) { resp =>
-            resp.status shouldBe UNAUTHORIZED
+            resp.status shouldBe SEE_OTHER
+            resp.header("Location").get should include(
+              UrlPaths.unauthorizedPath
+            )
           }
         }
       }
 
       "the user has a session missing required element Credentials" should {
-        s"return $UNAUTHORIZED" in {
+        s"return $SEE_OTHER" in {
           val authResponse = authoriseResponseJson(optCreds = None)
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
 
           val res =
             buildRequest(urlPath)
-              .withHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
+              .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+              .addHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
               .get()
 
           whenReady(res) { resp =>
-            resp.status shouldBe UNAUTHORIZED
+            resp.status shouldBe SEE_OTHER
+            resp.header("Location").get should include(
+              UrlPaths.unauthorizedPath
+            )
           }
         }
       }
 
       "the user has a insufficient confidence level" should {
-        s"return $UNAUTHORIZED" in {
+        s"return $SEE_OTHER" in {
           stubAuthorizePostUnauthorised(insufficientConfidenceLevel)
           stubPost(s"/write/.*", OK, """{"x":2}""")
 
           val res =
             buildRequest(urlPath)
-              .withHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
+              .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+              .addHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
               .get()
 
           whenReady(res) { resp =>
-            resp.status shouldBe UNAUTHORIZED
+            resp.status shouldBe SEE_OTHER
+            resp.header("Location").get should include(
+              UrlPaths.unauthorizedPath
+            )
           }
         }
       }
@@ -325,7 +340,8 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
           stubPost(s"/write/.*", OK, """{"x":2}""")
 
           val res = buildRequest(urlPath)
-            .withHttpHeaders(xSessionId, xRequestId, csrfContent)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, csrfContent)
             .get()
 
           whenReady(res) { resp =>

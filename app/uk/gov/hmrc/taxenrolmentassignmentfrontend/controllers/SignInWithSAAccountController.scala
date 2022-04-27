@@ -36,14 +36,15 @@ import scala.concurrent.ExecutionContext
 
 @Singleton
 class SignInWithSAAccountController @Inject()(
-                                        authAction: AuthAction,
-                                        mcc: MessagesControllerComponents,
-                                        multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
-                                        signInWithSAAccount: SignInWithSAAccount,
-                                        sessionCache: TEASessionCache,
-                                        val logger: EventLoggerService,
-                                        val errorView: ErrorTemplate)(implicit ec: ExecutionContext)
-  extends FrontendController(mcc)
+  authAction: AuthAction,
+  mcc: MessagesControllerComponents,
+  multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
+  signInWithSAAccount: SignInWithSAAccount,
+  sessionCache: TEASessionCache,
+  val logger: EventLoggerService,
+  val errorView: ErrorTemplate
+)(implicit ec: ExecutionContext)
+    extends FrontendController(mcc)
     with ControllerHelper
     with I18nSupport {
 
@@ -71,8 +72,12 @@ class SignInWithSAAccountController @Inject()(
         logger.logEvent(
           logUserSignsInAgainWithSAAccount(request.userDetails.credId)
         )
-        Redirect(redirectUrl)
-      case None => handleErrors( NoRedirectUrlInCache, "[SignInWithSAAccountController][continue]" )
+        Redirect(routes.SignOutController.signOut())
+      case None =>
+        handleErrors(
+          NoRedirectUrlInCache,
+          "[SignInWithSAAccountController][continue]"
+        )
     }
   }
 }

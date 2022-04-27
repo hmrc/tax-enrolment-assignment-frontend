@@ -20,6 +20,7 @@ import helpers.IntegrationSpecBase
 import helpers.TestITData.{csrfContent, xSessionId}
 import play.api.http.Status
 import play.api.libs.json.Json
+import play.api.libs.ws.DefaultWSCookie
 
 class TestOnlyControllerISpec extends IntegrationSpecBase with Status {
 
@@ -27,21 +28,22 @@ class TestOnlyControllerISpec extends IntegrationSpecBase with Status {
     super.afterAll()
   }
 
-  s"GET /users-group-search/test-only/users/:credId" should {
+  s"GET /users-groups-search/test-only/users/:credId" should {
     "retrieve the users details" when {
       "the credential is recognised" in {
 
         val credId = "4684455594391511"
-        val url = s"/users-group-search/test-only/users/$credId"
+        val url = s"/users-groups-search/test-only/users/$credId"
         val expectedResponse =
           """{"obfuscatedUserId":"********3469","email":"email1@test.com","lastAccessedTimestamp":"2022-01-16T14:40:25Z","additionalFactors":[{"factorType":"sms","phoneNumber":"07783924321"}]}"""
         val res = buildTestOnlyRequest(url, followRedirects = true)
-          .withHttpHeaders(xSessionId, csrfContent)
+          .addCookies(DefaultWSCookie("mdtp", authCookie))
+          .addHttpHeaders(xSessionId, csrfContent)
           .withBody(Json.obj())
           .get()
 
         whenReady(res) { resp =>
-          resp.status shouldBe OK
+          resp.status shouldBe NON_AUTHORITATIVE_INFORMATION
           resp.body shouldBe expectedResponse
         }
       }
@@ -49,9 +51,10 @@ class TestOnlyControllerISpec extends IntegrationSpecBase with Status {
       "return NOT_FOUND " when {
         "the credential is not recognised" in {
           val credId = "2568836745857973"
-          val url = s"/users-group-search/test-only/users/$credId"
+          val url = s"/users-groups-search/test-only/users/$credId"
           val res = buildTestOnlyRequest(url, followRedirects = true)
-            .withHttpHeaders(xSessionId, csrfContent)
+            .addCookies(DefaultWSCookie("mdtp", authCookie))
+            .addHttpHeaders(xSessionId, csrfContent)
             .withBody(Json.obj())
             .get()
 

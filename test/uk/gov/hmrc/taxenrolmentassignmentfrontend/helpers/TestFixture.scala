@@ -37,16 +37,30 @@ import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{EACDConnector, IVConnector, TaxEnrolmentsConnector}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{
+  EACDConnector,
+  IVConnector,
+  TaxEnrolmentsConnector
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignOutController
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.{AuthAction, RequestWithUserDetails}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.auth.{
+  AuthAction,
+  RequestWithUserDetails
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.userDetailsNoEnrolments
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{
+  AccountCheckOrchestrator,
+  MultipleAccountsOrchestrator
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, SilentAssignmentService, UsersGroupSearchService}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{
+  EACDService,
+  SilentAssignmentService,
+  UsersGroupsSearchService
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.UnderConstructionView
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
@@ -84,8 +98,8 @@ trait TestFixture
     mock[TaxEnrolmentsConnector]
   val mockEacdConnector: EACDConnector = mock[EACDConnector]
   val mockEacdService: EACDService = mock[EACDService]
-  val mockUsersGroupService: UsersGroupSearchService =
-    mock[UsersGroupSearchService]
+  val mockUsersGroupService: UsersGroupsSearchService =
+    mock[UsersGroupsSearchService]
   val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
   lazy val requestPath = "somePath"
   val mockTeaSessionCache = mock[TEASessionCache]
@@ -103,6 +117,7 @@ trait TestFixture
       .withCSRFToken
       .asInstanceOf[FakeRequest[AnyContentAsEmpty.type]]
   val testAppConfig: AppConfig = app.injector.instanceOf[AppConfig]
+  val errorView: ErrorTemplate = app.injector.instanceOf[ErrorTemplate]
   lazy val mockAuthAction =
     new AuthAction(mockAuthConnector, testBodyParser, logger, testAppConfig)
   implicit lazy val testMessages: Messages =
@@ -116,7 +131,6 @@ trait TestFixture
   lazy val mcc: MessagesControllerComponents =
     stubMessagesControllerComponents()
 
-  val errorView: ErrorTemplate = app.injector.instanceOf[ErrorTemplate]
   lazy val mockSignOutController = mock[SignOutController]
 
   def doc(result: Html): Document = Jsoup.parse(contentAsString(result))

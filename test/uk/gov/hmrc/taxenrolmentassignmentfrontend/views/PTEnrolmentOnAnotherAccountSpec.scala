@@ -205,6 +205,11 @@ class PTEnrolmentOnAnotherAccountSpec extends TestFixture {
       "has the correct text" in {
         textElement.text() shouldBe PTEnrolmentOtherAccountMesages.notMyUserId
       }
+      "contains a link to report suspicious Id" in {
+        textElement
+          .select("a")
+          .attr("href") shouldBe "/protect-tax-info/no-pt-enrolment/contact-hmrc-pta"
+      }
     }
 
     "contain self-assessment information" when {

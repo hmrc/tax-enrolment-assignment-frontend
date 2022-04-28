@@ -31,6 +31,9 @@ govukInsetText : GovukInsetText
 
 @(ptEnrolmentOtherAccountViewModel: PTEnrolmentOtherAccountViewModel)(implicit request: Request[AnyRef], messages: Messages, appConfig: AppConfig)
 
+@content = {
+    <a class = "govuk-link" href=@routes.ReportSuspiciousIDController.viewNoSA>@messages("ptEnrolmentOnOtherAccount.linkText")</a>
+}
 
 @layout(
     pageTitle = Some(messages("ptEnrolmentOnOtherAccount.title")), None) {
@@ -59,7 +62,7 @@ govukInsetText : GovukInsetText
     <div id="inset_text">
 
         @govukInsetText(InsetText(
-        content = Text(messages("ptEnrolmentOnOtherAccount.linkText", routes.ReportSuspiciousIDController.viewNoSA))
+        content = HtmlContent(content)
         ))
 
     </div>
@@ -76,12 +79,12 @@ govukInsetText : GovukInsetText
     } else if(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.ptAccountDetails.userId)){
 
     <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.saText1")
-        <a href="@routes.SignOutController.signOut" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.signInAgain")</a>.
+        <a href="@routes.SignOutController.signOut" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.signInAgain")</a>
         @messages("ptEnrolmentOnOtherAccount.saText2")
     </p>
     } else{
         <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.saText4")
-            <a href="@routes.SignOutController.signOut" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.signInAgain")</a>.
+            <a href="@routes.SignOutController.signOut" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.signInAgain")</a>
             @messages("ptEnrolmentOnOtherAccount.saText5", ptEnrolmentOtherAccountViewModel.saUserCred.get)
         </p>
       }

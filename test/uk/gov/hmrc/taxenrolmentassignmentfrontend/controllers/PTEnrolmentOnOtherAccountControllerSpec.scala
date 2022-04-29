@@ -25,9 +25,9 @@ import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.PT_ASSIGNED_TO_OTHER_USER
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{InvalidUserType, NoPTEnrolmentWhenOneExpected}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{accountDetails, buildFakeRequestWithSessionId, predicates, retrievalResponse, retrievals, saEnrolmentOnly}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{accountDetails, buildFakeRequestWithSessionId, predicates, randomAccountType, retrievalResponse, retrievals, saEnrolmentOnly}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnotherAccount
 
@@ -40,6 +40,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
 
   val controller = new PTEnrolmentOnOtherAccountController(
     mockAuthAction,
+    mockAccountMongoDetailsAction,
     mcc,
     mockMultipleAccountsOrchestrator,
     view,
@@ -64,7 +65,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -73,12 +74,13 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getPTCredentialDetails(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
           .expects(*, *, *)
           .returning(createInboundResult(accountDetails))
+        mockGetAccountTypeSuccess(randomAccountType)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -109,7 +111,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
           )
         (mockMultipleAccountsOrchestrator
           .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -118,12 +120,13 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getPTCredentialDetails(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
           .expects(*, *, *)
           .returning(createInboundResult(accountDetails))
+        mockGetAccountTypeSuccess(randomAccountType)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -153,7 +156,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -161,7 +164,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
           .returning(
             createInboundResultError(InvalidUserType(Some(UrlPaths.returnUrl)))
           )
-
+        mockGetAccountTypeSuccess(randomAccountType)
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
@@ -188,7 +191,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -197,12 +200,13 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getPTCredentialDetails(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
           .expects(*, *, *)
           .returning(createInboundResultError(NoPTEnrolmentWhenOneExpected))
+        mockGetAccountTypeSuccess(randomAccountType)
 
         val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -228,12 +232,13 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: RequestWithUserDetailsFromSessionAndMongo[_],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
           .expects(List(PT_ASSIGNED_TO_OTHER_USER), *, *, *)
           .returning(createInboundResultError(InvalidUserType(None)))
+        mockGetAccountTypeSuccess(randomAccountType)
 
         val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))

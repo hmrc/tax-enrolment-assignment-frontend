@@ -25,7 +25,7 @@ import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AuthAction, RequestWithUserDetailsFromSession}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction, RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.AccountCheckOrchestrator
@@ -39,14 +39,13 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class AccountCheckController @Inject()(
-  accountCheckOrchestrator: AccountCheckOrchestrator,
   silentAssignmentService: SilentAssignmentService,
   authAction: AuthAction,
+  accountMongoDetailsAction: AccountMongoDetailsAction,
   appConfig: AppConfig,
   mcc: MessagesControllerComponents,
   sessionCache: TEASessionCache,
   val logger: EventLoggerService,
-  errorHandler: ErrorHandler,
   errorView: ErrorTemplate
 )(implicit ec: ExecutionContext)
     extends FrontendController(mcc)
@@ -54,11 +53,11 @@ class AccountCheckController @Inject()(
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
-  def accountCheck(redirectUrl: String): Action[AnyContent] = authAction.async {
+  def accountCheck(redirectUrl: String): Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).async {
     implicit request =>
-      sessionCache.save[String](REDIRECT_URL, redirectUrl)
-      accountCheckOrchestrator.getAccountType.value.flatMap {
-        case Right(PT_ASSIGNED_TO_CURRENT_USER) =>
+      sessionCache.save[String](REDIRECT_URL, redirectUrl)(request, implicitly)
+      request.accountDetailsFromMongo.accountType match {
+        case PT_ASSIGNED_TO_CURRENT_USER =>
           logger.logEvent(
             logRedirectingToReturnUrl(
               request.userDetails.credId,
@@ -66,44 +65,41 @@ class AccountCheckController @Inject()(
             )
           )
           Future.successful(Redirect(redirectUrl))
-        case Right(PT_ASSIGNED_TO_OTHER_USER) =>
+        case PT_ASSIGNED_TO_OTHER_USER =>
           Future.successful(
             Redirect(routes.PTEnrolmentOnOtherAccountController.view)
           )
-        case Right(SA_ASSIGNED_TO_OTHER_USER) =>
+        case SA_ASSIGNED_TO_OTHER_USER =>
           Future.successful(Redirect(routes.SABlueInterruptController.view))
-        case Right(accountType) => silentEnrolmentAndRedirect(accountType)
-        case Left(error) =>
-          Future.successful(
-            errorHandler.handleErrors(error, "[AccountCheckController][accountCheck]")
-          )
+        case accountType => silentEnrolmentAndRedirect(accountType)
       }
   }
 
-  private def silentEnrolmentAndRedirect(accountType: AccountTypes.Value)(
-    implicit request: RequestWithUserDetailsFromSession[AnyContent],
-    hc: HeaderCarrier
-  ): Future[Result] = {
-    silentAssignmentService.enrolUser().isRight map {
-      case true if accountType == SINGLE_ACCOUNT =>
-        logger.logEvent(
-          logSingleAccountHolderAssignedEnrolment(request.userDetails.credId)
-        )
-        logger.logEvent(
-          logRedirectingToReturnUrl(
-            request.userDetails.credId,
-            "[AccountCheckController][accountCheck]"
-          )
-        )
-        Redirect(appConfig.redirectPTAUrl)
-      case true =>
-        logger.logEvent(
-          logMultipleAccountHolderAssignedEnrolment(request.userDetails.credId)
-        )
-        Redirect(routes.EnrolledForPTController.view)
-      case false =>
-        InternalServerError(errorView())
-    }
+      private def silentEnrolmentAndRedirect(accountType: AccountTypes.Value)(
+        implicit request: RequestWithUserDetailsFromSessionAndMongo[_],
+        hc: HeaderCarrier
+      ): Future[Result] = {
+        silentAssignmentService.enrolUser().isRight map {
+          case true if accountType == SINGLE_ACCOUNT =>
+            logger.logEvent(
+              logSingleAccountHolderAssignedEnrolment(request.userDetails.credId)
+            )
+            logger.logEvent(
+              logRedirectingToReturnUrl(
+                request.userDetails.credId,
+                "[AccountCheckController][accountCheck]"
+              )
+            )
+            Redirect(appConfig.redirectPTAUrl)
+          case true =>
+            logger.logEvent(
+              logMultipleAccountHolderAssignedEnrolment(request.userDetails.credId)
+            )
+            Redirect(routes.EnrolledForPTController.view)
+          case false =>
+            InternalServerError(errorView())
+        }
+      }
+
   }
 
-}

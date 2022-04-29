@@ -36,10 +36,12 @@ import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.service.TEAFResult
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SINGLE_ACCOUNT
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{EACDConnector, IVConnector, TaxEnrolmentsConnector}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{ErrorHandler, SignOutController}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AuthAction, RequestWithUserDetailsFromSession}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, AccountMongoDetailsAction, AuthAction, RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.userDetailsNoEnrolments
@@ -70,9 +72,15 @@ trait TestFixture
       "sessionId"
     )
 
+  def requestWithAccountType(accountType: AccountTypes.Value = SINGLE_ACCOUNT): RequestWithUserDetailsFromSessionAndMongo[_] =
+    RequestWithUserDetailsFromSessionAndMongo(request.request, request.userDetails, request.sessionID, AccountDetailsFromMongo(accountType))
+
   implicit val ec: ExecutionContext = injector.instanceOf[ExecutionContext]
   lazy val servicesConfig = injector.instanceOf[ServicesConfig]
   implicit val hc: HeaderCarrier = HeaderCarrier()
+  lazy val mcc: MessagesControllerComponents =
+    stubMessagesControllerComponents()
+  lazy val errorHandler: ErrorHandler = new ErrorHandler(errorView, logger, mcc)
   lazy val logger: EventLoggerService = new EventLoggerService()
   implicit val appConfig: AppConfig = injector.instanceOf[AppConfig]
   lazy val messagesApi: MessagesApi = inject[MessagesApi]
@@ -107,6 +115,9 @@ trait TestFixture
   val errorView: ErrorTemplate = app.injector.instanceOf[ErrorTemplate]
   lazy val mockAuthAction =
     new AuthAction(mockAuthConnector, testBodyParser, logger, testAppConfig)
+  lazy val mockAccountMongoDetailsAction =
+    new AccountMongoDetailsAction(mockAccountCheckOrchestrator, testBodyParser, errorHandler)
+
   implicit lazy val testMessages: Messages =
     messagesApi.preferred(FakeRequest())
 
@@ -116,9 +127,7 @@ trait TestFixture
       stubBodyParser[AnyContent](),
       stubMessagesApi()
     )
-  lazy val mcc: MessagesControllerComponents =
-    stubMessagesControllerComponents()
-  lazy val errorHandler: ErrorHandler = new ErrorHandler(errorView, logger, mcc)
+
 
   lazy val mockSignOutController = mock[SignOutController]
 
@@ -132,6 +141,17 @@ trait TestFixture
   ): TEAFResult[T] = EitherT.left(Future.successful(error))
 
   lazy val testOnlyController = new TestOnlyController(mcc, logger)
+
+  def mockGetAccountTypeSuccess(accountType: AccountTypes.Value) = {
+    (mockAccountCheckOrchestrator
+      .getAccountType(
+        _: ExecutionContext,
+        _: HeaderCarrier,
+        _: RequestWithUserDetailsFromSession[_]
+      ))
+      .expects(*, *, *)
+      .returning(createInboundResult(accountType))
+  }
 
   class TestTeaSessionCache extends TEASessionCache {
     override def save[A](key: String, value: A)(

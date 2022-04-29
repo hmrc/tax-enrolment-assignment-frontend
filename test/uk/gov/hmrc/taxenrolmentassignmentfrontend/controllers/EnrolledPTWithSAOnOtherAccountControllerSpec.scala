@@ -24,7 +24,8 @@ import uk.gov.hmrc.auth.core.Enrolments
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{InvalidUserType, UnexpectedResponseFromUsersGroupsSearch}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, UrlPaths}
@@ -39,6 +40,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
 
   val controller = new EnrolledPTWithSAOnOtherAccountController(
     mockAuthAction,
+    mockAccountMongoDetailsAction,
     mockMultipleAccountsOrchestrator,
     mockTeaSessionCache,
     mcc,
@@ -66,7 +68,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getDetailsForEnrolledPTWithSAOnOtherAccount(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: RequestWithUserDetailsFromSessionAndMongo[_],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -75,12 +77,14 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getSACredentialIfNotFraud(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: RequestWithUserDetailsFromSessionAndMongo[_],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
           .expects(*, *, *)
           .returning(createInboundResult(None))
+
+        mockGetAccountTypeSuccess(randomAccountType)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -114,7 +118,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getDetailsForEnrolledPTWithSAOnOtherAccount(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: RequestWithUserDetailsFromSessionAndMongo[_],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -123,7 +127,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getSACredentialIfNotFraud(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: RequestWithUserDetailsFromSessionAndMongo[_],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -133,7 +137,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
               Some(accountDetails.copy(userId = "********1234"))
             )
           )
-
+        mockGetAccountTypeSuccess(randomAccountType)
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
@@ -164,7 +168,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getDetailsForEnrolledPTWithSAOnOtherAccount(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: RequestWithUserDetailsFromSessionAndMongo[_],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -172,6 +176,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
           .returning(
             createInboundResultError(InvalidUserType(Some(UrlPaths.returnUrl)))
           )
+        mockGetAccountTypeSuccess(randomAccountType)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -197,13 +202,13 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getDetailsForEnrolledPTWithSAOnOtherAccount(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: RequestWithUserDetailsFromSessionAndMongo[_],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
           .expects(*, *, *)
           .returning(createInboundResultError(InvalidUserType(None)))
-
+        mockGetAccountTypeSuccess(randomAccountType)
         val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
@@ -228,7 +233,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getDetailsForEnrolledPTWithSAOnOtherAccount(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: RequestWithUserDetailsFromSessionAndMongo[_],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -236,7 +241,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
           .returning(
             createInboundResultError(UnexpectedResponseFromUsersGroupsSearch)
           )
-
+        mockGetAccountTypeSuccess(randomAccountType)
         val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 

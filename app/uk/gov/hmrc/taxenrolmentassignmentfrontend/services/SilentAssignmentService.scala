@@ -24,7 +24,7 @@ import play.api.mvc.AnyContent
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{EACDConnector, IVConnector, TaxEnrolmentsConnector}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IVNinoStoreEntry
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IVNinoStoreEntry._
@@ -69,7 +69,7 @@ class SilentAssignmentService @Inject()(
         }
     }
 
-  def enrolUser()(implicit request: RequestWithUserDetailsFromSession[_],
+  def enrolUser()(implicit request: RequestWithUserDetailsFromSessionAndMongo[_],
                   hc: HeaderCarrier,
                   ec: ExecutionContext): TEAFResult[Unit] = {
     val details = request.userDetails

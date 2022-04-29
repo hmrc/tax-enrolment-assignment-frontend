@@ -439,6 +439,9 @@ class KeepAccessToSAControllerISpec extends TestHelper with Status {
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
+          await(
+            save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", SA_ASSIGNED_TO_CURRENT_USER)
+          )
 
           val res = buildRequest(urlPath, followRedirects = true)
             .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
@@ -473,6 +476,7 @@ class KeepAccessToSAControllerISpec extends TestHelper with Status {
       "render the keepAccessToSA page with errors" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
+        await(save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", SA_ASSIGNED_TO_CURRENT_USER))
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
         val res = buildRequest(urlPath, followRedirects = true)

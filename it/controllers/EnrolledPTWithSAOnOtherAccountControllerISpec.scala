@@ -276,6 +276,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
     "the session cache contains the redirect url" should {
       s"redirect to the redirect url" in {
         await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
+        await(save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", PT_ASSIGNED_TO_CURRENT_USER))
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")

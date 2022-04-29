@@ -26,7 +26,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{InvalidUserType, NoPTEnrolmentWhenOneExpected, NoSAEnrolmentWhenOneExpected, TaxEnrolmentAssignmentErrors}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
@@ -50,7 +50,7 @@ class MultipleAccountsOrchestrator @Inject()(
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
   def getDetailsForEnrolledPT(
-                               implicit requestWithUserDetails: RequestWithUserDetailsFromSession[AnyContent],
+                               implicit requestWithUserDetails: RequestWithUserDetailsFromSessionAndMongo[_],
                                hc: HeaderCarrier,
                                ec: ExecutionContext
   ): TEAFResult[AccountDetails] = {
@@ -60,7 +60,7 @@ class MultipleAccountsOrchestrator @Inject()(
       )
       accountDetails <- usersGroupSearchService.getAccountDetails(
         requestWithUserDetails.userDetails.credId
-      )
+      )(implicitly, implicitly, requestWithUserDetails)
     } yield
       accountDetails.copy(
         hasSA = Some(accountType == SA_ASSIGNED_TO_CURRENT_USER)
@@ -68,7 +68,7 @@ class MultipleAccountsOrchestrator @Inject()(
   }
 
   def getDetailsForEnrolledPTWithSAOnOtherAccount(
-                                                   implicit requestWithUserDetails: RequestWithUserDetailsFromSession[AnyContent],
+                                                   implicit requestWithUserDetails: RequestWithUserDetailsFromSessionAndMongo[_],
                                                    hc: HeaderCarrier,
                                                    ec: ExecutionContext
   ): TEAFResult[AccountDetails] = {
@@ -78,13 +78,13 @@ class MultipleAccountsOrchestrator @Inject()(
       )
       accountDetails <- usersGroupSearchService.getAccountDetails(
         requestWithUserDetails.userDetails.credId
-      )
+      )(implicitly, implicitly, requestWithUserDetails)
     } yield accountDetails
 
   }
 
   def getDetailsForKeepAccessToSA(
-                                   implicit requestWithUserDetails: RequestWithUserDetailsFromSession[AnyContent],
+                                   implicit requestWithUserDetails: RequestWithUserDetailsFromSessionAndMongo[_],
                                    hc: HeaderCarrier,
                                    ec: ExecutionContext
   ): TEAFResult[Form[KeepAccessToSAThroughPTA]] = {
@@ -95,7 +95,7 @@ class MultipleAccountsOrchestrator @Inject()(
       optFormData <- EitherT.right[TaxEnrolmentAssignmentErrors](
         sessionCache.getEntry[KeepAccessToSAThroughPTA](
           KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM
-        )
+        )(requestWithUserDetails, implicitly)
       )
     } yield
       optFormData match {
@@ -107,7 +107,7 @@ class MultipleAccountsOrchestrator @Inject()(
   }
 
   def handleKeepAccessToSAChoice(keepAccessToSA: KeepAccessToSAThroughPTA)(
-    implicit requestWithUserDetails: RequestWithUserDetailsFromSession[AnyContent],
+    implicit requestWithUserDetails: RequestWithUserDetailsFromSessionAndMongo[_],
     hc: HeaderCarrier,
     ec: ExecutionContext
   ): TEAFResult[Boolean] = {
@@ -125,50 +125,50 @@ class MultipleAccountsOrchestrator @Inject()(
           .save[KeepAccessToSAThroughPTA](
             KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM,
             keepAccessToSA
-          )
+          )(requestWithUserDetails, implicitly)
       )
     } yield keepAccessToSA.keepAccessToSAThroughPTA
   }
 
   def getSACredentialIfNotFraud(
-                                 implicit requestWithUserDetails: RequestWithUserDetailsFromSession[AnyContent],
+                                 implicit requestWithUserDetails: RequestWithUserDetailsFromSessionAndMongo[_],
                                  hc: HeaderCarrier,
                                  ec: ExecutionContext
   ): TEAFResult[Option[AccountDetails]] = EitherT {
-    sessionCache.getEntry[Boolean](REPORTED_FRAUD).flatMap {
+    sessionCache.getEntry[Boolean](REPORTED_FRAUD)(requestWithUserDetails, implicitly).flatMap {
       case Some(true) => Future.successful(Right(None))
       case _          => getSACredentialDetails.map(Some(_)).value
     }
   }
 
   def getSACredentialDetails(
-                              implicit requestWithUserDetails: RequestWithUserDetailsFromSession[AnyContent],
+                              implicit requestWithUserDetails: RequestWithUserDetailsFromSessionAndMongo[_],
                               hc: HeaderCarrier,
                               ec: ExecutionContext
   ): TEAFResult[AccountDetails] = EitherT {
     sessionCache
-      .getEntry[UsersAssignedEnrolment](USER_ASSIGNED_SA_ENROLMENT)
+      .getEntry[UsersAssignedEnrolment](USER_ASSIGNED_SA_ENROLMENT)(requestWithUserDetails, implicitly)
       .flatMap { optCredential =>
         optCredential.fold[Option[String]](None)(_.enrolledCredential) match {
           case Some(saCred) =>
-            usersGroupSearchService.getAccountDetails(saCred).value
+            usersGroupSearchService.getAccountDetails(saCred)(implicitly, implicitly, requestWithUserDetails).value
           case _ => Future.successful(Left(NoSAEnrolmentWhenOneExpected))
         }
       }
   }
 
   def getPTCredentialDetails(
-                              implicit requestWithUserDetails: RequestWithUserDetailsFromSession[AnyContent],
+                              implicit requestWithUserDetails: RequestWithUserDetailsFromSessionAndMongo[_],
                               hc: HeaderCarrier,
                               ec: ExecutionContext
   ): TEAFResult[AccountDetails] = EitherT {
     sessionCache
-      .getEntry[UsersAssignedEnrolment](USER_ASSIGNED_PT_ENROLMENT)
+      .getEntry[UsersAssignedEnrolment](USER_ASSIGNED_PT_ENROLMENT)(requestWithUserDetails, implicitly)
       .flatMap { optCredential =>
         optCredential.fold[Option[String]](None)(_.enrolledCredential) match {
           case Some(saCred)
               if saCred != requestWithUserDetails.userDetails.credId =>
-            usersGroupSearchService.getAccountDetails(saCred).value
+            usersGroupSearchService.getAccountDetails(saCred)(implicitly, implicitly, requestWithUserDetails).value
           case _ =>
             logger.logEvent(
               logNoUserFoundWithPTEnrolment(
@@ -182,7 +182,7 @@ class MultipleAccountsOrchestrator @Inject()(
 
   def checkValidAccountTypeAndEnrolForPT(
     expectedAccountType: AccountTypes.Value
-  )(implicit requestWithUserDetails: RequestWithUserDetailsFromSession[AnyContent],
+  )(implicit requestWithUserDetails: RequestWithUserDetailsFromSessionAndMongo[_],
     hc: HeaderCarrier,
     ec: ExecutionContext): TEAFResult[Unit] = {
     for {
@@ -193,24 +193,19 @@ class MultipleAccountsOrchestrator @Inject()(
 
   def checkValidAccountTypeRedirectUrlInCache(
     validAccountTypes: List[AccountTypes.Value]
-  )(implicit requestWithUserDetails: RequestWithUserDetailsFromSession[AnyContent],
+  )(implicit requestWithUserDetailsAndMongo: RequestWithUserDetailsFromSessionAndMongo[_],
     hc: HeaderCarrier,
     ec: ExecutionContext): TEAFResult[AccountTypes.Value] = EitherT {
-    val res = for {
-      accountType <- sessionCache.getEntry[AccountTypes.Value](ACCOUNT_TYPE)
-      redirectUrl <- sessionCache.getEntry[String](REDIRECT_URL)
-    } yield (accountType, redirectUrl)
-
-    res.map {
-      case (Some(accountType), Some(_))
-          if validAccountTypes.contains(accountType) =>
-        Right(accountType)
-      case (optAccountType, optRedirectUrl) =>
+    sessionCache.getEntry[String](REDIRECT_URL)(requestWithUserDetailsAndMongo, implicitly).map {
+      case Some(_)
+          if validAccountTypes.contains(requestWithUserDetailsAndMongo.accountDetailsFromMongo.accountType) =>
+        Right(requestWithUserDetailsAndMongo.accountDetailsFromMongo.accountType)
+      case optRedirectUrl =>
         logger.logEvent(
           logIncorrectUserType(
-            requestWithUserDetails.userDetails.credId,
+            requestWithUserDetailsAndMongo.userDetails.credId,
             validAccountTypes,
-            optAccountType
+            requestWithUserDetailsAndMongo.accountDetailsFromMongo.accountType
           )
         )
         Left(InvalidUserType(optRedirectUrl))

@@ -24,7 +24,8 @@ import uk.gov.hmrc.auth.core.Enrolments
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{InvalidUserType, UnexpectedResponseFromTaxEnrolments}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm.keepAccessToSAThroughPTAForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
@@ -40,6 +41,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
 
   val controller = new KeepAccessToSAController(
     mockAuthAction,
+    mockAccountMongoDetailsAction,
     mockMultipleAccountsOrchestrator,
     mcc,
     logger,
@@ -66,12 +68,13 @@ class KeepAccessToSAControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getDetailsForKeepAccessToSA(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: RequestWithUserDetailsFromSessionAndMongo[_],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
           .expects(*, *, *)
           .returning(createInboundResult(keepAccessToSAThroughPTAForm))
+        mockGetAccountTypeSuccess(randomAccountType)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -108,7 +111,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getDetailsForKeepAccessToSA(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: RequestWithUserDetailsFromSessionAndMongo[_],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -118,6 +121,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
               keepAccessToSAThroughPTAForm.fill(KeepAccessToSAThroughPTA(true))
             )
           )
+        mockGetAccountTypeSuccess(randomAccountType)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -154,7 +158,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getDetailsForKeepAccessToSA(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: RequestWithUserDetailsFromSessionAndMongo[_],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -164,6 +168,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
               keepAccessToSAThroughPTAForm.fill(KeepAccessToSAThroughPTA(false))
             )
           )
+        mockGetAccountTypeSuccess(randomAccountType)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -198,7 +203,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getDetailsForKeepAccessToSA(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: RequestWithUserDetailsFromSessionAndMongo[_],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -206,6 +211,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
           .returning(
             createInboundResultError(InvalidUserType(Some(UrlPaths.returnUrl)))
           )
+        mockGetAccountTypeSuccess(randomAccountType)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -231,12 +237,13 @@ class KeepAccessToSAControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getDetailsForKeepAccessToSA(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: RequestWithUserDetailsFromSessionAndMongo[_],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
           .expects(*, *, *)
           .returning(createInboundResultError(InvalidUserType(None)))
+        mockGetAccountTypeSuccess(randomAccountType)
 
         val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -265,12 +272,13 @@ class KeepAccessToSAControllerSpec extends TestFixture {
 
           (mockMultipleAccountsOrchestrator
             .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
-              _: RequestWithUserDetailsFromSession[AnyContent],
+              _: RequestWithUserDetailsFromSessionAndMongo[_],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
             .expects(KeepAccessToSAThroughPTA(true), *, *, *)
             .returning(createInboundResult(true))
+          mockGetAccountTypeSuccess(randomAccountType)
 
           val res = controller.continue
             .apply(
@@ -300,7 +308,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
             .returning(Future.successful(retrievalResponse()))
           (mockMultipleAccountsOrchestrator
             .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
-              _: RequestWithUserDetailsFromSession[AnyContent],
+              _: RequestWithUserDetailsFromSessionAndMongo[_],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
@@ -310,6 +318,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
                 InvalidUserType(Some(UrlPaths.returnUrl))
               )
             )
+          mockGetAccountTypeSuccess(randomAccountType)
 
           val res = controller.continue
             .apply(
@@ -338,12 +347,13 @@ class KeepAccessToSAControllerSpec extends TestFixture {
             .returning(Future.successful(retrievalResponse()))
           (mockMultipleAccountsOrchestrator
             .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
-              _: RequestWithUserDetailsFromSession[AnyContent],
+              _: RequestWithUserDetailsFromSessionAndMongo[_],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
             .expects(KeepAccessToSAThroughPTA(true), *, *, *)
             .returning(createInboundResultError(InvalidUserType(None)))
+          mockGetAccountTypeSuccess(randomAccountType)
 
           val res = controller.continue
             .apply(
@@ -374,12 +384,13 @@ class KeepAccessToSAControllerSpec extends TestFixture {
             .returning(Future.successful(retrievalResponse()))
           (mockMultipleAccountsOrchestrator
             .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
-              _: RequestWithUserDetailsFromSession[AnyContent],
+              _: RequestWithUserDetailsFromSessionAndMongo[_],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
             .expects(KeepAccessToSAThroughPTA(false), *, *, *)
             .returning(createInboundResult(false))
+          mockGetAccountTypeSuccess(randomAccountType)
 
           val res = controller.continue
             .apply(
@@ -409,7 +420,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
             .returning(Future.successful(retrievalResponse()))
           (mockMultipleAccountsOrchestrator
             .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
-              _: RequestWithUserDetailsFromSession[AnyContent],
+              _: RequestWithUserDetailsFromSessionAndMongo[_],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
@@ -426,6 +437,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
                 data = Map("select-continue" -> "no")
               )
             )
+          mockGetAccountTypeSuccess(randomAccountType)
 
           status(res) shouldBe SEE_OTHER
           redirectLocation(res) shouldBe Some(UrlPaths.accountCheckPath)
@@ -447,12 +459,13 @@ class KeepAccessToSAControllerSpec extends TestFixture {
             .returning(Future.successful(retrievalResponse()))
           (mockMultipleAccountsOrchestrator
             .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
-              _: RequestWithUserDetailsFromSession[AnyContent],
+              _: RequestWithUserDetailsFromSessionAndMongo[_],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
             .expects(KeepAccessToSAThroughPTA(false), *, *, *)
             .returning(createInboundResultError(InvalidUserType(None)))
+          mockGetAccountTypeSuccess(randomAccountType)
 
           val res = controller.continue
             .apply(
@@ -481,7 +494,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
             .returning(Future.successful(retrievalResponse()))
           (mockMultipleAccountsOrchestrator
             .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
-              _: RequestWithUserDetailsFromSession[AnyContent],
+              _: RequestWithUserDetailsFromSessionAndMongo[_],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
@@ -489,6 +502,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
             .returning(
               createInboundResultError(UnexpectedResponseFromTaxEnrolments)
             )
+          mockGetAccountTypeSuccess(randomAccountType)
 
           val res = controller.continue
             .apply(
@@ -515,6 +529,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
+        mockGetAccountTypeSuccess(randomAccountType)
 
         val res = controller.continue
           .apply(

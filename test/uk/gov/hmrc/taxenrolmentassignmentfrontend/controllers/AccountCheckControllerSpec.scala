@@ -17,16 +17,14 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import cats.data.EitherT
-import play.api.http.Status.{OK, SEE_OTHER}
-import play.api.mvc.AnyContent
+import play.api.http.Status.SEE_OTHER
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.Enrolments
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{TaxEnrolmentAssignmentErrors, UnexpectedResponseFromIV, UnexpectedResponseFromTaxEnrolments}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{buildFakeRequestWithSessionId, predicates, retrievalResponse, retrievals}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, UrlPaths}
@@ -38,14 +36,13 @@ class AccountCheckControllerSpec extends TestFixture {
   val teaSessionCache = new TestTeaSessionCache
 
   val controller = new AccountCheckController(
-    mockAccountCheckOrchestrator,
     mockSilentAssignmentService,
     mockAuthAction,
+    mockAccountMongoDetailsAction,
     testAppConfig,
     mcc,
     teaSessionCache,
     logger,
-    errorHandler,
     errorView
   )
 
@@ -53,7 +50,7 @@ class AccountCheckControllerSpec extends TestFixture {
     "a single credential exists for a given nino with no PT enrolment" should {
       s"silently assign the HMRC-PT Enrolment and redirect to ${UrlPaths.PTA}" in new TestHelper {
         mockAuthCall()
-        mockAccountCheckSuccess(SINGLE_ACCOUNT)
+        mockGetAccountTypeSuccess(SINGLE_ACCOUNT)
         mockSilentEnrolSuccess
 
         val result = controller
@@ -66,7 +63,7 @@ class AccountCheckControllerSpec extends TestFixture {
 
       "return an error page if there was an error assigning the enrolment" in new TestHelper {
         mockAuthCall()
-        mockAccountCheckSuccess(SINGLE_ACCOUNT)
+        mockGetAccountTypeSuccess(SINGLE_ACCOUNT)
         mockSilentEnrolFailure
 
         val result = controller
@@ -81,7 +78,7 @@ class AccountCheckControllerSpec extends TestFixture {
     "a single credential exists for a given nino that is already enrolled for PT" should {
       s"redirect to ${UrlPaths.returnUrl}" in new TestHelper {
         mockAuthCall()
-        mockAccountCheckSuccess(PT_ASSIGNED_TO_CURRENT_USER)
+        mockGetAccountTypeSuccess(PT_ASSIGNED_TO_CURRENT_USER)
 
         val result = controller
           .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
@@ -95,7 +92,7 @@ class AccountCheckControllerSpec extends TestFixture {
     "a PT enrolment exists on another users account" should {
       s"redirect to ${UrlPaths.ptOnOtherAccountPath}" in new TestHelper {
         mockAuthCall()
-        mockAccountCheckSuccess(PT_ASSIGNED_TO_OTHER_USER)
+        mockGetAccountTypeSuccess(PT_ASSIGNED_TO_OTHER_USER)
 
         val result = controller
           .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
@@ -109,7 +106,7 @@ class AccountCheckControllerSpec extends TestFixture {
     "multiple credential exists for a given nino and no enrolments exists" should {
       s"redirect to ${UrlPaths.enrolledPTNoSAOnAnyAccountPath}" in new TestHelper {
         mockAuthCall()
-        mockAccountCheckSuccess(MULTIPLE_ACCOUNTS)
+        mockGetAccountTypeSuccess(MULTIPLE_ACCOUNTS)
         mockSilentEnrolSuccess
 
         val result = controller
@@ -126,7 +123,7 @@ class AccountCheckControllerSpec extends TestFixture {
     "multiple credential exists for a given nino and current credential has SA enrolment" should {
       s"redirect to ${UrlPaths.enrolledPTNoSAOnAnyAccountPath}" in new TestHelper {
         mockAuthCall()
-        mockAccountCheckSuccess(SA_ASSIGNED_TO_CURRENT_USER)
+        mockGetAccountTypeSuccess(SA_ASSIGNED_TO_CURRENT_USER)
         mockSilentEnrolSuccess
 
         val result = controller
@@ -143,7 +140,7 @@ class AccountCheckControllerSpec extends TestFixture {
     "multiple credential exists for a given nino and a non signed in account has SA enrolment" should {
       s"redirect ${UrlPaths.saOnOtherAccountInterruptPath}" in new TestHelper {
         mockAuthCall()
-        mockAccountCheckSuccess(SA_ASSIGNED_TO_OTHER_USER)
+        mockGetAccountTypeSuccess(SA_ASSIGNED_TO_OTHER_USER)
 
         val result = controller
           .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
@@ -159,7 +156,7 @@ class AccountCheckControllerSpec extends TestFixture {
     "a no credentials exists in IV for a given nino" should {
       "render the error page" in new TestHelper {
         mockAuthCall()
-        mockAccountCheckFailure(UnexpectedResponseFromIV)
+        mockGetAccountTypeFailure(UnexpectedResponseFromIV)
 
         val res = controller
           .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
@@ -185,32 +182,21 @@ class AccountCheckControllerSpec extends TestFixture {
         .expects(predicates, retrievals, *, *)
         .returning(Future.successful(retrievalResponse()))
 
-    def mockAccountCheckFailure(error: TaxEnrolmentAssignmentErrors) = {
+    def mockGetAccountTypeFailure(error: TaxEnrolmentAssignmentErrors) = {
       (mockAccountCheckOrchestrator
         .getAccountType(
           _: ExecutionContext,
           _: HeaderCarrier,
-          _: RequestWithUserDetailsFromSession[AnyContent]
+          _: RequestWithUserDetailsFromSessionAndMongo[_]
         ))
         .expects(*, *, *)
         .returning(createInboundResultError(error))
     }
 
-    def mockAccountCheckSuccess(accountType: AccountTypes.Value) = {
-      (mockAccountCheckOrchestrator
-        .getAccountType(
-          _: ExecutionContext,
-          _: HeaderCarrier,
-          _: RequestWithUserDetailsFromSession[AnyContent]
-        ))
-        .expects(*, *, *)
-        .returning(createInboundResult(accountType))
-    }
-
     def mockSilentEnrolSuccess =
       (mockSilentAssignmentService
         .enrolUser()(
-          _: RequestWithUserDetailsFromSession[AnyContent],
+          _: RequestWithUserDetailsFromSessionAndMongo[_],
           _: HeaderCarrier,
           _: ExecutionContext
         ))
@@ -222,7 +208,7 @@ class AccountCheckControllerSpec extends TestFixture {
     def mockSilentEnrolFailure =
       (mockSilentAssignmentService
         .enrolUser()(
-          _: RequestWithUserDetailsFromSession[AnyContent],
+          _: RequestWithUserDetailsFromSessionAndMongo[_],
           _: HeaderCarrier,
           _: ExecutionContext
         ))

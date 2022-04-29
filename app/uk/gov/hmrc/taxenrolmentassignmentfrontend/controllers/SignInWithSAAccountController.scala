@@ -21,7 +21,7 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthAction
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.NoRedirectUrlInCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
@@ -37,6 +37,7 @@ import scala.concurrent.ExecutionContext
 @Singleton
 class SignInWithSAAccountController @Inject()(
   authAction: AuthAction,
+  accountMongoDetailsAction: AccountMongoDetailsAction,
   mcc: MessagesControllerComponents,
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
   signInWithSAAccount: SignInWithSAAccount,
@@ -49,7 +50,7 @@ class SignInWithSAAccountController @Inject()(
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
-  def view(): Action[AnyContent] = authAction.async { implicit request =>
+  def view(): Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).async { implicit request =>
     val res = for {
       _ <- multipleAccountsOrchestrator.checkValidAccountTypeRedirectUrlInCache(
         List(SA_ASSIGNED_TO_OTHER_USER)
@@ -61,12 +62,12 @@ class SignInWithSAAccountController @Inject()(
       case Right(saAccount) =>
         Ok(signInWithSAAccount(saAccount))
       case Left(error) =>
-        errorHandler.handleErrors(error, "[SignInWithSAAccountController][view]")
+        errorHandler.handleErrors(error, "[SignInWithSAAccountController][view]")(request, implicitly)
     }
   }
 
-  def continue: Action[AnyContent] = authAction.async { implicit request =>
-    sessionCache.getEntry[String](REDIRECT_URL).map {
+  def continue: Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).async { implicit request =>
+    sessionCache.getEntry[String](REDIRECT_URL)(request, implicitly).map {
       case Some(_) =>
         logger.logEvent(
           logUserSignsInAgainWithSAAccount(request.userDetails.credId)
@@ -76,7 +77,7 @@ class SignInWithSAAccountController @Inject()(
         errorHandler.handleErrors(
           NoRedirectUrlInCache,
           "[SignInWithSAAccountController][continue]"
-        )
+        )(request, implicitly)
     }
   }
 }

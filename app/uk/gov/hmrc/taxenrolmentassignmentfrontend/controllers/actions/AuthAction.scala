@@ -43,8 +43,7 @@ case class UserDetailsFromSession(credId: String,
 
 case class RequestWithUserDetailsFromSession[A](request: Request[A],
                                                 userDetails: UserDetailsFromSession,
-                                                sessionID: String)
-    extends WrappedRequest[A](request)
+                                                sessionID: String) extends WrappedRequest[A](request)
 
 trait AuthIdentifierAction
     extends ActionBuilder[RequestWithUserDetailsFromSession, AnyContent]

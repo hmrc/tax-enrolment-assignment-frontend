@@ -25,7 +25,7 @@ import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{InvalidUserType, NoSAEnrolmentWhenOneExpected}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, UrlPaths}
@@ -35,28 +35,10 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class SignInAgainPageControllerSpec extends TestFixture {
   val view: SignInWithSAAccount = app.injector.instanceOf[SignInWithSAAccount]
-  val signOutController = new SignOutController(
-    mockAuthAction,
-    mcc,
-    testAppConfig,
-    mockTeaSessionCache
-  )
-  lazy val reportSuspiciousIDController = new ReportSuspiciousIDController(
-    mockAuthAction,
-    mockTeaSessionCache,
-    mockMultipleAccountsOrchestrator,
-    mcc,
-    reportSuspiciousIDPage,
-    logger,
-    errorHandler
-  )
-
-  lazy val reportSuspiciousIDPage: ReportSuspiciousID =
-    inject[ReportSuspiciousID]
-
   val controller =
     new SignInWithSAAccountController(
       mockAuthAction,
+      mockAccountMongoDetailsAction,
       mcc,
       mockMultipleAccountsOrchestrator,
       view,
@@ -80,7 +62,7 @@ class SignInAgainPageControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -89,12 +71,13 @@ class SignInAgainPageControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getSACredentialDetails(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: RequestWithUserDetailsFromSessionAndMongo[_],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
           .expects(*, *, *)
           .returning(createInboundResult(accountDetails))
+        mockGetAccountTypeSuccess(randomAccountType)
 
         val result = controller
           .view()
@@ -121,7 +104,7 @@ class SignInAgainPageControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: RequestWithUserDetailsFromSessionAndMongo[_],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -129,6 +112,7 @@ class SignInAgainPageControllerSpec extends TestFixture {
           .returning(
             createInboundResultError(InvalidUserType(Some(UrlPaths.returnUrl)))
           )
+        mockGetAccountTypeSuccess(randomAccountType)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -154,7 +138,7 @@ class SignInAgainPageControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: RequestWithUserDetailsFromSessionAndMongo[_],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -163,12 +147,13 @@ class SignInAgainPageControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getSACredentialDetails(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: RequestWithUserDetailsFromSessionAndMongo[_],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
           .expects(*, *, *)
           .returning(createInboundResultError(NoSAEnrolmentWhenOneExpected))
+        mockGetAccountTypeSuccess(randomAccountType)
 
         val res = controller
           .view()
@@ -195,12 +180,13 @@ class SignInAgainPageControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: RequestWithUserDetailsFromSessionAndMongo[_],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
           .expects(List(SA_ASSIGNED_TO_OTHER_USER), *, *, *)
           .returning(createInboundResultError(InvalidUserType(None)))
+        mockGetAccountTypeSuccess(randomAccountType)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -232,10 +218,11 @@ class SignInAgainPageControllerSpec extends TestFixture {
           ))
           .expects("redirectURL", *, *)
           .returning(Future.successful(Some(UrlPaths.returnUrl)))
-
+        mockGetAccountTypeSuccess(randomAccountType)
         val res = controller
           .continue()
           .apply(buildFakeRequestWithSessionId("POST", "Not Used"))
+
 
         status(res) shouldBe SEE_OTHER
         redirectLocation(res) shouldBe
@@ -264,6 +251,7 @@ class SignInAgainPageControllerSpec extends TestFixture {
           ))
           .expects("redirectURL", *, *)
           .returning(Future.successful(None))
+        mockGetAccountTypeSuccess(randomAccountType)
 
         val res = controller
           .continue()

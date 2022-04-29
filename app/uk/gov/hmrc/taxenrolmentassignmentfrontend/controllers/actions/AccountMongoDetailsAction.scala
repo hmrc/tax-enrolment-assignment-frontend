@@ -35,10 +35,23 @@ case class RequestWithUserDetailsFromSessionAndMongo[A](request: Request[A],
                                                         accountDetailsFromMongo: AccountDetailsFromMongo)
   extends WrappedRequest[A](request)
 
+object RequestWithUserDetailsFromSessionAndMongo{
+  import scala.language.implicitConversions
+  implicit def requestConversion(
+                                  requestWithUserDetailsFromSessionAndMongo: RequestWithUserDetailsFromSessionAndMongo[_])
+  : RequestWithUserDetailsFromSession[_] = {
+    RequestWithUserDetailsFromSession(
+      requestWithUserDetailsFromSessionAndMongo.request,
+      requestWithUserDetailsFromSessionAndMongo.userDetails,
+      requestWithUserDetailsFromSessionAndMongo.sessionID)
+  }
+}
+
 trait AccountMongoDetailsActionTrait
     extends ActionRefiner[RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo]
 
-class AccountMongoDetailsAction @Inject()(accountCheckOrchestrator: AccountCheckOrchestrator,
+
+  class AccountMongoDetailsAction @Inject()(accountCheckOrchestrator: AccountCheckOrchestrator,
                                           val parser: BodyParsers.Default,
                                           errorHandler: ErrorHandler)(implicit val executionContext: ExecutionContext) extends AccountMongoDetailsActionTrait {
   implicit val baseLogger: Logger = Logger(this.getClass.getName)

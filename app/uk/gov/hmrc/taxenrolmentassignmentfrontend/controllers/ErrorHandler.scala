@@ -18,9 +18,8 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import com.google.inject.Inject
 import play.api.Logger
-import play.api.i18n.{I18nSupport, Messages}
+import play.api.i18n.I18nSupport
 import play.api.mvc.{MessagesControllerComponents, Result}
-import play.api.mvc.Results.{InternalServerError, Redirect}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{InvalidUserType, TaxEnrolmentAssignmentErrors}

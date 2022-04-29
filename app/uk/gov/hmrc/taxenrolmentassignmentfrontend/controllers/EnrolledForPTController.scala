@@ -22,7 +22,7 @@ import play.api.http.ContentTypeOf.contentTypeOf_Html
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthAction
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.NoRedirectUrlInCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logRedirectingToReturnUrl
@@ -37,6 +37,7 @@ import scala.concurrent.ExecutionContext
 @Singleton
 class EnrolledForPTController @Inject()(
   authAction: AuthAction,
+  accountMongoDetailsAction: AccountMongoDetailsAction,
   mcc: MessagesControllerComponents,
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
   sessionCache: TEASessionCache,
@@ -49,8 +50,8 @@ class EnrolledForPTController @Inject()(
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
-  def view: Action[AnyContent] = authAction.async { implicit request =>
-    multipleAccountsOrchestrator.getDetailsForEnrolledPT.value.map {
+  def view: Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).async { implicit request =>
+    multipleAccountsOrchestrator.getDetailsForEnrolledPT(request, implicitly, implicitly).value.map {
       case Right(accountDetails) =>
         Ok(
           enrolledForPTPage(
@@ -59,12 +60,12 @@ class EnrolledForPTController @Inject()(
           )
         )
       case Left(error) =>
-        errorHandler.handleErrors(error, "[EnrolledForPTController][view]")
+        errorHandler.handleErrors(error, "[EnrolledForPTController][view]")(request, implicitly)
     }
   }
 
-  def continue: Action[AnyContent] = authAction.async { implicit request =>
-    sessionCache.getEntry[String](REDIRECT_URL).map {
+  def continue: Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).async { implicit request =>
+    sessionCache.getEntry[String](REDIRECT_URL)(request, implicitly).map {
       case Some(redirectUrl) =>
         logger.logEvent(
           logRedirectingToReturnUrl(
@@ -77,7 +78,7 @@ class EnrolledForPTController @Inject()(
         errorHandler.handleErrors(
           NoRedirectUrlInCache,
           "[EnrolledForPTController][continue]"
-        )
+        )(request, implicitly)
     }
   }
 }

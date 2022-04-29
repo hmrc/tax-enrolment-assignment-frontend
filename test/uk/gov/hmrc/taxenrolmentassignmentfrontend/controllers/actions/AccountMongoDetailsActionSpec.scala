@@ -21,7 +21,8 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.{Enrolment, Enrolments}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.PT_ASSIGNED_TO_CURRENT_USER
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_CURRENT_USER, SINGLE_ACCOUNT}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo.requestConversion
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedErrorWhenGettingUserType
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 
@@ -67,5 +68,16 @@ class AccountMongoDetailsActionSpec extends TestFixture {
       contentAsString(res) should include("enrolmentError.title")
     }
   }
+  "RequestWithUserDetailsFromSessionAndMongo.requestConversion" should {
+    "convert correctly" in {
+      val requestWithUserDetailsFromSession = RequestWithUserDetailsFromSession(
+        FakeRequest(), UserDetailsFromSession("foo","bar","wizz", Enrolments(Set.empty[Enrolment]), true, true), "foo")
 
+      requestConversion(RequestWithUserDetailsFromSessionAndMongo(
+        requestWithUserDetailsFromSession.request,
+        requestWithUserDetailsFromSession.userDetails,
+        requestWithUserDetailsFromSession.sessionID,
+        AccountDetailsFromMongo(SINGLE_ACCOUNT))) shouldBe requestWithUserDetailsFromSession
+    }
+  }
 }

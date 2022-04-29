@@ -23,7 +23,7 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.PT_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthAction
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.InvalidUserType
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
@@ -35,6 +35,7 @@ import scala.concurrent.ExecutionContext
 @Singleton
 class PTEnrolmentOnOtherAccountController @Inject()(
   authAction: AuthAction,
+  accountMongoDetailsAction: AccountMongoDetailsAction,
   mcc: MessagesControllerComponents,
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
   ptEnrolmentOnAnotherAccountView: PTEnrolmentOnAnotherAccount,
@@ -46,7 +47,7 @@ class PTEnrolmentOnOtherAccountController @Inject()(
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
-  def view(): Action[AnyContent] = authAction.async { implicit request =>
+  def view(): Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).async { implicit request =>
     val res = for {
       _ <- multipleAccountsOrchestrator.checkValidAccountTypeRedirectUrlInCache(
         List(PT_ASSIGNED_TO_OTHER_USER)
@@ -65,7 +66,7 @@ class PTEnrolmentOnOtherAccountController @Inject()(
       case Left(InvalidUserType(redirectUrl)) if redirectUrl.isDefined =>
         Redirect(routes.AccountCheckController.accountCheck(redirectUrl.get))
       case Left(error) =>
-        errorHandler.handleErrors(error, "[PTEnrolmentOnOtherAccountController][view]")
+        errorHandler.handleErrors(error, "[PTEnrolmentOnOtherAccountController][view]")(request, implicitly)
     }
   }
 }

@@ -21,27 +21,42 @@ import play.twirl.api.HtmlFormat
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.ErrorTemplateMessages
 
-class ErrorTemplateSpec extends TestFixture {
+class ErrorTemplateSpec extends ViewSpecHelper {
 
-  val result: HtmlFormat.Appendable = errorView()(FakeRequest(), testMessages)
+  val view: HtmlFormat.Appendable = errorView()(FakeRequest(), testMessages)
+  val document = doc(view)
 
   "The Error Page" should {
     "contain the correct title" in {
-      doc(result).title shouldBe ErrorTemplateMessages.title
+      document.title shouldBe ErrorTemplateMessages.title
     }
 
     "contain the correct header" in {
-      doc(result).getElementsByClass("govuk-heading-xl").text shouldBe ErrorTemplateMessages.heading
+      document
+        .getElementsByClass("govuk-heading-xl")
+        .text shouldBe ErrorTemplateMessages.heading
     }
 
+    validateTimeoutDialog(document)
+
     "contain the correct paragraph" in {
-      doc(result).getElementsByClass("govuk-body").get(0).text shouldBe ErrorTemplateMessages.paragraph1
-      doc(result).getElementsByClass("govuk-body").get(1).text shouldBe ErrorTemplateMessages.paragraph2Text
+      document
+        .getElementsByClass("govuk-body")
+        .get(0)
+        .text shouldBe ErrorTemplateMessages.paragraph1
+      document
+        .getElementsByClass("govuk-body")
+        .get(1)
+        .text shouldBe ErrorTemplateMessages.paragraph2Text
     }
 
     "contain the right link" in {
-      doc(result).getElementById("techSupportLink").attr("href") shouldBe ErrorTemplateMessages.paragraph2Link
-      doc(result).getElementById("techSupportLink").text() shouldBe ErrorTemplateMessages.paragraph2LinkText
+      document
+        .getElementById("techSupportLink")
+        .attr("href") shouldBe ErrorTemplateMessages.paragraph2Link
+      document
+        .getElementById("techSupportLink")
+        .text() shouldBe ErrorTemplateMessages.paragraph2LinkText
     }
   }
 }

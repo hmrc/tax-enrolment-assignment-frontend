@@ -4,6 +4,10 @@
 
 GET        /assets/*file            controllers.Assets.versioned(path = "/public", file: Asset)
 
+GET        /timeout                 uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.TimeOutController.timeout
+
+GET        /keep-alive              uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.TimeOutController.keepAlive
+
 GET        /                                                    uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.AccountCheckController.accountCheck(redirectUrl: String)
 
 #GET        /enrol-pt/enrolment-success-sa-user-id               uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.???

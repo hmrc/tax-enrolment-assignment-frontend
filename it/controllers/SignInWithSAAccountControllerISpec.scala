@@ -26,8 +26,8 @@ import play.api.libs.ws.DefaultWSCookie
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.USER_ASSIGNED_SA_ENROLMENT
 import play.api.libs.ws.DefaultWSCookie
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.USER_ASSIGNED_SA_ENROLMENT
 
 class SignInWithSAAccountControllerISpec extends TestHelper with Status {
 
@@ -281,7 +281,12 @@ class SignInWithSAAccountControllerISpec extends TestHelper with Status {
           val res =
             buildRequest(urlPath)
               .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-              .addHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
+              .addHttpHeaders(
+                xSessionId,
+                xRequestId,
+                csrfContent,
+                sessionCookie
+              )
               .get()
 
           whenReady(res) { resp =>
@@ -302,7 +307,12 @@ class SignInWithSAAccountControllerISpec extends TestHelper with Status {
           val res =
             buildRequest(urlPath)
               .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-              .addHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
+              .addHttpHeaders(
+                xSessionId,
+                xRequestId,
+                csrfContent,
+                sessionCookie
+              )
               .get()
 
           whenReady(res) { resp =>
@@ -322,7 +332,12 @@ class SignInWithSAAccountControllerISpec extends TestHelper with Status {
           val res =
             buildRequest(urlPath)
               .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-              .addHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
+              .addHttpHeaders(
+                xSessionId,
+                xRequestId,
+                csrfContent,
+                sessionCookie
+              )
               .get()
 
           whenReady(res) { resp =>

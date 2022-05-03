@@ -26,12 +26,12 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.NoRedirectUrlInCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REDIRECT_URL
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SignInWithSAAccount
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
-
 import javax.inject.{Inject, Singleton}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REDIRECT_URL
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+
 import scala.concurrent.ExecutionContext
 
 @Singleton
@@ -61,7 +61,8 @@ class SignInWithSAAccountController @Inject()(
       case Right(saAccount) =>
         Ok(signInWithSAAccount(saAccount))
       case Left(error) =>
-        errorHandler.handleErrors(error, "[SignInWithSAAccountController][view]")
+        errorHandler
+          .handleErrors(error, "[SignInWithSAAccountController][view]")
     }
   }
 

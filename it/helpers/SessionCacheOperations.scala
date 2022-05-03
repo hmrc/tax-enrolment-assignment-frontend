@@ -16,6 +16,9 @@
 
 package helpers
 
+import java.time.LocalDateTime
+
+import org.mongodb.scala.model.Filters
 import play.api.libs.json.{Format, JsString}
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.{
@@ -61,5 +64,15 @@ trait SessionCacheOperations {
         cacheMap.getEntry(key)
       }
     }
+  }
+
+  def getLastLoginDateTime(sessionID: String): LocalDateTime = {
+    await(
+      sessionRepository().collection
+        .find(Filters.equal("id", sessionID))
+        .first()
+        .toFuture()
+        .map(_.lastUpdated)
+    )
   }
 }

@@ -37,16 +37,33 @@ import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{EACDConnector, IVConnector, TaxEnrolmentsConnector}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{ErrorHandler, SignOutController}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AuthAction, RequestWithUserDetailsFromSession}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{
+  EACDConnector,
+  IVConnector,
+  TaxEnrolmentsConnector
+}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{
+  ErrorHandler,
+  SignOutController
+}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{
+  AuthAction,
+  RequestWithUserDetailsFromSession
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.userDetailsNoEnrolments
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{
+  AccountCheckOrchestrator,
+  MultipleAccountsOrchestrator
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, SilentAssignmentService, UsersGroupsSearchService}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{
+  EACDService,
+  SilentAssignmentService,
+  UsersGroupsSearchService
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.UnderConstructionView
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
@@ -110,7 +127,6 @@ trait TestFixture
   implicit lazy val testMessages: Messages =
     messagesApi.preferred(FakeRequest())
 
-
   val messagesActionBuilder: MessagesActionBuilder =
     new DefaultMessagesActionBuilderImpl(
       stubBodyParser[AnyContent](),
@@ -156,5 +172,9 @@ trait TestFixture
       implicit request: RequestWithUserDetailsFromSession[_],
       fmt: Format[A]
     ): Future[Option[A]] = Future.successful(None)
+
+    override def extendSession()(
+      implicit request: RequestWithUserDetailsFromSession[_]
+    ): Future[Boolean] = Future.successful(true)
   }
 }

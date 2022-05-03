@@ -27,7 +27,10 @@ import play.api.libs.ws.DefaultWSCookie
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{
+  USER_ASSIGNED_PT_ENROLMENT,
+  USER_ASSIGNED_SA_ENROLMENT
+}
 
 class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
 

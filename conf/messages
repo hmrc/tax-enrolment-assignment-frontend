@@ -79,3 +79,6 @@ keepAccessToSA.radio.yes = Yes
 keepAccessToSA.radio.no = No
 keepAccessToSA.noSA = I do not complete Self Assessment Online
 keepAccessToSA.error.required = Select option to continue
+timedout.title = For your security, we signed you out
+timedout.heading = For your security, we signed you out
+timedout.signin = Sign in

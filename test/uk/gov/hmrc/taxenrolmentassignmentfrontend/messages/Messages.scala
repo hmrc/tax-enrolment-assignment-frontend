@@ -16,22 +16,9 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.messages
 
-object KeepAccessToSAMessages extends Messages {
+trait Messages {
 
-  val continue = "Continue"
-  val title =
-    "Do you want to keep access to Self Assessment from your personal tax account?"
-  val heading =
-    "Do you want to keep access to Self Assessment from your personal tax account?"
-  val radioYes = "Yes"
-  val radioNo = "No"
-  val noSALink = "I do not complete Self Assessment Online"
-  val fraudReportingUrl =
-    "/protect-tax-info/enrol-pt/contact-hmrc-sa"
-  val errorTitle = "There is a problem"
-  val errorMessage = "Select option to continue"
-  val button = "Continue"
-  val action =
-    "/protect-tax-info/enrol-pt/other-user-id-has-sa/keep-access-to-sa-from-pta"
+  val title: String
+  val heading: String
 
 }

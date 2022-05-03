@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.messages
 
-object ReportSuspiciousIDMessages {
+object ReportSuspiciousIDMessages extends Messages {
 
   val title = "You need to contact us"
   val heading = "You need to contact us"

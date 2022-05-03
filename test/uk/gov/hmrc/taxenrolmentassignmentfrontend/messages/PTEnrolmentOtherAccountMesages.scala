@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.messages
 
-object PTEnrolmentOtherAccountMesages {
+object PTEnrolmentOtherAccountMesages extends Messages {
 
   val title =
     "We have found your personal tax account under a different Government Gateway user ID"

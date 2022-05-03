@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.messages
+package helpers.messages
 
-object UnderConstructionMessages extends Messages {
+object TimedOutMessages {
 
-  val title = "Tax Enrolment Assignment Frontend - Enrolment Present"
-  val heading = "This user has no PT enrolment"
-  val p = "The current user does not have an assigned PT enrolment"
+  val title = "For your security, we signed you out"
+  val heading = "For your security, we signed you out"
+  val button = "Sign in"
 
 }

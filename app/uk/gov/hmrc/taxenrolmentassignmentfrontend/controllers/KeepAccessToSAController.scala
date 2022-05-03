@@ -26,7 +26,6 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthAction
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.KeepAccessToSA
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
@@ -73,7 +72,8 @@ class KeepAccessToSAController @Inject()(
                 case Right(false) =>
                   Redirect(routes.EnrolledPTWithSAOnOtherAccountController.view)
                 case Left(error) =>
-                  errorHandler.handleErrors(error, "[KeepAccessToSAController][continue]")
+                  errorHandler
+                    .handleErrors(error, "[KeepAccessToSAController][continue]")
               }
           }
         )

@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.messages
 
-object KeepAccessToSAMessages extends Messages {
+object KeepAccessToSAMessages {
 
   val continue = "Continue"
   val title =

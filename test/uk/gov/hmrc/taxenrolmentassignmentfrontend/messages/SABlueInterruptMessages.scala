@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.messages
 
-object SABlueInterruptMessages extends Messages {
+object SABlueInterruptMessages {
   val title = "We are changing the way you access your personal tax account"
   val heading = "We are changing the way you access your personal tax account"
   val selfAssessParagraph

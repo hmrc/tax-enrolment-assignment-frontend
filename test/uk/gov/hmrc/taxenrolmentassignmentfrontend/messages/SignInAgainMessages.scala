@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.messages
 
-object SignInAgainMessages extends Messages {
+object SignInAgainMessages {
   val title = "You need to sign in again with your Self Assessment user ID"
   val heading = "You need to sign in again with your Self Assessment user ID"
   val paragraph =

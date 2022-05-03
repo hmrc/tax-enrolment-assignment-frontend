@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.messages
 
-object UnderConstructionMessages extends Messages {
+object UnderConstructionMessages {
 
   val title = "Tax Enrolment Assignment Frontend - Enrolment Present"
   val heading = "This user has no PT enrolment"

@@ -25,17 +25,21 @@ import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.play.json.formats.{MongoFormats, MongoJavatimeFormats}
-
 import java.time.{LocalDateTime, ZoneId}
 import java.util.concurrent.TimeUnit
+
 import javax.inject.{Inject, Singleton}
+import org.mongodb.scala.model.Updates.set
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.language.implicitConversions
 
 case class DatedCacheMap(id: String,
                          data: Map[String, JsValue],
-                         lastUpdated: LocalDateTime = LocalDateTime.now(ZoneId.of("UTC"))) extends MongoFormats {
+                         lastUpdated: LocalDateTime =
+                           LocalDateTime.now(ZoneId.of("UTC")))
+    extends MongoFormats {
 
   def toCacheMap: CacheMap = {
     CacheMap(this.id, this.data)
@@ -43,31 +47,42 @@ case class DatedCacheMap(id: String,
 }
 
 object DatedCacheMap {
-  implicit def apply(cacheMap: CacheMap): DatedCacheMap = DatedCacheMap(cacheMap.id, cacheMap.data)
+  implicit def apply(cacheMap: CacheMap): DatedCacheMap =
+    DatedCacheMap(cacheMap.id, cacheMap.data)
 
-  implicit val dateFormat: Format[LocalDateTime] = MongoJavatimeFormats.localDateTimeFormat
+  implicit val dateFormat: Format[LocalDateTime] =
+    MongoJavatimeFormats.localDateTimeFormat
   implicit val formats: OFormat[DatedCacheMap] = Json.format[DatedCacheMap]
 }
 
 class MongoRepository(config: Configuration, mongo: MongoComponent)
-  extends PlayMongoRepository[DatedCacheMap](
-    mongoComponent = mongo,
-    collectionName = config.get[String]("appName"),
-    domainFormat = DatedCacheMap.formats,
-    indexes = Seq(IndexModel(
-      ascending("lastUpdated"),
-      IndexOptions()
-        .name("userAnswersExpiry")
-        .expireAfter(config.get[Int]("mongodb.timeToLiveInSeconds"), TimeUnit.SECONDS)
-    )),
-    replaceIndexes = false) {
+    extends PlayMongoRepository[DatedCacheMap](
+      mongoComponent = mongo,
+      collectionName = config.get[String]("appName"),
+      domainFormat = DatedCacheMap.formats,
+      indexes = Seq(
+        IndexModel(
+          ascending("lastUpdated"),
+          IndexOptions()
+            .name("userAnswersExpiry")
+            .expireAfter(
+              config.get[Int]("mongodb.timeToLiveInSeconds"),
+              TimeUnit.SECONDS
+            )
+        )
+      ),
+      replaceIndexes = false
+    ) {
 
   def upsert(cm: CacheMap): Future[Boolean] = {
     val cmUpdated = DatedCacheMap(cm.id, cm.data)
     val options = ReplaceOptions().upsert(true)
-    collection.replaceOne(equal("id", cm.id), cmUpdated, options).toFuture().map { result =>
-      result.wasAcknowledged()
-    }
+    collection
+      .replaceOne(equal("id", cm.id), cmUpdated, options)
+      .toFuture()
+      .map { result =>
+        result.wasAcknowledged()
+      }
   }
 
   def get(id: String): Future[Option[CacheMap]] = {
@@ -77,12 +92,26 @@ class MongoRepository(config: Configuration, mongo: MongoComponent)
       }
     }
   }
+
+  def updateLastUpdated(id: String): Future[Boolean] = {
+    collection
+      .updateOne(
+        equal("id", id),
+        set("lastUpdated", LocalDateTime.now(ZoneId.of("UTC")))
+      )
+      .toFuture()
+      .map { result =>
+        result.wasAcknowledged()
+      }
+  }
 }
 
 @Singleton
-class SessionRepository @Inject()(config: Configuration, mongoComponent: MongoComponent) {
+class SessionRepository @Inject()(config: Configuration,
+                                  mongoComponent: MongoComponent) {
 
-  private lazy val sessionRepository = new MongoRepository(config, mongoComponent)
+  private lazy val sessionRepository =
+    new MongoRepository(config, mongoComponent)
 
   def apply(): MongoRepository = sessionRepository
 }

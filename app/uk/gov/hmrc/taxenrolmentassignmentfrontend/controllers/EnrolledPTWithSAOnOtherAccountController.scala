@@ -59,7 +59,10 @@ class EnrolledPTWithSAOnOtherAccountController @Inject()(
       case Right((currentUserId, optSAUserId)) =>
         Ok(enrolledForPTPage(currentUserId, optSAUserId))
       case Left(error) =>
-        errorHandler.handleErrors(error, "[EnrolledPTWithSAOnOtherAccountController][view]")
+        errorHandler.handleErrors(
+          error,
+          "[EnrolledPTWithSAOnOtherAccountController][view]"
+        )
     }
   }
 

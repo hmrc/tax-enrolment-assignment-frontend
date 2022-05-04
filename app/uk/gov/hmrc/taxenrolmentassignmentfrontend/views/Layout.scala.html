@@ -15,17 +15,29 @@
  *@
 
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-@import uk.gov.hmrc.hmrcfrontend.views.html.helpers.HmrcLayout
+@import uk.gov.hmrc.hmrcfrontend.views.html.helpers._
 @import views.html.helper.CSPNonce
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
+
 
 @this(
         appConfig: AppConfig,
         hmrcLayout: HmrcLayout,
+        hmrcTimeoutDialogHelper: HmrcTimeoutDialogHelper,
         defaultMainContent: TwoThirdsMainContent
 )
-@(pageTitle: Option[String] = None, optBackLinkUrl: Option[String] = None, mainLayout: Option[Html => Html] = Some(defaultMainContent(_)))(contentBlock: Html)(implicit request: Request[_], messages: Messages)
+@(pageTitle: Option[String] = None,
+  optBackLinkUrl: Option[String] = None,
+  mainLayout: Option[Html => Html] = Some(defaultMainContent(_)),
+  displaySignout: Boolean = true)(contentBlock: Html)(implicit request: Request[_], messages: Messages)
 
 @headBlock = {
+@if(displaySignout) {
+@hmrcTimeoutDialogHelper(
+    signOutUrl = controllers.routes.TimeOutController.timeout.url,
+    keepAliveUrl = Some(controllers.routes.TimeOutController.keepAlive.url)
+)
+}
 <link rel="stylesheet" type="text/css" href='@routes.Assets.versioned("stylesheets/application.css")'>
 }
 
@@ -36,6 +48,6 @@
  serviceName = Some(messages("service.name")),
  isWelshTranslationAvailable = appConfig.welshLanguageSupportEnabled,
  backLinkUrl = optBackLinkUrl,
- signOutUrl = Some(appConfig.signOutUrl),
+ signOutUrl = if(displaySignout) {Some(appConfig.signOutUrl)} else {None},
  mainContentLayout = mainLayout
 )(contentBlock)

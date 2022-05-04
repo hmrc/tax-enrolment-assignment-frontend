@@ -18,8 +18,9 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.messages
 
 object SignInAgainMessages {
   val title = "You need to sign in again with your Self Assessment user ID"
-  val heading1 = "You need to sign in again with your Self Assessment user ID"
-  val paragraph = "This is so that you can keep access to Self Assessment from your personal tax account."
+  val heading = "You need to sign in again with your Self Assessment user ID"
+  val paragraph =
+    "This is so that you can keep access to Self Assessment from your personal tax account."
   val heading2 = "User ID with Self Assessment access"
   val backLink = "Back"
   val continue = "Continue"

@@ -27,7 +27,10 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromEACD
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_ASSIGNED_PT_ENROLMENT, USER_ASSIGNED_SA_ENROLMENT}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{
+  USER_ASSIGNED_PT_ENROLMENT,
+  USER_ASSIGNED_SA_ENROLMENT
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.EACDService
 
 import scala.concurrent.{ExecutionContext, Future}

@@ -18,12 +18,15 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.services
 
 import cats.data.EitherT
 import cats.implicits._
-
 import javax.inject.Inject
 import play.api.mvc.AnyContent
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.service.TEAFResult
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{EACDConnector, IVConnector, TaxEnrolmentsConnector}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{
+  EACDConnector,
+  IVConnector,
+  TaxEnrolmentsConnector
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IVNinoStoreEntry
@@ -49,9 +52,9 @@ class SilentAssignmentService @Inject()(
     list.filter(_.confidenceLevel.exists(_ >= 200))
 
   def getOtherAccountsWithPTAAccess(
-                                     implicit requestWithUserDetails: RequestWithUserDetailsFromSession[_],
-                                     hc: HeaderCarrier,
-                                     ec: ExecutionContext
+    implicit requestWithUserDetails: RequestWithUserDetailsFromSession[_],
+    hc: HeaderCarrier,
+    ec: ExecutionContext
   ): TEAFResult[Seq[IVNinoStoreEntry]] =
     EitherT {
       sessionCache
@@ -77,9 +80,9 @@ class SilentAssignmentService @Inject()(
   }
 
   private def getOtherAccountsValidForPTA(
-                                           implicit requestWithUserDetails: RequestWithUserDetailsFromSession[_],
-                                           hc: HeaderCarrier,
-                                           ec: ExecutionContext
+    implicit requestWithUserDetails: RequestWithUserDetailsFromSession[_],
+    hc: HeaderCarrier,
+    ec: ExecutionContext
   ): TEAFResult[Seq[IVNinoStoreEntry]] = {
     for {
       allCreds <- ivConnector.getCredentialsWithNino(

@@ -25,17 +25,35 @@ import play.api.mvc.AnyContent
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
+  MULTIPLE_ACCOUNTS,
+  SA_ASSIGNED_TO_CURRENT_USER,
+  SA_ASSIGNED_TO_OTHER_USER
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{InvalidUserType, NoPTEnrolmentWhenOneExpected, NoSAEnrolmentWhenOneExpected, TaxEnrolmentAssignmentErrors}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
+  InvalidUserType,
+  NoPTEnrolmentWhenOneExpected,
+  NoSAEnrolmentWhenOneExpected,
+  TaxEnrolmentAssignmentErrors
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{logIncorrectUserType, logNoUserFoundWithPTEnrolment}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{
+  logIncorrectUserType,
+  logNoUserFoundWithPTEnrolment
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, UsersAssignedEnrolment}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
+  AccountDetails,
+  UsersAssignedEnrolment
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{SilentAssignmentService, UsersGroupsSearchService}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{
+  SilentAssignmentService,
+  UsersGroupsSearchService
+}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -50,9 +68,11 @@ class MultipleAccountsOrchestrator @Inject()(
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
   def getDetailsForEnrolledPT(
-                               implicit requestWithUserDetails: RequestWithUserDetailsFromSession[AnyContent],
-                               hc: HeaderCarrier,
-                               ec: ExecutionContext
+    implicit requestWithUserDetails: RequestWithUserDetailsFromSession[
+      AnyContent
+    ],
+    hc: HeaderCarrier,
+    ec: ExecutionContext
   ): TEAFResult[AccountDetails] = {
     for {
       accountType <- checkValidAccountTypeRedirectUrlInCache(
@@ -68,9 +88,11 @@ class MultipleAccountsOrchestrator @Inject()(
   }
 
   def getDetailsForEnrolledPTWithSAOnOtherAccount(
-                                                   implicit requestWithUserDetails: RequestWithUserDetailsFromSession[AnyContent],
-                                                   hc: HeaderCarrier,
-                                                   ec: ExecutionContext
+    implicit requestWithUserDetails: RequestWithUserDetailsFromSession[
+      AnyContent
+    ],
+    hc: HeaderCarrier,
+    ec: ExecutionContext
   ): TEAFResult[AccountDetails] = {
     for {
       _ <- checkValidAccountTypeRedirectUrlInCache(
@@ -84,9 +106,11 @@ class MultipleAccountsOrchestrator @Inject()(
   }
 
   def getDetailsForKeepAccessToSA(
-                                   implicit requestWithUserDetails: RequestWithUserDetailsFromSession[AnyContent],
-                                   hc: HeaderCarrier,
-                                   ec: ExecutionContext
+    implicit requestWithUserDetails: RequestWithUserDetailsFromSession[
+      AnyContent
+    ],
+    hc: HeaderCarrier,
+    ec: ExecutionContext
   ): TEAFResult[Form[KeepAccessToSAThroughPTA]] = {
     for {
       _ <- checkValidAccountTypeRedirectUrlInCache(
@@ -107,7 +131,9 @@ class MultipleAccountsOrchestrator @Inject()(
   }
 
   def handleKeepAccessToSAChoice(keepAccessToSA: KeepAccessToSAThroughPTA)(
-    implicit requestWithUserDetails: RequestWithUserDetailsFromSession[AnyContent],
+    implicit requestWithUserDetails: RequestWithUserDetailsFromSession[
+      AnyContent
+    ],
     hc: HeaderCarrier,
     ec: ExecutionContext
   ): TEAFResult[Boolean] = {
@@ -131,9 +157,11 @@ class MultipleAccountsOrchestrator @Inject()(
   }
 
   def getSACredentialIfNotFraud(
-                                 implicit requestWithUserDetails: RequestWithUserDetailsFromSession[AnyContent],
-                                 hc: HeaderCarrier,
-                                 ec: ExecutionContext
+    implicit requestWithUserDetails: RequestWithUserDetailsFromSession[
+      AnyContent
+    ],
+    hc: HeaderCarrier,
+    ec: ExecutionContext
   ): TEAFResult[Option[AccountDetails]] = EitherT {
     sessionCache.getEntry[Boolean](REPORTED_FRAUD).flatMap {
       case Some(true) => Future.successful(Right(None))
@@ -142,9 +170,11 @@ class MultipleAccountsOrchestrator @Inject()(
   }
 
   def getSACredentialDetails(
-                              implicit requestWithUserDetails: RequestWithUserDetailsFromSession[AnyContent],
-                              hc: HeaderCarrier,
-                              ec: ExecutionContext
+    implicit requestWithUserDetails: RequestWithUserDetailsFromSession[
+      AnyContent
+    ],
+    hc: HeaderCarrier,
+    ec: ExecutionContext
   ): TEAFResult[AccountDetails] = EitherT {
     sessionCache
       .getEntry[UsersAssignedEnrolment](USER_ASSIGNED_SA_ENROLMENT)
@@ -158,9 +188,11 @@ class MultipleAccountsOrchestrator @Inject()(
   }
 
   def getPTCredentialDetails(
-                              implicit requestWithUserDetails: RequestWithUserDetailsFromSession[AnyContent],
-                              hc: HeaderCarrier,
-                              ec: ExecutionContext
+    implicit requestWithUserDetails: RequestWithUserDetailsFromSession[
+      AnyContent
+    ],
+    hc: HeaderCarrier,
+    ec: ExecutionContext
   ): TEAFResult[AccountDetails] = EitherT {
     sessionCache
       .getEntry[UsersAssignedEnrolment](USER_ASSIGNED_PT_ENROLMENT)
@@ -182,7 +214,9 @@ class MultipleAccountsOrchestrator @Inject()(
 
   def checkValidAccountTypeAndEnrolForPT(
     expectedAccountType: AccountTypes.Value
-  )(implicit requestWithUserDetails: RequestWithUserDetailsFromSession[AnyContent],
+  )(implicit requestWithUserDetails: RequestWithUserDetailsFromSession[
+      AnyContent
+    ],
     hc: HeaderCarrier,
     ec: ExecutionContext): TEAFResult[Unit] = {
     for {
@@ -193,7 +227,9 @@ class MultipleAccountsOrchestrator @Inject()(
 
   def checkValidAccountTypeRedirectUrlInCache(
     validAccountTypes: List[AccountTypes.Value]
-  )(implicit requestWithUserDetails: RequestWithUserDetailsFromSession[AnyContent],
+  )(implicit requestWithUserDetails: RequestWithUserDetailsFromSession[
+      AnyContent
+    ],
     hc: HeaderCarrier,
     ec: ExecutionContext): TEAFResult[AccountTypes.Value] = EitherT {
     val res = for {

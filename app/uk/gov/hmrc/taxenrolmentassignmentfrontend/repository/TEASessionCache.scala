@@ -80,6 +80,12 @@ class TEASessionCacheImpl @Inject()(
       }
     }
   }
+
+  def extendSession()(
+    implicit request: RequestWithUserDetailsFromSession[_]
+  ): Future[Boolean] = {
+    sessionRepository().updateLastUpdated(request.sessionID)
+  }
 }
 
 @ImplementedBy(classOf[TEASessionCacheImpl])
@@ -105,4 +111,8 @@ trait TEASessionCache {
     implicit request: RequestWithUserDetailsFromSession[_],
     fmt: Format[A]
   ): Future[Option[A]]
+
+  def extendSession()(
+    implicit request: RequestWithUserDetailsFromSession[_]
+  ): Future[Boolean]
 }

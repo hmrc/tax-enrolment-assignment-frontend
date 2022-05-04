@@ -26,7 +26,10 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWit
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromEACD
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{IVNinoStoreEntry, UserEnrolmentsListResponse}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
+  IVNinoStoreEntry,
+  UserEnrolmentsListResponse
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.OTHER_VALID_PTA_ACCOUNTS
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
 

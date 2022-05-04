@@ -18,7 +18,6 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.services
 
 import cats.data.EitherT
 import cats.implicits._
-
 import javax.inject.Inject
 import play.api.mvc.AnyContent
 import uk.gov.hmrc.http.HeaderCarrier
@@ -27,7 +26,10 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.EACDConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_ASSIGNED_PT_ENROLMENT, USER_ASSIGNED_SA_ENROLMENT}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{
+  USER_ASSIGNED_PT_ENROLMENT,
+  USER_ASSIGNED_SA_ENROLMENT
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -36,9 +38,9 @@ class EACDService @Inject()(eacdConnector: EACDConnector,
                             sessionCache: TEASessionCache) {
 
   def getUsersAssignedPTEnrolment(
-                                   implicit requestWithUserDetails: RequestWithUserDetailsFromSession[_],
-                                   hc: HeaderCarrier,
-                                   ec: ExecutionContext
+    implicit requestWithUserDetails: RequestWithUserDetailsFromSession[_],
+    hc: HeaderCarrier,
+    ec: ExecutionContext
   ): TEAFResult[UsersAssignedEnrolment] =
     EitherT {
       sessionCache
@@ -50,9 +52,9 @@ class EACDService @Inject()(eacdConnector: EACDConnector,
     }
 
   def getUsersAssignedSAEnrolment(
-                                   implicit requestWithUserDetails: RequestWithUserDetailsFromSession[_],
-                                   hc: HeaderCarrier,
-                                   ec: ExecutionContext
+    implicit requestWithUserDetails: RequestWithUserDetailsFromSession[_],
+    hc: HeaderCarrier,
+    ec: ExecutionContext
   ): TEAFResult[UsersAssignedEnrolment] =
     EitherT {
       sessionCache
@@ -64,9 +66,9 @@ class EACDService @Inject()(eacdConnector: EACDConnector,
     }
 
   private def getUsersWithPTEnrolmentFromEACD(
-                                               implicit requestWithUserDetails: RequestWithUserDetailsFromSession[_],
-                                               hc: HeaderCarrier,
-                                               ec: ExecutionContext
+    implicit requestWithUserDetails: RequestWithUserDetailsFromSession[_],
+    hc: HeaderCarrier,
+    ec: ExecutionContext
   ): TEAFResult[UsersAssignedEnrolment] = {
     for {
       userWithPTEnrolment <- eacdConnector
@@ -82,9 +84,9 @@ class EACDService @Inject()(eacdConnector: EACDConnector,
   }
 
   private def getUsersWithSAEnrolmentFromEACD(
-                                               implicit requestWithUserDetails: RequestWithUserDetailsFromSession[_],
-                                               hc: HeaderCarrier,
-                                               ec: ExecutionContext
+    implicit requestWithUserDetails: RequestWithUserDetailsFromSession[_],
+    hc: HeaderCarrier,
+    ec: ExecutionContext
   ): TEAFResult[UsersAssignedEnrolment] = {
 
     for {

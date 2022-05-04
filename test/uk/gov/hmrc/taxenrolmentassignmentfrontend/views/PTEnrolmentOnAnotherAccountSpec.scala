@@ -20,10 +20,13 @@ import play.api.test.FakeRequest
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.PTEnrolmentOtherAccountMesages
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
+  AccountDetails,
+  MFADetails
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnotherAccount
 
-class PTEnrolmentOnAnotherAccountSpec extends TestFixture {
+class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
 
   lazy val view: PTEnrolmentOnAnotherAccount =
     inject[PTEnrolmentOnAnotherAccount]
@@ -54,12 +57,8 @@ class PTEnrolmentOnAnotherAccountSpec extends TestFixture {
     5 -> MFADetails("Authenticator app", "HRMC APP")
   )
 
-  val accountDetails = AccountDetails(
-    "3214",
-    Some("email1@test.com"),
-    "Yesterday",
-    mfaDetails
-  )
+  val accountDetails =
+    AccountDetails("3214", Some("email1@test.com"), "Yesterday", mfaDetails)
 
   val htmlWithSA =
     view(accountDetails, true)(FakeRequest(), testMessages, appConfigForTest)
@@ -87,6 +86,9 @@ class PTEnrolmentOnAnotherAccountSpec extends TestFixture {
         .getElementsByClass(Selectors.heading)
         .text shouldBe PTEnrolmentOtherAccountMesages.heading
     }
+
+    validateTimeoutDialog(documentWithSA)
+
     "have a body" that {
       val textElement = documentWithSA
         .getElementsByClass(Selectors.body)
@@ -164,9 +166,6 @@ class PTEnrolmentOnAnotherAccountSpec extends TestFixture {
       "has the correct text" in {
         textElement.text() shouldBe PTEnrolmentOtherAccountMesages.notMyUserId
       }
-      /*
-      //TODO remove fraud reporting ID part after consultation with leads, as it requires other changes such remove couple of tests etc etc
-       */
       "has the link to fraud reporting" in {
         textElement
           .select("a")

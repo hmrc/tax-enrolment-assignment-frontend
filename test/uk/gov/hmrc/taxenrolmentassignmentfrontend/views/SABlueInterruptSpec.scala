@@ -22,30 +22,41 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.SABlueInterruptMessages
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SABlueInterrupt
 
-class SABlueInterruptSpec extends TestFixture {
+class SABlueInterruptSpec extends ViewSpecHelper {
 
-  val sABlueInterruptView: SABlueInterrupt = app.injector.instanceOf[SABlueInterrupt]
-  val result: HtmlFormat.Appendable = sABlueInterruptView()(FakeRequest(), testMessages)
+  val sABlueInterruptView: SABlueInterrupt =
+    app.injector.instanceOf[SABlueInterrupt]
+  val view =
+    sABlueInterruptView()(FakeRequest(), testMessages)
+
+  val document = doc(view)
 
   "SABlueInterrupt" when {
     "user has an SA Enrolment associated to the credentials on another account" should {
       "contain the correct title" in {
-        doc(result).title shouldBe SABlueInterruptMessages.selfAssessTitle
+        document.title shouldBe SABlueInterruptMessages.title
       }
 
       "contain the correct header" in {
-        doc(result).getElementsByClass("govuk-heading-xl").text shouldBe SABlueInterruptMessages.selfAssessHeading
+        document
+          .getElementsByClass("govuk-heading-xl")
+          .text shouldBe SABlueInterruptMessages.heading
       }
 
+      validateTimeoutDialog(document)
+
       "contain the correct paragraph" in {
-        doc(result).getElementsByClass("govuk-body").text shouldBe SABlueInterruptMessages.selfAssessParagraph
+        document
+          .getElementsByClass("govuk-body")
+          .text shouldBe SABlueInterruptMessages.selfAssessParagraph
       }
 
       "contain the correct button" in {
-        doc(result).getElementsByClass("actions").text shouldBe SABlueInterruptMessages.selfAssessButton
+        document
+          .getElementsByClass("actions")
+          .text shouldBe SABlueInterruptMessages.selfAssessButton
       }
     }
   }
-
 
 }

@@ -16,34 +16,37 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
+import javax.inject.{Inject, Singleton}
 import play.api.Logging
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthAction
-import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.TimedOutView
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class SignOutController @Inject()(
+class TimeOutController @Inject()(
   authAction: AuthAction,
   mcc: MessagesControllerComponents,
-  appConfig: AppConfig,
-  sessionCache: TEASessionCache
+  sessionCache: TEASessionCache,
+  timedoutView: TimedOutView
 )(implicit ec: ExecutionContext)
     extends FrontendController(mcc)
     with Logging
     with I18nSupport {
 
-  def signOut(): Action[AnyContent] = authAction.async { implicit request =>
+  def keepAlive: Action[AnyContent] = authAction.async { implicit request =>
+    sessionCache.extendSession()
+    Future.successful(NoContent)
+  }
+
+  def timeout: Action[AnyContent] = authAction.async { implicit request =>
     sessionCache.removeAll()
-    Future.successful(
-      Redirect(appConfig.signOutUrl)
-        .removingFromSession("X-Request-ID", "Session-Id")
-    )
+    Future.successful(Ok(timedoutView()))
   }
 
 }

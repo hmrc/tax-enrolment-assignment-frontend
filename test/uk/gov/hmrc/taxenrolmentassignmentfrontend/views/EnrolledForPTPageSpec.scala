@@ -22,7 +22,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.EnrolledForPTPageMessages
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTPage
 
-class EnrolledForPTPageSpec extends TestFixture {
+class EnrolledForPTPageSpec extends ViewSpecHelper {
 
   val enrolledForPTPage: EnrolledForPTPage =
     app.injector.instanceOf[EnrolledForPTPage]
@@ -52,6 +52,9 @@ class EnrolledForPTPageSpec extends TestFixture {
           .getElementsByClass(Selectors.heading)
           .text shouldBe EnrolledForPTPageMessages.heading
       }
+
+      validateTimeoutDialog(documentWithSA)
+
       "contain the correct body" in {
         documentWithSA
           .getElementsByClass(Selectors.body)
@@ -86,6 +89,9 @@ class EnrolledForPTPageSpec extends TestFixture {
           .getElementsByClass("govuk-heading-xl")
           .text shouldBe EnrolledForPTPageMessages.heading
       }
+
+      validateTimeoutDialog(documentWithNoSA)
+
       "contain the correct body" in {
         documentWithNoSA
           .getElementsByClass("govuk-body")

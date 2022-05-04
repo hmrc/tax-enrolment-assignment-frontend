@@ -33,8 +33,7 @@ class AppConfig @Inject()(val config: ServicesConfig) {
     : String = config.baseUrl("enrolment-store-proxy") + "/enrolment-store-proxy"
   lazy val TAX_ENROLMENTS_BASE_URL
     : String = config.baseUrl("tax-enrolments") + "/tax-enrolments"
-  lazy val AUTH_BASE_URL
-  : String = config.baseUrl("auth")
+  lazy val AUTH_BASE_URL: String = config.baseUrl("auth")
 
   lazy val useTestOnlyUsersGroupSearch: Boolean = {
     config.getConfBool("users-groups-search.isTest", defBool = true)
@@ -50,6 +49,8 @@ class AppConfig @Inject()(val config: ServicesConfig) {
   lazy val loginURL: String = s"$basAuthHost/bas-gateway/sign-in"
   lazy val signOutUrl: String =
     s"$basAuthHost/bas-gateway/sign-out-without-state"
+  lazy val keepAliveUrl: String =
+    s"/protect-tax-info/keepAlive"
   lazy val redirectPTAUrl: String = config.getString(
     "microservice.services.personal-tax-account.host"
   ) + "/personal-account"

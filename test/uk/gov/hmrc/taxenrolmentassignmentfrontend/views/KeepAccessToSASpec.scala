@@ -23,7 +23,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.KeepAccessToSAMessage
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.KeepAccessToSA
 
-class KeepAccessToSASpec extends TestFixture {
+class KeepAccessToSASpec extends ViewSpecHelper {
 
   lazy val view: KeepAccessToSA = inject[KeepAccessToSA]
 
@@ -62,6 +62,9 @@ class KeepAccessToSASpec extends TestFixture {
           .getElementsByClass(Selectors.heading)
           .text shouldBe KeepAccessToSAMessages.heading
       }
+
+      validateTimeoutDialog(document)
+
       "have radio buttons" that {
         val radioButtons = document.getElementsByClass(Selectors.radios)
         "have the option to select Yes and is unchecked" in {
@@ -135,6 +138,7 @@ class KeepAccessToSASpec extends TestFixture {
           .getElementsByClass(Selectors.heading)
           .text shouldBe KeepAccessToSAMessages.heading
       }
+
       "have radio buttons" that {
         val radioButtonsYes = documentYes.getElementsByClass(Selectors.radios)
         val radioButtonsNo = documentNo.getElementsByClass(Selectors.radios)

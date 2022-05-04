@@ -23,7 +23,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.EnrolledPTWithSAOnOtherAccountMessages
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTWithSAOnOtherAccount
 
-class EnrolledForPTWithSAOnOtherAccountSpec extends TestFixture {
+class EnrolledForPTWithSAOnOtherAccountSpec extends ViewSpecHelper {
 
   val view: EnrolledForPTWithSAOnOtherAccount =
     app.injector.instanceOf[EnrolledForPTWithSAOnOtherAccount]
@@ -54,6 +54,9 @@ class EnrolledForPTWithSAOnOtherAccountSpec extends TestFixture {
           .getElementsByClass("govuk-heading-xl")
           .text shouldBe EnrolledPTWithSAOnOtherAccountMessages.heading
       }
+
+      validateTimeoutDialog(documentSA)
+
       "contain the correct body" which {
         val subHeadings = documentSA.getElementsByClass(Selectors.subHeading)
         "has a sub heading for other IDs" in {
@@ -89,6 +92,9 @@ class EnrolledForPTWithSAOnOtherAccountSpec extends TestFixture {
           .getElementsByClass("govuk-heading-xl")
           .text shouldBe EnrolledPTWithSAOnOtherAccountMessages.heading
       }
+
+      validateTimeoutDialog(document)
+
       "contain the correct body" which {
         val subHeadings = document.getElementsByClass(Selectors.subHeading)
         "has a sub heading for other IDs" in {

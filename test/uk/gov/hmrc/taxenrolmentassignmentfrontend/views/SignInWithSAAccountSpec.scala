@@ -16,21 +16,38 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.views
 
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
 import play.api.test.FakeRequest
 import play.twirl.api.HtmlFormat
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignOutController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.SignInAgainMessages
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{ReportSuspiciousID, SignInWithSAAccount}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
+  AccountDetails,
+  MFADetails
+}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{
+  ReportSuspiciousID,
+  SignInWithSAAccount
+}
 
-class SignInWithSAAccountSpec extends TestFixture {
+class SignInWithSAAccountSpec extends ViewSpecHelper {
 
   lazy val testTeaSessionCache = new TestTeaSessionCache
-  lazy val signOutController = new SignOutController(mockAuthAction,mcc,testAppConfig,testTeaSessionCache)
+  lazy val signOutController = new SignOutController(
+    mockAuthAction,
+    mcc,
+    testAppConfig,
+    testTeaSessionCache
+  )
   lazy val signInAgainPage: SignInWithSAAccount = inject[SignInWithSAAccount]
-  lazy val reportSuspiciousIDPage: ReportSuspiciousID = inject[ReportSuspiciousID]
-  lazy val result: HtmlFormat.Appendable = signInAgainPage(accountDetails)(FakeRequest(), testMessages)
+  lazy val reportSuspiciousIDPage: ReportSuspiciousID =
+    inject[ReportSuspiciousID]
+  lazy val view =
+    signInAgainPage(accountDetails)(FakeRequest(), testMessages)
+  lazy val document: Document =
+    Jsoup.parse(view.toString())
 
   object Selectors {
     val headingXL = "govuk-heading-xl"
@@ -65,23 +82,30 @@ class SignInWithSAAccountSpec extends TestFixture {
 
   "The SignInAgain Page" should {
     "contain the correct title" in {
-      doc(result).title shouldBe SignInAgainMessages.title
+      document.title shouldBe SignInAgainMessages.title
     }
 
     "contain the correct main header" in {
-      doc(result).getElementsByClass(Selectors.headingXL).text shouldBe SignInAgainMessages.heading1
+      document
+        .getElementsByClass(Selectors.headingXL)
+        .text shouldBe SignInAgainMessages.heading
     }
 
     "contain the correct paragraph" in {
-      val paragraph = doc(result).select("p." + Selectors.body)
-      paragraph.get(0).getElementsByClass(Selectors.body).text() shouldBe SignInAgainMessages.paragraph
+      val paragraph = document.select("p." + Selectors.body)
+      paragraph
+        .get(0)
+        .getElementsByClass(Selectors.body)
+        .text() shouldBe SignInAgainMessages.paragraph
     }
 
     "contain the correct second heading" in {
-      doc(result).getElementsByClass(Selectors.headingM).text shouldBe SignInAgainMessages.heading2
+      document
+        .getElementsByClass(Selectors.headingM)
+        .text shouldBe SignInAgainMessages.heading2
     }
     "contain a summary list" that {
-      val summaryListRows =  doc(result)
+      val summaryListRows = document
         .getElementsByClass(Selectors.summaryListRow)
       "includes the userId" in {
         summaryListRows
@@ -132,13 +156,21 @@ class SignInWithSAAccountSpec extends TestFixture {
     }
 
     "correct gov-uk link target and link text" in {
-      doc(result).getElementById("reportId").text() shouldBe SignInAgainMessages.linkText
+      document
+        .getElementById("reportId")
+        .text() shouldBe SignInAgainMessages.linkText
     }
     "contain the correct back link" in {
-      doc(result).getElementsByClass(Selectors.backLink).text shouldBe SignInAgainMessages.backLink
+      document
+        .getElementsByClass(Selectors.backLink)
+        .text shouldBe SignInAgainMessages.backLink
     }
     "contain the correct button" in {
-      doc(result).getElementsByClass(Selectors.button).text shouldBe SignInAgainMessages.continue
+      document
+        .getElementsByClass(Selectors.button)
+        .text shouldBe SignInAgainMessages.continue
     }
+
+    validateTimeoutDialog(document)
   }
 }

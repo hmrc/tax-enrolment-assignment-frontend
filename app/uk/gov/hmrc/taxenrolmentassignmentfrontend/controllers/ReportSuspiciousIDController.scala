@@ -21,7 +21,10 @@ import play.api.Logger
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_OTHER_USER}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
+  PT_ASSIGNED_TO_OTHER_USER,
+  SA_ASSIGNED_TO_OTHER_USER
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthAction
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
@@ -61,7 +64,8 @@ class ReportSuspiciousIDController @Inject()(
       case Right(ptAccount) =>
         Ok(reportSuspiciousID(ptAccount))
       case Left(error) =>
-        errorHandler.handleErrors(error, "[ReportSuspiciousIDController][viewNoSA]")
+        errorHandler
+          .handleErrors(error, "[ReportSuspiciousIDController][viewNoSA]")
     }
   }
 
@@ -77,7 +81,8 @@ class ReportSuspiciousIDController @Inject()(
       case Right(saAccount) =>
         Ok(reportSuspiciousID(saAccount, true))
       case Left(error) =>
-        errorHandler.handleErrors(error, "[ReportSuspiciousIDController][viewSA]")
+        errorHandler
+          .handleErrors(error, "[ReportSuspiciousIDController][viewSA]")
     }
   }
 
@@ -93,7 +98,8 @@ class ReportSuspiciousIDController @Inject()(
           )
           Redirect(routes.EnrolledPTWithSAOnOtherAccountController.view)
         case Left(error) =>
-          errorHandler.handleErrors(error, "[ReportSuspiciousIdController][continue]")
+          errorHandler
+            .handleErrors(error, "[ReportSuspiciousIdController][continue]")
       }
   }
 }

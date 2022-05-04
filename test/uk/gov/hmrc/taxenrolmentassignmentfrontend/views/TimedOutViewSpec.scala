@@ -18,41 +18,40 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.views
 
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.UnderConstructionMessages
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.UnderConstructionView
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.TimedOutMessages
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.TimedOutView
 
-class UnderConstructionViewSpec extends ViewSpecHelper {
+class TimedOutViewSpec extends ViewSpecHelper {
 
-  lazy val view: UnderConstructionView = inject[UnderConstructionView]
+  lazy val view: TimedOutView = inject[TimedOutView]
 
   lazy val document: Document =
     Jsoup.parse(view()(fakeRequest, messages).toString)
 
   object Selectors {
-    val title = "title"
-    val heading = "h1"
-    val p = "p"
+    val heading = "govuk-heading-xl"
+    val button = "govuk-button"
   }
 
-  "UnderConstructionView()" must {
+  "TimedOutView" must {
     "Have the correct page title" in {
       document
-        .select(Selectors.title)
-        .text shouldBe (UnderConstructionMessages.title)
+        .title() shouldBe (TimedOutMessages.title)
     }
 
     "Have the correct heading" in {
       document
-        .select(Selectors.heading)
-        .text shouldBe UnderConstructionMessages.heading
+        .getElementsByClass(Selectors.heading)
+        .text shouldBe TimedOutMessages.heading
     }
 
-    "have the correct p" in {
-      document.select(Selectors.p).text shouldBe UnderConstructionMessages.p
+    "have the correct button" in {
+      document
+        .getElementsByClass(Selectors.button)
+        .text shouldBe TimedOutMessages.button
     }
 
-    validateTimeoutDialog(document)
+    validateNoTimeoutDialog(document)
   }
 
 }

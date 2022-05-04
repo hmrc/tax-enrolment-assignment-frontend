@@ -87,6 +87,21 @@ class MultipleAccountsOrchestrator @Inject()(
       )
   }
 
+  def getAccountDetailsForCurrentUser(
+                               implicit requestWithUserDetails: RequestWithUserDetailsFromSession[AnyContent],
+                               hc: HeaderCarrier,
+                               ec: ExecutionContext
+                             ): TEAFResult[AccountDetails] = {
+    for {
+      accountDetails <- usersGroupSearchService.getAccountDetails(
+        requestWithUserDetails.userDetails.credId
+      )
+    } yield
+      accountDetails.copy(
+        hasSA = Some(requestWithUserDetails.userDetails.hasSAEnrolment)
+      )
+  }
+
   def getDetailsForEnrolledPTWithSAOnOtherAccount(
     implicit requestWithUserDetails: RequestWithUserDetailsFromSession[
       AnyContent

@@ -27,9 +27,11 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthAction
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logAssignedEnrolmentAfterReportingFraud
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.audit.ReportAuditDetailsData
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REPORTED_FRAUD
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.AuditService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.ReportSuspiciousID
 
 import scala.concurrent.ExecutionContext
@@ -42,7 +44,8 @@ class ReportSuspiciousIDController @Inject()(
   mcc: MessagesControllerComponents,
   reportSuspiciousID: ReportSuspiciousID,
   val logger: EventLoggerService,
-  errorHandler: ErrorHandler
+  errorHandler: ErrorHandler,
+  auditService: AuditService
 )(implicit ec: ExecutionContext, appConfig: AppConfig)
     extends FrontendController(mcc)
     with I18nSupport
@@ -56,10 +59,17 @@ class ReportSuspiciousIDController @Inject()(
         List(PT_ASSIGNED_TO_OTHER_USER)
       )
       ptAccount <- multipleAccountsOrchestrator.getPTCredentialDetails
-    } yield ptAccount
+      currentAccount <- multipleAccountsOrchestrator.getAccountDetailsForCurrentUser
+    } yield (ptAccount, currentAccount)
 
     res.value.map {
-      case Right(ptAccount) =>
+      case Right((ptAccount, currentAccount)) =>
+        auditService.reportUnrecognisedAccountAudit(
+          routes.ReportSuspiciousIDController.viewNoSA.url,
+          "pt",
+          ReportAuditDetailsData(currentAccount, ptAccount, None, PT_ASSIGNED_TO_OTHER_USER.toString)
+        )
+
         Ok(reportSuspiciousID(ptAccount))
       case Left(error) =>
         errorHandler
@@ -73,10 +83,16 @@ class ReportSuspiciousIDController @Inject()(
         List(SA_ASSIGNED_TO_OTHER_USER)
       )
       saAccount <- multipleAccountsOrchestrator.getSACredentialDetails
-    } yield saAccount
+      currentAccount <- multipleAccountsOrchestrator.getAccountDetailsForCurrentUser
+    } yield (saAccount, currentAccount)
 
     res.value.map {
-      case Right(saAccount) =>
+      case Right((saAccount, currentAccount)) =>
+        auditService.reportUnrecognisedAccountAudit(
+          routes.ReportSuspiciousIDController.viewSA.url,
+          "sa",
+          ReportAuditDetailsData(currentAccount, saAccount, None, SA_ASSIGNED_TO_OTHER_USER.toString)
+        )
         Ok(reportSuspiciousID(saAccount, true))
       case Left(error) =>
         errorHandler

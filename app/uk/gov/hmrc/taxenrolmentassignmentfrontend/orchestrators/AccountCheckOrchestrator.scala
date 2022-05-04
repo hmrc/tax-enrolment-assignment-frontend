@@ -67,14 +67,19 @@ class AccountCheckOrchestrator @Inject()(
     hc: HeaderCarrier,
     requestWithUserDetails: RequestWithUserDetailsFromSession[_]
   ): TEAFResult[AccountTypes.Value] = EitherT {
-    sessionCache.getEntry[AccountTypes.Value](ACCOUNT_TYPE).flatMap {
-      case Some(accountType) => Future.successful(Right(accountType))
-      case None =>
-        generateAccountType.map { accountType =>
-          sessionCache.save[AccountTypes.Value](ACCOUNT_TYPE, accountType)
-          accountType
-        }.value
-    }
+    (sessionCache
+      .getEntry[AccountTypes.Value](ACCOUNT_TYPE)
+      .flatMap {
+        case Some(accountType) => Future.successful(Right(accountType))
+        case None =>
+          generateAccountType.value.flatMap {
+            case Right(accountType) =>
+              sessionCache
+                .save[AccountTypes.Value](ACCOUNT_TYPE, accountType)
+                .map(_ => Right(accountType))
+            case Left(error) => Future.successful(Left(error))
+          }
+      })
   }
 
   private def generateAccountType(

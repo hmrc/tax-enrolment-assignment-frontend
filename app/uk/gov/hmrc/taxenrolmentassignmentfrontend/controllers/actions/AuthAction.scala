@@ -41,10 +41,11 @@ case class UserDetailsFromSession(credId: String,
                                   hasPTEnrolment: Boolean,
                                   hasSAEnrolment: Boolean)
 
-case class RequestWithUserDetailsFromSession[A](request: Request[A],
-                                                userDetails: UserDetailsFromSession,
-                                                sessionID: String)
-    extends WrappedRequest[A](request)
+case class RequestWithUserDetailsFromSession[A](
+  request: Request[A],
+  userDetails: UserDetailsFromSession,
+  sessionID: String
+) extends WrappedRequest[A](request)
 
 trait AuthIdentifierAction
     extends ActionBuilder[RequestWithUserDetailsFromSession, AnyContent]
@@ -67,7 +68,8 @@ class AuthAction @Inject()(
     request: Request[A],
     block: RequestWithUserDetailsFromSession[A] => Future[Result]
   ): Future[Result] = {
-    implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequestAndSession(request, request.session)
+    implicit val hc: HeaderCarrier =
+      HeaderCarrierConverter.fromRequestAndSession(request, request.session)
 
     authorised(AuthProviders(GovernmentGateway) and ConfidenceLevel.L200)
       .retrieve(nino and credentials and allEnrolments and groupIdentifier) {
@@ -84,11 +86,13 @@ class AuthAction @Inject()(
             hasPTEnrolment,
             hasSAEnrolment
           )
-
           val sessionID = request.session
             .get("sessionId")
             .getOrElse(UUID.randomUUID().toString)
-          block(RequestWithUserDetailsFromSession(request, userDetails, sessionID))
+
+          block(
+            RequestWithUserDetailsFromSession(request, userDetails, sessionID)
+          )
 
         case _ =>
           logger.logEvent(
@@ -96,7 +100,9 @@ class AuthAction @Inject()(
               s"session missing credential or NINO field for uri: ${request.uri}"
             )
           )
-          Future.successful(Redirect(routes.AuthorisationController.notAuthorised().url))
+          Future.successful(
+            Redirect(routes.AuthorisationController.notAuthorised().url)
+          )
       } recover {
       case er: NoActiveSession =>
         logger.logEvent(

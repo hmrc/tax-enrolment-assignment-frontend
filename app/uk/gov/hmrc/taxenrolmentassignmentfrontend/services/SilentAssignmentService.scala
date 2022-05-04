@@ -61,14 +61,7 @@ class SilentAssignmentService @Inject()(
         .getEntry[Seq[IVNinoStoreEntry]](OTHER_VALID_PTA_ACCOUNTS)
         .flatMap {
           case Some(otherCreds) => Future.successful(Right(otherCreds))
-          case None =>
-            getOtherAccountsValidForPTA.map { otherValidAccounts =>
-              sessionCache.save[Seq[IVNinoStoreEntry]](
-                OTHER_VALID_PTA_ACCOUNTS,
-                otherValidAccounts
-              )
-              otherValidAccounts
-            }.value
+          case None             => getOtherAccountsValidForPTA.value
         }
     }
 
@@ -92,6 +85,12 @@ class SilentAssignmentService @Inject()(
         getOtherNoneBusinessAccounts(
           allCreds,
           requestWithUserDetails.userDetails.credId
+        )
+      )
+      _ <- EitherT.right[TaxEnrolmentAssignmentErrors](
+        sessionCache.save[Seq[IVNinoStoreEntry]](
+          OTHER_VALID_PTA_ACCOUNTS,
+          otherValidPTACreds
         )
       )
     } yield {

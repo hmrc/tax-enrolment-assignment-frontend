@@ -64,6 +64,7 @@ class KeepAccessToSASpec extends ViewSpecHelper {
       }
 
       validateTimeoutDialog(document)
+      validateTechnicalHelpLinkPresent(document)
 
       "have radio buttons" that {
         val radioButtons = document.getElementsByClass(Selectors.radios)

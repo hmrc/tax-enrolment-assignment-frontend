@@ -53,4 +53,23 @@ trait ViewSpecHelper extends TestFixture {
     }
   }
 
+  def validateTechnicalHelpLinkPresent(doc: Document): Unit = {
+    val technicalHelpLink = doc
+      .getElementsByClass("govuk-link hmrc-report-technical-issue ")
+    "contain a technical help link" that {
+      "has the expected text" in {
+        println(doc)
+        technicalHelpLink
+          .text() shouldBe "Is this page not working properly? (opens in new tab)"
+      }
+      "has expected href" in {
+        assert(
+          technicalHelpLink
+            .attr("href")
+            .contains("/contact/report-technical-problem")
+        )
+      }
+    }
+  }
+
 }

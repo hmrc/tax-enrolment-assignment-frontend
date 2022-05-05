@@ -44,6 +44,7 @@ class SABlueInterruptSpec extends ViewSpecHelper {
       }
 
       validateTimeoutDialog(document)
+      validateTechnicalHelpLinkPresent(document)
 
       "contain the correct paragraph" in {
         document

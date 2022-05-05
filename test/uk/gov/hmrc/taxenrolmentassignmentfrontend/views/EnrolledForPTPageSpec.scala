@@ -54,6 +54,7 @@ class EnrolledForPTPageSpec extends ViewSpecHelper {
       }
 
       validateTimeoutDialog(documentWithSA)
+      validateTechnicalHelpLinkPresent(documentWithSA)
 
       "contain the correct body" in {
         documentWithSA
@@ -91,6 +92,7 @@ class EnrolledForPTPageSpec extends ViewSpecHelper {
       }
 
       validateTimeoutDialog(documentWithNoSA)
+      validateTechnicalHelpLinkPresent(documentWithNoSA)
 
       "contain the correct body" in {
         documentWithNoSA

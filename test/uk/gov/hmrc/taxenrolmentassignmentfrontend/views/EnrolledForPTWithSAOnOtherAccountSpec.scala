@@ -56,6 +56,7 @@ class EnrolledForPTWithSAOnOtherAccountSpec extends ViewSpecHelper {
       }
 
       validateTimeoutDialog(documentSA)
+      validateTechnicalHelpLinkPresent(documentSA)
 
       "contain the correct body" which {
         val subHeadings = documentSA.getElementsByClass(Selectors.subHeading)
@@ -94,6 +95,7 @@ class EnrolledForPTWithSAOnOtherAccountSpec extends ViewSpecHelper {
       }
 
       validateTimeoutDialog(document)
+      validateTechnicalHelpLinkPresent(document)
 
       "contain the correct body" which {
         val subHeadings = document.getElementsByClass(Selectors.subHeading)

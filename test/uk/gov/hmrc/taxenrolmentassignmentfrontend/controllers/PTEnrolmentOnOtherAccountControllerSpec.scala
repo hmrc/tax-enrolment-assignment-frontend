@@ -26,9 +26,22 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.PT_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{InvalidUserType, NoPTEnrolmentWhenOneExpected}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{accountDetails, buildFakeRequestWithSessionId, predicates, retrievalResponse, retrievals, saEnrolmentOnly}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, UrlPaths}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
+  InvalidUserType,
+  NoPTEnrolmentWhenOneExpected
+}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{
+  accountDetails,
+  buildFakeRequestWithSessionId,
+  predicates,
+  retrievalResponse,
+  retrievals,
+  saEnrolmentOnly
+}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{
+  TestFixture,
+  UrlPaths
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnotherAccount
 
 import scala.concurrent.{ExecutionContext, Future}

@@ -127,7 +127,7 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
     }
 
     "contains the contact UK telephone details " in {
-      val telephoneBlock = document.select("#telephone dt")
+      val telephoneBlock = document.select("#telephone li")
 
       telephoneBlock
         .get(0)
@@ -139,7 +139,7 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
     }
 
     "contains the outside UK contact details " in {
-      val outsideUKBlock = document.select("#outsideUk-telephone dt")
+      val outsideUKBlock = document.select("#outsideUk-telephone li")
 
       outsideUKBlock
         .get(0)

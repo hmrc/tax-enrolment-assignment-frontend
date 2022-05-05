@@ -11,7 +11,8 @@ enrolledForPT.heading = Dim ond eich ID cyfredol all gael mynediad at eich cyfri
 enrolledForPT.paragraph1 = Ar hyn o bryd, rydych wedi mewngofnodi gyda’ch ID ar gyfer Porth y Llywodraeth, sy’n gorffen gyda {0}.
 enrolledForPT.paragraph2 = Dyma’r unig ID a all gael mynediad at eich cyfrif treth personol erbyn hyn. Cadwch fanylion y ID hwn yn ddiogel.
 enrolledForPT.paragraphSA = Mae gennych hefyd fynediad at Hunanasesiad gyda’ch ID cyfredol.
-enrolledForPT.heading2 = Beth sydd wedi digwydd i’m Dynodyddion Defnyddiwr (ID) eraill ar gyfer Porth y Llywodraeth?enrolledForPT.paragraph3 = If you have any other Government Gateway user IDs, they will lose access to your personal tax account.
+enrolledForPT.heading2 = Beth sydd wedi digwydd i’m Dynodyddion Defnyddiwr (ID) eraill ar gyfer Porth y Llywodraeth?
+enrolledForPT.paragraph3 = Os oes gennych unrhyw Ddynodyddion Defnyddiwr (ID) eraill ar gyfer Porth y Llywodraeth, byddant yn colli mynediad at eich cyfrif treth personol.
 enrolledForPT.continue = Yn eich blaen
 ReportSuspiciousID.title = Mae angen i chi gysylltu â ni
 ReportSuspiciousID.heading = Mae angen i chi gysylltu â ni

@@ -63,17 +63,16 @@ pageTitle = Some(messages("ReportSuspiciousID.title")), Some("?")) {
 
 </dl>
 
+<ul class="govuk-list">
+    <li>@messages("ReportSuspiciousID.telephone.title")</li>
+    <li class="govuk-body govuk-!-font-weight-bold" >@messages("ReportSuspiciousID.telephone.number")</li>
+</ul>
 
+<ul class="govuk-list">
+    <li>@messages("ReportSuspiciousID.outsideUK.title")</li>
+    <li class="govuk-body govuk-!-font-weight-bold" >@messages("ReportSuspiciousID.outsideUK.number")</li>
+</ul>
 
-<dl id="telephone" class="govuk-list">
-    <dt>@messages("ReportSuspiciousID.telephone.title")</dt>
-    <dt class="govuk-!-font-weight-bold">@messages("ReportSuspiciousID.telephone.number")</dt>
-</dl>
-
-<dl id="outsideUk-telephone" class="govuk-list">
-    <dt>@messages("ReportSuspiciousID.outsideUK.title")</dt>
-    <dt class="govuk-!-font-weight-bold">@messages("ReportSuspiciousID.outsideUK.number")</dt>
-</dl>
 
 @govukDetails(Details(
 summary = Text(messages("ReportSuspiciousID.detailsComponent.title")),

@@ -23,13 +23,10 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.controller.WithDefaultFormBinding
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthAction
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.NoRedirectUrlInCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logRedirectingToReturnUrl
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REDIRECT_URL
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTWithSAOnOtherAccount
 
 import scala.concurrent.ExecutionContext
@@ -37,8 +34,8 @@ import scala.concurrent.ExecutionContext
 @Singleton
 class EnrolledPTWithSAOnOtherAccountController @Inject()(
   authAction: AuthAction,
+  accountMongoDetailsAction: AccountMongoDetailsAction,
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
-  sessionCache: TEASessionCache,
   mcc: MessagesControllerComponents,
   enrolledForPTPage: EnrolledForPTWithSAOnOtherAccount,
   val logger: EventLoggerService,
@@ -50,7 +47,7 @@ class EnrolledPTWithSAOnOtherAccountController @Inject()(
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
-  def view(): Action[AnyContent] = authAction.async { implicit request =>
+  def view(): Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).async { implicit request =>
     val res = for {
       currentAccount <- multipleAccountsOrchestrator.getDetailsForEnrolledPTWithSAOnOtherAccount
       optSAAccount <- multipleAccountsOrchestrator.getSACredentialIfNotFraud
@@ -60,29 +57,18 @@ class EnrolledPTWithSAOnOtherAccountController @Inject()(
       case Right((currentUserId, optSAUserId)) =>
         Ok(enrolledForPTPage(currentUserId, optSAUserId))
       case Left(error) =>
-        errorHandler.handleErrors(
-          error,
-          "[EnrolledPTWithSAOnOtherAccountController][view]"
-        )
+        errorHandler.handleErrors(error, "[EnrolledPTWithSAOnOtherAccountController][view]")(request, implicitly)
     }
   }
 
-  def continue: Action[AnyContent] = authAction.async { implicit request =>
-    sessionCache.getEntry[String](REDIRECT_URL).map {
-      case Some(redirectUrl) =>
+  def continue: Action[AnyContent] = authAction.andThen(accountMongoDetailsAction) { implicit request =>
         logger.logEvent(
           logRedirectingToReturnUrl(
             request.userDetails.credId,
             "[EnrolledWithSAOnOtherAccountController][continue]"
           )
         )
-        Redirect(redirectUrl)
-      case None =>
-        errorHandler.handleErrors(
-          NoRedirectUrlInCache,
-          "[EnrolledPTWithSAOnOtherAccountController][continue]"
-        )
-    }
+        Redirect(request.accountDetailsFromMongo.redirectUrl)
   }
 
 }

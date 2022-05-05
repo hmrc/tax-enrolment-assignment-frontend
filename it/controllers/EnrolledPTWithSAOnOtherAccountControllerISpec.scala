@@ -28,6 +28,8 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.USER_ASSIGNED_SA_ENROLMENT
 
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes.AccountCheckController
+
 class EnrolledPTWithSAOnOtherAccountControllerISpec
     extends TestHelper
     with Status {
@@ -117,7 +119,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
     }
 
     s"the session cache has Account type of $SA_ASSIGNED_TO_OTHER_USER but users group search fails" should {
-      s"render the error page" in {
+      s"return $INTERNAL_SERVER_ERROR" in {
         await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
         await(
           save[AccountTypes.Value](
@@ -137,7 +139,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
           INTERNAL_SERVER_ERROR,
           ""
         )
-        val res = buildRequest(urlPath, followRedirects = true)
+        val res = buildRequest(urlPath)
           .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
           .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
@@ -182,11 +184,11 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
     }
 
     "the session cache is empty" should {
-      "render the error page" in {
+      s"return $INTERNAL_SERVER_ERROR" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        val res = buildRequest(urlPath, followRedirects = true)
+        val res = buildRequest(urlPath)
           .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
           .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
@@ -276,6 +278,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
     "the session cache contains the redirect url" should {
       s"redirect to the redirect url" in {
         await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
+        await(save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", PT_ASSIGNED_TO_CURRENT_USER))
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -293,12 +296,12 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
     }
 
     "the session cache does not contain the redirect url" should {
-      s"render the error page" in {
+      s"return $INTERNAL_SERVER_ERROR" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val res = buildRequest(urlPath, followRedirects = true)
+        val res = buildRequest(urlPath)
           .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
           .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
           .post(Json.obj())

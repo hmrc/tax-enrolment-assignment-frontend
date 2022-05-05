@@ -158,8 +158,6 @@ object TestITData {
     ivNinoStoreEntry4
   )
 
-  // users group search
-
   val usersGroupSearchResponse = UsersGroupResponse(
     obfuscatedUserId = "********6037",
     email = Some("email1@test.com"),

@@ -23,18 +23,12 @@ import play.api.mvc.AnyContent
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
-  MULTIPLE_ACCOUNTS,
-  PT_ASSIGNED_TO_CURRENT_USER,
-  PT_ASSIGNED_TO_OTHER_USER,
-  SA_ASSIGNED_TO_CURRENT_USER,
-  SA_ASSIGNED_TO_OTHER_USER,
-  SINGLE_ACCOUNT
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IVNinoStoreEntry
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.ACCOUNT_TYPE
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -475,6 +469,38 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
             result shouldBe Right(SA_ASSIGNED_TO_OTHER_USER)
           }
         }
+      }
+    }
+  }
+  "getAccountTypeFromCache" should {
+    "return value from cache" in {
+      (mockTeaSessionCache
+        .getEntry(_: String)(
+          _: RequestWithUserDetailsFromSession[AnyContent],
+          _: Format[AccountTypes.Value]
+        ))
+        .expects(SessionKeys.ACCOUNT_TYPE, *, *)
+        .returning(Future.successful(Some(SINGLE_ACCOUNT)))
+
+      val res = orchestrator.getAccountTypeFromCache
+      whenReady(res) { result =>
+        result shouldBe Some(SINGLE_ACCOUNT)
+      }
+    }
+  }
+  "getRedirectUrlFromCache" should {
+    "return value from cache" in {
+      (mockTeaSessionCache
+        .getEntry(_: String)(
+          _: RequestWithUserDetailsFromSession[AnyContent],
+          _: Format[String]
+        ))
+        .expects(SessionKeys.REDIRECT_URL, *, *)
+        .returning(Future.successful(Some("foo")))
+
+      val res = orchestrator.getRedirectUrlFromCache
+      whenReady(res) { result =>
+        result shouldBe Some("foo")
       }
     }
   }

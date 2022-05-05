@@ -26,8 +26,9 @@ import play.api.libs.ws.DefaultWSCookie
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
-import play.api.libs.ws.DefaultWSCookie
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.USER_ASSIGNED_SA_ENROLMENT
+import play.api.libs.ws.DefaultWSCookie
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes.AccountCheckController
 
 class SignInWithSAAccountControllerISpec extends TestHelper with Status {
 
@@ -171,11 +172,11 @@ class SignInWithSAAccountControllerISpec extends TestHelper with Status {
       }
 
       "the session cache has no redirectUrl" should {
-        "render the error page" in {
+        s"return $INTERNAL_SERVER_ERROR" in {
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
-          val res = buildRequest(urlPath, followRedirects = true)
+          val res = buildRequest(urlPath)
             .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
             .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
             .get()
@@ -224,54 +225,6 @@ class SignInWithSAAccountControllerISpec extends TestHelper with Status {
         }
       }
 
-      "an authorised user with no credential uses the service" should {
-        s"render the error page" in {
-          val authResponse = authoriseResponseJson()
-          stubAuthorizePost(OK, authResponse.toString())
-          stubPost(s"/write/.*", OK, """{"x":2}""")
-          stubGetWithQueryParam(
-            "/identity-verification/nino",
-            "nino",
-            NINO,
-            Status.NOT_FOUND,
-            ""
-          )
-          val res = buildRequest(urlPath, followRedirects = true)
-            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-            .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
-            .get()
-
-          whenReady(res) { resp =>
-            resp.status shouldBe INTERNAL_SERVER_ERROR
-            resp.body should include(ErrorTemplateMessages.title)
-          }
-        }
-      }
-
-      "an authorised user but IV returns internal error" should {
-        s"render the error page" in {
-          val authResponse = authoriseResponseJson()
-          stubAuthorizePost(OK, authResponse.toString())
-          stubPost(s"/write/.*", OK, """{"x":2}""")
-          stubGetWithQueryParam(
-            "/identity-verification/nino",
-            "nino",
-            NINO,
-            Status.INTERNAL_SERVER_ERROR,
-            ""
-          )
-          val res = buildRequest(urlPath, followRedirects = true)
-            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-            .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
-            .get()
-
-          whenReady(res) { resp =>
-            resp.status shouldBe INTERNAL_SERVER_ERROR
-            resp.body should include(ErrorTemplateMessages.title)
-          }
-        }
-      }
-
       "the user has a session missing required element NINO" should {
         s"return $SEE_OTHER" in {
           val authResponse = authoriseResponseJson(optNino = None)
@@ -281,12 +234,7 @@ class SignInWithSAAccountControllerISpec extends TestHelper with Status {
           val res =
             buildRequest(urlPath)
               .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-              .addHttpHeaders(
-                xSessionId,
-                xRequestId,
-                csrfContent,
-                sessionCookie
-              )
+              .addHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
               .get()
 
           whenReady(res) { resp =>
@@ -307,12 +255,7 @@ class SignInWithSAAccountControllerISpec extends TestHelper with Status {
           val res =
             buildRequest(urlPath)
               .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-              .addHttpHeaders(
-                xSessionId,
-                xRequestId,
-                csrfContent,
-                sessionCookie
-              )
+              .addHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
               .get()
 
           whenReady(res) { resp =>
@@ -332,12 +275,7 @@ class SignInWithSAAccountControllerISpec extends TestHelper with Status {
           val res =
             buildRequest(urlPath)
               .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-              .addHttpHeaders(
-                xSessionId,
-                xRequestId,
-                csrfContent,
-                sessionCookie
-              )
+              .addHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
               .get()
 
           whenReady(res) { resp =>

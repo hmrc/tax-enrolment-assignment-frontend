@@ -5,8 +5,8 @@ import sbt._
 object AppDependencies {
 
   val compile = Seq(
-    "uk.gov.hmrc"         %%  "bootstrap-frontend-play-28"  % "5.23.0",
-    "uk.gov.hmrc"         %%  "play-frontend-hmrc"          % "3.14.0-play-28",
+    "uk.gov.hmrc"         %%  "bootstrap-frontend-play-28"  % "5.24.0",
+    "uk.gov.hmrc"         %%  "play-frontend-hmrc"          % "3.15.0-play-28",
     "org.typelevel"       %%  "cats-core"                   % "2.7.0",
     "uk.gov.hmrc"         %%  "domain"                      % "8.0.0-play-28",
     "uk.gov.hmrc"         %%  "http-caching-client"         % "9.6.0-play-28",

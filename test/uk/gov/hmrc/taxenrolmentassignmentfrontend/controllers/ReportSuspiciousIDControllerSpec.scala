@@ -26,29 +26,11 @@ import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
-  PT_ASSIGNED_TO_OTHER_USER,
-  SA_ASSIGNED_TO_OTHER_USER
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
-  InvalidUserType,
-  NoPTEnrolmentWhenOneExpected,
-  NoSAEnrolmentWhenOneExpected,
-  UnexpectedResponseFromTaxEnrolments
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{
-  accountDetails,
-  buildFakeRequestWithSessionId,
-  predicates,
-  retrievalResponse,
-  retrievals,
-  saEnrolmentOnly
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{
-  TestFixture,
-  UrlPaths
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_OTHER_USER}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, NoPTEnrolmentWhenOneExpected, NoSAEnrolmentWhenOneExpected, UnexpectedResponseFromTaxEnrolments}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REPORTED_FRAUD
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.ReportSuspiciousID
 
@@ -60,6 +42,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
   val controller =
     new ReportSuspiciousIDController(
       mockAuthAction,
+      mockAccountMongoDetailsAction,
       mockTeaSessionCache,
       mockMultipleAccountsOrchestrator,
       mcc,
@@ -84,22 +67,21 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
           .returning(Future.successful(retrievalResponse()))
 
         (mockMultipleAccountsOrchestrator
-          .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
+          .checkValidAccountType(_: List[AccountTypes.Value])(
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
           ))
-          .expects(List(PT_ASSIGNED_TO_OTHER_USER), *, *, *)
-          .returning(createInboundResult(PT_ASSIGNED_TO_OTHER_USER))
+          .expects(List(PT_ASSIGNED_TO_OTHER_USER), *)
+          .returning(Right(PT_ASSIGNED_TO_OTHER_USER))
 
         (mockMultipleAccountsOrchestrator
           .getPTCredentialDetails(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
           .expects(*, *, *)
           .returning(createInboundResult(accountDetails))
+        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
 
         val result = controller
           .viewNoSA()
@@ -125,15 +107,14 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
           .returning(Future.successful(retrievalResponse()))
 
         (mockMultipleAccountsOrchestrator
-          .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
+          .checkValidAccountType(_: List[AccountTypes.Value])(
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
           ))
-          .expects(List(PT_ASSIGNED_TO_OTHER_USER), *, *, *)
+          .expects(List(PT_ASSIGNED_TO_OTHER_USER), *)
           .returning(
-            createInboundResultError(InvalidUserType(Some(UrlPaths.returnUrl)))
+            Left(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
           )
+        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
 
         val result = controller
           .viewNoSA()
@@ -161,22 +142,21 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
           )
 
         (mockMultipleAccountsOrchestrator
-          .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
+          .checkValidAccountType(_: List[AccountTypes.Value])(
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
           ))
-          .expects(List(PT_ASSIGNED_TO_OTHER_USER), *, *, *)
-          .returning(createInboundResult(PT_ASSIGNED_TO_OTHER_USER))
+          .expects(List(PT_ASSIGNED_TO_OTHER_USER), *)
+          .returning(Right(PT_ASSIGNED_TO_OTHER_USER))
 
         (mockMultipleAccountsOrchestrator
           .getPTCredentialDetails(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
           .expects(*, *, *)
           .returning(createInboundResultError(NoPTEnrolmentWhenOneExpected))
+        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
 
         val res = controller
           .viewNoSA()
@@ -187,37 +167,6 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
       }
     }
 
-    s"the cache no redirectUrl" should {
-      "render the error page" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.successful(retrievalResponse()))
-
-        (mockMultipleAccountsOrchestrator
-          .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
-          .expects(List(PT_ASSIGNED_TO_OTHER_USER), *, *, *)
-          .returning(createInboundResultError(InvalidUserType(None)))
-
-        val res = controller
-          .viewNoSA()
-          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
-
-        status(res) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(res) should include("enrolmentError.title")
-      }
-    }
   }
 
   "viewSA" when {
@@ -236,22 +185,21 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
           .returning(Future.successful(retrievalResponse()))
 
         (mockMultipleAccountsOrchestrator
-          .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
+          .checkValidAccountType(_: List[AccountTypes.Value])(
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
           ))
-          .expects(List(SA_ASSIGNED_TO_OTHER_USER), *, *, *)
-          .returning(createInboundResult(SA_ASSIGNED_TO_OTHER_USER))
+          .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
+          .returning(Right(SA_ASSIGNED_TO_OTHER_USER))
 
         (mockMultipleAccountsOrchestrator
           .getSACredentialDetails(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
           .expects(*, *, *)
           .returning(createInboundResult(accountDetails))
+        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
 
         val result = controller
           .viewSA()
@@ -259,6 +207,29 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
 
         status(result) shouldBe OK
         contentAsString(result) should include("ReportSuspiciousID.title")
+      }
+    }
+    s"the cache no redirectUrl" should {
+      "render the error page" in {
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ]
+            ]
+          )(_: HeaderCarrier, _: ExecutionContext))
+          .expects(predicates, retrievals, *, *)
+          .returning(Future.successful(retrievalResponse()))
+        mockGetAccountTypeSucessRedirectFail
+
+        val res = controller
+          .viewNoSA()
+          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+
+        status(res) shouldBe INTERNAL_SERVER_ERROR
+        contentAsString(res) should include("enrolmentError.title")
       }
     }
 
@@ -277,15 +248,14 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
           .returning(Future.successful(retrievalResponse()))
 
         (mockMultipleAccountsOrchestrator
-          .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
+          .checkValidAccountType(_: List[AccountTypes.Value])(
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
           ))
-          .expects(List(SA_ASSIGNED_TO_OTHER_USER), *, *, *)
+          .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
           .returning(
-            createInboundResultError(InvalidUserType(Some(UrlPaths.returnUrl)))
+            Left(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
           )
+        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
 
         val result = controller
           .viewSA()
@@ -311,54 +281,21 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
           .returning(Future.successful(retrievalResponse()))
 
         (mockMultipleAccountsOrchestrator
-          .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
+          .checkValidAccountType(_: List[AccountTypes.Value])(
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
           ))
-          .expects(List(SA_ASSIGNED_TO_OTHER_USER), *, *, *)
-          .returning(createInboundResult(SA_ASSIGNED_TO_OTHER_USER))
+          .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
+          .returning(Right(SA_ASSIGNED_TO_OTHER_USER))
 
         (mockMultipleAccountsOrchestrator
           .getSACredentialDetails(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
           .expects(*, *, *)
           .returning(createInboundResultError(NoSAEnrolmentWhenOneExpected))
-
-        val res = controller
-          .viewSA()
-          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
-
-        status(res) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(res) should include("enrolmentError.title")
-      }
-    }
-
-    s"the cache no redirectUrl" should {
-      "render the error page" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.successful(retrievalResponse()))
-
-        (mockMultipleAccountsOrchestrator
-          .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
-          .expects(List(SA_ASSIGNED_TO_OTHER_USER), *, *, *)
-          .returning(createInboundResultError(InvalidUserType(None)))
+        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
 
         val res = controller
           .viewSA()
@@ -387,7 +324,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
 
         (mockTeaSessionCache
           .save(_: String, _: Boolean)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
             _: Format[Boolean]
           ))
           .expects(REPORTED_FRAUD, true, *, *)
@@ -395,12 +332,13 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .checkValidAccountTypeAndEnrolForPT(_: AccountTypes.Value)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
           .expects(SA_ASSIGNED_TO_OTHER_USER, *, *, *)
           .returning(createInboundResult((): Unit))
+        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
 
         val res = controller
           .continue()
@@ -410,6 +348,29 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
         redirectLocation(res) shouldBe Some(
           UrlPaths.enrolledPTSAOnOtherAccountPath
         )
+      }
+    }
+    s"the cache no redirectUrl" should {
+      "render the error page" in {
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ]
+            ]
+          )(_: HeaderCarrier, _: ExecutionContext))
+          .expects(predicates, retrievals, *, *)
+          .returning(Future.successful(retrievalResponse()))
+        mockGetAccountTypeSucessRedirectFail
+
+        val res = controller
+          .continue()
+          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+
+        status(res) shouldBe INTERNAL_SERVER_ERROR
+        contentAsString(res) should include("enrolmentError.title")
       }
     }
 
@@ -437,14 +398,15 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .checkValidAccountTypeAndEnrolForPT(_: AccountTypes.Value)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
           .expects(SA_ASSIGNED_TO_OTHER_USER, *, *, *)
           .returning(
-            createInboundResultError(InvalidUserType(Some(UrlPaths.returnUrl)))
+            createInboundResultError(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
           )
+        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
 
         val res = controller
           .continue()
@@ -480,7 +442,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .checkValidAccountTypeAndEnrolForPT(_: AccountTypes.Value)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -488,46 +450,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
           .returning(
             createInboundResultError(UnexpectedResponseFromTaxEnrolments)
           )
-
-        val res = controller
-          .continue()
-          .apply(buildFakeRequestWithSessionId("POST", "Not Used"))
-
-        status(res) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(res) should include("enrolmentError.title")
-      }
-    }
-
-    "the user has not a redirect url in session" should {
-      "render the error page" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.successful(retrievalResponse()))
-
-        (mockTeaSessionCache
-          .save(_: String, _: Boolean)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: Format[Boolean]
-          ))
-          .expects(REPORTED_FRAUD, true, *, *)
-          .returning(Future(CacheMap(request.sessionID, Map())))
-
-        (mockMultipleAccountsOrchestrator
-          .checkValidAccountTypeAndEnrolForPT(_: AccountTypes.Value)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
-          .expects(SA_ASSIGNED_TO_OTHER_USER, *, *, *)
-          .returning(createInboundResultError(InvalidUserType(None)))
+        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
 
         val res = controller
           .continue()

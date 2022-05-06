@@ -48,5 +48,4 @@ class SignOutController @Inject()(
         .removingFromSession("X-Request-ID", "Session-Id")
     )
   }
-
 }

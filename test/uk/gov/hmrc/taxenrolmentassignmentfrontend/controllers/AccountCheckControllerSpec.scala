@@ -17,8 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import cats.data.EitherT
-import play.api.http.Status.{OK, SEE_OTHER}
-import play.api.mvc.AnyContent
+import play.api.http.Status.SEE_OTHER
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.Enrolments
 import uk.gov.hmrc.auth.core.authorise.Predicate
@@ -26,7 +25,7 @@ import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{TaxEnrolmentAssignmentErrors, UnexpectedResponseFromIV, UnexpectedResponseFromTaxEnrolments}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{buildFakeRequestWithSessionId, predicates, retrievalResponse, retrievals}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, UrlPaths}
@@ -38,9 +37,9 @@ class AccountCheckControllerSpec extends TestFixture {
   val teaSessionCache = new TestTeaSessionCache
 
   val controller = new AccountCheckController(
-    mockAccountCheckOrchestrator,
     mockSilentAssignmentService,
     mockAuthAction,
+    mockAccountCheckOrchestrator,
     testAppConfig,
     mcc,
     teaSessionCache,
@@ -159,7 +158,7 @@ class AccountCheckControllerSpec extends TestFixture {
     "a no credentials exists in IV for a given nino" should {
       "render the error page" in new TestHelper {
         mockAuthCall()
-        mockAccountCheckFailure(UnexpectedResponseFromIV)
+        mockGetAccountTypeFailure(UnexpectedResponseFromIV)
 
         val res = controller
           .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
@@ -185,12 +184,12 @@ class AccountCheckControllerSpec extends TestFixture {
         .expects(predicates, retrievals, *, *)
         .returning(Future.successful(retrievalResponse()))
 
-    def mockAccountCheckFailure(error: TaxEnrolmentAssignmentErrors) = {
+    def mockGetAccountTypeFailure(error: TaxEnrolmentAssignmentErrors) = {
       (mockAccountCheckOrchestrator
         .getAccountType(
           _: ExecutionContext,
           _: HeaderCarrier,
-          _: RequestWithUserDetailsFromSession[AnyContent]
+          _: RequestWithUserDetailsFromSessionAndMongo[_]
         ))
         .expects(*, *, *)
         .returning(createInboundResultError(error))
@@ -201,7 +200,7 @@ class AccountCheckControllerSpec extends TestFixture {
         .getAccountType(
           _: ExecutionContext,
           _: HeaderCarrier,
-          _: RequestWithUserDetailsFromSession[AnyContent]
+          _: RequestWithUserDetailsFromSession[_]
         ))
         .expects(*, *, *)
         .returning(createInboundResult(accountType))
@@ -210,7 +209,7 @@ class AccountCheckControllerSpec extends TestFixture {
     def mockSilentEnrolSuccess =
       (mockSilentAssignmentService
         .enrolUser()(
-          _: RequestWithUserDetailsFromSession[AnyContent],
+          _: RequestWithUserDetailsFromSessionAndMongo[_],
           _: HeaderCarrier,
           _: ExecutionContext
         ))
@@ -222,7 +221,7 @@ class AccountCheckControllerSpec extends TestFixture {
     def mockSilentEnrolFailure =
       (mockSilentAssignmentService
         .enrolUser()(
-          _: RequestWithUserDetailsFromSession[AnyContent],
+          _: RequestWithUserDetailsFromSessionAndMongo[_],
           _: HeaderCarrier,
           _: ExecutionContext
         ))

@@ -23,6 +23,7 @@ import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{allEnrolments, credentials, groupIdentifier, nino}
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.UserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{EACDEnrolment => _, _}
@@ -74,7 +75,7 @@ object TestData {
     )
   )
 
-  //AuthAction
+ val randomAccountType: AccountTypes.Value = SINGLE_ACCOUNT
   val predicates: Predicate =
     AuthProviders(GovernmentGateway) and ConfidenceLevel.L200
 

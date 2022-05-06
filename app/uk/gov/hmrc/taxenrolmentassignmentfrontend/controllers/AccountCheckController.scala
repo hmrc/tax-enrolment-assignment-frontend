@@ -21,7 +21,6 @@ import play.api.http.ContentTypeOf.contentTypeOf_Html
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.bootstrap.controller.WithDefaultFormBinding
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
@@ -30,20 +29,19 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AuthActio
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.AccountCheckOrchestrator
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
-
-import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REDIRECT_URL
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
+import uk.gov.hmrc.play.bootstrap.controller.WithDefaultFormBinding
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class AccountCheckController @Inject()(
-  accountCheckOrchestrator: AccountCheckOrchestrator,
   silentAssignmentService: SilentAssignmentService,
   authAction: AuthAction,
+  accountCheckOrchestrator: AccountCheckOrchestrator,
   appConfig: AppConfig,
   mcc: MessagesControllerComponents,
   sessionCache: TEASessionCache,
@@ -59,55 +57,56 @@ class AccountCheckController @Inject()(
 
   def accountCheck(redirectUrl: String): Action[AnyContent] = authAction.async {
     implicit request =>
-      sessionCache.save[String](REDIRECT_URL, redirectUrl)
-      accountCheckOrchestrator.getAccountType.value.flatMap {
-        case Right(PT_ASSIGNED_TO_CURRENT_USER) =>
-          logger.logEvent(
-            logRedirectingToReturnUrl(
-              request.userDetails.credId,
-              "[AccountCheckController][accountCheck]"
+      sessionCache.save[String](REDIRECT_URL, redirectUrl)(request, implicitly).flatMap { _ =>
+        accountCheckOrchestrator.getAccountType.value.flatMap {
+          case Right(PT_ASSIGNED_TO_CURRENT_USER) =>
+            logger.logEvent(
+              logRedirectingToReturnUrl(
+                request.userDetails.credId,
+                "[AccountCheckController][accountCheck]"
+              )
             )
-          )
-          Future.successful(Redirect(redirectUrl))
-        case Right(PT_ASSIGNED_TO_OTHER_USER) =>
-          Future.successful(
-            Redirect(routes.PTEnrolmentOnOtherAccountController.view)
-          )
-        case Right(SA_ASSIGNED_TO_OTHER_USER) =>
-          Future.successful(Redirect(routes.SABlueInterruptController.view))
-        case Right(accountType) => silentEnrolmentAndRedirect(accountType)
-        case Left(error) =>
-          Future.successful(
-            errorHandler
-              .handleErrors(error, "[AccountCheckController][accountCheck]")
-          )
+            Future.successful(Redirect(redirectUrl))
+          case Right(PT_ASSIGNED_TO_OTHER_USER) =>
+            Future.successful(
+              Redirect(routes.PTEnrolmentOnOtherAccountController.view)
+            )
+          case Right(SA_ASSIGNED_TO_OTHER_USER) =>
+            Future.successful(Redirect(routes.SABlueInterruptController.view))
+          case Right(accountType) => silentEnrolmentAndRedirect(accountType)
+          case Left(error) =>
+            Future.successful(
+              errorHandler.handleErrors(error, "[AccountCheckController][accountCheck]")
+            )
+        }
       }
   }
 
-  private def silentEnrolmentAndRedirect(accountType: AccountTypes.Value)(
-    implicit request: RequestWithUserDetailsFromSession[AnyContent],
-    hc: HeaderCarrier
-  ): Future[Result] = {
-    silentAssignmentService.enrolUser().isRight map {
-      case true if accountType == SINGLE_ACCOUNT =>
-        logger.logEvent(
-          logSingleAccountHolderAssignedEnrolment(request.userDetails.credId)
-        )
-        logger.logEvent(
-          logRedirectingToReturnUrl(
-            request.userDetails.credId,
-            "[AccountCheckController][accountCheck]"
-          )
-        )
-        Redirect(appConfig.redirectPTAUrl)
-      case true =>
-        logger.logEvent(
-          logMultipleAccountHolderAssignedEnrolment(request.userDetails.credId)
-        )
-        Redirect(routes.EnrolledForPTController.view)
-      case false =>
-        InternalServerError(errorView())
-    }
+      private def silentEnrolmentAndRedirect(accountType: AccountTypes.Value)(
+        implicit request: RequestWithUserDetailsFromSession[_],
+        hc: HeaderCarrier
+      ): Future[Result] = {
+        silentAssignmentService.enrolUser().isRight map {
+          case true if accountType == SINGLE_ACCOUNT =>
+            logger.logEvent(
+              logSingleAccountHolderAssignedEnrolment(request.userDetails.credId)
+            )
+            logger.logEvent(
+              logRedirectingToReturnUrl(
+                request.userDetails.credId,
+                "[AccountCheckController][accountCheck]"
+              )
+            )
+            Redirect(appConfig.redirectPTAUrl)
+          case true =>
+            logger.logEvent(
+              logMultipleAccountHolderAssignedEnrolment(request.userDetails.credId)
+            )
+            Redirect(routes.EnrolledForPTController.view)
+          case false =>
+            InternalServerError(errorView())
+        }
+      }
+
   }
 
-}

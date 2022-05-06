@@ -27,10 +27,8 @@ import play.api.libs.ws.DefaultWSCookie
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{
-  USER_ASSIGNED_PT_ENROLMENT,
-  USER_ASSIGNED_SA_ENROLMENT
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes.AccountCheckController
 
 class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
 
@@ -177,11 +175,11 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
     }
 
     "the session cache has no redirectUrl" should {
-      "render the error page" in {
+      s"return $INTERNAL_SERVER_ERROR" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        val res = buildRequest(urlPathSA, followRedirects = true)
+        val res = buildRequest(urlPathSA)
           .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
           .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
@@ -234,6 +232,8 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
       s"render the error page" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
+        await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
+        await(save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", SA_ASSIGNED_TO_OTHER_USER))
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGetWithQueryParam(
           "/identity-verification/nino",
@@ -242,7 +242,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
           Status.NOT_FOUND,
           ""
         )
-        val res = buildRequest(urlPathSA, followRedirects = true)
+        val res = buildRequest(urlPathSA)
           .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
           .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
@@ -255,7 +255,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
     }
 
     "an authorised user but IV returns internal error" should {
-      s"render the error page" in {
+      s"return $INTERNAL_SERVER_ERROR" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -266,7 +266,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
           Status.INTERNAL_SERVER_ERROR,
           ""
         )
-        val res = buildRequest(urlPathSA, followRedirects = true)
+        val res = buildRequest(urlPathSA)
           .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
           .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
@@ -492,11 +492,11 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
     }
 
     "the session cache has no redirectUrl" should {
-      "render the error page" in {
+      s"return $INTERNAL_SERVER_ERROR" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        val res = buildRequest(urlPathPT, followRedirects = true)
+        val res = buildRequest(urlPathPT)
           .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
           .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
@@ -548,6 +548,14 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
     "an authorised user with no credential uses the service" should {
       s"render the error page" in {
         val authResponse = authoriseResponseJson()
+        await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
+        await(
+          save[AccountTypes.Value](
+            sessionId,
+            "ACCOUNT_TYPE",
+            PT_ASSIGNED_TO_OTHER_USER
+          )
+        )
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGetWithQueryParam(
@@ -557,7 +565,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
           Status.NOT_FOUND,
           ""
         )
-        val res = buildRequest(urlPathPT, followRedirects = true)
+        val res = buildRequest(urlPathPT)
           .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
           .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
@@ -572,6 +580,14 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
     "an authorised user but IV returns internal error" should {
       s"render the error page" in {
         val authResponse = authoriseResponseJson()
+        await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
+        await(
+          save[AccountTypes.Value](
+            sessionId,
+            "ACCOUNT_TYPE",
+            PT_ASSIGNED_TO_OTHER_USER
+          )
+        )
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGetWithQueryParam(
@@ -581,7 +597,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
           Status.INTERNAL_SERVER_ERROR,
           ""
         )
-        val res = buildRequest(urlPathPT, followRedirects = true)
+        val res = buildRequest(urlPathPT)
           .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
           .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
@@ -765,11 +781,11 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
     }
 
     "the session cache is empty" should {
-      "render the error page" in {
+       s"return $INTERNAL_SERVER_ERROR"  in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        val res = buildRequest(urlPathSA, followRedirects = true)
+        val res = buildRequest(urlPathSA)
           .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
           .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
           .post(Json.obj())

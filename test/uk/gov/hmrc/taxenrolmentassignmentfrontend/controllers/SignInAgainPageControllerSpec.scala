@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
-import play.api.libs.json.Format
 import play.api.mvc.AnyContent
 import play.api.test.Helpers.{status, _}
 import uk.gov.hmrc.auth.core.Enrolments
@@ -25,42 +24,23 @@ import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{InvalidUserType, NoSAEnrolmentWhenOneExpected}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, NoSAEnrolmentWhenOneExpected}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, UrlPaths}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{ReportSuspiciousID, SignInWithSAAccount}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SignInWithSAAccount
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class SignInAgainPageControllerSpec extends TestFixture {
   val view: SignInWithSAAccount = app.injector.instanceOf[SignInWithSAAccount]
-  val signOutController = new SignOutController(
-    mockAuthAction,
-    mcc,
-    testAppConfig,
-    mockTeaSessionCache
-  )
-  lazy val reportSuspiciousIDController = new ReportSuspiciousIDController(
-    mockAuthAction,
-    mockTeaSessionCache,
-    mockMultipleAccountsOrchestrator,
-    mcc,
-    reportSuspiciousIDPage,
-    logger,
-    errorHandler
-  )
-
-  lazy val reportSuspiciousIDPage: ReportSuspiciousID =
-    inject[ReportSuspiciousID]
-
   val controller =
     new SignInWithSAAccountController(
       mockAuthAction,
+      mockAccountMongoDetailsAction,
       mcc,
       mockMultipleAccountsOrchestrator,
       view,
-      mockTeaSessionCache,
       logger,
       errorHandler
     )
@@ -79,22 +59,21 @@ class SignInAgainPageControllerSpec extends TestFixture {
           .returning(Future.successful(retrievalResponse()))
 
         (mockMultipleAccountsOrchestrator
-          .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
+          .checkValidAccountType(_: List[AccountTypes.Value])(
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
           ))
-          .expects(List(SA_ASSIGNED_TO_OTHER_USER), *, *, *)
-          .returning(createInboundResult(SA_ASSIGNED_TO_OTHER_USER))
+          .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
+          .returning(Right(SA_ASSIGNED_TO_OTHER_USER))
 
         (mockMultipleAccountsOrchestrator
           .getSACredentialDetails(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: RequestWithUserDetailsFromSessionAndMongo[_],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
           .expects(*, *, *)
           .returning(createInboundResult(accountDetails))
+        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
 
         val result = controller
           .view()
@@ -102,6 +81,29 @@ class SignInAgainPageControllerSpec extends TestFixture {
 
         status(result) shouldBe OK
         contentAsString(result) should include("signInAgain.title")
+      }
+    }
+    s"the cache no redirectUrl" should {
+      "render the error page" in {
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ]
+            ]
+          )(_: HeaderCarrier, _: ExecutionContext))
+          .expects(predicates, retrievals, *, *)
+          .returning(Future.successful(retrievalResponse()))
+        mockGetAccountTypeSucessRedirectFail
+
+        val result = controller
+          .view()
+          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+
+        status(result) shouldBe INTERNAL_SERVER_ERROR
+        contentAsString(result) should include("enrolmentError.title")
       }
     }
 
@@ -120,15 +122,14 @@ class SignInAgainPageControllerSpec extends TestFixture {
           .returning(Future.successful(retrievalResponse()))
 
         (mockMultipleAccountsOrchestrator
-          .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
+          .checkValidAccountType(_: List[AccountTypes.Value])(
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
           ))
-          .expects(List(SA_ASSIGNED_TO_OTHER_USER), *, *, *)
+          .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
           .returning(
-            createInboundResultError(InvalidUserType(Some(UrlPaths.returnUrl)))
+            Left(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
           )
+        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -153,22 +154,21 @@ class SignInAgainPageControllerSpec extends TestFixture {
           .returning(Future.successful(retrievalResponse()))
 
         (mockMultipleAccountsOrchestrator
-          .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
+          .checkValidAccountType(_: List[AccountTypes.Value])(
+            _: RequestWithUserDetailsFromSessionAndMongo[_]
           ))
-          .expects(List(SA_ASSIGNED_TO_OTHER_USER), *, *, *)
-          .returning(createInboundResult(SA_ASSIGNED_TO_OTHER_USER))
+          .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
+          .returning(Right(SA_ASSIGNED_TO_OTHER_USER))
 
         (mockMultipleAccountsOrchestrator
           .getSACredentialDetails(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: RequestWithUserDetailsFromSessionAndMongo[_],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
           .expects(*, *, *)
           .returning(createInboundResultError(NoSAEnrolmentWhenOneExpected))
+        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
 
         val res = controller
           .view()
@@ -178,40 +178,8 @@ class SignInAgainPageControllerSpec extends TestFixture {
         contentAsString(res) should include("enrolmentError.title")
       }
     }
-
-    s"the cache no redirectUrl" should {
-      "return InternalServerError" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.successful(retrievalResponse()))
-
-        (mockMultipleAccountsOrchestrator
-          .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
-          .expects(List(SA_ASSIGNED_TO_OTHER_USER), *, *, *)
-          .returning(createInboundResultError(InvalidUserType(None)))
-
-        val result = controller.view
-          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
-
-        status(result) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(result) should include("enrolmentError.title")
-      }
-    }
   }
-  "continue" when {
-    "the user has a redirectUrl in cache" should {
+  "continue" should {
       s"redirect to ${UrlPaths.logoutPath}" in {
         (mockAuthConnector
           .authorise(
@@ -225,14 +193,7 @@ class SignInAgainPageControllerSpec extends TestFixture {
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
 
-        (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: Format[String]
-          ))
-          .expects("redirectURL", *, *)
-          .returning(Future.successful(Some(UrlPaths.returnUrl)))
-
+        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
         val res = controller
           .continue()
           .apply(buildFakeRequestWithSessionId("POST", "Not Used"))
@@ -241,10 +202,8 @@ class SignInAgainPageControllerSpec extends TestFixture {
         redirectLocation(res) shouldBe
           Some(UrlPaths.logoutPath)
       }
-    }
 
-    "the user has not got a redirect url in session" should {
-      "render the error page" in {
+      "render the error page when redirect url not in cache" in {
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -256,22 +215,14 @@ class SignInAgainPageControllerSpec extends TestFixture {
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
+        mockGetAccountTypeSucessRedirectFail
 
-        (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: Format[String]
-          ))
-          .expects("redirectURL", *, *)
-          .returning(Future.successful(None))
+        val result = controller
+          .view()
+          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        val res = controller
-          .continue()
-          .apply(buildFakeRequestWithSessionId("POST", "Not Used"))
-
-        status(res) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(res) should include("enrolmentError.title")
-      }
+        status(result) shouldBe INTERNAL_SERVER_ERROR
+        contentAsString(result) should include("enrolmentError.title")
     }
-  }
+    }
 }

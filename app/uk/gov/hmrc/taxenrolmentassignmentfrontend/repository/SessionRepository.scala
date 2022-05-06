@@ -18,19 +18,18 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.repository
 
 import org.mongodb.scala.model.Filters.equal
 import org.mongodb.scala.model.Indexes.ascending
-import org.mongodb.scala.model.{IndexModel, IndexOptions, ReplaceOptions}
+import org.mongodb.scala.model.{IndexModel, IndexOptions, Indexes, ReplaceOptions}
 import play.api.Configuration
 import play.api.libs.json.{Format, JsValue, Json, OFormat}
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.play.json.formats.{MongoFormats, MongoJavatimeFormats}
+
 import java.time.{LocalDateTime, ZoneId}
 import java.util.concurrent.TimeUnit
-
 import javax.inject.{Inject, Singleton}
 import org.mongodb.scala.model.Updates.set
-
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.language.implicitConversions
@@ -38,8 +37,8 @@ import scala.language.implicitConversions
 case class DatedCacheMap(id: String,
                          data: Map[String, JsValue],
                          lastUpdated: LocalDateTime =
-                           LocalDateTime.now(ZoneId.of("UTC")))
-    extends MongoFormats {
+                         LocalDateTime.now(ZoneId.of("UTC")))
+  extends MongoFormats {
 
   def toCacheMap: CacheMap = {
     CacheMap(this.id, this.data)
@@ -69,6 +68,14 @@ class MongoRepository(config: Configuration, mongo: MongoComponent)
               config.get[Int]("mongodb.timeToLiveInSeconds"),
               TimeUnit.SECONDS
             )
+        ),
+        IndexModel(
+          Indexes.ascending("id"),
+          IndexOptions()
+            .name("teaIdentifierIndex")
+            .sparse(true)
+            .unique(true)
+            .background(true)
         )
       ),
       replaceIndexes = false

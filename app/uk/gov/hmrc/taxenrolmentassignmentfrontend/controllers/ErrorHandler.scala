@@ -18,25 +18,28 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import com.google.inject.Inject
 import play.api.Logger
-import play.api.i18n.{I18nSupport, Messages}
+import play.api.i18n.I18nSupport
 import play.api.mvc.{MessagesControllerComponents, Result}
-import play.api.mvc.Results.{InternalServerError, Redirect}
+import uk.gov.hmrc.play.bootstrap.controller.WithDefaultFormBinding
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{InvalidUserType, TaxEnrolmentAssignmentErrors}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, TaxEnrolmentAssignmentErrors}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logUnexpectedErrorOccurred
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
-class ErrorHandler @Inject()(errorView: ErrorTemplate, logger: EventLoggerService, mcc: MessagesControllerComponents) extends FrontendController(mcc) with I18nSupport {
+class ErrorHandler @Inject()(errorView: ErrorTemplate, logger: EventLoggerService, mcc: MessagesControllerComponents)
+  extends FrontendController(mcc)
+    with I18nSupport
+    with WithDefaultFormBinding {
 
   def handleErrors(error: TaxEnrolmentAssignmentErrors, classAndMethod: String)(
     implicit request: RequestWithUserDetailsFromSession[_],
     baseLogger: Logger
   ): Result = {
     error match {
-      case InvalidUserType(redirectUrl) if redirectUrl.isDefined =>
-        Redirect(routes.AccountCheckController.accountCheck(redirectUrl.get))
+      case IncorrectUserType(redirectUrl, _) =>
+        Redirect(routes.AccountCheckController.accountCheck(redirectUrl))
       case _ =>
         logger.logEvent(
           logUnexpectedErrorOccurred(

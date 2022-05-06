@@ -142,7 +142,7 @@ object LoggingEvent {
   def logIncorrectUserType(
     credentialId: String,
     expectedUserType: List[AccountTypes.Value],
-    actualUserType: Option[AccountTypes.Value]
+    actualUserType: AccountTypes.Value
   ): LoggingEvent = {
     val expectedUserTypeString = expectedUserType.foldLeft[String]("") {
       (a, b) =>
@@ -153,10 +153,8 @@ object LoggingEvent {
         }
     }
 
-    val actualAccountTypeString =
-      actualUserType.fold("no account type found")(_.toString)
     val errorMessage =
-      s"User type of $expectedUserTypeString required but ${actualAccountTypeString} found"
+      s"User type of $expectedUserTypeString required but ${actualUserType.toString} found for $credentialId"
     Warn(
       Event(
         "[MultipleAccountsOrchestrator][checkValidAccountTypeRedirectUrlInCache]",

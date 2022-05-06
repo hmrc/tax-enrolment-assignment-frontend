@@ -18,6 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import uk.gov.hmrc.play.bootstrap.controller.WithDefaultFormBinding
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
@@ -27,9 +28,13 @@ import scala.concurrent.Future
 @Singleton
 class AuthorisationController @Inject()(mcc: MessagesControllerComponents,
                                         errorView: ErrorTemplate
-                                       ) extends FrontendController(mcc) with I18nSupport {
+                                       ) extends FrontendController(mcc)
+  with I18nSupport
+  with WithDefaultFormBinding {
+
   def notAuthorised: Action[AnyContent] = Action.async {
     implicit request =>
       Future.successful(Unauthorized(errorView()))
   }
+
 }

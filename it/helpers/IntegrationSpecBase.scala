@@ -23,12 +23,7 @@ import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.{
-  BeforeAndAfterAll,
-  BeforeAndAfterEach,
-  GivenWhenThen,
-  TestSuite
-}
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, GivenWhenThen, TestSuite}
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.{CookieHeaderEncoding, Session, SessionCookieBaker}
@@ -37,10 +32,8 @@ import play.api.{Application, Environment, Mode}
 import uk.gov.hmrc.crypto.PlainText
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
 import uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.SessionCookieCrypto
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.{
-  CascadeUpsert,
-  SessionRepository
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.{CascadeUpsert, SessionRepository}
 
 import scala.concurrent.ExecutionContext
 
@@ -81,6 +74,7 @@ trait IntegrationSpecBase
     "microservice.services.enrolment-store-proxy.port" -> s"$mockPort",
     "microservice.services.tax-enrolments.host" -> s"$mockHost",
     "microservice.services.tax-enrolments.port" -> s"$mockPort",
+    "microservice.services.bas-gateway-frontend.host" -> s"$wiremockURL",
     "microservice.services.users-groups-search.host" -> s"$mockHost",
     "microservice.services.users-groups-search.port" -> s"$mockPort",
     "microservice.services.users-groups-search.isTest" -> "false",
@@ -99,12 +93,9 @@ trait IntegrationSpecBase
     .configure(config)
     .build
 
-  val sessionBaker: SessionCookieBaker =
-    app.injector.instanceOf[SessionCookieBaker]
-  val cookieHeaderEncoding: CookieHeaderEncoding =
-    app.injector.instanceOf[CookieHeaderEncoding]
-  val sessionCookieCrypto: SessionCookieCrypto =
-    app.injector.instanceOf[SessionCookieCrypto]
+  val sessionBaker: SessionCookieBaker = app.injector.instanceOf[SessionCookieBaker]
+  val cookieHeaderEncoding: CookieHeaderEncoding = app.injector.instanceOf[CookieHeaderEncoding]
+  val sessionCookieCrypto: SessionCookieCrypto = app.injector.instanceOf[SessionCookieCrypto]
 
   def createSessionCookieAsString(sessionData: Map[String, String]): String = {
     val sessionCookie = sessionBaker.encodeAsCookie(Session(sessionData))
@@ -114,17 +105,13 @@ trait IntegrationSpecBase
       sessionCookie.copy(value = encryptedSessionCookieValue)
     cookieHeaderEncoding.encodeCookieHeader(Seq(encryptedSessionCookie))
   }
-
-  val sessionRepository: SessionRepository =
-    app.injector.instanceOf[SessionRepository]
+  val sessionRepository: SessionRepository = app.injector.instanceOf[SessionRepository]
   val cascadeUpsert: CascadeUpsert = app.injector.instanceOf[CascadeUpsert]
   val authData = Map("authToken" -> AUTHORIZE_HEADER_VALUE)
-  val sessionAndAuth =
-    Map("authToken" -> AUTHORIZE_HEADER_VALUE, "sessionId" -> sessionId)
+  val sessionAndAuth  = Map("authToken" -> AUTHORIZE_HEADER_VALUE, "sessionId" -> sessionId)
 
   val authCookie: String = createSessionCookieAsString(authData).substring(5)
-  val authAndSessionCookie: String =
-    createSessionCookieAsString(sessionAndAuth).substring(5)
+  val authAndSessionCookie: String = createSessionCookieAsString(sessionAndAuth).substring(5)
 
   override def beforeEach(): Unit = {
     resetWiremock()

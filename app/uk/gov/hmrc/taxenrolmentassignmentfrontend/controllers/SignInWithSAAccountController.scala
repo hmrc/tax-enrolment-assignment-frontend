@@ -16,44 +16,43 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
+import cats.data.EitherT
 import play.api.Logger
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthAction
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.NoRedirectUrlInCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SignInWithSAAccount
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
+import uk.gov.hmrc.play.bootstrap.controller.WithDefaultFormBinding
 import javax.inject.{Inject, Singleton}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REDIRECT_URL
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import scala.concurrent.{ExecutionContext, Future}
 
-import scala.concurrent.ExecutionContext
 
 @Singleton
 class SignInWithSAAccountController @Inject()(
   authAction: AuthAction,
+  accountMongoDetailsAction: AccountMongoDetailsAction,
   mcc: MessagesControllerComponents,
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
   signInWithSAAccount: SignInWithSAAccount,
-  sessionCache: TEASessionCache,
   val logger: EventLoggerService,
   errorHandler: ErrorHandler
 )(implicit ec: ExecutionContext)
     extends FrontendController(mcc)
-    with I18nSupport {
+    with I18nSupport
+      with WithDefaultFormBinding {
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
-  def view(): Action[AnyContent] = authAction.async { implicit request =>
+  def view(): Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).async { implicit request =>
     val res = for {
-      _ <- multipleAccountsOrchestrator.checkValidAccountTypeRedirectUrlInCache(
+      _ <- EitherT{Future.successful(multipleAccountsOrchestrator.checkValidAccountType(
         List(SA_ASSIGNED_TO_OTHER_USER)
-      )
+      ))}
       saAccount <- multipleAccountsOrchestrator.getSACredentialDetails
     } yield saAccount
 
@@ -61,23 +60,14 @@ class SignInWithSAAccountController @Inject()(
       case Right(saAccount) =>
         Ok(signInWithSAAccount(saAccount))
       case Left(error) =>
-        errorHandler
-          .handleErrors(error, "[SignInWithSAAccountController][view]")
+        errorHandler.handleErrors(error, "[SignInWithSAAccountController][view]")(request, implicitly)
     }
   }
 
-  def continue: Action[AnyContent] = authAction.async { implicit request =>
-    sessionCache.getEntry[String](REDIRECT_URL).map {
-      case Some(_) =>
+  def continue: Action[AnyContent] = authAction.andThen(accountMongoDetailsAction) { implicit request =>
         logger.logEvent(
           logUserSignsInAgainWithSAAccount(request.userDetails.credId)
         )
-        Redirect(routes.SignOutController.signOut())
-      case None =>
-        errorHandler.handleErrors(
-          NoRedirectUrlInCache,
-          "[SignInWithSAAccountController][continue]"
-        )
-    }
+    Redirect(routes.SignOutController.signOut())
   }
 }

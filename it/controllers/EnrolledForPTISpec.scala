@@ -24,10 +24,10 @@ import org.jsoup.Jsoup
 import play.api.http.Status
 import play.api.libs.json.Json
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SINGLE_ACCOUNT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
 import play.api.libs.ws.DefaultWSCookie
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes.AccountCheckController
 
 class EnrolledForPTISpec extends TestHelper with Status {
 
@@ -90,11 +90,11 @@ class EnrolledForPTISpec extends TestHelper with Status {
       }
 
     "the session cache is empty" should {
-      "render the error page" in {
+      s"return $INTERNAL_SERVER_ERROR" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        val res = buildRequest(urlPath, followRedirects = true)
+        val res = buildRequest(urlPath)
           .addCookies(DefaultWSCookie("mdtp", authCookie))
           .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
@@ -110,6 +110,8 @@ class EnrolledForPTISpec extends TestHelper with Status {
       s"render the error page" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
+        await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
+        await(save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", SA_ASSIGNED_TO_CURRENT_USER))
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGetWithQueryParam(
           "/identity-verification/nino",
@@ -118,8 +120,8 @@ class EnrolledForPTISpec extends TestHelper with Status {
           Status.NOT_FOUND,
           ""
         )
-        val res = buildRequest(urlPath, followRedirects = true)
-          .addCookies(DefaultWSCookie("mdtp", authCookie))
+        val res = buildRequest(urlPath)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
           .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
 
@@ -131,8 +133,10 @@ class EnrolledForPTISpec extends TestHelper with Status {
     }
 
     "an authorised user but IV returns internal error" should {
-      s"render the error page" in {
+      s"return $INTERNAL_SERVER_ERROR" in {
         val authResponse = authoriseResponseJson()
+        await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
+        await(save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", SA_ASSIGNED_TO_CURRENT_USER))
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGetWithQueryParam(
@@ -142,8 +146,8 @@ class EnrolledForPTISpec extends TestHelper with Status {
           Status.INTERNAL_SERVER_ERROR,
           ""
         )
-        val res = buildRequest(urlPath, followRedirects = true)
-          .addCookies(DefaultWSCookie("mdtp", authCookie))
+        val res = buildRequest(urlPath)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
           .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
 
@@ -157,6 +161,8 @@ class EnrolledForPTISpec extends TestHelper with Status {
     "the user has a session missing required element NINO" should {
       s"redirect to ${UrlPaths.unauthorizedPath}" in {
         val authResponse = authoriseResponseJson(optNino = None)
+        await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
+        await(save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", SA_ASSIGNED_TO_CURRENT_USER))
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
@@ -232,6 +238,7 @@ class EnrolledForPTISpec extends TestHelper with Status {
     "the session cache contains the redirect url" should {
       s"redirect to the redirect url" in {
         await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
+        await(save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", PT_ASSIGNED_TO_CURRENT_USER))
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -249,12 +256,12 @@ class EnrolledForPTISpec extends TestHelper with Status {
     }
 
     "the session cache does not contain the redirect url" should {
-      s"render the error page" in {
+      s"return $INTERNAL_SERVER_ERROR" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val res = buildRequest(urlPath, followRedirects = true)
+        val res = buildRequest(urlPath)
           .addCookies(DefaultWSCookie("mdtp", authCookie))
           .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
           .post(Json.obj())

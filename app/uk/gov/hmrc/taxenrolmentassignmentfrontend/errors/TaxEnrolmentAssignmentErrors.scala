@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.errors
 
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
+
 sealed trait TaxEnrolmentAssignmentErrors
 
 object UnexpectedResponseFromIV extends TaxEnrolmentAssignmentErrors
@@ -24,10 +26,11 @@ object NoAccountsHaveSA extends TaxEnrolmentAssignmentErrors
 object UnexpectedResponseFromTaxEnrolments extends TaxEnrolmentAssignmentErrors
 object UnexpectedResponseFromUsersGroupsSearch
     extends TaxEnrolmentAssignmentErrors
-case class InvalidUserType(redirectUrl: Option[String])
-    extends TaxEnrolmentAssignmentErrors
 object NoPTEnrolmentWhenOneExpected extends TaxEnrolmentAssignmentErrors
 object NoSAEnrolmentWhenOneExpected extends TaxEnrolmentAssignmentErrors
 object NoRedirectUrlInCache extends TaxEnrolmentAssignmentErrors
+object UnexpectedError extends TaxEnrolmentAssignmentErrors
 object UnexpectedResponseAssigningTemporaryPTAEnrolment extends TaxEnrolmentAssignmentErrors
-object UnexpectedErrorWhenGettingUserType extends TaxEnrolmentAssignmentErrors
+case class CacheNotCompleteOrNotCorrect(redirectUrl: Option[String],
+                                        accountType: Option[AccountTypes.Value]) extends TaxEnrolmentAssignmentErrors
+case class IncorrectUserType(redirectUrl: String, accountType: AccountTypes.Value) extends TaxEnrolmentAssignmentErrors

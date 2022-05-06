@@ -1,7 +1,7 @@
 
 # Tax Enrolment Assignment Frontend
 
-## Development Setup For Unit and IT tests
+## Development Setup For Local Unit and IT tests
 - Download rancher: `brew install rancher`
   - Select the latest kubenetes version
   - Select dockerd (moby) container runtime
@@ -10,11 +10,11 @@
 
      *(please use latest version as per MDTP best practices, this is just an example)*
 
-- Run locally: `sbt run` which runs on port `7750` by default
-- Run with test endpoints: `run.sh` or `sbt 'run -Dapplication.router=testOnlyDoNotUseInAppConf.Routes'`
 
 ## Development Setup for local running
 - please complete all pre-requisites within https://github.com/hmrc/tax-enrolment-assignment-journey-tests readme
+- Run locally: `sbt run` which runs on port `7750` by default
+- OR Run with test endpoints: `run.sh` or `sbt 'run -Dapplication.router=testOnlyDoNotUseInAppConf.Routes'`
 - please run the https://github.com/hmrc/tax-enrolment-assignment-journey-tests tests before manually navigating through app
 - pick a user from the local section within https://github.com/hmrc/tax-enrolment-assignment-journey-tests/blob/main/src/test/resources/environments.conf
 - Navigate to http://localhost:9949/auth-login-stub/gg-sign-in and enter all user details from the environment conf values.

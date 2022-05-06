@@ -26,7 +26,7 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.i18n._
 import play.api.inject.Injector
 import play.api.libs.json.Format
-import play.api.mvc.{AnyContent, _}
+import play.api.mvc._
 import play.api.test.CSRFTokenHelper._
 import play.api.test.Helpers._
 import play.api.test._
@@ -36,34 +36,19 @@ import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.service.TEAFResult
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SINGLE_ACCOUNT
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{
-  EACDConnector,
-  IVConnector,
-  TaxEnrolmentsConnector
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{
-  ErrorHandler,
-  SignOutController
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{
-  AuthAction,
-  RequestWithUserDetailsFromSession
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{EACDConnector, IVConnector, TaxEnrolmentsConnector}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{ErrorHandler, SignOutController}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.userDetailsNoEnrolments
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{randomAccountType, userDetailsNoEnrolments}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{
-  AccountCheckOrchestrator,
-  MultipleAccountsOrchestrator
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{
-  EACDService,
-  SilentAssignmentService,
-  UsersGroupsSearchService
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, SilentAssignmentService, UsersGroupsSearchService}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.UnderConstructionView
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
@@ -87,9 +72,20 @@ trait TestFixture
       "sessionId"
     )
 
+  def requestWithAccountType(accountType: AccountTypes.Value = SINGLE_ACCOUNT, redirectUrl: String = UrlPaths.returnUrl): RequestWithUserDetailsFromSessionAndMongo[_] =
+    RequestWithUserDetailsFromSessionAndMongo(
+      request.request,
+      request.userDetails,
+      request.sessionID,
+      AccountDetailsFromMongo(accountType, redirectUrl)
+    )
+
   implicit val ec: ExecutionContext = injector.instanceOf[ExecutionContext]
   lazy val servicesConfig = injector.instanceOf[ServicesConfig]
   implicit val hc: HeaderCarrier = HeaderCarrier()
+  lazy val mcc: MessagesControllerComponents =
+    stubMessagesControllerComponents()
+  lazy val errorHandler: ErrorHandler = new ErrorHandler(errorView, logger, mcc)
   lazy val logger: EventLoggerService = new EventLoggerService()
   implicit val appConfig: AppConfig = injector.instanceOf[AppConfig]
   lazy val messagesApi: MessagesApi = inject[MessagesApi]
@@ -124,6 +120,9 @@ trait TestFixture
   val errorView: ErrorTemplate = app.injector.instanceOf[ErrorTemplate]
   lazy val mockAuthAction =
     new AuthAction(mockAuthConnector, testBodyParser, logger, testAppConfig)
+  lazy val mockAccountMongoDetailsAction =
+    new AccountMongoDetailsAction(mockAccountCheckOrchestrator, testBodyParser, errorHandler)
+
   implicit lazy val testMessages: Messages =
     messagesApi.preferred(FakeRequest())
 
@@ -132,9 +131,7 @@ trait TestFixture
       stubBodyParser[AnyContent](),
       stubMessagesApi()
     )
-  lazy val mcc: MessagesControllerComponents =
-    stubMessagesControllerComponents()
-  lazy val errorHandler: ErrorHandler = new ErrorHandler(errorView, logger, mcc)
+
 
   lazy val mockSignOutController = mock[SignOutController]
 
@@ -148,6 +145,37 @@ trait TestFixture
   ): TEAFResult[T] = EitherT.left(Future.successful(error))
 
   lazy val testOnlyController = new TestOnlyController(mcc, logger)
+
+  def mockGetAccountTypeAndRedirectUrlSuccess(accountType: AccountTypes.Value, redirectUrl: String = "foo") = {
+    (mockAccountCheckOrchestrator
+      .getAccountTypeFromCache(
+        _: RequestWithUserDetailsFromSession[_],
+        _: Format[AccountTypes.Value]
+      ))
+      .expects(*, *)
+      .returning(Future.successful(Some(accountType)))
+    (mockAccountCheckOrchestrator
+      .getRedirectUrlFromCache(
+        _: RequestWithUserDetailsFromSession[_]
+      ))
+      .expects(*)
+      .returning(Future.successful(Some(redirectUrl)))
+  }
+  def mockGetAccountTypeSucessRedirectFail = {
+    (mockAccountCheckOrchestrator
+      .getAccountTypeFromCache(
+        _: RequestWithUserDetailsFromSession[_],
+        _: Format[AccountTypes.Value]
+      ))
+      .expects(*, *)
+      .returning(Future.successful(Some(randomAccountType)))
+    (mockAccountCheckOrchestrator
+      .getRedirectUrlFromCache(
+        _: RequestWithUserDetailsFromSession[_]
+      ))
+      .expects(*)
+      .returning(Future.successful(None))
+  }
 
   class TestTeaSessionCache extends TEASessionCache {
     override def save[A](key: String, value: A)(

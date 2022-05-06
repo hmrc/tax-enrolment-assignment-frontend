@@ -35,6 +35,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
 }
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.USER_ASSIGNED_PT_ENROLMENT
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes.AccountCheckController
 
 class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
 
@@ -179,11 +180,11 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
     }
 
     "the session cache has no redirectUrl" should {
-      "render the error page" in {
+      s"return $INTERNAL_SERVER_ERROR" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        val res = buildRequest(urlPath, followRedirects = true)
+        val res = buildRequest(urlPath)
           .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
           .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
@@ -218,54 +219,6 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
         stubGet(
           s"/users-groups-search/users/$CREDENTIAL_ID_2",
           INTERNAL_SERVER_ERROR,
-          ""
-        )
-        val res = buildRequest(urlPath, followRedirects = true)
-          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
-          .get()
-
-        whenReady(res) { resp =>
-          resp.status shouldBe INTERNAL_SERVER_ERROR
-          resp.body should include(ErrorTemplateMessages.title)
-        }
-      }
-    }
-
-    "an authorised user with no credential uses the service" should {
-      s"render the error page" in {
-        val authResponse = authoriseResponseJson()
-        stubAuthorizePost(OK, authResponse.toString())
-        stubPost(s"/write/.*", OK, """{"x":2}""")
-        stubGetWithQueryParam(
-          "/identity-verification/nino",
-          "nino",
-          NINO,
-          Status.NOT_FOUND,
-          ""
-        )
-        val res = buildRequest(urlPath, followRedirects = true)
-          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
-          .get()
-
-        whenReady(res) { resp =>
-          resp.status shouldBe INTERNAL_SERVER_ERROR
-          resp.body should include(ErrorTemplateMessages.title)
-        }
-      }
-    }
-
-    "an authorised user but IV returns internal error" should {
-      s"render the error page" in {
-        val authResponse = authoriseResponseJson()
-        stubAuthorizePost(OK, authResponse.toString())
-        stubPost(s"/write/.*", OK, """{"x":2}""")
-        stubGetWithQueryParam(
-          "/identity-verification/nino",
-          "nino",
-          NINO,
-          Status.INTERNAL_SERVER_ERROR,
           ""
         )
         val res = buildRequest(urlPath, followRedirects = true)

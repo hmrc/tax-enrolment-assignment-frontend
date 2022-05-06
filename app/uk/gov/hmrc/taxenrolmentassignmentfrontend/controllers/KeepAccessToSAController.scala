@@ -20,20 +20,21 @@ import com.google.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.i18n.I18nSupport
 import play.api.mvc._
+import uk.gov.hmrc.play.bootstrap.controller.WithDefaultFormBinding
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthAction
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.KeepAccessToSA
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class KeepAccessToSAController @Inject()(
   authAction: AuthAction,
+  accountMongoDetailsAction: AccountMongoDetailsAction,
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
   mcc: MessagesControllerComponents,
   val logger: EventLoggerService,
@@ -41,21 +42,21 @@ class KeepAccessToSAController @Inject()(
   errorHandler: ErrorHandler
 )(implicit config: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc)
-    with I18nSupport {
+    with I18nSupport with WithDefaultFormBinding {
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
   def view(): Action[AnyContent] =
-    authAction.async { implicit request =>
+    authAction.andThen(accountMongoDetailsAction).async { implicit request =>
       multipleAccountsOrchestrator.getDetailsForKeepAccessToSA.value.map {
         case Right(form) => Ok(keepAccessToSA(form))
         case Left(error) =>
-          errorHandler.handleErrors(error, "[KeepAccessToSAController][view]")
+          errorHandler.handleErrors(error, "[KeepAccessToSAController][view]")(request, implicitly)
       }
     }
 
-  def continue: Action[AnyContent] = authAction.async {
-    implicit requestWithUserDetails =>
+  def continue: Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).async {
+    implicit request =>
       KeepAccessToSAThroughPTAForm.keepAccessToSAThroughPTAForm.bindFromRequest
         .fold(
           formWithErrors => {
@@ -72,8 +73,7 @@ class KeepAccessToSAController @Inject()(
                 case Right(false) =>
                   Redirect(routes.EnrolledPTWithSAOnOtherAccountController.view)
                 case Left(error) =>
-                  errorHandler
-                    .handleErrors(error, "[KeepAccessToSAController][continue]")
+                  errorHandler.handleErrors(error, "[KeepAccessToSAController][continue]")(request, implicitly)
               }
           }
         )

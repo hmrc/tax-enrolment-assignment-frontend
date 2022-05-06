@@ -35,6 +35,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
 }
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes.AccountCheckController
 
 class KeepAccessToSAControllerISpec extends TestHelper with Status {
 
@@ -187,11 +188,11 @@ class KeepAccessToSAControllerISpec extends TestHelper with Status {
     }
 
     "the session cache is empty" should {
-      "render the error page" in {
+      s"return $INTERNAL_SERVER_ERROR" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        val res = buildRequest(urlPath, followRedirects = true)
+        val res = buildRequest(urlPath)
           .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
           .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
           .get()
@@ -441,13 +442,16 @@ class KeepAccessToSAControllerISpec extends TestHelper with Status {
     }
 
     "the session cache does not contain the redirect url" should {
-      s"render the error page" when {
+      s"return $INTERNAL_SERVER_ERROR" when {
         "yes is selected" in {
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
+          await(
+            save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", SA_ASSIGNED_TO_CURRENT_USER)
+          )
 
-          val res = buildRequest(urlPath, followRedirects = true)
+          val res = buildRequest(urlPath)
             .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
             .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
             .post(Json.obj("select-continue" -> "yes"))
@@ -463,7 +467,7 @@ class KeepAccessToSAControllerISpec extends TestHelper with Status {
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
 
-          val res = buildRequest(urlPath, followRedirects = true)
+          val res = buildRequest(urlPath)
             .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
             .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
             .post(Json.obj("select-continue" -> "no"))
@@ -480,9 +484,11 @@ class KeepAccessToSAControllerISpec extends TestHelper with Status {
       "render the keepAccessToSA page with errors" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
+        await(save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", SA_ASSIGNED_TO_CURRENT_USER))
+        await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val res = buildRequest(urlPath, followRedirects = true)
+        val res = buildRequest(urlPath)
           .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
           .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
           .post(Json.obj("select-continue" -> "error"))

@@ -19,9 +19,11 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 import play.api.Logging
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import uk.gov.hmrc.play.bootstrap.controller.WithDefaultFormBinding
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthAction
+
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 
@@ -36,7 +38,8 @@ class SignOutController @Inject()(
 )(implicit ec: ExecutionContext)
     extends FrontendController(mcc)
     with Logging
-    with I18nSupport {
+    with I18nSupport
+      with WithDefaultFormBinding {
 
   def signOut(): Action[AnyContent] = authAction.async { implicit request =>
     sessionCache.removeAll()
@@ -45,5 +48,4 @@ class SignOutController @Inject()(
         .removingFromSession("X-Request-ID", "Session-Id")
     )
   }
-
 }

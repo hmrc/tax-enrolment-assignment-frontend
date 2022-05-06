@@ -16,25 +16,26 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
+import cats.data.EitherT
 import com.google.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import uk.gov.hmrc.play.bootstrap.controller.WithDefaultFormBinding
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.PT_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthAction
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.InvalidUserType
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnotherAccount
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class PTEnrolmentOnOtherAccountController @Inject()(
   authAction: AuthAction,
+  accountMongoDetailsAction: AccountMongoDetailsAction,
   mcc: MessagesControllerComponents,
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
   ptEnrolmentOnAnotherAccountView: PTEnrolmentOnAnotherAccount,
@@ -42,15 +43,16 @@ class PTEnrolmentOnOtherAccountController @Inject()(
   errorHandler: ErrorHandler
 )(implicit ec: ExecutionContext, appConfig: AppConfig)
     extends FrontendController(mcc)
-    with I18nSupport {
+    with I18nSupport
+      with WithDefaultFormBinding{
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
-  def view(): Action[AnyContent] = authAction.async { implicit request =>
+  def view(): Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).async { implicit request =>
     val res = for {
-      _ <- multipleAccountsOrchestrator.checkValidAccountTypeRedirectUrlInCache(
+      _ <- EitherT{Future.successful(multipleAccountsOrchestrator.checkValidAccountType(
         List(PT_ASSIGNED_TO_OTHER_USER)
-      )
+      ))}
       accountDetails <- multipleAccountsOrchestrator.getPTCredentialDetails
     } yield accountDetails
 
@@ -62,10 +64,8 @@ class PTEnrolmentOnOtherAccountController @Inject()(
             request.userDetails.hasSAEnrolment
           )
         )
-      case Left(InvalidUserType(redirectUrl)) if redirectUrl.isDefined =>
-        Redirect(routes.AccountCheckController.accountCheck(redirectUrl.get))
       case Left(error) =>
-        errorHandler.handleErrors(error, "[PTEnrolmentOnOtherAccountController][view]")
+        errorHandler.handleErrors(error, "[PTEnrolmentOnOtherAccountController][view]")(request, implicitly)
     }
   }
 }

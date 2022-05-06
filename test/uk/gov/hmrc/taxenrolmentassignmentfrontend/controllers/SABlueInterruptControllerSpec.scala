@@ -25,8 +25,8 @@ import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.InvalidUserType
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.IncorrectUserType
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SABlueInterrupt
@@ -41,6 +41,7 @@ class SABlueInterruptControllerSpec extends TestFixture {
   val controller =
     new SABlueInterruptController(
       mockAuthAction,
+      mockAccountMongoDetailsAction,
       mcc,
       mockMultipleAccountsOrchestrator,
       logger,
@@ -64,13 +65,12 @@ class SABlueInterruptControllerSpec extends TestFixture {
           .returning(Future.successful(retrievalResponse()))
 
         (mockMultipleAccountsOrchestrator
-          .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
+          .checkValidAccountType(_: List[AccountTypes.Value])(
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
           ))
-          .expects(List(SA_ASSIGNED_TO_OTHER_USER), *, *, *)
-          .returning(createInboundResult(SA_ASSIGNED_TO_OTHER_USER))
+          .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
+          .returning(Right(SA_ASSIGNED_TO_OTHER_USER))
+        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
 
         val result = controller
           .view()
@@ -85,6 +85,29 @@ class SABlueInterruptControllerSpec extends TestFixture {
         page
           .select("p")
           .text() shouldBe "selfAssessmentInterrupt.paragraph1"
+      }
+    }
+    s"the cache no redirectUrl" should {
+      "render the error page" in {
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ]
+            ]
+          )(_: HeaderCarrier, _: ExecutionContext))
+          .expects(predicates, retrievals, *, *)
+          .returning(Future.successful(retrievalResponse()))
+        mockGetAccountTypeSucessRedirectFail
+
+        val result = controller
+          .view()
+          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+
+        status(result) shouldBe INTERNAL_SERVER_ERROR
+        contentAsString(result) should include("enrolmentError.title")
       }
     }
 
@@ -103,15 +126,14 @@ class SABlueInterruptControllerSpec extends TestFixture {
           .returning(Future.successful(retrievalResponse()))
 
         (mockMultipleAccountsOrchestrator
-          .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
+          .checkValidAccountType(_: List[AccountTypes.Value])(
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
           ))
-          .expects(List(SA_ASSIGNED_TO_OTHER_USER), *, *, *)
+          .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
           .returning(
-            createInboundResultError(InvalidUserType(Some(UrlPaths.returnUrl)))
+            Left(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
           )
+        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
 
         val result = controller
           .view()
@@ -119,38 +141,6 @@ class SABlueInterruptControllerSpec extends TestFixture {
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some(UrlPaths.accountCheckPath)
-      }
-    }
-
-    s"the cache no redirectUrl" should {
-      "render the error page" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.successful(retrievalResponse()))
-
-        (mockMultipleAccountsOrchestrator
-          .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
-          .expects(List(SA_ASSIGNED_TO_OTHER_USER), *, *, *)
-          .returning(createInboundResultError(InvalidUserType(None)))
-
-        val res = controller
-          .view()
-          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
-
-        status(res) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(res) should include("enrolmentError.title")
       }
     }
   }
@@ -171,13 +161,12 @@ class SABlueInterruptControllerSpec extends TestFixture {
           .returning(Future.successful(retrievalResponse()))
 
         (mockMultipleAccountsOrchestrator
-          .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
+          .checkValidAccountType(_: List[AccountTypes.Value])(
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
           ))
-          .expects(List(SA_ASSIGNED_TO_OTHER_USER), *, *, *)
-          .returning(createInboundResult(SA_ASSIGNED_TO_OTHER_USER))
+          .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
+          .returning(Right(SA_ASSIGNED_TO_OTHER_USER))
+        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
 
         val result = controller
           .continue()
@@ -187,6 +176,29 @@ class SABlueInterruptControllerSpec extends TestFixture {
         redirectLocation(result) shouldBe Some(
           UrlPaths.saOnOtherAccountKeepAccessToSAPath
         )
+      }
+    }
+    s"the cache no redirectUrl" should {
+      "render the error page" in {
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ]
+            ]
+          )(_: HeaderCarrier, _: ExecutionContext))
+          .expects(predicates, retrievals, *, *)
+          .returning(Future.successful(retrievalResponse()))
+        mockGetAccountTypeSucessRedirectFail
+
+        val result = controller
+          .continue()
+          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+
+        status(result) shouldBe INTERNAL_SERVER_ERROR
+        contentAsString(result) should include("enrolmentError.title")
       }
     }
 
@@ -205,15 +217,14 @@ class SABlueInterruptControllerSpec extends TestFixture {
           .returning(Future.successful(retrievalResponse()))
 
         (mockMultipleAccountsOrchestrator
-          .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
+          .checkValidAccountType(_: List[AccountTypes.Value])(
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
           ))
-          .expects(List(SA_ASSIGNED_TO_OTHER_USER), *, *, *)
+          .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
           .returning(
-            createInboundResultError(InvalidUserType(Some(UrlPaths.returnUrl)))
+            Left(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
           )
+        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
 
         val result = controller
           .continue()
@@ -221,38 +232,6 @@ class SABlueInterruptControllerSpec extends TestFixture {
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some(UrlPaths.accountCheckPath)
-      }
-    }
-
-    s"the cache no redirectUrl" should {
-      "render the error page" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.successful(retrievalResponse()))
-
-        (mockMultipleAccountsOrchestrator
-          .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
-          .expects(List(SA_ASSIGNED_TO_OTHER_USER), *, *, *)
-          .returning(createInboundResultError(InvalidUserType(None)))
-
-        val result = controller
-          .continue()
-          .apply(buildFakePOSTRequestWithSessionId(Map.empty))
-
-        status(result) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(result) should include("enrolmentError.title")
       }
     }
   }

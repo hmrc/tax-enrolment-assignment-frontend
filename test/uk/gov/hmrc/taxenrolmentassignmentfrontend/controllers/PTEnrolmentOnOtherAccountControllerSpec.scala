@@ -25,9 +25,9 @@ import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.PT_ASSIGNED_TO_OTHER_USER
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
-  InvalidUserType,
+  IncorrectUserType,
   NoPTEnrolmentWhenOneExpected
 }
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{
@@ -36,7 +36,8 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{
   predicates,
   retrievalResponse,
   retrievals,
-  saEnrolmentOnly
+  saEnrolmentOnly,
+  _
 }
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{
   TestFixture,
@@ -53,6 +54,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
 
   val controller = new PTEnrolmentOnOtherAccountController(
     mockAuthAction,
+    mockAccountMongoDetailsAction,
     mcc,
     mockMultipleAccountsOrchestrator,
     view,
@@ -76,22 +78,21 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
           .returning(Future.successful(retrievalResponse()))
 
         (mockMultipleAccountsOrchestrator
-          .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
+          .checkValidAccountType(_: List[AccountTypes.Value])(
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
           ))
-          .expects(List(PT_ASSIGNED_TO_OTHER_USER), *, *, *)
-          .returning(createInboundResult(PT_ASSIGNED_TO_OTHER_USER))
+          .expects(List(PT_ASSIGNED_TO_OTHER_USER), *)
+          .returning(Right(PT_ASSIGNED_TO_OTHER_USER))
 
         (mockMultipleAccountsOrchestrator
           .getPTCredentialDetails(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
           .expects(*, *, *)
           .returning(createInboundResult(accountDetails))
+        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -121,22 +122,21 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
             Future.successful(retrievalResponse(enrolments = saEnrolmentOnly))
           )
         (mockMultipleAccountsOrchestrator
-          .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
+          .checkValidAccountType(_: List[AccountTypes.Value])(
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
           ))
-          .expects(List(PT_ASSIGNED_TO_OTHER_USER), *, *, *)
-          .returning(createInboundResult(PT_ASSIGNED_TO_OTHER_USER))
+          .expects(List(PT_ASSIGNED_TO_OTHER_USER), *)
+          .returning(Right(PT_ASSIGNED_TO_OTHER_USER))
 
         (mockMultipleAccountsOrchestrator
           .getPTCredentialDetails(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
           .expects(*, *, *)
           .returning(createInboundResult(accountDetails))
+        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -165,16 +165,14 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
           .returning(Future.successful(retrievalResponse()))
 
         (mockMultipleAccountsOrchestrator
-          .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
+          .checkValidAccountType(_: List[AccountTypes.Value])(
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
           ))
-          .expects(List(PT_ASSIGNED_TO_OTHER_USER), *, *, *)
+          .expects(List(PT_ASSIGNED_TO_OTHER_USER), *)
           .returning(
-            createInboundResultError(InvalidUserType(Some(UrlPaths.returnUrl)))
+            Left(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
           )
-
+        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
@@ -200,22 +198,21 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
           )
 
         (mockMultipleAccountsOrchestrator
-          .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
+          .checkValidAccountType(_: List[AccountTypes.Value])(
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
           ))
-          .expects(List(PT_ASSIGNED_TO_OTHER_USER), *, *, *)
-          .returning(createInboundResult(PT_ASSIGNED_TO_OTHER_USER))
+          .expects(List(PT_ASSIGNED_TO_OTHER_USER), *)
+          .returning(Right(PT_ASSIGNED_TO_OTHER_USER))
 
         (mockMultipleAccountsOrchestrator
           .getPTCredentialDetails(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
           .expects(*, *, *)
           .returning(createInboundResultError(NoPTEnrolmentWhenOneExpected))
+        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
 
         val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -224,8 +221,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
         contentAsString(res) should include("enrolmentError.title")
       }
     }
-
-    s"the cache no redirectUrl" should {
+    "no redirect url in cache" should {
       "render the error page" in {
         (mockAuthConnector
           .authorise(
@@ -239,14 +235,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
 
-        (mockMultipleAccountsOrchestrator
-          .checkValidAccountTypeRedirectUrlInCache(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
-          .expects(List(PT_ASSIGNED_TO_OTHER_USER), *, *, *)
-          .returning(createInboundResultError(InvalidUserType(None)))
+        mockGetAccountTypeSucessRedirectFail
 
         val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))

@@ -20,7 +20,7 @@ import com.google.inject.{ImplementedBy, Inject}
 import play.api.libs.json.{Format, JsString}
 import play.api.mvc.AnyContent
 import uk.gov.hmrc.http.cache.client.CacheMap
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo}
 
 import scala.concurrent.{ExecutionContext, Future}
 

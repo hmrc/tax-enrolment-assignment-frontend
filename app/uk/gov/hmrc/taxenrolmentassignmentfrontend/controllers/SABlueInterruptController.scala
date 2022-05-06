@@ -20,20 +20,21 @@ import com.google.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.i18n.I18nSupport
 import play.api.mvc._
+import uk.gov.hmrc.play.bootstrap.controller.WithDefaultFormBinding
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthAction
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SABlueInterrupt
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class SABlueInterruptController @Inject()(
   authAction: AuthAction,
+  accountMongoDetailsAction: AccountMongoDetailsAction,
   mcc: MessagesControllerComponents,
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
   val logger: EventLoggerService,
@@ -41,36 +42,29 @@ class SABlueInterruptController @Inject()(
   errorHandler: ErrorHandler
 )(implicit config: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc)
-    with I18nSupport {
+    with I18nSupport
+      with WithDefaultFormBinding{
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
   def view(): Action[AnyContent] =
-    authAction.async { implicit request =>
+    authAction.andThen(accountMongoDetailsAction) { implicit request =>
       multipleAccountsOrchestrator
-        .checkValidAccountTypeRedirectUrlInCache(
-          List(SA_ASSIGNED_TO_OTHER_USER)
-        )
-        .value
-        .map {
-          case Right(x) =>
+        .checkValidAccountType(List(SA_ASSIGNED_TO_OTHER_USER)) match {
+          case Right(_) =>
             Ok(saBlueInterrupt())
           case Left(error) =>
-            errorHandler.handleErrors(error, "[SABlueInterruptController][view]")
+            errorHandler.handleErrors(error, "[SABlueInterruptController][view]")(request, implicitly)
         }
     }
 
   def continue(): Action[AnyContent] =
-    authAction.async { implicit request =>
+    authAction.andThen(accountMongoDetailsAction) { implicit request =>
       multipleAccountsOrchestrator
-        .checkValidAccountTypeRedirectUrlInCache(
-          List(SA_ASSIGNED_TO_OTHER_USER)
-        )
-        .value
-        .map {
+        .checkValidAccountType(List(SA_ASSIGNED_TO_OTHER_USER)) match {
           case Right(_) => Redirect(routes.KeepAccessToSAController.view)
           case Left(error) =>
-            errorHandler.handleErrors(error, "[SABlueInterruptController][continue]")
+            errorHandler.handleErrors(error, "[SABlueInterruptController][continue]")(request, implicitly)
         }
     }
 }

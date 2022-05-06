@@ -23,7 +23,7 @@ import play.api.libs.json.Format
 import play.api.mvc.AnyContent
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.cache.client.CacheMap
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm
@@ -129,26 +129,8 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
   }
 
   s"getSAForPTAlreadyEnrolledDetails" when {
-    s"the accountType $PT_ASSIGNED_TO_OTHER_USER, no SA associated to the account and redirectUrl are available in the cache" should {
+    s"the accountType $PT_ASSIGNED_TO_OTHER_USER, no SA associated to the account" should {
       "return a PTEnrolmentOtherAccountViewModel for the account details" in {
-        (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: Format[AccountTypes.Value]
-          ))
-          .expects("ACCOUNT_TYPE", *, *)
-          .returning(Future.successful(Some( PT_ASSIGNED_TO_OTHER_USER)))
-
-        (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: Format[String]
-          ))
-          .expects("redirectURL", *, *)
-          .returning(
-            Future
-              .successful(Some(UrlPaths.returnUrl))
-          )
 
         (mockUsersGroupService
           .getAccountDetails(_: String)(
@@ -185,33 +167,15 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
           .expects( *, *, *)
           .returning(createInboundResult(UsersAssignedEnrolmentEmpty))
 
-        val res = orchestrator.getSAForPTAlreadyEnrolledDetails
+        val res = orchestrator.getSAForPTAlreadyEnrolledDetails(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), implicitly, implicitly)
         whenReady(res.value) { result =>
           result shouldBe Right(ptEnrolmentDataModel(None,accountDetailsWithPT.copy(userId = CREDENTIAL_ID_1,hasSA = None)))
         }
       }
     }
 
-    s"the accountType $PT_ASSIGNED_TO_OTHER_USER, account has SA in the current session and redirectUrl are available in the cache" should {
+    s"the accountType $PT_ASSIGNED_TO_OTHER_USER, account has SA in the current session" should {
       "return a PTEnrolmentOtherAccountViewModel for the account details" in {
-        (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: Format[AccountTypes.Value]
-          ))
-          .expects("ACCOUNT_TYPE", *, *)
-          .returning(Future.successful(Some( PT_ASSIGNED_TO_OTHER_USER)))
-
-        (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: Format[String]
-          ))
-          .expects("redirectURL", *, *)
-          .returning(
-            Future
-              .successful(Some(UrlPaths.returnUrl))
-          )
 
         (mockUsersGroupService
           .getAccountDetails(_: String)(
@@ -257,34 +221,15 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
           .expects(USER_ID, *, *, *)
           .returning(createInboundResult(accountDetails))
 
-
-        val res = orchestrator.getSAForPTAlreadyEnrolledDetails
+        val res = orchestrator.getSAForPTAlreadyEnrolledDetails(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), implicitly, implicitly)
         whenReady(res.value) { result =>
           result shouldBe Right(ptEnrolmentDataModel(Some(USER_ID)))
         }
       }
     }
 
-    s"the accountType $PT_ASSIGNED_TO_OTHER_USER, account has SA on the another account that also has PT and redirectUrl are available in the cache" should {
+    s"the accountType $PT_ASSIGNED_TO_OTHER_USER, account has SA on the another account that also has PT" should {
       "return a PTEnrolmentOtherAccountViewModel for the account details" in {
-        (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: Format[AccountTypes.Value]
-          ))
-          .expects("ACCOUNT_TYPE", *, *)
-          .returning(Future.successful(Some( PT_ASSIGNED_TO_OTHER_USER)))
-
-        (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: Format[String]
-          ))
-          .expects("redirectURL", *, *)
-          .returning(
-            Future
-              .successful(Some(UrlPaths.returnUrl))
-          )
 
         (mockUsersGroupService
           .getAccountDetails(_: String)(
@@ -330,8 +275,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
           .expects(PT_USER_ID, *, *, *)
           .returning(createInboundResult(accountDetailsWithPT))
 
-
-        val res = orchestrator.getSAForPTAlreadyEnrolledDetails
+        val res = orchestrator.getSAForPTAlreadyEnrolledDetails(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), implicitly, implicitly)
         whenReady(res.value) { result =>
           result shouldBe Right(ptEnrolmentDataModel(Some(PT_USER_ID)))
         }
@@ -340,24 +284,6 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
 
     s"the accountType $PT_ASSIGNED_TO_OTHER_USER, the account has SA on another account with a third account that holds the PT enrolment" should {
       "return a PTEnrolmentOtherAccountViewModel for the account details" in {
-        (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: Format[AccountTypes.Value]
-          ))
-          .expects("ACCOUNT_TYPE", *, *)
-          .returning(Future.successful(Some( PT_ASSIGNED_TO_OTHER_USER)))
-
-        (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: Format[String]
-          ))
-          .expects("redirectURL", *, *)
-          .returning(
-            Future
-              .successful(Some(UrlPaths.returnUrl))
-          )
 
         (mockUsersGroupService
           .getAccountDetails(_: String)(
@@ -403,9 +329,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
           .expects(CREDENTIAL_ID_1, *, *, *)
           .returning(createInboundResult(accountDetails.copy(userId = CREDENTIAL_ID_1)))
 
-
-
-        val res = orchestrator.getSAForPTAlreadyEnrolledDetails
+        val res = orchestrator.getSAForPTAlreadyEnrolledDetails(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), implicitly, implicitly)
         whenReady(res.value) { result =>
           result shouldBe Right(ptEnrolmentDataModel(Some(CREDENTIAL_ID_1)))
         }
@@ -419,81 +343,13 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
       SA_ASSIGNED_TO_CURRENT_USER,
       SA_ASSIGNED_TO_OTHER_USER
     ).foreach { accountType =>
-      s"the accountType is $accountType and redirectUrl are available in the cache" should {
-        "return the InvalidUserType containing redirectUrl" in {
-          (mockTeaSessionCache
-            .getEntry(_: String)(
-              _: RequestWithUserDetailsFromSession[AnyContent],
-              _: Format[AccountTypes.Value]
-            ))
-            .expects("ACCOUNT_TYPE", *, *)
-            .returning(Future.successful(Some(accountType)))
+      s"the accountType is $accountType" should {
+        s"return the $IncorrectUserType containing redirectUrl" in {
 
-          (mockTeaSessionCache
-            .getEntry(_: String)(
-              _: RequestWithUserDetailsFromSession[AnyContent],
-              _: Format[String]
-            ))
-            .expects("redirectURL", *, *)
-            .returning(
-              Future
-                .successful(Some(UrlPaths.returnUrl))
-            )
-
-          val res = orchestrator.getSAForPTAlreadyEnrolledDetails
+          val res = orchestrator.getSAForPTAlreadyEnrolledDetails(requestWithAccountType(accountType), implicitly, implicitly)
           whenReady(res.value) { result =>
-            result shouldBe Left(InvalidUserType(Some(UrlPaths.returnUrl)))
+            result shouldBe Left(IncorrectUserType((UrlPaths.returnUrl), accountType))
           }
-        }
-      }
-
-      s"the accountType is $accountType is available in the cache but not the redirectUrl" should {
-        "return the InvalidUserType not containing redirectUrl" in {
-          (mockTeaSessionCache
-            .getEntry(_: String)(
-              _: RequestWithUserDetailsFromSession[AnyContent],
-              _: Format[AccountTypes.Value]
-            ))
-            .expects("ACCOUNT_TYPE", *, *)
-            .returning(Future.successful(Some(accountType)))
-
-          (mockTeaSessionCache
-            .getEntry(_: String)(
-              _: RequestWithUserDetailsFromSession[AnyContent],
-              _: Format[String]
-            ))
-            .expects("redirectURL", *, *)
-            .returning(Future.successful(None))
-
-          val res = orchestrator.getSAForPTAlreadyEnrolledDetails
-          whenReady(res.value) { result =>
-            result shouldBe Left(InvalidUserType(None))
-          }
-        }
-      }
-    }
-
-    s"the cache is empty" should {
-      "return the InvalidUserType containing no redirectUrl" in {
-        (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: Format[AccountTypes.Value]
-          ))
-          .expects("ACCOUNT_TYPE", *, *)
-          .returning(Future.successful(None))
-
-        (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: Format[String]
-          ))
-          .expects("redirectURL", *, *)
-          .returning(Future.successful(None))
-
-        val res = orchestrator.getSAForPTAlreadyEnrolledDetails
-        whenReady(res.value) { result =>
-          result shouldBe Left(InvalidUserType(None))
         }
       }
     }
@@ -509,7 +365,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
 
               (mockSilentAssignmentService
                 .enrolUser()(
-                  _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+                  _: RequestWithUserDetailsFromSession[_],
                   _: HeaderCarrier,
                   _: ExecutionContext
                 ))
@@ -826,7 +682,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
             "the user chooses to have PT and SA separate" in {
               (mockSilentAssignmentService
                 .enrolUser()(
-                  _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+                  _: RequestWithUserDetailsFromSession[_],
                   _: HeaderCarrier,
                   _: ExecutionContext
                 ))

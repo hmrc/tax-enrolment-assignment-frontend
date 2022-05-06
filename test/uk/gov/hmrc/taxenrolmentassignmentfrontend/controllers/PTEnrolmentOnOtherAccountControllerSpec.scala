@@ -23,8 +23,9 @@ import uk.gov.hmrc.auth.core.Enrolments
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, NoPTEnrolmentWhenOneExpected}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.PT_ASSIGNED_TO_OTHER_USER
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnotherAccount
@@ -111,6 +112,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
           ))
           .expects(*, *, *)
           .returning(createInboundResult(ptEnrolmentModel))
+        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -145,7 +147,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getSAForPTAlreadyEnrolledDetails(
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -192,6 +194,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
           ))
           .expects(*, *, *)
           .returning(createInboundResult(ptEnrolmentModel))
+        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -232,6 +235,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
           ))
           .expects(*, *, *)
           .returning(createInboundResult(ptEnrolmentModel))
+        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -245,7 +249,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
       }
     }
 
-    "the user does not have an account type of PT_ASSIGNED_TO_OTHER_USER" should {
+    s"the user does not have an account type of $PT_ASSIGNED_TO_OTHER_USER" should {
       s"redirect to ${UrlPaths.accountCheckPath}" in {
         val ptEnrolmentModel = ptEnrolmentDataModel(Some(USER_ID))
         (mockAuthConnector
@@ -270,6 +274,8 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
           .returning(
             createInboundResultError(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
           )
+        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -300,7 +306,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
 
         (mockMultipleAccountsOrchestrator
           .getSAForPTAlreadyEnrolledDetails(
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))

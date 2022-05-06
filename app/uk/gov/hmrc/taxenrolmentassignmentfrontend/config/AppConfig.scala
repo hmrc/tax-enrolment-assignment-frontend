@@ -23,7 +23,7 @@ import javax.inject.{Inject, Singleton}
 @Singleton
 class AppConfig @Inject()(val config: ServicesConfig) {
   lazy val welshLanguageSupportEnabled: Boolean = config
-    .getConfBool("features.welsh-language-support", defBool = false)
+    .getConfBool("features.welsh-language-support", defBool = true)
   lazy val taxEnrolmentsLocalEnabled: Boolean = config
     .getConfBool("features.taxEnrolmentsServiceListLocal", defBool = false)
 

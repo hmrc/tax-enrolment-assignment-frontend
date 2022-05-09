@@ -65,6 +65,8 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
     }
 
     validateTimeoutDialog(document)
+    validateTechnicalHelpLinkPresent(document)
+
     "contains the correct title" in {
       document.title shouldBe ReportSuspiciousIDMessages.title
     }

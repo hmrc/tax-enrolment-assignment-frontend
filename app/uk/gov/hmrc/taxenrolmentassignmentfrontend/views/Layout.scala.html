@@ -24,6 +24,7 @@
         appConfig: AppConfig,
         hmrcLayout: HmrcLayout,
         hmrcTimeoutDialogHelper: HmrcTimeoutDialogHelper,
+        hmrcReportTechnicalIssueHelper: HmrcReportTechnicalIssueHelper,
         defaultMainContent: TwoThirdsMainContent
 )
 @(pageTitle: Option[String] = None,
@@ -41,6 +42,11 @@
 <link rel="stylesheet" type="text/css" href='@routes.Assets.versioned("stylesheets/application.css")'>
 }
 
+@content = {
+    @contentBlock
+    @hmrcReportTechnicalIssueHelper()
+}
+
 @hmrcLayout(
  additionalHeadBlock = Some(headBlock),
  pageTitle = pageTitle,
@@ -50,4 +56,4 @@
  backLinkUrl = optBackLinkUrl,
  signOutUrl = if(displaySignout) {Some(appConfig.signOutUrl)} else {None},
  mainContentLayout = mainLayout
-)(contentBlock)
+)(content)

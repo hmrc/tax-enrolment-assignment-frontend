@@ -88,6 +88,7 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
     }
 
     validateTimeoutDialog(documentWithSA)
+    validateTechnicalHelpLinkPresent(documentWithSA)
 
     "have a body" that {
       val textElement = documentWithSA

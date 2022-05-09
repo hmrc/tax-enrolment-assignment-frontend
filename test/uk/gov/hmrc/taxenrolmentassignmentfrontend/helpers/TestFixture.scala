@@ -100,7 +100,7 @@ trait TestFixture
   val mockUsersGroupService: UsersGroupsSearchService =
     mock[UsersGroupsSearchService]
   val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
-  lazy val requestPath = "somePath"
+  lazy val requestPath = "Not Used"
   val mockTeaSessionCache = mock[TEASessionCache]
   val mockAccountCheckOrchestrator = mock[AccountCheckOrchestrator]
   val mockMultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]

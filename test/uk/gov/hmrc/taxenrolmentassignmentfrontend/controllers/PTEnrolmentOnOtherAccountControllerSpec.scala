@@ -26,9 +26,23 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.PT_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, NoPTEnrolmentWhenOneExpected}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, UrlPaths}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
+  IncorrectUserType,
+  NoPTEnrolmentWhenOneExpected
+}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{
+  accountDetails,
+  buildFakeRequestWithSessionId,
+  predicates,
+  retrievalResponse,
+  retrievals,
+  saEnrolmentOnly,
+  _
+}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{
+  TestFixture,
+  UrlPaths
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnotherAccount
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -208,27 +222,27 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
       }
     }
     "no redirect url in cache" should {
-    "render the error page" in {
-      (mockAuthConnector
-        .authorise(
-          _: Predicate,
-          _: Retrieval[
-            ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-              String
+      "render the error page" in {
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ]
             ]
-          ]
-        )(_: HeaderCarrier, _: ExecutionContext))
-        .expects(predicates, retrievals, *, *)
-        .returning(Future.successful(retrievalResponse()))
+          )(_: HeaderCarrier, _: ExecutionContext))
+          .expects(predicates, retrievals, *, *)
+          .returning(Future.successful(retrievalResponse()))
 
-      mockGetAccountTypeSucessRedirectFail
+        mockGetAccountTypeSucessRedirectFail
 
-      val res = controller.view
-        .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+        val res = controller.view
+          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-      status(res) shouldBe INTERNAL_SERVER_ERROR
-      contentAsString(res) should include("enrolmentError.title")
+        status(res) shouldBe INTERNAL_SERVER_ERROR
+        contentAsString(res) should include("enrolmentError.title")
+      }
     }
-  }
   }
 }

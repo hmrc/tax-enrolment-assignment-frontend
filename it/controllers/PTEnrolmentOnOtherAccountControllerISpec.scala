@@ -63,7 +63,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
 
         val res = buildRequest(urlPath, followRedirects = true)
           .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-          .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .withHttpHeaders(randomXSessionId, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -100,7 +100,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
 
         val res = buildRequest(urlPath, followRedirects = true)
           .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-          .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .withHttpHeaders(randomXSessionId, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -142,7 +142,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
 
         val res = buildRequest(urlPath, followRedirects = true)
           .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-          .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .withHttpHeaders(randomXSessionId, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -177,7 +177,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
 
         val res = buildRequest(urlPath, followRedirects = true)
           .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .addHttpHeaders(randomXSessionId, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -205,7 +205,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
 
           val res = buildRequest(urlPath, followRedirects = false)
             .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-            .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
+            .addHttpHeaders(randomXSessionId, xRequestId, sessionCookie)
             .get()
 
           whenReady(res) { resp =>
@@ -228,7 +228,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
 
         val res = buildRequest(urlPath, followRedirects = false)
           .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .addHttpHeaders(randomXSessionId, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -248,7 +248,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
 
         val res = buildRequest(urlPath, followRedirects = false)
           .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .addHttpHeaders(randomXSessionId, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -263,7 +263,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
         stubAuthoriseSuccess()
         val res = buildRequest(urlPath, followRedirects = true)
           .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .addHttpHeaders(randomXSessionId, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -284,7 +284,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
 
         val res = buildRequest(urlPath, followRedirects = true)
           .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
+          .addHttpHeaders(randomXSessionId, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -301,7 +301,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
         val res =
           buildRequest(urlPath)
             .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-            .addHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
+            .addHttpHeaders(randomXSessionId, xRequestId, csrfContent, sessionCookie)
             .get()
 
         whenReady(res) { resp =>
@@ -318,7 +318,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
         val res =
           buildRequest(urlPath)
             .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-            .addHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
+            .addHttpHeaders(randomXSessionId, xRequestId, csrfContent, sessionCookie)
             .get()
 
         whenReady(res) { resp =>
@@ -335,7 +335,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
         val res =
           buildRequest(urlPath)
             .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-            .addHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
+            .addHttpHeaders(randomXSessionId, xRequestId, csrfContent, sessionCookie)
             .get()
 
         whenReady(res) { resp =>
@@ -351,7 +351,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
 
         val res = buildRequest(urlPath)
           .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-          .addHttpHeaders(xSessionId, xRequestId, csrfContent)
+          .addHttpHeaders(randomXSessionId, xRequestId, csrfContent)
           .get()
 
         whenReady(res) { resp =>

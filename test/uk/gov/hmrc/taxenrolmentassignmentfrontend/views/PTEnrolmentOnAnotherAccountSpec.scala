@@ -19,15 +19,11 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.views
 import play.api.test.FakeRequest
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.PTEnrolmentOtherAccountMesages
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
-  AccountDetails,
-  MFADetails
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnotherAccount
 
-class PTEnrolmentOnAnotherAccountSpec extends TestFixture {
+class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
 
   lazy val view: PTEnrolmentOnAnotherAccount =
     inject[PTEnrolmentOnAnotherAccount]

@@ -14,21 +14,10 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.services
 
-import play.api.libs.json.{Format, Json}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.IRSAKey
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 
-case class KnownFactQueryForNINO(service: String,
-                                 knownFacts: List[IdentifiersOrVerifiers]) {
-  def this(nino: String) =
-    this(
-      service = s"$IRSAKey",
-      knownFacts = List(IdentifiersOrVerifiers("NINO", nino))
-    )
-}
+class ThrottlingServiceSpec extends TestFixture {
 
-object KnownFactQueryForNINO {
-  implicit val format: Format[KnownFactQueryForNINO] =
-    Json.format[KnownFactQueryForNINO]
 }

@@ -25,6 +25,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWit
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IVNinoStoreEntry
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IVNinoStoreEntry._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.{IRSAKey, saEnrolmentSet}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.OTHER_VALID_PTA_ACCOUNTS
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 
@@ -38,8 +39,6 @@ class SilentAssignmentService @Inject()(
   sessionCache: TEASessionCache
 ) {
 
-  private lazy val saEnrolmentSet: Set[String] =
-    Set("IR-SA", "HMRC-MTD-IT", "HMRC-NI")
 
   private def filterCL200Accounts(
     list: Seq[IVNinoStoreEntry]

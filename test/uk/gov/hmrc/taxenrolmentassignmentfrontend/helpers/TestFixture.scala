@@ -48,7 +48,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{randomAccoun
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, SilentAssignmentService, UsersGroupsSearchService}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, SilentAssignmentService, ThrottlingService, UsersGroupsSearchService}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.UnderConstructionView
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
@@ -107,6 +107,7 @@ trait TestFixture
   val mockSilentAssignmentService: SilentAssignmentService =
     mock[SilentAssignmentService]
 
+  val mockThrottlingService = mock[ThrottlingService]
   implicit lazy val fakeRequest: FakeRequest[AnyContentAsEmpty.type] =
     FakeRequest("", requestPath)
       .withSession(

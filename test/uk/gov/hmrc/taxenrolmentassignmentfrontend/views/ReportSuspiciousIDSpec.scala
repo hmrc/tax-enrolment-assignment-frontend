@@ -173,7 +173,7 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
       "correct gov-uk link target and link text for Relay UK link" in {
         document
           .getElementsByClass(Selectors.links)
-          .get(1)
+          .get(2)
           .attr("target") shouldBe "_blank"
 
         document

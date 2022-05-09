@@ -218,8 +218,8 @@ class MultipleAccountsOrchestrator @Inject()(
           )
         }
         saOnOtherAccountDetails <- saDetails match {
-          case Some(userId) =>
-            usersGroupSearchService.getAccountDetails(userId)(implicitly, implicitly, requestWithUserDetails).map(Some(_))
+          case Some(credId) =>
+            usersGroupSearchService.getAccountDetails(credId)(implicitly, implicitly, requestWithUserDetails).map(Some(_))
           case None =>
             EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(None))
         }

@@ -123,7 +123,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
       }
     }
 
-    "the user signed in has SA enrolment and PT enrolment on two other seperate accounts" should {
+    "the user signed in has SA enrolment and PT enrolment on two other separate accounts" should {
       s"render the pt on another account page" in new DataAndMockSetup {
         saveRedirectUrlToCache
         saveAccountTypeToCache()
@@ -273,13 +273,61 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
       }
     }
 
-    "users group search returns an error" should {
+    "users group search for current account in the session returns an error" should {
       "render the error page" in new DataAndMockSetup {
         saveRedirectUrlToCache
         saveAccountTypeToCache()
         savePTEnrolmentCredentialToCache()
         saveSAEnrolmentCredentialToCache(Some(CREDENTIAL_ID_3))
         stubAuthoriseSuccess()
+        stubUserGroupSearchFailure(CREDENTIAL_ID)
+
+        val res = buildRequest(urlPath, followRedirects = true)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(randomXSessionId, xRequestId, sessionCookie)
+          .get()
+
+        whenReady(res) { resp =>
+          resp.status shouldBe INTERNAL_SERVER_ERROR
+          resp.body should include(ErrorTemplateMessages.title)
+        }
+      }
+    }
+
+    "users group search returns for account with PT enrolment returns an error" should {
+      "render the error page" in new DataAndMockSetup {
+        saveRedirectUrlToCache
+        saveAccountTypeToCache()
+        savePTEnrolmentCredentialToCache()
+        saveSAEnrolmentCredentialToCache(Some(CREDENTIAL_ID_3))
+        stubAuthoriseSuccess()
+        stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
+        stubUserGroupSearchFailure(CREDENTIAL_ID_2)
+
+        val res = buildRequest(urlPath, followRedirects = true)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(randomXSessionId, xRequestId, sessionCookie)
+          .get()
+
+        whenReady(res) { resp =>
+          resp.status shouldBe INTERNAL_SERVER_ERROR
+          resp.body should include(ErrorTemplateMessages.title)
+        }
+      }
+    }
+
+    "users group search returns for account with SA enrolment returns an error" should {
+      "render the error page" in new DataAndMockSetup {
+        saveRedirectUrlToCache
+        saveAccountTypeToCache()
+        savePTEnrolmentCredentialToCache()
+        saveSAEnrolmentCredentialToCache(Some(CREDENTIAL_ID_3))
+        stubAuthoriseSuccess()
+        stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
+        stubUserGroupSearchSuccess(
+          CREDENTIAL_ID_2,
+          usersGroupSearchResponsePTEnrolment
+        )
         stubUserGroupSearchFailure(CREDENTIAL_ID)
 
         val res = buildRequest(urlPath, followRedirects = true)

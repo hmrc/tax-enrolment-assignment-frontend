@@ -44,7 +44,13 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
   val mfaDetails = Seq(MFADetails("mfaDetails.text", "28923"))
 
   val accountDetails =
-    AccountDetails("4533", Some("email1@test.com"), "Yesterday", mfaDetails)
+    AccountDetails(
+      "credId",
+      "4533",
+      Some("email1@test.com"),
+      "Yesterday",
+      mfaDetails
+    )
 
   val view: HtmlFormat.Appendable =
     reportSuspiciousIdView(accountDetails)(FakeRequest(), testMessages)

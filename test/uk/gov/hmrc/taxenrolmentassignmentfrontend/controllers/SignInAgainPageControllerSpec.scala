@@ -18,16 +18,22 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import play.api.mvc.AnyContent
 import play.api.test.Helpers.{status, _}
-import uk.gov.hmrc.auth.core.Enrolments
+import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, NoSAEnrolmentWhenOneExpected}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
+  IncorrectUserType,
+  NoSAEnrolmentWhenOneExpected
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, UrlPaths}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{
+  TestFixture,
+  UrlPaths
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SignInWithSAAccount
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -52,7 +58,9 @@ class SignInAgainPageControllerSpec extends TestFixture {
           .authorise(
             _: Predicate,
             _: Retrieval[
-              Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String]
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -91,7 +99,7 @@ class SignInAgainPageControllerSpec extends TestFixture {
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ]
+              ] ~ Option[AffinityGroup]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -115,7 +123,7 @@ class SignInAgainPageControllerSpec extends TestFixture {
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ]
+              ] ~ Option[AffinityGroup]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -147,7 +155,7 @@ class SignInAgainPageControllerSpec extends TestFixture {
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ]
+              ] ~ Option[AffinityGroup]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -180,49 +188,49 @@ class SignInAgainPageControllerSpec extends TestFixture {
     }
   }
   "continue" should {
-      s"redirect to ${UrlPaths.logoutPath}" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.successful(retrievalResponse()))
+    s"redirect to ${UrlPaths.logoutPath}" in {
+      (mockAuthConnector
+        .authorise(
+          _: Predicate,
+          _: Retrieval[
+            ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+              String
+            ] ~ Option[AffinityGroup]
+          ]
+        )(_: HeaderCarrier, _: ExecutionContext))
+        .expects(predicates, retrievals, *, *)
+        .returning(Future.successful(retrievalResponse()))
 
-        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
-        val res = controller
-          .continue()
-          .apply(buildFakeRequestWithSessionId("POST", "Not Used"))
+      mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+      val res = controller
+        .continue()
+        .apply(buildFakeRequestWithSessionId("POST", "Not Used"))
 
-        status(res) shouldBe SEE_OTHER
-        redirectLocation(res) shouldBe
-          Some(UrlPaths.logoutPath)
-      }
-
-      "render the error page when redirect url not in cache" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.successful(retrievalResponse()))
-        mockGetAccountTypeSucessRedirectFail
-
-        val result = controller
-          .view()
-          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
-
-        status(result) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(result) should include("enrolmentError.title")
+      status(res) shouldBe SEE_OTHER
+      redirectLocation(res) shouldBe
+        Some(UrlPaths.logoutPath)
     }
+
+    "render the error page when redirect url not in cache" in {
+      (mockAuthConnector
+        .authorise(
+          _: Predicate,
+          _: Retrieval[
+            ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+              String
+            ] ~ Option[AffinityGroup]
+          ]
+        )(_: HeaderCarrier, _: ExecutionContext))
+        .expects(predicates, retrievals, *, *)
+        .returning(Future.successful(retrievalResponse()))
+      mockGetAccountTypeSucessRedirectFail
+
+      val result = controller
+        .view()
+        .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+
+      status(result) shouldBe INTERNAL_SERVER_ERROR
+      contentAsString(result) should include("enrolmentError.title")
     }
+  }
 }

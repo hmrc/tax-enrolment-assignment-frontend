@@ -58,7 +58,13 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
   )
 
   val accountDetails =
-    AccountDetails("3214", Some("email1@test.com"), "Yesterday", mfaDetails)
+    AccountDetails(
+      "credId",
+      "3214",
+      Some("email1@test.com"),
+      "Yesterday",
+      mfaDetails
+    )
 
   val htmlWithSA =
     view(accountDetails, true)(FakeRequest(), testMessages, appConfigForTest)

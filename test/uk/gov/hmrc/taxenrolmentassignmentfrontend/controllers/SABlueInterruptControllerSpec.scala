@@ -19,7 +19,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 import org.jsoup.Jsoup
 import play.api.mvc.AnyContent
 import play.api.test.Helpers.{status, _}
-import uk.gov.hmrc.auth.core.Enrolments
+import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -28,7 +28,10 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OT
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.IncorrectUserType
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, UrlPaths}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{
+  TestFixture,
+  UrlPaths
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SABlueInterrupt
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -58,7 +61,7 @@ class SABlueInterruptControllerSpec extends TestFixture {
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ]
+              ] ~ Option[AffinityGroup]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -95,7 +98,7 @@ class SABlueInterruptControllerSpec extends TestFixture {
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ]
+              ] ~ Option[AffinityGroup]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -119,7 +122,7 @@ class SABlueInterruptControllerSpec extends TestFixture {
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ]
+              ] ~ Option[AffinityGroup]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -154,7 +157,7 @@ class SABlueInterruptControllerSpec extends TestFixture {
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ]
+              ] ~ Option[AffinityGroup]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -186,7 +189,7 @@ class SABlueInterruptControllerSpec extends TestFixture {
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ]
+              ] ~ Option[AffinityGroup]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -210,7 +213,7 @@ class SABlueInterruptControllerSpec extends TestFixture {
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ]
+              ] ~ Option[AffinityGroup]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)

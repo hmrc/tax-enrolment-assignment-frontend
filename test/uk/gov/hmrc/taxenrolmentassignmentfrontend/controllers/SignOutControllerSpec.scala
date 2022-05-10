@@ -19,11 +19,15 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.auth.core.Enrolments
+import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{predicates, retrievalResponse, retrievals}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{
+  predicates,
+  retrievalResponse,
+  retrievals
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -50,7 +54,7 @@ class SignOutControllerSpec extends TestFixture {
           _: Retrieval[
             ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
               String
-            ]
+            ] ~ Option[AffinityGroup]
           ]
         )(_: HeaderCarrier, _: ExecutionContext))
         .expects(predicates, retrievals, *, *)

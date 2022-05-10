@@ -58,7 +58,7 @@ class UsersGroupsSearchService @Inject()(
       .value
       .map {
         case Right(userDetails) =>
-          val accountDetails = new AccountDetails(userDetails)
+          val accountDetails = new AccountDetails(userDetails, credId)
           sessionCache.save[AccountDetails](key, accountDetails)
           Right(accountDetails)
         case Left(error) => Left(error)

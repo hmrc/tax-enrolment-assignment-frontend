@@ -21,11 +21,20 @@ import play.api.test.Helpers._
 import play.api.mvc.{Result, Results}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsString, redirectLocation, status}
-import uk.gov.hmrc.auth.core.{Enrolments, InsufficientConfidenceLevel, SessionRecordNotFound, UnsupportedAuthProvider}
+import uk.gov.hmrc.auth.core.{
+  AffinityGroup,
+  Enrolments,
+  InsufficientConfidenceLevel,
+  SessionRecordNotFound,
+  UnsupportedAuthProvider
+}
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AuthAction, RequestWithUserDetailsFromSession}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{
+  AuthAction,
+  RequestWithUserDetailsFromSession
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
@@ -34,7 +43,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class AuthActionSpec extends TestFixture {
 
-  def authAction: AuthAction = new AuthAction(mockAuthConnector, testBodyParser, logger, appConfig)
+  def authAction: AuthAction =
+    new AuthAction(mockAuthConnector, testBodyParser, logger, appConfig)
 
   def defaultAsyncBody(
     requestTestCase: RequestWithUserDetailsFromSession[_] => Assertion
@@ -49,7 +59,11 @@ class AuthActionSpec extends TestFixture {
         (mockAuthConnector
           .authorise(
             _: Predicate,
-            _: Retrieval[((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[String]]
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup]
+            ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
@@ -68,7 +82,11 @@ class AuthActionSpec extends TestFixture {
         (mockAuthConnector
           .authorise(
             _: Predicate,
-            _: Retrieval[((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[String]]
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup]
+            ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(
@@ -89,7 +107,11 @@ class AuthActionSpec extends TestFixture {
         (mockAuthConnector
           .authorise(
             _: Predicate,
-            _: Retrieval[((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[String]]
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup]
+            ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(
@@ -110,7 +132,11 @@ class AuthActionSpec extends TestFixture {
         (mockAuthConnector
           .authorise(
             _: Predicate,
-            _: Retrieval[((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[String]]
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup]
+            ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(
@@ -133,7 +159,11 @@ class AuthActionSpec extends TestFixture {
         (mockAuthConnector
           .authorise(
             _: Predicate,
-            _: Retrieval[((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[String]]
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup]
+            ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(
@@ -154,7 +184,11 @@ class AuthActionSpec extends TestFixture {
         (mockAuthConnector
           .authorise(
             _: Predicate,
-            _: Retrieval[((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[String]]
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup]
+            ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse(optNino = None)))
@@ -173,7 +207,11 @@ class AuthActionSpec extends TestFixture {
         (mockAuthConnector
           .authorise(
             _: Predicate,
-            _: Retrieval[((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[String]]
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup]
+            ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(
@@ -196,7 +234,11 @@ class AuthActionSpec extends TestFixture {
         (mockAuthConnector
           .authorise(
             _: Predicate,
-            _: Retrieval[((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[String]]
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup]
+            ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(Future.failed(SessionRecordNotFound("FAILED")))
@@ -218,7 +260,11 @@ class AuthActionSpec extends TestFixture {
         (mockAuthConnector
           .authorise(
             _: Predicate,
-            _: Retrieval[((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[String]]
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup]
+            ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(Future.failed(UnsupportedAuthProvider("FAILED")))
@@ -237,7 +283,11 @@ class AuthActionSpec extends TestFixture {
         (mockAuthConnector
           .authorise(
             _: Predicate,
-            _: Retrieval[((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[String]]
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup]
+            ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(Future.failed(InsufficientConfidenceLevel("FAILED")))

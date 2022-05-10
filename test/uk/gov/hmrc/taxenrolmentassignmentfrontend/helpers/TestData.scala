@@ -18,16 +18,35 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers
 
 import play.api.mvc.{AnyContentAsEmpty, AnyContentAsFormUrlEncoded}
 import play.api.test.FakeRequest
+import uk.gov.hmrc.auth.core.AffinityGroup.Individual
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.authorise.Predicate
-import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{allEnrolments, credentials, groupIdentifier, nino}
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{
+  affinityGroup,
+  allEnrolments,
+  credentials,
+  groupIdentifier,
+  nino
+}
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
+  MULTIPLE_ACCOUNTS,
+  PT_ASSIGNED_TO_CURRENT_USER,
+  PT_ASSIGNED_TO_OTHER_USER,
+  SA_ASSIGNED_TO_CURRENT_USER,
+  SA_ASSIGNED_TO_OTHER_USER,
+  SINGLE_ACCOUNT
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.UserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{EACDEnrolment => _, _}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{IVNinoStoreEntry, IdentifiersOrVerifiers, UserEnrolment, UsersAssignedEnrolment}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
+  IVNinoStoreEntry,
+  IdentifiersOrVerifiers,
+  UserEnrolment,
+  UsersAssignedEnrolment
+}
 
 object TestData {
 
@@ -75,27 +94,36 @@ object TestData {
     )
   )
 
- val randomAccountType: AccountTypes.Value = SINGLE_ACCOUNT
+  val randomAccountType: AccountTypes.Value = SINGLE_ACCOUNT
   val predicates: Predicate =
     AuthProviders(GovernmentGateway) and ConfidenceLevel.L200
 
   val retrievals: Retrieval[
-    Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String]
-  ] = nino and credentials and allEnrolments and groupIdentifier
+    Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String] ~ Option[
+      AffinityGroup
+    ]
+  ] = nino and credentials and allEnrolments and groupIdentifier and affinityGroup
 
   def retrievalResponse(
     optNino: Option[String] = Some(NINO),
     optCredentials: Option[Credentials] = Some(creds),
     enrolments: Enrolments = noEnrolments,
-    optGroupId: Option[String] = Some(GROUP_ID)
-  ): (((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[String]) =
-    new ~(new ~(new ~(optNino, optCredentials), enrolments), optGroupId)
+    optGroupId: Option[String] = Some(GROUP_ID),
+    optAffinityGroup: Option[AffinityGroup] = Some(Individual)
+  ): ((((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[String]) ~ Option[
+    AffinityGroup
+  ]) =
+    new ~(
+      new ~(new ~(new ~(optNino, optCredentials), enrolments), optGroupId),
+      optAffinityGroup
+    )
 
   val userDetailsNoEnrolments =
     UserDetailsFromSession(
       CREDENTIAL_ID,
       NINO,
       GROUP_ID,
+      Individual,
       enrolments = Enrolments(Set.empty[Enrolment]),
       hasPTEnrolment = false,
       hasSAEnrolment = false,
@@ -105,15 +133,17 @@ object TestData {
       CREDENTIAL_ID,
       NINO,
       GROUP_ID,
+      Individual,
       enrolments = ptEnrolmentOnly,
       hasPTEnrolment = true,
       hasSAEnrolment = false
-      )
+    )
   val userDetailsWithSAEnrolment =
     UserDetailsFromSession(
       CREDENTIAL_ID,
       NINO,
       GROUP_ID,
+      Individual,
       enrolments = saEnrolmentOnly,
       hasPTEnrolment = false,
       hasSAEnrolment = true
@@ -123,6 +153,7 @@ object TestData {
       CREDENTIAL_ID,
       NINO,
       GROUP_ID,
+      Individual,
       enrolments = saAndptEnrolments,
       hasPTEnrolment = true,
       hasSAEnrolment = true
@@ -151,6 +182,7 @@ object TestData {
   )
 
   val accountDetails: AccountDetails = AccountDetails(
+    credId = CREDENTIAL_ID,
     userId = "6037",
     email = Some("email1@test.com"),
     lastLoginDate = "27 February 2022 at 12:00 PM",

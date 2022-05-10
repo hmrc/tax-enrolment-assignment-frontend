@@ -46,6 +46,7 @@ class AccountDetailsSpec extends TestFixture {
   def accountDetails(formattedLastLoginDate: String,
                      mfaDetails: List[MFADetails]): AccountDetails = {
     AccountDetails(
+      "credId",
       "6037",
       Some("email1@test.com"),
       formattedLastLoginDate,
@@ -64,7 +65,7 @@ class AccountDetailsSpec extends TestFixture {
 
           val expectedResult = accountDetails("Today", List(mfaDetailsText))
 
-          val res = new AccountDetails(ugsResp)
+          val res = new AccountDetails(ugsResp, "credId")
 
           res shouldBe expectedResult
         }
@@ -83,7 +84,7 @@ class AccountDetailsSpec extends TestFixture {
           val expectedResult =
             accountDetails("Yesterday", List(mfaDetailsVoice))
 
-          val res = new AccountDetails(ugsResp)
+          val res = new AccountDetails(ugsResp, "credId")
 
           res shouldBe expectedResult
         }
@@ -100,7 +101,7 @@ class AccountDetailsSpec extends TestFixture {
           val expectedResult =
             accountDetails("27 February 2022 at 12:00 PM", List(mfaDetailsTotp))
 
-          val res = new AccountDetails(ugsResp)
+          val res = new AccountDetails(ugsResp, "credId")
 
           res shouldBe expectedResult
         }
@@ -126,7 +127,7 @@ class AccountDetailsSpec extends TestFixture {
             List(mfaDetailsText, mfaDetailsVoice, mfaDetailsTotp)
           )
 
-          val res = new AccountDetails(ugsResp)
+          val res = new AccountDetails(ugsResp, "credId")
 
           res shouldBe expectedResult
         }

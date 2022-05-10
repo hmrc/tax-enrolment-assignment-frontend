@@ -37,13 +37,15 @@ object MFADetails {
   implicit val format: Format[MFADetails] = Json.format[MFADetails]
 }
 
-case class AccountDetails(userId: String,
+case class AccountDetails(credId: String,
+                          userId: String,
                           email: Option[String],
                           lastLoginDate: String,
                           mfaDetails: Seq[MFADetails],
                           hasSA: Option[Boolean] = None) {
-  def this(usersGroupResponse: UsersGroupResponse) =
+  def this(usersGroupResponse: UsersGroupResponse, credId: String) =
     this(
+      credId = credId,
       userId = AccountDetails.trimmedUserId(usersGroupResponse.obfuscatedUserId),
       email = usersGroupResponse.email,
       lastLoginDate =
@@ -59,7 +61,8 @@ case class AccountDetails(userId: String,
 
 object AccountDetails {
 
-  def trimmedUserId(obfuscatedId: String): String = obfuscatedId.replaceAll("[*]", "")
+  def trimmedUserId(obfuscatedId: String): String =
+    obfuscatedId.replaceAll("[*]", "")
 
   def formatDate(date: String): String = {
     val zonedDateTime = ZonedDateTime.parse(date)

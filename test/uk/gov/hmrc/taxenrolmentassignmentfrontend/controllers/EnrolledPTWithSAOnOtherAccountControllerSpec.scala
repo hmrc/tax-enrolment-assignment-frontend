@@ -19,14 +19,20 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 import org.jsoup.Jsoup
 import play.api.http.Status.OK
 import play.api.test.Helpers._
-import uk.gov.hmrc.auth.core.Enrolments
+import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, UnexpectedResponseFromUsersGroupsSearch}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
+  IncorrectUserType,
+  UnexpectedResponseFromUsersGroupsSearch
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, UrlPaths}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{
+  TestFixture,
+  UrlPaths
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTWithSAOnOtherAccount
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -55,7 +61,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ]
+              ] ~ Option[AffinityGroup]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -105,7 +111,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ]
+              ] ~ Option[AffinityGroup]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -157,7 +163,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ]
+              ] ~ Option[AffinityGroup]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -170,7 +176,11 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
             _: ExecutionContext
           ))
           .expects(*, *, *)
-          .returning(createInboundResultError(IncorrectUserType(UrlPaths.returnUrl, randomAccountType)))
+          .returning(
+            createInboundResultError(
+              IncorrectUserType(UrlPaths.returnUrl, randomAccountType)
+            )
+          )
         mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
         val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -187,14 +197,15 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ]
+              ] ~ Option[AffinityGroup]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
         mockGetAccountTypeSucessRedirectFail
 
-        val res = controller.view()
+        val res = controller
+          .view()
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(res) shouldBe INTERNAL_SERVER_ERROR
@@ -210,7 +221,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ]
+              ] ~ Option[AffinityGroup]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)

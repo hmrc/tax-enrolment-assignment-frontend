@@ -56,4 +56,5 @@ class AppConfig @Inject()(val config: ServicesConfig) {
   ) + "/personal-account"
   //ToDo find real link to SA
   lazy val selfAssessmentUrl: String = "?"
+  lazy val appName = config.getString("appName")
 }

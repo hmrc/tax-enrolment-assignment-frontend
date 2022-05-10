@@ -453,6 +453,6 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
         UsersAssignedEnrolment(optSAEnrolledCredential)
       )
     )
-    await(save(randomSessionId, dataMap))
+    await(save(sessionId, dataMap))
   }
 }

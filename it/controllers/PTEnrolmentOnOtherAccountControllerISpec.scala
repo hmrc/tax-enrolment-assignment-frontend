@@ -30,6 +30,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNT
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{UsersAssignedEnrolment, UsersGroupResponse}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_ASSIGNED_PT_ENROLMENT, USER_ASSIGNED_SA_ENROLMENT}
 
+import java.util.UUID
 import scala.collection.JavaConverters._
 
 class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
@@ -48,8 +49,8 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
         )
 
         val res = buildRequest(urlPath, followRedirects = true)
-          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-          .withHttpHeaders(randomXSessionId, xRequestId, sessionCookie)
+          .addCookies(DefaultWSCookie("mdtp", sessionAndAuthForTestForTest))
+          .withHttpHeaders(xSessionID, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -82,8 +83,8 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
         )
 
         val res = buildRequest(urlPath, followRedirects = true)
-          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-          .withHttpHeaders(randomXSessionId, xRequestId, sessionCookie)
+          .addCookies(DefaultWSCookie("mdtp", sessionAndAuthForTestForTest))
+          .withHttpHeaders(xSessionID, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -121,8 +122,8 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
         )
 
         val res = buildRequest(urlPath, followRedirects = true)
-          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-          .withHttpHeaders(randomXSessionId, xRequestId, sessionCookie)
+          .addCookies(DefaultWSCookie("mdtp", sessionAndAuthForTestForTest))
+          .withHttpHeaders(xSessionID, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -153,8 +154,8 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
         )
 
         val res = buildRequest(urlPath, followRedirects = true)
-          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-          .addHttpHeaders(randomXSessionId, xRequestId, sessionCookie)
+          .addCookies(DefaultWSCookie("mdtp", sessionAndAuthForTestForTest))
+          .addHttpHeaders(xSessionID, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -180,8 +181,8 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
           stubAuthoriseSuccess()
 
           val res = buildRequest(urlPath, followRedirects = false)
-            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-            .addHttpHeaders(randomXSessionId, xRequestId, sessionCookie)
+            .addCookies(DefaultWSCookie("mdtp", sessionAndAuthForTestForTest))
+            .addHttpHeaders(xSessionID, xRequestId, sessionCookie)
             .get()
 
           whenReady(res) { resp =>
@@ -201,8 +202,8 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
         stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
 
         val res = buildRequest(urlPath, followRedirects = false)
-          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-          .addHttpHeaders(randomXSessionId, xRequestId, sessionCookie)
+          .addCookies(DefaultWSCookie("mdtp", sessionAndAuthForTestForTest))
+          .addHttpHeaders(xSessionID, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -219,8 +220,8 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
         stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
 
         val res = buildRequest(urlPath, followRedirects = false)
-          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-          .addHttpHeaders(randomXSessionId, xRequestId, sessionCookie)
+          .addCookies(DefaultWSCookie("mdtp", sessionAndAuthForTestForTest))
+          .addHttpHeaders(xSessionID, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -237,8 +238,8 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
         stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
 
         val res = buildRequest(urlPath, followRedirects = false)
-          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-          .addHttpHeaders(randomXSessionId, xRequestId, sessionCookie)
+          .addCookies(DefaultWSCookie("mdtp", sessionAndAuthForTestForTest))
+          .addHttpHeaders(xSessionID, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -252,8 +253,8 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
       "render the error page" in new DataAndMockSetup {
         stubAuthoriseSuccess()
         val res = buildRequest(urlPath, followRedirects = true)
-          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-          .addHttpHeaders(randomXSessionId, xRequestId, sessionCookie)
+          .addCookies(DefaultWSCookie("mdtp", sessionAndAuthForTestForTest))
+          .addHttpHeaders(xSessionID, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -270,8 +271,8 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
         stubUserGroupSearchFailure(CREDENTIAL_ID)
 
         val res = buildRequest(urlPath, followRedirects = true)
-          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-          .addHttpHeaders(randomXSessionId, xRequestId, sessionCookie)
+          .addCookies(DefaultWSCookie("mdtp", sessionAndAuthForTestForTest))
+          .addHttpHeaders(xSessionID, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -289,8 +290,8 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
         stubUserGroupSearchFailure(CREDENTIAL_ID_2)
 
         val res = buildRequest(urlPath, followRedirects = true)
-          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-          .addHttpHeaders(randomXSessionId, xRequestId, sessionCookie)
+          .addCookies(DefaultWSCookie("mdtp", sessionAndAuthForTestForTest))
+          .addHttpHeaders(xSessionID, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -312,8 +313,8 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
         stubUserGroupSearchFailure(CREDENTIAL_ID)
 
         val res = buildRequest(urlPath, followRedirects = true)
-          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-          .addHttpHeaders(randomXSessionId, xRequestId, sessionCookie)
+          .addCookies(DefaultWSCookie("mdtp", sessionAndAuthForTestForTest))
+          .addHttpHeaders(xSessionID, xRequestId, sessionCookie)
           .get()
 
         whenReady(res) { resp =>
@@ -329,8 +330,8 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
 
         val res =
           buildRequest(urlPath)
-            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-            .addHttpHeaders(randomXSessionId, xRequestId, csrfContent, sessionCookie)
+            .addCookies(DefaultWSCookie("mdtp", sessionAndAuthForTestForTest))
+            .addHttpHeaders(xSessionID, xRequestId, csrfContent, sessionCookie)
             .get()
 
         whenReady(res) { resp =>
@@ -346,8 +347,8 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
 
         val res =
           buildRequest(urlPath)
-            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-            .addHttpHeaders(randomXSessionId, xRequestId, csrfContent, sessionCookie)
+            .addCookies(DefaultWSCookie("mdtp", sessionAndAuthForTestForTest))
+            .addHttpHeaders(xSessionID, xRequestId, csrfContent, sessionCookie)
             .get()
 
         whenReady(res) { resp =>
@@ -363,8 +364,8 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
 
         val res =
           buildRequest(urlPath)
-            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-            .addHttpHeaders(randomXSessionId, xRequestId, csrfContent, sessionCookie)
+            .addCookies(DefaultWSCookie("mdtp", sessionAndAuthForTestForTest))
+            .addHttpHeaders(xSessionID, xRequestId, csrfContent, sessionCookie)
             .get()
 
         whenReady(res) { resp =>
@@ -379,8 +380,8 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
         stubUnAuthorised(unauthorisedError = Some(sessionNotFound))
 
         val res = buildRequest(urlPath)
-          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-          .addHttpHeaders(randomXSessionId, xRequestId, csrfContent)
+          .addCookies(DefaultWSCookie("mdtp", sessionAndAuthForTestForTest))
+          .addHttpHeaders(xSessionID, xRequestId, csrfContent)
           .get()
 
         whenReady(res) { resp =>
@@ -391,13 +392,42 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
     }
   }
 
+
   class DataAndMockSetup {
+
+    val sessionID = UUID.randomUUID().toString
+    val xSessionID: (String, String) = "X-Session-ID" -> sessionID
+    val xRequestID: (String, String) = "X-Request-ID" -> sessionID
+    val sessionDataForTest = Map("sessionId" -> sessionID)
+    val newSessionCookie
+    : (String, String) = ("COOKIE" -> createSessionCookieAsString(
+      sessionDataForTest
+    ))
+    val sessionAndAuthForTest =
+      Map("authToken" -> AUTHORIZE_HEADER_VALUE, "sessionId" -> sessionID)
+
+    val sessionAndAuthForTestForTest: String =
+      createSessionCookieAsString(sessionAndAuthForTest).substring(5)
 
     stubPost(s"/write/.*", OK, """{"x":2}""")
 
-    lazy val saveRedirectUrlToCache = await(
-      save[String](sessionId, "redirectURL", UrlPaths.returnUrl)
-    )
+    def saveDataToCache(
+                         accountType: AccountTypes.Value = PT_ASSIGNED_TO_OTHER_USER,
+                         optPTEnrolledCredential: Option[String] = Some(CREDENTIAL_ID_2),
+                         optSAEnrolledCredential: Option[String]
+                       ): Boolean = {
+      val dataMap = Map(
+        "redirectURL" -> JsString(UrlPaths.returnUrl),
+        "ACCOUNT_TYPE" -> JsString(accountType.toString),
+        USER_ASSIGNED_PT_ENROLMENT -> Json.toJson(
+          UsersAssignedEnrolment(optPTEnrolledCredential)
+        ),
+        USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(
+          UsersAssignedEnrolment(optSAEnrolledCredential)
+        )
+      )
+      await(save(sessionID, dataMap))
+    }
 
     def stubAuthoriseSuccess(hasSAEnrolment: Boolean = false): StubMapping = {
       val authResponse = authoriseResponseJson(
@@ -407,10 +437,10 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
     }
 
     def stubUnAuthorised(
-      hasNino: Boolean = true,
-      hasCred: Boolean = true,
-      unauthorisedError: Option[String] = None
-    ): StubMapping = {
+                          hasNino: Boolean = true,
+                          hasCred: Boolean = true,
+                          unauthorisedError: Option[String] = None
+                        ): StubMapping = {
       unauthorisedError match {
         case Some(error) => stubAuthorizePostUnauthorised(error)
         case None =>
@@ -423,36 +453,18 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
     }
 
     def stubUserGroupSearchSuccess(
-      credId: String,
-      usersGroupResponse: UsersGroupResponse
-    ): StubMapping = stubGet(
+                                    credId: String,
+                                    usersGroupResponse: UsersGroupResponse
+                                  ): StubMapping = stubGet(
       s"/users-groups-search/users/$credId",
       NON_AUTHORITATIVE_INFORMATION,
       usergroupsResponseJson(usersGroupResponse).toString()
     )
 
     def stubUserGroupSearchFailure(
-      credId: String,
-      responseCode: Int = INTERNAL_SERVER_ERROR
-    ): StubMapping =
+                                    credId: String,
+                                    responseCode: Int = INTERNAL_SERVER_ERROR
+                                  ): StubMapping =
       stubGet(s"/users-groups-search/users/$credId", INTERNAL_SERVER_ERROR, "")
-  }
-
-  def saveDataToCache(
-                       accountType: AccountTypes.Value = PT_ASSIGNED_TO_OTHER_USER,
-                       optPTEnrolledCredential: Option[String] = Some(CREDENTIAL_ID_2),
-                       optSAEnrolledCredential: Option[String]
-                     ): Boolean = {
-    val dataMap = Map(
-      "redirectURL" -> JsString(UrlPaths.returnUrl),
-      "ACCOUNT_TYPE" -> JsString(accountType.toString),
-      USER_ASSIGNED_PT_ENROLMENT -> Json.toJson(
-        UsersAssignedEnrolment(optPTEnrolledCredential)
-      ),
-      USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(
-        UsersAssignedEnrolment(optSAEnrolledCredential)
-      )
-    )
-    await(save(sessionId, dataMap))
   }
 }

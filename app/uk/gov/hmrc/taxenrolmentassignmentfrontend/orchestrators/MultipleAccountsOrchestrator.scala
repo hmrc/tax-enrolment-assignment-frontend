@@ -31,7 +31,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTA
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logNoUserFoundWithPTEnrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, PTEnrolmentOtherAccountViewModel, UsersAssignedEnrolment}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, CurrentAccountDetailsPTAccountDetailsSAAccountDetailsIfExists, PTEnrolmentOtherAccountViewModel, UsersAssignedEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, SilentAssignmentService, UsersGroupsSearchService}
@@ -198,11 +198,42 @@ class MultipleAccountsOrchestrator @Inject()(
           }
     }
 
-  def getSAForPTAlreadyEnrolledDetails(
+  def getCurrentAndPTAAndSAIfExistsForUser(implicit requestWithUserDetails: RequestWithUserDetailsFromSessionAndMongo[_],
+                                                hc: HeaderCarrier,
+                                                ec: ExecutionContext
+                                               ): TEAFResult[PTEnrolmentOtherAccountViewModel]  = {
+    getSAForPTAlreadyEnrolledDetails.map { model =>
+      PTEnrolmentOtherAccountViewModel(
+        model.currentAccountDetails,
+        model.ptAccountDetails,
+        if (requestWithUserDetails.userDetails.hasSAEnrolment) {
+          Some(model.currentAccountDetails.userId)
+        } else {
+          model.saAccountDetails.map(_.userId)
+        }
+      )
+    }
+  }
+
+  private def getSAForPTAlreadyEnrolledDetails(
                                         implicit requestWithUserDetails: RequestWithUserDetailsFromSessionAndMongo[_],
                                         hc: HeaderCarrier,
                                         ec: ExecutionContext
-                                      ): TEAFResult[PTEnrolmentOtherAccountViewModel] =
+                                      ): TEAFResult[CurrentAccountDetailsPTAccountDetailsSAAccountDetailsIfExists] = {
+
+    def getSAAccountDetails: TEAFResult[Option[AccountDetails]] = {
+      if (!requestWithUserDetails.userDetails.hasSAEnrolment) {
+        eacdService.getUsersAssignedSAEnrolment(requestWithUserDetails, implicitly, implicitly).map(
+          user => user.enrolledCredential
+        ).flatMap {
+          case Some(userId) => usersGroupSearchService.getAccountDetails(userId)(implicitly, implicitly, requestWithUserDetails).map(Some(_))
+          case None => EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(Option.empty[AccountDetails]))
+        }
+      } else {
+        EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(None))
+      }
+
+    }
 
     checkValidAccountType(List(PT_ASSIGNED_TO_OTHER_USER)) match {
       case Right(_) => for {
@@ -210,33 +241,16 @@ class MultipleAccountsOrchestrator @Inject()(
           requestWithUserDetails.userDetails.credId
         )(implicitly, implicitly, requestWithUserDetails)
         ptAccountDetails <- getPTCredentialDetails
-        saDetails <- if (requestWithUserDetails.userDetails.hasSAEnrolment) {
-          EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(None))
-        } else {
-          eacdService.getUsersAssignedSAEnrolment(requestWithUserDetails, implicitly, implicitly).map(
-            user => user.enrolledCredential
-          )
-        }
-        saOnOtherAccountDetails <- saDetails match {
-          case Some(credId) =>
-            usersGroupSearchService.getAccountDetails(credId)(implicitly, implicitly, requestWithUserDetails).map(Some(_))
-          case None =>
-            EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(None))
-        }
+        saOnOtherAccountDetails <- getSAAccountDetails
       }
       yield
-        PTEnrolmentOtherAccountViewModel(
+        CurrentAccountDetailsPTAccountDetailsSAAccountDetailsIfExists(
           currentAccountDetails,
           ptAccountDetails,
-          if (requestWithUserDetails.userDetails.hasSAEnrolment) {
-            Some(currentAccountDetails.userId)
-          } else {
-            saOnOtherAccountDetails.map(_.userId)
-          }
-        )
+          saOnOtherAccountDetails)
 
       case Left(error) => EitherT.left(Future.successful(error))
     }
-
+  }
 
   }

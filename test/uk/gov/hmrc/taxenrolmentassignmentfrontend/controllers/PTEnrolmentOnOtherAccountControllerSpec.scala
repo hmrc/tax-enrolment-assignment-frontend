@@ -64,7 +64,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
           .returning(Future.successful(retrievalResponse()))
 
         (mockMultipleAccountsOrchestrator
-          .getSAForPTAlreadyEnrolledDetails(
+          .getCurrentAndPTAAndSAIfExistsForUser(
             _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
@@ -105,7 +105,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
           )
 
         (mockMultipleAccountsOrchestrator
-          .getSAForPTAlreadyEnrolledDetails(
+          .getCurrentAndPTAAndSAIfExistsForUser(
             _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
@@ -146,7 +146,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
           )
 
         (mockMultipleAccountsOrchestrator
-          .getSAForPTAlreadyEnrolledDetails(
+          .getCurrentAndPTAAndSAIfExistsForUser(
             _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
@@ -187,7 +187,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
           )
 
         (mockMultipleAccountsOrchestrator
-          .getSAForPTAlreadyEnrolledDetails(
+          .getCurrentAndPTAAndSAIfExistsForUser(
             _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
@@ -228,7 +228,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
           )
 
         (mockMultipleAccountsOrchestrator
-          .getSAForPTAlreadyEnrolledDetails(
+          .getCurrentAndPTAAndSAIfExistsForUser(
             _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
@@ -265,7 +265,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
           .returning(Future.successful(retrievalResponse()))
 
         (mockMultipleAccountsOrchestrator
-          .getSAForPTAlreadyEnrolledDetails(
+          .getCurrentAndPTAAndSAIfExistsForUser(
             _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
@@ -305,7 +305,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
           )
 
         (mockMultipleAccountsOrchestrator
-          .getSAForPTAlreadyEnrolledDetails(
+          .getCurrentAndPTAAndSAIfExistsForUser(
             _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext

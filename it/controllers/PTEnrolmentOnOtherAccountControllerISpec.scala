@@ -23,25 +23,13 @@ import helpers.WiremockHelper._
 import helpers.messages._
 import org.jsoup.Jsoup
 import play.api.http.Status
+import play.api.libs.json.{JsString, Json}
 import play.api.libs.ws.DefaultWSCookie
-import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
-  MULTIPLE_ACCOUNTS,
-  PT_ASSIGNED_TO_CURRENT_USER,
-  PT_ASSIGNED_TO_OTHER_USER,
-  SA_ASSIGNED_TO_CURRENT_USER,
-  SA_ASSIGNED_TO_OTHER_USER,
-  SINGLE_ACCOUNT
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
-  UsersAssignedEnrolment,
-  UsersGroupResponse
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{
-  USER_ASSIGNED_PT_ENROLMENT,
-  USER_ASSIGNED_SA_ENROLMENT
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{UsersAssignedEnrolment, UsersGroupResponse}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_ASSIGNED_PT_ENROLMENT, USER_ASSIGNED_SA_ENROLMENT}
+
 import scala.collection.JavaConverters._
 
 class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
@@ -51,9 +39,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
   s"GET $urlPath" when {
     "the signed in user has SA enrolment in session and PT enrolment on another account" should {
       s"render the pt on another account page" in new DataAndMockSetup {
-        saveRedirectUrlToCache
-        saveAccountTypeToCache()
-        savePTEnrolmentCredentialToCache()
+        saveDataToCache(optSAEnrolledCredential = None)
         stubAuthoriseSuccess(true)
         stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
         stubUserGroupSearchSuccess(
@@ -87,10 +73,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
 
     "the signed in user has SA enrolment and a PT enrolment on another account" should {
       s"render the pt on another account page" in new DataAndMockSetup {
-        saveRedirectUrlToCache
-        saveAccountTypeToCache()
-        savePTEnrolmentCredentialToCache()
-        saveSAEnrolmentCredentialToCache(Some(CREDENTIAL_ID_2))
+        saveDataToCache(optSAEnrolledCredential = Some(CREDENTIAL_ID_2))
         stubAuthoriseSuccess()
         stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
         stubUserGroupSearchSuccess(
@@ -125,10 +108,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
 
     "the user signed in has SA enrolment and PT enrolment on two other separate accounts" should {
       s"render the pt on another account page" in new DataAndMockSetup {
-        saveRedirectUrlToCache
-        saveAccountTypeToCache()
-        savePTEnrolmentCredentialToCache()
-        saveSAEnrolmentCredentialToCache(Some(CREDENTIAL_ID_3))
+        saveDataToCache(optSAEnrolledCredential = Some(CREDENTIAL_ID_3))
         stubAuthoriseSuccess()
         stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
         stubUserGroupSearchSuccess(
@@ -164,10 +144,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
 
     "the signed in user has no SA on any accounts but has PT enrolment on another account" should {
       s"render the pt on another account page" in new DataAndMockSetup {
-        saveRedirectUrlToCache
-        saveAccountTypeToCache()
-        savePTEnrolmentCredentialToCache()
-        saveSAEnrolmentCredentialToCache(None)
+        saveDataToCache(optSAEnrolledCredential = None)
         stubAuthoriseSuccess()
         stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
         stubUserGroupSearchSuccess(
@@ -199,8 +176,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
     ).foreach { accountType =>
       s"the session cache has a credential with account type ${accountType.toString}" should {
         s"redirect to ${UrlPaths.accountCheckPath}" in new DataAndMockSetup {
-          saveRedirectUrlToCache
-          saveAccountTypeToCache(accountType)
+          saveDataToCache(accountType = accountType, optSAEnrolledCredential = Some(CREDENTIAL_ID_3))
           stubAuthoriseSuccess()
 
           val res = buildRequest(urlPath, followRedirects = false)
@@ -220,9 +196,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
 
     s"the session cache has a credential for PT enrolment that is the signed in account" should {
       s"render the error page" in new DataAndMockSetup {
-        saveRedirectUrlToCache
-        saveAccountTypeToCache()
-        savePTEnrolmentCredentialToCache(Some(CREDENTIAL_ID))
+        saveDataToCache(optPTEnrolledCredential = Some(CREDENTIAL_ID), optSAEnrolledCredential = None)
         stubAuthoriseSuccess()
         stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
 
@@ -238,11 +212,27 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
       }
     }
 
-    s"the session cache has no credentials with PT enrolment" should {
+    s"the session cache has found $USER_ASSIGNED_PT_ENROLMENT" should {
       s"render the error page" in new DataAndMockSetup {
-        saveRedirectUrlToCache
-        saveAccountTypeToCache()
-        savePTEnrolmentCredentialToCache(None)
+        saveDataToCache(optPTEnrolledCredential = None,optSAEnrolledCredential = None)
+        stubAuthoriseSuccess()
+        stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
+
+        val res = buildRequest(urlPath, followRedirects = false)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(randomXSessionId, xRequestId, sessionCookie)
+          .get()
+
+        whenReady(res) { resp =>
+          resp.status shouldBe INTERNAL_SERVER_ERROR
+          resp.body should include(ErrorTemplateMessages.title)
+        }
+      }
+    }
+
+    s"the session cache has a PT enrolment but $USER_ASSIGNED_SA_ENROLMENT does not exist" should {
+      s"render the error page" in new DataAndMockSetup {
+        saveDataToCache(optPTEnrolledCredential = Some(CREDENTIAL_ID),optSAEnrolledCredential = None)
         stubAuthoriseSuccess()
         stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
 
@@ -275,10 +265,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
 
     "users group search for current account in the session returns an error" should {
       "render the error page" in new DataAndMockSetup {
-        saveRedirectUrlToCache
-        saveAccountTypeToCache()
-        savePTEnrolmentCredentialToCache()
-        saveSAEnrolmentCredentialToCache(Some(CREDENTIAL_ID_3))
+        saveDataToCache(optSAEnrolledCredential = Some(CREDENTIAL_ID_3))
         stubAuthoriseSuccess()
         stubUserGroupSearchFailure(CREDENTIAL_ID)
 
@@ -296,10 +283,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
 
     "users group search returns for account with PT enrolment returns an error" should {
       "render the error page" in new DataAndMockSetup {
-        saveRedirectUrlToCache
-        saveAccountTypeToCache()
-        savePTEnrolmentCredentialToCache()
-        saveSAEnrolmentCredentialToCache(Some(CREDENTIAL_ID_3))
+        saveDataToCache(optSAEnrolledCredential = Some(CREDENTIAL_ID_3))
         stubAuthoriseSuccess()
         stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
         stubUserGroupSearchFailure(CREDENTIAL_ID_2)
@@ -318,10 +302,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
 
     "users group search returns for account with SA enrolment returns an error" should {
       "render the error page" in new DataAndMockSetup {
-        saveRedirectUrlToCache
-        saveAccountTypeToCache()
-        savePTEnrolmentCredentialToCache()
-        saveSAEnrolmentCredentialToCache(Some(CREDENTIAL_ID_3))
+        saveDataToCache(optSAEnrolledCredential = Some(CREDENTIAL_ID_3))
         stubAuthoriseSuccess()
         stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
         stubUserGroupSearchSuccess(
@@ -417,29 +398,6 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
     lazy val saveRedirectUrlToCache = await(
       save[String](sessionId, "redirectURL", UrlPaths.returnUrl)
     )
-    def saveAccountTypeToCache(
-      accountType: AccountTypes.Value = PT_ASSIGNED_TO_OTHER_USER
-    ): CacheMap = await(
-      save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", accountType)
-    )
-    def savePTEnrolmentCredentialToCache(
-      optCredId: Option[String] = Some(CREDENTIAL_ID_2)
-    ): CacheMap = await(
-      save[UsersAssignedEnrolment](
-        sessionId,
-        USER_ASSIGNED_PT_ENROLMENT,
-        UsersAssignedEnrolment(optCredId)
-      )
-    )
-
-    def saveSAEnrolmentCredentialToCache(optCredId: Option[String]): CacheMap =
-      await(
-        save[UsersAssignedEnrolment](
-          sessionId,
-          USER_ASSIGNED_SA_ENROLMENT,
-          UsersAssignedEnrolment(optCredId)
-        )
-      )
 
     def stubAuthoriseSuccess(hasSAEnrolment: Boolean = false): StubMapping = {
       val authResponse = authoriseResponseJson(
@@ -478,5 +436,23 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
       responseCode: Int = INTERNAL_SERVER_ERROR
     ): StubMapping =
       stubGet(s"/users-groups-search/users/$credId", INTERNAL_SERVER_ERROR, "")
+  }
+
+  def saveDataToCache(
+                       accountType: AccountTypes.Value = PT_ASSIGNED_TO_OTHER_USER,
+                       optPTEnrolledCredential: Option[String] = Some(CREDENTIAL_ID_2),
+                       optSAEnrolledCredential: Option[String]
+                     ): Boolean = {
+    val dataMap = Map(
+      "redirectURL" -> JsString(UrlPaths.returnUrl),
+      "ACCOUNT_TYPE" -> JsString(accountType.toString),
+      USER_ASSIGNED_PT_ENROLMENT -> Json.toJson(
+        UsersAssignedEnrolment(optPTEnrolledCredential)
+      ),
+      USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(
+        UsersAssignedEnrolment(optSAEnrolledCredential)
+      )
+    )
+    await(save(sessionId, dataMap))
   }
 }

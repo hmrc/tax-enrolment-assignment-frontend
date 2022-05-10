@@ -128,7 +128,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
     }
   }
 
-  s"getSAForPTAlreadyEnrolledDetails" when {
+  s"getCurrentAndPTAAndSAIfExistsForUser" when {
     s"the accountType $PT_ASSIGNED_TO_OTHER_USER, no SA associated to the account" should {
       "return a PTEnrolmentOtherAccountViewModel for the account details" in {
 
@@ -158,16 +158,16 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
           .expects(CREDENTIAL_ID_1, *, *, *)
           .returning(createInboundResult(accountDetailsWithPT.copy(userId = CREDENTIAL_ID_1,hasSA = None)))
 
-            (mockEacdService
+        (mockEacdService
           .getUsersAssignedSAEnrolment(
             _: RequestWithUserDetailsFromSession[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
           .expects( *, *, *)
-          .returning(createInboundResult(UsersAssignedEnrolmentEmpty))
+          .returning(createInboundResult(UsersAssignedEnrolment(None)))
 
-        val res = orchestrator.getSAForPTAlreadyEnrolledDetails(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), implicitly, implicitly)
+        val res = orchestrator.getCurrentAndPTAAndSAIfExistsForUser(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), implicitly, implicitly)
         whenReady(res.value) { result =>
           result shouldBe Right(ptEnrolmentDataModel(None,accountDetailsWithPT.copy(userId = CREDENTIAL_ID_1,hasSA = None)))
         }
@@ -219,9 +219,18 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
             _: RequestWithUserDetailsFromSession[AnyContent]
           ))
           .expects(USER_ID, *, *, *)
-          .returning(createInboundResult(accountDetails))
+          .returning(createInboundResult(accountDetails.copy(hasSA = Some(true))))
 
-        val res = orchestrator.getSAForPTAlreadyEnrolledDetails(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), implicitly, implicitly)
+//        (mockMultipleAccountsOrchestrator
+//          .getSACredentialDetails(
+//            _: RequestWithUserDetailsFromSessionAndMongo[_],
+//            _: HeaderCarrier,
+//            _: ExecutionContext
+//          ))
+//          .expects( *, *, *)
+//          .returning(createInboundResult(accountDetails.copy(hasSA = Some(true))))
+
+        val res = orchestrator.getCurrentAndPTAAndSAIfExistsForUser(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), implicitly, implicitly)
         whenReady(res.value) { result =>
           result shouldBe Right(ptEnrolmentDataModel(Some(USER_ID)))
         }
@@ -275,7 +284,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
           .expects(PT_USER_ID, *, *, *)
           .returning(createInboundResult(accountDetailsWithPT))
 
-        val res = orchestrator.getSAForPTAlreadyEnrolledDetails(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), implicitly, implicitly)
+        val res = orchestrator.getCurrentAndPTAAndSAIfExistsForUser(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), implicitly, implicitly)
         whenReady(res.value) { result =>
           result shouldBe Right(ptEnrolmentDataModel(Some(PT_USER_ID)))
         }
@@ -329,7 +338,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
           .expects(CREDENTIAL_ID_1, *, *, *)
           .returning(createInboundResult(accountDetails.copy(userId = CREDENTIAL_ID_1)))
 
-        val res = orchestrator.getSAForPTAlreadyEnrolledDetails(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), implicitly, implicitly)
+        val res = orchestrator.getCurrentAndPTAAndSAIfExistsForUser(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), implicitly, implicitly)
         whenReady(res.value) { result =>
           result shouldBe Right(ptEnrolmentDataModel(Some(CREDENTIAL_ID_1)))
         }
@@ -346,7 +355,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
       s"the accountType is $accountType" should {
         s"return the $IncorrectUserType containing redirectUrl" in {
 
-          val res = orchestrator.getSAForPTAlreadyEnrolledDetails(requestWithAccountType(accountType), implicitly, implicitly)
+          val res = orchestrator.getCurrentAndPTAAndSAIfExistsForUser(requestWithAccountType(accountType), implicitly, implicitly)
           whenReady(res.value) { result =>
             result shouldBe Left(IncorrectUserType((UrlPaths.returnUrl), accountType))
           }

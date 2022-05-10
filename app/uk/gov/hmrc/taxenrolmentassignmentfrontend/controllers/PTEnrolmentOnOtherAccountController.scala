@@ -16,21 +16,19 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
-import cats.data.EitherT
 import com.google.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.controller.WithDefaultFormBinding
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.PT_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnotherAccount
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class PTEnrolmentOnOtherAccountController @Inject()(
@@ -50,7 +48,7 @@ class PTEnrolmentOnOtherAccountController @Inject()(
 
   def view(): Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).async { implicit request =>
 
-    val res = multipleAccountsOrchestrator.getSAForPTAlreadyEnrolledDetails
+    val res = multipleAccountsOrchestrator.getCurrentAndPTAAndSAIfExistsForUser
 
     res.value.map {
       case Right(accountDetails) =>

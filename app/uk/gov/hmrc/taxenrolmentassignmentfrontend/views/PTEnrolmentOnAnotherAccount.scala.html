@@ -29,7 +29,7 @@ summaryRow: CreateSummaryRow,
 govukInsetText : GovukInsetText
 )
 
-@(ptEnrolmentOtherAccountViewModel: PTEnrolmentOtherAccountViewModel)(implicit request: Request[AnyRef], messages: Messages, appConfig: AppConfig)
+@(ptEnrolmentOtherAccountViewModel: PTEnrolmentOnOtherAccount)(implicit request: Request[AnyRef], messages: Messages, appConfig: AppConfig)
 
 @content = {
     <a class = "govuk-link" href=@routes.ReportSuspiciousIDController.viewNoSA>@messages("ptEnrolmentOnOtherAccount.linkText")</a>

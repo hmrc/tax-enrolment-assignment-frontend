@@ -36,6 +36,6 @@ object PTEnrolmentOtherAccountMesages {
     "To access your Self Assessment sign in again with the above user ID."
   val saText3 =
     "The user ID you are currently signed in with can access Self Assessment."
-  val saUrl = "/protect-tax-info/logout"
+  val saUrl = "/protect-tax-info/logout" //todo amend to  AppConfig val
 
 }

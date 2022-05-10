@@ -172,7 +172,7 @@ object TestData {
   )
 
 
-def ptEnrolmentDataModel(saUserCred : Option[String], ptAccountDetails:AccountDetails = accountDetailsWithPT): PTEnrolmentOtherAccountViewModel  = PTEnrolmentOtherAccountViewModel(
+def ptEnrolmentDataModel(saUserCred : Option[String], ptAccountDetails:AccountDetails = accountDetailsWithPT): PTEnrolmentOnOtherAccount  = PTEnrolmentOnOtherAccount(
   currentAccountDetails =accountDetails ,
   ptAccountDetails = ptAccountDetails,
   saUserCred = saUserCred

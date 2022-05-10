@@ -139,7 +139,7 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
           .getElementsByClass(Selectors.body)
           .get(2)
           .select("a")
-          .attr("href") shouldBe "/protect-tax-info/logout"
+          .attr("href") shouldBe PTEnrolmentOtherAccountMesages.saUrl
       }
     }
     "contain a summary list" that {
@@ -208,7 +208,7 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
       "contains a link to report suspicious Id" in {
         textElement
           .select("a")
-          .attr("href") shouldBe "/protect-tax-info/no-pt-enrolment/contact-hmrc-pta"
+          .attr("href") shouldBe PTEnrolmentOtherAccountMesages.fraudReportingUrl
       }
     }
 

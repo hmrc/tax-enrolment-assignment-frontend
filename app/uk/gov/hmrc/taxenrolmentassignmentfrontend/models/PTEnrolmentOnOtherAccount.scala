@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 
-case class PTEnrolmentOtherAccountViewModel(
+case class PTEnrolmentOnOtherAccount(
                                              currentAccountDetails: AccountDetails,
                                              ptAccountDetails: AccountDetails,
                                              saUserCred: Option[String]

@@ -31,7 +31,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTA
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logNoUserFoundWithPTEnrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, CurrentAccountDetailsPTAccountDetailsSAAccountDetailsIfExists, PTEnrolmentOtherAccountViewModel, UsersAssignedEnrolment}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, CADetailsPTADetailsSADetailsIfExists, PTEnrolmentOnOtherAccount, UsersAssignedEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, SilentAssignmentService, UsersGroupsSearchService}
@@ -201,9 +201,9 @@ class MultipleAccountsOrchestrator @Inject()(
   def getCurrentAndPTAAndSAIfExistsForUser(implicit requestWithUserDetails: RequestWithUserDetailsFromSessionAndMongo[_],
                                                 hc: HeaderCarrier,
                                                 ec: ExecutionContext
-                                               ): TEAFResult[PTEnrolmentOtherAccountViewModel]  = {
+                                               ): TEAFResult[PTEnrolmentOnOtherAccount]  = {
     getSAForPTAlreadyEnrolledDetails.map { model =>
-      PTEnrolmentOtherAccountViewModel(
+      PTEnrolmentOnOtherAccount(
         model.currentAccountDetails,
         model.ptAccountDetails,
         if (requestWithUserDetails.userDetails.hasSAEnrolment) {
@@ -219,7 +219,7 @@ class MultipleAccountsOrchestrator @Inject()(
                                         implicit requestWithUserDetails: RequestWithUserDetailsFromSessionAndMongo[_],
                                         hc: HeaderCarrier,
                                         ec: ExecutionContext
-                                      ): TEAFResult[CurrentAccountDetailsPTAccountDetailsSAAccountDetailsIfExists] = {
+                                      ): TEAFResult[CADetailsPTADetailsSADetailsIfExists] = {
 
     def getSAAccountDetails: TEAFResult[Option[AccountDetails]] = {
       if (!requestWithUserDetails.userDetails.hasSAEnrolment) {
@@ -244,7 +244,7 @@ class MultipleAccountsOrchestrator @Inject()(
         saOnOtherAccountDetails <- getSAAccountDetails
       }
       yield
-        CurrentAccountDetailsPTAccountDetailsSAAccountDetailsIfExists(
+        CADetailsPTADetailsSADetailsIfExists(
           currentAccountDetails,
           ptAccountDetails,
           saOnOtherAccountDetails)

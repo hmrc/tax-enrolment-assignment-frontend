@@ -39,7 +39,7 @@ import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SINGLE_ACCOUNT
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{EACDConnector, IVConnector, TaxEnrolmentsConnector}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{EACDConnector, IVConnector, LegacyAuthConnector, TaxEnrolmentsConnector}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{ErrorHandler, SignOutController}
@@ -88,6 +88,7 @@ trait TestFixture
   lazy val errorHandler: ErrorHandler = new ErrorHandler(errorView, logger, mcc)
   lazy val logger: EventLoggerService = new EventLoggerService()
   implicit val appConfig: AppConfig = injector.instanceOf[AppConfig]
+  val mockAppConfig: AppConfig      = mock[AppConfig]
   lazy val messagesApi: MessagesApi = inject[MessagesApi]
   implicit lazy val messages: Messages = messagesApi.preferred(fakeRequest)
   lazy val UCView: UnderConstructionView = inject[UnderConstructionView]
@@ -96,6 +97,7 @@ trait TestFixture
   val mockTaxEnrolmentsConnector: TaxEnrolmentsConnector =
     mock[TaxEnrolmentsConnector]
   val mockEacdConnector: EACDConnector = mock[EACDConnector]
+  val mockLegacyAuthConnector = mock[LegacyAuthConnector]
   val mockEacdService: EACDService = mock[EACDService]
   val mockUsersGroupService: UsersGroupsSearchService =
     mock[UsersGroupsSearchService]
@@ -116,11 +118,10 @@ trait TestFixture
       )
       .withCSRFToken
       .asInstanceOf[FakeRequest[AnyContentAsEmpty.type]]
-  val testAppConfig: AppConfig = app.injector.instanceOf[AppConfig]
 
   val errorView: ErrorTemplate = app.injector.instanceOf[ErrorTemplate]
   lazy val mockAuthAction =
-    new AuthAction(mockAuthConnector, testBodyParser, logger, testAppConfig)
+    new AuthAction(mockAuthConnector, testBodyParser, logger, appConfig)
   lazy val mockAccountMongoDetailsAction =
     new AccountMongoDetailsAction(mockAccountCheckOrchestrator, testBodyParser, errorHandler)
 
@@ -132,7 +133,6 @@ trait TestFixture
       stubBodyParser[AnyContent](),
       stubMessagesApi()
     )
-
 
   lazy val mockSignOutController = mock[SignOutController]
 

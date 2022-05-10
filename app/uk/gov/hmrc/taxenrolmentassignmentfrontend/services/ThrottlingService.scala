@@ -45,22 +45,23 @@ class ThrottlingService @Inject()(legacyAuthConnector: LegacyAuthConnector, appC
     }
   }
 
-  private def addPTEnrolmentToEnrolments(currentEnrolments: Set[Enrolment], nino: String): Set[Enrolment] = {
+  private[services] def addPTEnrolmentToEnrolments(currentEnrolments: Set[Enrolment], nino: String): Set[Enrolment] = {
     currentEnrolments + newPTEnrolment(nino)
   }
 
-  private def newPTEnrolment(nino: String): Enrolment = {
+  private[services] def newPTEnrolment(nino: String): Enrolment = {
     Enrolment(s"$hmrcPTKey", Seq(EnrolmentIdentifier("NINO", nino)), "Activated", None)
   }
-  def isNinoWithinThrottleThreshold(nino: String, percentageToThrottle: Int): Boolean = {
+  private[services] def isNinoWithinThrottleThreshold(nino: String, percentageToThrottle: Int): Boolean = {
     percentageToThrottle match {
       case n if n >= 100 => false
       case n if n < 0 => throw new IllegalArgumentException(s"percentage to throttle must be greater than 0, current percentage: $percentageToThrottle")
+      case _ if nino.length != 9 => throw new IllegalArgumentException(s"nino is incorrect length ${nino.length}")
       case n => Try(nino.substring(6,8).toInt).map(ninoNumber => ninoNumber <= n).getOrElse(throw new IllegalArgumentException(s"nino was not valid format for throttle"))
     }
   }
 
-  private def shouldAccountTypeBeThrottled(accountType: AccountTypes.Value,
+    private[services] def shouldAccountTypeBeThrottled(accountType: AccountTypes.Value,
                                            percentageToThrottle: Int,
                                            nino: String): Boolean = {
     accountType != SINGLE_ACCOUNT && isNinoWithinThrottleThreshold(nino, percentageToThrottle)

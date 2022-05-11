@@ -17,14 +17,10 @@
 package helpers
 
 import java.time.LocalDateTime
-
 import org.mongodb.scala.model.Filters
-import play.api.libs.json.{Format, JsString}
+import play.api.libs.json.{Format, JsString, JsValue}
 import uk.gov.hmrc.http.cache.client.CacheMap
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.{
-  CascadeUpsert,
-  SessionRepository
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.{CascadeUpsert, SessionRepository}
 
 import scala.concurrent.Future
 
@@ -48,6 +44,11 @@ trait SessionCacheOperations {
         updatedCacheMap
       }
     }
+  }
+
+  def save(sessionId: String,
+           dataMap: Map[String, JsValue]): Future[Boolean] = {
+    sessionRepository().upsert(CacheMap(sessionId, dataMap))
   }
 
   def removeAll(sessionID: String): Future[Boolean] = {

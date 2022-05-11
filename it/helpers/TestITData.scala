@@ -16,11 +16,13 @@
 
 package helpers
 
+import java.util.UUID
+
 import play.api.libs.json._
 import uk.gov.hmrc.auth.core.AffinityGroup.Individual
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
-import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolment, Enrolments}
 import uk.gov.hmrc.auth.core.retrieve.Credentials
+import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolment, Enrolments}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.UserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models._
 
@@ -66,6 +68,9 @@ object TestITData {
     )
   }
 
+  val randomId = UUID.randomUUID().toString
+  val randomSessionId = s"sessionId-$randomId"
+  val randomXSessionId: (String, String) = "X-Session-ID" -> randomSessionId
   val sessionId = "sessionId-eb3158c2-0aff-4ce8-8d1b-f2208ace52fe"
   val xSessionId: (String, String) = "X-Session-ID" -> sessionId
   val xRequestId: (String, String) = "X-Request-ID" -> sessionId
@@ -168,6 +173,11 @@ object TestITData {
     lastAccessedTimestamp = "2022-01-16T14:40:05Z",
     additionalFactors = Some(List(AdditonalFactors("sms", Some("07783924321"))))
   )
+
+  val usersGroupSearchResponsePTEnrolment =
+    usersGroupSearchResponse.copy(obfuscatedUserId = "********1234")
+  val usersGroupSearchResponseSAEnrolment =
+    usersGroupSearchResponse.copy(obfuscatedUserId = "********1243")
 
   def additionalFactorsJson(additionalFactors: List[AdditonalFactors]) =
     additionalFactors.foldLeft[JsArray](Json.arr()) { (a, b) =>

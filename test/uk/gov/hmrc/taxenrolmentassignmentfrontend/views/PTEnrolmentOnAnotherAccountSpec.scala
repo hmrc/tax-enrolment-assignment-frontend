@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.views
 
 import play.api.test.FakeRequest
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.PTEnrolmentOtherAccountMesages
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
   AccountDetails,
@@ -57,30 +57,67 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
     5 -> MFADetails("Authenticator app", "HRMC APP")
   )
 
-  val accountDetails =
-    AccountDetails(
-      "credId",
-      "3214",
-      Some("email1@test.com"),
-      "Yesterday",
-      mfaDetails
-    )
+  val testAccountDetails = AccountDetails(
+    "credId",
+    userId = USER_ID,
+    email = Some("email.otherUser@test.com"),
+    lastLoginDate = "27 February 2022 at 12:00 PM",
+    mfaDetails
+  )
+  val testAccountDetailsWithSA = AccountDetails(
+    "credId",
+    userId = PT_USER_ID,
+    email = Some("email.otherUser@test.com"),
+    lastLoginDate = "27 February 2022 at 12:00 PM",
+    mfaDetails,
+    hasSA = Some(true)
+  )
 
-  val htmlWithSA =
-    view(accountDetails, true)(FakeRequest(), testMessages, appConfigForTest)
+  val accountDetailsWithNoEmail: AccountDetails = AccountDetails(
+    "credId",
+    userId = "9871",
+    email = None,
+    lastLoginDate = "27 February 2022 at 12:00 PM",
+    mfaDetails = List(MFADetails("mfaDetails.text", "26543"))
+  )
 
-  val documentWithSA = doc(htmlWithSA)
-
-  val htmlNoEmail =
-    view(accountDetails.copy(email = None), false)(
+  val htmlSignedInWithSA =
+    view(ptEnrolmentDataModel(Some(USER_ID), testAccountDetailsWithSA))(
       FakeRequest(),
       testMessages,
       appConfigForTest
     )
+
+  val htmlWithSA =
+    view(ptEnrolmentDataModel(Some(PT_USER_ID), testAccountDetailsWithSA))(
+      FakeRequest(),
+      testMessages,
+      appConfigForTest
+    )
+
+  val htmlOtherAccountWithSA =
+    view(ptEnrolmentDataModel(Some(PT_USER_ID), testAccountDetails))(
+      FakeRequest(),
+      testMessages,
+      appConfigForTest
+    )
+
+  val documentWithSA = doc(htmlWithSA)
+  val documentSignedInWithSA = doc(htmlSignedInWithSA)
+  val documentOtherAccountWithSA = doc(htmlOtherAccountWithSA)
+
+  val htmlNoEmail =
+    view(
+      ptEnrolmentDataModel(Some(NO_EMAIL_USER_ID), accountDetailsWithNoEmail)
+    )(FakeRequest(), testMessages, appConfigForTest)
   val documentNoEmail = doc(htmlNoEmail)
 
   val html =
-    view(accountDetails, false)(FakeRequest(), testMessages, appConfigForTest)
+    view(ptEnrolmentDataModel(None, testAccountDetails))(
+      FakeRequest(),
+      testMessages,
+      appConfigForTest
+    )
   val document = doc(html)
 
   "PTEnrolmentOnAnotherAccount" should {
@@ -104,9 +141,11 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
         textElement.text shouldBe PTEnrolmentOtherAccountMesages.text1
       }
       "contains a link to signin again" in {
-        textElement
+        documentWithSA
+          .getElementsByClass(Selectors.body)
+          .get(2)
           .select("a")
-          .attr("href") shouldBe "/protect-tax-info/logout"
+          .attr("href") shouldBe PTEnrolmentOtherAccountMesages.saUrl
       }
     }
     "contain a summary list" that {
@@ -120,7 +159,7 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
         summaryListRows
           .get(0)
           .getElementsByClass(Selectors.summaryListValue)
-          .text() shouldBe s"Ending with ${accountDetails.userId}"
+          .text() shouldBe s"Ending with ${testAccountDetailsWithSA.userId}"
       }
       "includes the email" when {
         "the email is present in accountDetails" in {
@@ -131,7 +170,7 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
           summaryListRows
             .get(1)
             .getElementsByClass(Selectors.summaryListValue)
-            .text() shouldBe accountDetails.email.get
+            .text() shouldBe testAccountDetails.email.get
         }
       }
       "does not include the email" when {
@@ -150,7 +189,7 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
         summaryListRows
           .get(2)
           .getElementsByClass(Selectors.summaryListValue)
-          .text() shouldBe accountDetails.lastLoginDate
+          .text() shouldBe testAccountDetails.lastLoginDate
       }
       elementsToMFADetails.foreach {
         case (elementNumber, mfaDetails) =>
@@ -168,12 +207,11 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
     }
     "contains a link for if userId not recognised" that {
       val textElement = documentWithSA
-        .getElementsByClass(Selectors.body)
-        .get(1)
+        .getElementById("inset_text")
       "has the correct text" in {
         textElement.text() shouldBe PTEnrolmentOtherAccountMesages.notMyUserId
       }
-      "has the link to fraud reporting" in {
+      "contains a link to report suspicious Id" in {
         textElement
           .select("a")
           .attr("href") shouldBe PTEnrolmentOtherAccountMesages.fraudReportingUrl
@@ -181,12 +219,12 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
     }
 
     "contain self-assessment information" when {
-      "currentAccountHasSA is true" that {
-        val textElement = documentWithSA
+      "another account outside the session holds the PT enrolment session and also has access to SA" that {
+        val textElement = documentOtherAccountWithSA
           .getElementsByClass(Selectors.body)
           .get(2)
         "has the expected heading" in {
-          documentWithSA
+          documentOtherAccountWithSA
             .getElementsByClass(Selectors.saHeading)
             .text() shouldBe PTEnrolmentOtherAccountMesages.saHeading
         }
@@ -199,9 +237,46 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
             .attr("href") shouldBe PTEnrolmentOtherAccountMesages.saUrl
         }
       }
+      "the current account has SA but the PT enrolment is on another account" that {
+        val textElement = documentWithSA
+          .getElementsByClass(Selectors.body)
+          .get(2)
+        "has the expected heading" in {
+          documentWithSA
+            .getElementsByClass(Selectors.saHeading)
+            .text() shouldBe PTEnrolmentOtherAccountMesages.saHeading
+        }
+        "has the expected text" in {
+          textElement.text() shouldBe PTEnrolmentOtherAccountMesages.saText2
+        }
+        "has a link to self-assessment" in {
+          textElement
+            .select("a")
+            .attr("href") shouldBe PTEnrolmentOtherAccountMesages.saUrl
+        }
+      }
+
+      "the account in session has access to SA and has the PT enrolment" that {
+        val textElement = documentSignedInWithSA
+          .getElementsByClass(Selectors.body)
+          .get(2)
+        "has the expected heading" in {
+          documentWithSA
+            .getElementsByClass(Selectors.saHeading)
+            .text() shouldBe PTEnrolmentOtherAccountMesages.saHeading
+        }
+        "has the expected text" in {
+          textElement.text() shouldBe PTEnrolmentOtherAccountMesages.saText3
+        }
+        "has a link to self-assessment" in {
+          textElement
+            .select("a")
+            .attr("href") shouldBe PTEnrolmentOtherAccountMesages.saUrl
+        }
+      }
     }
     "not contain self-assessment information" when {
-      "currentAccountHasSA is true" in {
+      "the user does not have an SA enrolment on any associated accounts" in {
         document
           .getElementsByClass(Selectors.saHeading)
           .size() shouldBe 0

@@ -22,13 +22,7 @@ import uk.gov.hmrc.auth.core.AffinityGroup.Individual
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.authorise.Predicate
-import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{
-  affinityGroup,
-  allEnrolments,
-  credentials,
-  groupIdentifier,
-  nino
-}
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals._
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
@@ -40,12 +34,13 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
   SINGLE_ACCOUNT
 }
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.UserDetailsFromSession
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{EACDEnrolment => _, _}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
   IVNinoStoreEntry,
   IdentifiersOrVerifiers,
   UserEnrolment,
-  UsersAssignedEnrolment
+  UsersAssignedEnrolment,
+  EACDEnrolment => _,
+  _
 }
 
 object TestData {
@@ -53,6 +48,9 @@ object TestData {
   val NINO = "testNino"
   val GROUP_ID = "D37DB2E1-CF03-42E8-B151-E17300FFCF78"
   val CREDENTIAL_ID = "credId123"
+  val USER_ID = "6037"
+  val PT_USER_ID = "2341"
+  val NO_EMAIL_USER_ID = "9871"
   val CREDENTIAL_ID_1 = "6102202884164541"
   val UTR = "1234567890"
   val creds = Credentials(CREDENTIAL_ID, GovernmentGateway.toString)
@@ -183,10 +181,28 @@ object TestData {
 
   val accountDetails: AccountDetails = AccountDetails(
     credId = CREDENTIAL_ID,
-    userId = "6037",
+    userId = USER_ID,
     email = Some("email1@test.com"),
     lastLoginDate = "27 February 2022 at 12:00 PM",
     mfaDetails = List(MFADetails("mfaDetails.text", "24321"))
+  )
+
+  val accountDetailsWithPT: AccountDetails = AccountDetails(
+    credId = CREDENTIAL_ID_1,
+    userId = PT_USER_ID,
+    email = Some("email.otherUser@test.com"),
+    lastLoginDate = "27 February 2022 at 12:00 PM",
+    mfaDetails = List(MFADetails("mfaDetails.text", "26543")),
+    hasSA = Some(true)
+  )
+
+  def ptEnrolmentDataModel(
+    saUserCred: Option[String],
+    ptAccountDetails: AccountDetails = accountDetailsWithPT
+  ): PTEnrolmentOnOtherAccount = PTEnrolmentOnOtherAccount(
+    currentAccountDetails = accountDetails,
+    ptAccountDetails = ptAccountDetails,
+    saUserCred = saUserCred
   )
 
   val usersGroupSearchResponse = UsersGroupResponse(

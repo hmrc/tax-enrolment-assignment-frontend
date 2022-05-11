@@ -23,14 +23,18 @@ object PTEnrolmentOtherAccountMesages {
   val heading =
     "We have found your personal tax account under a different Government Gateway user ID"
   val text1 =
-    "To access your personal tax information you need to sign in again with the following user ID:"
+    s"To protect your information, access to your personal tax account was limited to the user ID below, ending with 1234."
   val signoutUrl = "http://test/signout"
-  val notMyUserId = "This user ID does not belong to me"
-  //TODO remove fraud reporting url after consultation with leads, as it requires other changes such remove couple of tests etc etc
+  val notMyUserId = "The above user ID does not belong to me"
   val fraudReportingUrl =
     "/protect-tax-info/no-pt-enrolment/contact-hmrc-pta"
   val saHeading = "Access to Self Assessment"
-  val saText = "Your current user ID can access Self Assessment."
-  val saUrl = "http://test/self-assessment"
+  val saText =
+    s"To access your Self Assessment you need to sign in again with user ID ending with 1243."
+  val saText2 =
+    "To access your Self Assessment sign in again with the above user ID."
+  val saText3 =
+    "The user ID you are currently signed in with can access Self Assessment."
+  val saUrl = "/protect-tax-info/logout"
 
 }

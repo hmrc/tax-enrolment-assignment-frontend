@@ -24,7 +24,7 @@ import play.api.libs.json.Json
 import play.api.mvc.Results.Ok
 import play.api.test.FakeRequest
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_OTHER_USER}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSessionAndMongo, ThrottleAction, UserDetailsFromSession}
 import play.api.test.Helpers._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.hmrcPTKey
@@ -39,13 +39,13 @@ class ThrottleActionISpec extends TestHelper with Status {
     FakeRequest(),
     UserDetailsFromSession("123", "QQ123456A", "gID", Enrolments(Set(Enrolment("foo"))), false, false),
     "sesh",
-    AccountDetailsFromMongo(PT_ASSIGNED_TO_OTHER_USER, "redirectURL")
+    AccountDetailsFromMongo(SA_ASSIGNED_TO_OTHER_USER, "redirectURL")
   )
   val exampleRequestAboveThreshold = RequestWithUserDetailsFromSessionAndMongo(
     FakeRequest(),
     UserDetailsFromSession("123", "QQ123499A", "gID", Enrolments(Set(Enrolment("foo"))), false, false),
     "sesh",
-    AccountDetailsFromMongo(PT_ASSIGNED_TO_OTHER_USER, "redirectURL")
+    AccountDetailsFromMongo(SA_ASSIGNED_TO_OTHER_USER, "redirectURL")
   )
   val newEnrolment = (nino: String) => Enrolment(s"$hmrcPTKey", Seq(EnrolmentIdentifier("NINO", nino)), "Activated", None)
   val exampleControllerFunction = (r: RequestWithUserDetailsFromSessionAndMongo[_]) => Future.successful(Ok("no throttle"))

@@ -84,11 +84,9 @@ class ThrottlingServiceSpec extends TestFixture with FutureAwaits with DefaultAw
     case class TestScenario(testName: String, nino: String, percentage: Int, accountType: AccountTypes.Value)
     "return true" when {
       List(
-        TestScenario(s"account type is $PT_ASSIGNED_TO_OTHER_USER, valid Nino below threshold", "QQ123405A", 6, PT_ASSIGNED_TO_OTHER_USER),
         TestScenario(s"account type is $MULTIPLE_ACCOUNTS, valid Nino below threshold", "QQ123405A", 6, MULTIPLE_ACCOUNTS),
         TestScenario(s"account type is $SA_ASSIGNED_TO_CURRENT_USER, valid Nino below threshold", "QQ123405A", 6, SA_ASSIGNED_TO_CURRENT_USER),
         TestScenario(s"account type is $SA_ASSIGNED_TO_OTHER_USER, valid Nino below threshold", "QQ123405A", 6, SA_ASSIGNED_TO_OTHER_USER),
-        TestScenario(s"account type is $PT_ASSIGNED_TO_OTHER_USER, valid Nino equal to threshold", "QQ123405A", 5, PT_ASSIGNED_TO_OTHER_USER),
         TestScenario(s"account type is $MULTIPLE_ACCOUNTS, valid Nino equal to threshold", "QQ123405A", 5, MULTIPLE_ACCOUNTS),
         TestScenario(s"account type is $SA_ASSIGNED_TO_CURRENT_USER, valid Nino equal to threshold", "QQ123405A", 5, SA_ASSIGNED_TO_CURRENT_USER),
         TestScenario(s"account type is $SA_ASSIGNED_TO_OTHER_USER, vvalid Nino equal to threshold", "QQ123405A", 5, SA_ASSIGNED_TO_OTHER_USER)
@@ -100,7 +98,7 @@ class ThrottlingServiceSpec extends TestFixture with FutureAwaits with DefaultAw
     "return false" when {
       List(
         TestScenario(s"account type is $PT_ASSIGNED_TO_CURRENT_USER, Valid Nino below threshold", "QQ123405A", 6, PT_ASSIGNED_TO_CURRENT_USER),
-        TestScenario(s"account type is $PT_ASSIGNED_TO_OTHER_USER, valid Nino above threshold", "QQ123405A", 4, PT_ASSIGNED_TO_OTHER_USER),
+        TestScenario(s"account type is $PT_ASSIGNED_TO_OTHER_USER, Valid Nino below threshold", "QQ123405A", 6, PT_ASSIGNED_TO_OTHER_USER),
         TestScenario(s"account type is $MULTIPLE_ACCOUNTS, valid Nino above threshold", "QQ123405A", 4, MULTIPLE_ACCOUNTS),
         TestScenario(s"account type is $SA_ASSIGNED_TO_CURRENT_USER, valid Nino above threshold", "QQ123405A", 4, SA_ASSIGNED_TO_CURRENT_USER),
         TestScenario(s"account type is $SA_ASSIGNED_TO_OTHER_USER, valid Nino above threshold", "QQ123405A", 4, SA_ASSIGNED_TO_OTHER_USER),
@@ -112,7 +110,8 @@ class ThrottlingServiceSpec extends TestFixture with FutureAwaits with DefaultAw
         TestScenario(s"account type is $SINGLE_ACCOUNT, Valid Nino below threshold", "QQ123405A", 6, SINGLE_ACCOUNT),
         TestScenario(s"account type is $SINGLE_ACCOUNT, Valid Nino equal threshold", "QQ123406A", 6, SINGLE_ACCOUNT),
         TestScenario(s"account type is $SINGLE_ACCOUNT, Invalid Nino", "QQ", 1, SINGLE_ACCOUNT),
-        TestScenario(s"account type is $PT_ASSIGNED_TO_CURRENT_USER, Invalid Nino", "QQ", 1, PT_ASSIGNED_TO_CURRENT_USER)
+        TestScenario(s"account type is $PT_ASSIGNED_TO_CURRENT_USER, Invalid Nino", "QQ", 1, PT_ASSIGNED_TO_CURRENT_USER),
+        TestScenario(s"account type is $PT_ASSIGNED_TO_OTHER_USER, Invalid Nino", "QQ", 1, PT_ASSIGNED_TO_OTHER_USER)
       ).foreach(test =>
         s"${test.testName}" in {
           throttlingservice.shouldAccountTypeBeThrottled(test.accountType, test.percentage, test.nino) shouldBe false
@@ -120,7 +119,6 @@ class ThrottlingServiceSpec extends TestFixture with FutureAwaits with DefaultAw
     }
     "return Exception" when {
       List(
-        TestScenario(s"account type is $PT_ASSIGNED_TO_OTHER_USER, Invalid nino", "QQ", 1, PT_ASSIGNED_TO_OTHER_USER),
         TestScenario(s"account type is $MULTIPLE_ACCOUNTS, Invalid nino", "QQ", 1, MULTIPLE_ACCOUNTS),
         TestScenario(s"account type is $SA_ASSIGNED_TO_CURRENT_USER, Invalid nino", "QQ", 1, SA_ASSIGNED_TO_CURRENT_USER),
         TestScenario(s"account type is $SA_ASSIGNED_TO_OTHER_USER, Invalid nino", "QQ", 1, SA_ASSIGNED_TO_OTHER_USER)
@@ -155,7 +153,6 @@ class ThrottlingServiceSpec extends TestFixture with FutureAwaits with DefaultAw
     })
     s"return $ThrottleApplied" when {
       List(
-        TestScenario(s"account type is $PT_ASSIGNED_TO_OTHER_USER, Valid Nino below threshold auth call succeeds", "QQ123455A", 99, PT_ASSIGNED_TO_OTHER_USER),
         TestScenario(s"account type is $MULTIPLE_ACCOUNTS, Valid Nino below threshold auth call succeeds", "QQ123455A", 99, MULTIPLE_ACCOUNTS),
         TestScenario(s"account type is $SA_ASSIGNED_TO_CURRENT_USER, Valid Nino below threshold auth call succeeds", "QQ123455A", 99, SA_ASSIGNED_TO_CURRENT_USER),
         TestScenario(s"account type is $SA_ASSIGNED_TO_OTHER_USER, Valid Nino below threshold auth call succeeds", "QQ123455A", 99, SA_ASSIGNED_TO_OTHER_USER)
@@ -173,7 +170,7 @@ class ThrottlingServiceSpec extends TestFixture with FutureAwaits with DefaultAw
     s"return $ThrottleDoesNotApply" when {
       List(
         TestScenario(s"account type is $PT_ASSIGNED_TO_CURRENT_USER, Valid Nino below threshold, no auth call", "QQ123455A", 99, PT_ASSIGNED_TO_CURRENT_USER),
-        TestScenario(s"account type is $PT_ASSIGNED_TO_OTHER_USER, Valid Nino above threshold, no auth call", "QQ123455A", 54, PT_ASSIGNED_TO_OTHER_USER),
+        TestScenario(s"account type is $PT_ASSIGNED_TO_OTHER_USER,  Valid Nino below threshold, no auth call", "QQ123455A", 99, PT_ASSIGNED_TO_OTHER_USER),
         TestScenario(s"account type is $MULTIPLE_ACCOUNTS, Valid Nino above threshold, no auth call", "QQ123455A", 54, MULTIPLE_ACCOUNTS),
         TestScenario(s"account type is $SA_ASSIGNED_TO_CURRENT_USER, Valid Nino above threshold, no auth calls", "QQ123455A", 54, SA_ASSIGNED_TO_CURRENT_USER),
         TestScenario(s"account type is $SA_ASSIGNED_TO_OTHER_USER, Valid Nino above threshold, no auth call", "QQ123455A", 54, SA_ASSIGNED_TO_OTHER_USER),
@@ -191,7 +188,6 @@ class ThrottlingServiceSpec extends TestFixture with FutureAwaits with DefaultAw
     }
     "return Left Error" when {
         List(
-          TestScenario(s"account type is $PT_ASSIGNED_TO_OTHER_USER, Valid Nino below threshold auth call fails", validNonRealNino, 99, PT_ASSIGNED_TO_OTHER_USER),
           TestScenario(s"account type is $MULTIPLE_ACCOUNTS, Valid Nino below threshold auth call fails", validNonRealNino, 99, MULTIPLE_ACCOUNTS),
           TestScenario(s"account type is $SA_ASSIGNED_TO_CURRENT_USER, Valid Nino below threshold auth call fails", validNonRealNino, 99, SA_ASSIGNED_TO_CURRENT_USER),
           TestScenario(s"account type is $SA_ASSIGNED_TO_OTHER_USER, Valid Nino below threshold auth call fails", validNonRealNino, 99, SA_ASSIGNED_TO_OTHER_USER)

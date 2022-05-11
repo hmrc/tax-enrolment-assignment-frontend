@@ -21,7 +21,7 @@ import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_CURRENT_USER, SINGLE_ACCOUNT}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.LegacyAuthConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.hmrcPTKey
@@ -64,7 +64,7 @@ class ThrottlingService @Inject()(legacyAuthConnector: LegacyAuthConnector, appC
     private[services] def shouldAccountTypeBeThrottled(accountType: AccountTypes.Value,
                                            percentageToThrottle: Int,
                                            nino: String): Boolean = {
-    accountType != SINGLE_ACCOUNT && accountType != PT_ASSIGNED_TO_CURRENT_USER && isNinoWithinThrottleThreshold(nino, percentageToThrottle)
+    !List(SINGLE_ACCOUNT, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER).contains(accountType) && isNinoWithinThrottleThreshold(nino, percentageToThrottle)
   }
 
 }

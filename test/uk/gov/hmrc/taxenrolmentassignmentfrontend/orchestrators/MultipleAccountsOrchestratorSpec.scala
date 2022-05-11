@@ -221,15 +221,6 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
           .expects(USER_ID, *, *, *)
           .returning(createInboundResult(accountDetails.copy(hasSA = Some(true))))
 
-//        (mockMultipleAccountsOrchestrator
-//          .getSACredentialDetails(
-//            _: RequestWithUserDetailsFromSessionAndMongo[_],
-//            _: HeaderCarrier,
-//            _: ExecutionContext
-//          ))
-//          .expects( *, *, *)
-//          .returning(createInboundResult(accountDetails.copy(hasSA = Some(true))))
-
         val res = orchestrator.getCurrentAndPTAAndSAIfExistsForUser(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), implicitly, implicitly)
         whenReady(res.value) { result =>
           result shouldBe Right(ptEnrolmentDataModel(Some(USER_ID)))

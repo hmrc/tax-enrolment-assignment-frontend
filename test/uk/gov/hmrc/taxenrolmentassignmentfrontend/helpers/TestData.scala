@@ -154,8 +154,6 @@ object TestData {
     ivNinoStoreEntry4
   )
 
-  // accountDetails
-
   val accountDetails: AccountDetails = AccountDetails(
     userId =USER_ID,
     email = Some("email1@test.com"),
@@ -177,8 +175,6 @@ def ptEnrolmentDataModel(saUserCred : Option[String], ptAccountDetails:AccountDe
   ptAccountDetails = ptAccountDetails,
   saUserCred = saUserCred
 )
-
-  // userGroupSearchResponse
 
   val usersGroupSearchResponse = UsersGroupResponse(
     obfuscatedUserId = "********6037",

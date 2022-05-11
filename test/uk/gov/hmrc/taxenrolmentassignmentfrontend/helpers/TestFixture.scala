@@ -39,7 +39,7 @@ import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SINGLE_ACCOUNT
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{EACDConnector, IVConnector, TaxEnrolmentsConnector}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{EACDConnector, IVConnector, LegacyAuthConnector, TaxEnrolmentsConnector}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{ErrorHandler, SignOutController}
@@ -48,7 +48,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{randomAccoun
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, SilentAssignmentService, UsersGroupsSearchService}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, SilentAssignmentService, ThrottlingService, UsersGroupsSearchService}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.UnderConstructionView
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
@@ -96,6 +96,7 @@ trait TestFixture
   val mockTaxEnrolmentsConnector: TaxEnrolmentsConnector =
     mock[TaxEnrolmentsConnector]
   val mockEacdConnector: EACDConnector = mock[EACDConnector]
+  val mockLegacyAuthConnector = mock[LegacyAuthConnector]
   val mockEacdService: EACDService = mock[EACDService]
   val mockUsersGroupService: UsersGroupsSearchService =
     mock[UsersGroupsSearchService]
@@ -107,6 +108,7 @@ trait TestFixture
   val mockSilentAssignmentService: SilentAssignmentService =
     mock[SilentAssignmentService]
 
+  val mockThrottlingService = mock[ThrottlingService]
   implicit lazy val fakeRequest: FakeRequest[AnyContentAsEmpty.type] =
     FakeRequest("", requestPath)
       .withSession(
@@ -115,11 +117,10 @@ trait TestFixture
       )
       .withCSRFToken
       .asInstanceOf[FakeRequest[AnyContentAsEmpty.type]]
-  val testAppConfig: AppConfig = app.injector.instanceOf[AppConfig]
 
   val errorView: ErrorTemplate = app.injector.instanceOf[ErrorTemplate]
   lazy val mockAuthAction =
-    new AuthAction(mockAuthConnector, testBodyParser, logger, testAppConfig)
+    new AuthAction(mockAuthConnector, testBodyParser, logger, appConfig)
   lazy val mockAccountMongoDetailsAction =
     new AccountMongoDetailsAction(mockAccountCheckOrchestrator, testBodyParser, errorHandler)
 
@@ -131,7 +132,6 @@ trait TestFixture
       stubBodyParser[AnyContent](),
       stubMessagesApi()
     )
-
 
   lazy val mockSignOutController = mock[SignOutController]
 

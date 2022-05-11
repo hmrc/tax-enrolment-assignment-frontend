@@ -14,21 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums
 
-import play.api.libs.json.{Format, Json}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.IRSAKey
+object EnrolmentEnum extends Enumeration {
 
-case class KnownFactQueryForNINO(service: String,
-                                 knownFacts: List[IdentifiersOrVerifiers]) {
-  def this(nino: String) =
-    this(
-      service = s"$IRSAKey",
-      knownFacts = List(IdentifiersOrVerifiers("NINO", nino))
-    )
-}
+  val hmrcPTKey = Value("HMRC-PT")
+  val IRSAKey = Value("IR-SA")
+  val hmrcMTDITKey = Value("HMRC-MTD-IT")
+  val hmrcNIKey = Value("HMRC-NI")
 
-object KnownFactQueryForNINO {
-  implicit val format: Format[KnownFactQueryForNINO] =
-    Json.format[KnownFactQueryForNINO]
+  val saEnrolmentSet: Set[String] =
+    Set(IRSAKey.toString, hmrcMTDITKey.toString, hmrcNIKey.toString)
 }

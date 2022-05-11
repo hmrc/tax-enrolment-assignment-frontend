@@ -26,7 +26,7 @@ import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.UserDetailsFromSession
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{EACDEnrolment => _, _}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{IVNinoStoreEntry, IdentifiersOrVerifiers, UserEnrolment, UsersAssignedEnrolment}
 
 object TestData {
@@ -34,6 +34,9 @@ object TestData {
   val NINO = "testNino"
   val GROUP_ID = "D37DB2E1-CF03-42E8-B151-E17300FFCF78"
   val CREDENTIAL_ID = "credId123"
+  val USER_ID = "6037"
+  val PT_USER_ID = "2341"
+  val NO_EMAIL_USER_ID = "9871"
   val CREDENTIAL_ID_1 = "6102202884164541"
   val UTR = "1234567890"
   val creds = Credentials(CREDENTIAL_ID, GovernmentGateway.toString)
@@ -81,7 +84,8 @@ object TestData {
 
   val retrievals: Retrieval[
     Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String]
-  ] = nino and credentials and allEnrolments and groupIdentifier
+  ] =
+    nino and credentials and allEnrolments and groupIdentifier
 
   def retrievalResponse(
     optNino: Option[String] = Some(NINO),
@@ -108,7 +112,7 @@ object TestData {
       enrolments = ptEnrolmentOnly,
       hasPTEnrolment = true,
       hasSAEnrolment = false
-      )
+    )
   val userDetailsWithSAEnrolment =
     UserDetailsFromSession(
       CREDENTIAL_ID,
@@ -151,11 +155,26 @@ object TestData {
   )
 
   val accountDetails: AccountDetails = AccountDetails(
-    userId = "6037",
+    userId =USER_ID,
     email = Some("email1@test.com"),
     lastLoginDate = "27 February 2022 at 12:00 PM",
     mfaDetails = List(MFADetails("mfaDetails.text", "24321"))
   )
+
+  val accountDetailsWithPT: AccountDetails = AccountDetails(
+    userId = PT_USER_ID,
+    email = Some("email.otherUser@test.com"),
+    lastLoginDate = "27 February 2022 at 12:00 PM",
+    mfaDetails = List(MFADetails("mfaDetails.text", "26543")),
+    hasSA = Some(true)
+  )
+
+
+def ptEnrolmentDataModel(saUserCred : Option[String], ptAccountDetails:AccountDetails = accountDetailsWithPT): PTEnrolmentOnOtherAccount  = PTEnrolmentOnOtherAccount(
+  currentAccountDetails =accountDetails ,
+  ptAccountDetails = ptAccountDetails,
+  saUserCred = saUserCred
+)
 
   val usersGroupSearchResponse = UsersGroupResponse(
     obfuscatedUserId = "********6037",
@@ -217,8 +236,8 @@ object TestData {
     FakeRequest(method, url).withSession("sessionId" -> "FAKE_SESSION_ID")
 
   def buildFakePOSTRequestWithSessionId(
-    data: Map[String, String]
-  ): FakeRequest[AnyContentAsFormUrlEncoded] =
+                                         data: Map[String, String]
+                                       ): FakeRequest[AnyContentAsFormUrlEncoded] =
     FakeRequest("POST", "Not Used")
       .withSession("sessionId" -> "FAKE_SESSION_ID")
       .withFormUrlEncodedBody(data.toSeq: _*)

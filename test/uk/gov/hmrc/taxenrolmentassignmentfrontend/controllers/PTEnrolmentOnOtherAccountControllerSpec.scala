@@ -23,26 +23,11 @@ import uk.gov.hmrc.auth.core.Enrolments
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.PT_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
-  IncorrectUserType,
-  NoPTEnrolmentWhenOneExpected
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{
-  accountDetails,
-  buildFakeRequestWithSessionId,
-  predicates,
-  retrievalResponse,
-  retrievals,
-  saEnrolmentOnly,
-  _
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{
-  TestFixture,
-  UrlPaths
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnotherAccount
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -64,7 +49,8 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
 
   "view" when {
     "the user with no SA has another account with PT enrolment" should {
-      "render the pt on another page" in {
+      "render the pt on another page with no Access SA text" in {
+        val ptEnrolmentDataModelNone = ptEnrolmentDataModel(None)
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -78,27 +64,20 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
           .returning(Future.successful(retrievalResponse()))
 
         (mockMultipleAccountsOrchestrator
-          .checkValidAccountType(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
-          ))
-          .expects(List(PT_ASSIGNED_TO_OTHER_USER), *)
-          .returning(Right(PT_ASSIGNED_TO_OTHER_USER))
-
-        (mockMultipleAccountsOrchestrator
-          .getPTCredentialDetails(
+          .getCurrentAndPTAAndSAIfExistsForUser(
             _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
           .expects(*, *, *)
-          .returning(createInboundResult(accountDetails))
+          .returning(createInboundResult(ptEnrolmentDataModelNone))
         mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe OK
-        contentAsString(result) shouldBe view(accountDetails, false)(
+        contentAsString(result) shouldBe view(ptEnrolmentDataModelNone)(
           fakeRequest,
           stubMessages(),
           appConfig
@@ -106,8 +85,11 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
       }
     }
 
-    "the user with SA has another account with PT enrolment" should {
-      "render the pt on another page" in {
+    "the current user with SA has another account with PT enrolment" should {
+      "render the pt on another page with Access SA text" in {
+
+        val ptEnrolmentModel = ptEnrolmentDataModel(Some(USER_ID))
+
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -121,28 +103,145 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
           .returning(
             Future.successful(retrievalResponse(enrolments = saEnrolmentOnly))
           )
-        (mockMultipleAccountsOrchestrator
-          .checkValidAccountType(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
-          ))
-          .expects(List(PT_ASSIGNED_TO_OTHER_USER), *)
-          .returning(Right(PT_ASSIGNED_TO_OTHER_USER))
 
         (mockMultipleAccountsOrchestrator
-          .getPTCredentialDetails(
+          .getCurrentAndPTAAndSAIfExistsForUser(
             _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
           .expects(*, *, *)
-          .returning(createInboundResult(accountDetails))
+          .returning(createInboundResult(ptEnrolmentModel))
         mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe OK
-        contentAsString(result) shouldBe view(accountDetails, true)(
+        contentAsString(result) shouldBe view(ptEnrolmentModel)(
+          fakeRequest,
+          stubMessages(),
+          appConfig
+        ).toString
+      }
+    }
+
+    "the signed user has SA enrolment in session and PT enrolment on another account" should {
+      "render the pt on another page with Access Self Assessment text" in {
+
+        val ptEnrolmentModel = ptEnrolmentDataModel(Some(USER_ID))
+
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ]
+            ]
+          )(_: HeaderCarrier, _: ExecutionContext))
+          .expects(predicates, retrievals, *, *)
+          .returning(
+            Future.successful(retrievalResponse(enrolments = saEnrolmentOnly))
+          )
+
+        (mockMultipleAccountsOrchestrator
+          .getCurrentAndPTAAndSAIfExistsForUser(
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+            _: HeaderCarrier,
+            _: ExecutionContext
+          ))
+          .expects(*, *, *)
+          .returning(createInboundResult(ptEnrolmentModel))
+        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+
+        val result = controller.view
+          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+
+        status(result) shouldBe OK
+        contentAsString(result) shouldBe view(ptEnrolmentModel)(
+          fakeRequest,
+          stubMessages(),
+          appConfig
+        ).toString
+      }
+    }
+
+    "the signed user has another account with SA enrolment which has both PT enrolment" should {
+      "render the pt on another page with Access Self Assessment text" in {
+
+        val ptEnrolmentModel = ptEnrolmentDataModel(Some(PT_USER_ID))
+
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ]
+            ]
+          )(_: HeaderCarrier, _: ExecutionContext))
+          .expects(predicates, retrievals, *, *)
+          .returning(
+            Future.successful(retrievalResponse(enrolments = saEnrolmentOnly))
+          )
+
+        (mockMultipleAccountsOrchestrator
+          .getCurrentAndPTAAndSAIfExistsForUser(
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+            _: HeaderCarrier,
+            _: ExecutionContext
+          ))
+          .expects(*, *, *)
+          .returning(createInboundResult(ptEnrolmentModel))
+        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+
+        val result = controller.view
+          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+
+        status(result) shouldBe OK
+        contentAsString(result) shouldBe view(ptEnrolmentModel)(
+          fakeRequest,
+          stubMessages(),
+          appConfig
+        ).toString
+      }
+    }
+
+    "the signed user has other accounts with SA enrolment and a different one with PT enrolment" should {
+      "render the pt on another page with Access Self Assessment text" in {
+
+        val ptEnrolmentModel = ptEnrolmentDataModel(Some("8764"))
+
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ]
+            ]
+          )(_: HeaderCarrier, _: ExecutionContext))
+          .expects(predicates, retrievals, *, *)
+          .returning(
+            Future.successful(retrievalResponse(enrolments = saEnrolmentOnly))
+          )
+
+        (mockMultipleAccountsOrchestrator
+          .getCurrentAndPTAAndSAIfExistsForUser(
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+            _: HeaderCarrier,
+            _: ExecutionContext
+          ))
+          .expects(*, *, *)
+          .returning(createInboundResult(ptEnrolmentModel))
+        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+
+        val result = controller.view
+          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+
+        status(result) shouldBe OK
+        contentAsString(result) shouldBe view(ptEnrolmentModel)(
           fakeRequest,
           stubMessages(),
           appConfig
@@ -152,6 +251,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
 
     s"the user does not have an account type of $PT_ASSIGNED_TO_OTHER_USER" should {
       s"redirect to ${UrlPaths.accountCheckPath}" in {
+        val ptEnrolmentModel = ptEnrolmentDataModel(Some(USER_ID))
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -165,14 +265,18 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
           .returning(Future.successful(retrievalResponse()))
 
         (mockMultipleAccountsOrchestrator
-          .checkValidAccountType(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
+          .getCurrentAndPTAAndSAIfExistsForUser(
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+            _: HeaderCarrier,
+            _: ExecutionContext
           ))
-          .expects(List(PT_ASSIGNED_TO_OTHER_USER), *)
+          .expects(*, *, *)
           .returning(
-            Left(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
+            createInboundResultError(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
           )
         mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+
+
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
@@ -183,6 +287,9 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
 
     "the current user has a no PT enrolment on other account but session says it is other account" should {
       "render the error page" in {
+
+        val ptEnrolmentModel = ptEnrolmentDataModel(Some(USER_ID))
+
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -198,14 +305,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
           )
 
         (mockMultipleAccountsOrchestrator
-          .checkValidAccountType(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
-          ))
-          .expects(List(PT_ASSIGNED_TO_OTHER_USER), *)
-          .returning(Right(PT_ASSIGNED_TO_OTHER_USER))
-
-        (mockMultipleAccountsOrchestrator
-          .getPTCredentialDetails(
+          .getCurrentAndPTAAndSAIfExistsForUser(
             _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext

@@ -23,9 +23,9 @@ import play.api.libs.json.Format
 import play.api.mvc.AnyContent
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.cache.client.CacheMap
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, NoPTEnrolmentWhenOneExpected, NoSAEnrolmentWhenOneExpected, TaxEnrolmentAssignmentErrors}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, UrlPaths}
@@ -47,6 +47,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
       mockTeaSessionCache,
       mockUsersGroupService,
       mockSilentAssignmentService,
+      mockEacdService,
       logger
     )
 
@@ -127,6 +128,234 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
     }
   }
 
+  s"getCurrentAndPTAAndSAIfExistsForUser" when {
+    s"the accountType $PT_ASSIGNED_TO_OTHER_USER, no SA associated to the account" should {
+      "return a PTEnrolmentOtherAccountViewModel for the account details" in {
+
+        (mockUsersGroupService
+          .getAccountDetails(_: String)(
+            _: ExecutionContext,
+            _: HeaderCarrier,
+            _: RequestWithUserDetailsFromSession[AnyContent]
+          ))
+          .expects(CREDENTIAL_ID, *, *, *)
+          .returning(createInboundResult(accountDetails))
+
+        (mockTeaSessionCache
+          .getEntry(_: String)(
+            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: Format[UsersAssignedEnrolment]
+          ))
+          .expects("USER_ASSIGNED_PT_ENROLMENT", *, *)
+          .returning(Future.successful(Some(UsersAssignedEnrolment1)))
+
+        (mockUsersGroupService
+          .getAccountDetails(_: String)(
+            _: ExecutionContext,
+            _: HeaderCarrier,
+            _: RequestWithUserDetailsFromSession[AnyContent]
+          ))
+          .expects(CREDENTIAL_ID_1, *, *, *)
+          .returning(createInboundResult(accountDetailsWithPT.copy(userId = CREDENTIAL_ID_1,hasSA = None)))
+
+        (mockEacdService
+          .getUsersAssignedSAEnrolment(
+            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: HeaderCarrier,
+            _: ExecutionContext
+          ))
+          .expects( *, *, *)
+          .returning(createInboundResult(UsersAssignedEnrolment(None)))
+
+        val res = orchestrator.getCurrentAndPTAAndSAIfExistsForUser(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), implicitly, implicitly)
+        whenReady(res.value) { result =>
+          result shouldBe Right(ptEnrolmentDataModel(None,accountDetailsWithPT.copy(userId = CREDENTIAL_ID_1,hasSA = None)))
+        }
+      }
+    }
+
+    s"the accountType $PT_ASSIGNED_TO_OTHER_USER, account has SA in the current session" should {
+      "return a PTEnrolmentOtherAccountViewModel for the account details" in {
+
+        (mockUsersGroupService
+          .getAccountDetails(_: String)(
+            _: ExecutionContext,
+            _: HeaderCarrier,
+            _: RequestWithUserDetailsFromSession[AnyContent]
+          ))
+          .expects(CREDENTIAL_ID, *, *, *)
+          .returning(createInboundResult(accountDetails))
+
+        (mockTeaSessionCache
+          .getEntry(_: String)(
+            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: Format[UsersAssignedEnrolment]
+          ))
+          .expects("USER_ASSIGNED_PT_ENROLMENT", *, *)
+          .returning(Future.successful(Some(UsersAssignedEnrolment1)))
+
+        (mockUsersGroupService
+          .getAccountDetails(_: String)(
+            _: ExecutionContext,
+            _: HeaderCarrier,
+            _: RequestWithUserDetailsFromSession[AnyContent]
+          ))
+          .expects(CREDENTIAL_ID_1, *, *, *)
+          .returning(createInboundResult(accountDetailsWithPT))
+
+        (mockEacdService
+          .getUsersAssignedSAEnrolment(
+            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: HeaderCarrier,
+            _: ExecutionContext
+          ))
+          .expects( *, *, *)
+          .returning(createInboundResult(UsersAssignedEnrolment(Some(USER_ID))))
+
+        (mockUsersGroupService
+          .getAccountDetails(_: String)(
+            _: ExecutionContext,
+            _: HeaderCarrier,
+            _: RequestWithUserDetailsFromSession[AnyContent]
+          ))
+          .expects(USER_ID, *, *, *)
+          .returning(createInboundResult(accountDetails.copy(hasSA = Some(true))))
+
+        val res = orchestrator.getCurrentAndPTAAndSAIfExistsForUser(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), implicitly, implicitly)
+        whenReady(res.value) { result =>
+          result shouldBe Right(ptEnrolmentDataModel(Some(USER_ID)))
+        }
+      }
+    }
+
+    s"the accountType $PT_ASSIGNED_TO_OTHER_USER, account has SA on the another account that also has PT" should {
+      "return a PTEnrolmentOtherAccountViewModel for the account details" in {
+
+        (mockUsersGroupService
+          .getAccountDetails(_: String)(
+            _: ExecutionContext,
+            _: HeaderCarrier,
+            _: RequestWithUserDetailsFromSession[AnyContent]
+          ))
+          .expects(CREDENTIAL_ID, *, *, *)
+          .returning(createInboundResult(accountDetails))
+
+        (mockTeaSessionCache
+          .getEntry(_: String)(
+            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: Format[UsersAssignedEnrolment]
+          ))
+          .expects("USER_ASSIGNED_PT_ENROLMENT", *, *)
+          .returning(Future.successful(Some(UsersAssignedEnrolment1)))
+
+        (mockUsersGroupService
+          .getAccountDetails(_: String)(
+            _: ExecutionContext,
+            _: HeaderCarrier,
+            _: RequestWithUserDetailsFromSession[AnyContent]
+          ))
+          .expects(CREDENTIAL_ID_1, *, *, *)
+          .returning(createInboundResult(accountDetailsWithPT))
+
+        (mockEacdService
+          .getUsersAssignedSAEnrolment(
+            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: HeaderCarrier,
+            _: ExecutionContext
+          ))
+          .expects( *, *, *)
+          .returning(createInboundResult(UsersAssignedEnrolment(Some(PT_USER_ID))))
+
+        (mockUsersGroupService
+          .getAccountDetails(_: String)(
+            _: ExecutionContext,
+            _: HeaderCarrier,
+            _: RequestWithUserDetailsFromSession[AnyContent]
+          ))
+          .expects(PT_USER_ID, *, *, *)
+          .returning(createInboundResult(accountDetailsWithPT))
+
+        val res = orchestrator.getCurrentAndPTAAndSAIfExistsForUser(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), implicitly, implicitly)
+        whenReady(res.value) { result =>
+          result shouldBe Right(ptEnrolmentDataModel(Some(PT_USER_ID)))
+        }
+      }
+    }
+
+    s"the accountType $PT_ASSIGNED_TO_OTHER_USER, the account has SA on another account with a third account that holds the PT enrolment" should {
+      "return a PTEnrolmentOtherAccountViewModel for the account details" in {
+
+        (mockUsersGroupService
+          .getAccountDetails(_: String)(
+            _: ExecutionContext,
+            _: HeaderCarrier,
+            _: RequestWithUserDetailsFromSession[AnyContent]
+          ))
+          .expects(CREDENTIAL_ID, *, *, *)
+          .returning(createInboundResult(accountDetails))
+
+        (mockTeaSessionCache
+          .getEntry(_: String)(
+            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: Format[UsersAssignedEnrolment]
+          ))
+          .expects("USER_ASSIGNED_PT_ENROLMENT", *, *)
+          .returning(Future.successful(Some(UsersAssignedEnrolment1)))
+
+        (mockUsersGroupService
+          .getAccountDetails(_: String)(
+            _: ExecutionContext,
+            _: HeaderCarrier,
+            _: RequestWithUserDetailsFromSession[AnyContent]
+          ))
+          .expects(CREDENTIAL_ID_1, *, *, *)
+          .returning(createInboundResult(accountDetailsWithPT))
+
+        (mockEacdService
+          .getUsersAssignedSAEnrolment(
+            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: HeaderCarrier,
+            _: ExecutionContext
+          ))
+          .expects( *, *, *)
+          .returning(createInboundResult(UsersAssignedEnrolment(Some(CREDENTIAL_ID_1))))
+
+        (mockUsersGroupService
+          .getAccountDetails(_: String)(
+            _: ExecutionContext,
+            _: HeaderCarrier,
+            _: RequestWithUserDetailsFromSession[AnyContent]
+          ))
+          .expects(CREDENTIAL_ID_1, *, *, *)
+          .returning(createInboundResult(accountDetails.copy(userId = CREDENTIAL_ID_1)))
+
+        val res = orchestrator.getCurrentAndPTAAndSAIfExistsForUser(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), implicitly, implicitly)
+        whenReady(res.value) { result =>
+          result shouldBe Right(ptEnrolmentDataModel(Some(CREDENTIAL_ID_1)))
+        }
+      }
+    }
+
+    List(
+      SINGLE_ACCOUNT,
+      PT_ASSIGNED_TO_CURRENT_USER,
+      MULTIPLE_ACCOUNTS,
+      SA_ASSIGNED_TO_CURRENT_USER,
+      SA_ASSIGNED_TO_OTHER_USER
+    ).foreach { accountType =>
+      s"the accountType is $accountType" should {
+        s"return the $IncorrectUserType containing redirectUrl" in {
+
+          val res = orchestrator.getCurrentAndPTAAndSAIfExistsForUser(requestWithAccountType(accountType), implicitly, implicitly)
+          whenReady(res.value) { result =>
+            result shouldBe Left(IncorrectUserType((UrlPaths.returnUrl), accountType))
+          }
+        }
+      }
+    }
+  }
+
+
   "checkValidAccountTypeAndEnrolForPT" when {
     for (inputAccountType <- all_account_types) {
       for (sessionAccountType <- all_account_types) {
@@ -136,7 +365,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
 
               (mockSilentAssignmentService
                 .enrolUser()(
-                  _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+                  _: RequestWithUserDetailsFromSession[_],
                   _: HeaderCarrier,
                   _: ExecutionContext
                 ))
@@ -453,7 +682,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
             "the user chooses to have PT and SA separate" in {
               (mockSilentAssignmentService
                 .enrolUser()(
-                  _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+                  _: RequestWithUserDetailsFromSession[_],
                   _: HeaderCarrier,
                   _: ExecutionContext
                 ))

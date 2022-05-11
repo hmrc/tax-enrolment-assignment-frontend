@@ -24,17 +24,17 @@ import play.api.data.Form
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, NoPTEnrolmentWhenOneExpected, NoSAEnrolmentWhenOneExpected, TaxEnrolmentAssignmentErrors}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logNoUserFoundWithPTEnrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, UsersAssignedEnrolment}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, CADetailsPTADetailsSADetailsIfExists, PTEnrolmentOnOtherAccount, UsersAssignedEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{SilentAssignmentService, UsersGroupsSearchService}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, SilentAssignmentService, UsersGroupsSearchService}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -43,6 +43,7 @@ class MultipleAccountsOrchestrator @Inject()(
   sessionCache: TEASessionCache,
   usersGroupSearchService: UsersGroupsSearchService,
   silentAssignmentService: SilentAssignmentService,
+  eacdService: EACDService,
   logger: EventLoggerService
 ) {
 
@@ -196,4 +197,60 @@ class MultipleAccountsOrchestrator @Inject()(
             )
           }
     }
+
+  def getCurrentAndPTAAndSAIfExistsForUser(implicit requestWithUserDetails: RequestWithUserDetailsFromSessionAndMongo[_],
+                                                hc: HeaderCarrier,
+                                                ec: ExecutionContext
+                                               ): TEAFResult[PTEnrolmentOnOtherAccount]  = {
+    getSAForPTAlreadyEnrolledDetails.map { model =>
+      PTEnrolmentOnOtherAccount(
+        model.currentAccountDetails,
+        model.ptAccountDetails,
+        if (requestWithUserDetails.userDetails.hasSAEnrolment) {
+          Some(model.currentAccountDetails.userId)
+        } else {
+          model.saAccountDetails.map(_.userId)
+        }
+      )
+    }
+  }
+
+  private def getSAForPTAlreadyEnrolledDetails(
+                                        implicit requestWithUserDetails: RequestWithUserDetailsFromSessionAndMongo[_],
+                                        hc: HeaderCarrier,
+                                        ec: ExecutionContext
+                                      ): TEAFResult[CADetailsPTADetailsSADetailsIfExists] = {
+
+    def getSAAccountDetails: TEAFResult[Option[AccountDetails]] = {
+      if (!requestWithUserDetails.userDetails.hasSAEnrolment) {
+        eacdService.getUsersAssignedSAEnrolment(requestWithUserDetails, implicitly, implicitly).map(
+          user => user.enrolledCredential
+        ).flatMap {
+          case Some(userId) => usersGroupSearchService.getAccountDetails(userId)(implicitly, implicitly, requestWithUserDetails).map(Some(_))
+          case None => EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(Option.empty[AccountDetails]))
+        }
+      } else {
+        EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(None))
+      }
+
+    }
+
+    checkValidAccountType(List(PT_ASSIGNED_TO_OTHER_USER)) match {
+      case Right(_) => for {
+        currentAccountDetails <- usersGroupSearchService.getAccountDetails(
+          requestWithUserDetails.userDetails.credId
+        )(implicitly, implicitly, requestWithUserDetails)
+        ptAccountDetails <- getPTCredentialDetails
+        saOnOtherAccountDetails <- getSAAccountDetails
+      }
+      yield
+        CADetailsPTADetailsSADetailsIfExists(
+          currentAccountDetails,
+          ptAccountDetails,
+          saOnOtherAccountDetails)
+
+      case Left(error) => EitherT.left(Future.successful(error))
+    }
+  }
+
   }

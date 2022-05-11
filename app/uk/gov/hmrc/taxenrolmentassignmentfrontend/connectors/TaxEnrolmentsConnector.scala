@@ -27,6 +27,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromTaxEnrolments
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{logUnexpectedResponseFromTaxEnrolments, logUnexpectedResponseFromTaxEnrolmentsKnownFacts}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.{IRSAKey, hmrcPTKey}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AssignHMRCPTRequest, IdentifiersOrVerifiers, PersonalTaxEnrolment}
 
 import scala.concurrent.ExecutionContext
@@ -43,7 +44,7 @@ class TaxEnrolmentsConnector @Inject()(httpClient: HttpClient,
     hc: HeaderCarrier
   ): TEAFResult[Unit] = EitherT {
     val request = new PersonalTaxEnrolment(credId, nino)
-    val enrolmentKey = s"HMRC-PT~NINO~$nino"
+    val enrolmentKey = s"$hmrcPTKey~NINO~$nino"
     val url =
       s"${appConfig.TAX_ENROLMENTS_BASE_URL}/groups/$groupId/enrolments/$enrolmentKey"
     httpClient
@@ -71,7 +72,7 @@ class TaxEnrolmentsConnector @Inject()(httpClient: HttpClient,
       )
     )
 
-    val serviceName = if(appConfig.taxEnrolmentsLocalEnabled) "IR-SA" else "HMRC-PT"
+    val serviceName = if(appConfig.taxEnrolmentsLocalEnabled) IRSAKey else hmrcPTKey
     val url = s"${appConfig.TAX_ENROLMENTS_BASE_URL}/service/$serviceName/enrolment"
 
     httpClient

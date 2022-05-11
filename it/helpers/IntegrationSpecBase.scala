@@ -32,7 +32,6 @@ import play.api.{Application, Environment, Mode}
 import uk.gov.hmrc.crypto.PlainText
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
 import uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.SessionCookieCrypto
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.{CascadeUpsert, SessionRepository}
 
 import scala.concurrent.ExecutionContext
@@ -80,7 +79,8 @@ trait IntegrationSpecBase
     "microservice.services.users-groups-search.isTest" -> "false",
     "microservice.services.personal-tax-account.host" -> s"$wiremockURL",
     "play.http.router" -> "testOnlyDoNotUseInAppConf.Routes",
-    "microservice.services.features.taxEnrolmentsServiceListLocal" -> "false"
+    "microservice.services.features.taxEnrolmentsServiceListLocal" -> "false",
+    "throttle.percentage" -> "60"
   )
 
   override implicit val patienceConfig: PatienceConfig = PatienceConfig(

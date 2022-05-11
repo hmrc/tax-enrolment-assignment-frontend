@@ -29,6 +29,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.{IRSAKey, hmrcPTKey}
 
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
@@ -72,8 +73,8 @@ class AuthAction @Inject()(
       .retrieve(nino and credentials and allEnrolments and groupIdentifier) {
         case Some(nino) ~ Some(credentials) ~ enrolments ~ Some(groupId) =>
           val hasSAEnrolment =
-            enrolments.getEnrolment("IR-SA").fold(false)(_.isActivated)
-          val hasPTEnrolment = enrolments.getEnrolment("HMRC-PT").isDefined
+            enrolments.getEnrolment(s"$IRSAKey").fold(false)(_.isActivated)
+          val hasPTEnrolment = enrolments.getEnrolment(s"$hmrcPTKey").isDefined
 
           val userDetails = UserDetailsFromSession(
             credentials.providerId,

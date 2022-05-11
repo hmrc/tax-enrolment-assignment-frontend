@@ -43,7 +43,7 @@ class SABlueInterruptController @Inject()(
 )(implicit config: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc)
     with I18nSupport
-      with WithDefaultFormBinding{
+      with WithDefaultFormBinding {
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 

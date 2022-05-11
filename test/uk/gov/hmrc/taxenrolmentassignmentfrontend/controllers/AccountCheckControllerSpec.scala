@@ -55,7 +55,7 @@ class AccountCheckControllerSpec extends TestFixture {
     mockSilentAssignmentService,
     mockAuthAction,
     mockAccountCheckOrchestrator,
-    testAppConfig,
+    appConfig,
     mcc,
     teaSessionCache,
     logger,

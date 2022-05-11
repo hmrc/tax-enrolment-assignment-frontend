@@ -19,6 +19,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.logging
 import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.{IRSAKey, hmrcPTKey}
 
 object LoggingEvent {
 
@@ -29,7 +30,7 @@ object LoggingEvent {
       Event(
         "[AccountCheckController][silentEnrol]",
         details = Some(
-          s"PT enrolment assigned to single account credential $credentialId"
+          s"$hmrcPTKey enrolment assigned to single account credential $credentialId"
         )
       )
     )
@@ -51,7 +52,7 @@ object LoggingEvent {
       Event(
         "[AccountCheckController][silentEnrol]",
         details = Some(
-          s"PT enrolment assigned to credential $credentialId which has multiple accounts"
+          s"$hmrcPTKey enrolment assigned to credential $credentialId which has multiple accounts"
         )
       )
     )
@@ -63,7 +64,7 @@ object LoggingEvent {
       Event(
         "[ReportSuspiciousIdController][continue]",
         details = Some(
-          s"PT enrolment assigned to credential $credentialId after reporting fraud on account with Self Assessment"
+          s"$hmrcPTKey enrolment assigned to credential $credentialId after reporting fraud on account with Self Assessment"
         )
       )
     )
@@ -73,7 +74,7 @@ object LoggingEvent {
       Event(
         "[SignInWithSAAccountController][continue]",
         details = Some(
-          s"User with credential $credentialId chose to sign in again with their SA account"
+          s"User with credential $credentialId chose to sign in again with their $IRSAKey account"
         )
       )
     )
@@ -83,7 +84,7 @@ object LoggingEvent {
       Event(
         "[AccountCheckOrchestrator][getAccountType]",
         details = Some(
-          s"PT enrolment has already been assigned to the current credential $credentialId"
+          s"$hmrcPTKey enrolment has already been assigned to the current credential $credentialId"
         )
       )
     )
@@ -92,7 +93,7 @@ object LoggingEvent {
     Info(
       Event(
         "[AccountCheckOrchestrator][getAccountType]",
-        details = Some(s"Current credential $credentialId has SA enrolment.")
+        details = Some(s"Current credential $credentialId has $IRSAKey enrolment")
       )
     )
 
@@ -117,7 +118,7 @@ object LoggingEvent {
       Event(
         "[AccountCheckOrchestrator][getAccountType]",
         details = Some(
-          s"Signed in with credential $credentialId has not got SA enrolment but another credential $credentialWithSAEnrolment does"
+          s"Signed in with credential $credentialId has not got $IRSAKey enrolment but another credential $credentialWithSAEnrolment does"
         )
       )
     )
@@ -168,7 +169,7 @@ object LoggingEvent {
       Event(
         "[MultipleAccountsOrchestrator][getPTCredentialDetails]",
         details = Some(
-          s"No PT enrolment found when user has account type of PT on other account for credential $credentialId"
+          s"No $hmrcPTKey enrolment found when user has account type of $hmrcPTKey on other account for credential $credentialId"
         )
       )
     )
@@ -219,7 +220,7 @@ object LoggingEvent {
       Event(
         "[EACDConnector][queryKnownFactsByNinoVerifier]",
         errorDetails = Some(
-          s"EACD returned status of $statusReturned when searching for users with IR-SA enrolment for NINO $nino." +
+          s"EACD returned status of $statusReturned when searching for users with $IRSAKey enrolment for NINO $nino." +
             s"\nError Message: $eacdErrorMsg"
         )
       )
@@ -234,7 +235,7 @@ object LoggingEvent {
       Event(
         "[TaxEnrolmentsConnector][assignPTEnrolment]",
         errorDetails = Some(
-          s"Tax Enrolments return status of $statusReturned when allocating PT enrolment for users with $nino NINO," +
+          s"Tax Enrolments return status of $statusReturned when allocating $hmrcPTKey enrolment for users with $nino NINO," +
             s"Error message - $errorMsg"
         )
       )
@@ -264,7 +265,7 @@ object LoggingEvent {
       Event(
         "[TaxEnrolmentsConnector][assignPTEnrolmentWithKnownFacts]",
         errorDetails = Some(
-          s"Tax Enrolments return status of $statusReturned when allocating PT enrolment for users with $nino NINO," +
+          s"Tax Enrolments return status of $statusReturned when allocating $hmrcPTKey enrolment for users with $nino NINO," +
             s"Error message - $errorMsg"
         )
       )
@@ -310,7 +311,7 @@ object LoggingEvent {
     classAndMethod: String,
     errorType: TaxEnrolmentAssignmentErrors
   ): LoggingEvent =
-    Error(Event(classAndMethod, details = Some(errorType.toString)))
+    Error(Event(classAndMethod, details = Some(s"${errorType.toString} for $credentialId")))
 
   implicit val formats: Format[Event] = Json.format[Event]
 

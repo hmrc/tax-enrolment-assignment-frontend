@@ -39,7 +39,7 @@ class SignInWithSAAccountSpec extends ViewSpecHelper {
   lazy val signOutController = new SignOutController(
     mockAuthAction,
     mcc,
-    testAppConfig,
+    appConfig,
     testTeaSessionCache
   )
   lazy val signInAgainPage: SignInWithSAAccount = inject[SignInWithSAAccount]

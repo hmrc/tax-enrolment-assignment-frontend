@@ -57,4 +57,7 @@ class AppConfig @Inject()(val config: ServicesConfig) {
   //ToDo find real link to SA
   lazy val selfAssessmentUrl: String = "?"
   lazy val appName = config.getString("appName")
+
+  lazy val percentageOfUsersThrottledToGetFakeEnrolment: Int =
+    config.getInt("throttle.percentage")
 }

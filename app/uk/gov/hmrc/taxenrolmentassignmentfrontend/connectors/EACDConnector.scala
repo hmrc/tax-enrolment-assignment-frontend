@@ -26,17 +26,9 @@ import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromEACD
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{
-  logES2ErrorFromEACD,
-  logUnexpectedResponseFromEACD,
-  logUnexpectedResponseFromEACDQueryKnownFacts
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
-  KnownFactQueryForNINO,
-  KnownFactResponseForNINO,
-  UserEnrolmentsListResponse,
-  UsersAssignedEnrolment
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{logES2ErrorFromEACD, logUnexpectedResponseFromEACD, logUnexpectedResponseFromEACDQueryKnownFacts}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.{IRSAKey, hmrcPTKey}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{KnownFactQueryForNINO, KnownFactResponseForNINO, UserEnrolmentsListResponse, UsersAssignedEnrolment}
 
 import scala.concurrent.ExecutionContext
 
@@ -50,7 +42,7 @@ class EACDConnector @Inject()(httpClient: HttpClient,
     implicit ec: ExecutionContext,
     hc: HeaderCarrier
   ): TEAFResult[String] = EitherT {
-    val enrolmentKey = s"HMRC-PT~NINO~$nino"
+    val enrolmentKey = s"$hmrcPTKey~NINO~$nino"
     lazy val url =
       s"${appConfig.EACD_BASE_URL}/enrolment-store/users/$userId/enrolments/$enrolmentKey"
 
@@ -77,7 +69,7 @@ class EACDConnector @Inject()(httpClient: HttpClient,
     implicit ec: ExecutionContext,
     hc: HeaderCarrier
   ): TEAFResult[UsersAssignedEnrolment] = {
-    val enrolmentKey = s"HMRC-PT~NINO~$nino"
+    val enrolmentKey = s"$hmrcPTKey~NINO~$nino"
     getUsersWithAssignedEnrolment(enrolmentKey)
   }
 
@@ -85,7 +77,7 @@ class EACDConnector @Inject()(httpClient: HttpClient,
     implicit ec: ExecutionContext,
     hc: HeaderCarrier
   ): TEAFResult[UsersAssignedEnrolment] = {
-    val enrolmentKey = s"IR-SA~UTR~$utr"
+    val enrolmentKey = s"$IRSAKey~UTR~$utr"
     getUsersWithAssignedEnrolment(enrolmentKey)
   }
 

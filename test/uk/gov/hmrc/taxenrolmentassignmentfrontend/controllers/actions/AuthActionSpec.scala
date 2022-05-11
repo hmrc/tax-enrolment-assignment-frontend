@@ -17,27 +17,15 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions
 
 import org.scalatest.Assertion
-import play.api.test.Helpers._
 import play.api.mvc.{Result, Results}
 import play.api.test.FakeRequest
-import play.api.test.Helpers.{contentAsString, redirectLocation, status}
-import uk.gov.hmrc.auth.core.{
-  AffinityGroup,
-  Enrolments,
-  InsufficientConfidenceLevel,
-  SessionRecordNotFound,
-  UnsupportedAuthProvider
-}
+import play.api.test.Helpers.{contentAsString, redirectLocation, status, _}
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
+import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{
-  AuthAction,
-  RequestWithUserDetailsFromSession
-}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
 import scala.concurrent.{ExecutionContext, Future}
 

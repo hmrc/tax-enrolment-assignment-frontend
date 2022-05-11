@@ -88,7 +88,6 @@ trait TestFixture
   lazy val errorHandler: ErrorHandler = new ErrorHandler(errorView, logger, mcc)
   lazy val logger: EventLoggerService = new EventLoggerService()
   implicit val appConfig: AppConfig = injector.instanceOf[AppConfig]
-  val mockAppConfig: AppConfig      = mock[AppConfig]
   lazy val messagesApi: MessagesApi = inject[MessagesApi]
   implicit lazy val messages: Messages = messagesApi.preferred(fakeRequest)
   lazy val UCView: UnderConstructionView = inject[UnderConstructionView]

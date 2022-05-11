@@ -16,15 +16,21 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.services
 
+import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedError
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.hmrcPTKey
 
-class ThrottlingServiceSpec extends TestFixture {
+import scala.concurrent.ExecutionContext
 
-  val throttlingservice = new ThrottlingService(mockLegacyAuthConnector, mockAppConfig)
+class ThrottlingServiceSpec extends TestFixture with FutureAwaits with DefaultAwaitTimeout {
+
+  val throttlingservice = new ThrottlingService(mockLegacyAuthConnector, appConfig)
   val validNonRealNino = "QQ123456A"
 
   "isNinoWithinThrottleThreshold" should {
@@ -141,21 +147,71 @@ class ThrottlingServiceSpec extends TestFixture {
 
   "throttle" should {
     case class TestScenario(testName: String, nino: String, percentage: Int, accountType: AccountTypes.Value)
+    val setOfExistingEnrolments = Set(
+      Enrolment("foo", Seq(EnrolmentIdentifier("NINO", "foo")), "Activated", None),
+      Enrolment("bar", Seq(EnrolmentIdentifier("NINO", "foo")), "Activated", None)
+    )
+    val newEnrolment = (nino: String) => Enrolment(s"$hmrcPTKey", Seq(EnrolmentIdentifier("NINO", nino)), "Activated", None)
+    val throttlingservice = (percentageToThrottle: Int) =>  new ThrottlingService(mockLegacyAuthConnector, new AppConfig(servicesConfig){
+      override lazy val percentageOfUsersThrottledToGetFakeEnrolment: Int = percentageToThrottle
+    })
     s"return $ThrottleApplied" when {
+      List(
+        TestScenario(s"account type is $PT_ASSIGNED_TO_CURRENT_USER, Valid Nino below threshold, auth call succeeds", "QQ123455A", 99, PT_ASSIGNED_TO_CURRENT_USER),
+        TestScenario(s"account type is $PT_ASSIGNED_TO_OTHER_USER, Valid Nino below threshold auth call succeeds", "QQ123455A", 99, PT_ASSIGNED_TO_OTHER_USER),
+        TestScenario(s"account type is $MULTIPLE_ACCOUNTS, Valid Nino below threshold auth call succeeds", "QQ123455A", 99, MULTIPLE_ACCOUNTS),
+        TestScenario(s"account type is $SA_ASSIGNED_TO_CURRENT_USER, Valid Nino below threshold auth call succeeds", "QQ123455A", 99, SA_ASSIGNED_TO_CURRENT_USER),
+        TestScenario(s"account type is $SA_ASSIGNED_TO_OTHER_USER, Valid Nino below threshold auth call succeeds", "QQ123455A", 99, SA_ASSIGNED_TO_OTHER_USER)
+      ).foreach(test =>
+        s"${test.testName}" in {
+          (mockLegacyAuthConnector.updateEnrolments(_: Set[Enrolment])(_: ExecutionContext, _: HeaderCarrier))
+            .expects(setOfExistingEnrolments + newEnrolment(test.nino) , *, *)
+            .returning(createInboundResult((): Unit))
+            .once()
 
+          val res = await(throttlingservice(test.percentage).throttle(test.accountType, test.nino, setOfExistingEnrolments).value)
+          res.right.get shouldBe ThrottleApplied
+        })
     }
     s"return $ThrottleDoesNotApply" when {
       List(
-        TestScenario(s"account type is $PT_ASSIGNED_TO_CURRENT_USER, Invalid nino", "QQ", 1, PT_ASSIGNED_TO_CURRENT_USER),
-      )
+        TestScenario(s"account type is $PT_ASSIGNED_TO_CURRENT_USER, Valid Nino above threshold, no auth call", "QQ123455A", 54, PT_ASSIGNED_TO_CURRENT_USER),
+        TestScenario(s"account type is $PT_ASSIGNED_TO_OTHER_USER, Valid Nino above threshold, no auth call", "QQ123455A", 54, PT_ASSIGNED_TO_OTHER_USER),
+        TestScenario(s"account type is $MULTIPLE_ACCOUNTS, Valid Nino above threshold, no auth call", "QQ123455A", 54, MULTIPLE_ACCOUNTS),
+        TestScenario(s"account type is $SA_ASSIGNED_TO_CURRENT_USER, Valid Nino above threshold, no auth calls", "QQ123455A", 54, SA_ASSIGNED_TO_CURRENT_USER),
+        TestScenario(s"account type is $SA_ASSIGNED_TO_OTHER_USER, Valid Nino above threshold, no auth call", "QQ123455A", 54, SA_ASSIGNED_TO_OTHER_USER),
+        TestScenario(s"account type is $SINGLE_ACCOUNT, Valid Nino below threshold, no auth call", "QQ123455A", 99, SINGLE_ACCOUNT)
+      ).foreach(test =>
+        s"${test.testName}" in {
+          (mockLegacyAuthConnector.updateEnrolments(_: Set[Enrolment])(_: ExecutionContext, _: HeaderCarrier))
+            .expects(*, *, *)
+            .returning(createInboundResult((): Unit))
+            .never
+
+          val res = await(throttlingservice(test.percentage).throttle(test.accountType, test.nino, setOfExistingEnrolments).value)
+          res.right.get shouldBe ThrottleDoesNotApply
+        })
     }
     "return Left Error" when {
-      "throttle applies but auth returns error" in {
+        List(
+          TestScenario(s"account type is $PT_ASSIGNED_TO_CURRENT_USER, Valid Nino below threshold, auth call fails", validNonRealNino, 99, PT_ASSIGNED_TO_CURRENT_USER),
+          TestScenario(s"account type is $PT_ASSIGNED_TO_OTHER_USER, Valid Nino below threshold auth call fails", validNonRealNino, 99, PT_ASSIGNED_TO_OTHER_USER),
+          TestScenario(s"account type is $MULTIPLE_ACCOUNTS, Valid Nino below threshold auth call fails", validNonRealNino, 99, MULTIPLE_ACCOUNTS),
+          TestScenario(s"account type is $SA_ASSIGNED_TO_CURRENT_USER, Valid Nino below threshold auth call fails", validNonRealNino, 99, SA_ASSIGNED_TO_CURRENT_USER),
+          TestScenario(s"account type is $SA_ASSIGNED_TO_OTHER_USER, Valid Nino below threshold auth call fails", validNonRealNino, 99, SA_ASSIGNED_TO_OTHER_USER)
+        ).foreach(test =>
+          s"${test.testName}" in {
+            (mockLegacyAuthConnector.updateEnrolments(_: Set[Enrolment])(_: ExecutionContext, _: HeaderCarrier))
+              .expects(setOfExistingEnrolments + newEnrolment(test.nino) , *, *)
+              .returning(createInboundResultError(UnexpectedError))
+              .once()
 
+            val res = await(throttlingservice(test.percentage).throttle(test.accountType, test.nino, setOfExistingEnrolments).value)
+            res.left.get shouldBe UnexpectedError
+          })
       }
     }
-  }
-
+  
   "newPTEnrolment" should {
     "return correct class containing NINO" in {
       throttlingservice.newPTEnrolment("foo") shouldBe Enrolment(s"$hmrcPTKey", Seq(EnrolmentIdentifier("NINO", "foo")), "Activated", None)

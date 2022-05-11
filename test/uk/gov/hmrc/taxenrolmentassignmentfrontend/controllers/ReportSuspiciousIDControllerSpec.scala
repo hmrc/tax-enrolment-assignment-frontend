@@ -100,13 +100,17 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
           .returning(createInboundResult(accountDetails))
         mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
 
+        val auditEvent = AuditEvent.auditReportSuspiciousPTAccount(
+          accountDetails
+        )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER))
         (mockAuditHandler
           .audit(_: AuditEvent)(_: HeaderCarrier))
-          .expects(AuditEvent.auditReportSuspiciousPTAccount(accountDetails))
+          .expects(auditEvent, *)
+          .returning(Future.successful((): Unit))
 
         val result = controller
           .viewNoSA()
-          .apply()
+          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe OK
         contentAsString(result) should include("ReportSuspiciousID.title")
@@ -221,6 +225,14 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
           .expects(*, *, *)
           .returning(createInboundResult(accountDetails))
         mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+
+        val auditEvent = AuditEvent.auditReportSuspiciousSAAccount(
+          accountDetails
+        )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER))
+        (mockAuditHandler
+          .audit(_: AuditEvent)(_: HeaderCarrier))
+          .expects(auditEvent, *)
+          .returning(Future.successful((): Unit))
 
         val result = controller
           .viewSA()
@@ -345,7 +357,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
 
         (mockTeaSessionCache
           .save(_: String, _: Boolean)(
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: Format[Boolean]
           ))
           .expects(REPORTED_FRAUD, true, *, *)

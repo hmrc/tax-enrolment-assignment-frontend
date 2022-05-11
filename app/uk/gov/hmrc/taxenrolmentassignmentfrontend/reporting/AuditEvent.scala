@@ -73,12 +73,8 @@ object AuditEvent {
   ): JsObject = {
     val currentAccountDetails = Json.obj(
       ("credentialId", JsString(userDetails.credId)),
-      ("type", JsString(accountType.toString)),
-      (
-        "affinityGroup",
-        JsString(userDetails.affinityGroup.getClass.getSimpleName)
-      )
-    )
+      ("type", JsString(accountType.toString))
+    ) ++ userDetails.affinityGroup.toJson.as[JsObject]
 
     val reportedAccountDetails = Json.obj(
       ("credentialId", JsString(suspiciousAccountDetails.credId)),
@@ -101,14 +97,19 @@ object AuditEvent {
   private def mfaFactorToJson(mfaDetail: MFADetails): JsValue =
     mfaDetail.factorNameKey match {
       case "mfaDetails.totp" =>
-        Json.obj(("Authenticator app", JsString(mfaDetail.factorValue)))
+        Json.obj(
+          ("factorType", JsString("Authenticator app")),
+          ("factorValue", JsString(mfaDetail.factorValue))
+        )
       case "mfaDetails.voice" =>
         Json.obj(
-          ("Phone number", JsString(s"Ending with ${mfaDetail.factorValue}"))
+          ("factorType", JsString("Phone number")),
+          ("factorValue", JsString(s"Ending with ${mfaDetail.factorValue}"))
         )
       case _ =>
         Json.obj(
-          ("Text message", JsString(s"Ending with ${mfaDetail.factorValue}"))
+          ("factorType", JsString("Text message")),
+          ("factorValue", JsString(s"Ending with ${mfaDetail.factorValue}"))
         )
     }
 }

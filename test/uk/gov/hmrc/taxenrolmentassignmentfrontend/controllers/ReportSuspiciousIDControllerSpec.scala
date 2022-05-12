@@ -107,6 +107,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
           .audit(_: AuditEvent)(_: HeaderCarrier))
           .expects(auditEvent, *)
           .returning(Future.successful((): Unit))
+          .once()
 
         val result = controller
           .viewNoSA()
@@ -233,6 +234,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
           .audit(_: AuditEvent)(_: HeaderCarrier))
           .expects(auditEvent, *)
           .returning(Future.successful((): Unit))
+          .once()
 
         val result = controller
           .viewSA()

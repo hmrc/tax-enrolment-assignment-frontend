@@ -21,6 +21,7 @@ import org.jsoup.nodes.Document
 import play.api.test.FakeRequest
 import play.twirl.api.HtmlFormat
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignOutController
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.CREDENTIAL_ID
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.SignInAgainMessages
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
@@ -74,6 +75,7 @@ class SignInWithSAAccountSpec extends ViewSpecHelper {
   )
 
   val accountDetails = AccountDetails(
+    credId = CREDENTIAL_ID,
     "********3214",
     Some("email1@test.com"),
     "Yesterday",

@@ -16,7 +16,15 @@
 
 package helpers
 
-import helpers.TestITData.sessionData
+import helpers.TestITData._
+import play.api.mvc.{AnyContent, Request}
+import play.api.test.FakeRequest
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SINGLE_ACCOUNT
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{
+  AccountDetailsFromMongo,
+  RequestWithUserDetailsFromSessionAndMongo
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{routes, testOnly}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
@@ -27,6 +35,17 @@ trait TestHelper extends IntegrationSpecBase {
     : (String, String) = ("COOKIE" -> createSessionCookieAsString(sessionData))
 
   val errorView = app.injector.instanceOf[ErrorTemplate]
+
+  def requestWithAccountType(
+    accountType: AccountTypes.Value,
+    redirectUrl: String = UrlPaths.returnUrl
+  ): RequestWithUserDetailsFromSessionAndMongo[_] =
+    RequestWithUserDetailsFromSessionAndMongo(
+      FakeRequest().asInstanceOf[Request[AnyContent]],
+      userDetailsNoEnrolments,
+      sessionId,
+      AccountDetailsFromMongo(accountType, redirectUrl)
+    )
 
   object UrlPaths {
     val returnUrl: String = testOnly.routes.TestOnlyController.successfulCall

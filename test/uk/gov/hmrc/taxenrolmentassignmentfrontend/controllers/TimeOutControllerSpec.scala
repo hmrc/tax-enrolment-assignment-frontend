@@ -20,7 +20,7 @@ import org.jsoup.Jsoup
 import play.api.mvc.{AnyContent, AnyContentAsEmpty}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.auth.core.Enrolments
+import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -58,7 +58,7 @@ class TimeOutControllerSpec extends TestFixture {
           _: Retrieval[
             ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
               String
-            ]
+            ] ~ Option[AffinityGroup]
           ]
         )(_: HeaderCarrier, _: ExecutionContext))
         .expects(predicates, retrievals, *, *)
@@ -83,7 +83,7 @@ class TimeOutControllerSpec extends TestFixture {
           _: Retrieval[
             ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
               String
-            ]
+            ] ~ Option[AffinityGroup]
           ]
         )(_: HeaderCarrier, _: ExecutionContext))
         .expects(predicates, retrievals, *, *)

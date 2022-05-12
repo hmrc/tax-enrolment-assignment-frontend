@@ -39,16 +39,36 @@ import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SINGLE_ACCOUNT
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{EACDConnector, IVConnector, LegacyAuthConnector, TaxEnrolmentsConnector}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{
+  EACDConnector,
+  IVConnector,
+  LegacyAuthConnector,
+  TaxEnrolmentsConnector
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{ErrorHandler, SignOutController}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{
+  ErrorHandler,
+  SignOutController
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{randomAccountType, userDetailsNoEnrolments}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{
+  randomAccountType,
+  userDetailsNoEnrolments
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{
+  AccountCheckOrchestrator,
+  MultipleAccountsOrchestrator
+}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditHandler
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, SilentAssignmentService, ThrottlingService, UsersGroupsSearchService}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{
+  EACDService,
+  SilentAssignmentService,
+  ThrottlingService,
+  UsersGroupsSearchService
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.UnderConstructionView
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
@@ -72,7 +92,10 @@ trait TestFixture
       "sessionId"
     )
 
-  def requestWithAccountType(accountType: AccountTypes.Value = SINGLE_ACCOUNT, redirectUrl: String = UrlPaths.returnUrl): RequestWithUserDetailsFromSessionAndMongo[_] =
+  def requestWithAccountType(
+    accountType: AccountTypes.Value = SINGLE_ACCOUNT,
+    redirectUrl: String = UrlPaths.returnUrl
+  ): RequestWithUserDetailsFromSessionAndMongo[_] =
     RequestWithUserDetailsFromSessionAndMongo(
       request.request,
       request.userDetails,
@@ -107,6 +130,7 @@ trait TestFixture
   val mockMultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
   val mockSilentAssignmentService: SilentAssignmentService =
     mock[SilentAssignmentService]
+  val mockAuditHandler: AuditHandler = mock[AuditHandler]
 
   val mockThrottlingService = mock[ThrottlingService]
   implicit lazy val fakeRequest: FakeRequest[AnyContentAsEmpty.type] =
@@ -122,7 +146,11 @@ trait TestFixture
   lazy val mockAuthAction =
     new AuthAction(mockAuthConnector, testBodyParser, logger, appConfig)
   lazy val mockAccountMongoDetailsAction =
-    new AccountMongoDetailsAction(mockAccountCheckOrchestrator, testBodyParser, errorHandler)
+    new AccountMongoDetailsAction(
+      mockAccountCheckOrchestrator,
+      testBodyParser,
+      errorHandler
+    )
 
   implicit lazy val testMessages: Messages =
     messagesApi.preferred(FakeRequest())
@@ -146,7 +174,8 @@ trait TestFixture
 
   lazy val testOnlyController = new TestOnlyController(mcc, logger)
 
-  def mockGetAccountTypeAndRedirectUrlSuccess(accountType: AccountTypes.Value, redirectUrl: String = "foo") = {
+  def mockGetAccountTypeAndRedirectUrlSuccess(accountType: AccountTypes.Value,
+                                              redirectUrl: String = "foo") = {
     (mockAccountCheckOrchestrator
       .getAccountTypeFromCache(
         _: RequestWithUserDetailsFromSession[_],
@@ -155,9 +184,7 @@ trait TestFixture
       .expects(*, *)
       .returning(Future.successful(Some(accountType)))
     (mockAccountCheckOrchestrator
-      .getRedirectUrlFromCache(
-        _: RequestWithUserDetailsFromSession[_]
-      ))
+      .getRedirectUrlFromCache(_: RequestWithUserDetailsFromSession[_]))
       .expects(*)
       .returning(Future.successful(Some(redirectUrl)))
   }
@@ -170,9 +197,7 @@ trait TestFixture
       .expects(*, *)
       .returning(Future.successful(Some(randomAccountType)))
     (mockAccountCheckOrchestrator
-      .getRedirectUrlFromCache(
-        _: RequestWithUserDetailsFromSession[_]
-      ))
+      .getRedirectUrlFromCache(_: RequestWithUserDetailsFromSession[_]))
       .expects(*)
       .returning(Future.successful(None))
   }

@@ -19,16 +19,31 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 import cats.data.EitherT
 import play.api.http.Status.SEE_OTHER
 import play.api.test.Helpers._
-import uk.gov.hmrc.auth.core.Enrolments
+import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{TaxEnrolmentAssignmentErrors, UnexpectedResponseFromIV, UnexpectedResponseFromTaxEnrolments}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{buildFakeRequestWithSessionId, predicates, retrievalResponse, retrievals}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, UrlPaths}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{
+  RequestWithUserDetailsFromSession,
+  RequestWithUserDetailsFromSessionAndMongo
+}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
+  TaxEnrolmentAssignmentErrors,
+  UnexpectedResponseFromIV,
+  UnexpectedResponseFromTaxEnrolments
+}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{
+  buildFakeRequestWithSessionId,
+  predicates,
+  retrievalResponse,
+  retrievals
+}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{
+  TestFixture,
+  UrlPaths
+}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -178,7 +193,7 @@ class AccountCheckControllerSpec extends TestFixture {
           _: Retrieval[
             ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
               String
-            ]
+            ] ~ Option[AffinityGroup]
           ]
         )(_: HeaderCarrier, _: ExecutionContext))
         .expects(predicates, retrievals, *, *)

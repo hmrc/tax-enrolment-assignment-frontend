@@ -16,14 +16,15 @@
 
 package helpers
 
+import java.util.UUID
+
 import play.api.libs.json._
+import uk.gov.hmrc.auth.core.AffinityGroup.Individual
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core.retrieve.Credentials
-import uk.gov.hmrc.auth.core.{Enrolment, Enrolments}
+import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolment, Enrolments}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.UserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models._
-
-import java.util.UUID
 
 object TestITData {
 
@@ -82,6 +83,7 @@ object TestITData {
   def authoriseResponseJson(optNino: Option[String] = Some(NINO),
                             optCreds: Option[Credentials] = Some(creds),
                             optGroupId: Option[String] = Some(GROUP_ID),
+                            affinityGroup: AffinityGroup = Individual,
                             enrolments: JsValue = noEnrolments): JsValue = {
 
     val enrolmentsJson = Json.obj("allEnrolments" -> enrolments)
@@ -101,7 +103,9 @@ object TestITData {
       groupId => Json.obj("groupIdentifier" -> JsString(groupId))
     )
 
-    ninoJson ++ credentialsJson ++ enrolmentsJson ++ groupIdJson
+    val affinityGroupJson = affinityGroup.toJson.as[JsObject]
+
+    ninoJson ++ credentialsJson ++ enrolmentsJson ++ groupIdJson ++ affinityGroupJson
   }
 
   val sessionNotFound = "SessionRecordNotFound"
@@ -351,6 +355,7 @@ object TestITData {
       CREDENTIAL_ID,
       NINO,
       GROUP_ID,
+      Individual,
       Enrolments(Set.empty[Enrolment]),
       hasPTEnrolment = false,
       hasSAEnrolment = false

@@ -19,15 +19,21 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 import org.jsoup.Jsoup
 import play.api.http.Status.OK
 import play.api.test.Helpers._
-import uk.gov.hmrc.auth.core.Enrolments
+import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, UnexpectedResponseFromTaxEnrolments}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
+  IncorrectUserType,
+  UnexpectedResponseFromTaxEnrolments
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm.keepAccessToSAThroughPTAForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, UrlPaths}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{
+  TestFixture,
+  UrlPaths
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.KeepAccessToSA
 
@@ -56,7 +62,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ]
+              ] ~ Option[AffinityGroup]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -99,7 +105,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ]
+              ] ~ Option[AffinityGroup]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -146,7 +152,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ]
+              ] ~ Option[AffinityGroup]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -193,7 +199,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ]
+              ] ~ Option[AffinityGroup]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -207,7 +213,9 @@ class KeepAccessToSAControllerSpec extends TestFixture {
           ))
           .expects(*, *, *)
           .returning(
-            createInboundResultError(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
+            createInboundResultError(
+              IncorrectUserType(UrlPaths.returnUrl, randomAccountType)
+            )
           )
         mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
 
@@ -226,7 +234,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ]
+              ] ~ Option[AffinityGroup]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -250,7 +258,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
                 _: Retrieval[
                   ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                     String
-                  ]
+                  ] ~ Option[AffinityGroup]
                 ]
               )(_: HeaderCarrier, _: ExecutionContext))
               .expects(predicates, retrievals, *, *)
@@ -287,7 +295,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
                 _: Retrieval[
                   ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                     String
-                  ]
+                  ] ~ Option[AffinityGroup]
                 ]
               )(_: HeaderCarrier, _: ExecutionContext))
               .expects(predicates, retrievals, *, *)
@@ -328,7 +336,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
                 _: Retrieval[
                   ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                     String
-                  ]
+                  ] ~ Option[AffinityGroup]
                 ]
               )(_: HeaderCarrier, _: ExecutionContext))
               .expects(predicates, retrievals, *, *)
@@ -364,7 +372,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
                 _: Retrieval[
                   ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                     String
-                  ]
+                  ] ~ Option[AffinityGroup]
                 ]
               )(_: HeaderCarrier, _: ExecutionContext))
               .expects(predicates, retrievals, *, *)
@@ -403,7 +411,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
                 _: Retrieval[
                   ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                     String
-                  ]
+                  ] ~ Option[AffinityGroup]
                 ]
               )(_: HeaderCarrier, _: ExecutionContext))
               .expects(predicates, retrievals, *, *)
@@ -440,7 +448,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
               _: Retrieval[
                 ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                   String
-                ]
+                ] ~ Option[AffinityGroup]
               ]
             )(_: HeaderCarrier, _: ExecutionContext))
             .expects(predicates, retrievals, *, *)

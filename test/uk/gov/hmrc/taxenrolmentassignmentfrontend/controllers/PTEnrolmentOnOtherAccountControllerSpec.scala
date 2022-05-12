@@ -19,7 +19,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 import play.api.http.Status.OK
 import play.api.mvc.AnyContent
 import play.api.test.Helpers._
-import uk.gov.hmrc.auth.core.Enrolments
+import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
@@ -27,7 +27,10 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.PT_ASSIGNED_TO_OT
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, UrlPaths}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{
+  TestFixture,
+  UrlPaths
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnotherAccount
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -57,7 +60,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ]
+              ] ~ Option[AffinityGroup]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -96,7 +99,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ]
+              ] ~ Option[AffinityGroup]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -137,7 +140,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ]
+              ] ~ Option[AffinityGroup]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -178,7 +181,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ]
+              ] ~ Option[AffinityGroup]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -219,7 +222,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ]
+              ] ~ Option[AffinityGroup]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -258,7 +261,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ]
+              ] ~ Option[AffinityGroup]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -272,10 +275,11 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
           ))
           .expects(*, *, *)
           .returning(
-            createInboundResultError(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
+            createInboundResultError(
+              IncorrectUserType(UrlPaths.returnUrl, randomAccountType)
+            )
           )
         mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
-
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -296,7 +300,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ]
+              ] ~ Option[AffinityGroup]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -329,7 +333,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ]
+              ] ~ Option[AffinityGroup]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)

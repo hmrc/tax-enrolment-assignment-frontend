@@ -23,12 +23,22 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.controller.WithDefaultFormBinding
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_OTHER_USER}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
+  PT_ASSIGNED_TO_OTHER_USER,
+  SA_ASSIGNED_TO_OTHER_USER
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{
+  AccountMongoDetailsAction,
+  AuthAction
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logAssignedEnrolmentAfterReportingFraud
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{
+  AuditEvent,
+  AuditHandler
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REPORTED_FRAUD
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.ReportSuspiciousID
@@ -44,59 +54,84 @@ class ReportSuspiciousIDController @Inject()(
   mcc: MessagesControllerComponents,
   reportSuspiciousID: ReportSuspiciousID,
   val logger: EventLoggerService,
+  auditHandler: AuditHandler,
   errorHandler: ErrorHandler
 )(implicit ec: ExecutionContext, appConfig: AppConfig)
     extends FrontendController(mcc)
     with I18nSupport
-      with WithDefaultFormBinding {
+    with WithDefaultFormBinding {
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
-  def viewNoSA(): Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).async { implicit request =>
-    val res = for {
-      _ <- EitherT{Future.successful(multipleAccountsOrchestrator.checkValidAccountType(
-        List(PT_ASSIGNED_TO_OTHER_USER)
-      ))}
-      ptAccount <- multipleAccountsOrchestrator.getPTCredentialDetails
-    } yield ptAccount
-
-    res.value.map {
-      case Right(ptAccount) =>
-        Ok(reportSuspiciousID(ptAccount))
-      case Left(error) =>
-        errorHandler.handleErrors(error, "[ReportSuspiciousIDController][viewNoSA]")(request, implicitly)
-    }
-  }
-
-  def viewSA(): Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).async { implicit request =>
-    val res = for {
-      _ <- EitherT{Future.successful(multipleAccountsOrchestrator.checkValidAccountType(
-        List(SA_ASSIGNED_TO_OTHER_USER)
-      ))}
-      saAccount <- multipleAccountsOrchestrator.getSACredentialDetails
-    } yield saAccount
-
-    res.value.map {
-      case Right(saAccount) =>
-        Ok(reportSuspiciousID(saAccount, true))
-      case Left(error) =>
-        errorHandler.handleErrors(error, "[ReportSuspiciousIDController][viewSA]")(request, implicitly)
-    }
-  }
-
-  def continue: Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).async { implicit request =>
-    sessionCache.save[Boolean](REPORTED_FRAUD, true)(request, implicitly)
-    multipleAccountsOrchestrator
-      .checkValidAccountTypeAndEnrolForPT(SA_ASSIGNED_TO_OTHER_USER)
-      .value
-      .map {
-        case Right(_) =>
-          logger.logEvent(
-            logAssignedEnrolmentAfterReportingFraud(request.userDetails.credId)
+  def viewNoSA(): Action[AnyContent] =
+    authAction.andThen(accountMongoDetailsAction).async { implicit request =>
+      val res = for {
+        _ <- EitherT {
+          Future.successful(
+            multipleAccountsOrchestrator
+              .checkValidAccountType(List(PT_ASSIGNED_TO_OTHER_USER))
           )
-          Redirect(routes.EnrolledPTWithSAOnOtherAccountController.view)
+        }
+        ptAccount <- multipleAccountsOrchestrator.getPTCredentialDetails
+      } yield ptAccount
+
+      res.value.map {
+        case Right(ptAccount) =>
+          auditHandler
+            .audit(AuditEvent.auditReportSuspiciousPTAccount(ptAccount))
+          Ok(reportSuspiciousID(ptAccount))
         case Left(error) =>
-          errorHandler.handleErrors(error, "[ReportSuspiciousIdController][continue]")(request, implicitly)
+          errorHandler.handleErrors(
+            error,
+            "[ReportSuspiciousIDController][viewNoSA]"
+          )(request, implicitly)
       }
-  }
+    }
+
+  def viewSA(): Action[AnyContent] =
+    authAction.andThen(accountMongoDetailsAction).async { implicit request =>
+      val res = for {
+        _ <- EitherT {
+          Future.successful(
+            multipleAccountsOrchestrator
+              .checkValidAccountType(List(SA_ASSIGNED_TO_OTHER_USER))
+          )
+        }
+        saAccount <- multipleAccountsOrchestrator.getSACredentialDetails
+      } yield saAccount
+
+      res.value.map {
+        case Right(saAccount) =>
+          auditHandler
+            .audit(AuditEvent.auditReportSuspiciousSAAccount(saAccount))
+          Ok(reportSuspiciousID(saAccount, true))
+        case Left(error) =>
+          errorHandler.handleErrors(
+            error,
+            "[ReportSuspiciousIDController][viewSA]"
+          )(request, implicitly)
+      }
+    }
+
+  def continue: Action[AnyContent] =
+    authAction.andThen(accountMongoDetailsAction).async { implicit request =>
+      sessionCache.save[Boolean](REPORTED_FRAUD, true)(request, implicitly)
+      multipleAccountsOrchestrator
+        .checkValidAccountTypeAndEnrolForPT(SA_ASSIGNED_TO_OTHER_USER)
+        .value
+        .map {
+          case Right(_) =>
+            logger.logEvent(
+              logAssignedEnrolmentAfterReportingFraud(
+                request.userDetails.credId
+              )
+            )
+            Redirect(routes.EnrolledPTWithSAOnOtherAccountController.view)
+          case Left(error) =>
+            errorHandler.handleErrors(
+              error,
+              "[ReportSuspiciousIdController][continue]"
+            )(request, implicitly)
+        }
+    }
 }

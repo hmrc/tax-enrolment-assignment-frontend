@@ -30,6 +30,7 @@ import play.api.libs.json.{JsString, Json}
 import play.api.libs.ws.{WSClient, WSRequest}
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core.{AuthProviders, ConfidenceLevel}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
 
 object WiremockHelper extends Eventually with IntegrationPatience {
   val wiremockPort = 1111
@@ -44,7 +45,8 @@ object WiremockHelper extends Eventually with IntegrationPatience {
         JsString("nino"),
         JsString("optionalCredentials"),
         JsString("allEnrolments"),
-        JsString("groupIdentifier")
+        JsString("groupIdentifier"),
+        JsString("affinityGroup")
       )
     )
     stubPost(
@@ -110,8 +112,7 @@ object WiremockHelper extends Eventually with IntegrationPatience {
                status: Integer,
                responseBody: String): StubMapping =
     stubFor(
-      post(
-        urlMatching(url))
+      post(urlMatching(url))
         .willReturn(aResponse().withStatus(status).withBody(responseBody))
     )
 
@@ -120,9 +121,13 @@ object WiremockHelper extends Eventually with IntegrationPatience {
       put(urlMatching(url))
         .willReturn(aResponse().withStatus(status).withBody(responseBody))
     )
-  def stubPutWithRequestBody(url: String, status: Integer, requestBody: String, responseBody: String): StubMapping =
+  def stubPutWithRequestBody(url: String,
+                             status: Integer,
+                             requestBody: String,
+                             responseBody: String): StubMapping =
     stubFor(
-      put(urlMatching(url)).withRequestBody(equalToJson(requestBody))
+      put(urlMatching(url))
+        .withRequestBody(equalToJson(requestBody))
         .willReturn(aResponse().withStatus(status).withBody(responseBody))
     )
   def stubGetWithQueryParam(url: String,
@@ -149,6 +154,18 @@ object WiremockHelper extends Eventually with IntegrationPatience {
       get(urlEqualTo(url))
         .willReturn(aResponse().withStatus(status).withBody(responseBody))
     )
+
+  def verifyAuditEventSent(auditEvent: AuditEvent) = {
+    eventually(
+      verify(
+        postRequestedFor(urlMatching("/write/audit"))
+          .withRequestBody(
+            containing(s""""auditType":"${auditEvent.auditType}"""")
+          )
+          .withRequestBody(containing(auditEvent.detail.toString()))
+      )
+    )
+  }
 }
 
 trait WiremockHelper extends ServerProvider {
@@ -170,7 +187,8 @@ trait WiremockHelper extends ServerProvider {
 
   def resetWiremock(): Unit = WireMock.reset()
 
-  def buildRequest(path: String, followRedirects: Boolean = false): WSRequest = {
+  def buildRequest(path: String,
+                   followRedirects: Boolean = false): WSRequest = {
     ws.url(s"http://localhost:$port$path")
       .withFollowRedirects(followRedirects)
   }

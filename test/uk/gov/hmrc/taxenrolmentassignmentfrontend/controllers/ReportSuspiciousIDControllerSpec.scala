@@ -20,17 +20,32 @@ import play.api.http.Status.OK
 import play.api.libs.json.Format
 import play.api.mvc.AnyContent
 import play.api.test.Helpers._
-import uk.gov.hmrc.auth.core.Enrolments
+import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_OTHER_USER}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, NoPTEnrolmentWhenOneExpected, NoSAEnrolmentWhenOneExpected, UnexpectedResponseFromTaxEnrolments}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
+  PT_ASSIGNED_TO_OTHER_USER,
+  SA_ASSIGNED_TO_OTHER_USER
+}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{
+  RequestWithUserDetailsFromSession,
+  RequestWithUserDetailsFromSessionAndMongo
+}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
+  IncorrectUserType,
+  NoPTEnrolmentWhenOneExpected,
+  NoSAEnrolmentWhenOneExpected,
+  UnexpectedResponseFromTaxEnrolments
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, UrlPaths}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{
+  TestFixture,
+  UrlPaths
+}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REPORTED_FRAUD
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.ReportSuspiciousID
 
@@ -48,19 +63,21 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
       mcc,
       view,
       logger,
+      mockAuditHandler,
       errorHandler
     )
 
   "viewNoSA" when {
     "a user has PT on another account" should {
       "render the ReportSuspiciousID page" in {
+
         (mockAuthConnector
           .authorise(
             _: Predicate,
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ]
+              ] ~ Option[AffinityGroup]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -83,6 +100,15 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
           .returning(createInboundResult(accountDetails))
         mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
 
+        val auditEvent = AuditEvent.auditReportSuspiciousPTAccount(
+          accountDetails
+        )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER))
+        (mockAuditHandler
+          .audit(_: AuditEvent)(_: HeaderCarrier))
+          .expects(auditEvent, *)
+          .returning(Future.successful((): Unit))
+          .once()
+
         val result = controller
           .viewNoSA()
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -100,7 +126,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ]
+              ] ~ Option[AffinityGroup]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -133,7 +159,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ]
+              ] ~ Option[AffinityGroup]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -178,7 +204,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ]
+              ] ~ Option[AffinityGroup]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -201,6 +227,15 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
           .returning(createInboundResult(accountDetails))
         mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
 
+        val auditEvent = AuditEvent.auditReportSuspiciousSAAccount(
+          accountDetails
+        )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER))
+        (mockAuditHandler
+          .audit(_: AuditEvent)(_: HeaderCarrier))
+          .expects(auditEvent, *)
+          .returning(Future.successful((): Unit))
+          .once()
+
         val result = controller
           .viewSA()
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -217,7 +252,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ]
+              ] ~ Option[AffinityGroup]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -241,7 +276,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ]
+              ] ~ Option[AffinityGroup]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -274,7 +309,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ]
+              ] ~ Option[AffinityGroup]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -316,7 +351,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ]
+              ] ~ Option[AffinityGroup]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -324,7 +359,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
 
         (mockTeaSessionCache
           .save(_: String, _: Boolean)(
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+            _: RequestWithUserDetailsFromSession[AnyContent],
             _: Format[Boolean]
           ))
           .expects(REPORTED_FRAUD, true, *, *)
@@ -358,7 +393,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ]
+              ] ~ Option[AffinityGroup]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -382,7 +417,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ]
+              ] ~ Option[AffinityGroup]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -404,7 +439,9 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
           ))
           .expects(SA_ASSIGNED_TO_OTHER_USER, *, *, *)
           .returning(
-            createInboundResultError(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
+            createInboundResultError(
+              IncorrectUserType(UrlPaths.returnUrl, randomAccountType)
+            )
           )
         mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
 
@@ -426,7 +463,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ]
+              ] ~ Option[AffinityGroup]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)

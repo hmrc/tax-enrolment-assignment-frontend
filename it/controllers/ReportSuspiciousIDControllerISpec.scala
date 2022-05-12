@@ -26,9 +26,13 @@ import play.api.libs.json.Json
 import play.api.libs.ws.DefaultWSCookie
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
+  AccountDetails,
+  UsersAssignedEnrolment
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes.AccountCheckController
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
 
 class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
 
@@ -72,6 +76,12 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
           resp.status shouldBe OK
           page.title should include(ReportSuspiciousIDMessages.title)
           page.getElementsByClass("govuk-button").size() shouldBe 1
+          val saAccountDetails =
+            new AccountDetails(usersGroupSearchResponse, CREDENTIAL_ID_2)
+          val expectedAuditEvent = AuditEvent.auditReportSuspiciousSAAccount(
+            saAccountDetails
+          )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER))
+          verifyAuditEventSent(expectedAuditEvent)
         }
       }
     }
@@ -233,7 +243,13 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
-        await(save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", SA_ASSIGNED_TO_OTHER_USER))
+        await(
+          save[AccountTypes.Value](
+            sessionId,
+            "ACCOUNT_TYPE",
+            SA_ASSIGNED_TO_OTHER_USER
+          )
+        )
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGetWithQueryParam(
           "/identity-verification/nino",
@@ -389,6 +405,12 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
           resp.status shouldBe OK
           page.title should include(ReportSuspiciousIDMessages.title)
           page.getElementsByClass("govuk-button").size() shouldBe 0
+          val ptAccountDetails =
+            new AccountDetails(usersGroupSearchResponse, CREDENTIAL_ID_2)
+          val expectedAuditEvent = AuditEvent.auditReportSuspiciousPTAccount(
+            ptAccountDetails
+          )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER))
+          verifyAuditEventSent(expectedAuditEvent)
         }
       }
     }
@@ -781,7 +803,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
     }
 
     "the session cache is empty" should {
-       s"return $INTERNAL_SERVER_ERROR"  in {
+      s"return $INTERNAL_SERVER_ERROR" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")

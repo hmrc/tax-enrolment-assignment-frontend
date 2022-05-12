@@ -20,7 +20,10 @@ import play.api.test.FakeRequest
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.PTEnrolmentOtherAccountMesages
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
+  AccountDetails,
+  MFADetails
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnotherAccount
 
 class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
@@ -55,12 +58,14 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
   )
 
   val testAccountDetails = AccountDetails(
+    "credId",
     userId = USER_ID,
     email = Some("email.otherUser@test.com"),
     lastLoginDate = "27 February 2022 at 12:00 PM",
     mfaDetails
   )
   val testAccountDetailsWithSA = AccountDetails(
+    "credId",
     userId = PT_USER_ID,
     email = Some("email.otherUser@test.com"),
     lastLoginDate = "27 February 2022 at 12:00 PM",
@@ -69,6 +74,7 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
   )
 
   val accountDetailsWithNoEmail: AccountDetails = AccountDetails(
+    "credId",
     userId = "9871",
     email = None,
     lastLoginDate = "27 February 2022 at 12:00 PM",

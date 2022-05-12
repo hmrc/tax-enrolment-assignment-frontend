@@ -39,15 +39,12 @@ import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SINGLE_ACCOUNT
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-<<<<<<< HEAD
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{
   EACDConnector,
   IVConnector,
+  LegacyAuthConnector,
   TaxEnrolmentsConnector
 }
-=======
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{EACDConnector, IVConnector, LegacyAuthConnector, TaxEnrolmentsConnector}
->>>>>>> 44ce6e3604f9ec55fdf9370ea716da6af0d8eef2
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{
@@ -66,15 +63,12 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{
 }
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditHandler
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-<<<<<<< HEAD
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{
   EACDService,
   SilentAssignmentService,
+  ThrottlingService,
   UsersGroupsSearchService
 }
-=======
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, SilentAssignmentService, ThrottlingService, UsersGroupsSearchService}
->>>>>>> 44ce6e3604f9ec55fdf9370ea716da6af0d8eef2
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.UnderConstructionView
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 

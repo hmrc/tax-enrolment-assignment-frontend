@@ -16,7 +16,7 @@
 
 package controllers
 
-import helpers.TestHelper
+import helpers.{TestHelper, ThrottleHelperISpec}
 import helpers.TestITData._
 import helpers.WiremockHelper._
 import helpers.messages._
@@ -25,15 +25,19 @@ import play.api.http.Status
 import play.api.libs.json.Json
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SINGLE_ACCOUNT}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
 import play.api.libs.ws.DefaultWSCookie
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes.AccountCheckController
 
-class EnrolledForPTISpec extends TestHelper with Status {
+class EnrolledForPTISpec extends TestHelper with Status with ThrottleHelperISpec {
 
   val urlPath: String = UrlPaths.enrolledPTNoSAOnAnyAccountPath
 
   s"GET $urlPath" when {
+
+    throttleSpecificTests(() => buildRequest(urlPath)
+      .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+      .addHttpHeaders(xSessionId, xRequestId)
+      .get())
+
     s"the session cache has Account type of $MULTIPLE_ACCOUNTS" should {
       s"render the EnrolledForPT page" in {
         await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
@@ -235,6 +239,12 @@ class EnrolledForPTISpec extends TestHelper with Status {
   }
 
   s"POST $urlPath" when {
+
+    throttleSpecificTests(() => buildRequest(urlPath)
+      .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+      .addHttpHeaders(csrfContent, xSessionId, xRequestId, sessionCookie)
+      .post(Json.obj()))
+
     "the session cache contains the redirect url" should {
       s"redirect to the redirect url" in {
         await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
@@ -243,14 +253,14 @@ class EnrolledForPTISpec extends TestHelper with Status {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val res = buildRequest(urlPath, followRedirects = true)
+        val res = buildRequest(urlPath)
           .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
           .addHttpHeaders(csrfContent, xSessionId, xRequestId, sessionCookie)
           .post(Json.obj())
 
         whenReady(res) { resp =>
-          resp.status shouldBe OK
-          resp.uri.toString shouldBe UrlPaths.returnUrl
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include(UrlPaths.returnUrl)
         }
       }
     }

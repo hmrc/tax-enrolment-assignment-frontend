@@ -17,7 +17,7 @@
 package controllers
 
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
-import helpers.TestHelper
+import helpers.{TestHelper, ThrottleHelperISpec}
 import helpers.TestITData._
 import helpers.WiremockHelper._
 import helpers.messages._
@@ -33,11 +33,17 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_A
 import java.util.UUID
 import scala.collection.JavaConverters._
 
-class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status {
+class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status with ThrottleHelperISpec {
 
   val urlPath: String = UrlPaths.ptOnOtherAccountPath
 
   s"GET $urlPath" when {
+
+    throttleSpecificTests(() => buildRequest(urlPath)
+      .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+      .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
+      .get())
+
     "the signed in user has SA enrolment in session and PT enrolment on another account" should {
       s"render the pt on another account page" in new DataAndMockSetup {
         saveDataToCache(optSAEnrolledCredential = None)

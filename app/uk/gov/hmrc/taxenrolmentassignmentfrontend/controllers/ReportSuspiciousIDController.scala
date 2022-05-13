@@ -21,27 +21,18 @@ import com.google.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.play.bootstrap.controller.WithDefaultFormBinding
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
-  PT_ASSIGNED_TO_OTHER_USER,
-  SA_ASSIGNED_TO_OTHER_USER
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_OTHER_USER}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{
-  AccountMongoDetailsAction,
-  AuthAction
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction, ThrottleAction}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logAssignedEnrolmentAfterReportingFraud
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{
-  AuditEvent,
-  AuditHandler
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REPORTED_FRAUD
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.ReportSuspiciousID
+import uk.gov.hmrc.play.bootstrap.controller.WithDefaultFormBinding
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -49,6 +40,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class ReportSuspiciousIDController @Inject()(
   authAction: AuthAction,
   accountMongoDetailsAction: AccountMongoDetailsAction,
+  throttleAction: ThrottleAction,
   sessionCache: TEASessionCache,
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
   mcc: MessagesControllerComponents,
@@ -64,7 +56,7 @@ class ReportSuspiciousIDController @Inject()(
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
   def viewNoSA(): Action[AnyContent] =
-    authAction.andThen(accountMongoDetailsAction).async { implicit request =>
+    authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
       val res = for {
         _ <- EitherT {
           Future.successful(
@@ -89,7 +81,7 @@ class ReportSuspiciousIDController @Inject()(
     }
 
   def viewSA(): Action[AnyContent] =
-    authAction.andThen(accountMongoDetailsAction).async { implicit request =>
+    authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
       val res = for {
         _ <- EitherT {
           Future.successful(
@@ -114,7 +106,7 @@ class ReportSuspiciousIDController @Inject()(
     }
 
   def continue: Action[AnyContent] =
-    authAction.andThen(accountMongoDetailsAction).async { implicit request =>
+    authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
       sessionCache.save[Boolean](REPORTED_FRAUD, true)(request, implicitly)
       multipleAccountsOrchestrator
         .checkValidAccountTypeAndEnrolForPT(SA_ASSIGNED_TO_OTHER_USER)

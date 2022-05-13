@@ -23,7 +23,7 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.controller.WithDefaultFormBinding
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction, ThrottleAction}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnotherAccount
@@ -34,6 +34,7 @@ import scala.concurrent.ExecutionContext
 class PTEnrolmentOnOtherAccountController @Inject()(
   authAction: AuthAction,
   accountMongoDetailsAction: AccountMongoDetailsAction,
+  throttleAction: ThrottleAction,
   mcc: MessagesControllerComponents,
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
   ptEnrolmentOnAnotherAccountView: PTEnrolmentOnAnotherAccount,
@@ -42,11 +43,11 @@ class PTEnrolmentOnOtherAccountController @Inject()(
 )(implicit ec: ExecutionContext, appConfig: AppConfig)
     extends FrontendController(mcc)
     with I18nSupport
-      with WithDefaultFormBinding{
+      with WithDefaultFormBinding {
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
-  def view(): Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).async { implicit request =>
+  def view(): Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
 
     val res = multipleAccountsOrchestrator.getCurrentAndPTAAndSAIfExistsForUser
 

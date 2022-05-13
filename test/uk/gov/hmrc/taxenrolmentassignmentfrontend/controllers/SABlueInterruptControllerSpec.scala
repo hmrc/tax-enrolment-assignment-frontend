@@ -19,24 +19,21 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 import org.jsoup.Jsoup
 import play.api.mvc.AnyContent
 import play.api.test.Helpers.{status, _}
-import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
+import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.IncorrectUserType
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{
-  TestFixture,
-  UrlPaths
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, ThrottleHelperSpec, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SABlueInterrupt
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class SABlueInterruptControllerSpec extends TestFixture {
+class SABlueInterruptControllerSpec extends TestFixture with ThrottleHelperSpec {
 
   val blueSAView: SABlueInterrupt =
     inject[SABlueInterrupt]
@@ -45,6 +42,7 @@ class SABlueInterruptControllerSpec extends TestFixture {
     new SABlueInterruptController(
       mockAuthAction,
       mockAccountMongoDetailsAction,
+      mockThrottleAction,
       mcc,
       mockMultipleAccountsOrchestrator,
       logger,
@@ -53,6 +51,9 @@ class SABlueInterruptControllerSpec extends TestFixture {
     )
 
   "view" when {
+
+    specificThrottleTests(controller.view())
+
     "a user has SA on another account" should {
       "render the SABlueInterrupt page" in {
         (mockAuthConnector
@@ -74,6 +75,7 @@ class SABlueInterruptControllerSpec extends TestFixture {
           .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
           .returning(Right(SA_ASSIGNED_TO_OTHER_USER))
         mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val result = controller
           .view()
@@ -137,6 +139,7 @@ class SABlueInterruptControllerSpec extends TestFixture {
             Left(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
           )
         mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val result = controller
           .view()
@@ -149,6 +152,9 @@ class SABlueInterruptControllerSpec extends TestFixture {
   }
 
   "continue" when {
+
+    specificThrottleTests(controller.continue())
+
     "a user has SA on another account" should {
       s"redirect to ${UrlPaths.saOnOtherAccountKeepAccessToSAPath}" in {
         (mockAuthConnector
@@ -170,6 +176,7 @@ class SABlueInterruptControllerSpec extends TestFixture {
           .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
           .returning(Right(SA_ASSIGNED_TO_OTHER_USER))
         mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val result = controller
           .continue()
@@ -228,6 +235,7 @@ class SABlueInterruptControllerSpec extends TestFixture {
             Left(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
           )
         mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val result = controller
           .continue()

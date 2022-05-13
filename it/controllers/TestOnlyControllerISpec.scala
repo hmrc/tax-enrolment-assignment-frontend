@@ -17,10 +17,12 @@
 package controllers
 
 import helpers.IntegrationSpecBase
-import helpers.TestITData.{csrfContent, xSessionId}
+import helpers.TestITData.{authoriseResponseJson, csrfContent, saEnrolmentAsCaseClass, saEnrolmentOnly, xSessionId}
+import helpers.WiremockHelper.stubAuthorizePost
 import play.api.http.Status
 import play.api.libs.json.Json
 import play.api.libs.ws.DefaultWSCookie
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.formats.EnrolmentsFormats
 
 class TestOnlyControllerISpec extends IntegrationSpecBase with Status {
 
@@ -62,6 +64,23 @@ class TestOnlyControllerISpec extends IntegrationSpecBase with Status {
             resp.status shouldBe NOT_FOUND
           }
         }
+      }
+    }
+  }
+  "GET /protect-tax-info/auth/enrolments" should {
+    s"return enrolments and $OK" in {
+
+      val authResponse = authoriseResponseJson(enrolments = saEnrolmentOnly)
+      stubAuthorizePost(OK, authResponse.toString())
+      val res = buildTestOnlyRequest("/protect-tax-info/auth/enrolments")
+        .addCookies(DefaultWSCookie("mdtp", authCookie))
+        .addHttpHeaders(xSessionId, csrfContent)
+        .withBody(Json.obj())
+        .get()
+
+      whenReady(res) { resp =>
+        resp.status shouldBe OK
+        resp.json shouldBe Json.toJson(Set(saEnrolmentAsCaseClass))(EnrolmentsFormats.writes)
       }
     }
   }

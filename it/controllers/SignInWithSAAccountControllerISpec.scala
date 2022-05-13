@@ -16,7 +16,7 @@
 
 package controllers
 
-import helpers.TestHelper
+import helpers.{TestHelper, ThrottleHelperISpec}
 import helpers.TestITData._
 import helpers.WiremockHelper._
 import helpers.messages._
@@ -30,11 +30,17 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.USER_AS
 import play.api.libs.ws.DefaultWSCookie
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes.AccountCheckController
 
-class SignInWithSAAccountControllerISpec extends TestHelper with Status {
+class SignInWithSAAccountControllerISpec extends TestHelper with Status with ThrottleHelperISpec {
 
   val urlPath: String = UrlPaths.saOnOtherAccountSigninAgainPath
 
   s"GET $urlPath" when {
+
+    throttleSpecificTests(() => buildRequest(urlPath)
+      .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+      .addHttpHeaders(xSessionId, csrfContent, sessionCookie)
+      .get())
+
     "the session cache has a credential for SA enrolment that is not the signed in account" should {
       s"return $OK with the sign in again page" in {
         await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))

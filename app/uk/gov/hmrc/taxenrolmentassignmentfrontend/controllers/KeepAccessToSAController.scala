@@ -23,7 +23,7 @@ import play.api.mvc._
 import uk.gov.hmrc.play.bootstrap.controller.WithDefaultFormBinding
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction, ThrottleAction}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
@@ -35,6 +35,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class KeepAccessToSAController @Inject()(
   authAction: AuthAction,
   accountMongoDetailsAction: AccountMongoDetailsAction,
+  throttleAction: ThrottleAction,
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
   mcc: MessagesControllerComponents,
   val logger: EventLoggerService,
@@ -47,7 +48,7 @@ class KeepAccessToSAController @Inject()(
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
   def view(): Action[AnyContent] =
-    authAction.andThen(accountMongoDetailsAction).async { implicit request =>
+    authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
       multipleAccountsOrchestrator.getDetailsForKeepAccessToSA.value.map {
         case Right(form) => Ok(keepAccessToSA(form))
         case Left(error) =>
@@ -55,7 +56,7 @@ class KeepAccessToSAController @Inject()(
       }
     }
 
-  def continue: Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).async {
+  def continue: Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async {
     implicit request =>
       KeepAccessToSAThroughPTAForm.keepAccessToSAThroughPTAForm.bindFromRequest
         .fold(

@@ -16,7 +16,7 @@
 
 package controllers
 
-import helpers.TestHelper
+import helpers.{TestHelper, ThrottleHelperISpec}
 import helpers.TestITData._
 import helpers.WiremockHelper._
 import helpers.messages._
@@ -25,23 +25,22 @@ import play.api.http.Status
 import play.api.libs.json.Json
 import play.api.libs.ws.DefaultWSCookie
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
-  MULTIPLE_ACCOUNTS,
-  PT_ASSIGNED_TO_CURRENT_USER,
-  PT_ASSIGNED_TO_OTHER_USER,
-  SA_ASSIGNED_TO_CURRENT_USER,
-  SA_ASSIGNED_TO_OTHER_USER,
-  SINGLE_ACCOUNT
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes.AccountCheckController
 
-class KeepAccessToSAControllerISpec extends TestHelper with Status {
+class KeepAccessToSAControllerISpec extends TestHelper with Status with ThrottleHelperISpec {
 
   val urlPath: String = UrlPaths.saOnOtherAccountKeepAccessToSAPath
 
   s"GET $urlPath" when {
+
+    throttleSpecificTests(() => buildRequest(urlPath)
+      .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+      .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
+      .get())
+
     s"the session cache contains Account type of $SA_ASSIGNED_TO_OTHER_USER and no page data" should {
       s"render the KeepAccessToSA page with radio buttons unchecked" in {
         await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
@@ -279,6 +278,11 @@ class KeepAccessToSAControllerISpec extends TestHelper with Status {
   }
 
   s"POST $urlPath" when {
+    throttleSpecificTests(() => buildRequest(urlPath)
+      .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+      .addHttpHeaders(csrfContent, xSessionId, xRequestId, sessionCookie)
+      .post(Json.obj("select-continue" -> "yes")))
+
     s"the session cache contains Account type of $SA_ASSIGNED_TO_OTHER_USER" should {
       s"redirect to the ${UrlPaths.saOnOtherAccountSigninAgainPath}" when {
         "the user selects yes" in {

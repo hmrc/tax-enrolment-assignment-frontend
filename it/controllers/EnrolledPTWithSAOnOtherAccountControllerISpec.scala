@@ -16,7 +16,7 @@
 
 package controllers
 
-import helpers.TestHelper
+import helpers.{TestHelper, ThrottleHelperISpec}
 import helpers.TestITData._
 import helpers.WiremockHelper._
 import helpers.messages._
@@ -27,17 +27,23 @@ import play.api.libs.ws.DefaultWSCookie
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.USER_ASSIGNED_SA_ENROLMENT
-
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes.AccountCheckController
 
 class EnrolledPTWithSAOnOtherAccountControllerISpec
     extends TestHelper
-    with Status {
+    with Status
+    with ThrottleHelperISpec {
 
   val urlPath: String =
     UrlPaths.enrolledPTSAOnOtherAccountPath
 
   s"GET $urlPath" when {
+
+    throttleSpecificTests(() => buildRequest(urlPath)
+      .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+      .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
+      .get())
+
     s"the session cache has Account type of $SA_ASSIGNED_TO_OTHER_USER and the user has reported fraud" should {
       s"render the enrolledPTPage with no self assessment information" in {
         await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
@@ -275,6 +281,12 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
   }
 
   s"POST $urlPath" when {
+
+    throttleSpecificTests(() => buildRequest(urlPath)
+      .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+      .addHttpHeaders(csrfContent, xSessionId, xRequestId, sessionCookie)
+      .post(Json.obj()))
+
     "the session cache contains the redirect url" should {
       s"redirect to the redirect url" in {
         await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))

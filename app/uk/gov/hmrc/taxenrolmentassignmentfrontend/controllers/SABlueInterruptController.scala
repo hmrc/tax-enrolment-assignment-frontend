@@ -24,7 +24,7 @@ import uk.gov.hmrc.play.bootstrap.controller.WithDefaultFormBinding
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction, ThrottleAction}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SABlueInterrupt
@@ -35,6 +35,7 @@ import scala.concurrent.ExecutionContext
 class SABlueInterruptController @Inject()(
   authAction: AuthAction,
   accountMongoDetailsAction: AccountMongoDetailsAction,
+  throttleAction: ThrottleAction,
   mcc: MessagesControllerComponents,
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
   val logger: EventLoggerService,
@@ -48,7 +49,7 @@ class SABlueInterruptController @Inject()(
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
   def view(): Action[AnyContent] =
-    authAction.andThen(accountMongoDetailsAction) { implicit request =>
+    authAction.andThen(accountMongoDetailsAction).andThen(throttleAction) { implicit request =>
       multipleAccountsOrchestrator
         .checkValidAccountType(List(SA_ASSIGNED_TO_OTHER_USER)) match {
           case Right(_) =>
@@ -59,7 +60,7 @@ class SABlueInterruptController @Inject()(
     }
 
   def continue(): Action[AnyContent] =
-    authAction.andThen(accountMongoDetailsAction) { implicit request =>
+    authAction.andThen(accountMongoDetailsAction).andThen(throttleAction) { implicit request =>
       multipleAccountsOrchestrator
         .checkValidAccountType(List(SA_ASSIGNED_TO_OTHER_USER)) match {
           case Right(_) => Redirect(routes.KeepAccessToSAController.view)

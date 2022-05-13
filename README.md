@@ -18,7 +18,7 @@
 - please run the https://github.com/hmrc/tax-enrolment-assignment-journey-tests tests before manually navigating through app
 - pick a user from the local section within https://github.com/hmrc/tax-enrolment-assignment-journey-tests/blob/main/src/test/resources/environments.conf
 - Navigate to http://localhost:9949/auth-login-stub/gg-sign-in and enter all user details from the environment conf values.
-  - Setting the RedirectURL to `http://localhost:7750/protect-tax-info?redirectUrl=http%3A%2F%2Flocalhost%3A7750%2Ftax-enrolment-assignment-frontend%2Ftest-only%2Fsuccessful`
+  - Setting the RedirectURL to `http://localhost:7750/protect-tax-info?redirectUrl=http%3A%2F%2Flocalhost%3A7750%2Fprotect-tax-info%2Ftest-only%2Fsuccessful`
   - Confidence Level to 200
 
 See https://confluence.tools.tax.service.gov.uk/display/TEN/Journey+Testing+-+Data+setup+requirements for more info

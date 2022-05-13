@@ -16,14 +16,9 @@
 
 package controllers
 
-import helpers.TestHelper
+import helpers.{TestHelper, ThrottleHelperISpec}
 import helpers.TestITData._
-import helpers.WiremockHelper.{
-  stubAuthorizePost,
-  stubAuthorizePostUnauthorised,
-  stubGetWithQueryParam,
-  stubPost
-}
+import helpers.WiremockHelper.{stubAuthorizePost, stubAuthorizePostUnauthorised, stubGetWithQueryParam, stubPost}
 import helpers.messages._
 import org.jsoup.Jsoup
 import play.api.http.Status
@@ -33,10 +28,16 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import play.api.libs.ws.DefaultWSCookie
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes.AccountCheckController
 
-class SABlueInterruptControllerISpec extends TestHelper with Status {
+class SABlueInterruptControllerISpec extends TestHelper with Status with ThrottleHelperISpec {
   val urlPath: String = UrlPaths.saOnOtherAccountInterruptPath
 
   s"GET $urlPath" when {
+
+    throttleSpecificTests(() => buildRequest(urlPath)
+      .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+      .addHttpHeaders(xSessionId, csrfContent)
+      .get())
+
     "the session cache has a credential for SA enrolment that is not the signed in account" should {
       s"render the report blue interrupt page" in {
         await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
@@ -238,6 +239,12 @@ class SABlueInterruptControllerISpec extends TestHelper with Status {
   }
 
   s"POST $urlPath" when {
+
+    throttleSpecificTests(() => buildRequest(urlPath)
+      .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+      .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
+      .post(Json.obj()))
+
     "the session cache has a credential for SA enrolment that is not the signed in account" should {
       s"redirect to ${UrlPaths.saOnOtherAccountKeepAccessToSAPath}" in {
         await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))

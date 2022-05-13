@@ -22,6 +22,7 @@ import play.api.libs.json._
 import uk.gov.hmrc.auth.core.AffinityGroup.Individual
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core.retrieve.Credentials
+import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
 import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolment, Enrolments}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.UserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models._
@@ -42,6 +43,7 @@ object TestITData {
   val noEnrolments: JsValue = Json.arr()
   val saEnrolmentOnly: JsValue =
     Json.arr(createEnrolmentJson("IR-SA", "UTR", "123456789"))
+  val saEnrolmentAsCaseClass = Enrolment("IR-SA", Seq(EnrolmentIdentifier("UTR", "123456789")), "Activated")
   val ptEnrolmentOnly: JsValue =
     Json.arr(createEnrolmentJson("HMRC-PT", "NINO", NINO))
   val saAndptEnrolments: JsArray = Json.arr(

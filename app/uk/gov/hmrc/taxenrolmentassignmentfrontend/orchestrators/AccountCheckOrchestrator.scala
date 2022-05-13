@@ -24,7 +24,14 @@ import play.api.libs.json.Format
 import play.api.mvc.AnyContent
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.service.TEAFResult
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
+  MULTIPLE_ACCOUNTS,
+  PT_ASSIGNED_TO_CURRENT_USER,
+  PT_ASSIGNED_TO_OTHER_USER,
+  SA_ASSIGNED_TO_CURRENT_USER,
+  SA_ASSIGNED_TO_OTHER_USER,
+  SINGLE_ACCOUNT
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
@@ -37,9 +44,15 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{
   logCurrentUserhasMultipleAccounts,
   logCurrentUserhasOneAccount
 }
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{
+  ACCOUNT_TYPE,
+  REDIRECT_URL
+}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, SilentAssignmentService}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{
+  EACDService,
+  SilentAssignmentService
+}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -54,20 +67,22 @@ class AccountCheckOrchestrator @Inject()(
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
   def getAccountType(
-                      implicit ec: ExecutionContext,
-                      hc: HeaderCarrier,
-                      requestWithUserDetails: RequestWithUserDetailsFromSession[_]
-                    ): TEAFResult[AccountTypes.Value] = EitherT {
+    implicit ec: ExecutionContext,
+    hc: HeaderCarrier,
+    requestWithUserDetails: RequestWithUserDetailsFromSession[_]
+  ): TEAFResult[AccountTypes.Value] = EitherT {
     getAccountTypeFromCache.flatMap {
       case Some(accountType) => Future.successful(Right(accountType))
       case None =>
-        generateAccountType.map { accountType =>
-          sessionCache.save[AccountTypes.Value](ACCOUNT_TYPE, accountType)
-          accountType
-        }.value
+        generateAccountType.value.flatMap {
+          case Right(accountType) =>
+            sessionCache
+              .save[AccountTypes.Value](ACCOUNT_TYPE, accountType)
+              .map(_ => Right(accountType))
+          case Left(error) => Future.successful(Left(error))
+        }
     }
   }
-
 
   private def generateAccountType(
     implicit ec: ExecutionContext,
@@ -121,9 +136,9 @@ class AccountCheckOrchestrator @Inject()(
   }
 
   private def getNonePTAccountType(
-                                    implicit requestWithUserDetails: RequestWithUserDetailsFromSession[_],
-                                    hc: HeaderCarrier,
-                                    ec: ExecutionContext
+    implicit requestWithUserDetails: RequestWithUserDetailsFromSession[_],
+    hc: HeaderCarrier,
+    ec: ExecutionContext
   ): TEAFResult[AccountTypes.Value] = {
     for {
       singleOrMultipleAccount <- checkIfSingleOrMultipleAccounts
@@ -138,9 +153,9 @@ class AccountCheckOrchestrator @Inject()(
   }
 
   private def checkIfSingleOrMultipleAccounts(
-                                               implicit requestWithUserDetails: RequestWithUserDetailsFromSession[_],
-                                               hc: HeaderCarrier,
-                                               ec: ExecutionContext
+    implicit requestWithUserDetails: RequestWithUserDetailsFromSession[_],
+    hc: HeaderCarrier,
+    ec: ExecutionContext
   ): TEAFResult[AccountTypes.Value] = {
     silentAssignmentService.getOtherAccountsWithPTAAccess.map(
       otherCreds =>
@@ -199,11 +214,18 @@ class AccountCheckOrchestrator @Inject()(
         )
     }
   }
-  def getAccountTypeFromCache(implicit requestWithUserDetails: RequestWithUserDetailsFromSession[_],
-                              fmt: Format[AccountTypes.Value]): Future[Option[AccountTypes.Value]] =
+  def getAccountTypeFromCache(
+    implicit requestWithUserDetails: RequestWithUserDetailsFromSession[_],
+    fmt: Format[AccountTypes.Value]
+  ): Future[Option[AccountTypes.Value]] =
     sessionCache.getEntry[AccountTypes.Value](ACCOUNT_TYPE)
 
-  def getRedirectUrlFromCache(implicit requestWithUserDetails: RequestWithUserDetailsFromSession[_]): Future[Option[String]] =
-    sessionCache.getEntry[String](REDIRECT_URL)(requestWithUserDetails, implicitly)
+  def getRedirectUrlFromCache(
+    implicit requestWithUserDetails: RequestWithUserDetailsFromSession[_]
+  ): Future[Option[String]] =
+    sessionCache.getEntry[String](REDIRECT_URL)(
+      requestWithUserDetails,
+      implicitly
+    )
 
 }

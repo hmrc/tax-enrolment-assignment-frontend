@@ -67,12 +67,12 @@ class TestOnlyControllerISpec extends IntegrationSpecBase with Status {
       }
     }
   }
-  "GET /protect-tax-info/auth/enrolments" should {
+  "GET /protect-tax-info/test-only.auth/enrolments" should {
     s"return enrolments and $OK" in {
 
       val authResponse = authoriseResponseJson(enrolments = saEnrolmentOnly)
       stubAuthorizePost(OK, authResponse.toString())
-      val res = buildTestOnlyRequest("/protect-tax-info/auth/enrolments")
+      val res = buildTestOnlyRequest("/protect-tax-info/test-only/auth/enrolments")
         .addCookies(DefaultWSCookie("mdtp", authCookie))
         .addHttpHeaders(xSessionId, csrfContent)
         .withBody(Json.obj())

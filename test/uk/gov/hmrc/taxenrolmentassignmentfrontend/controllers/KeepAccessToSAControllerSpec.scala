@@ -19,33 +19,28 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 import org.jsoup.Jsoup
 import play.api.http.Status.OK
 import play.api.test.Helpers._
-import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
+import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
-  IncorrectUserType,
-  UnexpectedResponseFromTaxEnrolments
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, UnexpectedResponseFromTaxEnrolments}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm.keepAccessToSAThroughPTAForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{
-  TestFixture,
-  UrlPaths
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, ThrottleHelperSpec, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.KeepAccessToSA
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class KeepAccessToSAControllerSpec extends TestFixture {
+class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
 
   val view: KeepAccessToSA = app.injector.instanceOf[KeepAccessToSA]
 
   val controller = new KeepAccessToSAController(
     mockAuthAction,
     mockAccountMongoDetailsAction,
+    mockThrottleAction,
     mockMultipleAccountsOrchestrator,
     mcc,
     logger,
@@ -54,6 +49,9 @@ class KeepAccessToSAControllerSpec extends TestFixture {
   )
 
   "view" when {
+
+    specificThrottleTests(controller.view())
+
     "the user has multiple accounts, is signed in with one with SA and has no form data in cache" should {
       "render the keep access to sa page with radio buttons unchecked" in {
         (mockAuthConnector
@@ -79,6 +77,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
           .expects(*, *, *)
           .returning(createInboundResult(keepAccessToSAThroughPTAForm))
         mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -126,6 +125,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
             )
           )
         mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -173,6 +173,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
             )
           )
         mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -213,11 +214,10 @@ class KeepAccessToSAControllerSpec extends TestFixture {
           ))
           .expects(*, *, *)
           .returning(
-            createInboundResultError(
-              IncorrectUserType(UrlPaths.returnUrl, randomAccountType)
-            )
+            createInboundResultError(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
           )
         mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -249,6 +249,9 @@ class KeepAccessToSAControllerSpec extends TestFixture {
     }
 
     "continue" when {
+
+      specificThrottleTests(controller.continue())
+
       "the user has selected Yes" should {
         s"redirect to ${UrlPaths.saOnOtherAccountSigninAgainPath}" when {
           "they have SA on another account" in {
@@ -273,6 +276,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
               .expects(KeepAccessToSAThroughPTA(true), *, *, *)
               .returning(createInboundResult(true))
             mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+            mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
             val res = controller.continue
               .apply(
@@ -313,6 +317,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
                 )
               )
             mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+            mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
             val res = controller.continue
               .apply(
@@ -350,6 +355,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
               .expects(KeepAccessToSAThroughPTA(false), *, *, *)
               .returning(createInboundResult(false))
             mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+            mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
             val res = controller.continue
               .apply(
@@ -389,6 +395,8 @@ class KeepAccessToSAControllerSpec extends TestFixture {
                   IncorrectUserType(UrlPaths.returnUrl, randomAccountType)
                 )
               )
+            mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+            mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
             val res = controller.continue
               .apply(
@@ -396,7 +404,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
                   data = Map("select-continue" -> "no")
                 )
               )
-            mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+
 
             status(res) shouldBe SEE_OTHER
             redirectLocation(res) shouldBe Some(UrlPaths.accountCheckPath)
@@ -427,6 +435,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
                 createInboundResultError(UnexpectedResponseFromTaxEnrolments)
               )
             mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+            mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
             val res = controller.continue
               .apply(
@@ -454,6 +463,7 @@ class KeepAccessToSAControllerSpec extends TestFixture {
             .expects(predicates, retrievals, *, *)
             .returning(Future.successful(retrievalResponse()))
           mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+          mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
           val res = controller.continue
             .apply(

@@ -45,7 +45,7 @@ class ThrottleActionISpec extends TestHelper with Status {
     FakeRequest(),
     UserDetailsFromSession(
       "123",
-      "QQ123456A",
+      "QQ123400A",
       "gID",
       Individual,
       Enrolments(Set(Enrolment("foo"))),

@@ -20,14 +20,14 @@ import com.google.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.play.bootstrap.controller.WithDefaultFormBinding
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction, ThrottleAction}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logRedirectingToReturnUrl
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTWithSAOnOtherAccount
+import uk.gov.hmrc.play.bootstrap.controller.WithDefaultFormBinding
 
 import scala.concurrent.ExecutionContext
 
@@ -35,6 +35,7 @@ import scala.concurrent.ExecutionContext
 class EnrolledPTWithSAOnOtherAccountController @Inject()(
   authAction: AuthAction,
   accountMongoDetailsAction: AccountMongoDetailsAction,
+  throttleAction: ThrottleAction,
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
   mcc: MessagesControllerComponents,
   enrolledForPTPage: EnrolledForPTWithSAOnOtherAccount,
@@ -47,7 +48,7 @@ class EnrolledPTWithSAOnOtherAccountController @Inject()(
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
-  def view(): Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).async { implicit request =>
+  def view(): Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
     val res = for {
       currentAccount <- multipleAccountsOrchestrator.getDetailsForEnrolledPTWithSAOnOtherAccount
       optSAAccount <- multipleAccountsOrchestrator.getSACredentialIfNotFraud
@@ -61,7 +62,7 @@ class EnrolledPTWithSAOnOtherAccountController @Inject()(
     }
   }
 
-  def continue: Action[AnyContent] = authAction.andThen(accountMongoDetailsAction) { implicit request =>
+  def continue: Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).andThen(throttleAction) { implicit request =>
         logger.logEvent(
           logRedirectingToReturnUrl(
             request.userDetails.credId,

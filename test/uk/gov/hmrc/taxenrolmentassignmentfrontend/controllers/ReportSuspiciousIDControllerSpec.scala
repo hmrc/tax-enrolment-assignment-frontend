@@ -20,44 +20,31 @@ import play.api.http.Status.OK
 import play.api.libs.json.Format
 import play.api.mvc.AnyContent
 import play.api.test.Helpers._
-import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
+import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
-  PT_ASSIGNED_TO_OTHER_USER,
-  SA_ASSIGNED_TO_OTHER_USER
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{
-  RequestWithUserDetailsFromSession,
-  RequestWithUserDetailsFromSessionAndMongo
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
-  IncorrectUserType,
-  NoPTEnrolmentWhenOneExpected,
-  NoSAEnrolmentWhenOneExpected,
-  UnexpectedResponseFromTaxEnrolments
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_OTHER_USER}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, NoPTEnrolmentWhenOneExpected, NoSAEnrolmentWhenOneExpected, UnexpectedResponseFromTaxEnrolments}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{
-  TestFixture,
-  UrlPaths
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, ThrottleHelperSpec, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REPORTED_FRAUD
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.ReportSuspiciousID
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class ReportSuspiciousIDControllerSpec extends TestFixture {
+class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSpec {
 
   val view: ReportSuspiciousID = app.injector.instanceOf[ReportSuspiciousID]
   val controller =
     new ReportSuspiciousIDController(
       mockAuthAction,
       mockAccountMongoDetailsAction,
+      mockThrottleAction,
       mockTeaSessionCache,
       mockMultipleAccountsOrchestrator,
       mcc,
@@ -68,6 +55,9 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
     )
 
   "viewNoSA" when {
+
+    specificThrottleTests(controller.viewNoSA())
+
     "a user has PT on another account" should {
       "render the ReportSuspiciousID page" in {
 
@@ -99,6 +89,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
           .expects(*, *, *)
           .returning(createInboundResult(accountDetails))
         mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val auditEvent = AuditEvent.auditReportSuspiciousPTAccount(
           accountDetails
@@ -141,6 +132,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
             Left(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
           )
         mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val result = controller
           .viewNoSA()
@@ -183,6 +175,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
           .expects(*, *, *)
           .returning(createInboundResultError(NoPTEnrolmentWhenOneExpected))
         mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
 
         val res = controller
           .viewNoSA()
@@ -196,6 +189,9 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
   }
 
   "viewSA" when {
+
+    specificThrottleTests(controller.viewSA())
+
     "a user has SA on another account" should {
       "render the ReportSuspiciousID page" in {
         (mockAuthConnector
@@ -226,6 +222,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
           .expects(*, *, *)
           .returning(createInboundResult(accountDetails))
         mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val auditEvent = AuditEvent.auditReportSuspiciousSAAccount(
           accountDetails
@@ -291,6 +288,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
             Left(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
           )
         mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val result = controller
           .viewSA()
@@ -331,6 +329,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
           .expects(*, *, *)
           .returning(createInboundResultError(NoSAEnrolmentWhenOneExpected))
         mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val res = controller
           .viewSA()
@@ -343,6 +342,9 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
   }
 
   "continue" when {
+
+    specificThrottleTests(controller.continue())
+
     "the user has SA assigned to another user and enrolment to PT is successful" should {
       s"redirect to ${UrlPaths.enrolledPTSAOnOtherAccountPath}" in {
         (mockAuthConnector
@@ -374,6 +376,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
           .expects(SA_ASSIGNED_TO_OTHER_USER, *, *, *)
           .returning(createInboundResult((): Unit))
         mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val res = controller
           .continue()
@@ -439,11 +442,10 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
           ))
           .expects(SA_ASSIGNED_TO_OTHER_USER, *, *, *)
           .returning(
-            createInboundResultError(
-              IncorrectUserType(UrlPaths.returnUrl, randomAccountType)
-            )
+            createInboundResultError(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
           )
         mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val res = controller
           .continue()
@@ -488,6 +490,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture {
             createInboundResultError(UnexpectedResponseFromTaxEnrolments)
           )
         mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val res = controller
           .continue()

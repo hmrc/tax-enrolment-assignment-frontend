@@ -80,7 +80,7 @@ trait IntegrationSpecBase
     "microservice.services.personal-tax-account.host" -> s"$wiremockURL",
     "play.http.router" -> "testOnlyDoNotUseInAppConf.Routes",
     "microservice.services.features.taxEnrolmentsServiceListLocal" -> "false",
-    "throttle.percentage" -> "60"
+    "throttle.percentage" -> "1"
   )
 
   override implicit val patienceConfig: PatienceConfig = PatienceConfig(

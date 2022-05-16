@@ -16,7 +16,7 @@
 
 package controllers
 
-import helpers.TestHelper
+import helpers.{TestHelper, ThrottleHelperISpec}
 import helpers.TestITData._
 import helpers.WiremockHelper._
 import helpers.messages._
@@ -34,12 +34,18 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes.AccountCheckController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
 
-class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
+class ReportSuspiciousIDControllerISpec extends TestHelper with Status with ThrottleHelperISpec {
 
   val urlPathSA: String = UrlPaths.reportFraudSAAccountPath
   val urlPathPT: String = UrlPaths.reportFraudPTAccountPath
 
   s"GET $urlPathSA" when {
+
+    throttleSpecificTests(() => buildRequest(urlPathSA)
+      .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+      .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
+      .get())
+
     "the session cache has a credential for SA enrolment that is not the signed in account" should {
       s"render the report suspiciousId page with a continue button" in {
         await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
@@ -369,6 +375,12 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
   }
 
   s"GET $urlPathPT" when {
+
+    throttleSpecificTests(() => buildRequest(urlPathPT)
+      .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+      .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
+      .get())
+
     "the session cache has a credential for PT enrolment that is not the signed in account" should {
       s"render the report suspiciousId page with no continue button" in {
         await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
@@ -706,6 +718,12 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status {
   }
 
   s"POST $urlPathSA" when {
+
+    throttleSpecificTests(() => buildRequest(urlPathSA)
+      .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+      .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
+      .post(Json.obj()))
+
     "the user has account type of SA_ASSIGNED_TO_OTHER_USER" should {
       s"enrol the user for PT and redirect to the EnroledAfterReportingFraud" in {
         await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))

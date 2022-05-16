@@ -19,25 +19,19 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 import org.jsoup.Jsoup
 import play.api.http.Status.OK
 import play.api.test.Helpers._
-import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
+import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
-  IncorrectUserType,
-  UnexpectedResponseFromUsersGroupsSearch
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, UnexpectedResponseFromUsersGroupsSearch}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{
-  TestFixture,
-  UrlPaths
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, ThrottleHelperSpec, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTWithSAOnOtherAccount
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
+class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture with ThrottleHelperSpec{
 
   val view: EnrolledForPTWithSAOnOtherAccount =
     app.injector.instanceOf[EnrolledForPTWithSAOnOtherAccount]
@@ -45,6 +39,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
   val controller = new EnrolledPTWithSAOnOtherAccountController(
     mockAuthAction,
     mockAccountMongoDetailsAction,
+    mockThrottleAction,
     mockMultipleAccountsOrchestrator,
     mcc,
     view,
@@ -53,6 +48,8 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
   )
 
   "view" when {
+    specificThrottleTests(controller.view())
+
     "the user has enrolled for PT after reporting fraud" should {
       "render the EnrolledForPTWithSAOnOtherAccount page without SA" in {
         (mockAuthConnector
@@ -88,6 +85,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
           .returning(createInboundResult(None))
 
         mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -127,6 +125,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
           ))
           .expects(*, *, *)
           .returning(createInboundResult(accountDetails))
+        mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
 
         (mockMultipleAccountsOrchestrator
           .getSACredentialIfNotFraud(
@@ -168,6 +167,8 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
+
+        mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         (mockMultipleAccountsOrchestrator
           .getDetailsForEnrolledPTWithSAOnOtherAccount(
@@ -226,7 +227,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
-
+        mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
         (mockMultipleAccountsOrchestrator
           .getDetailsForEnrolledPTWithSAOnOtherAccount(
             _: RequestWithUserDetailsFromSessionAndMongo[_],
@@ -245,5 +246,8 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture {
         contentAsString(res) should include("enrolmentError.title")
       }
     }
+  }
+  "continue" when {
+    specificThrottleTests(controller.continue)
   }
 }

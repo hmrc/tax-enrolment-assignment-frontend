@@ -17,16 +17,20 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
 
 import play.api.Logger
+import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthAction
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.formats.EnrolmentsFormats
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
 
 @Singleton
 class TestOnlyController @Inject()(mcc: MessagesControllerComponents,
+                                   authAction: AuthAction,
                                    logger: EventLoggerService)
     extends FrontendController(mcc) {
 
@@ -48,5 +52,10 @@ class TestOnlyController @Inject()(mcc: MessagesControllerComponents,
           )
         case None => Future.successful(NotFound)
       }
+  }
+
+  def enrolmentsFromAuth(): Action[AnyContent] = authAction {
+    implicit request =>
+      Ok(Json.toJson(request.userDetails.enrolments.enrolments)(EnrolmentsFormats.writes).toString())
   }
 }

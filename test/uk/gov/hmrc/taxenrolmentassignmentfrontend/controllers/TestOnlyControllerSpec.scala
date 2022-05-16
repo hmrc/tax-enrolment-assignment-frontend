@@ -19,7 +19,15 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 import play.api.libs.json.{JsString, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
+import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
+import uk.gov.hmrc.auth.core.authorise.Predicate
+import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{predicates, retrievalResponse, retrievals, saEnrolmentOnly}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.formats.EnrolmentsFormats
+
+import scala.concurrent.{ExecutionContext, Future}
 
 class TestOnlyControllerSpec extends TestFixture {
 
@@ -58,6 +66,27 @@ class TestOnlyControllerSpec extends TestFixture {
         val res = testOnlyController.usersGroupSearchCall(credId)(fakeReq)
         status(res) shouldBe NOT_FOUND
       }
+    }
+  }
+
+  "enrolmentsFromAuth" should {
+    "return the enrolments from auth for a user" in {
+      (mockAuthConnector
+        .authorise(
+          _: Predicate,
+          _: Retrieval[
+            ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+              String
+            ] ~ Option[AffinityGroup]
+          ]
+        )(_: HeaderCarrier, _: ExecutionContext))
+        .expects(predicates, retrievals, *, *)
+        .returning(Future.successful(retrievalResponse(enrolments = saEnrolmentOnly)))
+
+      val res = testOnlyController.enrolmentsFromAuth()(fakeReq)
+      status(res) shouldBe OK
+      contentAsJson(res) shouldBe Json.toJson(saEnrolmentOnly.enrolments)(EnrolmentsFormats.writes)
+
     }
   }
 }

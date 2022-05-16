@@ -19,23 +19,20 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 import play.api.http.Status.OK
 import play.api.mvc.AnyContent
 import play.api.test.Helpers._
-import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
+import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.PT_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{
-  TestFixture,
-  UrlPaths
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, ThrottleHelperSpec, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnotherAccount
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
+class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleHelperSpec {
 
   val view: PTEnrolmentOnAnotherAccount =
     app.injector.instanceOf[PTEnrolmentOnAnotherAccount]
@@ -43,6 +40,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
   val controller = new PTEnrolmentOnOtherAccountController(
     mockAuthAction,
     mockAccountMongoDetailsAction,
+    mockThrottleAction,
     mcc,
     mockMultipleAccountsOrchestrator,
     view,
@@ -51,6 +49,8 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
   )
 
   "view" when {
+    specificThrottleTests(controller.view())
+
     "the user with no SA has another account with PT enrolment" should {
       "render the pt on another page with no Access SA text" in {
         val ptEnrolmentDataModelNone = ptEnrolmentDataModel(None)
@@ -75,6 +75,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
           .expects(*, *, *)
           .returning(createInboundResult(ptEnrolmentDataModelNone))
         mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -116,6 +117,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
           .expects(*, *, *)
           .returning(createInboundResult(ptEnrolmentModel))
         mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -157,6 +159,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
           .expects(*, *, *)
           .returning(createInboundResult(ptEnrolmentModel))
         mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -198,6 +201,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
           .expects(*, *, *)
           .returning(createInboundResult(ptEnrolmentModel))
         mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -239,6 +243,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
           .expects(*, *, *)
           .returning(createInboundResult(ptEnrolmentModel))
         mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -254,7 +259,6 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
 
     s"the user does not have an account type of $PT_ASSIGNED_TO_OTHER_USER" should {
       s"redirect to ${UrlPaths.accountCheckPath}" in {
-        val ptEnrolmentModel = ptEnrolmentDataModel(Some(USER_ID))
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -275,11 +279,10 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
           ))
           .expects(*, *, *)
           .returning(
-            createInboundResultError(
-              IncorrectUserType(UrlPaths.returnUrl, randomAccountType)
-            )
+            createInboundResultError(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
           )
         mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -291,8 +294,6 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
 
     "the current user has a no PT enrolment on other account but session says it is other account" should {
       "render the error page" in {
-
-        val ptEnrolmentModel = ptEnrolmentDataModel(Some(USER_ID))
 
         (mockAuthConnector
           .authorise(
@@ -317,6 +318,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture {
           .expects(*, *, *)
           .returning(createInboundResultError(NoPTEnrolmentWhenOneExpected))
         mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
 
         val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))

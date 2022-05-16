@@ -31,7 +31,7 @@ import play.api.test.CSRFTokenHelper._
 import play.api.test.Helpers._
 import play.api.test._
 import play.twirl.api.Html
-import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment}
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -39,36 +39,17 @@ import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SINGLE_ACCOUNT
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{
-  EACDConnector,
-  IVConnector,
-  LegacyAuthConnector,
-  TaxEnrolmentsConnector
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{EACDConnector, IVConnector, LegacyAuthConnector, TaxEnrolmentsConnector}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{
-  ErrorHandler,
-  SignOutController
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{
-  randomAccountType,
-  userDetailsNoEnrolments
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{ErrorHandler, SignOutController}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{TaxEnrolmentAssignmentErrors, UnexpectedError}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{randomAccountType, userDetailsNoEnrolments}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{
-  AccountCheckOrchestrator,
-  MultipleAccountsOrchestrator
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditHandler
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{
-  EACDService,
-  SilentAssignmentService,
-  ThrottlingService,
-  UsersGroupsSearchService
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.UnderConstructionView
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
@@ -152,6 +133,8 @@ trait TestFixture
       errorHandler
     )
 
+  lazy val mockThrottleAction =
+    new ThrottleAction(mockThrottlingService, testBodyParser, errorHandler)
   implicit lazy val testMessages: Messages =
     messagesApi.preferred(FakeRequest())
 
@@ -172,10 +155,40 @@ trait TestFixture
     error: TaxEnrolmentAssignmentErrors
   ): TEAFResult[T] = EitherT.left(Future.successful(error))
 
-  lazy val testOnlyController = new TestOnlyController(mcc, logger)
+  lazy val testOnlyController = new TestOnlyController(mcc, mockAuthAction,  logger)
 
-  def mockGetAccountTypeAndRedirectUrlSuccess(accountType: AccountTypes.Value,
-                                              redirectUrl: String = "foo") = {
+  def mockAccountShouldNotBeThrottled(accountTypes: AccountTypes.Value, nino: String, enrolments: Set[Enrolment]) = {
+    (mockThrottlingService.throttle(_: AccountTypes.Value, _: String, _: Set[Enrolment])(_: ExecutionContext, _: HeaderCarrier))
+      .expects(
+        accountTypes,
+        nino,
+        enrolments, *, *
+      )
+      .returning(createInboundResult(ThrottleDoesNotApply))
+      .once()
+  }
+
+  def mockAccountShouldBeThrottled(accountTypes: AccountTypes.Value, nino: String, enrolments: Set[Enrolment]) = {
+    (mockThrottlingService.throttle(_: AccountTypes.Value, _: String, _: Set[Enrolment])(_: ExecutionContext, _: HeaderCarrier))
+      .expects(
+        accountTypes,
+        nino,
+        enrolments, *, *
+      )
+      .returning(createInboundResult(ThrottleApplied))
+      .once()
+  }
+  def mockErrorFromThrottlingService(accountTypes: AccountTypes.Value, nino: String, enrolments: Set[Enrolment]) = {
+    (mockThrottlingService.throttle(_: AccountTypes.Value, _: String, _: Set[Enrolment])(_: ExecutionContext, _: HeaderCarrier))
+      .expects(
+        accountTypes,
+        nino,
+        enrolments, *, *
+      )
+      .returning(createInboundResultError(UnexpectedError))
+      .once()
+  }
+  def mockGetAccountTypeAndRedirectUrlSuccess(accountType: AccountTypes.Value, redirectUrl: String = "foo") = {
     (mockAccountCheckOrchestrator
       .getAccountTypeFromCache(
         _: RequestWithUserDetailsFromSession[_],
@@ -184,7 +197,9 @@ trait TestFixture
       .expects(*, *)
       .returning(Future.successful(Some(accountType)))
     (mockAccountCheckOrchestrator
-      .getRedirectUrlFromCache(_: RequestWithUserDetailsFromSession[_]))
+      .getRedirectUrlFromCache(
+        _: RequestWithUserDetailsFromSession[_]
+      ))
       .expects(*)
       .returning(Future.successful(Some(redirectUrl)))
   }
@@ -197,7 +212,9 @@ trait TestFixture
       .expects(*, *)
       .returning(Future.successful(Some(randomAccountType)))
     (mockAccountCheckOrchestrator
-      .getRedirectUrlFromCache(_: RequestWithUserDetailsFromSession[_]))
+      .getRedirectUrlFromCache(
+        _: RequestWithUserDetailsFromSession[_]
+      ))
       .expects(*)
       .returning(Future.successful(None))
   }

@@ -77,7 +77,6 @@ trait IntegrationSpecBase
     "microservice.services.users-groups-search.host" -> s"$mockHost",
     "microservice.services.users-groups-search.port" -> s"$mockPort",
     "microservice.services.users-groups-search.isTest" -> "false",
-    "microservice.services.personal-tax-account.host" -> s"$wiremockURL",
     "play.http.router" -> "testOnlyDoNotUseInAppConf.Routes",
     "microservice.services.features.taxEnrolmentsServiceListLocal" -> "false",
     "throttle.percentage" -> "1"

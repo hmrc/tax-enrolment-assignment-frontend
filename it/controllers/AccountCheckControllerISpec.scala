@@ -70,7 +70,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
       }
 
       "has no PT enrolment in session or EACD" should {
-        s"silently enrol for PT and redirect to personal tax" in {
+        s"silently enrol for PT and redirect to users redirect url" in {
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -93,16 +93,14 @@ class AccountCheckControllerISpec extends TestHelper with Status {
             ""
           )
 
-          stubGet(s"/personal-account", OK, "On PTA")
-
-          val res = buildRequest(urlPath, followRedirects = true)
+          val res = buildRequest(urlPath)
             .addCookies(DefaultWSCookie("mdtp", authCookie))
             .addHttpHeaders(xSessionId, csrfContent)
             .get()
 
           whenReady(res) { resp =>
-            resp.status shouldBe OK
-            resp.body should include("On PTA")
+            resp.status shouldBe SEE_OTHER
+            resp.header("Location").get should include(UrlPaths.returnUrl)
           }
         }
       }

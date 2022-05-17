@@ -73,7 +73,7 @@ class AccountCheckController @Inject()(
             )
           case Right(SA_ASSIGNED_TO_OTHER_USER) =>
             Future.successful(Redirect(routes.SABlueInterruptController.view))
-          case Right(accountType) => silentEnrolmentAndRedirect(accountType)
+          case Right(accountType) => silentEnrolmentAndRedirect(accountType, redirectUrl)
           case Left(error) =>
             Future.successful(
               errorHandler.handleErrors(error, "[AccountCheckController][accountCheck]")
@@ -82,7 +82,7 @@ class AccountCheckController @Inject()(
       }
   }
 
-      private def silentEnrolmentAndRedirect(accountType: AccountTypes.Value)(
+      private def silentEnrolmentAndRedirect(accountType: AccountTypes.Value, usersRedirectUrl: String)(
         implicit request: RequestWithUserDetailsFromSession[_],
         hc: HeaderCarrier
       ): Future[Result] = {
@@ -97,7 +97,7 @@ class AccountCheckController @Inject()(
                 "[AccountCheckController][accountCheck]"
               )
             )
-            Redirect(appConfig.redirectPTAUrl)
+            Redirect(usersRedirectUrl)
           case true =>
             logger.logEvent(
               logMultipleAccountHolderAssignedEnrolment(request.userDetails.credId)

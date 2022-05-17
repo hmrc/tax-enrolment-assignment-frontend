@@ -41,13 +41,6 @@ Run Performance Tests see [here](https://github.com/hmrc/tax-enrolment-assignmen
 | `/protect-tax-info/test-only/auth/enrolments `         | GET | Test | Endpoint to get enrolments from auth          |
 | `/users-groups-search/test-only/users/:credId `         | GET | Test | Endpoint to mimic User groups search endpoint |
 
-## Throttling
-- controlled via one config value `throttle.percentage`
-- allocates temporary PTA enrolment (to Auth not ESP)
-- applies to certain account types
-- set to 100 to disable
-
-
 
 ### License
 

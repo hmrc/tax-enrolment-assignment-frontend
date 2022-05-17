@@ -88,7 +88,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
           ))
           .expects(*, *, *)
           .returning(createInboundResult(accountDetails))
-        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val auditEvent = AuditEvent.auditReportSuspiciousPTAccount(
@@ -131,7 +131,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
           .returning(
             Left(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
           )
-        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val result = controller
@@ -174,7 +174,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
           ))
           .expects(*, *, *)
           .returning(createInboundResultError(NoPTEnrolmentWhenOneExpected))
-        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
 
         val res = controller
@@ -221,7 +221,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
           ))
           .expects(*, *, *)
           .returning(createInboundResult(accountDetails))
-        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val auditEvent = AuditEvent.auditReportSuspiciousSAAccount(
@@ -254,7 +254,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
-        mockGetAccountTypeSucessRedirectFail
+        mockGetDataFromCacheForActionNoRedirectUrl
 
         val res = controller
           .viewNoSA()
@@ -287,7 +287,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
           .returning(
             Left(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
           )
-        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val result = controller
@@ -328,7 +328,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
           ))
           .expects(*, *, *)
           .returning(createInboundResultError(NoSAEnrolmentWhenOneExpected))
-        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val res = controller
@@ -375,7 +375,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
           ))
           .expects(SA_ASSIGNED_TO_OTHER_USER, *, *, *)
           .returning(createInboundResult((): Unit))
-        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val res = controller
@@ -401,7 +401,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
-        mockGetAccountTypeSucessRedirectFail
+        mockGetDataFromCacheForActionNoRedirectUrl
 
         val res = controller
           .continue()
@@ -444,7 +444,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
           .returning(
             createInboundResultError(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
           )
-        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val res = controller
@@ -489,7 +489,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
           .returning(
             createInboundResultError(UnexpectedResponseFromTaxEnrolments)
           )
-        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val res = controller

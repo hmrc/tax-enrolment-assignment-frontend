@@ -21,60 +21,81 @@ import play.api.Logger
 import play.api.mvc._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.ErrorHandler
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.AccountCheckOrchestrator
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+
 import scala.concurrent.{ExecutionContext, Future}
 
-case class AccountDetailsFromMongo(accountType: AccountTypes.Value, redirectUrl: String)
-case class RequestWithUserDetailsFromSessionAndMongo[A](request: Request[A],
-                                                        userDetails: UserDetailsFromSession,
-                                                        sessionID: String,
-                                                        accountDetailsFromMongo: AccountDetailsFromMongo)
-  extends WrappedRequest[A](request)
+case class RequestWithUserDetailsFromSessionAndMongo[A](
+  request: Request[A],
+  userDetails: UserDetailsFromSession,
+  sessionID: String,
+  accountDetailsFromMongo: AccountDetailsFromMongo
+) extends WrappedRequest[A](request)
 
-object RequestWithUserDetailsFromSessionAndMongo{
+object RequestWithUserDetailsFromSessionAndMongo {
   import scala.language.implicitConversions
   implicit def requestConversion(
-                                  requestWithUserDetailsFromSessionAndMongo: RequestWithUserDetailsFromSessionAndMongo[_])
-  : RequestWithUserDetailsFromSession[_] = {
+    requestWithUserDetailsFromSessionAndMongo: RequestWithUserDetailsFromSessionAndMongo[_]
+  ): RequestWithUserDetailsFromSession[_] = {
     RequestWithUserDetailsFromSession(
       requestWithUserDetailsFromSessionAndMongo.request,
       requestWithUserDetailsFromSessionAndMongo.userDetails,
-      requestWithUserDetailsFromSessionAndMongo.sessionID)
+      requestWithUserDetailsFromSessionAndMongo.sessionID
+    )
   }
 }
 
 trait AccountMongoDetailsActionTrait
-    extends ActionRefiner[RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo]
+  extends ActionRefiner[RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo]
 
-
-  class AccountMongoDetailsAction @Inject()(accountCheckOrchestrator: AccountCheckOrchestrator,
-                                          val parser: BodyParsers.Default,
-                                          errorHandler: ErrorHandler)(implicit val executionContext: ExecutionContext) extends AccountMongoDetailsActionTrait {
+class AccountMongoDetailsAction @Inject()(
+  teaSessionCache: TEASessionCache,
+  val parser: BodyParsers.Default,
+  errorHandler: ErrorHandler
+)(implicit val executionContext: ExecutionContext)
+    extends AccountMongoDetailsActionTrait {
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
-  override protected def refine[A](request: RequestWithUserDetailsFromSession[A]): Future[Either[Result, RequestWithUserDetailsFromSessionAndMongo[A]]] = {
-    implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequestAndSession(request, request.session)
-    (for {
-      redirectUrl <- accountCheckOrchestrator.getRedirectUrlFromCache(request)
-      accountType <- accountCheckOrchestrator.getAccountTypeFromCache(request, implicitly)
-    } yield {
-      val resultOfGettingCache: (Option[String], Option[AccountTypes.Value]) = redirectUrl -> accountType
-      resultOfGettingCache match {
-        case (Some(redirectUrl), Some(accountType)) => Right(
-          RequestWithUserDetailsFromSessionAndMongo(
-            request.request, request.userDetails, request.sessionID, AccountDetailsFromMongo(accountType, redirectUrl)
-          )
+  override protected def refine[A](
+    request: RequestWithUserDetailsFromSession[A]
+  ): Future[Either[Result, RequestWithUserDetailsFromSessionAndMongo[A]]] = {
+    implicit val hc: HeaderCarrier =
+      HeaderCarrierConverter.fromRequestAndSession(request, request.session)
+
+    getAccountDetailsFromMongoFromCache(request).map {
+      case Right(accountDetailsFromMongo) => Right(
+        RequestWithUserDetailsFromSessionAndMongo(
+          request.request, request.userDetails, request.sessionID, accountDetailsFromMongo
         )
-        case (redirectUrlOpt, accountTypeOpt) =>
-          Left(errorHandler
-            .handleErrors(CacheNotCompleteOrNotCorrect(redirectUrlOpt, accountTypeOpt), "[AccountTypeAction][invokeBlock]")(request, baseLogger))
-      }
-    }).recover {
+      )
+      case Left(error) =>
+        Left(errorHandler
+          .handleErrors(error, "[AccountTypeAction][invokeBlock]")(request, baseLogger))
+    }.recover {
       case _ => Left(errorHandler
         .handleErrors(UnexpectedError, "[AccountTypeAction][invokeBlock]")(request, baseLogger))
     }
   }
+
+  private def getAccountDetailsFromMongoFromCache
+  (implicit request: RequestWithUserDetailsFromSession[_]): Future[Either[TaxEnrolmentAssignmentErrors, AccountDetailsFromMongo]] = {
+    teaSessionCache.fetch().map {optCachedMap =>
+      optCachedMap
+        .fold[Either[TaxEnrolmentAssignmentErrors, AccountDetailsFromMongo]](
+          Left(CacheNotCompleteOrNotCorrect(None, None))
+        ) { cachedMap =>
+          (AccountDetailsFromMongo.optAccountType(cachedMap.data), AccountDetailsFromMongo.optRedirectUrl(cachedMap.data)) match {
+            case (Some(accountType), Some(redirectUrl)) => Right(
+              AccountDetailsFromMongo(accountType, redirectUrl, cachedMap.data)
+            )
+            case (optAccountType, optRedirectUrl) => Left(
+              CacheNotCompleteOrNotCorrect(optRedirectUrl, optAccountType)
+            )
+          }
+        }
+    }
+  }
+
 }

@@ -16,33 +16,33 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions
 
-import play.api.libs.json.Format
+import play.api.libs.json.{JsString, Json}
 import play.api.mvc.Results.Ok
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AffinityGroup.Individual
 import uk.gov.hmrc.auth.core.{Enrolment, Enrolments}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
-  PT_ASSIGNED_TO_CURRENT_USER,
-  SINGLE_ACCOUNT
-}
+import uk.gov.hmrc.http.cache.client.CacheMap
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_CURRENT_USER, SINGLE_ACCOUNT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo.requestConversion
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL}
 
 import scala.concurrent.Future
 
 class AccountMongoDetailsActionSpec extends TestFixture {
   val accountMongoDetailsAction: AccountMongoDetailsAction =
     new AccountMongoDetailsAction(
-      mockAccountCheckOrchestrator,
+      mockTeaSessionCache,
       testBodyParser,
       errorHandler
     )
 
+
+
   "invoke" should {
     "return updated request when orchestrator returns success Some for both account type and redirect url" in {
+      val exampleMongoSessionData = Map(ACCOUNT_TYPE -> Json.toJson(PT_ASSIGNED_TO_CURRENT_USER), REDIRECT_URL -> JsString("foo"))
       val requestWithUserDetailsFromSession = RequestWithUserDetailsFromSession(
         FakeRequest(),
         UserDetailsFromSession(
@@ -61,7 +61,7 @@ class AccountMongoDetailsActionSpec extends TestFixture {
         requestWithUserDetailsFromSession.request,
         requestWithUserDetailsFromSession.userDetails,
         requestWithUserDetailsFromSession.sessionID,
-        AccountDetailsFromMongo(PT_ASSIGNED_TO_CURRENT_USER, "foo")
+        AccountDetailsFromMongo(PT_ASSIGNED_TO_CURRENT_USER, "foo", exampleMongoSessionData)
       )
 
       val function =
@@ -72,17 +72,11 @@ class AccountMongoDetailsActionSpec extends TestFixture {
             Ok(requestWithUserDetailsFromSessionAndMongo.toString())
         )
 
-      (mockAccountCheckOrchestrator
-        .getAccountTypeFromCache(
-          _: RequestWithUserDetailsFromSession[_],
-          _: Format[AccountTypes.Value]
-        ))
-        .expects(requestWithUserDetailsFromSession, *)
-        .returning(Future.successful(Some(PT_ASSIGNED_TO_CURRENT_USER)))
-      (mockAccountCheckOrchestrator
-        .getRedirectUrlFromCache(_: RequestWithUserDetailsFromSession[_]))
-        .expects(requestWithUserDetailsFromSession)
-        .returning(Future.successful(Some("foo")))
+      (mockTeaSessionCache
+        .fetch()(
+          _: RequestWithUserDetailsFromSession[_]))
+        .expects(*)
+        .returning(Future.successful(Some(CacheMap("id", exampleMongoSessionData))))
 
       val res = accountMongoDetailsAction.invokeBlock(
         requestWithUserDetailsFromSession,
@@ -91,7 +85,8 @@ class AccountMongoDetailsActionSpec extends TestFixture {
       contentAsString(res) shouldBe expectedConversion.toString()
     }
     s"Return $INTERNAL_SERVER_ERROR" when {
-      s"orchestrator returns success None for Account type but Some redirect url" in {
+      s"the session cache contains the redirectUrl but no the accountType" in {
+        val exampleMongoSessionData = Map(REDIRECT_URL -> JsString("foo"))
         val requestWithUserDetailsFromSession =
           RequestWithUserDetailsFromSession(
             FakeRequest(),
@@ -115,17 +110,11 @@ class AccountMongoDetailsActionSpec extends TestFixture {
               Ok(requestWithUserDetailsFromSessionAndMongo.toString())
           )
 
-        (mockAccountCheckOrchestrator
-          .getAccountTypeFromCache(
-            _: RequestWithUserDetailsFromSession[_],
-            _: Format[AccountTypes.Value]
-          ))
-          .expects(requestWithUserDetailsFromSession, *)
-          .returning(Future.successful(None))
-        (mockAccountCheckOrchestrator
-          .getRedirectUrlFromCache(_: RequestWithUserDetailsFromSession[_]))
-          .expects(requestWithUserDetailsFromSession)
-          .returning(Future.successful(Some("redirectUrl")))
+        (mockTeaSessionCache
+          .fetch()(
+            _: RequestWithUserDetailsFromSession[_]))
+          .expects(*)
+          .returning(Future.successful(Some(CacheMap("id", exampleMongoSessionData))))
 
         val res = accountMongoDetailsAction.invokeBlock(
           requestWithUserDetailsFromSession,
@@ -134,7 +123,8 @@ class AccountMongoDetailsActionSpec extends TestFixture {
         status(res) shouldBe INTERNAL_SERVER_ERROR
         contentAsString(res) should include("enrolmentError.title")
       }
-      "orchestrator returns success Some for Account type but None redirect url" in {
+      "the session cache contains the account type but not the redirect url" in {
+        val exampleMongoSessionData = Map(ACCOUNT_TYPE -> Json.toJson(PT_ASSIGNED_TO_CURRENT_USER))
         val requestWithUserDetailsFromSession =
           RequestWithUserDetailsFromSession(
             FakeRequest(),
@@ -158,17 +148,11 @@ class AccountMongoDetailsActionSpec extends TestFixture {
               Ok(requestWithUserDetailsFromSessionAndMongo.toString())
           )
 
-        (mockAccountCheckOrchestrator
-          .getAccountTypeFromCache(
-            _: RequestWithUserDetailsFromSession[_],
-            _: Format[AccountTypes.Value]
-          ))
-          .expects(requestWithUserDetailsFromSession, *)
-          .returning(Future.successful(Some(PT_ASSIGNED_TO_CURRENT_USER)))
-        (mockAccountCheckOrchestrator
-          .getRedirectUrlFromCache(_: RequestWithUserDetailsFromSession[_]))
-          .expects(requestWithUserDetailsFromSession)
-          .returning(Future.successful(None))
+        (mockTeaSessionCache
+          .fetch()(
+            _: RequestWithUserDetailsFromSession[_]))
+          .expects(*)
+          .returning(Future.successful(Some(CacheMap("id", exampleMongoSessionData))))
 
         val res = accountMongoDetailsAction.invokeBlock(
           requestWithUserDetailsFromSession,
@@ -178,7 +162,8 @@ class AccountMongoDetailsActionSpec extends TestFixture {
         contentAsString(res) should include("enrolmentError.title")
       }
     }
-    "orchestrator get account type fails" in {
+
+    "the cache is empty" in {
       val requestWithUserDetailsFromSession = RequestWithUserDetailsFromSession(
         FakeRequest(),
         UserDetailsFromSession(
@@ -199,17 +184,12 @@ class AccountMongoDetailsActionSpec extends TestFixture {
           Future.successful(
             Ok(requestWithUserDetailsFromSessionAndMongo.toString())
         )
-      (mockAccountCheckOrchestrator
-        .getRedirectUrlFromCache(_: RequestWithUserDetailsFromSession[_]))
-        .expects(requestWithUserDetailsFromSession)
+
+      (mockTeaSessionCache
+        .fetch()(
+          _: RequestWithUserDetailsFromSession[_]))
+        .expects(*)
         .returning(Future.successful(None))
-      (mockAccountCheckOrchestrator
-        .getAccountTypeFromCache(
-          _: RequestWithUserDetailsFromSession[_],
-          _: Format[AccountTypes.Value]
-        ))
-        .expects(requestWithUserDetailsFromSession, *)
-        .returning(Future.failed(exception = new Exception("uh oh")))
 
       val res = accountMongoDetailsAction.invokeBlock(
         requestWithUserDetailsFromSession,
@@ -219,7 +199,7 @@ class AccountMongoDetailsActionSpec extends TestFixture {
       contentAsString(res) should include("enrolmentError.title")
     }
 
-    "orchestrator get redirect url fails" in {
+    "when reading from cache returns an exception" in {
       val requestWithUserDetailsFromSession = RequestWithUserDetailsFromSession(
         FakeRequest(),
         UserDetailsFromSession(
@@ -240,9 +220,11 @@ class AccountMongoDetailsActionSpec extends TestFixture {
           Future.successful(
             Ok(requestWithUserDetailsFromSessionAndMongo.toString())
         )
-      (mockAccountCheckOrchestrator
-        .getRedirectUrlFromCache(_: RequestWithUserDetailsFromSession[_]))
-        .expects(requestWithUserDetailsFromSession)
+
+      (mockTeaSessionCache
+        .fetch()(
+          _: RequestWithUserDetailsFromSession[_]))
+        .expects(*)
         .returning(Future.failed(exception = new Exception("uh oh")))
 
       val res = accountMongoDetailsAction.invokeBlock(
@@ -275,7 +257,7 @@ class AccountMongoDetailsActionSpec extends TestFixture {
           requestWithUserDetailsFromSession.request,
           requestWithUserDetailsFromSession.userDetails,
           requestWithUserDetailsFromSession.sessionID,
-          AccountDetailsFromMongo(SINGLE_ACCOUNT, "redirect")
+          AccountDetailsFromMongo(SINGLE_ACCOUNT, "redirect", Map())
         )
       ) shouldBe requestWithUserDetailsFromSession
     }

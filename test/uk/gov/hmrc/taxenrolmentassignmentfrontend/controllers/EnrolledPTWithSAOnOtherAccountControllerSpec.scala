@@ -84,7 +84,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture with Thro
           .expects(*, *, *)
           .returning(createInboundResult(None))
 
-        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
 
         val result = controller.view
@@ -139,7 +139,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture with Thro
               Some(accountDetails.copy(userId = "********1234"))
             )
           )
-        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(randomAccountType)
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
@@ -182,7 +182,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture with Thro
               IncorrectUserType(UrlPaths.returnUrl, randomAccountType)
             )
           )
-        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(randomAccountType)
         val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
@@ -203,7 +203,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture with Thro
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
-        mockGetAccountTypeSucessRedirectFail
+        mockGetDataFromCacheForActionNoRedirectUrl
 
         val res = controller
           .view()
@@ -238,7 +238,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture with Thro
           .returning(
             createInboundResultError(UnexpectedResponseFromUsersGroupsSearch)
           )
-        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(randomAccountType)
         val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 

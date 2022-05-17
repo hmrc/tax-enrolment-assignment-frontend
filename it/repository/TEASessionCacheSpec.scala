@@ -186,49 +186,6 @@ class TEASessionCacheSpec extends IntegrationSpecBase {
     }
   }
 
-  "getEntry" when {
-    "the session cache is empty" should {
-      "return None" in {
-        val res = teaSessionCache.getEntry[String]("test")
-
-        whenReady(res) { result =>
-          result shouldBe None
-        }
-      }
-    }
-
-    "the session cache contains data for the key" should {
-      "return the key value" in {
-        val data = CacheMap(
-          sessionId,
-          Map("test" -> JsString("abc"), "test1" -> JsString("efg"))
-        )
-        val res = for {
-          _ <- sessionRepository().upsert(data)
-          updated <- teaSessionCache.getEntry[String]("test")
-        } yield updated
-
-        whenReady(res) { result =>
-          result shouldBe Some("abc")
-        }
-      }
-    }
-
-    "the session cache does not contain data with the key" should {
-      "return None" in {
-        val data = CacheMap(sessionId, Map("test" -> JsString("abc")))
-        val res = for {
-          _ <- sessionRepository().upsert(data)
-          updated <- teaSessionCache.getEntry[String]("test1")
-        } yield updated
-
-        whenReady(res) { result =>
-          result shouldBe None
-        }
-      }
-    }
-  }
-
   "extendSession" when {
     "there is no record in the database" should {
       "upsert empty data to mongo and return true" in {

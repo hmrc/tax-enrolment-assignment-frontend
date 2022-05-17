@@ -74,7 +74,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
           ))
           .expects(*, *, *)
           .returning(createInboundResult(ptEnrolmentDataModelNone))
-        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val result = controller.view
@@ -116,7 +116,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
           ))
           .expects(*, *, *)
           .returning(createInboundResult(ptEnrolmentModel))
-        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
 
         val result = controller.view
@@ -158,7 +158,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
           ))
           .expects(*, *, *)
           .returning(createInboundResult(ptEnrolmentModel))
-        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
 
         val result = controller.view
@@ -200,7 +200,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
           ))
           .expects(*, *, *)
           .returning(createInboundResult(ptEnrolmentModel))
-        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
 
         val result = controller.view
@@ -242,7 +242,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
           ))
           .expects(*, *, *)
           .returning(createInboundResult(ptEnrolmentModel))
-        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
 
         val result = controller.view
@@ -281,7 +281,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
           .returning(
             createInboundResultError(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
           )
-        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val result = controller.view
@@ -317,7 +317,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
           ))
           .expects(*, *, *)
           .returning(createInboundResultError(NoPTEnrolmentWhenOneExpected))
-        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
 
         val res = controller.view
@@ -341,7 +341,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
 
-        mockGetAccountTypeSucessRedirectFail
+        mockGetDataFromCacheForActionNoRedirectUrl
 
         val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))

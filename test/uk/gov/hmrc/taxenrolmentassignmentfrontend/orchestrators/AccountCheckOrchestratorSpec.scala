@@ -23,12 +23,11 @@ import play.api.mvc.AnyContent
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IVNinoStoreEntry
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.ACCOUNT_TYPE
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -51,12 +50,11 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
     "the accountType is available in the cache" should {
       "return the accountType" in {
         (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: Format[AccountTypes.Value]
+          .fetch()(
+            _: RequestWithUserDetailsFromSession[AnyContent]
           ))
-          .expects("ACCOUNT_TYPE", *, *)
-          .returning(Future.successful(Some(SINGLE_ACCOUNT)))
+          .expects(*)
+          .returning(Future.successful(Some(generateBasicCacheMap(SINGLE_ACCOUNT))))
 
         val res = orchestrator.getAccountType
         whenReady(res.value) { result =>
@@ -69,11 +67,10 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
       "has no PT enrolment in session or EACD" should {
         s"return SINGLE_ACCOUNT" in {
           (mockTeaSessionCache
-            .getEntry(_: String)(
-              _: RequestWithUserDetailsFromSession[AnyContent],
-              _: Format[AccountTypes.Value]
+            .fetch()(
+              _: RequestWithUserDetailsFromSession[AnyContent]
             ))
-            .expects("ACCOUNT_TYPE", *, *)
+            .expects(*)
             .returning(Future.successful(None))
 
           (mockEacdService
@@ -113,11 +110,10 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
       "has a PT enrolment in the session" should {
         s"return PT_ASSIGNED_TO_CURRENT_USER" in {
           (mockTeaSessionCache
-            .getEntry(_: String)(
-              _: RequestWithUserDetailsFromSession[AnyContent],
-              _: Format[AccountTypes.Value]
+            .fetch()(
+              _: RequestWithUserDetailsFromSession[AnyContent]
             ))
-            .expects("ACCOUNT_TYPE", *, *)
+            .expects(*)
             .returning(Future.successful(None))
 
           val res = orchestrator.getAccountType(
@@ -143,11 +139,10 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
       "has PT enrolment in EACD but not the session" should {
         s"return PT_ASSIGNED_TO_CURRENT_USER" in {
           (mockTeaSessionCache
-            .getEntry(_: String)(
-              _: RequestWithUserDetailsFromSession[AnyContent],
-              _: Format[AccountTypes.Value]
+            .fetch()(
+              _: RequestWithUserDetailsFromSession[AnyContent]
             ))
-            .expects("ACCOUNT_TYPE", *, *)
+            .expects(*)
             .returning(Future.successful(None))
 
           (mockEacdService
@@ -179,11 +174,10 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
       "includes one with a PT enrolment" should {
         "return PT_ASSIGNED_TO_OTHER_USER" in {
           (mockTeaSessionCache
-            .getEntry(_: String)(
-              _: RequestWithUserDetailsFromSession[AnyContent],
-              _: Format[AccountTypes.Value]
+            .fetch()(
+              _: RequestWithUserDetailsFromSession[AnyContent]
             ))
-            .expects("ACCOUNT_TYPE", *, *)
+            .expects(*)
             .returning(Future.successful(None))
 
           (mockEacdService
@@ -214,11 +208,10 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
       "includes a credential (not signed in) with SA enrolment" should {
         "return SA_ASSIGNED_TO_OTHER_USER" in {
           (mockTeaSessionCache
-            .getEntry(_: String)(
-              _: RequestWithUserDetailsFromSession[AnyContent],
-              _: Format[AccountTypes.Value]
+            .fetch()(
+              _: RequestWithUserDetailsFromSession[AnyContent]
             ))
-            .expects("ACCOUNT_TYPE", *, *)
+            .expects(*)
             .returning(Future.successful(None))
 
           (mockEacdService
@@ -267,11 +260,10 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
       "have no enrolments but the signed in credential has SA in request" should {
         "return SA_ASSIGNED_TO_CURRENT_USER" in {
           (mockTeaSessionCache
-            .getEntry(_: String)(
-              _: RequestWithUserDetailsFromSession[AnyContent],
-              _: Format[AccountTypes.Value]
+            .fetch()(
+              _: RequestWithUserDetailsFromSession[AnyContent]
             ))
-            .expects("ACCOUNT_TYPE", *, *)
+            .expects(*)
             .returning(Future.successful(None))
 
           (mockEacdService
@@ -315,11 +307,10 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
       "have no enrolments but the signed in credential has SA in EACD" should {
         "return SA_ASSIGNED_TO_CURRENT_USER" in {
           (mockTeaSessionCache
-            .getEntry(_: String)(
-              _: RequestWithUserDetailsFromSession[AnyContent],
-              _: Format[AccountTypes.Value]
+            .fetch()(
+              _: RequestWithUserDetailsFromSession[AnyContent]
             ))
-            .expects("ACCOUNT_TYPE", *, *)
+            .expects(*)
             .returning(Future.successful(None))
 
           (mockEacdService
@@ -368,11 +359,10 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
       "have no enrolments" should {
         s"return MULTIPLE_ACCOUNTS" in {
           (mockTeaSessionCache
-            .getEntry(_: String)(
-              _: RequestWithUserDetailsFromSession[AnyContent],
-              _: Format[AccountTypes.Value]
+            .fetch()(
+              _: RequestWithUserDetailsFromSession[AnyContent]
             ))
-            .expects("ACCOUNT_TYPE", *, *)
+            .expects(*)
             .returning(Future.successful(None))
 
           (mockEacdService
@@ -421,11 +411,10 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
       "includes one with a SA enrolment" should {
         "return SA_ASSIGNED_TO_OTHER_USER" in {
           (mockTeaSessionCache
-            .getEntry(_: String)(
-              _: RequestWithUserDetailsFromSession[AnyContent],
-              _: Format[AccountTypes.Value]
+            .fetch()(
+              _: RequestWithUserDetailsFromSession[AnyContent]
             ))
-            .expects("ACCOUNT_TYPE", *, *)
+            .expects(*)
             .returning(Future.successful(None))
 
           (mockEacdService
@@ -469,38 +458,6 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
             result shouldBe Right(SA_ASSIGNED_TO_OTHER_USER)
           }
         }
-      }
-    }
-  }
-  "getAccountTypeFromCache" should {
-    "return value from cache" in {
-      (mockTeaSessionCache
-        .getEntry(_: String)(
-          _: RequestWithUserDetailsFromSession[AnyContent],
-          _: Format[AccountTypes.Value]
-        ))
-        .expects(SessionKeys.ACCOUNT_TYPE, *, *)
-        .returning(Future.successful(Some(SINGLE_ACCOUNT)))
-
-      val res = orchestrator.getAccountTypeFromCache
-      whenReady(res) { result =>
-        result shouldBe Some(SINGLE_ACCOUNT)
-      }
-    }
-  }
-  "getRedirectUrlFromCache" should {
-    "return value from cache" in {
-      (mockTeaSessionCache
-        .getEntry(_: String)(
-          _: RequestWithUserDetailsFromSession[AnyContent],
-          _: Format[String]
-        ))
-        .expects(SessionKeys.REDIRECT_URL, *, *)
-        .returning(Future.successful(Some("foo")))
-
-      val res = orchestrator.getRedirectUrlFromCache
-      whenReady(res) { result =>
-        result shouldBe Some("foo")
       }
     }
   }

@@ -20,21 +20,17 @@ import helpers.WiremockHelper.{stubPost, stubPutWithRequestBody}
 import helpers.messages.ErrorTemplateMessages
 import helpers.TestHelper
 import play.api.http.Status
-import play.api.libs.json.Json
+import play.api.libs.json.{JsString, Json}
 import play.api.mvc.Results.Ok
 import play.api.test.FakeRequest
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{
-  AccountDetailsFromMongo,
-  RequestWithUserDetailsFromSessionAndMongo,
-  ThrottleAction,
-  UserDetailsFromSession
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSessionAndMongo, ThrottleAction, UserDetailsFromSession}
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AffinityGroup.Individual
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.hmrcPTKey
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.formats.EnrolmentsFormats
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL}
 
 import scala.concurrent.Future
 
@@ -53,7 +49,7 @@ class ThrottleActionISpec extends TestHelper with Status {
       false
     ),
     "sesh",
-    AccountDetailsFromMongo(SA_ASSIGNED_TO_OTHER_USER, "redirectURL")
+    AccountDetailsFromMongo(SA_ASSIGNED_TO_OTHER_USER, "redirectURL", exampleMongoSessionData)
   )
   val exampleRequestAboveThreshold = RequestWithUserDetailsFromSessionAndMongo(
     FakeRequest(),
@@ -67,7 +63,7 @@ class ThrottleActionISpec extends TestHelper with Status {
       false
     ),
     "sesh",
-    AccountDetailsFromMongo(SA_ASSIGNED_TO_OTHER_USER, "redirectURL")
+    AccountDetailsFromMongo(SA_ASSIGNED_TO_OTHER_USER, "redirectURL", exampleMongoSessionData)
   )
   val newEnrolment = (nino: String) =>
     Enrolment(

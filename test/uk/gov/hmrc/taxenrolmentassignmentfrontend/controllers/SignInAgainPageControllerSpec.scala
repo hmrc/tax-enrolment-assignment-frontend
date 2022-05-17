@@ -79,7 +79,7 @@ class SignInAgainPageControllerSpec extends TestFixture with ThrottleHelperSpec 
           ))
           .expects(*, *, *)
           .returning(createInboundResult(accountDetails))
-        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val result = controller
@@ -103,7 +103,7 @@ class SignInAgainPageControllerSpec extends TestFixture with ThrottleHelperSpec 
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
-        mockGetAccountTypeSucessRedirectFail
+        mockGetDataFromCacheForActionNoRedirectUrl
 
         val result = controller
           .view()
@@ -136,7 +136,7 @@ class SignInAgainPageControllerSpec extends TestFixture with ThrottleHelperSpec 
           .returning(
             Left(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
           )
-        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val result = controller.view
@@ -176,7 +176,7 @@ class SignInAgainPageControllerSpec extends TestFixture with ThrottleHelperSpec 
           ))
           .expects(*, *, *)
           .returning(createInboundResultError(NoSAEnrolmentWhenOneExpected))
-        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val res = controller
@@ -205,7 +205,7 @@ class SignInAgainPageControllerSpec extends TestFixture with ThrottleHelperSpec 
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
 
-        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val res = controller
@@ -229,7 +229,7 @@ class SignInAgainPageControllerSpec extends TestFixture with ThrottleHelperSpec 
         )(_: HeaderCarrier, _: ExecutionContext))
         .expects(predicates, retrievals, *, *)
         .returning(Future.successful(retrievalResponse()))
-      mockGetAccountTypeSucessRedirectFail
+      mockGetDataFromCacheForActionNoRedirectUrl
 
         val result = controller
           .view()

@@ -37,6 +37,14 @@ Run Performance Tests see [here](https://github.com/hmrc/tax-enrolment-assignmen
 |`/account-check`| GET | Internal | Endpoint get account check. |
 |`/multiple-accounts-check`| GET | Internal | Endpoint to get multiple accounts check. |
 |`/protect-tax-info/test-only/successful `| GET | Test | Endpoint to get a successful redirect. |
-### License
 
+## Throttling
+- controlled via one config value `throttle.percentage`
+- allocates temporary PTA enrolment (to Auth not ESP)
+- applies to certain account types
+- set to 101 to disable
+- set to 1 to throttle NINOs with pattern QQ112200Q
+- set to 100 to throttle NINOS with pattern QQ112299Q
+
+### License
 This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html").

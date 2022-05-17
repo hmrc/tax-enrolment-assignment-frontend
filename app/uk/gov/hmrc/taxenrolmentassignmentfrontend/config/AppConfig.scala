@@ -59,5 +59,5 @@ class AppConfig @Inject()(val config: ServicesConfig) {
   lazy val appName = config.getString("appName")
 
   lazy val percentageOfUsersThrottledToGetFakeEnrolment: Int =
-    config.getInt("throttle.percentage")
+    config.getInt("throttle.percentage") - 1
 }

@@ -65,7 +65,7 @@ class AccountCheckControllerSpec extends TestFixture {
 
   "accountCheck" when {
     "a single credential exists for a given nino with no PT enrolment" should {
-      s"silently assign the HMRC-PT Enrolment and redirect to ${UrlPaths.PTA}" in new TestHelper {
+      s"silently assign the HMRC-PT Enrolment and redirect to users redirect url" in new TestHelper {
         mockAuthCall()
         mockAccountCheckSuccess(SINGLE_ACCOUNT)
         mockSilentEnrolSuccess
@@ -75,7 +75,7 @@ class AccountCheckControllerSpec extends TestFixture {
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe SEE_OTHER
-        redirectLocation(result) shouldBe Some(UrlPaths.PTA)
+        redirectLocation(result) shouldBe Some(testOnly.routes.TestOnlyController.successfulCall.url)
       }
 
       "return an error page if there was an error assigning the enrolment" in new TestHelper {

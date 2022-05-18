@@ -148,6 +148,24 @@ object UsersGroupsFixedData {
       additionalFactors =
         Some(List(AdditonalFactors("totp", name = Some("HMRC App"))))
     )
+  val credId14 = "3775345571784310"
+  val userDetails14 =
+    UsersGroupResponse(
+      "********6125",
+      Some("email10@test.com"),
+      "2022-09-16T14:40:25Z",
+      additionalFactors =
+        Some(List(AdditonalFactors("totp", name = Some("HMRC App"))))
+    )
+  val credId15 = "2130391752756105"
+  val userDetails15 =
+    UsersGroupResponse(
+      "********6125",
+      Some("email10@test.com"),
+      "2022-09-16T14:40:25Z",
+      additionalFactors =
+        Some(List(AdditonalFactors("totp", name = Some("HMRC App"))))
+    )
 
   val usersGroupSearchCreds = Map(
     credId1 -> userDetails1,
@@ -162,7 +180,9 @@ object UsersGroupsFixedData {
     credId10 -> userDetails10,
     credId11 -> userDetails11,
     credId12 -> userDetails12,
-    credId13 -> userDetails13
+    credId13 -> userDetails13,
+    credId14 -> userDetails14,
+    credId15 -> userDetails15
   )
 
   def toJson(usersGroupResponse: UsersGroupResponse): JsValue = {

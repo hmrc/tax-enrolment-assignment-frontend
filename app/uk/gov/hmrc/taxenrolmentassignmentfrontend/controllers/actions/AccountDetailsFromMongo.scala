@@ -24,7 +24,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUN
 
 case class AccountDetailsFromMongo(accountType: AccountTypes.Value,
                                    redirectUrl: String,
-                                   sessionData: Map[String, JsValue]) {
+                                   private val sessionData: Map[String, JsValue]) {
 
   val optKeepAccessToSAFormData: Option[KeepAccessToSAThroughPTA] =
     sessionData.get(KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM).map(_.as[KeepAccessToSAThroughPTA])

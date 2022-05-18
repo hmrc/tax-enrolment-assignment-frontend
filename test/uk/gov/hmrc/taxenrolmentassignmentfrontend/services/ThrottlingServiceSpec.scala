@@ -47,7 +47,6 @@ class ThrottlingServiceSpec extends TestFixture with FutureAwaits with DefaultAw
         TestScenario("Nino is invalid format (not correct length 3)", "JW0", 10),
         TestScenario("Nino is invalid format (not correct length 2)", "JW", 10),
         TestScenario("Nino is invalid format (not correct length 1)", "J", 10),
-        TestScenario("percentage < 0 but Nino is correct format", validNonRealNino, -1)
       ).foreach(test =>
         s"${test.testName}" in {
           intercept[IllegalArgumentException](throttlingservice.isNinoWithinThrottleThreshold(test.nino, test.percentage))
@@ -55,7 +54,6 @@ class ThrottlingServiceSpec extends TestFixture with FutureAwaits with DefaultAw
     }
     "return true" when {
       List(
-        TestScenario("Nino last 2 digits == percentage (percentage is 0)", "QQ123400A", 0),
         TestScenario("Nino last 2 digits == percentage (percentage is 1)", "QQ123401A", 1),
         TestScenario("Nino last 2 digits == percentage (percentage is an amount)", "QQ123455A", 55),
         TestScenario("Nino last 2 digits == percentage (percentage is max)", "QQ123499A", 99),
@@ -73,7 +71,9 @@ class ThrottlingServiceSpec extends TestFixture with FutureAwaits with DefaultAw
         TestScenario("percentage is 100", validNonRealNino, 100),
         TestScenario("Nino last 2 digits > percentage by 1", "QQ123411A", 10),
         TestScenario("Nino last 2 digits > percentage by an amount", "QQ123456A", 10),
-        TestScenario("Nino last 2 digits > percentage by max amount", "QQ123499A", 10)
+        TestScenario("Nino last 2 digits > percentage by max amount", "QQ123499A", 10),
+        TestScenario("percentage < 0 but Nino is correct format", validNonRealNino, -1),
+        TestScenario("Nino last 2 digits == percentage (percentage is 0)", "QQ123400A", 0)
       ).foreach(test =>
         s"${test.testName}" in {
           throttlingservice.isNinoWithinThrottleThreshold(test.nino, test.percentage) shouldBe false

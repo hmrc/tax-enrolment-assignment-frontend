@@ -33,12 +33,12 @@ Run Performance Tests see [here](https://github.com/hmrc/tax-enrolment-assignmen
 
 ## API
 
-| Path  | Supported Methods | Type | Description                                   |
-|----------------------------------------------------|:-------------------:|:-------|-----------------------------------------------|
-| `/protect-tax-info/account-check`                                   | GET | Internal | Endpoint get account check.                   |
-| `/protect-tax-info/test-only/successful `          | GET | Test | Endpoint to get a successful redirect.        |
-| `/protect-tax-info/test-only/auth/enrolments `     | GET | Test | Endpoint to get enrolments from auth          |
-| `/users-groups-search/test-only/users/:credId `     | GET | Test | Endpoint to mimic User groups search endpoint |
+| Path                                             | Supported Methods | Type | Description                                   |
+|--------------------------------------------------|:-------------------:|:-------|-----------------------------------------------|
+| `/protect-tax-info/account-check`                | GET | Internal | Endpoint get account check.                   |
+| `/protect-tax-info/test-only/successful `        | GET | Test | Endpoint to get a successful redirect.        |
+| `/protect-tax-info/test-only/auth/enrolments `   | GET | Test | Endpoint to get enrolments from auth          |
+| `/users-groups-search/test-only/users/:credId `  | GET | Test | Endpoint to mimic User groups search endpoint |
 
 ### License
 

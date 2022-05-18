@@ -182,8 +182,7 @@ object UsersGroupsFixedData {
     credId12 -> userDetails12,
     credId13 -> userDetails13,
     credId14 -> userDetails14,
-    credId15 -> userDetails15,
-
+    credId15 -> userDetails15
   )
 
   def toJson(usersGroupResponse: UsersGroupResponse): JsValue = {

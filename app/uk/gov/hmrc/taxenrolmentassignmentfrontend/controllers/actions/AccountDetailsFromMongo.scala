@@ -26,15 +26,15 @@ case class AccountDetailsFromMongo(accountType: AccountTypes.Value,
                                    redirectUrl: String,
                                    sessionData: Map[String, JsValue]) {
 
-  val optKeepAccessToSAFormData =
+  val optKeepAccessToSAFormData: Option[KeepAccessToSAThroughPTA] =
     sessionData.get(KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM).map(_.as[KeepAccessToSAThroughPTA])
-  val optReportedFraud =
+  val optReportedFraud: Option[Boolean] =
     sessionData.get(REPORTED_FRAUD).map(_.as[Boolean])
-  val optUserAssignedSA =
+  val optUserAssignedSA: Option[UsersAssignedEnrolment] =
     sessionData.get(USER_ASSIGNED_SA_ENROLMENT).map(_.as[UsersAssignedEnrolment])
-  val optUserAssignedPT =
+  val optUserAssignedPT: Option[UsersAssignedEnrolment] =
     sessionData.get(USER_ASSIGNED_PT_ENROLMENT).map(_.as[UsersAssignedEnrolment])
-  val optOtherValidPTAAccounts =
+  val optOtherValidPTAAccounts: Option[Seq[IVNinoStoreEntry]] =
     sessionData.get(OTHER_VALID_PTA_ACCOUNTS).map(_.as[Seq[IVNinoStoreEntry]])
   def optAccountDetails(credId: String): Option[AccountDetails] =
     sessionData.get(accountDetailsForCredential(credId)).map(_.as[AccountDetails])
@@ -43,8 +43,8 @@ case class AccountDetailsFromMongo(accountType: AccountTypes.Value,
 
 object AccountDetailsFromMongo {
 
-  val optAccountType = (sessionData: Map[String, JsValue]) =>
+  val optAccountType: Map[String, JsValue] => Option[AccountTypes.Value] = (sessionData: Map[String, JsValue]) =>
     sessionData.get(ACCOUNT_TYPE).map(_.as[AccountTypes.Value])
-  val optRedirectUrl = (sessionData: Map[String, JsValue]) =>
+  val optRedirectUrl: Map[String, JsValue] => Option[String] = (sessionData: Map[String, JsValue]) =>
     sessionData.get(REDIRECT_URL).map(_.as[String])
 }

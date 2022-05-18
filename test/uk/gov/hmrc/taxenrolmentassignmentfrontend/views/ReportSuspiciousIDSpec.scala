@@ -68,6 +68,9 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
       "has the text back" in {
         backLink.text() shouldBe "Back"
       }
+      "has the expected href" in {
+        backLink.get(0).attr("href") shouldBe "javascript:window.history.back();"
+      }
     }
 
     validateTimeoutDialog(document)

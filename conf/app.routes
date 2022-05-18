@@ -10,8 +10,6 @@ GET        /keep-alive              uk.gov.hmrc.taxenrolmentassignmentfrontend.c
 
 GET        /                                                    uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.AccountCheckController.accountCheck(redirectUrl: String)
 
-#GET        /enrol-pt/enrolment-success-sa-user-id               uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.???
-
 GET        /enrol-pt/enrolment-success-no-sa                    uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.EnrolledForPTController.view
 
 POST       /enrol-pt/enrolment-success-no-sa                    uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.EnrolledForPTController.continue

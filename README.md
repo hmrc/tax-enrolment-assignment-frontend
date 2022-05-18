@@ -30,6 +30,7 @@ Run Journey Tests: see [here](https://github.com/hmrc/tax-enrolment-assignment-j
 Run Performance Tests see [here](https://github.com/hmrc/tax-enrolment-assignment-performance-tests)
 
 
+
 ## API
 
 | Path - internal routes prefixed by `/protect-tax-info` | Supported Methods | Type | Description |
@@ -39,6 +40,7 @@ Run Performance Tests see [here](https://github.com/hmrc/tax-enrolment-assignmen
 |`/protect-tax-info/test-only/successful `| GET | Test | Endpoint to get a successful redirect. |
 
 ## Throttling
+
 - controlled via one config value `throttle.percentage`
 - allocates temporary PTA enrolment (to Auth not ESP)
 - applies to certain account types

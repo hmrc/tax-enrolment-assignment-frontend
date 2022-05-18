@@ -39,6 +39,5 @@ object UrlPaths {
   val ptOnOtherAccountPath =
     routes.PTEnrolmentOnOtherAccountController.view.url
   val logoutPath = routes.SignOutController.signOut.url
-  val PTA = "http://localhost:9232/personal-account"
 
 }

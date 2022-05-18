@@ -51,10 +51,7 @@ class AppConfig @Inject()(val config: ServicesConfig) {
     s"$basAuthHost/bas-gateway/sign-out-without-state"
   lazy val keepAliveUrl: String =
     s"/protect-tax-info/keepAlive"
-  lazy val redirectPTAUrl: String = config.getString(
-    "microservice.services.personal-tax-account.host"
-  ) + "/personal-account"
-  //ToDo find real link to SA
+
   lazy val selfAssessmentUrl: String = "?"
   lazy val appName = config.getString("appName")
 

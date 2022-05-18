@@ -42,7 +42,7 @@ Run Performance Tests see [here](https://github.com/hmrc/tax-enrolment-assignmen
 - controlled via one config value `throttle.percentage`
 - allocates temporary PTA enrolment (to Auth not ESP)
 - applies to certain account types
-- set to 101 to disable
+- set to 0 to disable
 - set to 1 to throttle NINOs with pattern QQ112200Q
 - set to 100 to throttle NINOS with pattern QQ112299Q
 

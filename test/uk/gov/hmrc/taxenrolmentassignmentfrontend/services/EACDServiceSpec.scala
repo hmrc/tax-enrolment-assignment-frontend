@@ -18,19 +18,17 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.services
 
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
-import play.api.libs.json.Format
+import play.api.libs.json.{Format, Json}
 import play.api.mvc.AnyContent
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.cache.client.CacheMap
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.PT_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromEACD
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{
-  USER_ASSIGNED_PT_ENROLMENT,
-  USER_ASSIGNED_SA_ENROLMENT
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_ASSIGNED_PT_ENROLMENT, USER_ASSIGNED_SA_ENROLMENT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.EACDService
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -45,30 +43,8 @@ class EACDServiceSpec extends TestFixture with ScalaFutures {
   val service = new EACDService(mockEacdConnector, mockTeaSessionCache)
 
   "getUsersAssignedPTEnrolment" when {
-    "the user assigned PT enrolment are already in the cache" should {
-      "not make a call the eacd and return value from cache" in {
-        (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: Format[UsersAssignedEnrolment]
-          ))
-          .expects(USER_ASSIGNED_PT_ENROLMENT, *, *)
-          .returning(Future.successful(Some(UsersAssignedEnrolment1)))
-        val result = service.getUsersAssignedPTEnrolment
-        whenReady(result.value) { res =>
-          res shouldBe Right(UsersAssignedEnrolment1)
-        }
-      }
-    }
-    "the user assigned PT enrolment are not already in the cache" should {
+    "the a PT enrolment has been assigned for the nino" should {
       "call the EACD, save to cache and return the account details" in {
-        (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: Format[UsersAssignedEnrolment]
-          ))
-          .expects(USER_ASSIGNED_PT_ENROLMENT, *, *)
-          .returning(Future.successful(None))
         (mockEacdConnector
           .getUsersWithPTEnrolment(_: String)(
             _: ExecutionContext,
@@ -90,15 +66,8 @@ class EACDServiceSpec extends TestFixture with ScalaFutures {
       }
     }
 
-    "the user assigned PT enrolment are not already in the cache and EACD returns an error" should {
+    "EACD returns an error" should {
       "return an error" in {
-        (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: Format[UsersAssignedEnrolment]
-          ))
-          .expects(USER_ASSIGNED_PT_ENROLMENT, *, *)
-          .returning(Future.successful(None))
         (mockEacdConnector
           .getUsersWithPTEnrolment(_: String)(
             _: ExecutionContext,
@@ -115,31 +84,10 @@ class EACDServiceSpec extends TestFixture with ScalaFutures {
   }
 
   "getUsersAssignedSAEnrolment" when {
-    "the user assigned SA enrolment are already in the cache" should {
-      "not make a call the eacd and return value from cache" in {
-        (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: Format[UsersAssignedEnrolment]
-          ))
-          .expects(USER_ASSIGNED_SA_ENROLMENT, *, *)
-          .returning(Future.successful(Some(UsersAssignedEnrolment1)))
-        val result = service.getUsersAssignedSAEnrolment
-        whenReady(result.value) { res =>
-          res shouldBe Right(UsersAssignedEnrolment1)
-        }
-      }
-    }
 
-    "the user assigned SA enrolment are not already in the cache" should {
+    "the there is a user assigned SA enrolment" should {
       "call the EACD twice to get the UTR and then enrolled credentials, save to cache and return the credentialId" in {
-        (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: Format[UsersAssignedEnrolment]
-          ))
-          .expects(USER_ASSIGNED_SA_ENROLMENT, *, *)
-          .returning(Future.successful(None))
+
         (mockEacdConnector
           .queryKnownFactsByNinoVerifier(_: String)(
             _: ExecutionContext,
@@ -168,15 +116,9 @@ class EACDServiceSpec extends TestFixture with ScalaFutures {
       }
     }
 
-    "there is no SA enrolment data in the cache and the user has no SA enrolments associated with their nino" should {
-      "call EACD to get the UTR, then save no creds witth enrolment to cache and return None" in {
-        (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: Format[UsersAssignedEnrolment]
-          ))
-          .expects(USER_ASSIGNED_SA_ENROLMENT, *, *)
-          .returning(Future.successful(None))
+    "the user has no SA enrolments associated with their nino" should {
+      "call EACD to get the UTR, then save no creds with enrolment to cache and return None" in {
+
         (mockEacdConnector
           .queryKnownFactsByNinoVerifier(_: String)(
             _: ExecutionContext,
@@ -204,15 +146,9 @@ class EACDServiceSpec extends TestFixture with ScalaFutures {
       }
     }
 
-    "the user assigned SA enrolment are not already in the cache and EACD returns an error" should {
+    "EACD returns an error" should {
       "return an error" in {
-        (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: Format[UsersAssignedEnrolment]
-          ))
-          .expects(USER_ASSIGNED_SA_ENROLMENT, *, *)
-          .returning(Future.successful(None))
+
         (mockEacdConnector
           .queryKnownFactsByNinoVerifier(_: String)(
             _: ExecutionContext,

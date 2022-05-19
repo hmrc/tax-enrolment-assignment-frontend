@@ -21,7 +21,8 @@ import com.google.inject.{Inject, Singleton}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.UsersGroupsSearchConnector
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.accountDetailsForCredential
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
@@ -37,13 +38,12 @@ class UsersGroupsSearchService @Inject()(
   def getAccountDetails(credId: String)(
     implicit ec: ExecutionContext,
     hc: HeaderCarrier,
-    request: RequestWithUserDetailsFromSession[_]
+    request: RequestWithUserDetailsFromSessionAndMongo[_]
   ): TEAFResult[AccountDetails] = EitherT {
-    val key = accountDetailsForCredential(credId)
-    sessionCache.getEntry[AccountDetails](key).flatMap {
+    request.accountDetailsFromMongo.optAccountDetails(credId) match {
       case Some(entry) => Future.successful(Right(entry))
       case None =>
-        getAccountDetailsFromUsersGroupSearch(credId, key).value
+        getAccountDetailsFromUsersGroupSearch(credId, accountDetailsForCredential(credId)).value
     }
   }
 
@@ -51,7 +51,7 @@ class UsersGroupsSearchService @Inject()(
                                                     key: String)(
     implicit ec: ExecutionContext,
     hc: HeaderCarrier,
-    request: RequestWithUserDetailsFromSession[_]
+    request: RequestWithUserDetailsFromSessionAndMongo[_]
   ): TEAFResult[AccountDetails] = EitherT {
     usersGroupsSearchConnector
       .getUserDetails(credId)
@@ -59,7 +59,7 @@ class UsersGroupsSearchService @Inject()(
       .map {
         case Right(userDetails) =>
           val accountDetails = new AccountDetails(userDetails, credId)
-          sessionCache.save[AccountDetails](key, accountDetails)
+          sessionCache.save[AccountDetails](key, accountDetails)(request, implicitly)
           Right(accountDetails)
         case Left(error) => Left(error)
       }

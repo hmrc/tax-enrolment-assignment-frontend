@@ -74,7 +74,7 @@ class SABlueInterruptControllerSpec extends TestFixture with ThrottleHelperSpec 
           ))
           .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
           .returning(Right(SA_ASSIGNED_TO_OTHER_USER))
-        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val result = controller
@@ -105,7 +105,7 @@ class SABlueInterruptControllerSpec extends TestFixture with ThrottleHelperSpec 
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
-        mockGetAccountTypeSucessRedirectFail
+        mockGetDataFromCacheForActionNoRedirectUrl
 
         val result = controller
           .view()
@@ -138,7 +138,7 @@ class SABlueInterruptControllerSpec extends TestFixture with ThrottleHelperSpec 
           .returning(
             Left(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
           )
-        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val result = controller
@@ -175,7 +175,7 @@ class SABlueInterruptControllerSpec extends TestFixture with ThrottleHelperSpec 
           ))
           .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
           .returning(Right(SA_ASSIGNED_TO_OTHER_USER))
-        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val result = controller
@@ -201,7 +201,7 @@ class SABlueInterruptControllerSpec extends TestFixture with ThrottleHelperSpec 
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
-        mockGetAccountTypeSucessRedirectFail
+        mockGetDataFromCacheForActionNoRedirectUrl
 
         val result = controller
           .continue()
@@ -234,7 +234,7 @@ class SABlueInterruptControllerSpec extends TestFixture with ThrottleHelperSpec 
           .returning(
             Left(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
           )
-        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val result = controller

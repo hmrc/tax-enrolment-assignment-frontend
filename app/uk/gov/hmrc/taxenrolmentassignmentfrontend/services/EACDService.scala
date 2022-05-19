@@ -37,34 +37,6 @@ class EACDService @Inject()(eacdConnector: EACDConnector,
     implicit requestWithUserDetails: RequestWithUserDetailsFromSession[_],
     hc: HeaderCarrier,
     ec: ExecutionContext
-  ): TEAFResult[UsersAssignedEnrolment] =
-    EitherT {
-      sessionCache
-        .getEntry[UsersAssignedEnrolment](USER_ASSIGNED_PT_ENROLMENT)
-        .flatMap {
-          case Some(record) => Future.successful(Right(record))
-          case None         => getUsersWithPTEnrolmentFromEACD.value
-        }
-    }
-
-  def getUsersAssignedSAEnrolment(
-    implicit requestWithUserDetails: RequestWithUserDetailsFromSession[_],
-    hc: HeaderCarrier,
-    ec: ExecutionContext
-  ): TEAFResult[UsersAssignedEnrolment] =
-    EitherT {
-      sessionCache
-        .getEntry[UsersAssignedEnrolment](USER_ASSIGNED_SA_ENROLMENT)
-        .flatMap {
-          case Some(record) => Future.successful(Right(record))
-          case None         => getUsersWithSAEnrolmentFromEACD.value
-        }
-    }
-
-  private def getUsersWithPTEnrolmentFromEACD(
-    implicit requestWithUserDetails: RequestWithUserDetailsFromSession[_],
-    hc: HeaderCarrier,
-    ec: ExecutionContext
   ): TEAFResult[UsersAssignedEnrolment] = {
     for {
       userWithPTEnrolment <- eacdConnector
@@ -79,7 +51,7 @@ class EACDService @Inject()(eacdConnector: EACDConnector,
     } yield userWithPTEnrolment
   }
 
-  private def getUsersWithSAEnrolmentFromEACD(
+  def getUsersAssignedSAEnrolment(
     implicit requestWithUserDetails: RequestWithUserDetailsFromSession[_],
     hc: HeaderCarrier,
     ec: ExecutionContext

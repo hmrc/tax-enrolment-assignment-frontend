@@ -19,12 +19,12 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators
 import cats.data.EitherT
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
-import play.api.libs.json.Format
+import play.api.libs.json.{Format, JsBoolean, Json}
 import play.api.mvc.AnyContent
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
@@ -59,7 +59,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
             .getAccountDetails(_: String)(
               _: ExecutionContext,
               _: HeaderCarrier,
-              _: RequestWithUserDetailsFromSession[AnyContent]
+              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
             ))
             .expects(CREDENTIAL_ID, *, *, *)
             .returning(createInboundResult(accountDetails))
@@ -99,7 +99,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
           .getAccountDetails(_: String)(
             _: ExecutionContext,
             _: HeaderCarrier,
-            _: RequestWithUserDetailsFromSession[AnyContent]
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
           ))
           .expects(CREDENTIAL_ID, *, *, *)
           .returning(createInboundResult(accountDetails))
@@ -132,28 +132,21 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
     s"the accountType $PT_ASSIGNED_TO_OTHER_USER, no SA associated to the account" should {
       "return a PTEnrolmentOtherAccountViewModel for the account details" in {
 
+        val additionalCacheData = Map("USER_ASSIGNED_PT_ENROLMENT" -> Json.toJson(UsersAssignedEnrolment1))
         (mockUsersGroupService
           .getAccountDetails(_: String)(
             _: ExecutionContext,
             _: HeaderCarrier,
-            _: RequestWithUserDetailsFromSession[AnyContent]
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
           ))
           .expects(CREDENTIAL_ID, *, *, *)
           .returning(createInboundResult(accountDetails))
 
-        (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: Format[UsersAssignedEnrolment]
-          ))
-          .expects("USER_ASSIGNED_PT_ENROLMENT", *, *)
-          .returning(Future.successful(Some(UsersAssignedEnrolment1)))
-
         (mockUsersGroupService
           .getAccountDetails(_: String)(
             _: ExecutionContext,
             _: HeaderCarrier,
-            _: RequestWithUserDetailsFromSession[AnyContent]
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
           ))
           .expects(CREDENTIAL_ID_1, *, *, *)
           .returning(createInboundResult(accountDetailsWithPT.copy(userId = CREDENTIAL_ID_1,hasSA = None)))
@@ -167,7 +160,12 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
           .expects( *, *, *)
           .returning(createInboundResult(UsersAssignedEnrolment(None)))
 
-        val res = orchestrator.getCurrentAndPTAAndSAIfExistsForUser(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), implicitly, implicitly)
+        val res = orchestrator
+          .getCurrentAndPTAAndSAIfExistsForUser(
+            requestWithAccountType(
+              PT_ASSIGNED_TO_OTHER_USER,
+              additionalCacheData = additionalCacheData),
+            implicitly, implicitly)
         whenReady(res.value) { result =>
           result shouldBe Right(ptEnrolmentDataModel(None,accountDetailsWithPT.copy(userId = CREDENTIAL_ID_1,hasSA = None)))
         }
@@ -176,29 +174,22 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
 
     s"the accountType $PT_ASSIGNED_TO_OTHER_USER, account has SA in the current session" should {
       "return a PTEnrolmentOtherAccountViewModel for the account details" in {
+        val additionalCacheData = Map("USER_ASSIGNED_PT_ENROLMENT" -> Json.toJson(UsersAssignedEnrolment1))
 
         (mockUsersGroupService
           .getAccountDetails(_: String)(
             _: ExecutionContext,
             _: HeaderCarrier,
-            _: RequestWithUserDetailsFromSession[AnyContent]
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
           ))
           .expects(CREDENTIAL_ID, *, *, *)
           .returning(createInboundResult(accountDetails))
 
-        (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: Format[UsersAssignedEnrolment]
-          ))
-          .expects("USER_ASSIGNED_PT_ENROLMENT", *, *)
-          .returning(Future.successful(Some(UsersAssignedEnrolment1)))
-
         (mockUsersGroupService
           .getAccountDetails(_: String)(
             _: ExecutionContext,
             _: HeaderCarrier,
-            _: RequestWithUserDetailsFromSession[AnyContent]
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
           ))
           .expects(CREDENTIAL_ID_1, *, *, *)
           .returning(createInboundResult(accountDetailsWithPT))
@@ -216,12 +207,14 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
           .getAccountDetails(_: String)(
             _: ExecutionContext,
             _: HeaderCarrier,
-            _: RequestWithUserDetailsFromSession[AnyContent]
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
           ))
           .expects(USER_ID, *, *, *)
           .returning(createInboundResult(accountDetails.copy(hasSA = Some(true))))
 
-        val res = orchestrator.getCurrentAndPTAAndSAIfExistsForUser(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), implicitly, implicitly)
+        val res = orchestrator.getCurrentAndPTAAndSAIfExistsForUser(
+          requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData),
+          implicitly, implicitly)
         whenReady(res.value) { result =>
           result shouldBe Right(ptEnrolmentDataModel(Some(USER_ID)))
         }
@@ -230,29 +223,22 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
 
     s"the accountType $PT_ASSIGNED_TO_OTHER_USER, account has SA on the another account that also has PT" should {
       "return a PTEnrolmentOtherAccountViewModel for the account details" in {
+        val additionalCacheData = Map("USER_ASSIGNED_PT_ENROLMENT" -> Json.toJson(UsersAssignedEnrolment1))
 
         (mockUsersGroupService
           .getAccountDetails(_: String)(
             _: ExecutionContext,
             _: HeaderCarrier,
-            _: RequestWithUserDetailsFromSession[AnyContent]
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
           ))
           .expects(CREDENTIAL_ID, *, *, *)
           .returning(createInboundResult(accountDetails))
 
-        (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: Format[UsersAssignedEnrolment]
-          ))
-          .expects("USER_ASSIGNED_PT_ENROLMENT", *, *)
-          .returning(Future.successful(Some(UsersAssignedEnrolment1)))
-
         (mockUsersGroupService
           .getAccountDetails(_: String)(
             _: ExecutionContext,
             _: HeaderCarrier,
-            _: RequestWithUserDetailsFromSession[AnyContent]
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
           ))
           .expects(CREDENTIAL_ID_1, *, *, *)
           .returning(createInboundResult(accountDetailsWithPT))
@@ -270,12 +256,13 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
           .getAccountDetails(_: String)(
             _: ExecutionContext,
             _: HeaderCarrier,
-            _: RequestWithUserDetailsFromSession[AnyContent]
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
           ))
           .expects(PT_USER_ID, *, *, *)
           .returning(createInboundResult(accountDetailsWithPT))
 
-        val res = orchestrator.getCurrentAndPTAAndSAIfExistsForUser(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), implicitly, implicitly)
+        val res = orchestrator.getCurrentAndPTAAndSAIfExistsForUser(
+          requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData), implicitly, implicitly)
         whenReady(res.value) { result =>
           result shouldBe Right(ptEnrolmentDataModel(Some(PT_USER_ID)))
         }
@@ -284,29 +271,22 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
 
     s"the accountType $PT_ASSIGNED_TO_OTHER_USER, the account has SA on another account with a third account that holds the PT enrolment" should {
       "return a PTEnrolmentOtherAccountViewModel for the account details" in {
+        val additionalCacheData = Map("USER_ASSIGNED_PT_ENROLMENT" -> Json.toJson(UsersAssignedEnrolment1))
 
         (mockUsersGroupService
           .getAccountDetails(_: String)(
             _: ExecutionContext,
             _: HeaderCarrier,
-            _: RequestWithUserDetailsFromSession[AnyContent]
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
           ))
           .expects(CREDENTIAL_ID, *, *, *)
           .returning(createInboundResult(accountDetails))
 
-        (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: Format[UsersAssignedEnrolment]
-          ))
-          .expects("USER_ASSIGNED_PT_ENROLMENT", *, *)
-          .returning(Future.successful(Some(UsersAssignedEnrolment1)))
-
         (mockUsersGroupService
           .getAccountDetails(_: String)(
             _: ExecutionContext,
             _: HeaderCarrier,
-            _: RequestWithUserDetailsFromSession[AnyContent]
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
           ))
           .expects(CREDENTIAL_ID_1, *, *, *)
           .returning(createInboundResult(accountDetailsWithPT))
@@ -324,12 +304,13 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
           .getAccountDetails(_: String)(
             _: ExecutionContext,
             _: HeaderCarrier,
-            _: RequestWithUserDetailsFromSession[AnyContent]
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
           ))
           .expects(CREDENTIAL_ID_1, *, *, *)
           .returning(createInboundResult(accountDetails.copy(userId = CREDENTIAL_ID_1)))
 
-        val res = orchestrator.getCurrentAndPTAAndSAIfExistsForUser(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), implicitly, implicitly)
+        val res = orchestrator.getCurrentAndPTAAndSAIfExistsForUser(
+          requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData), implicitly, implicitly)
         whenReady(res.value) { result =>
           result shouldBe Right(ptEnrolmentDataModel(Some(CREDENTIAL_ID_1)))
         }
@@ -404,15 +385,10 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
   "getSACredentialIfNotFraud" when {
     "the user has reported fraud" should {
       "return None" in {
-        (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: Format[Boolean]
-          ))
-          .expects("reportedFraud", *, *)
-          .returning(Future.successful(Some(true)))
+        val additionalCacheData = Map("reportedFraud" -> JsBoolean(true))
 
-        val res = orchestrator.getSACredentialIfNotFraud(requestWithAccountType(randomAccountType), implicitly, implicitly)
+        val res = orchestrator.getSACredentialIfNotFraud(
+          requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData), implicitly, implicitly)
         whenReady(res.value) { result =>
           result shouldBe Right(None)
         }
@@ -422,32 +398,19 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
     "the user has not reported fraud" should {
       "return the account details for the SA user" when {
         "the sa user is available in the cache" in {
-          (mockTeaSessionCache
-            .getEntry(_: String)(
-              _: RequestWithUserDetailsFromSession[AnyContent],
-              _: Format[Boolean]
-            ))
-            .expects("reportedFraud", *, *)
-            .returning(Future.successful(None))
-
-          (mockTeaSessionCache
-            .getEntry(_: String)(
-              _: RequestWithUserDetailsFromSession[AnyContent],
-              _: Format[UsersAssignedEnrolment]
-            ))
-            .expects("USER_ASSIGNED_SA_ENROLMENT", *, *)
-            .returning(Future.successful(Some(UsersAssignedEnrolment1)))
+          val additionalCacheData = Map("USER_ASSIGNED_SA_ENROLMENT" -> Json.toJson(UsersAssignedEnrolment1))
 
           (mockUsersGroupService
             .getAccountDetails(_: String)(
               _: ExecutionContext,
               _: HeaderCarrier,
-              _: RequestWithUserDetailsFromSession[AnyContent]
+              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
             ))
             .expects(CREDENTIAL_ID_1, *, *, *)
             .returning(createInboundResult(accountDetails))
 
-          val res = orchestrator.getSACredentialIfNotFraud(requestWithAccountType(randomAccountType), implicitly, implicitly)
+          val res = orchestrator.getSACredentialIfNotFraud(
+            requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData), implicitly, implicitly)
 
           whenReady(res.value) { result =>
             result shouldBe Right(Some(accountDetails))
@@ -457,23 +420,10 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
 
       "return NoPTEnrolmentWhenOneExpected" when {
         "the sa user in the cache is empty" in {
-          (mockTeaSessionCache
-            .getEntry(_: String)(
-              _: RequestWithUserDetailsFromSession[AnyContent],
-              _: Format[Boolean]
-            ))
-            .expects("reportedFraud", *, *)
-            .returning(Future.successful(None))
+          val additionalCacheData = Map("USER_ASSIGNED_SA_ENROLMENT" -> Json.toJson(UsersAssignedEnrolmentEmpty))
 
-          (mockTeaSessionCache
-            .getEntry(_: String)(
-              _: RequestWithUserDetailsFromSession[AnyContent],
-              _: Format[UsersAssignedEnrolment]
-            ))
-            .expects("USER_ASSIGNED_SA_ENROLMENT", *, *)
-            .returning(Future.successful(Some(UsersAssignedEnrolmentEmpty)))
-
-          val res = orchestrator.getSACredentialIfNotFraud(requestWithAccountType(randomAccountType), implicitly, implicitly)
+          val res = orchestrator.getSACredentialIfNotFraud(
+            requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData), implicitly, implicitly)
 
           whenReady(res.value) { result =>
             result shouldBe Left(NoSAEnrolmentWhenOneExpected)
@@ -481,22 +431,6 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
         }
 
         "the cache is empty" in {
-          (mockTeaSessionCache
-            .getEntry(_: String)(
-              _: RequestWithUserDetailsFromSession[AnyContent],
-              _: Format[Boolean]
-            ))
-            .expects("reportedFraud", *, *)
-            .returning(Future.successful(None))
-
-          (mockTeaSessionCache
-            .getEntry(_: String)(
-              _: RequestWithUserDetailsFromSession[AnyContent],
-              _: Format[UsersAssignedEnrolment]
-            ))
-            .expects("USER_ASSIGNED_SA_ENROLMENT", *, *)
-            .returning(Future.successful(None))
-
           val res = orchestrator.getSACredentialIfNotFraud(requestWithAccountType(randomAccountType), implicitly, implicitly)
 
           whenReady(res.value) { result =>
@@ -510,24 +444,19 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
   "getPTCredentialDetails" when {
     "a pt enrolment exists for a different credential" should {
       "return the account details for the PT user" in {
-        (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: Format[UsersAssignedEnrolment]
-          ))
-          .expects("USER_ASSIGNED_PT_ENROLMENT", *, *)
-          .returning(Future.successful(Some(UsersAssignedEnrolment1)))
+        val additionalCacheData = Map("USER_ASSIGNED_PT_ENROLMENT" -> Json.toJson(UsersAssignedEnrolment1))
 
         (mockUsersGroupService
           .getAccountDetails(_: String)(
             _: ExecutionContext,
             _: HeaderCarrier,
-            _: RequestWithUserDetailsFromSession[AnyContent]
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
           ))
           .expects(CREDENTIAL_ID_1, *, *, *)
           .returning(createInboundResult(accountDetails))
 
-        val res = orchestrator.getPTCredentialDetails(requestWithAccountType(randomAccountType), implicitly, implicitly)
+        val res = orchestrator.getPTCredentialDetails(
+          requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData), implicitly, implicitly)
 
         whenReady(res.value) { result =>
           result shouldBe Right(accountDetails)
@@ -537,15 +466,10 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
 
     "a pt enrolment exists for the signed in credential" should {
       "return NoPTEnrolmentWhenOneExpected" in {
-        (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: Format[UsersAssignedEnrolment]
-          ))
-          .expects("USER_ASSIGNED_PT_ENROLMENT", *, *)
-          .returning(Future.successful(Some(UsersAssignedEnrolmentCurrentCred)))
+        val additionalCacheData = Map("USER_ASSIGNED_PT_ENROLMENT" -> Json.toJson(UsersAssignedEnrolmentCurrentCred))
 
-        val res = orchestrator.getPTCredentialDetails(requestWithAccountType(randomAccountType), implicitly, implicitly)
+        val res = orchestrator.getPTCredentialDetails(
+          requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData), implicitly, implicitly)
 
         whenReady(res.value) { result =>
           result shouldBe Left(NoPTEnrolmentWhenOneExpected)
@@ -555,15 +479,10 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
 
     "no pt enrolment exists" should {
       "return NoPTEnrolmentWhenOneExpected" in {
-        (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: Format[UsersAssignedEnrolment]
-          ))
-          .expects("USER_ASSIGNED_PT_ENROLMENT", *, *)
-          .returning(Future.successful(Some(UsersAssignedEnrolmentEmpty)))
+        val additionalCacheData = Map("USER_ASSIGNED_PT_ENROLMENT" -> Json.toJson(UsersAssignedEnrolmentEmpty))
 
-        val res = orchestrator.getPTCredentialDetails(requestWithAccountType(randomAccountType), implicitly, implicitly)
+        val res = orchestrator.getPTCredentialDetails(
+          requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData), implicitly, implicitly)
 
         whenReady(res.value) { result =>
           result shouldBe Left(NoPTEnrolmentWhenOneExpected)
@@ -573,13 +492,6 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
 
     "the cache is empty" should {
       "return NoPTEnrolmentWhenOneExpected" in {
-        (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: Format[UsersAssignedEnrolment]
-          ))
-          .expects("USER_ASSIGNED_PT_ENROLMENT", *, *)
-          .returning(Future.successful(None))
 
         val res = orchestrator.getPTCredentialDetails(requestWithAccountType(randomAccountType), implicitly, implicitly)
 
@@ -596,13 +508,6 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
         if (accountType == SA_ASSIGNED_TO_OTHER_USER) {
           "return an empty form" when {
             "there is no form stored in session" in {
-              (mockTeaSessionCache
-                .getEntry(_: String)(
-                  _: RequestWithUserDetailsFromSession[AnyContent],
-                  _: Format[KeepAccessToSAThroughPTA]
-                ))
-                .expects(KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM, *, *)
-                .returning(Future.successful(None))
 
               val res = orchestrator.getDetailsForKeepAccessToSA(requestWithAccountType(accountType), implicitly, implicitly)
 
@@ -615,18 +520,10 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
           }
           "return a populated form" when {
             "there is form data stored in session" in {
-              (mockTeaSessionCache
-                .getEntry(_: String)(
-                  _: RequestWithUserDetailsFromSession[AnyContent],
-                  _: Format[KeepAccessToSAThroughPTA]
-                ))
-                .expects(KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM, *, *)
-                .returning(
-                  Future.successful(Some(KeepAccessToSAThroughPTA(true)))
-                )
+              val additionalCacheData = Map("KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM" -> Json.toJson(KeepAccessToSAThroughPTA(true)))
 
-              val res = orchestrator.getDetailsForKeepAccessToSA(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER), implicitly, implicitly)
-
+              val res = orchestrator.getDetailsForKeepAccessToSA(
+                requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData), implicitly, implicitly)
               whenReady(res.value) { result =>
                 result shouldBe Right(
                   KeepAccessToSAThroughPTAForm.keepAccessToSAThroughPTAForm

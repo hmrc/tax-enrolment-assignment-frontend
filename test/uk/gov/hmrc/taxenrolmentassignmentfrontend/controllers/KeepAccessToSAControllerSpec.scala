@@ -76,7 +76,7 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
           ))
           .expects(*, *, *)
           .returning(createInboundResult(keepAccessToSAThroughPTAForm))
-        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
 
         val result = controller.view
@@ -124,7 +124,7 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
               keepAccessToSAThroughPTAForm.fill(KeepAccessToSAThroughPTA(true))
             )
           )
-        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
 
         val result = controller.view
@@ -172,7 +172,7 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
               keepAccessToSAThroughPTAForm.fill(KeepAccessToSAThroughPTA(false))
             )
           )
-        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
 
         val result = controller.view
@@ -216,7 +216,7 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
           .returning(
             createInboundResultError(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
           )
-        mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val result = controller.view
@@ -239,7 +239,7 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
-        mockGetAccountTypeSucessRedirectFail
+        mockGetDataFromCacheForActionNoRedirectUrl
         val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
@@ -275,7 +275,7 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
               ))
               .expects(KeepAccessToSAThroughPTA(true), *, *, *)
               .returning(createInboundResult(true))
-            mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+            mockGetDataFromCacheForActionSuccess(randomAccountType)
             mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
             val res = controller.continue
@@ -316,7 +316,7 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
                   IncorrectUserType(UrlPaths.returnUrl, randomAccountType)
                 )
               )
-            mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+            mockGetDataFromCacheForActionSuccess(randomAccountType)
             mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
             val res = controller.continue
@@ -354,7 +354,7 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
               ))
               .expects(KeepAccessToSAThroughPTA(false), *, *, *)
               .returning(createInboundResult(false))
-            mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+            mockGetDataFromCacheForActionSuccess(randomAccountType)
             mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
             val res = controller.continue
@@ -395,7 +395,7 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
                   IncorrectUserType(UrlPaths.returnUrl, randomAccountType)
                 )
               )
-            mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+            mockGetDataFromCacheForActionSuccess(randomAccountType)
             mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
             val res = controller.continue
@@ -434,7 +434,7 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
               .returning(
                 createInboundResultError(UnexpectedResponseFromTaxEnrolments)
               )
-            mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+            mockGetDataFromCacheForActionSuccess(randomAccountType)
             mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
             val res = controller.continue
@@ -462,7 +462,7 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
             )(_: HeaderCarrier, _: ExecutionContext))
             .expects(predicates, retrievals, *, *)
             .returning(Future.successful(retrievalResponse()))
-          mockGetAccountTypeAndRedirectUrlSuccess(randomAccountType)
+          mockGetDataFromCacheForActionSuccess(randomAccountType)
           mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
           val res = controller.continue

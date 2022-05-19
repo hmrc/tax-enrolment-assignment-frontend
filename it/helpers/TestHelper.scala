@@ -17,15 +17,14 @@
 package helpers
 
 import helpers.TestITData._
+import play.api.libs.json.{JsString, Json}
 import play.api.mvc.{AnyContent, Request}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SINGLE_ACCOUNT
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{
-  AccountDetailsFromMongo,
-  RequestWithUserDetailsFromSessionAndMongo
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSessionAndMongo}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{routes, testOnly}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
 trait TestHelper extends IntegrationSpecBase {
@@ -36,6 +35,9 @@ trait TestHelper extends IntegrationSpecBase {
 
   val errorView = app.injector.instanceOf[ErrorTemplate]
 
+  val exampleMongoSessionData = Map(ACCOUNT_TYPE -> Json.toJson(SA_ASSIGNED_TO_OTHER_USER), REDIRECT_URL -> JsString("redirectURL"))
+
+
   def requestWithAccountType(
     accountType: AccountTypes.Value,
     redirectUrl: String = UrlPaths.returnUrl
@@ -44,7 +46,7 @@ trait TestHelper extends IntegrationSpecBase {
       FakeRequest().asInstanceOf[Request[AnyContent]],
       userDetailsNoEnrolments,
       sessionId,
-      AccountDetailsFromMongo(accountType, redirectUrl)
+      AccountDetailsFromMongo(accountType, redirectUrl, exampleMongoSessionData)
     )
 
   object UrlPaths {

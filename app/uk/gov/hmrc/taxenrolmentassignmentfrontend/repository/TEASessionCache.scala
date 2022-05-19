@@ -70,17 +70,6 @@ class TEASessionCacheImpl @Inject()(
   ): Future[Option[CacheMap]] =
     sessionRepository().get(request.sessionID)
 
-  def getEntry[A](key: String)(
-    implicit request: RequestWithUserDetailsFromSession[_],
-    fmt: Format[A]
-  ): Future[Option[A]] = {
-    fetch().map { optionalCacheMap =>
-      optionalCacheMap.flatMap { cacheMap =>
-        cacheMap.getEntry(key)
-      }
-    }
-  }
-
   def extendSession()(
     implicit request: RequestWithUserDetailsFromSession[_]
   ): Future[Boolean] = {
@@ -106,11 +95,6 @@ trait TEASessionCache {
   def fetch()(
     implicit request: RequestWithUserDetailsFromSession[_]
   ): Future[Option[CacheMap]]
-
-  def getEntry[A](key: String)(
-    implicit request: RequestWithUserDetailsFromSession[_],
-    fmt: Format[A]
-  ): Future[Option[A]]
 
   def extendSession()(
     implicit request: RequestWithUserDetailsFromSession[_]

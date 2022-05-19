@@ -25,7 +25,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.i18n._
 import play.api.inject.Injector
-import play.api.libs.json.Format
+import play.api.libs.json.{Format, JsString, JsValue, Json}
 import play.api.mvc._
 import play.api.test.CSRFTokenHelper._
 import play.api.test.Helpers._
@@ -48,6 +48,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{randomAccoun
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditHandler
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.UnderConstructionView
@@ -75,13 +76,14 @@ trait TestFixture
 
   def requestWithAccountType(
     accountType: AccountTypes.Value = SINGLE_ACCOUNT,
-    redirectUrl: String = UrlPaths.returnUrl
+    redirectUrl: String = UrlPaths.returnUrl,
+    additionalCacheData: Map[String, JsValue] = Map()
   ): RequestWithUserDetailsFromSessionAndMongo[_] =
     RequestWithUserDetailsFromSessionAndMongo(
       request.request,
       request.userDetails,
       request.sessionID,
-      AccountDetailsFromMongo(accountType, redirectUrl)
+      AccountDetailsFromMongo(accountType, redirectUrl, generateBasicCacheData(accountType, redirectUrl) ++ additionalCacheData)
     )
 
   implicit val ec: ExecutionContext = injector.instanceOf[ExecutionContext]
@@ -128,7 +130,7 @@ trait TestFixture
     new AuthAction(mockAuthConnector, testBodyParser, logger, appConfig)
   lazy val mockAccountMongoDetailsAction =
     new AccountMongoDetailsAction(
-      mockAccountCheckOrchestrator,
+      mockTeaSessionCache,
       testBodyParser,
       errorHandler
     )
@@ -156,6 +158,14 @@ trait TestFixture
   ): TEAFResult[T] = EitherT.left(Future.successful(error))
 
   lazy val testOnlyController = new TestOnlyController(mcc, mockAuthAction,  logger)
+
+  def generateBasicCacheData(accountType: AccountTypes.Value, redirectUrl: String = "foo") = {
+    Map(ACCOUNT_TYPE -> Json.toJson(accountType), REDIRECT_URL -> JsString(redirectUrl))
+  }
+
+  def generateBasicCacheMap(accountType: AccountTypes.Value, redirectUrl: String = "foo") = {
+    CacheMap("id", generateBasicCacheData(accountType, redirectUrl))
+  }
 
   def mockAccountShouldNotBeThrottled(accountTypes: AccountTypes.Value, nino: String, enrolments: Set[Enrolment]) = {
     (mockThrottlingService.throttle(_: AccountTypes.Value, _: String, _: Set[Enrolment])(_: ExecutionContext, _: HeaderCarrier))
@@ -188,35 +198,27 @@ trait TestFixture
       .returning(createInboundResultError(UnexpectedError))
       .once()
   }
-  def mockGetAccountTypeAndRedirectUrlSuccess(accountType: AccountTypes.Value, redirectUrl: String = "foo") = {
-    (mockAccountCheckOrchestrator
-      .getAccountTypeFromCache(
-        _: RequestWithUserDetailsFromSession[_],
-        _: Format[AccountTypes.Value]
-      ))
-      .expects(*, *)
-      .returning(Future.successful(Some(accountType)))
-    (mockAccountCheckOrchestrator
-      .getRedirectUrlFromCache(
+
+  def mockGetDataFromCacheForActionSuccess(accountType: AccountTypes.Value, redirectUrl: String = "foo") = {
+    val data = generateBasicCacheData(accountType, redirectUrl)
+    val cacheMap = CacheMap("id", data)
+    (mockTeaSessionCache
+      .fetch()(
         _: RequestWithUserDetailsFromSession[_]
       ))
       .expects(*)
-      .returning(Future.successful(Some(redirectUrl)))
+      .returning(Future.successful(Some(cacheMap)))
   }
-  def mockGetAccountTypeSucessRedirectFail = {
-    (mockAccountCheckOrchestrator
-      .getAccountTypeFromCache(
-        _: RequestWithUserDetailsFromSession[_],
-        _: Format[AccountTypes.Value]
-      ))
-      .expects(*, *)
-      .returning(Future.successful(Some(randomAccountType)))
-    (mockAccountCheckOrchestrator
-      .getRedirectUrlFromCache(
+
+  def mockGetDataFromCacheForActionNoRedirectUrl = {
+    val data = Map(ACCOUNT_TYPE -> Json.toJson(randomAccountType))
+    val cacheMap = CacheMap("id", data)
+    (mockTeaSessionCache
+      .fetch()(
         _: RequestWithUserDetailsFromSession[_]
       ))
       .expects(*)
-      .returning(Future.successful(None))
+      .returning(Future.successful(Some(cacheMap)))
   }
 
   class TestTeaSessionCache extends TEASessionCache {
@@ -237,11 +239,6 @@ trait TestFixture
       implicit request: RequestWithUserDetailsFromSession[_]
     ): Future[Option[CacheMap]] =
       Future(Some(CacheMap(request.sessionID, Map())))
-
-    override def getEntry[A](key: String)(
-      implicit request: RequestWithUserDetailsFromSession[_],
-      fmt: Format[A]
-    ): Future[Option[A]] = Future.successful(None)
 
     override def extendSession()(
       implicit request: RequestWithUserDetailsFromSession[_]

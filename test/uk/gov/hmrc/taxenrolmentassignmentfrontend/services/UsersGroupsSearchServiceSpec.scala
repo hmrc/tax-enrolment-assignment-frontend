@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.services
 
 import org.scalatest.concurrent.ScalaFutures
-import play.api.libs.json.Format
+import play.api.libs.json.{Format, Json}
 import play.api.mvc.AnyContent
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.cache.client.CacheMap
@@ -43,14 +43,10 @@ class UsersGroupsSearchServiceSpec extends TestFixture with ScalaFutures {
   "getAccountDetails" when {
     "the account details are already in the cache" should {
       "not call the users-groups-search and return value from cache" in {
-        (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: Format[AccountDetails]
-          ))
-          .expects(s"AccountDetailsFor$CREDENTIAL_ID", *, *)
-          .returning(Future.successful(Some(accountDetails)))
-        val result = service.getAccountDetails(CREDENTIAL_ID)
+        val additionCacheData = Map(s"AccountDetailsFor$CREDENTIAL_ID" -> Json.toJson(accountDetails))
+        val result = service.getAccountDetails(CREDENTIAL_ID)(
+          implicitly, implicitly,
+          requestWithAccountType(additionalCacheData = additionCacheData))
         whenReady(result.value) { res =>
           res shouldBe Right(accountDetails)
         }
@@ -58,13 +54,6 @@ class UsersGroupsSearchServiceSpec extends TestFixture with ScalaFutures {
     }
     "the account details are not already in the cache" should {
       "call the users-groups-search, save to cache and return the account details" in {
-        (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: Format[AccountDetails]
-          ))
-          .expects(s"AccountDetailsFor$CREDENTIAL_ID", *, *)
-          .returning(Future.successful(None))
         (mockUsersGroupsSearchConnector
           .getUserDetails(_: String)(_: ExecutionContext, _: HeaderCarrier))
           .expects(CREDENTIAL_ID, *, *)
@@ -76,7 +65,9 @@ class UsersGroupsSearchServiceSpec extends TestFixture with ScalaFutures {
           ))
           .expects(s"AccountDetailsFor$CREDENTIAL_ID", accountDetails, *, *)
           .returning(Future(CacheMap(request.sessionID, Map())))
-        val result = service.getAccountDetails(CREDENTIAL_ID)
+        val result = service.getAccountDetails(CREDENTIAL_ID)(
+          implicitly, implicitly,
+          requestWithAccountType())
         whenReady(result.value) { res =>
           res shouldBe Right(accountDetails)
         }
@@ -85,20 +76,15 @@ class UsersGroupsSearchServiceSpec extends TestFixture with ScalaFutures {
 
     "the account details are not already in the cache and users-group-search returns an error" should {
       "return an error" in {
-        (mockTeaSessionCache
-          .getEntry(_: String)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: Format[AccountDetails]
-          ))
-          .expects(s"AccountDetailsFor$CREDENTIAL_ID", *, *)
-          .returning(Future.successful(None))
         (mockUsersGroupsSearchConnector
           .getUserDetails(_: String)(_: ExecutionContext, _: HeaderCarrier))
           .expects(CREDENTIAL_ID, *, *)
           .returning(
             createInboundResultError(UnexpectedResponseFromUsersGroupsSearch)
           )
-        val result = service.getAccountDetails(CREDENTIAL_ID)
+        val result = service.getAccountDetails(CREDENTIAL_ID)(
+          implicitly, implicitly,
+          requestWithAccountType())
         whenReady(result.value) { res =>
           res shouldBe Left(UnexpectedResponseFromUsersGroupsSearch)
         }

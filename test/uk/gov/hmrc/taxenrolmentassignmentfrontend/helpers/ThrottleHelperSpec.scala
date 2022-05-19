@@ -46,7 +46,7 @@ _: TestFixture =>
             Future.successful(retrievalResponse()
           ))
 
-        mockGetAccountTypeAndRedirectUrlSuccess(accountType = randomAccountType, redirectUrl = "redirect")
+        mockGetDataFromCacheForActionSuccess(accountType = randomAccountType, redirectUrl = "redirect")
         mockAccountShouldBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val res = controllerFunction.apply(buildFakeRequestWithSessionId("", ""))
@@ -71,7 +71,7 @@ _: TestFixture =>
             Future.successful(retrievalResponse()
             ))
 
-        mockGetAccountTypeAndRedirectUrlSuccess(accountType = randomAccountType, redirectUrl = "redirect")
+        mockGetDataFromCacheForActionSuccess(accountType = randomAccountType, redirectUrl = "redirect")
         mockErrorFromThrottlingService(randomAccountType, NINO, noEnrolments.enrolments)
 
         val res = controllerFunction.apply(buildFakeRequestWithSessionId("", ""))

@@ -50,7 +50,7 @@ class ThrottleActionSpec extends TestFixture {
       false
     ),
     "sesh",
-    AccountDetailsFromMongo(PT_ASSIGNED_TO_CURRENT_USER, "redirectURL")
+    AccountDetailsFromMongo(PT_ASSIGNED_TO_CURRENT_USER, "redirectURL", Map())
   )
   val exampleControllerFunction =
     (r: RequestWithUserDetailsFromSessionAndMongo[_]) =>

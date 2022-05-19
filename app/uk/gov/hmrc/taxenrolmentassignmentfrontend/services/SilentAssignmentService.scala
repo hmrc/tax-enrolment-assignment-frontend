@@ -21,15 +21,15 @@ import cats.implicits._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{EACDConnector, IVConnector, TaxEnrolmentsConnector}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSession}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IVNinoStoreEntry
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IVNinoStoreEntry._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.{IRSAKey, saEnrolmentSet}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.OTHER_VALID_PTA_ACCOUNTS
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-
 import javax.inject.Inject
+
 import scala.concurrent.{ExecutionContext, Future}
 
 class SilentAssignmentService @Inject()(
@@ -45,20 +45,6 @@ class SilentAssignmentService @Inject()(
   ): Seq[IVNinoStoreEntry] =
     list.filter(_.confidenceLevel.exists(_ >= 200))
 
-  def getOtherAccountsWithPTAAccess(
-    implicit requestWithUserDetails: RequestWithUserDetailsFromSession[_],
-    hc: HeaderCarrier,
-    ec: ExecutionContext
-  ): TEAFResult[Seq[IVNinoStoreEntry]] =
-    EitherT {
-      sessionCache
-        .getEntry[Seq[IVNinoStoreEntry]](OTHER_VALID_PTA_ACCOUNTS)
-        .flatMap {
-          case Some(otherCreds) => Future.successful(Right(otherCreds))
-          case None             => getOtherAccountsValidForPTA.value
-        }
-    }
-
   def enrolUser()(implicit request: RequestWithUserDetailsFromSession[_],
                   hc: HeaderCarrier,
                   ec: ExecutionContext): TEAFResult[Unit] = {
@@ -66,7 +52,7 @@ class SilentAssignmentService @Inject()(
     taxEnrolmentsConnector.assignPTEnrolmentWithKnownFacts(details.nino)
   }
 
-  private def getOtherAccountsValidForPTA(
+  def getOtherAccountsWithPTAAccess(
     implicit requestWithUserDetails: RequestWithUserDetailsFromSession[_],
     hc: HeaderCarrier,
     ec: ExecutionContext

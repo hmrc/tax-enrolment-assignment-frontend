@@ -42,10 +42,6 @@
 <link rel="stylesheet" type="text/css" href='@routes.Assets.versioned("stylesheets/application.css")'>
 
 }
-
-@scripts = {
-<script src='@routes.Assets.versioned("javascripts/tax-enrolment-assignment-frontend.js")'></script>
-}
 @content = {
     @contentBlock
     @hmrcReportTechnicalIssueHelper()
@@ -59,6 +55,5 @@
  isWelshTranslationAvailable = appConfig.welshLanguageSupportEnabled,
  backLinkUrl = optBackLinkUrl,
  signOutUrl = if(displaySignout) {Some(appConfig.signOutUrl)} else {None},
- mainContentLayout = mainLayout,
- additionalScriptsBlock = Some(scripts)
+ mainContentLayout = mainLayout
 )(content)

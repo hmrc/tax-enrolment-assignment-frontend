@@ -42,7 +42,7 @@ summaryRow: CreateSummaryRow
 
 
 @layout(
-pageTitle = Some(messages("ReportSuspiciousID.title")), Some("?")) {
+pageTitle = Some(messages("ReportSuspiciousID.title")), optBackLinkUrl = Some("javascript:window.history.back();")) {
 
 <h1 class="govuk-heading-xl">@{messages(s"ReportSuspiciousID.heading")}</h1>
 

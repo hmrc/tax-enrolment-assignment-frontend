@@ -59,7 +59,8 @@ class ThrottlingServiceSpec extends TestFixture with FutureAwaits with DefaultAw
         TestScenario("Nino last 2 digits == percentage (percentage is max)", "QQ123499A", 99),
         TestScenario("Nino last 2 digits < percentage (percentage is one above)", "QQ123401A", 2),
         TestScenario("Nino last 2 digits < percentage (percentage is an amount above)", "QQ123401A", 50),
-        TestScenario("Nino last 2 digits < percentage (percentage is max amount above)", "QQ123401A", 99)
+        TestScenario("Nino last 2 digits < percentage (percentage is max amount above)", "QQ123401A", 99),
+        TestScenario("Nino last 2 digits == percentage (percentage is 0)", "QQ123400A", 0)
       ).foreach(test =>
         s"${test.testName}" in {
           throttlingservice.isNinoWithinThrottleThreshold(test.nino, test.percentage) shouldBe true
@@ -73,7 +74,6 @@ class ThrottlingServiceSpec extends TestFixture with FutureAwaits with DefaultAw
         TestScenario("Nino last 2 digits > percentage by an amount", "QQ123456A", 10),
         TestScenario("Nino last 2 digits > percentage by max amount", "QQ123499A", 10),
         TestScenario("percentage < 0 but Nino is correct format", validNonRealNino, -1),
-        TestScenario("Nino last 2 digits == percentage (percentage is 0)", "QQ123400A", 0)
       ).foreach(test =>
         s"${test.testName}" in {
           throttlingservice.isNinoWithinThrottleThreshold(test.nino, test.percentage) shouldBe false

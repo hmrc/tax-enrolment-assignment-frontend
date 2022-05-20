@@ -79,7 +79,7 @@ trait IntegrationSpecBase
     "microservice.services.users-groups-search.isTest" -> "false",
     "play.http.router" -> "testOnlyDoNotUseInAppConf.Routes",
     "microservice.services.features.taxEnrolmentsServiceListLocal" -> "false",
-    "throttle.percentage" -> "1"
+    "throttle.percentage" -> "2"
   )
 
   override implicit val patienceConfig: PatienceConfig = PatienceConfig(

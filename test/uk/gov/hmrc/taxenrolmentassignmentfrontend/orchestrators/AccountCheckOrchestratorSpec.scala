@@ -116,12 +116,6 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
             .expects(*)
             .returning(Future.successful(None))
 
-          val res = orchestrator.getAccountType(
-            ec,
-            hc,
-            request.copy(userDetails = userDetailsWithPTEnrolment)
-          )
-
           (mockTeaSessionCache
             .save(_: String, _: AccountTypes.Value)(
               _: RequestWithUserDetailsFromSession[AnyContent],
@@ -129,6 +123,12 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
             ))
             .expects(ACCOUNT_TYPE, PT_ASSIGNED_TO_CURRENT_USER, *, *)
             .returning(Future(CacheMap(request.sessionID, Map())))
+
+          val res = orchestrator.getAccountType(
+            ec,
+            hc,
+            request.copy(userDetails = userDetailsWithPTEnrolment)
+          )
 
           whenReady(res.value) { result =>
             result shouldBe Right(PT_ASSIGNED_TO_CURRENT_USER)

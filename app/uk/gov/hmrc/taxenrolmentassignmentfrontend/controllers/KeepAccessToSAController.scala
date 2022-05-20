@@ -27,20 +27,22 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMo
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.KeepAccessToSA
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class KeepAccessToSAController @Inject()(
-  authAction: AuthAction,
-  accountMongoDetailsAction: AccountMongoDetailsAction,
-  throttleAction: ThrottleAction,
-  multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
-  mcc: MessagesControllerComponents,
-  val logger: EventLoggerService,
-  keepAccessToSA: KeepAccessToSA,
-  errorHandler: ErrorHandler
+                                          authAction: AuthAction,
+                                          accountMongoDetailsAction: AccountMongoDetailsAction,
+                                          throttleAction: ThrottleAction,
+                                          multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
+                                          mcc: MessagesControllerComponents,
+                                          val logger: EventLoggerService,
+                                          keepAccessToSA: KeepAccessToSA,
+                                          auditHandler: AuditHandler,
+                                          errorHandler: ErrorHandler
 )(implicit config: AppConfig, ec: ExecutionContext)
     extends FrontendController(mcc)
     with I18nSupport with WithDefaultFormBinding {
@@ -72,6 +74,7 @@ class KeepAccessToSAController @Inject()(
                 case Right(true) =>
                   Redirect(routes.SignInWithSAAccountController.view)
                 case Right(false) =>
+                  auditHandler.audit(AuditEvent.auditSuccessfullyEnrolledPersonalTax(false))
                   Redirect(routes.EnrolledPTWithSAOnOtherAccountController.view)
                 case Left(error) =>
                   errorHandler.handleErrors(error, "[KeepAccessToSAController][continue]")(request, implicitly)

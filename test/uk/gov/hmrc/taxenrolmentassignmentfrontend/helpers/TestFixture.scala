@@ -74,6 +74,13 @@ trait TestFixture
       "sessionId"
     )
 
+  def requestWithUserDetails(userDetails: UserDetailsFromSession = userDetailsNoEnrolments): RequestWithUserDetailsFromSession[AnyContent] =
+    new RequestWithUserDetailsFromSession[AnyContent](
+      FakeRequest().asInstanceOf[Request[AnyContent]],
+      userDetails,
+      "sessionId"
+    )
+
   def requestWithAccountType(
     accountType: AccountTypes.Value = SINGLE_ACCOUNT,
     redirectUrl: String = UrlPaths.returnUrl,
@@ -199,8 +206,8 @@ trait TestFixture
       .once()
   }
 
-  def mockGetDataFromCacheForActionSuccess(accountType: AccountTypes.Value, redirectUrl: String = "foo") = {
-    val data = generateBasicCacheData(accountType, redirectUrl)
+  def mockGetDataFromCacheForActionSuccess(accountType: AccountTypes.Value, redirectUrl: String = "foo", additionCacheData: Map[String, JsValue] = Map()) = {
+    val data = generateBasicCacheData(accountType, redirectUrl) ++ additionCacheData
     val cacheMap = CacheMap("id", data)
     (mockTeaSessionCache
       .fetch()(

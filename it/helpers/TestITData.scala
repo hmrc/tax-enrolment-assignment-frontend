@@ -22,8 +22,7 @@ import play.api.libs.json._
 import uk.gov.hmrc.auth.core.AffinityGroup.Individual
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core.retrieve.Credentials
-import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
-import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolment, Enrolments}
+import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolment, EnrolmentIdentifier, Enrolments}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.UserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models._
 
@@ -34,6 +33,7 @@ object TestITData {
   val CREDENTIAL_ID_2: String = "8316291481001919"
   val CREDENTIAL_ID_3: String = "0493831301037584"
   val CREDENTIAL_ID_4: String = "2884521810163541"
+  val USER_ID = "6037"
   val GROUP_ID: String = "GROUPID123"
   val UTR = "1234567890"
   val CL50 = 50
@@ -362,6 +362,14 @@ object TestITData {
       hasPTEnrolment = false,
       hasSAEnrolment = false
     )
+
+  val accountDetails: AccountDetails = AccountDetails(
+    credId = CREDENTIAL_ID_2,
+    userId = USER_ID,
+    email = Some("email1@test.com"),
+    lastLoginDate = "27 February 2022 at 12:00 PM",
+    mfaDetails = List(MFADetails("mfaDetails.text", "24321"))
+  )
 
   val eacdResponse = s"""{
                         |    "service": "IR-SA",

@@ -187,6 +187,14 @@ object TestData {
     mfaDetails = List(MFADetails("mfaDetails.text", "24321"))
   )
 
+  val accountDetailsSA: AccountDetails = AccountDetails(
+    credId = CREDENTIAL_ID_1,
+    userId = USER_ID,
+    email = Some("email1@test.com"),
+    lastLoginDate = "27 February 2022 at 12:00 PM",
+    mfaDetails = List(MFADetails("mfaDetails.text", "24321"))
+  )
+
   val accountDetailsWithPT: AccountDetails = AccountDetails(
     credId = CREDENTIAL_ID_1,
     userId = PT_USER_ID,

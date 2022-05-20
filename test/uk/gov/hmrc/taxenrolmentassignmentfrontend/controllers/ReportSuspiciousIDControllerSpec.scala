@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import play.api.http.Status.OK
-import play.api.libs.json.Format
+import play.api.libs.json.{Format, Json}
 import play.api.mvc.AnyContent
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.authorise.Predicate
@@ -32,7 +32,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, NoP
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, ThrottleHelperSpec, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REPORTED_FRAUD
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{REPORTED_FRAUD, USER_ASSIGNED_SA_ENROLMENT, accountDetailsForCredential}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.ReportSuspiciousID
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -88,8 +88,8 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
           ))
           .expects(*, *, *)
           .returning(createInboundResult(accountDetails))
-        mockGetDataFromCacheForActionSuccess(randomAccountType)
-        mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
+        mockGetDataFromCacheForActionSuccess(PT_ASSIGNED_TO_OTHER_USER)
+        mockAccountShouldNotBeThrottled(PT_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
 
         val auditEvent = AuditEvent.auditReportSuspiciousPTAccount(
           accountDetails
@@ -131,8 +131,9 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
           .returning(
             Left(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
           )
-        mockGetDataFromCacheForActionSuccess(randomAccountType)
-        mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
+        mockGetDataFromCacheForActionSuccess(PT_ASSIGNED_TO_OTHER_USER
+        )
+        mockAccountShouldNotBeThrottled(PT_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
 
         val result = controller
           .viewNoSA()
@@ -221,8 +222,8 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
           ))
           .expects(*, *, *)
           .returning(createInboundResult(accountDetails))
-        mockGetDataFromCacheForActionSuccess(randomAccountType)
-        mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
+        mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
+        mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
 
         val auditEvent = AuditEvent.auditReportSuspiciousSAAccount(
           accountDetails
@@ -347,6 +348,9 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
 
     "the user has SA assigned to another user and enrolment to PT is successful" should {
       s"redirect to ${UrlPaths.enrolledPTSAOnOtherAccountPath}" in {
+        val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetails))
+        val sessionData = generateBasicCacheData(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl) ++ additionalCacheData
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -365,7 +369,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
             _: Format[Boolean]
           ))
           .expects(REPORTED_FRAUD, true, *, *)
-          .returning(Future(CacheMap(request.sessionID, Map())))
+          .returning(Future(CacheMap(request.sessionID, sessionData)))
 
         (mockMultipleAccountsOrchestrator
           .checkValidAccountTypeAndEnrolForPT(_: AccountTypes.Value)(
@@ -375,9 +379,15 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
           ))
           .expects(SA_ASSIGNED_TO_OTHER_USER, *, *, *)
           .returning(createInboundResult((): Unit))
-        mockGetDataFromCacheForActionSuccess(randomAccountType)
-        mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
-
+        mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData)
+        mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
+        val auditEvent = AuditEvent.auditSuccessfullyEnrolledPersonalTax(true
+        )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData = additionalCacheData))
+        (mockAuditHandler
+          .audit(_: AuditEvent)(_: HeaderCarrier))
+          .expects(auditEvent, *)
+          .returning(Future.successful((): Unit))
+          .once()
         val res = controller
           .continue()
           .apply(buildFakeRequestWithSessionId("POST", "Not Used"))

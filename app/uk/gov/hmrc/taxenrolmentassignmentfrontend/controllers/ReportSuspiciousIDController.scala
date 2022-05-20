@@ -33,6 +33,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REPORTE
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.ReportSuspiciousID
 import uk.gov.hmrc.play.bootstrap.controller.WithDefaultFormBinding
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -118,6 +119,7 @@ class ReportSuspiciousIDController @Inject()(
                 request.userDetails.credId
               )
             )
+            auditHandler.audit(AuditEvent.auditSuccessfullyEnrolledPersonalTax(true))
             Redirect(routes.EnrolledPTWithSAOnOtherAccountController.view)
           case Left(error) =>
             errorHandler.handleErrors(

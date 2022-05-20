@@ -22,14 +22,11 @@ import helpers.WiremockHelper._
 import helpers.messages._
 import org.jsoup.Jsoup
 import play.api.http.Status
-import play.api.libs.json.Json
+import play.api.libs.json.{JsString, Json}
 import play.api.libs.ws.DefaultWSCookie
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
-  AccountDetails,
-  UsersAssignedEnrolment
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, UsersAssignedEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes.AccountCheckController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
@@ -726,14 +723,13 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
 
     "the user has account type of SA_ASSIGNED_TO_OTHER_USER" should {
       s"enrol the user for PT and redirect to the EnroledAfterReportingFraud" in {
-        await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
-        await(
-          save[AccountTypes.Value](
-            sessionId,
-            "ACCOUNT_TYPE",
-            SA_ASSIGNED_TO_OTHER_USER
-          )
+        val cacheData = Map(
+          ACCOUNT_TYPE -> Json.toJson(SA_ASSIGNED_TO_OTHER_USER),
+          REDIRECT_URL -> JsString(UrlPaths.returnUrl),
+          USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(saUsers),
+          accountDetailsForCredential(CREDENTIAL_ID_2) -> Json.toJson(accountDetails)
         )
+        await(save(sessionId, cacheData))
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -753,6 +749,8 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
           resp.header("Location").get should include(
             "/enrol-pt/enrolment-success-sa-access-not-wanted"
           )
+          val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPersonalTax(true)(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, mongoCacheData = cacheData))
+          verifyAuditEventSent(expectedAuditEvent)
         }
       }
     }

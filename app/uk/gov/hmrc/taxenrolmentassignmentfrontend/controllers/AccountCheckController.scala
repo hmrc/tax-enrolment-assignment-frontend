@@ -35,6 +35,8 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentServi
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 import uk.gov.hmrc.play.bootstrap.controller.WithDefaultFormBinding
 import javax.inject.{Inject, Singleton}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
+
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -42,7 +44,7 @@ class AccountCheckController @Inject()(
   silentAssignmentService: SilentAssignmentService,
   authAction: AuthAction,
   accountCheckOrchestrator: AccountCheckOrchestrator,
-  appConfig: AppConfig,
+  auditHandler: AuditHandler,
   mcc: MessagesControllerComponents,
   sessionCache: TEASessionCache,
   val logger: EventLoggerService,
@@ -87,22 +89,23 @@ class AccountCheckController @Inject()(
         hc: HeaderCarrier
       ): Future[Result] = {
         silentAssignmentService.enrolUser().isRight map {
-          case true if accountType == SINGLE_ACCOUNT =>
-            logger.logEvent(
-              logSingleAccountHolderAssignedEnrolment(request.userDetails.credId)
-            )
-            logger.logEvent(
-              logRedirectingToReturnUrl(
-                request.userDetails.credId,
-                "[AccountCheckController][accountCheck]"
+          case true =>
+            auditHandler.audit(AuditEvent.auditSuccessfullyAutoEnrolledPersonalTax(accountType))
+            if (accountType == SINGLE_ACCOUNT) {
+              logger.logEvent(
+                logSingleAccountHolderAssignedEnrolment(request.userDetails.credId)
+              )
+              logger.logEvent(
+                logRedirectingToReturnUrl(request.userDetails.credId,"[AccountCheckController][accountCheck]"
               )
             )
-            Redirect(usersRedirectUrl)
-          case true =>
-            logger.logEvent(
-              logMultipleAccountHolderAssignedEnrolment(request.userDetails.credId)
-            )
-            Redirect(routes.EnrolledForPTController.view)
+              Redirect(usersRedirectUrl)
+        } else {
+              logger.logEvent(
+                logMultipleAccountHolderAssignedEnrolment(request.userDetails.credId)
+              )
+              Redirect(routes.EnrolledForPTController.view)
+        }
           case false =>
             InternalServerError(errorView())
         }

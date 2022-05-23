@@ -119,7 +119,7 @@ object AuditEvent {
     val userDetails = request.userDetails
     val optSACredIdJson = optSACredentialId.fold(Json.obj())(credId => Json.obj(("saAccountCredentialId", JsString(credId))))
     val optReportedAccountJson = suspiciousAccountDetails.fold(Json.obj())(accountDetails =>
-      Json.obj(("reportedAccount",getPresentedAccountJson(accountDetails))))
+      Json.obj(("reportedAccount", getPresentedAccountJson(accountDetails))))
 
     Json.obj(
       ("NINO", JsString(userDetails.nino)),

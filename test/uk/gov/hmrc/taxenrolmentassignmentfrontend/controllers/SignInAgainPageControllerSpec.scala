@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
+import play.api.libs.json.Json
 import play.api.mvc.AnyContent
 import play.api.test.Helpers.{status, _}
 import uk.gov.hmrc.auth.core.authorise.Predicate
@@ -28,6 +29,8 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWit
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, NoSAEnrolmentWhenOneExpected}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, ThrottleHelperSpec, UrlPaths}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_ASSIGNED_SA_ENROLMENT, accountDetailsForCredential}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SignInWithSAAccount
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -43,6 +46,7 @@ class SignInAgainPageControllerSpec extends TestFixture with ThrottleHelperSpec 
       mockMultipleAccountsOrchestrator,
       view,
       logger,
+      mockAuditHandler,
       errorHandler
     )
 
@@ -193,6 +197,8 @@ class SignInAgainPageControllerSpec extends TestFixture with ThrottleHelperSpec 
     specificThrottleTests(controller.continue())
 
       s"redirect to ${UrlPaths.logoutPath}" in {
+        val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetails))
         (mockAuthConnector
           .authorise(
             _: Predicate,
@@ -205,8 +211,14 @@ class SignInAgainPageControllerSpec extends TestFixture with ThrottleHelperSpec 
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
 
-        mockGetDataFromCacheForActionSuccess(randomAccountType)
-        mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
+        mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData)
+        mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
+        val auditEvent = AuditEvent.auditSigninAgainWithSACredential()(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData = additionalCacheData))
+        (mockAuditHandler
+          .audit(_: AuditEvent)(_: HeaderCarrier))
+          .expects(auditEvent, *)
+          .returning(Future.successful((): Unit))
+          .once()
 
         val res = controller
           .continue()

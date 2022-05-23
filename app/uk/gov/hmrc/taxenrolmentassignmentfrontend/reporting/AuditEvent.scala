@@ -22,7 +22,7 @@ import java.time.temporal.{ChronoUnit, Temporal}
 import akka.http.scaladsl.model.StatusCode
 import play.api.libs.json._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_CURRENT_USER
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo, UserDetailsFromSession}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails}
 
@@ -92,6 +92,15 @@ object AuditEvent {
     )
   }
 
+  def auditSigninAgainWithSACredential()
+                                          (implicit request: RequestWithUserDetailsFromSessionAndMongo[_]): AuditEvent = {
+    AuditEvent(
+      auditType = "SignInWithOtherAccount",
+      transactionName = "sign-in-with-other-account",
+      detail = getDetailsForSigninAgainSA
+    )
+  }
+
   private def getDetailsForReportingFraud(
     suspiciousAccountDetails: AccountDetails
   )(implicit request: RequestWithUserDetailsFromSessionAndMongo[_]): JsObject = {
@@ -99,7 +108,7 @@ object AuditEvent {
     Json.obj(
       ("NINO", JsString(userDetails.nino)),
       ("currentAccount", getCurrentAccountJson(userDetails, request.accountDetailsFromMongo.accountType)),
-      ("reportedAccount", getReportedAccountJson(suspiciousAccountDetails))
+      ("reportedAccount", getPresentedAccountJson(suspiciousAccountDetails))
     )
   }
 
@@ -110,12 +119,28 @@ object AuditEvent {
     val userDetails = request.userDetails
     val optSACredIdJson = optSACredentialId.fold(Json.obj())(credId => Json.obj(("saAccountCredentialId", JsString(credId))))
     val optReportedAccountJson = suspiciousAccountDetails.fold(Json.obj())(accountDetails =>
-      Json.obj(("reportedAccount",getReportedAccountJson(accountDetails))))
+      Json.obj(("reportedAccount",getPresentedAccountJson(accountDetails))))
 
     Json.obj(
       ("NINO", JsString(userDetails.nino)),
       ("currentAccount", getCurrentAccountJson(userDetails, accountType))
     ) ++ optSACredIdJson ++ optReportedAccountJson
+  }
+
+
+
+  private def getDetailsForSigninAgainSA(implicit request: RequestWithUserDetailsFromSessionAndMongo[_]): JsObject = {
+    val userDetails = request.userDetails
+    val optSACredId: Option[String] = request.accountDetailsFromMongo.optUserAssignedSA.fold[Option[String]](None)(uae => uae.enrolledCredential)
+    val optSAAccountJson = optSACredId.fold(Json.obj())(credId =>
+      request.accountDetailsFromMongo.optAccountDetails(credId)
+        .fold(Json.obj())(accountDetails => Json.obj(("saAccount", getPresentedAccountJson(accountDetails))))
+      )
+
+    Json.obj(
+      ("NINO", JsString(userDetails.nino)),
+      ("currentAccount", getCurrentAccountJson(userDetails, SA_ASSIGNED_TO_OTHER_USER))
+    ) ++ optSAAccountJson
   }
 
   private def getCurrentAccountJson(userDetails: UserDetailsFromSession,
@@ -126,7 +151,7 @@ object AuditEvent {
     ) ++ userDetails.affinityGroup.toJson.as[JsObject]
   }
 
-  private def getReportedAccountJson(suspiciousAccountDetails: AccountDetails): JsObject = {
+  private def getPresentedAccountJson(suspiciousAccountDetails: AccountDetails): JsObject = {
     Json.obj(
       ("credentialId", JsString(suspiciousAccountDetails.credId)),
       ("userId", JsString(s"Ending with ${suspiciousAccountDetails.userId}")),

@@ -28,21 +28,23 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SignInWithSAAccount
 import uk.gov.hmrc.play.bootstrap.controller.WithDefaultFormBinding
-
 import javax.inject.{Inject, Singleton}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
+
 import scala.concurrent.{ExecutionContext, Future}
 
 
 @Singleton
 class SignInWithSAAccountController @Inject()(
-  authAction: AuthAction,
-  accountMongoDetailsAction: AccountMongoDetailsAction,
-  throttleAction: ThrottleAction,
-  mcc: MessagesControllerComponents,
-  multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
-  signInWithSAAccount: SignInWithSAAccount,
-  val logger: EventLoggerService,
-  errorHandler: ErrorHandler
+                                               authAction: AuthAction,
+                                               accountMongoDetailsAction: AccountMongoDetailsAction,
+                                               throttleAction: ThrottleAction,
+                                               mcc: MessagesControllerComponents,
+                                               multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
+                                               signInWithSAAccount: SignInWithSAAccount,
+                                               val logger: EventLoggerService,
+                                               auditHandler: AuditHandler,
+                                               errorHandler: ErrorHandler
 )(implicit ec: ExecutionContext)
     extends FrontendController(mcc)
     with I18nSupport
@@ -67,9 +69,10 @@ class SignInWithSAAccountController @Inject()(
   }
 
   def continue: Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).andThen(throttleAction) { implicit request =>
-        logger.logEvent(
-          logUserSignsInAgainWithSAAccount(request.userDetails.credId)
-        )
+    logger.logEvent(
+      logUserSignsInAgainWithSAAccount(request.userDetails.credId)
+    )
+    auditHandler.audit(AuditEvent.auditSigninAgainWithSACredential())
     Redirect(routes.SignOutController.signOut())
   }
 }

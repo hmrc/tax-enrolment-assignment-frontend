@@ -16,10 +16,6 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting
 
-import java.time.ZonedDateTime
-import java.time.temporal.{ChronoUnit, Temporal}
-
-import akka.http.scaladsl.model.StatusCode
 import play.api.libs.json._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_CURRENT_USER
@@ -59,43 +55,47 @@ object AuditEvent {
   def auditSuccessfullyAutoEnrolledPersonalTax(accountType: AccountTypes.Value)
                                               (implicit request: RequestWithUserDetailsFromSession[_]): AuditEvent = {
 
-    val optSACredentialId = if(request.userDetails.hasSAEnrolment || accountType == SA_ASSIGNED_TO_CURRENT_USER) {
+    val optSACredentialId: Option[String] = if(request.userDetails.hasSAEnrolment || accountType == SA_ASSIGNED_TO_CURRENT_USER) {
       Some(request.userDetails.credId)
     } else {
       None
     }
-    AuditEvent(
-      auditType = "SuccessfullyEnrolledPersonalTax",
-      transactionName = "successfully-enrolled-personal-tax",
-      detail = getDetailsForPTEnrolled(accountType, optSACredentialId, None)
-    )
+    val details: JsObject = getDetailsForPTEnrolled(accountType, optSACredentialId, None)
+
+    auditSuccessfullyEnrolledForPT(details)
   }
 
   def auditSuccessfullyEnrolledPersonalTax(enrolledAfterReportingFraud: Boolean = false)
                                           (implicit request: RequestWithUserDetailsFromSessionAndMongo[_]): AuditEvent = {
-    val optSACredentialId = if(request.userDetails.hasSAEnrolment) {
+    val optSACredentialId: Option[String] = if(request.userDetails.hasSAEnrolment) {
       Some(request.userDetails.credId)
     } else {
       request.accountDetailsFromMongo.optUserAssignedSA.fold[Option[String]](None)(_.enrolledCredential)
     }
-    val suspiciousAccountDetails = if(enrolledAfterReportingFraud) {
+    val suspiciousAccountDetails: Option[AccountDetails] = if(enrolledAfterReportingFraud) {
       optSACredentialId.fold[Option[AccountDetails]](None)(credId => request.accountDetailsFromMongo.optAccountDetails(credId))
     } else {
       None
     }
+    val details: JsObject = getDetailsForPTEnrolled(
+      request.accountDetailsFromMongo.accountType,
+      optSACredentialId, suspiciousAccountDetails)(request)
+
+    auditSuccessfullyEnrolledForPT(details)
+  }
+
+  private def auditSuccessfullyEnrolledForPT(details: JsObject) = {
     AuditEvent(
       auditType = "SuccessfullyEnrolledPersonalTax",
       transactionName = "successfully-enrolled-personal-tax",
-      detail = getDetailsForPTEnrolled(
-        request.accountDetailsFromMongo.accountType,
-        optSACredentialId, suspiciousAccountDetails)(request)
+      detail = details
     )
   }
 
   private def getDetailsForReportingFraud(
     suspiciousAccountDetails: AccountDetails
   )(implicit request: RequestWithUserDetailsFromSessionAndMongo[_]): JsObject = {
-    val userDetails = request.userDetails
+    val userDetails: UserDetailsFromSession = request.userDetails
     Json.obj(
       ("NINO", JsString(userDetails.nino)),
       ("currentAccount", getCurrentAccountJson(userDetails, request.accountDetailsFromMongo.accountType)),
@@ -107,10 +107,10 @@ object AuditEvent {
                                       optSACredentialId: Option[String],
                                       suspiciousAccountDetails: Option[AccountDetails])
                                      (implicit request: RequestWithUserDetailsFromSession[_]): JsObject = {
-    val userDetails = request.userDetails
-    val optSACredIdJson = optSACredentialId.fold(Json.obj())(credId => Json.obj(("saAccountCredentialId", JsString(credId))))
-    val optReportedAccountJson = suspiciousAccountDetails.fold(Json.obj())(accountDetails =>
-      Json.obj(("reportedAccount",getReportedAccountJson(accountDetails))))
+    val userDetails: UserDetailsFromSession = request.userDetails
+    val optSACredIdJson: JsObject = optSACredentialId.fold(Json.obj())(credId => Json.obj(("saAccountCredentialId", JsString(credId))))
+    val optReportedAccountJson: JsObject = suspiciousAccountDetails.fold(Json.obj())(accountDetails =>
+      Json.obj(("reportedAccount", getReportedAccountJson(accountDetails))))
 
     Json.obj(
       ("NINO", JsString(userDetails.nino)),

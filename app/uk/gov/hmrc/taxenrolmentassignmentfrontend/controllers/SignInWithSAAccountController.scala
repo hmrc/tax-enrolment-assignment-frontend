@@ -28,8 +28,9 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SignInWithSAAccount
 import uk.gov.hmrc.play.bootstrap.controller.WithDefaultFormBinding
-
 import javax.inject.{Inject, Singleton}
+import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
+
 import scala.concurrent.{ExecutionContext, Future}
 
 

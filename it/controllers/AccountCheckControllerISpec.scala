@@ -428,7 +428,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
       }
 
       "have no enrolments but current credential has SA enrolment in session" should {
-        s"redirect to ${UrlPaths.enrolledPTNoSAOnAnyAccountPath}" in {
+        s"redirect to ${UrlPaths.enrolledPTWithSAOnAnyAccountPath}" in {
           val authResponse = authoriseResponseJson(enrolments = saEnrolmentOnly)
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -469,7 +469,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
           whenReady(res) { resp =>
             resp.status shouldBe SEE_OTHER
             resp.header("Location").get should include(
-              UrlPaths.enrolledPTNoSAOnAnyAccountPath
+              UrlPaths.enrolledPTWithSAOnAnyAccountPath
             )
 
             val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
@@ -481,7 +481,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
       }
 
       "have no enrolments but current credential has SA enrolment in EACD" should {
-        s"redirect to ${UrlPaths.enrolledPTNoSAOnAnyAccountPath}" in {
+        s"redirect to ${UrlPaths.enrolledPTWithSAOnAnyAccountPath}" in {
           val authResponse = authoriseResponseJson(enrolments = saEnrolmentOnly)
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -533,7 +533,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
           whenReady(res) { resp =>
             resp.status shouldBe SEE_OTHER
             resp.header("Location").get should include(
-              UrlPaths.enrolledPTNoSAOnAnyAccountPath
+              UrlPaths.enrolledPTWithSAOnAnyAccountPath
             )
             val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
               SA_ASSIGNED_TO_CURRENT_USER

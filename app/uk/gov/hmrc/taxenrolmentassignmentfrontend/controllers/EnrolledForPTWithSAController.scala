@@ -20,19 +20,19 @@ import play.api.Logger
 import play.api.http.ContentTypeOf.contentTypeOf_Html
 import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import uk.gov.hmrc.play.bootstrap.controller.WithDefaultFormBinding
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction, ThrottleAction}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logRedirectingToReturnUrl
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTPage
-import uk.gov.hmrc.play.bootstrap.controller.WithDefaultFormBinding
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class EnrolledForPTController @Inject()(
+class EnrolledForPTWithSAController @Inject()(
                                          authAction: AuthAction,
                                          accountMongoDetailsAction: AccountMongoDetailsAction,
                                          throttleAction: ThrottleAction,
@@ -54,12 +54,12 @@ class EnrolledForPTController @Inject()(
         Ok(
           enrolledForPTPage(
             accountDetails.userId,
-            false,
-            routes.EnrolledForPTController.continue
+            true,
+            routes.EnrolledForPTWithSAController.continue
           )
         )
       case Left(error) =>
-        errorHandler.handleErrors(error, "[EnrolledForPTController][view]")(request, implicitly)
+        errorHandler.handleErrors(error, "[EnrolledForPTWithSAController][view]")(request, implicitly)
     }
   }
 
@@ -67,7 +67,7 @@ class EnrolledForPTController @Inject()(
     logger.logEvent(
           logRedirectingToReturnUrl(
             request.userDetails.credId,
-            "[EnrolledForPTController][continue]"
+            "[EnrolledForPTWithSAController][continue]"
           )
         )
         Redirect(request.accountDetailsFromMongo.redirectUrl)

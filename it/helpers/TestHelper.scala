@@ -62,7 +62,8 @@ trait TestHelper extends IntegrationSpecBase {
       .absoluteURL(false, teaHost)
     val accountCheckPath =
       routes.AccountCheckController.accountCheck(returnUrl).url
-    val enrolledPTNoSAOnAnyAccountPath = routes.EnrolledForPTController.view.url
+    val enrolledPTNoSAOnAnyAccountPath    = routes.EnrolledForPTController.view.url
+    val enrolledPTWithSAOnAnyAccountPath  = routes.EnrolledForPTWithSAController.view.url
     val enrolledPTSAOnOtherAccountPath =
       routes.EnrolledPTWithSAOnOtherAccountController.view.url
     val reportFraudPTAccountPath =

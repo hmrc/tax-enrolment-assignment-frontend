@@ -107,7 +107,15 @@ class AccountCheckController @Inject()(
               )
             )
               Redirect(usersRedirectUrl)
-        } else {
+
+            }
+            else if (accountType == SA_ASSIGNED_TO_CURRENT_USER) {
+            logger.logEvent(
+              logMultipleAccountHolderAssignedEnrolment(request.userDetails.credId)
+            )
+            Redirect(routes.EnrolledForPTWithSAController.view)
+            }
+            else {
               logger.logEvent(
                 logMultipleAccountHolderAssignedEnrolment(request.userDetails.credId)
               )

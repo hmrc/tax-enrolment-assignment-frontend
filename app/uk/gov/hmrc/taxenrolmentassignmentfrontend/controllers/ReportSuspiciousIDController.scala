@@ -119,7 +119,7 @@ class ReportSuspiciousIDController @Inject()(
                 request.userDetails.credId
               )
             )
-            auditHandler.audit(AuditEvent.auditSuccessfullyEnrolledPersonalTax(true))
+            auditHandler.audit(AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true))
             Redirect(routes.EnrolledPTWithSAOnOtherAccountController.view)
           case Left(error) =>
             errorHandler.handleErrors(

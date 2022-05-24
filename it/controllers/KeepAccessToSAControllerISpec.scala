@@ -343,7 +343,7 @@ class KeepAccessToSAControllerISpec extends TestHelper with Status with Throttle
             resp.header("Location").get should include(
               UrlPaths.enrolledPTSAOnOtherAccountPath
             )
-            val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPersonalTax(
+            val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(
             )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, mongoCacheData = cacheData))
             verifyAuditEventSent(expectedAuditEvent)
           }

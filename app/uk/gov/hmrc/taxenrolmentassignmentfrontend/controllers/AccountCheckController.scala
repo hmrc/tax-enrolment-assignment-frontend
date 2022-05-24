@@ -25,7 +25,7 @@ import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AuthAction, RequestWithUserDetailsFromSession}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AuthAction, RequestWithUserDetailsFromSession, ThrottleAction}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.AccountCheckOrchestrator
@@ -34,22 +34,25 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 import uk.gov.hmrc.play.bootstrap.controller.WithDefaultFormBinding
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
+
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class AccountCheckController @Inject()(
-  silentAssignmentService: SilentAssignmentService,
-  authAction: AuthAction,
-  accountCheckOrchestrator: AccountCheckOrchestrator,
-  auditHandler: AuditHandler,
-  mcc: MessagesControllerComponents,
-  sessionCache: TEASessionCache,
-  val logger: EventLoggerService,
-  errorHandler: ErrorHandler,
-  errorView: ErrorTemplate
+class AccountCheckController @Inject()(silentAssignmentService: SilentAssignmentService,
+                                        throttleAction: ThrottleAction,
+                                        authAction: AuthAction,
+                                        accountCheckOrchestrator: AccountCheckOrchestrator,
+                                        auditHandler: AuditHandler,
+                                        appConfig: AppConfig,
+                                        mcc: MessagesControllerComponents,
+                                        sessionCache: TEASessionCache,
+                                        val logger: EventLoggerService,
+                                        errorHandler: ErrorHandler,
+                                        errorView: ErrorTemplate
 )(implicit ec: ExecutionContext)
     extends FrontendController(mcc)
     with I18nSupport
@@ -61,21 +64,26 @@ class AccountCheckController @Inject()(
     implicit request =>
       sessionCache.save[String](REDIRECT_URL, redirectUrl)(request, implicitly).flatMap { _ =>
         accountCheckOrchestrator.getAccountType.value.flatMap {
-          case Right(PT_ASSIGNED_TO_CURRENT_USER) =>
-            logger.logEvent(
-              logRedirectingToReturnUrl(
-                request.userDetails.credId,
-                "[AccountCheckController][accountCheck]"
-              )
-            )
-            Future.successful(Redirect(redirectUrl))
-          case Right(PT_ASSIGNED_TO_OTHER_USER) =>
-            Future.successful(
-              Redirect(routes.PTEnrolmentOnOtherAccountController.view)
-            )
-          case Right(SA_ASSIGNED_TO_OTHER_USER) =>
-            Future.successful(Redirect(routes.SABlueInterruptController.view))
-          case Right(accountType) => silentEnrolmentAndRedirect(accountType, redirectUrl)
+          case Right(anyAccountType) => throttleAction.throttle(anyAccountType, redirectUrl).flatMap {
+            case Some(redirectResult) => Future.successful(redirectResult)
+            case _ => anyAccountType match {
+              case PT_ASSIGNED_TO_CURRENT_USER =>
+                logger.logEvent(
+                  logRedirectingToReturnUrl(
+                    request.userDetails.credId,
+                    "[AccountCheckController][accountCheck]"
+                  )
+                )
+                Future.successful(Redirect(redirectUrl))
+              case PT_ASSIGNED_TO_OTHER_USER =>
+                Future.successful(
+                  Redirect(routes.PTEnrolmentOnOtherAccountController.view)
+                )
+              case SA_ASSIGNED_TO_OTHER_USER =>
+                Future.successful(Redirect(routes.SABlueInterruptController.view))
+              case accountType => silentEnrolmentAndRedirect(accountType, redirectUrl)
+            }
+          }
           case Left(error) =>
             Future.successful(
               errorHandler.handleErrors(error, "[AccountCheckController][accountCheck]")
@@ -90,7 +98,7 @@ class AccountCheckController @Inject()(
       ): Future[Result] = {
         silentAssignmentService.enrolUser().isRight map {
           case true =>
-            auditHandler.audit(AuditEvent.auditSuccessfullyAutoEnrolledPersonalTax(accountType))
+            auditHandler.audit(AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(accountType))
             if (accountType == SINGLE_ACCOUNT) {
               logger.logEvent(
                 logSingleAccountHolderAssignedEnrolment(request.userDetails.credId)

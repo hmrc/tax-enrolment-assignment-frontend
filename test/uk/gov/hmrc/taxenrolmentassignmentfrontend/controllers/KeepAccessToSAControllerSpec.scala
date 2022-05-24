@@ -363,7 +363,7 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
               .returning(createInboundResult(false))
             mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData)
             mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
-            val auditEvent = AuditEvent.auditSuccessfullyEnrolledPersonalTax(false
+            val auditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(false
             )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData = additionalCacheData))
             (mockAuditHandler
               .audit(_: AuditEvent)(_: HeaderCarrier))

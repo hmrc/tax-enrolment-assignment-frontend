@@ -381,7 +381,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
           .returning(createInboundResult((): Unit))
         mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData)
         mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
-        val auditEvent = AuditEvent.auditSuccessfullyEnrolledPersonalTax(true
+        val auditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true
         )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData = additionalCacheData))
         (mockAuditHandler
           .audit(_: AuditEvent)(_: HeaderCarrier))

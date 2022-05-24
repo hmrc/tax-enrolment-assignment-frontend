@@ -29,15 +29,19 @@ Run Journey Tests: see [here](https://github.com/hmrc/tax-enrolment-assignment-j
 
 Run Performance Tests see [here](https://github.com/hmrc/tax-enrolment-assignment-performance-tests)
 
-
-
 ## API
 
-| Path - internal routes prefixed by `/protect-tax-info` | Supported Methods | Type | Description |
-|-------|:-------------------:|:-------|-------------|
-|`/account-check`| GET | Internal | Endpoint get account check. |
-|`/multiple-accounts-check`| GET | Internal | Endpoint to get multiple accounts check. |
-|`/protect-tax-info/test-only/successful `| GET | Test | Endpoint to get a successful redirect. |
+### For a service to integrate with us.
+
+- They must start their journey on  `/protect-tax-info?redirectUrl=<providing-a-url-desitination-of-where-users-should-be-redirected-to>`
+- where redirectUrl should be URL encoded such as `/protect-tax-info?redirectUrl=%2FurlHere`
+
+
+| Path | Supported Methods | Type | Description                            |
+|---------------------------------------------------|:-------------------:|:-------|----------------------------------------|
+| `/protect-tax-info/test-only/successful`          | GET | Test | Endpoint to get a successful redirect. |
+| `/users-groups-search/test-only/users/:credId`    | GET | Test | Mimic UGS locally and in staging.      |
+| `/protect-tax-info/test-only/auth/enrolments`     | GET | Test | Return enrolments in session from auth |
 
 ## Throttling
 

@@ -27,18 +27,15 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.PT_ASSIGNED_TO_CURRENT_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedError
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{
-  ThrottleApplied,
-  ThrottleDoesNotApply
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{ThrottleApplied, ThrottleDoesNotApply}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class ThrottleActionSpec extends TestFixture {
 
   val action =
-    new ThrottleAction(mockThrottlingService, testBodyParser, errorHandler)
-  val exampleRequest = RequestWithUserDetailsFromSessionAndMongo(
+    new ThrottleAction(mockThrottlingService, testBodyParser, errorHandler, logger)
+  val exampleRequestSessionAndMongo: RequestWithUserDetailsFromSessionAndMongo[_] = RequestWithUserDetailsFromSessionAndMongo(
     FakeRequest(),
     UserDetailsFromSession(
       "123",
@@ -52,9 +49,14 @@ class ThrottleActionSpec extends TestFixture {
     "sesh",
     AccountDetailsFromMongo(PT_ASSIGNED_TO_CURRENT_USER, "redirectURL", Map())
   )
+  val exampleRequestSession: RequestWithUserDetailsFromSession[_] = {
+    RequestWithUserDetailsFromSession(exampleRequestSessionAndMongo.request, exampleRequestSessionAndMongo.userDetails, exampleRequestSessionAndMongo.sessionID)
+  }
   val exampleControllerFunction =
     (r: RequestWithUserDetailsFromSessionAndMongo[_]) =>
       Future.successful(Ok("got through"))
+
+
   "invokeBlock" should {
     s"return result of function if throttling service returns $ThrottleDoesNotApply" in {
       (mockThrottlingService
@@ -63,15 +65,15 @@ class ThrottleActionSpec extends TestFixture {
           _: HeaderCarrier
         ))
         .expects(
-          exampleRequest.accountDetailsFromMongo.accountType,
-          exampleRequest.userDetails.nino,
-          exampleRequest.userDetails.enrolments.enrolments,
+          exampleRequestSessionAndMongo.accountDetailsFromMongo.accountType,
+          exampleRequestSessionAndMongo.userDetails.nino,
+          exampleRequestSessionAndMongo.userDetails.enrolments.enrolments,
           *,
           *
         )
         .returning(createInboundResult(ThrottleDoesNotApply))
 
-      val res = action.invokeBlock(exampleRequest, exampleControllerFunction)
+      val res = action.invokeBlock(exampleRequestSessionAndMongo, exampleControllerFunction)
       contentAsString(res) shouldBe "got through"
       status(res) shouldBe OK
     }
@@ -82,18 +84,18 @@ class ThrottleActionSpec extends TestFixture {
           _: HeaderCarrier
         ))
         .expects(
-          exampleRequest.accountDetailsFromMongo.accountType,
-          exampleRequest.userDetails.nino,
-          exampleRequest.userDetails.enrolments.enrolments,
+          exampleRequestSessionAndMongo.accountDetailsFromMongo.accountType,
+          exampleRequestSessionAndMongo.userDetails.nino,
+          exampleRequestSessionAndMongo.userDetails.enrolments.enrolments,
           *,
           *
         )
         .returning(createInboundResult(ThrottleApplied))
 
-      val res = action.invokeBlock(exampleRequest, exampleControllerFunction)
+      val res = action.invokeBlock(exampleRequestSessionAndMongo, exampleControllerFunction)
 
       status(res) shouldBe SEE_OTHER
-      redirectLocation(res).get shouldBe exampleRequest.accountDetailsFromMongo.redirectUrl
+      redirectLocation(res).get shouldBe exampleRequestSessionAndMongo.accountDetailsFromMongo.redirectUrl
     }
     s"return $INTERNAL_SERVER_ERROR if throttling service returns Error" in {
       (mockThrottlingService
@@ -102,17 +104,77 @@ class ThrottleActionSpec extends TestFixture {
           _: HeaderCarrier
         ))
         .expects(
-          exampleRequest.accountDetailsFromMongo.accountType,
-          exampleRequest.userDetails.nino,
-          exampleRequest.userDetails.enrolments.enrolments,
+          exampleRequestSessionAndMongo.accountDetailsFromMongo.accountType,
+          exampleRequestSessionAndMongo.userDetails.nino,
+          exampleRequestSessionAndMongo.userDetails.enrolments.enrolments,
           *,
           *
         )
         .returning(createInboundResultError(UnexpectedError))
 
-      val res = action.invokeBlock(exampleRequest, exampleControllerFunction)
+      val res = action.invokeBlock(exampleRequestSessionAndMongo, exampleControllerFunction)
 
       status(res) shouldBe INTERNAL_SERVER_ERROR
+    }
+  }
+
+  "throttle" should {
+    s"return None if throttle does not apply" in {
+      (mockThrottlingService
+        .throttle(_: AccountTypes.Value, _: String, _: Set[Enrolment])(
+          _: ExecutionContext,
+          _: HeaderCarrier
+        ))
+        .expects(
+          PT_ASSIGNED_TO_CURRENT_USER,
+          exampleRequestSession.userDetails.nino,
+          exampleRequestSession.userDetails.enrolments.enrolments,
+          *,
+          *
+        )
+        .returning(createInboundResult(ThrottleDoesNotApply))
+
+      val res = action.throttle(PT_ASSIGNED_TO_CURRENT_USER,"redirectURL")(implicitly, implicitly, exampleRequestSession)
+      await(res) shouldBe None
+    }
+    s"return result that redirects to users redirect URL of user if throttling service returns $ThrottleApplied" in {
+      (mockThrottlingService
+        .throttle(_: AccountTypes.Value, _: String, _: Set[Enrolment])(
+          _: ExecutionContext,
+          _: HeaderCarrier
+        ))
+        .expects(
+          PT_ASSIGNED_TO_CURRENT_USER,
+          exampleRequestSession.userDetails.nino,
+          exampleRequestSession.userDetails.enrolments.enrolments,
+          *,
+          *
+        )
+        .returning(createInboundResult(ThrottleApplied))
+
+      val res = action.throttle(PT_ASSIGNED_TO_CURRENT_USER,"redirectURL")(implicitly, implicitly, exampleRequestSession)
+
+      status(res.map(_.get)) shouldBe SEE_OTHER
+      redirectLocation(res.map(_.get)).get shouldBe "redirectURL"
+    }
+    s"return $INTERNAL_SERVER_ERROR if throttling service returns Error" in {
+      (mockThrottlingService
+        .throttle(_: AccountTypes.Value, _: String, _: Set[Enrolment])(
+          _: ExecutionContext,
+          _: HeaderCarrier
+        ))
+        .expects(
+          PT_ASSIGNED_TO_CURRENT_USER,
+          exampleRequestSession.userDetails.nino,
+          exampleRequestSession.userDetails.enrolments.enrolments,
+          *,
+          *
+        )
+        .returning(createInboundResultError(UnexpectedError))
+
+      val res = action.throttle(PT_ASSIGNED_TO_CURRENT_USER,"redirectURL")(implicitly, implicitly, exampleRequestSession)
+
+      status(res.map(_.get)) shouldBe INTERNAL_SERVER_ERROR
     }
   }
 }

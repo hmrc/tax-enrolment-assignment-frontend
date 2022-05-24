@@ -21,15 +21,251 @@ import helpers.TestITData._
 import helpers.WiremockHelper._
 import helpers.messages._
 import play.api.http.Status
+import play.api.libs.json.Json
 import play.api.libs.ws.DefaultWSCookie
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
+import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.hmrcPTKey
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.formats.EnrolmentsFormats
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{ThrottleApplied, ThrottleDoesNotApply}
 
 class AccountCheckControllerISpec extends TestHelper with Status {
 
   val urlPath: String = UrlPaths.accountCheckPath
+  val ninoBelowThreshold = "QQ123400A"
+  val newEnrolment = (nino: String) => Enrolment(s"$hmrcPTKey", Seq(EnrolmentIdentifier("NINO", nino)), "Activated", None)
 
   s"GET $urlPath" when {
+      s"$ThrottleApplied for $MULTIPLE_ACCOUNTS with Nino in threshold" should {
+        "redirect user to their RedirectURL and call to auth with their current enrolments plus new enrolment" in {
+          val authResponse = authoriseResponseJson(optNino = Some(ninoBelowThreshold), enrolments = noEnrolments)
+          stubAuthorizePost(OK, authResponse.toString())
+          stubPost(s"/write/.*", OK, """{"x":2}""")
+          stubGet(
+            s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$ninoBelowThreshold/users",
+            Status.OK,
+            es0ResponseNoRecordCred
+          )
+          stubGetWithQueryParam(
+            "/identity-verification/nino",
+            "nino",
+            ninoBelowThreshold,
+            Status.OK,
+            ivResponseMultiCredsJsonString
+          )
+          stubGetMatching(
+            s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_3/enrolments?type=principal",
+            Status.NO_CONTENT,
+            ""
+          )
+          stubGetMatching(
+            s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_4/enrolments?type=principal",
+            Status.NO_CONTENT,
+            ""
+          )
+
+          stubPost(
+            s"/enrolment-store-proxy/enrolment-store/enrolments",
+            Status.NO_CONTENT,
+            ""
+          )
+          stubPut(
+            s"/tax-enrolments/service/HMRC-PT/enrolment",
+            Status.NO_CONTENT,
+            ""
+          )
+          stubPutWithRequestBody(
+            url = "/auth/enrolments",
+            status = OK,
+            requestBody = Json.toJson(Set(newEnrolment(ninoBelowThreshold)))(EnrolmentsFormats.writes).toString,
+            responseBody = "")
+
+          val result = buildRequest(urlPath)
+            .addCookies(DefaultWSCookie("mdtp", authCookie))
+            .addHttpHeaders(xSessionId, csrfContent)
+            .get()
+
+          whenReady(result) { res =>
+            res.status shouldBe SEE_OTHER
+            res.header("Location").get should include(UrlPaths.returnUrl)
+          }
+        }
+      }
+    s"$ThrottleApplied for $SA_ASSIGNED_TO_OTHER_USER with Nino in threshold" should {
+      "redirect user to their RedirectURL and call to auth with their current enrolments plus new enrolment" in {
+        val authResponse = authoriseResponseJson(optNino = Some(ninoBelowThreshold), enrolments = noEnrolments)
+        stubAuthorizePost(OK, authResponse.toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        stubGet(
+          s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$ninoBelowThreshold/users",
+          Status.OK,
+          es0ResponseNoRecordCred
+        )
+        stubGetWithQueryParam(
+          "/identity-verification/nino",
+          "nino",
+          ninoBelowThreshold,
+          Status.OK,
+          ivResponseMultiCredsJsonString
+        )
+        stubGetMatching(
+          s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_3/enrolments?type=principal",
+          Status.NO_CONTENT,
+          ""
+        )
+        stubGetMatching(
+          s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_4/enrolments?type=principal",
+          Status.NO_CONTENT,
+          ""
+        )
+
+        stubPost(
+          s"/enrolment-store-proxy/enrolment-store/enrolments",
+          Status.OK,
+          eacdResponse
+        )
+        stubGet(
+          s"/enrolment-store-proxy/enrolment-store/enrolments/IR-SA~UTR~$UTR/users",
+          Status.OK,
+          es0ResponseNotMatchingCred
+        )
+        stubPutWithRequestBody(
+          url = "/auth/enrolments",
+          status = OK,
+          requestBody = Json.toJson(Set(newEnrolment(ninoBelowThreshold)))(EnrolmentsFormats.writes).toString,
+          responseBody = "")
+
+        val result = buildRequest(urlPath)
+          .addCookies(DefaultWSCookie("mdtp", authCookie))
+          .addHttpHeaders(xSessionId, csrfContent)
+          .get()
+
+        whenReady(result) { res =>
+          res.status shouldBe SEE_OTHER
+          res.header("Location").get should include(UrlPaths.returnUrl)
+        }
+      }
+    }
+    s"$ThrottleApplied for $SA_ASSIGNED_TO_CURRENT_USER with Nino in threshold" should {
+      "redirect user to their RedirectURL and call to auth with their current enrolments plus new enrolment" in {
+        val authResponse = authoriseResponseJson(optNino = Some(ninoBelowThreshold), enrolments = saEnrolmentOnly)
+        stubAuthorizePost(OK, authResponse.toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        stubGet(
+          s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$ninoBelowThreshold/users",
+          Status.OK,
+          es0ResponseNoRecordCred
+        )
+        stubGetWithQueryParam(
+          "/identity-verification/nino",
+          "nino",
+          ninoBelowThreshold,
+          Status.OK,
+          ivResponseMultiCredsJsonString
+        )
+        stubGetMatching(
+          s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_3/enrolments?type=principal",
+          Status.NO_CONTENT,
+          ""
+        )
+        stubGetMatching(
+          s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_4/enrolments?type=principal",
+          Status.NO_CONTENT,
+          ""
+        )
+        stubPutWithRequestBody(
+          url = "/auth/enrolments",
+          status = OK,
+          requestBody = Json.toJson(Set(saEnrolmentAsCaseClass, newEnrolment(ninoBelowThreshold)))(EnrolmentsFormats.writes).toString,
+          responseBody = "")
+
+        val result = buildRequest(urlPath)
+          .addCookies(DefaultWSCookie("mdtp", authCookie))
+          .addHttpHeaders(xSessionId, csrfContent)
+          .get()
+
+        whenReady(result) { res =>
+          res.status shouldBe SEE_OTHER
+          res.header("Location").get should include(UrlPaths.returnUrl)
+        }
+      }
+    }
+    s"$ThrottleDoesNotApply for $PT_ASSIGNED_TO_CURRENT_USER with Nino in threshold" should {
+      "not redirect user to their redirect url and follow standard logic" in {
+        val authResponse = authoriseResponseJson(optNino = Some(ninoBelowThreshold), enrolments = ptEnrolmentOnly)
+        stubAuthorizePost(OK, authResponse.toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+
+        val res = buildRequest(urlPath)
+          .addCookies(DefaultWSCookie("mdtp", authCookie))
+          .addHttpHeaders(xSessionId, csrfContent)
+          .get()
+
+        whenReady(res) { resp =>
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include(UrlPaths.returnUrl)
+        }
+      }
+    }
+    s"$ThrottleDoesNotApply for $PT_ASSIGNED_TO_OTHER_USER with Nino in threshold" should {
+      "not redirect user to their redirect url and follow standard logic" in {
+        val authResponse = authoriseResponseJson(optNino = Some(ninoBelowThreshold), enrolments = noEnrolments)
+        stubAuthorizePost(OK, authResponse.toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        stubGet(
+          s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$ninoBelowThreshold/users",
+          Status.OK,
+          es0ResponseNotMatchingCred
+        )
+
+        val res = buildRequest(urlPath)
+          .addCookies(DefaultWSCookie("mdtp", authCookie))
+          .addHttpHeaders(xSessionId, csrfContent)
+          .get()
+
+        whenReady(res) { resp =>
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include(UrlPaths.ptOnOtherAccountPath)
+        }
+      }
+    }
+    s"$ThrottleDoesNotApply for $SINGLE_ACCOUNT with Nino in threshold" should {
+      "not redirect user to their redirect url and follow standard logic" in {
+        val authResponse = authoriseResponseJson(optNino = Some(ninoBelowThreshold), enrolments = noEnrolments)
+        stubAuthorizePost(OK, authResponse.toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        stubGet(
+          s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$ninoBelowThreshold/users",
+          Status.OK,
+          es0ResponseNoRecordCred
+        )
+        stubGetWithQueryParam(
+          "/identity-verification/nino",
+          "nino",
+          ninoBelowThreshold,
+          Status.OK,
+          ivResponseSingleCredsJsonString
+        )
+        stubPut(
+          s"/tax-enrolments/service/HMRC-PT/enrolment",
+          Status.NO_CONTENT,
+          ""
+        )
+
+        val res = buildRequest(urlPath)
+          .addCookies(DefaultWSCookie("mdtp", authCookie))
+          .addHttpHeaders(xSessionId, csrfContent)
+          .get()
+
+        whenReady(res) { resp =>
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include(UrlPaths.returnUrl)
+        }
+      }
+    }
+
     "a user has one credential associated with their nino" that {
       "has a PT enrolment in the session" should {
         s"redirect to ${UrlPaths.returnUrl}" in {

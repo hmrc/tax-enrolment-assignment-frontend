@@ -19,15 +19,15 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 import cats.data.EitherT
 import play.api.http.Status.SEE_OTHER
 import play.api.test.Helpers._
-import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
+import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{TaxEnrolmentAssignmentErrors, UnexpectedResponseFromIV, UnexpectedResponseFromTaxEnrolments}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{buildFakeRequestWithSessionId, predicates, retrievalResponse, retrievals, saEnrolmentOnly, userDetailsWithSAEnrolment}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
 
@@ -39,9 +39,11 @@ class AccountCheckControllerSpec extends TestFixture {
 
   val controller = new AccountCheckController(
     mockSilentAssignmentService,
+    mockThrottleAction,
     mockAuthAction,
     mockAccountCheckOrchestrator,
     mockAuditHandler,
+    appConfig,
     mcc,
     teaSessionCache,
     logger,
@@ -56,6 +58,7 @@ class AccountCheckControllerSpec extends TestFixture {
         mockAccountCheckSuccess(SINGLE_ACCOUNT)
         mockSilentEnrolSuccess
         mockAuditPTEnrolled(SINGLE_ACCOUNT, requestWithUserDetails())
+        mockAccountShouldNotBeThrottled(SINGLE_ACCOUNT, NINO, noEnrolments.enrolments)
 
         val result = controller
           .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
@@ -69,6 +72,7 @@ class AccountCheckControllerSpec extends TestFixture {
         mockAuthCall()
         mockAccountCheckSuccess(SINGLE_ACCOUNT)
         mockSilentEnrolFailure
+        mockAccountShouldNotBeThrottled(SINGLE_ACCOUNT, NINO, noEnrolments.enrolments)
 
         val result = controller
           .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
@@ -83,6 +87,7 @@ class AccountCheckControllerSpec extends TestFixture {
       s"redirect to ${UrlPaths.returnUrl}" in new TestHelper {
         mockAuthCall()
         mockAccountCheckSuccess(PT_ASSIGNED_TO_CURRENT_USER)
+        mockAccountShouldNotBeThrottled(PT_ASSIGNED_TO_CURRENT_USER, NINO, noEnrolments.enrolments)
 
         val result = controller
           .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
@@ -97,6 +102,7 @@ class AccountCheckControllerSpec extends TestFixture {
       s"redirect to ${UrlPaths.ptOnOtherAccountPath}" in new TestHelper {
         mockAuthCall()
         mockAccountCheckSuccess(PT_ASSIGNED_TO_OTHER_USER)
+        mockAccountShouldNotBeThrottled(PT_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
 
         val result = controller
           .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
@@ -112,6 +118,7 @@ class AccountCheckControllerSpec extends TestFixture {
         mockAuthCall()
         mockAccountCheckSuccess(MULTIPLE_ACCOUNTS)
         mockSilentEnrolSuccess
+        mockAccountShouldNotBeThrottled(MULTIPLE_ACCOUNTS, NINO, noEnrolments.enrolments)
         mockAuditPTEnrolled(MULTIPLE_ACCOUNTS, requestWithUserDetails())
 
         val result = controller
@@ -130,6 +137,7 @@ class AccountCheckControllerSpec extends TestFixture {
         mockAuthCallWithSA()
         mockAccountCheckSuccess(SA_ASSIGNED_TO_CURRENT_USER)
         mockSilentEnrolSuccess
+        mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_CURRENT_USER, NINO, saEnrolmentOnly.enrolments)
         mockAuditPTEnrolled(SA_ASSIGNED_TO_CURRENT_USER, requestWithUserDetails(userDetailsWithSAEnrolment))
 
         val result = controller
@@ -147,6 +155,7 @@ class AccountCheckControllerSpec extends TestFixture {
       s"redirect ${UrlPaths.saOnOtherAccountInterruptPath}" in new TestHelper {
         mockAuthCall()
         mockAccountCheckSuccess(SA_ASSIGNED_TO_OTHER_USER)
+        mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
 
         val result = controller
           .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
@@ -163,6 +172,38 @@ class AccountCheckControllerSpec extends TestFixture {
       "render the error page" in new TestHelper {
         mockAuthCall()
         mockGetAccountTypeFailure(UnexpectedResponseFromIV)
+
+        val res = controller
+          .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
+          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+
+        status(res) shouldBe INTERNAL_SERVER_ERROR
+        contentAsString(res) should include("enrolmentError.title")
+      }
+    }
+
+    "throttled" should {
+      "redirect user to their redirect url" in new TestHelper {
+        mockAuthCall()
+        mockAccountShouldBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
+        mockAccountCheckSuccess(SA_ASSIGNED_TO_OTHER_USER)
+
+        val res = controller
+          .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
+          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+
+        status(res) shouldBe SEE_OTHER
+        redirectLocation(res) shouldBe Some(
+          testOnly.routes.TestOnlyController.successfulCall.url
+        )
+      }
+
+    }
+    "throttle returns error" should {
+      s"return $INTERNAL_SERVER_ERROR" in new TestHelper {
+        mockAuthCall()
+        mockErrorFromThrottlingService(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
+        mockAccountCheckSuccess(SA_ASSIGNED_TO_OTHER_USER)
 
         val res = controller
           .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)

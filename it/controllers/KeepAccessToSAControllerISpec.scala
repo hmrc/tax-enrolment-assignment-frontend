@@ -22,13 +22,14 @@ import helpers.WiremockHelper._
 import helpers.messages._
 import org.jsoup.Jsoup
 import play.api.http.Status
-import play.api.libs.json.Json
+import play.api.libs.json.{JsString, Json}
 import play.api.libs.ws.DefaultWSCookie
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM, REDIRECT_URL, USER_ASSIGNED_SA_ENROLMENT, accountDetailsForCredential}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes.AccountCheckController
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
 
 class KeepAccessToSAControllerISpec extends TestHelper with Status with ThrottleHelperISpec {
 
@@ -315,14 +316,13 @@ class KeepAccessToSAControllerISpec extends TestHelper with Status with Throttle
 
       s"enrol the user for PT and redirect to ${UrlPaths.enrolledPTSAOnOtherAccountPath} url" when {
         "the user selects no" in {
-          await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
-          await(
-            save[AccountTypes.Value](
-              sessionId,
-              "ACCOUNT_TYPE",
-              SA_ASSIGNED_TO_OTHER_USER
-            )
+          val cacheData = Map(
+            ACCOUNT_TYPE -> Json.toJson(SA_ASSIGNED_TO_OTHER_USER),
+            REDIRECT_URL -> JsString(UrlPaths.returnUrl),
+            USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(saUsers),
+            accountDetailsForCredential(CREDENTIAL_ID_2) -> Json.toJson(accountDetails)
           )
+          await(save(sessionId, cacheData))
 
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())
@@ -343,6 +343,9 @@ class KeepAccessToSAControllerISpec extends TestHelper with Status with Throttle
             resp.header("Location").get should include(
               UrlPaths.enrolledPTSAOnOtherAccountPath
             )
+            val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(
+            )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, mongoCacheData = cacheData))
+            verifyAuditEventSent(expectedAuditEvent)
           }
         }
       }

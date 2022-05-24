@@ -18,17 +18,21 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import org.jsoup.Jsoup
 import play.api.http.Status.OK
+import play.api.libs.json.Json
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_OTHER_USER}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, UnexpectedResponseFromTaxEnrolments}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm.keepAccessToSAThroughPTAForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, ThrottleHelperSpec, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_ASSIGNED_SA_ENROLMENT, accountDetailsForCredential}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.KeepAccessToSA
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -45,6 +49,7 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
     mcc,
     logger,
     view,
+    mockAuditHandler,
     errorHandler
   )
 
@@ -335,6 +340,8 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
       "the user has selected No" should {
         s"be enrolled for PT and redirect to ${UrlPaths.enrolledPTSAOnOtherAccountPath}" when {
           "they have SA on another account" in {
+            val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+              accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetails))
             (mockAuthConnector
               .authorise(
                 _: Predicate,
@@ -354,8 +361,15 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
               ))
               .expects(KeepAccessToSAThroughPTA(false), *, *, *)
               .returning(createInboundResult(false))
-            mockGetDataFromCacheForActionSuccess(randomAccountType)
-            mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
+            mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData)
+            mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
+            val auditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(false
+            )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData = additionalCacheData))
+            (mockAuditHandler
+              .audit(_: AuditEvent)(_: HeaderCarrier))
+              .expects(auditEvent, *)
+              .returning(Future.successful((): Unit))
+              .once()
 
             val res = controller.continue
               .apply(

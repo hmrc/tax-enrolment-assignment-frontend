@@ -25,25 +25,11 @@ import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{
-  RequestWithUserDetailsFromSession,
-  RequestWithUserDetailsFromSessionAndMongo
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{
-  TaxEnrolmentAssignmentErrors,
-  UnexpectedResponseFromIV,
-  UnexpectedResponseFromTaxEnrolments
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{
-  buildFakeRequestWithSessionId,
-  predicates,
-  retrievalResponse,
-  retrievals
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{
-  TestFixture,
-  UrlPaths
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{TaxEnrolmentAssignmentErrors, UnexpectedResponseFromIV, UnexpectedResponseFromTaxEnrolments}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{buildFakeRequestWithSessionId, predicates, retrievalResponse, retrievals, saEnrolmentOnly, userDetailsWithSAEnrolment}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, UrlPaths}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -55,7 +41,7 @@ class AccountCheckControllerSpec extends TestFixture {
     mockSilentAssignmentService,
     mockAuthAction,
     mockAccountCheckOrchestrator,
-    appConfig,
+    mockAuditHandler,
     mcc,
     teaSessionCache,
     logger,
@@ -69,6 +55,7 @@ class AccountCheckControllerSpec extends TestFixture {
         mockAuthCall()
         mockAccountCheckSuccess(SINGLE_ACCOUNT)
         mockSilentEnrolSuccess
+        mockAuditPTEnrolled(SINGLE_ACCOUNT, requestWithUserDetails())
 
         val result = controller
           .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
@@ -125,6 +112,7 @@ class AccountCheckControllerSpec extends TestFixture {
         mockAuthCall()
         mockAccountCheckSuccess(MULTIPLE_ACCOUNTS)
         mockSilentEnrolSuccess
+        mockAuditPTEnrolled(MULTIPLE_ACCOUNTS, requestWithUserDetails())
 
         val result = controller
           .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
@@ -139,9 +127,10 @@ class AccountCheckControllerSpec extends TestFixture {
 
     "multiple credential exists for a given nino and current credential has SA enrolment" should {
       s"redirect to ${UrlPaths.enrolledPTNoSAOnAnyAccountPath}" in new TestHelper {
-        mockAuthCall()
+        mockAuthCallWithSA()
         mockAccountCheckSuccess(SA_ASSIGNED_TO_CURRENT_USER)
         mockSilentEnrolSuccess
+        mockAuditPTEnrolled(SA_ASSIGNED_TO_CURRENT_USER, requestWithUserDetails(userDetailsWithSAEnrolment))
 
         val result = controller
           .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
@@ -199,12 +188,25 @@ class AccountCheckControllerSpec extends TestFixture {
         .expects(predicates, retrievals, *, *)
         .returning(Future.successful(retrievalResponse()))
 
+    def mockAuthCallWithSA() =
+      (mockAuthConnector
+        .authorise(
+          _: Predicate,
+          _: Retrieval[
+            ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+              String
+            ] ~ Option[AffinityGroup]
+          ]
+        )(_: HeaderCarrier, _: ExecutionContext))
+        .expects(predicates, retrievals, *, *)
+        .returning(Future.successful(retrievalResponse(enrolments = saEnrolmentOnly)))
+
     def mockGetAccountTypeFailure(error: TaxEnrolmentAssignmentErrors) = {
       (mockAccountCheckOrchestrator
         .getAccountType(
           _: ExecutionContext,
           _: HeaderCarrier,
-          _: RequestWithUserDetailsFromSessionAndMongo[_]
+          _: RequestWithUserDetailsFromSession[_]
         ))
         .expects(*, *, *)
         .returning(createInboundResultError(error))
@@ -224,7 +226,7 @@ class AccountCheckControllerSpec extends TestFixture {
     def mockSilentEnrolSuccess =
       (mockSilentAssignmentService
         .enrolUser()(
-          _: RequestWithUserDetailsFromSessionAndMongo[_],
+          _: RequestWithUserDetailsFromSession[_],
           _: HeaderCarrier,
           _: ExecutionContext
         ))
@@ -236,7 +238,7 @@ class AccountCheckControllerSpec extends TestFixture {
     def mockSilentEnrolFailure =
       (mockSilentAssignmentService
         .enrolUser()(
-          _: RequestWithUserDetailsFromSessionAndMongo[_],
+          _: RequestWithUserDetailsFromSession[_],
           _: HeaderCarrier,
           _: ExecutionContext
         ))
@@ -244,5 +246,14 @@ class AccountCheckControllerSpec extends TestFixture {
         .returning(
           createInboundResultError(UnexpectedResponseFromTaxEnrolments)
         )
+
+    def mockAuditPTEnrolled(accountType: AccountTypes.Value, requestWithUserDetailsFromSession: RequestWithUserDetailsFromSession[_]) = {
+      val expectedAudit = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(accountType)(requestWithUserDetailsFromSession)
+      (mockAuditHandler
+        .audit(_: AuditEvent)(_: HeaderCarrier))
+        .expects(expectedAudit, *)
+        .returning(Future.successful((): Unit))
+        .once()
+    }
   }
 }

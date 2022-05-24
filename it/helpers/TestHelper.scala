@@ -17,12 +17,12 @@
 package helpers
 
 import helpers.TestITData._
-import play.api.libs.json.{JsString, Json}
+import play.api.libs.json.{JsString, JsValue, Json}
 import play.api.mvc.{AnyContent, Request}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSessionAndMongo}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo, UserDetailsFromSession}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{routes, testOnly}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
@@ -40,13 +40,21 @@ trait TestHelper extends IntegrationSpecBase {
 
   def requestWithAccountType(
     accountType: AccountTypes.Value,
-    redirectUrl: String = UrlPaths.returnUrl
+    redirectUrl: String = UrlPaths.returnUrl,
+    mongoCacheData: Map[String, JsValue] = exampleMongoSessionData,
   ): RequestWithUserDetailsFromSessionAndMongo[_] =
     RequestWithUserDetailsFromSessionAndMongo(
       FakeRequest().asInstanceOf[Request[AnyContent]],
       userDetailsNoEnrolments,
       sessionId,
-      AccountDetailsFromMongo(accountType, redirectUrl, exampleMongoSessionData)
+      AccountDetailsFromMongo(accountType, redirectUrl, mongoCacheData)
+    )
+
+  def requestWithUserDetails(userDetails: UserDetailsFromSession = userDetailsNoEnrolments): RequestWithUserDetailsFromSession[_] =
+    RequestWithUserDetailsFromSession(
+      FakeRequest().asInstanceOf[Request[AnyContent]],
+      userDetails,
+      sessionId
     )
 
   object UrlPaths {

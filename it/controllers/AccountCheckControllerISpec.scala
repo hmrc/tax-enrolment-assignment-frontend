@@ -22,6 +22,8 @@ import helpers.WiremockHelper._
 import helpers.messages._
 import play.api.http.Status
 import play.api.libs.ws.DefaultWSCookie
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
 
 class AccountCheckControllerISpec extends TestHelper with Status {
 
@@ -101,6 +103,11 @@ class AccountCheckControllerISpec extends TestHelper with Status {
           whenReady(res) { resp =>
             resp.status shouldBe SEE_OTHER
             resp.header("Location").get should include(UrlPaths.returnUrl)
+
+            val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
+              SINGLE_ACCOUNT
+            )(requestWithUserDetails())
+            verifyAuditEventSent(expectedAuditEvent)
           }
         }
       }
@@ -228,6 +235,11 @@ class AccountCheckControllerISpec extends TestHelper with Status {
             resp.header("Location").get should include(
               UrlPaths.enrolledPTNoSAOnAnyAccountPath
             )
+
+            val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
+              SA_ASSIGNED_TO_CURRENT_USER
+            )(requestWithUserDetails(userDetailsNoEnrolments.copy(hasSAEnrolment = true)))
+            verifyAuditEventSent(expectedAuditEvent)
           }
         }
       }
@@ -287,6 +299,10 @@ class AccountCheckControllerISpec extends TestHelper with Status {
             resp.header("Location").get should include(
               UrlPaths.enrolledPTNoSAOnAnyAccountPath
             )
+            val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
+              SA_ASSIGNED_TO_CURRENT_USER
+            )(requestWithUserDetails())
+            verifyAuditEventSent(expectedAuditEvent)
           }
         }
       }
@@ -340,6 +356,10 @@ class AccountCheckControllerISpec extends TestHelper with Status {
             resp.header("Location").get should include(
               UrlPaths.enrolledPTNoSAOnAnyAccountPath
             )
+            val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
+              MULTIPLE_ACCOUNTS
+            )(requestWithUserDetails())
+            verifyAuditEventSent(expectedAuditEvent)
           }
         }
       }

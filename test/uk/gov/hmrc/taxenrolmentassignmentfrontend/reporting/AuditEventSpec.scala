@@ -17,16 +17,12 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting
 
 import play.api.libs.json.{JsObject, JsString, Json}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
-  PT_ASSIGNED_TO_OTHER_USER,
-  SA_ASSIGNED_TO_OTHER_USER
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
-  AccountDetails,
-  MFADetails
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_ASSIGNED_SA_ENROLMENT, accountDetailsForCredential}
 
 class AuditEventSpec extends TestFixture {
 
@@ -94,6 +90,26 @@ class AuditEventSpec extends TestFixture {
         ("currentAccount", currentAccountDetails),
         ("reportedAccount", reportedAccountDetails)
       )
+    )
+  }
+
+  def getExpectedAuditForPTEnrolled(accountType: AccountTypes.Value, optReportedAccountDetails: Option[JsObject],
+                                    optSACred: Option[String]) = {
+    val currentAccountDetails = Json.obj(
+      ("credentialId", JsString(CREDENTIAL_ID)),
+      ("type", JsString(accountType.toString)),
+      ("affinityGroup", JsString("Individual"))
+    )
+    val details = Json.obj(
+      ("NINO", JsString(NINO)),
+      ("currentAccount", currentAccountDetails)
+    ) ++ optSACred.fold(Json.obj())(credId =>
+      Json.obj(("saAccountCredentialId", JsString(credId)))) ++ optReportedAccountDetails.getOrElse(Json.obj())
+
+    AuditEvent(
+      auditType = "SuccessfullyEnrolledPersonalTax",
+      transactionName = "successfully-enrolled-personal-tax",
+      detail = details
     )
   }
 
@@ -261,6 +277,164 @@ class AuditEventSpec extends TestFixture {
         AuditEvent.auditReportSuspiciousPTAccount(
           accountDetailsWithThreeMFADetails
         )(requestWithMongoAndAccountType) shouldEqual expectedAuditEvent
+      }
+    }
+  }
+
+  "auditSuccessfullyAutoEnrolledPersonalTax" when {
+
+    "the user has a single account with no SA" should {
+      "return an audit event with the expected details" in {
+        val requestForAudit =
+          requestWithUserDetails(userDetailsNoEnrolments)
+
+        val expectedAuditEvent =
+          getExpectedAuditForPTEnrolled(SINGLE_ACCOUNT, None, None)
+
+        AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
+          SINGLE_ACCOUNT
+        )(requestForAudit) shouldEqual expectedAuditEvent
+      }
+    }
+
+    "the user has a single account with SA" should {
+      "return an audit event with the expected details" in {
+        val requestForAudit =
+          requestWithUserDetails(userDetailsWithSAEnrolment)
+
+        val expectedAuditEvent =
+          getExpectedAuditForPTEnrolled(SINGLE_ACCOUNT, None, Some(CREDENTIAL_ID))
+
+        AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
+          SINGLE_ACCOUNT
+        )(requestForAudit) shouldEqual expectedAuditEvent
+      }
+    }
+
+    "the user has multiple accounts with no SA" should {
+      "return an audit event with the expected details" in {
+        val requestForAudit =
+          requestWithUserDetails(userDetailsNoEnrolments)
+
+        val expectedAuditEvent =
+          getExpectedAuditForPTEnrolled(MULTIPLE_ACCOUNTS, None, None)
+
+        AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
+          MULTIPLE_ACCOUNTS
+        )(requestForAudit) shouldEqual expectedAuditEvent
+      }
+    }
+
+    "the user has multiple accounts and is signed in with SA account" should {
+      "return an audit event with the expected details" in {
+        val requestForAudit =
+          requestWithUserDetails(userDetailsWithSAEnrolment)
+
+        val expectedAuditEvent =
+          getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_CURRENT_USER, None, Some(CREDENTIAL_ID
+          ))
+
+        AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
+          SA_ASSIGNED_TO_CURRENT_USER
+        )(requestForAudit) shouldEqual expectedAuditEvent
+      }
+    }
+  }
+
+
+  "auditSuccessfullyEnrolledPersonalTax" when {
+    "the user has enrolled after choosing to keep PT and SA separate" should {
+      "return an audit event with the expected details" in {
+        val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsSA))
+        val requestForAudit =
+          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
+        val expectedAuditEvent =
+          getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_OTHER_USER, None, Some(CREDENTIAL_ID_1))
+
+        AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(
+          false
+        )(requestForAudit) shouldEqual expectedAuditEvent
+      }
+    }
+
+    "the user has enrolled after reporting fraud" should {
+      "return an audit event with the expected details" when {
+        "the reported account has no email or mfaDetails" in {
+          val accountDetailsNoEmailOrMFA = accountDetailsWithOneMFADetails
+            .copy(email = None, mfaDetails = Seq.empty)
+          val reportedAccountDetails =
+            Json.obj(("reportedAccount", getReportedAccountJson(accountDetailsNoEmailOrMFA)))
+          val expectedAuditEvent =
+            getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_OTHER_USER, Some(reportedAccountDetails), Some(CREDENTIAL_ID_1))
+
+          val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmailOrMFA))
+          val requestForAudit =
+            requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
+
+          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(
+            requestForAudit
+          ) shouldEqual expectedAuditEvent
+        }
+
+        "the reported account has no email" in {
+          val accountDetailsNoEmail = accountDetailsWithOneMFADetails
+            .copy(email = None)
+          val reportedAccountDetails =
+            Json.obj(("reportedAccount", getReportedAccountJson(accountDetailsNoEmail)))
+          val expectedAuditEvent =
+            getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_OTHER_USER, Some(reportedAccountDetails), Some(CREDENTIAL_ID_1))
+
+          val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmail))
+          val requestForAudit =
+            requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
+
+          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(
+            requestForAudit
+          ) shouldEqual expectedAuditEvent
+        }
+
+        "the reported account has no mfaDetails" in {
+          val accountDetailsNoMFA = accountDetailsWithOneMFADetails
+            .copy(mfaDetails = Seq.empty)
+          val reportedAccountDetails = Json.obj(("reportedAccount", getReportedAccountJson(accountDetailsNoMFA)))
+          val expectedAuditEvent =
+            getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_OTHER_USER, Some(reportedAccountDetails), Some(CREDENTIAL_ID_1))
+          val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoMFA))
+          val requestForAudit =
+            requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
+
+          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(
+            requestForAudit
+          ) shouldEqual expectedAuditEvent
+        }
+
+        "the reported account has email and three mfaDetails" in {
+          val accountDetailsWithThreeMFADetails = accountDetailsWithOneMFADetails
+            .copy(
+              mfaDetails = Seq(
+                MFADetails("mfaDetails.text", "24321"),
+                MFADetails("mfaDetails.voice", "24322"),
+                MFADetails("mfaDetails.totp", "TEST")
+              )
+            )
+          val reportedAccountDetails =
+            Json.obj(("reportedAccount", getReportedAccountJson(accountDetailsWithThreeMFADetails)))
+          val expectedAuditEvent =
+            getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_OTHER_USER, Some(reportedAccountDetails), Some(CREDENTIAL_ID_1))
+
+          val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsWithThreeMFADetails))
+          val requestForAudit =
+            requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
+
+          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(
+            requestForAudit
+          ) shouldEqual expectedAuditEvent
+        }
       }
     }
   }

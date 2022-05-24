@@ -19,8 +19,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting
 import play.api.libs.json._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_CURRENT_USER
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo, UserDetailsFromSession}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails}
 
 case class AuditEvent(auditType: String,
@@ -56,7 +55,9 @@ object AuditEvent {
   def auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(accountType: AccountTypes.Value)
                                                         (implicit request: RequestWithUserDetailsFromSession[_]): AuditEvent = {
 
-    val optSACredentialId: Option[String] = if(request.userDetails.hasSAEnrolment || accountType == SA_ASSIGNED_TO_CURRENT_USER) Some(request.userDetails.credId)
+    val optSACredentialId: Option[String] = if(request.userDetails.hasSAEnrolment || accountType == SA_ASSIGNED_TO_CURRENT_USER) {
+      Some(request.userDetails.credId)
+    }
     else {
       None
     }
@@ -130,9 +131,9 @@ object AuditEvent {
 
 
   private def getDetailsForSigninAgainSA(implicit request: RequestWithUserDetailsFromSessionAndMongo[_]): JsObject = {
-    val userDetails = request.userDetails
+    val userDetails: UserDetailsFromSession = request.userDetails
     val optSACredId: Option[String] = request.accountDetailsFromMongo.optUserAssignedSA.fold[Option[String]](None)(uae => uae.enrolledCredential)
-    val optSAAccountJson = optSACredId.fold(Json.obj())(credId =>
+    val optSAAccountJson: JsObject = optSACredId.fold(Json.obj())(credId =>
       request.accountDetailsFromMongo.optAccountDetails(credId)
         .fold(Json.obj())(accountDetails => Json.obj(("saAccount", getPresentedAccountJson(accountDetails))))
       )

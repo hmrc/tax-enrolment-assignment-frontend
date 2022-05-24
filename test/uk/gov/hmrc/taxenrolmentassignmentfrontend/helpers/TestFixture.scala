@@ -143,7 +143,7 @@ trait TestFixture
     )
 
   lazy val mockThrottleAction =
-    new ThrottleAction(mockThrottlingService, testBodyParser, errorHandler)
+    new ThrottleAction(mockThrottlingService, testBodyParser, errorHandler, logger)
   implicit lazy val testMessages: Messages =
     messagesApi.preferred(FakeRequest())
 

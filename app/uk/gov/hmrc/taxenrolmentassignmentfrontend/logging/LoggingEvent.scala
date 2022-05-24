@@ -78,6 +78,15 @@ object LoggingEvent {
         )
       )
     )
+    def logUserThrottled(credentialId: String, accountType: AccountTypes.Value): LoggingEvent =
+    Info(
+      Event(
+        "[Throttling]",
+        details = Some(
+          s"$credentialId has been throttled with the account type $accountType"
+        )
+      )
+    )
 
   def logCurrentUserAlreadyHasPTEnrolment(credentialId: String): LoggingEvent =
     Info(

@@ -318,7 +318,7 @@ object TestITData {
       |}
       |""".stripMargin
 
-  val es0ResponseNotMatchingCred =
+  val   es0ResponseNotMatchingCred =
     """
       |{
       |    "principalUserIds": [

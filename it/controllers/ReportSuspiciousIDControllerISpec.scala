@@ -749,7 +749,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
           resp.header("Location").get should include(
             "/enrol-pt/enrolment-success-sa-access-not-wanted"
           )
-          val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPersonalTax(true)(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, mongoCacheData = cacheData))
+          val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, mongoCacheData = cacheData))
           verifyAuditEventSent(expectedAuditEvent)
         }
       }

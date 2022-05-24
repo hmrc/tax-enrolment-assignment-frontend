@@ -74,7 +74,7 @@ class KeepAccessToSAController @Inject()(
                 case Right(true) =>
                   Redirect(routes.SignInWithSAAccountController.view)
                 case Right(false) =>
-                  auditHandler.audit(AuditEvent.auditSuccessfullyEnrolledPersonalTax(false))
+                  auditHandler.audit(AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(false))
                   Redirect(routes.EnrolledPTWithSAOnOtherAccountController.view)
                 case Left(error) =>
                   errorHandler.handleErrors(error, "[KeepAccessToSAController][continue]")(request, implicitly)

@@ -291,7 +291,7 @@ class AuditEventSpec extends TestFixture {
         val expectedAuditEvent =
           getExpectedAuditForPTEnrolled(SINGLE_ACCOUNT, None, None)
 
-        AuditEvent.auditSuccessfullyAutoEnrolledPersonalTax(
+        AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
           SINGLE_ACCOUNT
         )(requestForAudit) shouldEqual expectedAuditEvent
       }
@@ -305,7 +305,7 @@ class AuditEventSpec extends TestFixture {
         val expectedAuditEvent =
           getExpectedAuditForPTEnrolled(SINGLE_ACCOUNT, None, Some(CREDENTIAL_ID))
 
-        AuditEvent.auditSuccessfullyAutoEnrolledPersonalTax(
+        AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
           SINGLE_ACCOUNT
         )(requestForAudit) shouldEqual expectedAuditEvent
       }
@@ -319,7 +319,7 @@ class AuditEventSpec extends TestFixture {
         val expectedAuditEvent =
           getExpectedAuditForPTEnrolled(MULTIPLE_ACCOUNTS, None, None)
 
-        AuditEvent.auditSuccessfullyAutoEnrolledPersonalTax(
+        AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
           MULTIPLE_ACCOUNTS
         )(requestForAudit) shouldEqual expectedAuditEvent
       }
@@ -334,7 +334,7 @@ class AuditEventSpec extends TestFixture {
           getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_CURRENT_USER, None, Some(CREDENTIAL_ID
           ))
 
-        AuditEvent.auditSuccessfullyAutoEnrolledPersonalTax(
+        AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
           SA_ASSIGNED_TO_CURRENT_USER
         )(requestForAudit) shouldEqual expectedAuditEvent
       }
@@ -352,7 +352,7 @@ class AuditEventSpec extends TestFixture {
         val expectedAuditEvent =
           getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_OTHER_USER, None, Some(CREDENTIAL_ID_1))
 
-        AuditEvent.auditSuccessfullyEnrolledPersonalTax(
+        AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(
           false
         )(requestForAudit) shouldEqual expectedAuditEvent
       }
@@ -373,7 +373,7 @@ class AuditEventSpec extends TestFixture {
           val requestForAudit =
             requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
-          AuditEvent.auditSuccessfullyEnrolledPersonalTax(true)(
+          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(
             requestForAudit
           ) shouldEqual expectedAuditEvent
         }
@@ -391,7 +391,7 @@ class AuditEventSpec extends TestFixture {
           val requestForAudit =
             requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
-          AuditEvent.auditSuccessfullyEnrolledPersonalTax(true)(
+          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(
             requestForAudit
           ) shouldEqual expectedAuditEvent
         }
@@ -407,7 +407,7 @@ class AuditEventSpec extends TestFixture {
           val requestForAudit =
             requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
-          AuditEvent.auditSuccessfullyEnrolledPersonalTax(true)(
+          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(
             requestForAudit
           ) shouldEqual expectedAuditEvent
         }
@@ -431,7 +431,7 @@ class AuditEventSpec extends TestFixture {
           val requestForAudit =
             requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
-          AuditEvent.auditSuccessfullyEnrolledPersonalTax(true)(
+          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(
             requestForAudit
           ) shouldEqual expectedAuditEvent
         }

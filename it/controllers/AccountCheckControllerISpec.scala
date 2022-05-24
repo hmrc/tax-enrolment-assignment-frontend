@@ -104,7 +104,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
             resp.status shouldBe SEE_OTHER
             resp.header("Location").get should include(UrlPaths.returnUrl)
 
-            val expectedAuditEvent = AuditEvent.auditSuccessfullyAutoEnrolledPersonalTax(
+            val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
               SINGLE_ACCOUNT
             )(requestWithUserDetails())
             verifyAuditEventSent(expectedAuditEvent)
@@ -236,7 +236,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
               UrlPaths.enrolledPTNoSAOnAnyAccountPath
             )
 
-            val expectedAuditEvent = AuditEvent.auditSuccessfullyAutoEnrolledPersonalTax(
+            val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
               SA_ASSIGNED_TO_CURRENT_USER
             )(requestWithUserDetails(userDetailsNoEnrolments.copy(hasSAEnrolment = true)))
             verifyAuditEventSent(expectedAuditEvent)
@@ -299,7 +299,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
             resp.header("Location").get should include(
               UrlPaths.enrolledPTNoSAOnAnyAccountPath
             )
-            val expectedAuditEvent = AuditEvent.auditSuccessfullyAutoEnrolledPersonalTax(
+            val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
               SA_ASSIGNED_TO_CURRENT_USER
             )(requestWithUserDetails())
             verifyAuditEventSent(expectedAuditEvent)
@@ -356,7 +356,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
             resp.header("Location").get should include(
               UrlPaths.enrolledPTNoSAOnAnyAccountPath
             )
-            val expectedAuditEvent = AuditEvent.auditSuccessfullyAutoEnrolledPersonalTax(
+            val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
               MULTIPLE_ACCOUNTS
             )(requestWithUserDetails())
             verifyAuditEventSent(expectedAuditEvent)

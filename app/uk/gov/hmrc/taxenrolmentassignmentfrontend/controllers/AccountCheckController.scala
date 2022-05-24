@@ -90,7 +90,7 @@ class AccountCheckController @Inject()(
       ): Future[Result] = {
         silentAssignmentService.enrolUser().isRight map {
           case true =>
-            auditHandler.audit(AuditEvent.auditSuccessfullyAutoEnrolledPersonalTax(accountType))
+            auditHandler.audit(AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(accountType))
             if (accountType == SINGLE_ACCOUNT) {
               logger.logEvent(
                 logSingleAccountHolderAssignedEnrolment(request.userDetails.credId)

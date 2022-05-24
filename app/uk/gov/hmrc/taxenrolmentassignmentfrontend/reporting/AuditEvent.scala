@@ -52,8 +52,8 @@ object AuditEvent {
     )
   }
 
-  def auditSuccessfullyAutoEnrolledPersonalTax(accountType: AccountTypes.Value)
-                                              (implicit request: RequestWithUserDetailsFromSession[_]): AuditEvent = {
+  def auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(accountType: AccountTypes.Value)
+                                                        (implicit request: RequestWithUserDetailsFromSession[_]): AuditEvent = {
 
     val optSACredentialId: Option[String] = if(request.userDetails.hasSAEnrolment || accountType == SA_ASSIGNED_TO_CURRENT_USER) {
       Some(request.userDetails.credId)
@@ -65,8 +65,8 @@ object AuditEvent {
     auditSuccessfullyEnrolledForPT(details)
   }
 
-  def auditSuccessfullyEnrolledPersonalTax(enrolledAfterReportingFraud: Boolean = false)
-                                          (implicit request: RequestWithUserDetailsFromSessionAndMongo[_]): AuditEvent = {
+  def auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud: Boolean = false)
+                                                     (implicit request: RequestWithUserDetailsFromSessionAndMongo[_]): AuditEvent = {
     val optSACredentialId: Option[String] = if(request.userDetails.hasSAEnrolment) {
       Some(request.userDetails.credId)
     } else {

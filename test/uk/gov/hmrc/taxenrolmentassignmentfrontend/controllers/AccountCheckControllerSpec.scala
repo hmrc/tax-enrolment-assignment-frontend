@@ -248,7 +248,7 @@ class AccountCheckControllerSpec extends TestFixture {
         )
 
     def mockAuditPTEnrolled(accountType: AccountTypes.Value, requestWithUserDetailsFromSession: RequestWithUserDetailsFromSession[_]) = {
-      val expectedAudit = AuditEvent.auditSuccessfullyAutoEnrolledPersonalTax(accountType)(requestWithUserDetailsFromSession)
+      val expectedAudit = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(accountType)(requestWithUserDetailsFromSession)
       (mockAuditHandler
         .audit(_: AuditEvent)(_: HeaderCarrier))
         .expects(expectedAudit, *)

@@ -30,4 +30,6 @@ object EnrolledForPTPageMessages {
   val button = "Continue"
   val action =
     "/protect-tax-info/enrol-pt/enrolment-success-no-sa"
+  val saAction =
+    "/protect-tax-info/enrol-pt/enrolment-success-sa-user-id"
 }

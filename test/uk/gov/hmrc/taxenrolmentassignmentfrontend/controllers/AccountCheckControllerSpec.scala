@@ -133,7 +133,7 @@ class AccountCheckControllerSpec extends TestFixture {
     }
 
     "multiple credential exists for a given nino and current credential has SA enrolment" should {
-      s"redirect to ${UrlPaths.enrolledPTNoSAOnAnyAccountPath}" in new TestHelper {
+      s"redirect to ${UrlPaths.enrolledPTWithSAAccountPath}" in new TestHelper {
         mockAuthCallWithSA()
         mockAccountCheckSuccess(SA_ASSIGNED_TO_CURRENT_USER)
         mockSilentEnrolSuccess
@@ -146,7 +146,7 @@ class AccountCheckControllerSpec extends TestFixture {
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some(
-          UrlPaths.enrolledPTNoSAOnAnyAccountPath
+          UrlPaths.enrolledPTWithSAAccountPath
         )
       }
     }

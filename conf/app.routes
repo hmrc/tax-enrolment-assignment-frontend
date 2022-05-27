@@ -14,6 +14,10 @@ GET        /enrol-pt/enrolment-success-no-sa                    uk.gov.hmrc.taxe
 
 POST       /enrol-pt/enrolment-success-no-sa                    uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.EnrolledForPTController.continue
 
+GET        /enrol-pt/enrolment-success-sa-user-id               uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.EnrolledForPTWithSAController.view
+
+POST       /enrol-pt/enrolment-success-sa-user-id               uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.EnrolledForPTWithSAController.continue
+
 GET        /enrol-pt/enrolment-success-sa-access-not-wanted     uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.EnrolledPTWithSAOnOtherAccountController.view
 
 POST       /enrol-pt/enrolment-success-sa-access-not-wanted     uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.EnrolledPTWithSAOnOtherAccountController.continue

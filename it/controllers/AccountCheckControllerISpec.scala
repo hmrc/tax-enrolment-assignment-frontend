@@ -339,7 +339,6 @@ class AccountCheckControllerISpec extends TestHelper with Status {
           whenReady(res) { resp =>
             resp.status shouldBe SEE_OTHER
             resp.header("Location").get should include(UrlPaths.returnUrl)
-
             val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
               SINGLE_ACCOUNT
             )(requestWithUserDetails())
@@ -471,7 +470,6 @@ class AccountCheckControllerISpec extends TestHelper with Status {
             resp.header("Location").get should include(
               UrlPaths.enrolledPTNoSAOnAnyAccountPath
             )
-
             val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
               SA_ASSIGNED_TO_CURRENT_USER
             )(requestWithUserDetails(userDetailsNoEnrolments.copy(hasSAEnrolment = true)))

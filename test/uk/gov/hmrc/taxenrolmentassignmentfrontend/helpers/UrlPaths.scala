@@ -24,6 +24,7 @@ object UrlPaths {
   val accountCheckPath =
     routes.AccountCheckController.accountCheck(returnUrl).url
   val enrolledPTNoSAOnAnyAccountPath = routes.EnrolledForPTController.view.url
+  val enrolledPTWithSAAccountPath = routes.EnrolledForPTWithSAController.view.url
   val enrolledPTSAOnOtherAccountPath =
     routes.EnrolledPTWithSAOnOtherAccountController.view.url
   val reportFraudPTAccountPath =

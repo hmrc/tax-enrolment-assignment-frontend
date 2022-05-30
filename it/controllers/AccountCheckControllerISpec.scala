@@ -428,7 +428,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
         }
       }
 
-      s"redirect to ${UrlPaths.enrolledPTNoSAOnAnyAccountPath}" when {
+      s"redirect to ${UrlPaths.enrolledPTWithSAOnAnyAccountPath}" when {
       "the user has no PT enrolments but current credential has SA enrolment in session" in {
           val authResponse = authoriseResponseJson(enrolments = saEnrolmentOnly)
           stubAuthorizePost(OK, authResponse.toString())
@@ -470,7 +470,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
           whenReady(res) { resp =>
             resp.status shouldBe SEE_OTHER
             resp.header("Location").get should include(
-              UrlPaths.enrolledPTNoSAOnAnyAccountPath
+              UrlPaths.enrolledPTWithSAOnAnyAccountPath
             )
 
             val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
@@ -481,7 +481,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
         }
       }
 
-      s"redirect to ${UrlPaths.enrolledPTNoSAOnAnyAccountPath}" when {
+      s"redirect to ${UrlPaths.enrolledPTWithSAOnAnyAccountPath}" when {
         "the user has no PT enrolments but current credential has SA enrolment in EACD" in {
           val authResponse = authoriseResponseJson(enrolments = saEnrolmentOnly)
           stubAuthorizePost(OK, authResponse.toString())
@@ -534,7 +534,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
           whenReady(res) { resp =>
             resp.status shouldBe SEE_OTHER
             resp.header("Location").get should include(
-              UrlPaths.enrolledPTNoSAOnAnyAccountPath
+              UrlPaths.enrolledPTWithSAOnAnyAccountPath
             )
             val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
               SA_ASSIGNED_TO_CURRENT_USER

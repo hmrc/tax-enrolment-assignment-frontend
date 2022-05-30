@@ -22,13 +22,15 @@ import helpers.WiremockHelper._
 import helpers.messages._
 import org.jsoup.Jsoup
 import play.api.http.Status
+import play.api.libs.json.{JsString, Json}
 import play.api.libs.ws.DefaultWSCookie
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.USER_ASSIGNED_SA_ENROLMENT
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL, USER_ASSIGNED_SA_ENROLMENT, accountDetailsForCredential}
 import play.api.libs.ws.DefaultWSCookie
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes.AccountCheckController
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
 
 class SignInWithSAAccountControllerISpec extends TestHelper with Status with ThrottleHelperISpec {
 
@@ -345,6 +347,131 @@ class SignInWithSAAccountControllerISpec extends TestHelper with Status with Thr
           .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
           .addHttpHeaders(xSessionId, xRequestId, csrfContent)
           .get()
+
+        whenReady(res) { resp =>
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include("/bas-gateway/sign-in")
+        }
+      }
+    }
+  }
+
+  s"POST $urlPath" when {
+
+    throttleSpecificTests(() => buildRequest(urlPath)
+      .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+      .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
+      .post(Json.obj()))
+
+    "the session cache has a credential for SA enrolment that is not the signed in account" should {
+      s"redirect to ${UrlPaths.logoutPath}" in {
+        val cacheData = Map(
+          ACCOUNT_TYPE -> Json.toJson(SA_ASSIGNED_TO_OTHER_USER),
+          REDIRECT_URL -> JsString(UrlPaths.returnUrl),
+          USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(saUsers),
+          accountDetailsForCredential(CREDENTIAL_ID_2) -> Json.toJson(accountDetails)
+        )
+        await(save(sessionId, cacheData))
+        val authResponse = authoriseResponseJson()
+        stubAuthorizePost(OK, authResponse.toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        val res = buildRequest(urlPath)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
+          .post(Json.obj())
+
+        whenReady(res) { resp =>
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include(
+            UrlPaths.logoutPath
+          )
+          val expectedAuditEvent = AuditEvent.auditSigninAgainWithSACredential()(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, mongoCacheData = cacheData))
+          verifyAuditEventSent(expectedAuditEvent)
+        }
+      }
+    }
+
+    "the session cache has no redirectUrl" should {
+      s"return $INTERNAL_SERVER_ERROR" in {
+        val authResponse = authoriseResponseJson()
+        stubAuthorizePost(OK, authResponse.toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        val res = buildRequest(urlPath)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
+          .post(Json.obj())
+
+        whenReady(res) { resp =>
+          resp.status shouldBe INTERNAL_SERVER_ERROR
+          resp.body should include(ErrorTemplateMessages.title)
+        }
+      }
+    }
+    "the user has a session missing required element NINO" should {
+      s"redirect to ${UrlPaths.unauthorizedPath}" in {
+        val authResponse = authoriseResponseJson(optNino = None)
+        stubAuthorizePost(OK, authResponse.toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+
+        val res =
+          buildRequest(urlPath)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
+            .post(Json.obj())
+
+        whenReady(res) { resp =>
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include(UrlPaths.unauthorizedPath)
+        }
+      }
+    }
+
+    "the user has a session missing required element Credentials" should {
+      s"redirect to ${UrlPaths.unauthorizedPath}" in {
+        val authResponse = authoriseResponseJson(optCreds = None)
+        stubAuthorizePost(OK, authResponse.toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+
+        val res =
+          buildRequest(urlPath)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
+            .post(Json.obj())
+
+        whenReady(res) { resp =>
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include(UrlPaths.unauthorizedPath)
+        }
+      }
+    }
+
+    "the user has a insufficient confidence level" should {
+      s"redirect to ${UrlPaths.unauthorizedPath}" in {
+        stubAuthorizePostUnauthorised(insufficientConfidenceLevel)
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+
+        val res =
+          buildRequest(urlPath)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
+            .post(Json.obj())
+
+        whenReady(res) { resp =>
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include(UrlPaths.unauthorizedPath)
+        }
+      }
+    }
+
+    "the user has no active session" should {
+      s"redirect to login" in {
+        stubAuthorizePostUnauthorised(sessionNotFound)
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+
+        val res = buildRequest(urlPath)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
+          .post(Json.obj())
 
         whenReady(res) { resp =>
           resp.status shouldBe SEE_OTHER

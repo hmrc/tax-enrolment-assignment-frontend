@@ -23,7 +23,7 @@
         govukButton: GovukButton
 )
 
-@(userId: String, hasSA: Boolean)(implicit request: Request[AnyRef], messages: Messages)
+@(userId: String, hasSA: Boolean, postAction: Call)(implicit request: Request[AnyRef], messages: Messages)
 
 @layout(pageTitle = Some(messages("enrolledForPT.title"))) {
 
@@ -38,7 +38,7 @@
  <h3 class="govuk-heading-m">@messages("enrolledForPT.heading2")</h3>
  <p class="govuk-body">@messages("enrolledForPT.paragraph3")</p>
 
- @formHelper(action = routes.EnrolledForPTController.continue) {
+ @formHelper(action = postAction) {
   @govukButton(Button(
    preventDoubleClick = true,
    content = Text(messages("enrolledForPT.continue"))

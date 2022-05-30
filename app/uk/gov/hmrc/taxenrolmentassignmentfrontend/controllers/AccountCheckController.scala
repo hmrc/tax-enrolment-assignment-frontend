@@ -26,6 +26,7 @@ import uk.gov.hmrc.play.bootstrap.controller.WithDefaultFormBinding
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AuthAction, RequestWithUserDetailsFromSession, ThrottleAction}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
@@ -97,32 +98,40 @@ class AccountCheckController @Inject()(
     }
   }
 
-  private def silentEnrolmentAndRedirect(accountType: AccountTypes.Value, usersRedirectUrl: String)(
-    implicit request: RequestWithUserDetailsFromSession[_],
-    hc: HeaderCarrier
-  ): Future[Result] = {
-    silentAssignmentService.enrolUser().isRight map {
-      case true =>
-        auditHandler.audit(AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(accountType))
-        if (accountType == SINGLE_ACCOUNT) {
-          logger.logEvent(
-            logSingleAccountHolderAssignedEnrolment(request.userDetails.credId)
-          )
-          logger.logEvent(
-            logRedirectingToReturnUrl(request.userDetails.credId,"[AccountCheckController][accountCheck]"
-          )
-        )
-          Redirect(usersRedirectUrl)
-    } else {
-          logger.logEvent(
-            logMultipleAccountHolderAssignedEnrolment(request.userDetails.credId)
-          )
-          Redirect(routes.EnrolledForPTController.view)
-    }
-      case false =>
-        InternalServerError(errorView())
-    }
-  }
+      private def silentEnrolmentAndRedirect(accountType: AccountTypes.Value, usersRedirectUrl: String)(
+        implicit request: RequestWithUserDetailsFromSession[_],
+        hc: HeaderCarrier
+      ): Future[Result] = {
+        silentAssignmentService.enrolUser().isRight map {
+          case true =>
+            auditHandler.audit(AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(accountType))
+            if (accountType == SINGLE_ACCOUNT) {
+              logger.logEvent(
+                logSingleAccountHolderAssignedEnrolment(request.userDetails.credId)
+              )
+              logger.logEvent(
+                logRedirectingToReturnUrl(request.userDetails.credId,"[AccountCheckController][accountCheck]"
+              )
+            )
+              Redirect(usersRedirectUrl)
+
+            }
+            else if (accountType == SA_ASSIGNED_TO_CURRENT_USER) {
+            logger.logEvent(
+              logMultipleAccountHolderAssignedEnrolment(request.userDetails.credId)
+            )
+            Redirect(routes.EnrolledForPTWithSAController.view)
+            }
+            else {
+              logger.logEvent(
+                logMultipleAccountHolderAssignedEnrolment(request.userDetails.credId)
+              )
+              Redirect(routes.EnrolledForPTController.view)
+        }
+          case false =>
+            InternalServerError(errorView())
+        }
+      }
 
 }
 

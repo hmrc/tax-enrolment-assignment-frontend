@@ -73,7 +73,9 @@ class AuditEventSpec extends TestFixture {
                             isSA: Boolean): AuditEvent = {
     val currentAccountDetails = Json.obj(
       ("credentialId", JsString(CREDENTIAL_ID)),
-      ("type", JsString(if (isSA) { SA_ASSIGNED_TO_OTHER_USER.toString } else {
+      ("type", JsString(if (isSA) {
+        SA_ASSIGNED_TO_OTHER_USER.toString
+      } else {
         PT_ASSIGNED_TO_OTHER_USER.toString
       })),
       ("affinityGroup", JsString("Individual"))
@@ -109,6 +111,24 @@ class AuditEventSpec extends TestFixture {
     AuditEvent(
       auditType = "SuccessfullyEnrolledPersonalTax",
       transactionName = "successfully-enrolled-personal-tax",
+      detail = details
+    )
+  }
+
+  def getExpectedAuditForSigninWithSA(saAccountDetails: Option[JsObject]) = {
+    val currentAccountDetails = Json.obj(
+      ("credentialId", JsString(CREDENTIAL_ID)),
+      ("type", JsString(SA_ASSIGNED_TO_OTHER_USER.toString)),
+      ("affinityGroup", JsString("Individual"))
+    )
+    val details = Json.obj(
+      ("NINO", JsString(NINO)),
+      ("currentAccount", currentAccountDetails)
+    ) ++ saAccountDetails.getOrElse(Json.obj())
+
+    AuditEvent(
+      auditType = "SignInWithOtherAccount",
+      transactionName = "sign-in-with-other-account",
       detail = details
     )
   }
@@ -435,6 +455,98 @@ class AuditEventSpec extends TestFixture {
             requestForAudit
           ) shouldEqual expectedAuditEvent
         }
+      }
+    }
+  }
+
+  "auditSigninAgainWithSACredential" should {
+    "return an audit event with the expected details" when {
+      "the sa account has no email or mfaDetails" in {
+        val accountDetailsNoEmailOrMFA = accountDetailsWithOneMFADetails
+          .copy(email = None, mfaDetails = Seq.empty)
+        val saAccountDetails =
+          Json.obj(("saAccount", getReportedAccountJson(accountDetailsNoEmailOrMFA)))
+        val expectedAuditEvent =
+          getExpectedAuditForSigninWithSA(Some(saAccountDetails))
+
+        val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmailOrMFA))
+        val requestForAudit =
+          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
+
+        AuditEvent.auditSigninAgainWithSACredential()(
+          requestForAudit
+        ) shouldEqual expectedAuditEvent
+      }
+
+      "the reported account has no email" in {
+        val accountDetailsNoEmail = accountDetailsWithOneMFADetails
+          .copy(email = None)
+        val saAccountDetails =
+          Json.obj(("saAccount", getReportedAccountJson(accountDetailsNoEmail)))
+        val expectedAuditEvent =
+          getExpectedAuditForSigninWithSA(Some(saAccountDetails))
+
+        val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmail))
+        val requestForAudit =
+          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
+
+        AuditEvent.auditSigninAgainWithSACredential()(
+          requestForAudit
+        ) shouldEqual expectedAuditEvent
+      }
+
+      "the reported account has no mfaDetails" in {
+        val accountDetailsNoMFA = accountDetailsWithOneMFADetails
+          .copy(mfaDetails = Seq.empty)
+        val saAccountDetails = Json.obj(("saAccount", getReportedAccountJson(accountDetailsNoMFA)))
+        val expectedAuditEvent =
+          getExpectedAuditForSigninWithSA(Some(saAccountDetails))
+        val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoMFA))
+        val requestForAudit =
+          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
+
+        AuditEvent.auditSigninAgainWithSACredential()(
+          requestForAudit
+        ) shouldEqual expectedAuditEvent
+      }
+
+      "the reported account has email and three mfaDetails" in {
+        val accountDetailsWithThreeMFADetails = accountDetailsWithOneMFADetails
+          .copy(
+            mfaDetails = Seq(
+              MFADetails("mfaDetails.text", "24321"),
+              MFADetails("mfaDetails.voice", "24322"),
+              MFADetails("mfaDetails.totp", "TEST")
+            )
+          )
+        val saAccountDetails =
+          Json.obj(("saAccount", getReportedAccountJson(accountDetailsWithThreeMFADetails)))
+        val expectedAuditEvent =
+          getExpectedAuditForSigninWithSA(Some(saAccountDetails))
+
+        val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsWithThreeMFADetails))
+        val requestForAudit =
+          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
+
+        AuditEvent.auditSigninAgainWithSACredential()(
+          requestForAudit
+        ) shouldEqual expectedAuditEvent
+      }
+
+      "return no saAccountDetails if not in sessionCache" in {
+        val expectedAuditEvent =
+          getExpectedAuditForSigninWithSA(None)
+
+        val requestForAudit =
+          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER)
+
+        AuditEvent.auditSigninAgainWithSACredential()(
+          requestForAudit
+        ) shouldEqual expectedAuditEvent
       }
     }
   }

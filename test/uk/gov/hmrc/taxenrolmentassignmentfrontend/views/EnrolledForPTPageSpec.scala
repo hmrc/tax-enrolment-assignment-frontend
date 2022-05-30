@@ -18,6 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.views
 
 import play.api.test.FakeRequest
 import play.twirl.api.HtmlFormat
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.EnrolledForPTPageMessages
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTPage
@@ -28,9 +29,9 @@ class EnrolledForPTPageSpec extends ViewSpecHelper {
     app.injector.instanceOf[EnrolledForPTPage]
   val userId = "3214"
   val htmlWithSA: HtmlFormat.Appendable =
-    enrolledForPTPage(userId, true)(FakeRequest(), testMessages)
+    enrolledForPTPage(userId, true, routes.EnrolledForPTWithSAController.continue)(FakeRequest(), testMessages)
   val htmlWithNoSA: HtmlFormat.Appendable =
-    enrolledForPTPage(userId, false)(FakeRequest(), testMessages)
+    enrolledForPTPage(userId, false, routes.EnrolledForPTController.continue)(FakeRequest(), testMessages)
   val documentWithSA = doc(htmlWithSA)
   val documentWithNoSA = doc(htmlWithNoSA)
 
@@ -77,7 +78,7 @@ class EnrolledForPTPageSpec extends ViewSpecHelper {
       "contains a form with the correct action" in {
         documentWithSA
           .select(Selectors.form)
-          .attr("action") shouldBe EnrolledForPTPageMessages.action
+          .attr("action") shouldBe EnrolledForPTPageMessages.saAction
       }
     }
 
@@ -108,7 +109,7 @@ class EnrolledForPTPageSpec extends ViewSpecHelper {
       "contains a form with the correct action" in {
         documentWithSA
           .select(Selectors.form)
-          .attr("action") shouldBe EnrolledForPTPageMessages.action
+          .attr("action") shouldBe EnrolledForPTPageMessages.saAction
       }
     }
   }

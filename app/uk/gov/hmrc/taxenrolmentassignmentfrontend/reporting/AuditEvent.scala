@@ -18,8 +18,8 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting
 
 import play.api.libs.json._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_CURRENT_USER
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo, UserDetailsFromSession}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails}
 
 case class AuditEvent(auditType: String,
@@ -57,7 +57,8 @@ object AuditEvent {
 
     val optSACredentialId: Option[String] = if(request.userDetails.hasSAEnrolment || accountType == SA_ASSIGNED_TO_CURRENT_USER) {
       Some(request.userDetails.credId)
-    } else {
+    }
+    else {
       None
     }
     val details: JsObject = getDetailsForPTEnrolled(accountType, optSACredentialId, None)
@@ -84,6 +85,15 @@ object AuditEvent {
     auditSuccessfullyEnrolledForPT(details)
   }
 
+  def auditSigninAgainWithSACredential()
+                                      (implicit request: RequestWithUserDetailsFromSessionAndMongo[_]): AuditEvent = {
+    AuditEvent(
+      auditType = "SignInWithOtherAccount",
+      transactionName = "sign-in-with-other-account",
+      detail = getDetailsForSigninAgainSA
+    )
+  }
+
   private def auditSuccessfullyEnrolledForPT(details: JsObject) = {
     AuditEvent(
       auditType = "SuccessfullyEnrolledPersonalTax",
@@ -99,7 +109,7 @@ object AuditEvent {
     Json.obj(
       ("NINO", JsString(userDetails.nino)),
       ("currentAccount", getCurrentAccountJson(userDetails, request.accountDetailsFromMongo.accountType)),
-      ("reportedAccount", getReportedAccountJson(suspiciousAccountDetails))
+      ("reportedAccount", getPresentedAccountJson(suspiciousAccountDetails))
     )
   }
 
@@ -107,15 +117,31 @@ object AuditEvent {
                                       optSACredentialId: Option[String],
                                       suspiciousAccountDetails: Option[AccountDetails])
                                      (implicit request: RequestWithUserDetailsFromSession[_]): JsObject = {
+
     val userDetails: UserDetailsFromSession = request.userDetails
     val optSACredIdJson: JsObject = optSACredentialId.fold(Json.obj())(credId => Json.obj(("saAccountCredentialId", JsString(credId))))
     val optReportedAccountJson: JsObject = suspiciousAccountDetails.fold(Json.obj())(accountDetails =>
-      Json.obj(("reportedAccount", getReportedAccountJson(accountDetails))))
+      Json.obj(("reportedAccount", getPresentedAccountJson(accountDetails))))
 
     Json.obj(
       ("NINO", JsString(userDetails.nino)),
       ("currentAccount", getCurrentAccountJson(userDetails, accountType))
     ) ++ optSACredIdJson ++ optReportedAccountJson
+  }
+
+
+  private def getDetailsForSigninAgainSA(implicit request: RequestWithUserDetailsFromSessionAndMongo[_]): JsObject = {
+    val userDetails: UserDetailsFromSession = request.userDetails
+    val optSACredId: Option[String] = request.accountDetailsFromMongo.optUserAssignedSA.fold[Option[String]](None)(uae => uae.enrolledCredential)
+    val optSAAccountJson: JsObject = optSACredId.fold(Json.obj())(credId =>
+      request.accountDetailsFromMongo.optAccountDetails(credId)
+        .fold(Json.obj())(accountDetails => Json.obj(("saAccount", getPresentedAccountJson(accountDetails))))
+      )
+
+    Json.obj(
+      ("NINO", JsString(userDetails.nino)),
+      ("currentAccount", getCurrentAccountJson(userDetails, SA_ASSIGNED_TO_OTHER_USER))
+    ) ++ optSAAccountJson
   }
 
   private def getCurrentAccountJson(userDetails: UserDetailsFromSession,
@@ -126,7 +152,7 @@ object AuditEvent {
     ) ++ userDetails.affinityGroup.toJson.as[JsObject]
   }
 
-  private def getReportedAccountJson(suspiciousAccountDetails: AccountDetails): JsObject = {
+  private def getPresentedAccountJson(suspiciousAccountDetails: AccountDetails): JsObject = {
     Json.obj(
       ("credentialId", JsString(suspiciousAccountDetails.credId)),
       ("userId", JsString(s"Ending with ${suspiciousAccountDetails.userId}")),

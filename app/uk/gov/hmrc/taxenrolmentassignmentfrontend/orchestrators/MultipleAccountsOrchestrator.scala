@@ -26,7 +26,7 @@ import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSessionAndMongo}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, NoPTEnrolmentWhenOneExpected, NoSAEnrolmentWhenOneExpected, TaxEnrolmentAssignmentErrors}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, NoPTEnrolmentWhenOneExpected, NoSAEnrolmentWhenOneExpected, TaxEnrolmentAssignmentErrors, UnexpectedPTEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logNoUserFoundWithPTEnrolment
@@ -83,7 +83,7 @@ class MultipleAccountsOrchestrator @Inject()(
                                    hc: HeaderCarrier,
                                    ec: ExecutionContext
   ): TEAFResult[Form[KeepAccessToSAThroughPTA]] = {
-    checkValidAccountType(List(SA_ASSIGNED_TO_OTHER_USER)) match {
+    checkAccessAllowedForPage(List(SA_ASSIGNED_TO_OTHER_USER)) match {
       case Left(error) => EitherT.left(Future.successful(error))
       case Right(_) => EitherT.right[TaxEnrolmentAssignmentErrors](
         Future.successful(
@@ -101,7 +101,7 @@ class MultipleAccountsOrchestrator @Inject()(
     hc: HeaderCarrier,
     ec: ExecutionContext
   ): TEAFResult[Boolean] = {
-    checkValidAccountType(List(SA_ASSIGNED_TO_OTHER_USER)) match {
+    checkAccessAllowedForPage(List(SA_ASSIGNED_TO_OTHER_USER)) match {
       case Left(error) => EitherT.left(Future.successful(error))
       case Right(_) =>
         for {
@@ -170,25 +170,52 @@ class MultipleAccountsOrchestrator @Inject()(
   )(implicit requestWithUserDetails: RequestWithUserDetailsFromSessionAndMongo[_],
     hc: HeaderCarrier,
     ec: ExecutionContext): TEAFResult[Unit] = {
-    checkValidAccountType(List(expectedAccountType)) match {
+    checkAccessAllowedForPage(List(expectedAccountType)) match {
       case Right(_) => silentAssignmentService.enrolUser()(requestWithUserDetails, implicitly, implicitly)
       case Left(error) => EitherT.left(Future.successful(error))
     }
   }
 
+  def checkAccessAllowedForPage(validAccountTypes: List[AccountTypes.Value])(
+    implicit requestWithUserDetailsAndMongo: RequestWithUserDetailsFromSessionAndMongo[_]): Either[TaxEnrolmentAssignmentErrors, AccountTypes.Value] = {
+
+    (checkValidAccountType(validAccountTypes), checkPTEnrolmentDoesNotExist) match {
+      case (Right(accountType), Right(_)) => Right(accountType)
+      case (Right(_), Left(error)) => Left(error)
+      case _ =>
+        Left(
+          IncorrectUserType(
+            requestWithUserDetailsAndMongo.accountDetailsFromMongo.redirectUrl,
+            requestWithUserDetailsAndMongo.accountDetailsFromMongo.accountType
+          )
+        )
+    }
+  }
+
   def checkValidAccountType(validAccountTypes: List[AccountTypes.Value])(
     implicit requestWithUserDetailsAndMongo: RequestWithUserDetailsFromSessionAndMongo[_]): Either[TaxEnrolmentAssignmentErrors, AccountTypes.Value] = {
-          if (validAccountTypes.contains(requestWithUserDetailsAndMongo.accountDetailsFromMongo.accountType)) {
-            Right(requestWithUserDetailsAndMongo.accountDetailsFromMongo.accountType)
-          } else {
-            Left(
-              IncorrectUserType(
-                requestWithUserDetailsAndMongo.accountDetailsFromMongo.redirectUrl,
-                requestWithUserDetailsAndMongo.accountDetailsFromMongo.accountType
-              )
-            )
-          }
+    if (validAccountTypes.contains(requestWithUserDetailsAndMongo.accountDetailsFromMongo.accountType)) {
+      Right(requestWithUserDetailsAndMongo.accountDetailsFromMongo.accountType)
+    } else {
+      Left(
+        IncorrectUserType(
+          requestWithUserDetailsAndMongo.accountDetailsFromMongo.redirectUrl,
+          requestWithUserDetailsAndMongo.accountDetailsFromMongo.accountType
+        )
+      )
     }
+  }
+
+  def checkPTEnrolmentDoesNotExist(
+    implicit requestWithUserDetailsAndMongo: RequestWithUserDetailsFromSessionAndMongo[_]): Either[TaxEnrolmentAssignmentErrors, Unit] = {
+    val hasPTEnrolment = requestWithUserDetailsAndMongo.userDetails.hasPTEnrolment
+
+    if(hasPTEnrolment) {
+      Left(UnexpectedPTEnrolment)
+    } else {
+      Right((): Unit)
+    }
+  }
 
   def getCurrentAndPTAAndSAIfExistsForUser(implicit requestWithUserDetails: RequestWithUserDetailsFromSessionAndMongo[_],
                                                 hc: HeaderCarrier,
@@ -234,7 +261,7 @@ class MultipleAccountsOrchestrator @Inject()(
     }
 
     for {
-      _ <- EitherT(Future(checkValidAccountType(List(PT_ASSIGNED_TO_OTHER_USER))))
+      _ <- EitherT(Future(checkAccessAllowedForPage(List(PT_ASSIGNED_TO_OTHER_USER))))
       currentAccountDetails <- usersGroupSearchService.getAccountDetails(requestWithUserDetails.userDetails.credId
       )(implicitly, implicitly, requestWithUserDetails)
       ptAccountDetails <- getPTCredentialDetails

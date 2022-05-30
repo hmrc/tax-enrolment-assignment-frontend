@@ -26,7 +26,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.IncorrectUserType
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, UnexpectedPTEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, ThrottleHelperSpec, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SABlueInterrupt
@@ -55,41 +55,75 @@ class SABlueInterruptControllerSpec extends TestFixture with ThrottleHelperSpec 
     specificThrottleTests(controller.view())
 
     "a user has SA on another account" should {
-      "render the SABlueInterrupt page" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.successful(retrievalResponse()))
+      "render the SABlueInterrupt page" when {
+        "the user has not already been assigned a PT enrolment" in {
+          (mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup]
+              ]
+            )(_: HeaderCarrier, _: ExecutionContext))
+            .expects(predicates, retrievals, *, *)
+            .returning(Future.successful(retrievalResponse()))
 
-        (mockMultipleAccountsOrchestrator
-          .checkValidAccountType(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
-          ))
-          .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
-          .returning(Right(SA_ASSIGNED_TO_OTHER_USER))
-        mockGetDataFromCacheForActionSuccess(randomAccountType)
-        mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
+          (mockMultipleAccountsOrchestrator
+            .checkAccessAllowedForPage(_: List[AccountTypes.Value])(
+              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
+            ))
+            .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
+            .returning(Right(SA_ASSIGNED_TO_OTHER_USER))
+          mockGetDataFromCacheForActionSuccess(randomAccountType)
+          mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
-        val result = controller
-          .view()
-          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+          val result = controller
+            .view()
+            .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(result) shouldBe OK
-        val page = Jsoup.parse(contentAsString(result))
-        page.title shouldBe "selfAssessmentInterrupt.title"
-        page
-          .select("h1")
-          .text() shouldBe "selfAssessmentInterrupt.heading"
-        page
-          .select("p")
-          .text() shouldBe "selfAssessmentInterrupt.paragraph1"
+          status(result) shouldBe OK
+          val page = Jsoup.parse(contentAsString(result))
+          page.title shouldBe "selfAssessmentInterrupt.title"
+          page
+            .select("h1")
+            .text() shouldBe "selfAssessmentInterrupt.heading"
+          page
+            .select("p")
+            .text() shouldBe "selfAssessmentInterrupt.paragraph1"
+        }
+      }
+
+      s"redirect to ${UrlPaths.enrolledPTSAOnOtherAccountPath}" when {
+        "the user has already been assigned a PT enrolment already" in {
+          (mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup]
+              ]
+            )(_: HeaderCarrier, _: ExecutionContext))
+            .expects(predicates, retrievals, *, *)
+            .returning(Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly)))
+
+          (mockMultipleAccountsOrchestrator
+            .checkAccessAllowedForPage(_: List[AccountTypes.Value])(
+              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
+            ))
+            .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
+            .returning(Left(UnexpectedPTEnrolment))
+          mockGetDataFromCacheForActionSuccess(randomAccountType)
+          mockAccountShouldNotBeThrottled(randomAccountType, NINO, ptEnrolmentOnly.enrolments)
+
+          val result = controller
+            .view()
+            .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+
+          status(result) shouldBe SEE_OTHER
+          redirectLocation(result) shouldBe Some(UrlPaths.enrolledPTSAOnOtherAccountPath)
+        }
       }
     }
     s"the cache no redirectUrl" should {
@@ -131,7 +165,7 @@ class SABlueInterruptControllerSpec extends TestFixture with ThrottleHelperSpec 
           .returning(Future.successful(retrievalResponse()))
 
         (mockMultipleAccountsOrchestrator
-          .checkValidAccountType(_: List[AccountTypes.Value])(
+          .checkAccessAllowedForPage(_: List[AccountTypes.Value])(
             _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
           ))
           .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
@@ -170,7 +204,7 @@ class SABlueInterruptControllerSpec extends TestFixture with ThrottleHelperSpec 
           .returning(Future.successful(retrievalResponse()))
 
         (mockMultipleAccountsOrchestrator
-          .checkValidAccountType(_: List[AccountTypes.Value])(
+          .checkAccessAllowedForPage(_: List[AccountTypes.Value])(
             _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
           ))
           .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
@@ -227,7 +261,7 @@ class SABlueInterruptControllerSpec extends TestFixture with ThrottleHelperSpec 
           .returning(Future.successful(retrievalResponse()))
 
         (mockMultipleAccountsOrchestrator
-          .checkValidAccountType(_: List[AccountTypes.Value])(
+          .checkAccessAllowedForPage(_: List[AccountTypes.Value])(
             _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
           ))
           .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)

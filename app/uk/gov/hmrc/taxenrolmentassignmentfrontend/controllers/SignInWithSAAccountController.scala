@@ -53,7 +53,7 @@ class SignInWithSAAccountController @Inject()(
 
   def view(): Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
     val res = for {
-      _ <- EitherT{Future.successful(multipleAccountsOrchestrator.checkValidAccountType(
+      _ <- EitherT{Future.successful(multipleAccountsOrchestrator.checkAccessAllowedForPage(
         List(SA_ASSIGNED_TO_OTHER_USER)
       ))}
       saAccount <- multipleAccountsOrchestrator.getSACredentialDetails

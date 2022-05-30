@@ -44,8 +44,7 @@ class EnrolledForPTISpec extends TestHelper with Status with ThrottleHelperISpec
         await(
           save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", MULTIPLE_ACCOUNTS)
         )
-        val authResponse = authoriseResponseJson()
-        stubAuthorizePost(OK, authResponse.toString())
+        stubAuthorizePost(OK, authoriseResponseWithPTEnrolment().toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGet(
           s"/users-groups-search/users/$CREDENTIAL_ID",
@@ -74,8 +73,7 @@ class EnrolledForPTISpec extends TestHelper with Status with ThrottleHelperISpec
             await(
               save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", accountType)
             )
-            val authResponse = authoriseResponseJson()
-            stubAuthorizePost(OK, authResponse.toString())
+            stubAuthorizePost(OK, authoriseResponseWithPTEnrolment().toString())
             stubPost(s"/write/.*", OK, """{"x":2}""")
 
             val res = buildRequest(urlPath)
@@ -95,8 +93,7 @@ class EnrolledForPTISpec extends TestHelper with Status with ThrottleHelperISpec
 
     "the session cache is empty" should {
       s"return $INTERNAL_SERVER_ERROR" in {
-        val authResponse = authoriseResponseJson()
-        stubAuthorizePost(OK, authResponse.toString())
+        stubAuthorizePost(OK, authoriseResponseWithPTEnrolment().toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         val res = buildRequest(urlPath)
           .addCookies(DefaultWSCookie("mdtp", authCookie))
@@ -112,8 +109,7 @@ class EnrolledForPTISpec extends TestHelper with Status with ThrottleHelperISpec
 
     "an authorised user with no credential uses the service" should {
       s"render the error page" in {
-        val authResponse = authoriseResponseJson()
-        stubAuthorizePost(OK, authResponse.toString())
+        stubAuthorizePost(OK, authoriseResponseWithPTEnrolment().toString())
         await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
         await(save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", SA_ASSIGNED_TO_CURRENT_USER))
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -138,10 +134,9 @@ class EnrolledForPTISpec extends TestHelper with Status with ThrottleHelperISpec
 
     "an authorised user but IV returns internal error" should {
       s"return $INTERNAL_SERVER_ERROR" in {
-        val authResponse = authoriseResponseJson()
         await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
         await(save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", SA_ASSIGNED_TO_CURRENT_USER))
-        stubAuthorizePost(OK, authResponse.toString())
+        stubAuthorizePost(OK, authoriseResponseWithPTEnrolment().toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGetWithQueryParam(
           "/identity-verification/nino",
@@ -164,7 +159,7 @@ class EnrolledForPTISpec extends TestHelper with Status with ThrottleHelperISpec
 
     "the user has a session missing required element NINO" should {
       s"redirect to ${UrlPaths.unauthorizedPath}" in {
-        val authResponse = authoriseResponseJson(optNino = None)
+        val authResponse = authoriseResponseWithPTEnrolment(optNino = None)
         await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
         await(save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", SA_ASSIGNED_TO_CURRENT_USER))
         stubAuthorizePost(OK, authResponse.toString())
@@ -185,7 +180,7 @@ class EnrolledForPTISpec extends TestHelper with Status with ThrottleHelperISpec
 
     "the user has a session missing required element Credentials" should {
       s"redirect to ${UrlPaths.unauthorizedPath}" in {
-        val authResponse = authoriseResponseJson(optCreds = None)
+        val authResponse = authoriseResponseWithPTEnrolment(optCreds = None)
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
@@ -249,7 +244,7 @@ class EnrolledForPTISpec extends TestHelper with Status with ThrottleHelperISpec
       s"redirect to the redirect url" in {
         await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
         await(save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", PT_ASSIGNED_TO_CURRENT_USER))
-        val authResponse = authoriseResponseJson()
+        val authResponse = authoriseResponseWithPTEnrolment()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
@@ -267,7 +262,7 @@ class EnrolledForPTISpec extends TestHelper with Status with ThrottleHelperISpec
 
     "the session cache does not contain the redirect url" should {
       s"return $INTERNAL_SERVER_ERROR" in {
-        val authResponse = authoriseResponseJson()
+        val authResponse = authoriseResponseWithPTEnrolment()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 

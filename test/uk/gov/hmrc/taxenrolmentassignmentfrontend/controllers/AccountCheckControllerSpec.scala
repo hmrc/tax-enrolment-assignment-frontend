@@ -43,12 +43,10 @@ class AccountCheckControllerSpec extends TestFixture {
     mockAuthAction,
     mockAccountCheckOrchestrator,
     mockAuditHandler,
-    appConfig,
     mcc,
     teaSessionCache,
     logger,
-    errorHandler,
-    errorView
+    errorHandler
   )
 
   "accountCheck" when {
@@ -217,6 +215,7 @@ class AccountCheckControllerSpec extends TestFixture {
   }
 
   class TestHelper {
+    
     def mockAuthCall() =
       (mockAuthConnector
         .authorise(

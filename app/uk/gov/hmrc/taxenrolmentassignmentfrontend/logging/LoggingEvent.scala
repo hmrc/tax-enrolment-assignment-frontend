@@ -265,6 +265,11 @@ object LoggingEvent {
       )
     )
 
+
+  def logPTEnrolmentHasAlreadyBeenAssigned(nino: String): LoggingEvent =
+    Warn(Event("[TaxEnrolmentsConnector][assignPTEnrolmentWithKnownFacts]",
+      details = Some(s"Personal Tax enrolment has already been assigned for $nino")))
+
   def logUnexpectedResponseFromTaxEnrolmentsKnownFacts(
     nino: String,
     statusReturned: Int,

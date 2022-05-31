@@ -40,12 +40,12 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemp
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class AccountCheckController @Inject()(silentAssignmentService: SilentAssignmentService,
+class AccountCheckController @Inject()(
+                                        silentAssignmentService: SilentAssignmentService,
                                         throttleAction: ThrottleAction,
                                         authAction: AuthAction,
                                         accountCheckOrchestrator: AccountCheckOrchestrator,
                                         auditHandler: AuditHandler,
-                                        appConfig: AppConfig,
                                         mcc: MessagesControllerComponents,
                                         sessionCache: TEASessionCache,
                                         val logger: EventLoggerService,
@@ -64,23 +64,7 @@ class AccountCheckController @Inject()(silentAssignmentService: SilentAssignment
         accountCheckOrchestrator.getAccountType.value.flatMap {
           case Right(anyAccountType) => throttleAction.throttle(anyAccountType, redirectUrl).flatMap {
             case Some(redirectResult) => Future.successful(redirectResult)
-            case _ => anyAccountType match {
-              case PT_ASSIGNED_TO_CURRENT_USER =>
-                logger.logEvent(
-                  logRedirectingToReturnUrl(
-                    request.userDetails.credId,
-                    "[AccountCheckController][accountCheck]"
-                  )
-                )
-                Future.successful(Redirect(redirectUrl))
-              case PT_ASSIGNED_TO_OTHER_USER =>
-                Future.successful(
-                  Redirect(routes.PTEnrolmentOnOtherAccountController.view)
-                )
-              case SA_ASSIGNED_TO_OTHER_USER =>
-                Future.successful(Redirect(routes.SABlueInterruptController.view))
-              case accountType => silentEnrolmentAndRedirect(accountType, redirectUrl)
-            }
+            case _ => handleNoneThrottledUsers(anyAccountType, redirectUrl)
           }
           case Left(error) =>
             Future.successful(
@@ -88,6 +72,30 @@ class AccountCheckController @Inject()(silentAssignmentService: SilentAssignment
             )
         }
       }
+  }
+
+  private def handleNoneThrottledUsers(accountType: AccountTypes.Value, redirectUrl: String)
+                                      (implicit request: RequestWithUserDetailsFromSession[_],
+                                       hc: HeaderCarrier): Future[Result] = {
+    accountType match {
+      case PT_ASSIGNED_TO_CURRENT_USER =>
+        logger.logEvent(
+          logRedirectingToReturnUrl(
+            request.userDetails.credId,
+            "[AccountCheckController][accountCheck]"
+          )
+        )
+        Future.successful(Redirect(redirectUrl))
+      case PT_ASSIGNED_TO_OTHER_USER =>
+        Future.successful(
+          Redirect(routes.PTEnrolmentOnOtherAccountController.view)
+        )
+      case SA_ASSIGNED_TO_OTHER_USER if request.userDetails.hasPTEnrolment =>
+        Future.successful(Redirect(routes.EnrolledPTWithSAOnOtherAccountController.view))
+      case SA_ASSIGNED_TO_OTHER_USER =>
+        Future.successful(Redirect(routes.SABlueInterruptController.view))
+      case accountType => silentEnrolmentAndRedirect(accountType, redirectUrl)
+    }
   }
 
       private def silentEnrolmentAndRedirect(accountType: AccountTypes.Value, usersRedirectUrl: String)(
@@ -125,5 +133,5 @@ class AccountCheckController @Inject()(silentAssignmentService: SilentAssignment
         }
       }
 
-  }
+}
 

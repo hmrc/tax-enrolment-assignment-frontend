@@ -110,6 +110,15 @@ object TestITData {
     ninoJson ++ credentialsJson ++ enrolmentsJson ++ groupIdJson ++ affinityGroupJson
   }
 
+  def authoriseResponseWithPTEnrolment(optNino: Option[String] = Some(NINO),
+                                       optCreds: Option[Credentials] = Some(creds),
+                                       optGroupId: Option[String] = Some(GROUP_ID),
+                                       affinityGroup: AffinityGroup = Individual,
+                                       hasSA: Boolean  = false) = {
+    val enrolments = if(hasSA) saAndptEnrolments else ptEnrolmentOnly
+    authoriseResponseJson(optNino, optCreds, optGroupId, affinityGroup, enrolments)
+  }
+
   val sessionNotFound = "SessionRecordNotFound"
   val insufficientConfidenceLevel = "InsufficientConfidenceLevel"
 

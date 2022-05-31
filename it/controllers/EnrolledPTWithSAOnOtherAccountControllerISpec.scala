@@ -55,7 +55,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
             SA_ASSIGNED_TO_OTHER_USER
           )
         )
-        val authResponse = authoriseResponseJson()
+        val authResponse = authoriseResponseWithPTEnrolment()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGet(
@@ -93,7 +93,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
           )
         )
         await(save(sessionId, USER_ASSIGNED_SA_ENROLMENT, saUsers))
-        val authResponse = authoriseResponseJson()
+        val authResponse = authoriseResponseWithPTEnrolment()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGet(
@@ -135,7 +135,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
           )
         )
 
-        val authResponse = authoriseResponseJson(
+        val authResponse = authoriseResponseWithPTEnrolment(
           optCreds = Some(creds.copy(providerId = CREDENTIAL_ID_3))
         )
         stubAuthorizePost(OK, authResponse.toString())
@@ -170,7 +170,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
           await(
             save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", accountType)
           )
-          val authResponse = authoriseResponseJson()
+          val authResponse = authoriseResponseWithPTEnrolment()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
 
@@ -191,7 +191,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
 
     "the session cache is empty" should {
       s"return $INTERNAL_SERVER_ERROR" in {
-        val authResponse = authoriseResponseJson()
+        val authResponse = authoriseResponseWithPTEnrolment()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         val res = buildRequest(urlPath)
@@ -208,7 +208,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
 
     "the user has a session missing required element NINO" should {
       s"redirect to ${UrlPaths.unauthorizedPath}" in {
-        val authResponse = authoriseResponseJson(optNino = None)
+        val authResponse = authoriseResponseWithPTEnrolment(optNino = None)
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
@@ -227,7 +227,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
 
     "the user has a session missing required element Credentials" should {
       s"redirect to ${UrlPaths.unauthorizedPath}" in {
-        val authResponse = authoriseResponseJson(optCreds = None)
+        val authResponse = authoriseResponseWithPTEnrolment(optCreds = None)
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
@@ -291,7 +291,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
       s"redirect to the redirect url" in {
         await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
         await(save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", PT_ASSIGNED_TO_CURRENT_USER))
-        val authResponse = authoriseResponseJson()
+        val authResponse = authoriseResponseWithPTEnrolment()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
@@ -309,7 +309,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
 
     "the session cache does not contain the redirect url" should {
       s"return $INTERNAL_SERVER_ERROR" in {
-        val authResponse = authoriseResponseJson()
+        val authResponse = authoriseResponseWithPTEnrolment()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 

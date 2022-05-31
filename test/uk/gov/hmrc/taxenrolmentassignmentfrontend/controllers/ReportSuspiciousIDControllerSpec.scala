@@ -28,7 +28,7 @@ import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_OTHER_USER}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, NoPTEnrolmentWhenOneExpected, NoSAEnrolmentWhenOneExpected, UnexpectedResponseFromTaxEnrolments}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, NoPTEnrolmentWhenOneExpected, NoSAEnrolmentWhenOneExpected, UnexpectedPTEnrolment, UnexpectedResponseFromTaxEnrolments}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, ThrottleHelperSpec, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
@@ -194,52 +194,93 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
     specificThrottleTests(controller.viewSA())
 
     "a user has SA on another account" should {
-      "render the ReportSuspiciousID page" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.successful(retrievalResponse()))
+      "render the ReportSuspiciousID page" when {
+        "the user hasn't already been assigned a PT enrolment" in {
+          (mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup]
+              ]
+            )(_: HeaderCarrier, _: ExecutionContext))
+            .expects(predicates, retrievals, *, *)
+            .returning(Future.successful(retrievalResponse()))
 
-        (mockMultipleAccountsOrchestrator
-          .checkValidAccountType(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
-          ))
-          .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
-          .returning(Right(SA_ASSIGNED_TO_OTHER_USER))
+          (mockMultipleAccountsOrchestrator
+            .checkValidAccountType(_: List[AccountTypes.Value])(
+              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
+            ))
+            .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
+            .returning(Right(SA_ASSIGNED_TO_OTHER_USER))
 
-        (mockMultipleAccountsOrchestrator
-          .getSACredentialDetails(
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
-          .expects(*, *, *)
-          .returning(createInboundResult(accountDetails))
-        mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
-        mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
+          (mockMultipleAccountsOrchestrator
+            .getSACredentialDetails(
+              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            ))
+            .expects(*, *, *)
+            .returning(createInboundResult(accountDetails))
+          mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
+          mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
 
-        val auditEvent = AuditEvent.auditReportSuspiciousSAAccount(
-          accountDetails
-        )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER))
-        (mockAuditHandler
-          .audit(_: AuditEvent)(_: HeaderCarrier))
-          .expects(auditEvent, *)
-          .returning(Future.successful((): Unit))
-          .once()
+          val auditEvent = AuditEvent.auditReportSuspiciousSAAccount(
+            accountDetails
+          )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER))
+          (mockAuditHandler
+            .audit(_: AuditEvent)(_: HeaderCarrier))
+            .expects(auditEvent, *)
+            .returning(Future.successful((): Unit))
+            .once()
 
-        val result = controller
-          .viewSA()
-          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+          val result = controller
+            .viewSA()
+            .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(result) shouldBe OK
-        contentAsString(result) should include("ReportSuspiciousID.title")
+          status(result) shouldBe OK
+          contentAsString(result) should include("ReportSuspiciousID.title")
+        }
+
+        "the user has already been assigned a PT enrolment" in {
+          (mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup]
+              ]
+            )(_: HeaderCarrier, _: ExecutionContext))
+            .expects(predicates, retrievals, *, *)
+            .returning(Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly)))
+
+          (mockMultipleAccountsOrchestrator
+            .checkValidAccountType(_: List[AccountTypes.Value])(
+              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
+            ))
+            .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
+            .returning(Right(SA_ASSIGNED_TO_OTHER_USER))
+
+          (mockMultipleAccountsOrchestrator
+            .getSACredentialDetails(
+              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            ))
+            .expects(*, *, *)
+            .returning(createInboundResult(accountDetails))
+          mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
+          mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, ptEnrolmentOnly.enrolments)
+
+          val result = controller
+            .viewSA()
+            .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+
+          status(result) shouldBe OK
+          contentAsString(result) should include("ReportSuspiciousID.title")
+        }
       }
     }
     s"the cache no redirectUrl" should {
@@ -346,8 +387,8 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
 
     specificThrottleTests(controller.continue())
 
-    "the user has SA assigned to another user and enrolment to PT is successful" should {
-      s"redirect to ${UrlPaths.enrolledPTSAOnOtherAccountPath}" in {
+    "the user has SA assigned to another user and not already enrolled for PT" should {
+      s"enrol for PT and redirect to ${UrlPaths.enrolledPTSAOnOtherAccountPath}" in {
         val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
           accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetails))
         val sessionData = generateBasicCacheData(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl) ++ additionalCacheData
@@ -398,6 +439,54 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
         )
       }
     }
+
+    "the user has SA assigned to another user and has already been enrolled for PT" should {
+      s"not enrol for PT again and redirect to ${UrlPaths.enrolledPTSAOnOtherAccountPath}" in {
+        val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetails))
+        val sessionData = generateBasicCacheData(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl) ++ additionalCacheData
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup]
+            ]
+          )(_: HeaderCarrier, _: ExecutionContext))
+          .expects(predicates, retrievals, *, *)
+          .returning(Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly)))
+
+        (mockTeaSessionCache
+          .save(_: String, _: Boolean)(
+            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: Format[Boolean]
+          ))
+          .expects(REPORTED_FRAUD, true, *, *)
+          .returning(Future(CacheMap(request.sessionID, sessionData)))
+
+        (mockMultipleAccountsOrchestrator
+          .checkValidAccountTypeAndEnrolForPT(_: AccountTypes.Value)(
+            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+            _: HeaderCarrier,
+            _: ExecutionContext
+          ))
+          .expects(SA_ASSIGNED_TO_OTHER_USER, *, *, *)
+          .returning(createInboundResultError(UnexpectedPTEnrolment))
+        mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData)
+        mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, ptEnrolmentOnly.enrolments)
+
+        val res = controller
+          .continue()
+          .apply(buildFakeRequestWithSessionId("POST", "Not Used"))
+
+        status(res) shouldBe SEE_OTHER
+        redirectLocation(res) shouldBe Some(
+          UrlPaths.enrolledPTSAOnOtherAccountPath
+        )
+      }
+    }
+
     s"the cache no redirectUrl" should {
       "render the error page" in {
         (mockAuthConnector

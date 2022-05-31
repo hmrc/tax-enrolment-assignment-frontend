@@ -43,7 +43,6 @@ class AccountCheckControllerSpec extends TestFixture {
     mockAuthAction,
     mockAccountCheckOrchestrator,
     mockAuditHandler,
-    appConfig,
     mcc,
     teaSessionCache,
     logger,
@@ -152,20 +151,39 @@ class AccountCheckControllerSpec extends TestFixture {
     }
 
     "multiple credential exists for a given nino and a non signed in account has SA enrolment" should {
-      s"redirect ${UrlPaths.saOnOtherAccountInterruptPath}" in new TestHelper {
-        mockAuthCall()
-        mockAccountCheckSuccess(SA_ASSIGNED_TO_OTHER_USER)
-        mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
+      s"redirect ${UrlPaths.saOnOtherAccountInterruptPath}" when {
+        "the PT enrolment has not already been assigned" in new TestHelper {
+          mockAuthCall()
+          mockAccountCheckSuccess(SA_ASSIGNED_TO_OTHER_USER)
+          mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
+
+          val result = controller
+            .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
+            .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+
+          status(result) shouldBe SEE_OTHER
+          redirectLocation(result) shouldBe Some(
+            UrlPaths.saOnOtherAccountInterruptPath
+          )
+        }
+      }
 
 
-        val result = controller
-          .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
-          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+      s"redirect ${UrlPaths.enrolledPTSAOnOtherAccountPath}" when {
+        "the PT enrolment has not already been assigned" in new TestHelper {
+          mockAuthCallWithPT()
+          mockAccountCheckSuccess(SA_ASSIGNED_TO_OTHER_USER)
+          mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, ptEnrolmentOnly.enrolments)
 
-        status(result) shouldBe SEE_OTHER
-        redirectLocation(result) shouldBe Some(
-          UrlPaths.saOnOtherAccountInterruptPath
-        )
+          val result = controller
+            .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
+            .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+
+          status(result) shouldBe SEE_OTHER
+          redirectLocation(result) shouldBe Some(
+            UrlPaths.enrolledPTSAOnOtherAccountPath
+          )
+        }
       }
     }
 
@@ -242,6 +260,20 @@ class AccountCheckControllerSpec extends TestFixture {
         )(_: HeaderCarrier, _: ExecutionContext))
         .expects(predicates, retrievals, *, *)
         .returning(Future.successful(retrievalResponse(enrolments = saEnrolmentOnly)))
+
+
+    def mockAuthCallWithPT() =
+      (mockAuthConnector
+        .authorise(
+          _: Predicate,
+          _: Retrieval[
+            ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+              String
+            ] ~ Option[AffinityGroup]
+          ]
+        )(_: HeaderCarrier, _: ExecutionContext))
+        .expects(predicates, retrievals, *, *)
+        .returning(Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly)))
 
     def mockGetAccountTypeFailure(error: TaxEnrolmentAssignmentErrors) = {
       (mockAccountCheckOrchestrator

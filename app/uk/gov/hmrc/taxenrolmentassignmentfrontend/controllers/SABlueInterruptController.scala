@@ -51,7 +51,7 @@ class SABlueInterruptController @Inject()(
   def view(): Action[AnyContent] =
     authAction.andThen(accountMongoDetailsAction).andThen(throttleAction) { implicit request =>
       multipleAccountsOrchestrator
-        .checkValidAccountType(List(SA_ASSIGNED_TO_OTHER_USER)) match {
+        .checkAccessAllowedForPage(List(SA_ASSIGNED_TO_OTHER_USER)) match {
           case Right(_) =>
             Ok(saBlueInterrupt())
           case Left(error) =>
@@ -62,7 +62,7 @@ class SABlueInterruptController @Inject()(
   def continue(): Action[AnyContent] =
     authAction.andThen(accountMongoDetailsAction).andThen(throttleAction) { implicit request =>
       multipleAccountsOrchestrator
-        .checkValidAccountType(List(SA_ASSIGNED_TO_OTHER_USER)) match {
+        .checkAccessAllowedForPage(List(SA_ASSIGNED_TO_OTHER_USER)) match {
           case Right(_) => Redirect(routes.KeepAccessToSAController.view)
           case Left(error) =>
             errorHandler.handleErrors(error, "[SABlueInterruptController][continue]")(request, implicitly)

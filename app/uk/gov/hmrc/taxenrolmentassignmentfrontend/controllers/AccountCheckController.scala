@@ -43,7 +43,8 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemp
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class AccountCheckController @Inject()(silentAssignmentService: SilentAssignmentService,
+class AccountCheckController @Inject()(
+                                        silentAssignmentService: SilentAssignmentService,
                                         throttleAction: ThrottleAction,
                                         authAction: AuthAction,
                                         accountCheckOrchestrator: AccountCheckOrchestrator,
@@ -63,18 +64,9 @@ class AccountCheckController @Inject()(silentAssignmentService: SilentAssignment
     implicit request =>
       handleRequest(redirectUrl).value.map {
         case Right((_, Some(redirectResult))) => redirectResult
-        case Right((PT_ASSIGNED_TO_OTHER_USER, _)) => Redirect(routes.PTEnrolmentOnOtherAccountController.view)
-        case Right((SA_ASSIGNED_TO_OTHER_USER, _)) if request.userDetails.hasPTEnrolment => Redirect(routes.EnrolledPTWithSAOnOtherAccountController.view)
-        case Right((SA_ASSIGNED_TO_OTHER_USER, _)) => Redirect(routes.SABlueInterruptController.view)
-        case Right((MULTIPLE_ACCOUNTS, _)) => Redirect(routes.EnrolledForPTController.view)
-        case Right((SA_ASSIGNED_TO_CURRENT_USER, _)) => Redirect(routes.EnrolledForPTWithSAController.view)
-        case Right(_) =>
-          logger.logEvent(
-            logRedirectingToReturnUrl(request.userDetails.credId, "[AccountCheckController][accountCheck]")
-          )
-          Redirect(redirectUrl)
+        case Right((accountType, _)) => handleNoneThrottledUsers(accountType, redirectUrl)
         case Left(error) =>
-            errorHandler.handleErrors(error, "[AccountCheckController][accountCheck]")
+          errorHandler.handleErrors(error, "[AccountCheckController][accountCheck]")
       }
   }
 
@@ -86,6 +78,25 @@ class AccountCheckController @Inject()(silentAssignmentService: SilentAssignment
       throttle <- EitherT.right[TaxEnrolmentAssignmentErrors](throttleAction.throttle(accountType, redirectUrl))
       _ <- enrolForPTIfRequired(accountType, throttle.isEmpty)
     } yield (accountType, throttle)
+  }
+
+  private def handleNoneThrottledUsers(accountType: AccountTypes.Value, redirectUrl: String)
+                                      (implicit request: RequestWithUserDetailsFromSession[_],
+                                       hc: HeaderCarrier): Result = {
+    accountType match {
+      case PT_ASSIGNED_TO_OTHER_USER => Redirect(routes.PTEnrolmentOnOtherAccountController.view)
+      case SA_ASSIGNED_TO_OTHER_USER if request.userDetails.hasPTEnrolment => Redirect(routes.EnrolledPTWithSAOnOtherAccountController.view)
+      case SA_ASSIGNED_TO_OTHER_USER => Redirect(routes.SABlueInterruptController.view)
+      case MULTIPLE_ACCOUNTS => Redirect(routes.EnrolledForPTController.view)
+      case SA_ASSIGNED_TO_CURRENT_USER => Redirect(routes.EnrolledForPTWithSAController.view)
+      case _ => logger.logEvent(
+        logRedirectingToReturnUrl(
+          request.userDetails.credId,
+          "[AccountCheckController][accountCheck]"
+        )
+      )
+        Redirect(redirectUrl)
+    }
   }
 
   private def enrolForPTIfRequired(accountType: AccountTypes.Value, isThrottled: Boolean)(

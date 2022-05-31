@@ -26,7 +26,7 @@ import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_OTHER_USER}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, UnexpectedResponseFromTaxEnrolments}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, UnexpectedPTEnrolment, UnexpectedResponseFromTaxEnrolments}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm.keepAccessToSAThroughPTAForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, ThrottleHelperSpec, UrlPaths}
@@ -57,7 +57,7 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
 
     specificThrottleTests(controller.view())
 
-    "the user has multiple accounts, is signed in with one with SA and has no form data in cache" should {
+    "the user has multiple accounts, is signed in with one without SA and has no form data in cache" should {
       "render the keep access to sa page with radio buttons unchecked" in {
         (mockAuthConnector
           .authorise(
@@ -70,7 +70,7 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(
-            Future.successful(retrievalResponse(enrolments = saEnrolmentOnly))
+            Future.successful(retrievalResponse())
           )
 
         (mockMultipleAccountsOrchestrator
@@ -81,8 +81,8 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
           ))
           .expects(*, *, *)
           .returning(createInboundResult(keepAccessToSAThroughPTAForm))
-        mockGetDataFromCacheForActionSuccess(randomAccountType)
-        mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
+        mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
+        mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -101,7 +101,7 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
       }
     }
 
-    "the user has multiple accounts, is signed in with one with SA and has previously selected Yes" should {
+    "the user has multiple accounts, is signed in with one without SA and has previously selected Yes" should {
       "render the keep access to sa page with Yes checked" in {
         (mockAuthConnector
           .authorise(
@@ -114,7 +114,7 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(
-            Future.successful(retrievalResponse(enrolments = saEnrolmentOnly))
+            Future.successful(retrievalResponse())
           )
 
         (mockMultipleAccountsOrchestrator
@@ -129,8 +129,8 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
               keepAccessToSAThroughPTAForm.fill(KeepAccessToSAThroughPTA(true))
             )
           )
-        mockGetDataFromCacheForActionSuccess(randomAccountType)
-        mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
+        mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
+        mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -149,7 +149,7 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
       }
     }
 
-    "the user has multiple accounts, is signed in with one with SA and has previously selected No" should {
+    "the user has multiple accounts including one with SA, is signed in with one without SA and has previously selected No" should {
       "render the keep access to sa page with No checked" in {
         (mockAuthConnector
           .authorise(
@@ -162,7 +162,7 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(
-            Future.successful(retrievalResponse(enrolments = saEnrolmentOnly))
+            Future.successful(retrievalResponse())
           )
 
         (mockMultipleAccountsOrchestrator
@@ -177,8 +177,8 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
               keepAccessToSAThroughPTAForm.fill(KeepAccessToSAThroughPTA(false))
             )
           )
-        mockGetDataFromCacheForActionSuccess(randomAccountType)
-        mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
+        mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
+        mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -197,7 +197,42 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
       }
     }
 
-    "the user is not a multiple accounts usertype" should {
+    "the user has multiple accounts, is signed in with one without SA and has already been enrolled for PT" should {
+      s"redirect to ${UrlPaths.enrolledPTSAOnOtherAccountPath}" in {
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup]
+            ]
+          )(_: HeaderCarrier, _: ExecutionContext))
+          .expects(predicates, retrievals, *, *)
+          .returning(
+            Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly))
+          )
+
+        (mockMultipleAccountsOrchestrator
+          .getDetailsForKeepAccessToSA(
+            _: RequestWithUserDetailsFromSessionAndMongo[_],
+            _: HeaderCarrier,
+            _: ExecutionContext
+          ))
+          .expects(*, *, *)
+          .returning(createInboundResultError(UnexpectedPTEnrolment))
+        mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
+        mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, ptEnrolmentOnly.enrolments)
+
+        val result = controller.view
+          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result) shouldBe Some(UrlPaths.enrolledPTSAOnOtherAccountPath)
+      }
+    }
+
+    "the user does not have SA on another account" should {
       s"redirect to ${UrlPaths.accountCheckPath}" in {
         (mockAuthConnector
           .authorise(
@@ -231,7 +266,7 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
         redirectLocation(result) shouldBe Some(UrlPaths.accountCheckPath)
       }
     }
-    "the user ha no redirectUrl stored in session" should {
+    "the user has no redirectUrl stored in session" should {
       "render the error page" in {
         (mockAuthConnector
           .authorise(
@@ -252,219 +287,15 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
         contentAsString(res) should include("enrolmentError.title")
       }
     }
+  }
 
-    "continue" when {
+  "continue" when {
 
-      specificThrottleTests(controller.continue())
+    specificThrottleTests(controller.continue())
 
-      "the user has selected Yes" should {
-        s"redirect to ${UrlPaths.saOnOtherAccountSigninAgainPath}" when {
-          "they have SA on another account" in {
-            (mockAuthConnector
-              .authorise(
-                _: Predicate,
-                _: Retrieval[
-                  ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                    String
-                  ] ~ Option[AffinityGroup]
-                ]
-              )(_: HeaderCarrier, _: ExecutionContext))
-              .expects(predicates, retrievals, *, *)
-              .returning(Future.successful(retrievalResponse()))
-
-            (mockMultipleAccountsOrchestrator
-              .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
-                _: RequestWithUserDetailsFromSessionAndMongo[_],
-                _: HeaderCarrier,
-                _: ExecutionContext
-              ))
-              .expects(KeepAccessToSAThroughPTA(true), *, *, *)
-              .returning(createInboundResult(true))
-            mockGetDataFromCacheForActionSuccess(randomAccountType)
-            mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
-
-            val res = controller.continue
-              .apply(
-                buildFakePOSTRequestWithSessionId(
-                  data = Map("select-continue" -> "yes")
-                )
-              )
-
-            status(res) shouldBe SEE_OTHER
-            redirectLocation(res) shouldBe Some(
-              UrlPaths.saOnOtherAccountSigninAgainPath
-            )
-          }
-        }
-        s"redirect to ${UrlPaths.accountCheckPath}" when {
-          "they don't have SA on another account" in {
-            (mockAuthConnector
-              .authorise(
-                _: Predicate,
-                _: Retrieval[
-                  ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                    String
-                  ] ~ Option[AffinityGroup]
-                ]
-              )(_: HeaderCarrier, _: ExecutionContext))
-              .expects(predicates, retrievals, *, *)
-              .returning(Future.successful(retrievalResponse()))
-            (mockMultipleAccountsOrchestrator
-              .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
-                _: RequestWithUserDetailsFromSessionAndMongo[_],
-                _: HeaderCarrier,
-                _: ExecutionContext
-              ))
-              .expects(KeepAccessToSAThroughPTA(true), *, *, *)
-              .returning(
-                createInboundResultError(
-                  IncorrectUserType(UrlPaths.returnUrl, randomAccountType)
-                )
-              )
-            mockGetDataFromCacheForActionSuccess(randomAccountType)
-            mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
-
-            val res = controller.continue
-              .apply(
-                buildFakePOSTRequestWithSessionId(
-                  data = Map("select-continue" -> "yes")
-                )
-              )
-
-            status(res) shouldBe SEE_OTHER
-            redirectLocation(res) shouldBe Some(UrlPaths.accountCheckPath)
-          }
-        }
-      }
-
-      "the user has selected No" should {
-        s"be enrolled for PT and redirect to ${UrlPaths.enrolledPTSAOnOtherAccountPath}" when {
-          "they have SA on another account" in {
-            val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-              accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetails))
-            (mockAuthConnector
-              .authorise(
-                _: Predicate,
-                _: Retrieval[
-                  ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                    String
-                  ] ~ Option[AffinityGroup]
-                ]
-              )(_: HeaderCarrier, _: ExecutionContext))
-              .expects(predicates, retrievals, *, *)
-              .returning(Future.successful(retrievalResponse()))
-            (mockMultipleAccountsOrchestrator
-              .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
-                _: RequestWithUserDetailsFromSessionAndMongo[_],
-                _: HeaderCarrier,
-                _: ExecutionContext
-              ))
-              .expects(KeepAccessToSAThroughPTA(false), *, *, *)
-              .returning(createInboundResult(false))
-            mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData)
-            mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
-            val auditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(false
-            )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData = additionalCacheData))
-            (mockAuditHandler
-              .audit(_: AuditEvent)(_: HeaderCarrier))
-              .expects(auditEvent, *)
-              .returning(Future.successful((): Unit))
-              .once()
-
-            val res = controller.continue
-              .apply(
-                buildFakePOSTRequestWithSessionId(
-                  data = Map("select-continue" -> "no")
-                )
-              )
-
-            status(res) shouldBe SEE_OTHER
-            redirectLocation(res) shouldBe Some(
-              UrlPaths.enrolledPTSAOnOtherAccountPath
-            )
-          }
-        }
-        s"redirect to ${UrlPaths.accountCheckPath}" when {
-          "they don't have SA on another account" in {
-            (mockAuthConnector
-              .authorise(
-                _: Predicate,
-                _: Retrieval[
-                  ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                    String
-                  ] ~ Option[AffinityGroup]
-                ]
-              )(_: HeaderCarrier, _: ExecutionContext))
-              .expects(predicates, retrievals, *, *)
-              .returning(Future.successful(retrievalResponse()))
-            (mockMultipleAccountsOrchestrator
-              .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
-                _: RequestWithUserDetailsFromSessionAndMongo[_],
-                _: HeaderCarrier,
-                _: ExecutionContext
-              ))
-              .expects(KeepAccessToSAThroughPTA(false), *, *, *)
-              .returning(
-                createInboundResultError(
-                  IncorrectUserType(UrlPaths.returnUrl, randomAccountType)
-                )
-              )
-            mockGetDataFromCacheForActionSuccess(randomAccountType)
-            mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
-
-            val res = controller.continue
-              .apply(
-                buildFakePOSTRequestWithSessionId(
-                  data = Map("select-continue" -> "no")
-                )
-              )
-
-
-            status(res) shouldBe SEE_OTHER
-            redirectLocation(res) shouldBe Some(UrlPaths.accountCheckPath)
-          }
-        }
-
-        "render the error page" when {
-          "enrolling for PT fails" in {
-            (mockAuthConnector
-              .authorise(
-                _: Predicate,
-                _: Retrieval[
-                  ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                    String
-                  ] ~ Option[AffinityGroup]
-                ]
-              )(_: HeaderCarrier, _: ExecutionContext))
-              .expects(predicates, retrievals, *, *)
-              .returning(Future.successful(retrievalResponse()))
-            (mockMultipleAccountsOrchestrator
-              .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
-                _: RequestWithUserDetailsFromSessionAndMongo[_],
-                _: HeaderCarrier,
-                _: ExecutionContext
-              ))
-              .expects(KeepAccessToSAThroughPTA(false), *, *, *)
-              .returning(
-                createInboundResultError(UnexpectedResponseFromTaxEnrolments)
-              )
-            mockGetDataFromCacheForActionSuccess(randomAccountType)
-            mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
-
-            val res = controller.continue
-              .apply(
-                buildFakePOSTRequestWithSessionId(
-                  data = Map("select-continue" -> "no")
-                )
-              )
-
-            status(res) shouldBe INTERNAL_SERVER_ERROR
-            contentAsString(res) should include("enrolmentError.title")
-          }
-        }
-      }
-      "a form error occurs" should {
-        "render the keepAccessToSA page with error summary" in {
+    "the user has selected Yes" should {
+      s"redirect to ${UrlPaths.saOnOtherAccountSigninAgainPath}" when {
+        "they have SA on another account" in {
           (mockAuthConnector
             .authorise(
               _: Predicate,
@@ -476,27 +307,311 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
             )(_: HeaderCarrier, _: ExecutionContext))
             .expects(predicates, retrievals, *, *)
             .returning(Future.successful(retrievalResponse()))
+
+          (mockMultipleAccountsOrchestrator
+            .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
+              _: RequestWithUserDetailsFromSessionAndMongo[_],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            ))
+            .expects(KeepAccessToSAThroughPTA(true), *, *, *)
+            .returning(createInboundResult(true))
+          mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
+          mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
+
+          val res = controller.continue
+            .apply(
+              buildFakePOSTRequestWithSessionId(
+                data = Map("select-continue" -> "yes")
+              )
+            )
+
+          status(res) shouldBe SEE_OTHER
+          redirectLocation(res) shouldBe Some(
+            UrlPaths.saOnOtherAccountSigninAgainPath
+          )
+        }
+      }
+
+      s"redirect to ${UrlPaths.enrolledPTSAOnOtherAccountPath}" when {
+        "they have SA on another account" in {
+          (mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup]
+              ]
+            )(_: HeaderCarrier, _: ExecutionContext))
+            .expects(predicates, retrievals, *, *)
+            .returning(Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly)))
+
+          (mockMultipleAccountsOrchestrator
+            .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
+              _: RequestWithUserDetailsFromSessionAndMongo[_],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            ))
+            .expects(KeepAccessToSAThroughPTA(true), *, *, *)
+            .returning(createInboundResultError(UnexpectedPTEnrolment))
+          mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
+          mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, ptEnrolmentOnly.enrolments)
+
+          val res = controller.continue
+            .apply(
+              buildFakePOSTRequestWithSessionId(
+                data = Map("select-continue" -> "yes")
+              )
+            )
+
+          status(res) shouldBe SEE_OTHER
+          redirectLocation(res) shouldBe Some(
+            UrlPaths.enrolledPTSAOnOtherAccountPath
+          )
+        }
+      }
+      s"redirect to ${UrlPaths.accountCheckPath}" when {
+        "they don't have SA on another account" in {
+          (mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup]
+              ]
+            )(_: HeaderCarrier, _: ExecutionContext))
+            .expects(predicates, retrievals, *, *)
+            .returning(Future.successful(retrievalResponse()))
+          (mockMultipleAccountsOrchestrator
+            .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
+              _: RequestWithUserDetailsFromSessionAndMongo[_],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            ))
+            .expects(KeepAccessToSAThroughPTA(true), *, *, *)
+            .returning(
+              createInboundResultError(
+                IncorrectUserType(UrlPaths.returnUrl, randomAccountType)
+              )
+            )
           mockGetDataFromCacheForActionSuccess(randomAccountType)
           mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
           val res = controller.continue
             .apply(
               buildFakePOSTRequestWithSessionId(
-                data = Map("select-continue" -> "error")
+                data = Map("select-continue" -> "yes")
               )
             )
 
-          status(res) shouldBe BAD_REQUEST
-
-          val page = Jsoup.parse(contentAsString(res))
-          page
-            .getElementsByClass("govuk-error-summary__title")
-            .text() shouldBe "validation.summary.heading"
-          page
-            .getElementsByClass("govuk-list govuk-error-summary__list")
-            .first()
-            .text() shouldBe "keepAccessToSA.error.required"
+          status(res) shouldBe SEE_OTHER
+          redirectLocation(res) shouldBe Some(UrlPaths.accountCheckPath)
         }
+      }
+    }
+
+    "the user has selected No" should {
+      s"be enrolled for PT and redirect to ${UrlPaths.enrolledPTSAOnOtherAccountPath}" when {
+        "they have SA on another account" in {
+          val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetails))
+          (mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup]
+              ]
+            )(_: HeaderCarrier, _: ExecutionContext))
+            .expects(predicates, retrievals, *, *)
+            .returning(Future.successful(retrievalResponse()))
+          (mockMultipleAccountsOrchestrator
+            .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
+              _: RequestWithUserDetailsFromSessionAndMongo[_],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            ))
+            .expects(KeepAccessToSAThroughPTA(false), *, *, *)
+            .returning(createInboundResult(false))
+          mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData)
+          mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
+          val auditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(false
+          )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData = additionalCacheData))
+          (mockAuditHandler
+            .audit(_: AuditEvent)(_: HeaderCarrier))
+            .expects(auditEvent, *)
+            .returning(Future.successful((): Unit))
+            .once()
+
+          val res = controller.continue
+            .apply(
+              buildFakePOSTRequestWithSessionId(
+                data = Map("select-continue" -> "no")
+              )
+            )
+
+          status(res) shouldBe SEE_OTHER
+          redirectLocation(res) shouldBe Some(
+            UrlPaths.enrolledPTSAOnOtherAccountPath
+          )
+        }
+      }
+
+      s"not be enrolled for PT and redirect to ${UrlPaths.enrolledPTSAOnOtherAccountPath}" when {
+        "they have already been assigned PT enrolment" in {
+          val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetails))
+          (mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup]
+              ]
+            )(_: HeaderCarrier, _: ExecutionContext))
+            .expects(predicates, retrievals, *, *)
+            .returning(Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly)))
+          (mockMultipleAccountsOrchestrator
+            .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
+              _: RequestWithUserDetailsFromSessionAndMongo[_],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            ))
+            .expects(KeepAccessToSAThroughPTA(false), *, *, *)
+            .returning(createInboundResultError(UnexpectedPTEnrolment))
+          mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData)
+          mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, ptEnrolmentOnly.enrolments)
+
+          val res = controller.continue
+            .apply(
+              buildFakePOSTRequestWithSessionId(
+                data = Map("select-continue" -> "no")
+              )
+            )
+
+          status(res) shouldBe SEE_OTHER
+          redirectLocation(res) shouldBe Some(
+            UrlPaths.enrolledPTSAOnOtherAccountPath
+          )
+        }
+      }
+
+      s"redirect to ${UrlPaths.accountCheckPath}" when {
+        "they don't have SA on another account" in {
+          (mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup]
+              ]
+            )(_: HeaderCarrier, _: ExecutionContext))
+            .expects(predicates, retrievals, *, *)
+            .returning(Future.successful(retrievalResponse()))
+          (mockMultipleAccountsOrchestrator
+            .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
+              _: RequestWithUserDetailsFromSessionAndMongo[_],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            ))
+            .expects(KeepAccessToSAThroughPTA(false), *, *, *)
+            .returning(
+              createInboundResultError(
+                IncorrectUserType(UrlPaths.returnUrl, randomAccountType)
+              )
+            )
+          mockGetDataFromCacheForActionSuccess(randomAccountType)
+          mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
+
+          val res = controller.continue
+            .apply(
+              buildFakePOSTRequestWithSessionId(
+                data = Map("select-continue" -> "no")
+              )
+            )
+
+
+          status(res) shouldBe SEE_OTHER
+          redirectLocation(res) shouldBe Some(UrlPaths.accountCheckPath)
+        }
+      }
+
+      "render the error page" when {
+        "enrolling for PT fails" in {
+          (mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup]
+              ]
+            )(_: HeaderCarrier, _: ExecutionContext))
+            .expects(predicates, retrievals, *, *)
+            .returning(Future.successful(retrievalResponse()))
+          (mockMultipleAccountsOrchestrator
+            .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
+              _: RequestWithUserDetailsFromSessionAndMongo[_],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            ))
+            .expects(KeepAccessToSAThroughPTA(false), *, *, *)
+            .returning(
+              createInboundResultError(UnexpectedResponseFromTaxEnrolments)
+            )
+          mockGetDataFromCacheForActionSuccess(randomAccountType)
+          mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
+
+          val res = controller.continue
+            .apply(
+              buildFakePOSTRequestWithSessionId(
+                data = Map("select-continue" -> "no")
+              )
+            )
+
+          status(res) shouldBe INTERNAL_SERVER_ERROR
+          contentAsString(res) should include("enrolmentError.title")
+        }
+      }
+    }
+    "a form error occurs" should {
+      "render the keepAccessToSA page with error summary" in {
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup]
+            ]
+          )(_: HeaderCarrier, _: ExecutionContext))
+          .expects(predicates, retrievals, *, *)
+          .returning(Future.successful(retrievalResponse()))
+        mockGetDataFromCacheForActionSuccess(randomAccountType)
+        mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
+
+        val res = controller.continue
+          .apply(
+            buildFakePOSTRequestWithSessionId(
+              data = Map("select-continue" -> "error")
+            )
+          )
+
+        status(res) shouldBe BAD_REQUEST
+
+        val page = Jsoup.parse(contentAsString(res))
+        page
+          .getElementsByClass("govuk-error-summary__title")
+          .text() shouldBe "validation.summary.heading"
+        page
+          .getElementsByClass("govuk-list govuk-error-summary__list")
+          .first()
+          .text() shouldBe "keepAccessToSA.error.required"
       }
     }
   }

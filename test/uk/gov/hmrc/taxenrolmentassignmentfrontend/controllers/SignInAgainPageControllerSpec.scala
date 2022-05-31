@@ -26,7 +26,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, NoSAEnrolmentWhenOneExpected}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, NoSAEnrolmentWhenOneExpected, UnexpectedPTEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, ThrottleHelperSpec, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
@@ -55,43 +55,77 @@ class SignInAgainPageControllerSpec extends TestFixture with ThrottleHelperSpec 
     specificThrottleTests(controller.view())
 
     "a user has SA on another account" should {
-      "render the signInWithSAAccount page" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.successful(retrievalResponse()))
+      "render the signInWithSAAccount page" when {
+        "the user has not already been assigned the PT enrolment" in {
+          (mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup]
+              ]
+            )(_: HeaderCarrier, _: ExecutionContext))
+            .expects(predicates, retrievals, *, *)
+            .returning(Future.successful(retrievalResponse()))
 
-        (mockMultipleAccountsOrchestrator
-          .checkValidAccountType(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
-          ))
-          .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
-          .returning(Right(SA_ASSIGNED_TO_OTHER_USER))
+          (mockMultipleAccountsOrchestrator
+            .checkAccessAllowedForPage(_: List[AccountTypes.Value])(
+              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
+            ))
+            .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
+            .returning(Right(SA_ASSIGNED_TO_OTHER_USER))
 
-        (mockMultipleAccountsOrchestrator
-          .getSACredentialDetails(
-            _: RequestWithUserDetailsFromSessionAndMongo[_],
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
-          .expects(*, *, *)
-          .returning(createInboundResult(accountDetails))
-        mockGetDataFromCacheForActionSuccess(randomAccountType)
-        mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
+          (mockMultipleAccountsOrchestrator
+            .getSACredentialDetails(
+              _: RequestWithUserDetailsFromSessionAndMongo[_],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            ))
+            .expects(*, *, *)
+            .returning(createInboundResult(accountDetails))
+          mockGetDataFromCacheForActionSuccess(randomAccountType)
+          mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
-        val result = controller
-          .view()
-          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+          val result = controller
+            .view()
+            .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(result) shouldBe OK
-        contentAsString(result) should include("signInAgain.title")
+          status(result) shouldBe OK
+          contentAsString(result) should include("signInAgain.title")
+        }
+      }
+      s"redirect to ${UrlPaths.enrolledPTSAOnOtherAccountPath}" when {
+        "the user has already been assigned the PT enrolment" in {
+          (mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup]
+              ]
+            )(_: HeaderCarrier, _: ExecutionContext))
+            .expects(predicates, retrievals, *, *)
+            .returning(Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly)))
+
+          (mockMultipleAccountsOrchestrator
+            .checkAccessAllowedForPage(_: List[AccountTypes.Value])(
+              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
+            ))
+            .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
+            .returning(Left(UnexpectedPTEnrolment))
+
+          mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
+          mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, ptEnrolmentOnly.enrolments)
+
+          val result = controller
+            .view()
+            .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+
+          status(result) shouldBe SEE_OTHER
+          redirectLocation(result) shouldBe Some(UrlPaths.enrolledPTSAOnOtherAccountPath)
+        }
       }
     }
     s"the cache no redirectUrl" should {
@@ -133,7 +167,7 @@ class SignInAgainPageControllerSpec extends TestFixture with ThrottleHelperSpec 
           .returning(Future.successful(retrievalResponse()))
 
         (mockMultipleAccountsOrchestrator
-          .checkValidAccountType(_: List[AccountTypes.Value])(
+          .checkAccessAllowedForPage(_: List[AccountTypes.Value])(
             _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
           ))
           .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
@@ -166,7 +200,7 @@ class SignInAgainPageControllerSpec extends TestFixture with ThrottleHelperSpec 
           .returning(Future.successful(retrievalResponse()))
 
         (mockMultipleAccountsOrchestrator
-          .checkValidAccountType(_: List[AccountTypes.Value])(
+          .checkAccessAllowedForPage(_: List[AccountTypes.Value])(
             _: RequestWithUserDetailsFromSessionAndMongo[_]
           ))
           .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
@@ -220,14 +254,14 @@ class SignInAgainPageControllerSpec extends TestFixture with ThrottleHelperSpec 
           .returning(Future.successful((): Unit))
           .once()
 
-        val res = controller
-          .continue()
-          .apply(buildFakeRequestWithSessionId("POST", "Not Used"))
+      val res = controller
+        .continue()
+        .apply(buildFakeRequestWithSessionId("POST", "Not Used"))
 
-        status(res) shouldBe SEE_OTHER
-        redirectLocation(res) shouldBe
-          Some(UrlPaths.logoutPath)
-      }
+      status(res) shouldBe SEE_OTHER
+      redirectLocation(res) shouldBe
+        Some(UrlPaths.logoutPath)
+    }
 
     "render the error page when redirect url not in cache" in {
       (mockAuthConnector

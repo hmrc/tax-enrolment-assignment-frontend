@@ -23,7 +23,7 @@ import play.api.mvc.{MessagesControllerComponents, Result}
 import uk.gov.hmrc.play.bootstrap.controller.WithDefaultFormBinding
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, TaxEnrolmentAssignmentErrors}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, TaxEnrolmentAssignmentErrors, UnexpectedPTEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logUnexpectedErrorOccurred
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
@@ -40,6 +40,8 @@ class ErrorHandler @Inject()(errorView: ErrorTemplate, logger: EventLoggerServic
     error match {
       case IncorrectUserType(redirectUrl, _) =>
         Redirect(routes.AccountCheckController.accountCheck(redirectUrl))
+      case UnexpectedPTEnrolment =>
+        Redirect(routes.EnrolledPTWithSAOnOtherAccountController.view)
       case _ =>
         logger.logEvent(
           logUnexpectedErrorOccurred(

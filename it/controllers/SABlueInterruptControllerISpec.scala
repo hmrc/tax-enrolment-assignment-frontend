@@ -39,29 +39,61 @@ class SABlueInterruptControllerISpec extends TestHelper with Status with Throttl
       .get())
 
     "the session cache has a credential for SA enrolment that is not the signed in account" should {
-      s"render the report blue interrupt page" in {
-        await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
-        await(
-          save[AccountTypes.Value](
-            sessionId,
-            "ACCOUNT_TYPE",
-            SA_ASSIGNED_TO_OTHER_USER
+      s"render the report blue interrupt page" when {
+        "the user has not been assigned a PT enrolment" in {
+          await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
+          await(
+            save[AccountTypes.Value](
+              sessionId,
+              "ACCOUNT_TYPE",
+              SA_ASSIGNED_TO_OTHER_USER
+            )
           )
-        )
-        val authResponse = authoriseResponseJson()
-        stubAuthorizePost(OK, authResponse.toString())
-        stubPost(s"/write/.*", OK, """{"x":2}""")
+          val authResponse = authoriseResponseJson()
+          stubAuthorizePost(OK, authResponse.toString())
+          stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val res = buildRequest(urlPath,followRedirects = true)
-          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-          .addHttpHeaders(xSessionId, csrfContent)
-          .get()
+          val res = buildRequest(urlPath,followRedirects = true)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, csrfContent)
+            .get()
 
-        whenReady(res) { resp =>
-          val page = Jsoup.parse(resp.body)
+          whenReady(res) { resp =>
+            val page = Jsoup.parse(resp.body)
 
-          resp.status shouldBe OK
-          page.title should include(SABlueInterruptMessages.selfAssessTitle)
+            resp.status shouldBe OK
+            page.title should include(SABlueInterruptMessages.selfAssessTitle)
+          }
+        }
+      }
+
+      s"redirect to ${UrlPaths.enrolledPTSAOnOtherAccountPath}" when {
+        "the user has been assigned a PT enrolment already" in {
+          await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
+          await(
+            save[AccountTypes.Value](
+              sessionId,
+              "ACCOUNT_TYPE",
+              SA_ASSIGNED_TO_OTHER_USER
+            )
+          )
+          val authResponse = authoriseResponseWithPTEnrolment()
+          stubAuthorizePost(OK, authResponse.toString())
+          stubPost(s"/write/.*", OK, """{"x":2}""")
+
+          val res = buildRequest(urlPath)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, csrfContent)
+            .get()
+
+          whenReady(res) { resp =>
+            val page = Jsoup.parse(resp.body)
+
+            resp.status shouldBe SEE_OTHER
+            resp.header("Location").get should include(
+              UrlPaths.enrolledPTSAOnOtherAccountPath
+            )
+          }
         }
       }
     }
@@ -246,28 +278,57 @@ class SABlueInterruptControllerISpec extends TestHelper with Status with Throttl
       .post(Json.obj()))
 
     "the session cache has a credential for SA enrolment that is not the signed in account" should {
-      s"redirect to ${UrlPaths.saOnOtherAccountKeepAccessToSAPath}" in {
-        await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
-        await(
-          save[AccountTypes.Value](
-            sessionId,
-            "ACCOUNT_TYPE",
-            SA_ASSIGNED_TO_OTHER_USER
+      s"redirect to ${UrlPaths.saOnOtherAccountKeepAccessToSAPath}" when {
+        "the user has not already been assigned PT enrolment" in {
+          await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
+          await(
+            save[AccountTypes.Value](
+              sessionId,
+              "ACCOUNT_TYPE",
+              SA_ASSIGNED_TO_OTHER_USER
+            )
           )
-        )
-        val authResponse = authoriseResponseJson()
-        stubAuthorizePost(OK, authResponse.toString())
-        stubPost(s"/write/.*", OK, """{"x":2}""")
-        val res = buildRequest(urlPath)
-          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-          .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
-          .post(Json.obj())
+          val authResponse = authoriseResponseJson()
+          stubAuthorizePost(OK, authResponse.toString())
+          stubPost(s"/write/.*", OK, """{"x":2}""")
+          val res = buildRequest(urlPath)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
+            .post(Json.obj())
 
-        whenReady(res) { resp =>
-          resp.status shouldBe SEE_OTHER
-          resp.header("Location").get should include(
-            UrlPaths.saOnOtherAccountKeepAccessToSAPath
+          whenReady(res) { resp =>
+            resp.status shouldBe SEE_OTHER
+            resp.header("Location").get should include(
+              UrlPaths.saOnOtherAccountKeepAccessToSAPath
+            )
+          }
+        }
+      }
+
+      s"redirect to ${UrlPaths.enrolledPTSAOnOtherAccountPath}" when {
+        "the user has not already been assigned PT enrolment" in {
+          await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
+          await(
+            save[AccountTypes.Value](
+              sessionId,
+              "ACCOUNT_TYPE",
+              SA_ASSIGNED_TO_OTHER_USER
+            )
           )
+          val authResponse = authoriseResponseWithPTEnrolment()
+          stubAuthorizePost(OK, authResponse.toString())
+          stubPost(s"/write/.*", OK, """{"x":2}""")
+          val res = buildRequest(urlPath)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
+            .post(Json.obj())
+
+          whenReady(res) { resp =>
+            resp.status shouldBe SEE_OTHER
+            resp.header("Location").get should include(
+              UrlPaths.enrolledPTSAOnOtherAccountPath
+            )
+          }
         }
       }
     }

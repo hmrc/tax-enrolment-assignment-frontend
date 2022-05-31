@@ -89,6 +89,53 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
       }
     }
 
+    "the session cache has a credential for SA enrolment that is not the signed in account" should {
+      s"still render the report suspiciousId page with a continue button" when {
+        "the current user has been assigned a PT enrolment" in {
+          await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
+          await(
+            save[AccountTypes.Value](
+              sessionId,
+              "ACCOUNT_TYPE",
+              SA_ASSIGNED_TO_OTHER_USER
+            )
+          )
+          await(
+            save[UsersAssignedEnrolment](
+              sessionId,
+              USER_ASSIGNED_SA_ENROLMENT,
+              UsersAssignedEnrolment(Some(CREDENTIAL_ID_2))
+            )
+          )
+          val authResponse = authoriseResponseWithPTEnrolment()
+          stubAuthorizePost(OK, authResponse.toString())
+          stubPost(s"/write/.*", OK, """{"x":2}""")
+          stubGet(
+            s"/users-groups-search/users/$CREDENTIAL_ID_2",
+            NON_AUTHORITATIVE_INFORMATION,
+            usergroupsResponseJson().toString()
+          )
+          val res = buildRequest(urlPathSA, followRedirects = true)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
+            .get()
+
+          whenReady(res) { resp =>
+            val page = Jsoup.parse(resp.body)
+
+            resp.status shouldBe OK
+            page.title should include(ReportSuspiciousIDMessages.title)
+            page.getElementsByClass("govuk-button").size() shouldBe 1
+            val saAccountDetails =
+              new AccountDetails(usersGroupSearchResponse, CREDENTIAL_ID_2)
+            val expectedAuditEvent = AuditEvent.auditReportSuspiciousSAAccount(
+              saAccountDetails
+            )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER))
+          }
+        }
+      }
+    }
+
     List(
       SINGLE_ACCOUNT,
       PT_ASSIGNED_TO_CURRENT_USER,
@@ -722,35 +769,64 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
       .post(Json.obj()))
 
     "the user has account type of SA_ASSIGNED_TO_OTHER_USER" should {
-      s"enrol the user for PT and redirect to the EnroledAfterReportingFraud" in {
-        val cacheData = Map(
-          ACCOUNT_TYPE -> Json.toJson(SA_ASSIGNED_TO_OTHER_USER),
-          REDIRECT_URL -> JsString(UrlPaths.returnUrl),
-          USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(saUsers),
-          accountDetailsForCredential(CREDENTIAL_ID_2) -> Json.toJson(accountDetails)
-        )
-        await(save(sessionId, cacheData))
-        val authResponse = authoriseResponseJson()
-        stubAuthorizePost(OK, authResponse.toString())
-        stubPost(s"/write/.*", OK, """{"x":2}""")
-        stubPut(
-          s"/tax-enrolments/service/HMRC-PT/enrolment",
-          Status.NO_CONTENT,
-          ""
-        )
-
-        val res = buildRequest(urlPathSA, followRedirects = false)
-          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-          .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
-          .post(Json.obj())
-
-        whenReady(res) { resp =>
-          resp.status shouldBe SEE_OTHER
-          resp.header("Location").get should include(
-            "/enrol-pt/enrolment-success-sa-access-not-wanted"
+      s"enrol the user for PT and redirect to the EnroledAfterReportingFraud" when {
+        "the user hasn't already been assigned a PT enrolment" in {
+          val cacheData = Map(
+            ACCOUNT_TYPE -> Json.toJson(SA_ASSIGNED_TO_OTHER_USER),
+            REDIRECT_URL -> JsString(UrlPaths.returnUrl),
+            USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(saUsers),
+            accountDetailsForCredential(CREDENTIAL_ID_2) -> Json.toJson(accountDetails)
           )
-          val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, mongoCacheData = cacheData))
-          verifyAuditEventSent(expectedAuditEvent)
+          await(save(sessionId, cacheData))
+          val authResponse = authoriseResponseJson()
+          stubAuthorizePost(OK, authResponse.toString())
+          stubPost(s"/write/.*", OK, """{"x":2}""")
+          stubPut(
+            s"/tax-enrolments/service/HMRC-PT/enrolment",
+            Status.NO_CONTENT,
+            ""
+          )
+
+          val res = buildRequest(urlPathSA, followRedirects = false)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
+            .post(Json.obj())
+
+          whenReady(res) { resp =>
+            resp.status shouldBe SEE_OTHER
+            resp.header("Location").get should include(
+              "/enrol-pt/enrolment-success-sa-access-not-wanted"
+            )
+            val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, mongoCacheData = cacheData))
+            verifyAuditEventSent(expectedAuditEvent)
+          }
+        }
+      }
+
+      s"not enrol the user for PT and redirect to the EnroledAfterReportingFraud" when {
+        "the user has already been assigned a PT enrolment" in {
+          val cacheData = Map(
+            ACCOUNT_TYPE -> Json.toJson(SA_ASSIGNED_TO_OTHER_USER),
+            REDIRECT_URL -> JsString(UrlPaths.returnUrl),
+            USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(saUsers),
+            accountDetailsForCredential(CREDENTIAL_ID_2) -> Json.toJson(accountDetails)
+          )
+          await(save(sessionId, cacheData))
+          val authResponse = authoriseResponseWithPTEnrolment()
+          stubAuthorizePost(OK, authResponse.toString())
+          stubPost(s"/write/.*", OK, """{"x":2}""")
+
+          val res = buildRequest(urlPathSA, followRedirects = false)
+            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+            .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
+            .post(Json.obj())
+
+          whenReady(res) { resp =>
+            resp.status shouldBe SEE_OTHER
+            resp.header("Location").get should include(
+              "/enrol-pt/enrolment-success-sa-access-not-wanted"
+            )
+          }
         }
       }
     }

@@ -51,19 +51,36 @@ class AccountCheckControllerSpec extends TestFixture {
 
   "accountCheck" when {
     "a single credential exists for a given nino with no PT enrolment" should {
-      s"silently assign the HMRC-PT Enrolment and redirect to users redirect url" in new TestHelper {
-        mockAuthCall()
-        mockAccountCheckSuccess(SINGLE_ACCOUNT)
-        mockSilentEnrolSuccess
-        mockAuditPTEnrolled(SINGLE_ACCOUNT, requestWithUserDetails())
-        mockAccountShouldNotBeThrottled(SINGLE_ACCOUNT, NINO, noEnrolments.enrolments)
+      s"silently assign the HMRC-PT Enrolment and redirect to users redirect url" when {
+        "the user has not been assigned the enrolment already" in new TestHelper {
+          mockAuthCall()
+          mockAccountCheckSuccess(SINGLE_ACCOUNT)
+          mockSilentEnrolSuccess
+          mockAuditPTEnrolled(SINGLE_ACCOUNT, requestWithUserDetails())
+          mockAccountShouldNotBeThrottled(SINGLE_ACCOUNT, NINO, noEnrolments.enrolments)
 
-        val result = controller
-          .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
-          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+          val result = controller
+            .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
+            .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(result) shouldBe SEE_OTHER
-        redirectLocation(result) shouldBe Some(testOnly.routes.TestOnlyController.successfulCall.url)
+          status(result) shouldBe SEE_OTHER
+          redirectLocation(result) shouldBe Some(testOnly.routes.TestOnlyController.successfulCall.url)
+        }
+      }
+
+      s"not silently assign the HMRC-PT Enrolment and redirect to users redirect url" when {
+        "the user has been assigned the enrolment already" in new TestHelper {
+          mockAuthCallWithPT()
+          mockAccountCheckSuccess(SINGLE_ACCOUNT)
+          mockAccountShouldNotBeThrottled(SINGLE_ACCOUNT, NINO, ptEnrolmentOnly.enrolments)
+
+          val result = controller
+            .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
+            .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+
+          status(result) shouldBe SEE_OTHER
+          redirectLocation(result) shouldBe Some(testOnly.routes.TestOnlyController.successfulCall.url)
+        }
       }
 
       "return an error page if there was an error assigning the enrolment" in new TestHelper {
@@ -112,58 +129,114 @@ class AccountCheckControllerSpec extends TestFixture {
     }
 
     "multiple credential exists for a given nino and no enrolments exists" should {
-      s"redirect to ${UrlPaths.enrolledPTNoSAOnAnyAccountPath}" in new TestHelper {
-        mockAuthCall()
-        mockAccountCheckSuccess(MULTIPLE_ACCOUNTS)
-        mockSilentEnrolSuccess
-        mockAccountShouldNotBeThrottled(MULTIPLE_ACCOUNTS, NINO, noEnrolments.enrolments)
-        mockAuditPTEnrolled(MULTIPLE_ACCOUNTS, requestWithUserDetails())
+      s"enrol for PT and redirect to ${UrlPaths.enrolledPTNoSAOnAnyAccountPath}" when {
+        "the user has not already been assigned the PT enrolment" in new TestHelper {
+          mockAuthCall()
+          mockAccountCheckSuccess(MULTIPLE_ACCOUNTS)
+          mockSilentEnrolSuccess
+          mockAccountShouldNotBeThrottled(MULTIPLE_ACCOUNTS, NINO, noEnrolments.enrolments)
+          mockAuditPTEnrolled(MULTIPLE_ACCOUNTS, requestWithUserDetails())
 
-        val result = controller
-          .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
-          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+          val result = controller
+            .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
+            .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(result) shouldBe SEE_OTHER
-        redirectLocation(result) shouldBe Some(
-          UrlPaths.enrolledPTNoSAOnAnyAccountPath
-        )
+          status(result) shouldBe SEE_OTHER
+          redirectLocation(result) shouldBe Some(
+            UrlPaths.enrolledPTNoSAOnAnyAccountPath
+          )
+        }
+      }
+
+      s"not enrol for PT and redirect to ${UrlPaths.enrolledPTNoSAOnAnyAccountPath}" when {
+        "the user has already been assigned the PT enrolment" in new TestHelper {
+          mockAuthCallWithPT()
+          mockAccountCheckSuccess(MULTIPLE_ACCOUNTS)
+          mockAccountShouldNotBeThrottled(MULTIPLE_ACCOUNTS, NINO, ptEnrolmentOnly.enrolments)
+
+          val result = controller
+            .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
+            .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+
+          status(result) shouldBe SEE_OTHER
+          redirectLocation(result) shouldBe Some(
+            UrlPaths.enrolledPTNoSAOnAnyAccountPath
+          )
+        }
       }
     }
 
     "multiple credential exists for a given nino and current credential has SA enrolment" should {
-      s"redirect to ${UrlPaths.enrolledPTWithSAAccountPath}" in new TestHelper {
-        mockAuthCallWithSA()
-        mockAccountCheckSuccess(SA_ASSIGNED_TO_CURRENT_USER)
-        mockSilentEnrolSuccess
-        mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_CURRENT_USER, NINO, saEnrolmentOnly.enrolments)
-        mockAuditPTEnrolled(SA_ASSIGNED_TO_CURRENT_USER, requestWithUserDetails(userDetailsWithSAEnrolment))
+      s"enrol for PT and redirect to ${UrlPaths.enrolledPTWithSAAccountPath}" when {
+        "the current user hasn't already been assigned a PT enrolment" in new TestHelper {
+          mockAuthCallWithSA()
+          mockAccountCheckSuccess(SA_ASSIGNED_TO_CURRENT_USER)
+          mockSilentEnrolSuccess
+          mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_CURRENT_USER, NINO, saEnrolmentOnly.enrolments)
+          mockAuditPTEnrolled(SA_ASSIGNED_TO_CURRENT_USER, requestWithUserDetails(userDetailsWithSAEnrolment))
 
-        val result = controller
-          .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
-          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+          val result = controller
+            .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
+            .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(result) shouldBe SEE_OTHER
-        redirectLocation(result) shouldBe Some(
-          UrlPaths.enrolledPTWithSAAccountPath
-        )
+          status(result) shouldBe SEE_OTHER
+          redirectLocation(result) shouldBe Some(
+            UrlPaths.enrolledPTWithSAAccountPath
+          )
+        }
+      }
+
+      s"not enrol for PT and redirect to ${UrlPaths.enrolledPTWithSAAccountPath}" when {
+        "the current user has already been assigned a PT enrolment" in new TestHelper {
+          mockAuthCallWithPT(true)
+          mockAccountCheckSuccess(SA_ASSIGNED_TO_CURRENT_USER)
+          mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_CURRENT_USER, NINO, saAndptEnrolments.enrolments)
+
+          val result = controller
+            .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
+            .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+
+          status(result) shouldBe SEE_OTHER
+          redirectLocation(result) shouldBe Some(
+            UrlPaths.enrolledPTWithSAAccountPath
+          )
+        }
       }
     }
 
     "multiple credential exists for a given nino and a non signed in account has SA enrolment" should {
-      s"redirect ${UrlPaths.saOnOtherAccountInterruptPath}" in new TestHelper {
-        mockAuthCall()
-        mockAccountCheckSuccess(SA_ASSIGNED_TO_OTHER_USER)
-        mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
+      s"redirect ${UrlPaths.saOnOtherAccountInterruptPath}" when {
+        "the PT enrolment has not already been assigned" in new TestHelper {
+          mockAuthCall()
+          mockAccountCheckSuccess(SA_ASSIGNED_TO_OTHER_USER)
+          mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
 
+          val result = controller
+            .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
+            .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        val result = controller
-          .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
-          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+          status(result) shouldBe SEE_OTHER
+          redirectLocation(result) shouldBe Some(
+            UrlPaths.saOnOtherAccountInterruptPath
+          )
+        }
+      }
 
-        status(result) shouldBe SEE_OTHER
-        redirectLocation(result) shouldBe Some(
-          UrlPaths.saOnOtherAccountInterruptPath
-        )
+      s"redirect ${UrlPaths.enrolledPTSAOnOtherAccountPath}" when {
+        "the PT enrolment has not already been assigned" in new TestHelper {
+          mockAuthCallWithPT()
+          mockAccountCheckSuccess(SA_ASSIGNED_TO_OTHER_USER)
+          mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, ptEnrolmentOnly.enrolments)
+
+          val result = controller
+            .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
+            .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+
+          status(result) shouldBe SEE_OTHER
+          redirectLocation(result) shouldBe Some(
+            UrlPaths.enrolledPTSAOnOtherAccountPath
+          )
+        }
       }
     }
 
@@ -196,7 +269,6 @@ class AccountCheckControllerSpec extends TestFixture {
           testOnly.routes.TestOnlyController.successfulCall.url
         )
       }
-
     }
     "throttle returns error" should {
       s"return $INTERNAL_SERVER_ERROR" in new TestHelper {
@@ -241,6 +313,22 @@ class AccountCheckControllerSpec extends TestFixture {
         )(_: HeaderCarrier, _: ExecutionContext))
         .expects(predicates, retrievals, *, *)
         .returning(Future.successful(retrievalResponse(enrolments = saEnrolmentOnly)))
+
+
+    def mockAuthCallWithPT(hasSA: Boolean = false) = {
+      val enrolments = if(hasSA) saAndptEnrolments else ptEnrolmentOnly
+      (mockAuthConnector
+        .authorise(
+          _: Predicate,
+          _: Retrieval[
+            ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+              String
+            ] ~ Option[AffinityGroup]
+          ]
+        )(_: HeaderCarrier, _: ExecutionContext))
+        .expects(predicates, retrievals, *, *)
+        .returning(Future.successful(retrievalResponse(enrolments = enrolments)))
+    }
 
     def mockGetAccountTypeFailure(error: TaxEnrolmentAssignmentErrors) = {
       (mockAccountCheckOrchestrator

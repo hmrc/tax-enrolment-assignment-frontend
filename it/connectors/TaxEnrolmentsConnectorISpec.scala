@@ -29,91 +29,6 @@ class TaxEnrolmentsConnectorISpec extends IntegrationSpecBase {
   lazy val connector: TaxEnrolmentsConnector =
     app.injector.instanceOf[TaxEnrolmentsConnector]
 
-  "assignPTEnrolment" when {
-    val ENROLMENT_KEY = s"HMRC-PT~NINO~$NINO"
-    val PATH =
-      s"/tax-enrolments/groups/$GROUP_ID/enrolments/$ENROLMENT_KEY"
-    s"the user is assigned the enrolment" should {
-      "return Unit" in {
-        stubPostWithAuthorizeHeaders(
-          PATH,
-          AUTHORIZE_HEADER_VALUE,
-          Status.CREATED
-        )
-        stubPost(s"/write/.*", OK, """{"x":2}""")
-        whenReady(
-          connector.assignPTEnrolment(GROUP_ID, CREDENTIAL_ID, NINO).value
-        ) { response =>
-          response shouldBe Right((): Unit)
-        }
-      }
-    }
-
-    s"the user is not authorized" should {
-      "return an UnexpectedResponseFromTaxEnrolments" in {
-        stubPostWithAuthorizeHeaders(
-          PATH,
-          AUTHORIZE_HEADER_VALUE,
-          Status.UNAUTHORIZED
-        )
-        stubPost(s"/write/.*", OK, """{"x":2}""")
-        whenReady(
-          connector.assignPTEnrolment(GROUP_ID, CREDENTIAL_ID, NINO).value
-        ) { response =>
-          response shouldBe Left(UnexpectedResponseFromTaxEnrolments)
-        }
-      }
-    }
-
-    "a BAD_REQUEST is returned" should {
-      "return an UnexpectedResponseFromTaxEnrolments error" in {
-        stubPostWithAuthorizeHeaders(
-          PATH,
-          AUTHORIZE_HEADER_VALUE,
-          Status.BAD_REQUEST
-        )
-        stubPost(s"/write/.*", OK, """{"x":2}""")
-        whenReady(
-          connector.assignPTEnrolment(GROUP_ID, CREDENTIAL_ID, NINO).value
-        ) { response =>
-          response shouldBe Left(UnexpectedResponseFromTaxEnrolments)
-        }
-      }
-    }
-
-    "a NOT_FOUND is returned" should {
-      "return an UnexpectedResponseFromTaxEnrolments error" in {
-        stubPostWithAuthorizeHeaders(
-          PATH,
-          AUTHORIZE_HEADER_VALUE,
-          Status.NOT_FOUND
-        )
-        stubPost(s"/write/.*", OK, """{"x":2}""")
-        whenReady(
-          connector.assignPTEnrolment(GROUP_ID, CREDENTIAL_ID, NINO).value
-        ) { response =>
-          response shouldBe Left(UnexpectedResponseFromTaxEnrolments)
-        }
-      }
-    }
-
-    "a INTERNAL_SERVER_ERROR is returned" should {
-      "return an UnexpectedResponseFromTaxEnrolments error" in {
-        stubPostWithAuthorizeHeaders(
-          PATH,
-          AUTHORIZE_HEADER_VALUE,
-          Status.INTERNAL_SERVER_ERROR
-        )
-        stubPost(s"/write/.*", OK, """{"x":2}""")
-        whenReady(
-          connector.assignPTEnrolment(GROUP_ID, CREDENTIAL_ID, NINO).value
-        ) { response =>
-          response shouldBe Left(UnexpectedResponseFromTaxEnrolments)
-        }
-      }
-    }
-  }
-
   "assignPTEnrolmentWithKnownFacts" when {
 
     val PATH = s"/tax-enrolments/service/HMRC-PT/enrolment"
@@ -124,6 +39,21 @@ class TaxEnrolmentsConnectorISpec extends IntegrationSpecBase {
           PATH,
           AUTHORIZE_HEADER_VALUE,
           Status.NO_CONTENT
+        )
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        whenReady(connector.assignPTEnrolmentWithKnownFacts(NINO).value) {
+          response =>
+            response shouldBe Right((): Unit)
+        }
+      }
+    }
+
+    s"the user has already been assigned the enrolment" should {
+      "return Unit" in {
+        stubPutWithAuthorizeHeaders(
+          PATH,
+          AUTHORIZE_HEADER_VALUE,
+          Status.CONFLICT
         )
         stubPost(s"/write/.*", OK, """{"x":2}""")
         whenReady(connector.assignPTEnrolmentWithKnownFacts(NINO).value) {

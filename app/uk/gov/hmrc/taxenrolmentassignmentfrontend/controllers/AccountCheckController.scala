@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
+import cats.data.EitherT
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.http.ContentTypeOf.contentTypeOf_Html
@@ -24,10 +25,12 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.controller.WithDefaultFormBinding
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AuthAction, RequestWithUserDetailsFromSession, ThrottleAction}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.AccountCheckOrchestrator
@@ -49,8 +52,7 @@ class AccountCheckController @Inject()(
                                         mcc: MessagesControllerComponents,
                                         sessionCache: TEASessionCache,
                                         val logger: EventLoggerService,
-                                        errorHandler: ErrorHandler,
-                                        errorView: ErrorTemplate
+                                        errorHandler: ErrorHandler
 )(implicit ec: ExecutionContext)
     extends FrontendController(mcc)
     with I18nSupport
@@ -60,78 +62,66 @@ class AccountCheckController @Inject()(
 
   def accountCheck(redirectUrl: String): Action[AnyContent] = authAction.async {
     implicit request =>
-      sessionCache.save[String](REDIRECT_URL, redirectUrl)(request, implicitly).flatMap { _ =>
-        accountCheckOrchestrator.getAccountType.value.flatMap {
-          case Right(anyAccountType) => throttleAction.throttle(anyAccountType, redirectUrl).flatMap {
-            case Some(redirectResult) => Future.successful(redirectResult)
-            case _ => handleNoneThrottledUsers(anyAccountType, redirectUrl)
-          }
-          case Left(error) =>
-            Future.successful(
-              errorHandler.handleErrors(error, "[AccountCheckController][accountCheck]")
-            )
-        }
+      handleRequest(redirectUrl).value.map {
+        case Right((_, Some(redirectResult))) => redirectResult
+        case Right((accountType, _)) => handleNoneThrottledUsers(accountType, redirectUrl)
+        case Left(error) =>
+          errorHandler.handleErrors(error, "[AccountCheckController][accountCheck]")
       }
+  }
+
+  private def handleRequest(redirectUrl: String)(implicit request: RequestWithUserDetailsFromSession[_],
+  hc: HeaderCarrier): TEAFResult[(AccountTypes.Value, Option[Result])] = {
+    for {
+      _ <- EitherT.right[TaxEnrolmentAssignmentErrors](sessionCache.save[String](REDIRECT_URL, redirectUrl)(request, implicitly))
+      accountType <- accountCheckOrchestrator.getAccountType
+      throttle <- EitherT.right[TaxEnrolmentAssignmentErrors](throttleAction.throttle(accountType, redirectUrl))
+      _ <- enrolForPTIfRequired(accountType, throttle.isEmpty)
+    } yield (accountType, throttle)
   }
 
   private def handleNoneThrottledUsers(accountType: AccountTypes.Value, redirectUrl: String)
                                       (implicit request: RequestWithUserDetailsFromSession[_],
-                                       hc: HeaderCarrier): Future[Result] = {
+                                       hc: HeaderCarrier): Result = {
     accountType match {
-      case PT_ASSIGNED_TO_CURRENT_USER =>
-        logger.logEvent(
-          logRedirectingToReturnUrl(
-            request.userDetails.credId,
-            "[AccountCheckController][accountCheck]"
-          )
+      case PT_ASSIGNED_TO_OTHER_USER => Redirect(routes.PTEnrolmentOnOtherAccountController.view)
+      case SA_ASSIGNED_TO_OTHER_USER if request.userDetails.hasPTEnrolment => Redirect(routes.EnrolledPTWithSAOnOtherAccountController.view)
+      case SA_ASSIGNED_TO_OTHER_USER => Redirect(routes.SABlueInterruptController.view)
+      case MULTIPLE_ACCOUNTS => Redirect(routes.EnrolledForPTController.view)
+      case SA_ASSIGNED_TO_CURRENT_USER => Redirect(routes.EnrolledForPTWithSAController.view)
+      case _ => logger.logEvent(
+        logRedirectingToReturnUrl(
+          request.userDetails.credId,
+          "[AccountCheckController][accountCheck]"
         )
-        Future.successful(Redirect(redirectUrl))
-      case PT_ASSIGNED_TO_OTHER_USER =>
-        Future.successful(
-          Redirect(routes.PTEnrolmentOnOtherAccountController.view)
-        )
-      case SA_ASSIGNED_TO_OTHER_USER if request.userDetails.hasPTEnrolment =>
-        Future.successful(Redirect(routes.EnrolledPTWithSAOnOtherAccountController.view))
-      case SA_ASSIGNED_TO_OTHER_USER =>
-        Future.successful(Redirect(routes.SABlueInterruptController.view))
-      case accountType => silentEnrolmentAndRedirect(accountType, redirectUrl)
+      )
+        Redirect(redirectUrl)
     }
   }
 
-      private def silentEnrolmentAndRedirect(accountType: AccountTypes.Value, usersRedirectUrl: String)(
-        implicit request: RequestWithUserDetailsFromSession[_],
-        hc: HeaderCarrier
-      ): Future[Result] = {
-        silentAssignmentService.enrolUser().isRight map {
-          case true =>
-            auditHandler.audit(AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(accountType))
-            if (accountType == SINGLE_ACCOUNT) {
-              logger.logEvent(
-                logSingleAccountHolderAssignedEnrolment(request.userDetails.credId)
-              )
-              logger.logEvent(
-                logRedirectingToReturnUrl(request.userDetails.credId,"[AccountCheckController][accountCheck]"
-              )
-            )
-              Redirect(usersRedirectUrl)
+  private def enrolForPTIfRequired(accountType: AccountTypes.Value, isThrottled: Boolean)(
+    implicit request: RequestWithUserDetailsFromSession[_],
+    hc: HeaderCarrier
+  ): TEAFResult[Unit] = {
+    val accountTypesToEnrolForPT = List(SINGLE_ACCOUNT, MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER)
+    val hasPTEnrolmentAlready = request.userDetails.hasPTEnrolment
 
-            }
-            else if (accountType == SA_ASSIGNED_TO_CURRENT_USER) {
-            logger.logEvent(
-              logMultipleAccountHolderAssignedEnrolment(request.userDetails.credId)
-            )
-            Redirect(routes.EnrolledForPTWithSAController.view)
-            }
-            else {
-              logger.logEvent(
-                logMultipleAccountHolderAssignedEnrolment(request.userDetails.credId)
-              )
-              Redirect(routes.EnrolledForPTController.view)
-        }
-          case false =>
-            InternalServerError(errorView())
+    if (isThrottled && !hasPTEnrolmentAlready && accountTypesToEnrolForPT.contains(accountType)) {
+      silentAssignmentService.enrolUser().map {_ =>
+        auditHandler.audit(AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(accountType))
+        if (accountType == SINGLE_ACCOUNT) {
+          logger.logEvent(
+            logSingleAccountHolderAssignedEnrolment(request.userDetails.credId)
+          )
+        } else {
+          logger.logEvent(
+            logMultipleAccountHolderAssignedEnrolment(request.userDetails.credId)
+          )
         }
       }
-
+    } else {
+      EitherT.right(Future.successful((): Unit))
+    }
+  }
 }
 

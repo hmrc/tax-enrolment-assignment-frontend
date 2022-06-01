@@ -21,17 +21,14 @@ import helpers.TestITData._
 import helpers.WiremockHelper._
 import helpers.messages._
 import play.api.http.Status
-import play.api.libs.json.{JsString, Json}
+import play.api.libs.json.Json
 import play.api.libs.ws.DefaultWSCookie
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.hmrcPTKey
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.formats.EnrolmentsFormats
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_ASSIGNED_PT_ENROLMENT, USER_ASSIGNED_SA_ENROLMENT}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{ThrottleApplied, ThrottleDoesNotApply}
 
 class AccountCheckControllerISpec extends TestHelper with Status {
@@ -600,80 +597,62 @@ class AccountCheckControllerISpec extends TestHelper with Status {
           }
         }
       }
+    }
 
-      s"redirect to ${UrlPaths.enrolledPTSAOnOtherAccountPath}" when {
-        s"the user has accountType $SA_ASSIGNED_TO_OTHER_USER in cache and has ptEnrolment in session" in {
-          await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
-          await(
-            save[AccountTypes.Value](
-              sessionId,
-              "ACCOUNT_TYPE",
-              SA_ASSIGNED_TO_OTHER_USER
-            )
-          )
-          val authResponse = authoriseResponseJson(enrolments = ptEnrolmentOnly)
-          stubAuthorizePost(OK, authResponse.toString())
-          stubPost(s"/write/.*", OK, """{"x":2}""")
+    s"$ThrottleDoesNotApply and user has already been through account check and enrolled for PT" should {
+      val accountTypeWithExpectedRedirectUrl = Map(
+        SINGLE_ACCOUNT -> UrlPaths.returnUrl,
+        MULTIPLE_ACCOUNTS -> UrlPaths.enrolledPTNoSAOnAnyAccountPath,
+        SA_ASSIGNED_TO_CURRENT_USER -> UrlPaths.enrolledPTWithSAOnAnyAccountPath,
+        PT_ASSIGNED_TO_CURRENT_USER -> UrlPaths.returnUrl,
+        SA_ASSIGNED_TO_OTHER_USER -> UrlPaths.enrolledPTSAOnOtherAccountPath,
+        PT_ASSIGNED_TO_OTHER_USER -> UrlPaths.ptOnOtherAccountPath
+      )
+      val accountTypesThatSilentlyEnrol = List(SINGLE_ACCOUNT, MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER)
 
-          val res = buildRequest(urlPath, followRedirects = false)
-            .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-            .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
-            .get()
+      accountTypeWithExpectedRedirectUrl.foreach { case ((accountType, redirectUrl)) =>
+        if (accountTypesThatSilentlyEnrol.contains(accountType)) {
+          s"not enrol for PT and redirect to $redirectUrl" when {
+            s"the session cache has accountType $accountType" in {
+              await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
+              await(save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", accountType))
+              stubAuthorizePost(OK, authoriseResponseWithPTEnrolment().toString())
+              stubPost(s"/write/.*", OK, """{"x":2}""")
 
-          whenReady(res) { resp =>
-            resp.status shouldBe SEE_OTHER
-            resp.header("Location").get should include(
-              UrlPaths.enrolledPTSAOnOtherAccountPath
-            )
+              val res = buildRequest(urlPath, followRedirects = false)
+                .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+                .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
+                .get()
+
+              whenReady(res) { resp =>
+                resp.status shouldBe SEE_OTHER
+                resp.header("Location").get should include(
+                  redirectUrl
+                )
+              }
+            }
           }
-        }
-      }
-    }
+        } else {
+          s"redirect to $redirectUrl" when {
+            s"the session cache has accountType $accountType" in {
+              await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
+              await(save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", accountType))
+              stubAuthorizePost(OK, authoriseResponseWithPTEnrolment().toString())
+              stubPost(s"/write/.*", OK, """{"x":2}""")
 
-    "an authorised user with no credential uses the service" should {
-      s"render the error page" in {
-        val authResponse = authoriseResponseJson()
-        stubAuthorizePost(OK, authResponse.toString())
-        stubPost(s"/write/.*", OK, """{"x":2}""")
-        stubGetWithQueryParam(
-          "/identity-verification/nino",
-          "nino",
-          NINO,
-          Status.NOT_FOUND,
-          ""
-        )
-        val res = buildRequest(urlPath, followRedirects = true)
-          .addCookies(DefaultWSCookie("mdtp", authCookie))
-          .addHttpHeaders(xSessionId, csrfContent)
-          .get()
+              val res = buildRequest(urlPath, followRedirects = false)
+                .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+                .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
+                .get()
 
-        whenReady(res) { resp =>
-          resp.status shouldBe INTERNAL_SERVER_ERROR
-          resp.body should include(ErrorTemplateMessages.title)
-        }
-      }
-    }
-
-    "an authorised user but IV returns internal error" should {
-      s"render the error page" in {
-        val authResponse = authoriseResponseJson()
-        stubAuthorizePost(OK, authResponse.toString())
-        stubPost(s"/write/.*", OK, """{"x":2}""")
-        stubGetWithQueryParam(
-          "/identity-verification/nino",
-          "nino",
-          NINO,
-          Status.INTERNAL_SERVER_ERROR,
-          ""
-        )
-        val res = buildRequest(urlPath, followRedirects = true)
-          .addCookies(DefaultWSCookie("mdtp", authCookie))
-          .addHttpHeaders(xSessionId, csrfContent)
-          .get()
-
-        whenReady(res) { resp =>
-          resp.status shouldBe INTERNAL_SERVER_ERROR
-          resp.body should include(ErrorTemplateMessages.title)
+              whenReady(res) { resp =>
+                resp.status shouldBe SEE_OTHER
+                resp.header("Location").get should include(
+                  redirectUrl
+                )
+              }
+            }
+          }
         }
       }
     }

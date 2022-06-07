@@ -114,7 +114,7 @@ class SignInAgainPageControllerSpec extends TestFixture with ThrottleHelperSpec 
               _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
             ))
             .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
-            .returning(Left(UnexpectedPTEnrolment))
+            .returning(Left(UnexpectedPTEnrolment(SA_ASSIGNED_TO_OTHER_USER)))
 
           mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
           mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, ptEnrolmentOnly.enrolments)

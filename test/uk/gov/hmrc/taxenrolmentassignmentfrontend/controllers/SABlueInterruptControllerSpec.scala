@@ -113,7 +113,7 @@ class SABlueInterruptControllerSpec extends TestFixture with ThrottleHelperSpec 
               _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
             ))
             .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
-            .returning(Left(UnexpectedPTEnrolment))
+            .returning(Left(UnexpectedPTEnrolment(SA_ASSIGNED_TO_OTHER_USER)))
           mockGetDataFromCacheForActionSuccess(randomAccountType)
           mockAccountShouldNotBeThrottled(randomAccountType, NINO, ptEnrolmentOnly.enrolments)
 

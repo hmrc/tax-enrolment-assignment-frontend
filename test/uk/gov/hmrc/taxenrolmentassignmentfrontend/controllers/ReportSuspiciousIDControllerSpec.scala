@@ -472,7 +472,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
             _: ExecutionContext
           ))
           .expects(SA_ASSIGNED_TO_OTHER_USER, *, *, *)
-          .returning(createInboundResultError(UnexpectedPTEnrolment))
+          .returning(createInboundResultError(UnexpectedPTEnrolment(SA_ASSIGNED_TO_OTHER_USER)))
         mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData)
         mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, ptEnrolmentOnly.enrolments)
 

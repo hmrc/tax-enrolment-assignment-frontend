@@ -34,4 +34,4 @@ object UnexpectedResponseAssigningTemporaryPTAEnrolment extends TaxEnrolmentAssi
 case class CacheNotCompleteOrNotCorrect(redirectUrl: Option[String],
                                         accountType: Option[AccountTypes.Value]) extends TaxEnrolmentAssignmentErrors
 case class IncorrectUserType(redirectUrl: String, accountType: AccountTypes.Value) extends TaxEnrolmentAssignmentErrors
-object UnexpectedPTEnrolment extends TaxEnrolmentAssignmentErrors
+case class UnexpectedPTEnrolment(accountTypes: AccountTypes.Value) extends TaxEnrolmentAssignmentErrors

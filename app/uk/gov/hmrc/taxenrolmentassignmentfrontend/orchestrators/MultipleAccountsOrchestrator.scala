@@ -211,7 +211,7 @@ class MultipleAccountsOrchestrator @Inject()(
     val hasPTEnrolment = requestWithUserDetailsAndMongo.userDetails.hasPTEnrolment
 
     if(hasPTEnrolment) {
-      Left(UnexpectedPTEnrolment)
+      Left(UnexpectedPTEnrolment(requestWithUserDetailsAndMongo.accountDetailsFromMongo.accountType))
     } else {
       Right((): Unit)
     }

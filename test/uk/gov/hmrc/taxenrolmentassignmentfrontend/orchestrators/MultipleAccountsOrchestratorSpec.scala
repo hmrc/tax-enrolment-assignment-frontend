@@ -149,7 +149,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
             _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
           ))
           .expects(CREDENTIAL_ID_1, *, *, *)
-          .returning(createInboundResult(accountDetailsWithPT.copy(userId = CREDENTIAL_ID_1,hasSA = None)))
+          .returning(createInboundResult(accountDetailsWithPT.copy(hasSA = None)))
 
         (mockEacdService
           .getUsersAssignedSAEnrolment(
@@ -167,7 +167,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
               additionalCacheData = additionalCacheData),
             implicitly, implicitly)
         whenReady(res.value) { result =>
-          result shouldBe Right(ptEnrolmentDataModel(None,accountDetailsWithPT.copy(userId = CREDENTIAL_ID_1,hasSA = None)))
+          result shouldBe Right(ptEnrolmentDataModel(None,accountDetailsWithPT.copy(hasSA = None)))
         }
       }
     }
@@ -201,16 +201,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
             _: ExecutionContext
           ))
           .expects( *, *, *)
-          .returning(createInboundResult(UsersAssignedEnrolment(Some(USER_ID))))
-
-        (mockUsersGroupService
-          .getAccountDetails(_: String)(
-            _: ExecutionContext,
-            _: HeaderCarrier,
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
-          ))
-          .expects(USER_ID, *, *, *)
-          .returning(createInboundResult(accountDetails.copy(hasSA = Some(true))))
+          .returning(createInboundResult(UsersAssignedEnrolment(Some(CREDENTIAL_ID))))
 
         val res = orchestrator.getCurrentAndPTAAndSAIfExistsForUser(
           requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData),
@@ -250,16 +241,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
             _: ExecutionContext
           ))
           .expects( *, *, *)
-          .returning(createInboundResult(UsersAssignedEnrolment(Some(PT_USER_ID))))
-
-        (mockUsersGroupService
-          .getAccountDetails(_: String)(
-            _: ExecutionContext,
-            _: HeaderCarrier,
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
-          ))
-          .expects(PT_USER_ID, *, *, *)
-          .returning(createInboundResult(accountDetailsWithPT))
+          .returning(createInboundResult(UsersAssignedEnrolment(Some(CREDENTIAL_ID_1))))
 
         val res = orchestrator.getCurrentAndPTAAndSAIfExistsForUser(
           requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData), implicitly, implicitly)
@@ -298,7 +280,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
             _: ExecutionContext
           ))
           .expects( *, *, *)
-          .returning(createInboundResult(UsersAssignedEnrolment(Some(CREDENTIAL_ID_1))))
+          .returning(createInboundResult(UsersAssignedEnrolment(Some(CREDENTIAL_ID_2))))
 
         (mockUsersGroupService
           .getAccountDetails(_: String)(
@@ -306,13 +288,13 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
             _: HeaderCarrier,
             _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
           ))
-          .expects(CREDENTIAL_ID_1, *, *, *)
-          .returning(createInboundResult(accountDetails.copy(userId = CREDENTIAL_ID_1)))
+          .expects(CREDENTIAL_ID_2, *, *, *)
+          .returning(createInboundResult(accountDetails.copy(userId = CREDENTIAL_ID_2)))
 
         val res = orchestrator.getCurrentAndPTAAndSAIfExistsForUser(
           requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData), implicitly, implicitly)
         whenReady(res.value) { result =>
-          result shouldBe Right(ptEnrolmentDataModel(Some(CREDENTIAL_ID_1)))
+          result shouldBe Right(ptEnrolmentDataModel(Some(CREDENTIAL_ID_2)))
         }
       }
     }

@@ -211,7 +211,7 @@ class MultipleAccountsOrchestrator @Inject()(
     val hasPTEnrolment = requestWithUserDetailsAndMongo.userDetails.hasPTEnrolment
 
     if(hasPTEnrolment) {
-      Left(UnexpectedPTEnrolment)
+      Left(UnexpectedPTEnrolment(requestWithUserDetailsAndMongo.accountDetailsFromMongo.accountType))
     } else {
       Right((): Unit)
     }
@@ -225,11 +225,8 @@ class MultipleAccountsOrchestrator @Inject()(
       PTEnrolmentOnOtherAccount(
         model.currentAccountDetails,
         model.ptAccountDetails,
-        if (requestWithUserDetails.userDetails.hasSAEnrolment) {
-          Some(model.currentAccountDetails.userId)
-        } else {
-          model.saAccountDetails.map(_.userId)
-        }
+        model.saAccountDetails.map(_.userId)
+
       )
     }
   }
@@ -243,7 +240,7 @@ class MultipleAccountsOrchestrator @Inject()(
     lazy val optSACredentialId: TEAFResult[Option[String]] =
       (requestWithUserDetails.userDetails.hasSAEnrolment, requestWithUserDetails.accountDetailsFromMongo.optUserAssignedSA) match {
       case (true, _) =>
-        EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(None))
+        EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(Some(requestWithUserDetails.userDetails.credId)))
       case (false, Some(usersAssignedEnrolment)) =>
         EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(usersAssignedEnrolment.enrolledCredential))
       case (false, None) =>
@@ -251,8 +248,12 @@ class MultipleAccountsOrchestrator @Inject()(
           .map(user => user.enrolledCredential)
     }
 
-    def getSAAccountDetails: TEAFResult[Option[AccountDetails]] = {
+    def getSAAccountDetails(currentAccountDetails: AccountDetails, ptAccountDetails: AccountDetails): TEAFResult[Option[AccountDetails]] = {
       optSACredentialId.flatMap {
+        case Some(credId) if credId == currentAccountDetails.credId =>
+          EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(Some(currentAccountDetails)))
+        case Some(credId) if credId == ptAccountDetails.credId =>
+          EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(Some(ptAccountDetails)))
         case Some(credId) =>
           usersGroupSearchService.getAccountDetails(credId)(implicitly, implicitly, requestWithUserDetails).map(Some(_))
         case None =>
@@ -265,7 +266,7 @@ class MultipleAccountsOrchestrator @Inject()(
       currentAccountDetails <- usersGroupSearchService.getAccountDetails(requestWithUserDetails.userDetails.credId
       )(implicitly, implicitly, requestWithUserDetails)
       ptAccountDetails <- getPTCredentialDetails
-      saOnOtherAccountDetails <- getSAAccountDetails
+      saOnOtherAccountDetails <- getSAAccountDetails(currentAccountDetails, ptAccountDetails)
     } yield
         CADetailsPTADetailsSADetailsIfExists(
           currentAccountDetails,

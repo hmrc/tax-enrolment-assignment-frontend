@@ -220,7 +220,7 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
             _: ExecutionContext
           ))
           .expects(*, *, *)
-          .returning(createInboundResultError(UnexpectedPTEnrolment))
+          .returning(createInboundResultError(UnexpectedPTEnrolment(SA_ASSIGNED_TO_OTHER_USER)))
         mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
         mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, ptEnrolmentOnly.enrolments)
 
@@ -354,7 +354,7 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
               _: ExecutionContext
             ))
             .expects(KeepAccessToSAThroughPTA(true), *, *, *)
-            .returning(createInboundResultError(UnexpectedPTEnrolment))
+            .returning(createInboundResultError(UnexpectedPTEnrolment(SA_ASSIGNED_TO_OTHER_USER)))
           mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
           mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, ptEnrolmentOnly.enrolments)
 
@@ -482,7 +482,7 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
               _: ExecutionContext
             ))
             .expects(KeepAccessToSAThroughPTA(false), *, *, *)
-            .returning(createInboundResultError(UnexpectedPTEnrolment))
+            .returning(createInboundResultError(UnexpectedPTEnrolment(SA_ASSIGNED_TO_OTHER_USER)))
           mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData)
           mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, ptEnrolmentOnly.enrolments)
 

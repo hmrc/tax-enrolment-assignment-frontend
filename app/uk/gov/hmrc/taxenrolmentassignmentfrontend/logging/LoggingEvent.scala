@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.logging
 
-import play.api.libs.json.{Format, Json}
+import play.api.http.Status.BAD_REQUEST
+import play.api.libs.json.{Format, JsValue, Json}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.{IRSAKey, hmrcPTKey}
@@ -76,6 +77,14 @@ object LoggingEvent {
         details = Some(
           s"User with credential $credentialId chose to sign in again with their $IRSAKey account"
         )
+      )
+    )
+
+  def logBadResponseFromSASetupJourney(body: String, status: Int): LoggingEvent =
+    Error(
+      Event(
+        "SaSetupJourney",
+        details = Some(s"Add taxes frontend returned $status with ${body.toString()} when setting up journey")
       )
     )
     def logUserThrottled(credentialId: String, accountType: AccountTypes.Value): LoggingEvent =

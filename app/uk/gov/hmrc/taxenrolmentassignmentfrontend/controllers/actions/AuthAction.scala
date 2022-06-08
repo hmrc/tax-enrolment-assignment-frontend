@@ -41,7 +41,11 @@ case class UserDetailsFromSession(credId: String,
                                   affinityGroup: AffinityGroup,
                                   enrolments: Enrolments,
                                   hasPTEnrolment: Boolean,
-                                  hasSAEnrolment: Boolean)
+                                  hasSAEnrolment: Boolean) {
+
+  val utr: Option[String] = enrolments.getEnrolment(s"$IRSAKey").flatMap(_.getIdentifier("UTR").map(_.value))
+
+}
 
 case class RequestWithUserDetailsFromSession[A](
   request: Request[A],

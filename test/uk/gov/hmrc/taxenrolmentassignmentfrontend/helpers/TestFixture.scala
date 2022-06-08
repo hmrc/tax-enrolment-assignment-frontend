@@ -39,7 +39,7 @@ import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SINGLE_ACCOUNT
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{EACDConnector, IVConnector, LegacyAuthConnector, TaxEnrolmentsConnector}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{AddTaxesFrontendConnector, EACDConnector, IVConnector, LegacyAuthConnector, TaxEnrolmentsConnector}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{ErrorHandler, SignOutController}
@@ -109,6 +109,7 @@ trait TestFixture
   val mockTaxEnrolmentsConnector: TaxEnrolmentsConnector =
     mock[TaxEnrolmentsConnector]
   val mockEacdConnector: EACDConnector = mock[EACDConnector]
+  val mockAddTaxesFrontendConnector: AddTaxesFrontendConnector = mock[AddTaxesFrontendConnector]
   val mockLegacyAuthConnector = mock[LegacyAuthConnector]
   val mockEacdService: EACDService = mock[EACDService]
   val mockUsersGroupService: UsersGroupsSearchService =

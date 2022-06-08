@@ -52,15 +52,16 @@ object TestData {
   val PT_USER_ID = "2341"
   val NO_EMAIL_USER_ID = "9871"
   val CREDENTIAL_ID_1 = "6102202884164541"
+
   val CREDENTIAL_ID_2 = "6102202884164542"
-  val UTR = "1234567890"
+  val UTR = "123456789"
   val creds = Credentials(CREDENTIAL_ID, GovernmentGateway.toString)
   val noEnrolments = Enrolments(Set.empty[Enrolment])
   val saEnrolmentOnly = Enrolments(
     Set(
       Enrolment(
         "IR-SA",
-        Seq(EnrolmentIdentifier("UTR", "123456789")),
+        Seq(EnrolmentIdentifier("UTR", UTR)),
         "Activated",
         None
       )

@@ -59,8 +59,7 @@ class TestOnlyController @Inject()(mcc: MessagesControllerComponents,
       Ok(Json.toJson(request.userDetails.enrolments.enrolments)(EnrolmentsFormats.writes).toString())
   }
 
-  def getSARedirectUrl(): Action[AnyContent] = Action.async{
-    implicit request =>
-
+  def successfulSACall: Action[AnyContent] = Action.async { implicit request =>
+    Future.successful(Ok("Successful Redirect to SA"))
   }
 }

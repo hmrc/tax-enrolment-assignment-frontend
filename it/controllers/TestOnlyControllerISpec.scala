@@ -85,4 +85,19 @@ class TestOnlyControllerISpec extends IntegrationSpecBase with Status {
     }
   }
 
+  "GET /sa/test-only/start" should {
+    s"return $OK with success message" in {
+      val res = buildTestOnlyRequest("/sa/test-only/start")
+        .addCookies(DefaultWSCookie("mdtp", authCookie))
+        .addHttpHeaders(xSessionId, csrfContent)
+        .withBody(Json.obj())
+        .get()
+
+      whenReady(res) { resp =>
+        resp.status shouldBe OK
+        resp.body shouldBe "Successful Redirect to SA"
+      }
+    }
+  }
+
 }

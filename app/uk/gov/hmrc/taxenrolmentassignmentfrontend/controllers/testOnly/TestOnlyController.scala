@@ -58,4 +58,9 @@ class TestOnlyController @Inject()(mcc: MessagesControllerComponents,
     implicit request =>
       Ok(Json.toJson(request.userDetails.enrolments.enrolments)(EnrolmentsFormats.writes).toString())
   }
+
+  def getSARedirectUrl(): Action[AnyContent] = Action.async{
+    implicit request =>
+
+  }
 }

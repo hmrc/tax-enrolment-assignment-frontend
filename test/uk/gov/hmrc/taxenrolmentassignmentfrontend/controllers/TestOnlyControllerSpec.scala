@@ -89,4 +89,12 @@ class TestOnlyControllerSpec extends TestFixture {
 
     }
   }
+
+  "successfulSACall" should {
+    s"return $OK with success message" in {
+      val res = testOnlyController.successfulSACall()(fakeReq)
+      status(res) shouldBe OK
+      contentAsString(res) shouldBe "Successful Redirect to SA"
+    }
+  }
 }

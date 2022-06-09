@@ -324,7 +324,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(res) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(res) should include("enrolmentError.title")
+        contentAsString(res) should include("enrolmentError.heading")
       }
     }
     "no redirect url in cache" should {
@@ -347,7 +347,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(res) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(res) should include("enrolmentError.title")
+        contentAsString(res) should include("enrolmentError.heading")
       }
     }
   }

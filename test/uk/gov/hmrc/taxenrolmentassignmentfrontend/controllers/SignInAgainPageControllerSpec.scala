@@ -92,7 +92,7 @@ class SignInAgainPageControllerSpec extends TestFixture with ThrottleHelperSpec 
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
           status(result) shouldBe OK
-          contentAsString(result) should include("signInAgain.title")
+          contentAsString(result) should include("signInAgain.heading")
         }
       }
       s"redirect to ${UrlPaths.enrolledPTSAOnOtherAccountPath}" when {
@@ -148,7 +148,7 @@ class SignInAgainPageControllerSpec extends TestFixture with ThrottleHelperSpec 
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(result) should include("enrolmentError.title")
+        contentAsString(result) should include("enrolmentError.heading")
       }
     }
 
@@ -222,7 +222,7 @@ class SignInAgainPageControllerSpec extends TestFixture with ThrottleHelperSpec 
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(res) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(res) should include("enrolmentError.title")
+        contentAsString(res) should include("enrolmentError.heading")
       }
     }
   }
@@ -282,7 +282,7 @@ class SignInAgainPageControllerSpec extends TestFixture with ThrottleHelperSpec 
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(result) should include("enrolmentError.title")
+        contentAsString(result) should include("enrolmentError.h")
     }
     }
 }

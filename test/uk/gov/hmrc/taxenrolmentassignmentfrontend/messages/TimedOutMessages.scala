@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.messages
 
-object TimedOutMessages {
+object TimedOutMessages extends BaseMessage {
 
-  val title = "For your security, we signed you out"
+  val title = "For your security, we signed you out" + defaultTitleSuffix
   val heading = "For your security, we signed you out"
   val button = "Sign in"
 

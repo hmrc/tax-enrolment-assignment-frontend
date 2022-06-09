@@ -94,7 +94,7 @@ class AccountCheckControllerSpec extends TestFixture {
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(result) should include("enrolmentError.title")
+        contentAsString(result) should include("enrolmentError.heading")
       }
     }
 
@@ -250,7 +250,7 @@ class AccountCheckControllerSpec extends TestFixture {
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(res) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(res) should include("enrolmentError.title")
+        contentAsString(res) should include("enrolmentError.heading")
       }
     }
 
@@ -281,7 +281,7 @@ class AccountCheckControllerSpec extends TestFixture {
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(res) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(res) should include("enrolmentError.title")
+        contentAsString(res) should include("enrolmentError.heading")
       }
     }
   }

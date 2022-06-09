@@ -99,7 +99,7 @@ class TimeOutControllerSpec extends TestFixture {
       status(result) shouldBe OK
       val page = Jsoup
         .parse(contentAsString(result))
-      page.title() shouldBe "timedout.title"
+      page.body().text() should include("timedout.heading")
     }
   }
 

@@ -91,7 +91,7 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
         val page = Jsoup
           .parse(contentAsString(result))
 
-        page.title() shouldBe "keepAccessToSA.title"
+        page.getElementsByTag("h1").text() shouldBe "keepAccessToSA.heading"
         val radioInputs = page.getElementsByClass("govuk-radios__input")
         radioInputs.size() shouldBe 2
         radioInputs.get(0).attr("value") shouldBe "yes"
@@ -139,7 +139,7 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
         val page = Jsoup
           .parse(contentAsString(result))
 
-        page.title() shouldBe "keepAccessToSA.title"
+        page.getElementsByTag("h1").text() shouldBe "keepAccessToSA.heading"
         val radioInputs = page.getElementsByClass("govuk-radios__input")
         radioInputs.size() shouldBe 2
         radioInputs.get(0).attr("value") shouldBe "yes"
@@ -187,7 +187,7 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
         val page = Jsoup
           .parse(contentAsString(result))
 
-        page.title() shouldBe "keepAccessToSA.title"
+        page.getElementsByTag("h1").  text() shouldBe "keepAccessToSA.heading"
         val radioInputs = page.getElementsByClass("govuk-radios__input")
         radioInputs.size() shouldBe 2
         radioInputs.get(0).attr("value") shouldBe "yes"
@@ -284,7 +284,7 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(res) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(res) should include("enrolmentError.title")
+        contentAsString(res) should include("enrolmentError.heading")
       }
     }
   }
@@ -575,7 +575,7 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
             )
 
           status(res) shouldBe INTERNAL_SERVER_ERROR
-          contentAsString(res) should include("enrolmentError.title")
+          contentAsString(res) should include("enrolmentError.heading")
         }
       }
     }

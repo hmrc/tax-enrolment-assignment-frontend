@@ -29,7 +29,7 @@ class AuthorisationControllerSpec extends TestFixture {
       val result = controller.notAuthorised()(FakeRequest())
 
       status(result) shouldBe UNAUTHORIZED
-      contentAsString(result) should include("enrolmentError.title")
+      contentAsString(result) should include("enrolmentError.heading")
     }
   }
 

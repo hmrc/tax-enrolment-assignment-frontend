@@ -3,6 +3,7 @@ validation.summary.heading = There is a problem
 common.continue = Continue
 common.endingWith = Ending with {0}
 common.userId = User ID
+common.pageTitle = {0} - {1} - GOV.UK
 mfaDetails.totp = Authenticator app
 mfaDetails.voice = Phone number
 mfaDetails.text = Text message

@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.messages
 
-object KeepAccessToSAMessages {
+object KeepAccessToSAMessages extends BaseMessage {
 
   val continue = "Continue"
   val title =
-    "Do you want to keep access to Self Assessment from your personal tax account?"
+    "Do you want to keep access to Self Assessment from your personal tax account?" + defaultTitleSuffix
   val heading =
     "Do you want to keep access to Self Assessment from your personal tax account?"
   val radioYes = "Yes"

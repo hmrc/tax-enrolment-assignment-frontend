@@ -84,7 +84,6 @@ class SABlueInterruptControllerSpec extends TestFixture with ThrottleHelperSpec 
 
           status(result) shouldBe OK
           val page = Jsoup.parse(contentAsString(result))
-          page.title shouldBe "selfAssessmentInterrupt.title"
           page
             .select("h1")
             .text() shouldBe "selfAssessmentInterrupt.heading"
@@ -146,7 +145,7 @@ class SABlueInterruptControllerSpec extends TestFixture with ThrottleHelperSpec 
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(result) should include("enrolmentError.title")
+        contentAsString(result) should include("enrolmentError.heading")
       }
     }
 
@@ -242,7 +241,7 @@ class SABlueInterruptControllerSpec extends TestFixture with ThrottleHelperSpec 
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(result) should include("enrolmentError.title")
+        contentAsString(result) should include("enrolmentError.heading")
       }
     }
 

@@ -49,7 +49,7 @@
 
 @hmrcLayout(
  additionalHeadBlock = Some(headBlock),
- pageTitle = pageTitle,
+ pageTitle = Some(messages("common.pageTitle", pageTitle.getOrElse(""), messages("service.name"))),
  nonce = CSPNonce.get,
  serviceName = Some(messages("service.name")),
  isWelshTranslationAvailable = appConfig.welshLanguageSupportEnabled,

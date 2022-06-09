@@ -94,7 +94,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture with Thro
         val content = Jsoup
           .parse(contentAsString(result))
 
-        content.title() shouldBe "enrolledForPTWithSAOnOtherAccount.title"
+        content.body().text() should include("enrolledForPTWithSAOnOtherAccount.heading")
         content.body().text() shouldNot include(
           "enrolledForPTWithSAOnOtherAccount.h2.paragraph1"
         )
@@ -147,7 +147,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture with Thro
         val content = Jsoup
           .parse(contentAsString(result))
 
-        content.title() shouldBe "enrolledForPTWithSAOnOtherAccount.title"
+        content.body().text() should include("enrolledForPTWithSAOnOtherAccount.heading")
         content.body().text() should include(
           "enrolledForPTWithSAOnOtherAccount.h2.paragraph1"
         )
@@ -210,7 +210,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture with Thro
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(res) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(res) should include("enrolmentError.title")
+        contentAsString(res) should include("enrolmentError.heading")
       }
     }
 
@@ -243,7 +243,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture with Thro
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(res) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(res) should include("enrolmentError.title")
+        contentAsString(res) should include("enrolmentError.heading")
       }
     }
   }

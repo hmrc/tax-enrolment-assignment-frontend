@@ -121,7 +121,7 @@ class AccountMongoDetailsActionSpec extends TestFixture {
           function
         )
         status(res) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(res) should include("enrolmentError.title")
+        contentAsString(res) should include("enrolmentError.heading")
       }
       "the session cache contains the account type but not the redirect url" in {
         val exampleMongoSessionData = Map(ACCOUNT_TYPE -> Json.toJson(PT_ASSIGNED_TO_CURRENT_USER))
@@ -159,7 +159,7 @@ class AccountMongoDetailsActionSpec extends TestFixture {
           function
         )
         status(res) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(res) should include("enrolmentError.title")
+        contentAsString(res) should include("enrolmentError.heading")
       }
     }
 
@@ -196,7 +196,7 @@ class AccountMongoDetailsActionSpec extends TestFixture {
         function
       )
       status(res) shouldBe INTERNAL_SERVER_ERROR
-      contentAsString(res) should include("enrolmentError.title")
+      contentAsString(res) should include("enrolmentError.heading")
     }
 
     "when reading from cache returns an exception" in {
@@ -232,7 +232,7 @@ class AccountMongoDetailsActionSpec extends TestFixture {
         function
       )
       status(res) shouldBe INTERNAL_SERVER_ERROR
-      contentAsString(res) should include("enrolmentError.title")
+      contentAsString(res) should include("enrolmentError.heading")
 
     }
   }

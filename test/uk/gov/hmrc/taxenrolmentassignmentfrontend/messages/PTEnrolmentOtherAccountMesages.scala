@@ -17,10 +17,10 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.messages
 
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-object PTEnrolmentOtherAccountMesages {
+object PTEnrolmentOtherAccountMesages extends BaseMessage {
 
   val title =
-    "We have found your personal tax account under a different Government Gateway user ID"
+    "We have found your personal tax account under a different Government Gateway user ID" + defaultTitleSuffix
   val heading =
     "We have found your personal tax account under a different Government Gateway user ID"
   val text1 =

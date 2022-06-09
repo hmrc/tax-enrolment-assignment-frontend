@@ -84,7 +84,7 @@ class EnrolledForPTControllerSpec extends TestFixture with ThrottleHelperSpec {
         status(result) shouldBe OK
         Jsoup
           .parse(contentAsString(result))
-          .title() shouldBe "enrolledForPT.title"
+          .body().text() should include("enrolledForPT.heading")
       }
     }
 
@@ -151,7 +151,7 @@ class EnrolledForPTControllerSpec extends TestFixture with ThrottleHelperSpec {
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(res) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(res) should include("enrolmentError.title")
+        contentAsString(res) should include("enrolmentError.heading")
       }
     }
 
@@ -189,7 +189,7 @@ class EnrolledForPTControllerSpec extends TestFixture with ThrottleHelperSpec {
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(res) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(res) should include("enrolmentError.title")
+        contentAsString(res) should include("enrolmentError.heading")
       }
     }
   }

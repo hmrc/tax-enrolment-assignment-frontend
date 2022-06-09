@@ -105,7 +105,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe OK
-        contentAsString(result) should include("ReportSuspiciousID.title")
+        contentAsString(result) should include("ReportSuspiciousID.heading")
       }
     }
 
@@ -183,7 +183,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(res) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(res) should include("enrolmentError.title")
+        contentAsString(res) should include("enrolmentError.heading")
       }
     }
 
@@ -240,7 +240,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
           status(result) shouldBe OK
-          contentAsString(result) should include("ReportSuspiciousID.title")
+          contentAsString(result) should include("ReportSuspiciousID.heading")
         }
 
         "the user has already been assigned a PT enrolment" in {
@@ -279,7 +279,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
           status(result) shouldBe OK
-          contentAsString(result) should include("ReportSuspiciousID.title")
+          contentAsString(result) should include("ReportSuspiciousID.heading")
         }
       }
     }
@@ -303,7 +303,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(res) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(res) should include("enrolmentError.title")
+        contentAsString(res) should include("enrolmentError.heading")
       }
     }
 
@@ -378,7 +378,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(res) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(res) should include("enrolmentError.title")
+        contentAsString(res) should include("enrolmentError.heading")
       }
     }
   }
@@ -507,7 +507,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(res) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(res) should include("enrolmentError.title")
+        contentAsString(res) should include("enrolmentError.heading")
       }
     }
 
@@ -596,7 +596,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
           .apply(buildFakeRequestWithSessionId("POST", "Not Used"))
 
         status(res) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(res) should include("enrolmentError.title")
+        contentAsString(res) should include("enrolmentError.heading")
       }
     }
   }

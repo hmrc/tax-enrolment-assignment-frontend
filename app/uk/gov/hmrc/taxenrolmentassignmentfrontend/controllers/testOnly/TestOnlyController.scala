@@ -18,12 +18,13 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
 
 import play.api.Logger
 import play.api.libs.json.Json
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import play.api.mvc.{Action, AnyContent, BodyParsers, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthAction
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.formats.EnrolmentsFormats
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.setupSAJourney.SASetupJourneyResponse
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
@@ -59,7 +60,11 @@ class TestOnlyController @Inject()(mcc: MessagesControllerComponents,
       Ok(Json.toJson(request.userDetails.enrolments.enrolments)(EnrolmentsFormats.writes).toString())
   }
 
-  def successfulSACall: Action[AnyContent] = Action.async { implicit request =>
+  val successfulSACall: Action[AnyContent] = Action.async { implicit request =>
     Future.successful(Ok("Successful Redirect to SA"))
+  }
+
+  val addTaxesFrontendStub: Action[AnyContent] = Action { implicit request =>
+    Ok(Json.toJson(SASetupJourneyResponse(routes.TestOnlyController.successfulCall.url)))
   }
 }

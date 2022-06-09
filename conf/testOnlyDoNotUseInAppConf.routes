@@ -14,5 +14,6 @@
 
 GET        /protect-tax-info/test-only/successful                                                             uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController.successfulCall
 GET        /users-groups-search/test-only/users/:credId                                                       uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController.usersGroupSearchCall(credId)
-GET        /protect-tax-info/test-only/auth/enrolments                                                                                   uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController.enrolmentsFromAuth()
-GET        /sa/test-only/start                                                             uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController.successfulSACall
+GET        /protect-tax-info/test-only/auth/enrolments                                                        uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController.enrolmentsFromAuth()
+GET        /sa/test-only/start                                                                                uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController.successfulSACall
+POST       /add-taxes-frontend/test-only/self-assessment/enrol-for-sa                                         uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController.addTaxesFrontendStub

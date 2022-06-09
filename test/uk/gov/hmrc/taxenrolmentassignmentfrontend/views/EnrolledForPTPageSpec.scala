@@ -48,7 +48,7 @@ class EnrolledForPTPageSpec extends ViewSpecHelper {
       "contain the correct title" in {
         documentWithSA.title shouldBe EnrolledForPTPageMessages.title
       }
-      "contain the correct header" in {
+      "contain the correct first header" in {
         documentWithSA
           .getElementsByClass(Selectors.heading)
           .text shouldBe EnrolledForPTPageMessages.heading
@@ -63,10 +63,10 @@ class EnrolledForPTPageSpec extends ViewSpecHelper {
           .text shouldBe EnrolledForPTPageMessages.paragraphSA
       }
 
-      "contain the correct h3 heading" in {
+      "contain the correct second header" in {
         documentWithSA
           .getElementsByClass(Selectors.saHeading)
-          .text shouldBe EnrolledForPTPageMessages.heading3
+          .text shouldBe EnrolledForPTPageMessages.heading2
       }
 
       "contain the correct button" in {
@@ -86,7 +86,7 @@ class EnrolledForPTPageSpec extends ViewSpecHelper {
       "contain the correct title" in {
         documentWithNoSA.title shouldBe EnrolledForPTPageMessages.title
       }
-      "contain the correct header" in {
+      "contain the correct first header" in {
         documentWithNoSA
           .getElementsByClass("govuk-heading-xl")
           .text shouldBe EnrolledForPTPageMessages.heading

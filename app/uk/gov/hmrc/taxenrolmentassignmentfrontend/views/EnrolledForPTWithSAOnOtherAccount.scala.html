@@ -27,13 +27,13 @@
 
 @layout(pageTitle = Some(messages("enrolledForPTWithSAOnOtherAccount.title"))) {
 
- <h2 class="govuk-heading-xl">@messages("enrolledForPTWithSAOnOtherAccount.heading")</h2>
+ <h1 class="govuk-heading-xl">@messages("enrolledForPTWithSAOnOtherAccount.heading")</h1>
  <p class="govuk-body">@messages("enrolledForPTWithSAOnOtherAccount.paragraph1", userId)</p>
  <p class="govuk-body">@messages("enrolledForPTWithSAOnOtherAccount.paragraph2")</p>
 
  <br>
 
- <h3 class="govuk-heading-m">@messages("enrolledForPTWithSAOnOtherAccount.heading2")</h3>
+ <h2 class="govuk-heading-m">@messages("enrolledForPTWithSAOnOtherAccount.heading2")</h2>
  @if(saCredential.isDefined) {
  <p class="govuk-body">@messages("enrolledForPTWithSAOnOtherAccount.h2.paragraph1", saCredential.get)</p>
  }

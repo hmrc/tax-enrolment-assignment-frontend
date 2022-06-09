@@ -3,6 +3,7 @@ validation.summary.heading = Mae problem wedi codi
 common.continue = Yn eich blaen
 common.endingWith = yn gorffen gyda {0}
 common.userId = Dynodydd Defnyddiwr (ID)
+common.pageTitle = {0} - {1} - GOV.UK
 mfaDetails.totp = Ap dilysu
 mfaDetails.voice = Rhif ffôn
 mfaDetails.text = Neges destun

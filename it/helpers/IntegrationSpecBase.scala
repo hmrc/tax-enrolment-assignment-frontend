@@ -76,6 +76,7 @@ trait IntegrationSpecBase
     "microservice.services.bas-gateway-frontend.host" -> s"$wiremockURL",
     "microservice.services.add-taxes-frontend.host" -> s"$mockHost",
     "microservice.services.add-taxes-frontend.port" -> s"$mockPort",
+    "microservice.services.add-taxes-frontend.isTest" -> "false",
     "microservice.services.users-groups-search.host" -> s"$mockHost",
     "microservice.services.users-groups-search.port" -> s"$mockPort",
     "microservice.services.users-groups-search.isTest" -> "false",

@@ -26,6 +26,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{predicates, retrievalResponse, retrievals, saEnrolmentOnly}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.formats.EnrolmentsFormats
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.setupSAJourney.SASetupJourneyResponse
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -95,6 +96,14 @@ class TestOnlyControllerSpec extends TestFixture {
       val res = testOnlyController.successfulSACall()(fakeReq)
       status(res) shouldBe OK
       contentAsString(res) shouldBe "Successful Redirect to SA"
+    }
+  }
+
+  "addTaxesFrontendStub" should {
+    s"return $OK with success message" in {
+      val res = testOnlyController.addTaxesFrontendStub()(fakeReq)
+      status(res) shouldBe OK
+      contentAsJson(res) shouldBe Json.toJson(SASetupJourneyResponse(testOnly.routes.TestOnlyController.successfulCall.url))
     }
   }
 }

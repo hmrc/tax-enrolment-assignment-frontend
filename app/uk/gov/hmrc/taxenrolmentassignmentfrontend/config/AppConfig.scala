@@ -17,6 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.config
 
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
 
 import javax.inject.{Inject, Singleton}
 
@@ -35,10 +36,16 @@ class AppConfig @Inject()(val config: ServicesConfig) {
     : String = config.baseUrl("tax-enrolments") + "/tax-enrolments"
   lazy val AUTH_BASE_URL: String = config.baseUrl("auth")
 
-  lazy val ADD_TAXES_FRONTEND_SA_INIT_URL: String = s"${config.baseUrl("add-taxes-frontend")}/internal/self-assessment/enrol-for-sa"
+  lazy val ADD_TAXES_FRONTEND_SA_INIT_URL: String = {
+    if(config.getConfBool("add-taxes-frontend.isTest", defBool = false)) {
+      testOnly.routes.TestOnlyController.addTaxesFrontendStub.url
+    } else {
+      s"${config.baseUrl("add-taxes-frontend")}/internal/self-assessment/enrol-for-sa"
+    }
+  }
 
   lazy val useTestOnlyUsersGroupSearch: Boolean = {
-    config.getConfBool("users-groups-search.isTest", defBool = true)
+    config.getConfBool("users-groups-search.isTest", defBool = false)
   }
   lazy val tenBaseUrl: String =
     s"${config.baseUrl("tax-enrolment-assignment-frontend")}"

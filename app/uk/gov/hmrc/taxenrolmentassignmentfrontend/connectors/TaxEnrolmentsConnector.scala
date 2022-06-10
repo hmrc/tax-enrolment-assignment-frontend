@@ -49,9 +49,7 @@ class TaxEnrolmentsConnector @Inject()(httpClient: HttpClient,
       verifiers = Seq(IdentifiersOrVerifiers("NINO1", nino)
       )
     )
-
-    val serviceName = if(appConfig.taxEnrolmentsLocalEnabled) IRSAKey else hmrcPTKey
-    val url = s"${appConfig.TAX_ENROLMENTS_BASE_URL}/service/$serviceName/enrolment"
+    val url = s"${appConfig.TAX_ENROLMENTS_BASE_URL}/service/$hmrcPTKey/enrolment"
 
     httpClient
       .PUT[AssignHMRCPTRequest, HttpResponse](url, request)

@@ -22,7 +22,9 @@ import helpers.WiremockHelper.stubAuthorizePost
 import play.api.http.Status
 import play.api.libs.json.Json
 import play.api.libs.ws.DefaultWSCookie
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.formats.EnrolmentsFormats
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.setupSAJourney.SASetupJourneyResponse
 
 class TestOnlyControllerISpec extends IntegrationSpecBase with Status {
 
@@ -90,12 +92,25 @@ class TestOnlyControllerISpec extends IntegrationSpecBase with Status {
       val res = buildTestOnlyRequest("/sa/test-only/start")
         .addCookies(DefaultWSCookie("mdtp", authCookie))
         .addHttpHeaders(xSessionId, csrfContent)
-        .withBody(Json.obj())
         .get()
 
       whenReady(res) { resp =>
         resp.status shouldBe OK
         resp.body shouldBe "Successful Redirect to SA"
+      }
+    }
+  }
+
+  "POST /add-taxes-frontend/test-only/self-assessment/enrol-for-sa" should {
+    s"return $OK with correct body" in {
+      val res = buildTestOnlyRequest("/add-taxes-frontend/test-only/self-assessment/enrol-for-sa")
+        .addCookies(DefaultWSCookie("mdtp", authCookie))
+        .addHttpHeaders(xSessionId, csrfContent)
+        .post(Json.obj())
+
+      whenReady(res) { resp =>
+        resp.status shouldBe OK
+        resp.json shouldBe Json.toJson(SASetupJourneyResponse(testOnly.routes.TestOnlyController.successfulCall.url))
       }
     }
   }

@@ -16,6 +16,8 @@
 
 package controllers
 
+import java.net.URLEncoder
+
 import helpers.TestHelper
 import helpers.TestITData._
 import helpers.WiremockHelper._
@@ -26,6 +28,7 @@ import play.api.libs.ws.DefaultWSCookie
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.hmrcPTKey
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.formats.EnrolmentsFormats
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
@@ -594,6 +597,185 @@ class AccountCheckControllerISpec extends TestHelper with Status {
               MULTIPLE_ACCOUNTS
             )(requestWithUserDetails())
             verifyAuditEventSent(expectedAuditEvent)
+          }
+        }
+      }
+
+      "redirect to the return url" when {
+        s"the user has pt enrolment in session" should {
+          "redirect to the return url" when {
+            "the redirectUrl is a valid encoded relative url" in {
+              val relativeUrl = testOnly.routes.TestOnlyController.successfulCall.url
+              val encodedUrl = URLEncoder.encode(relativeUrl, "UTF-8")
+              val urlPath = s"/protect-tax-info?redirectUrl=$encodedUrl"
+
+              val authResponse = authoriseResponseJson(enrolments = ptEnrolmentOnly)
+              stubAuthorizePost(OK, authResponse.toString())
+              stubPost(s"/write/.*", OK, """{"x":2}""")
+
+              val res = buildRequest(urlPath, followRedirects = false)
+                .addCookies(DefaultWSCookie("mdtp", authCookie))
+                .addHttpHeaders(xSessionId, csrfContent)
+                .get()
+
+              whenReady(res) { resp =>
+                resp.status shouldBe SEE_OTHER
+                resp.header("Location").get should include(
+                  relativeUrl
+                )
+              }
+            }
+
+            "the redirectUrl is a valid relative url" in {
+              val relativeUrl = testOnly.routes.TestOnlyController.successfulCall.url
+              val urlPath = s"/protect-tax-info?redirectUrl=$relativeUrl"
+
+              val authResponse = authoriseResponseJson(enrolments = ptEnrolmentOnly)
+              stubAuthorizePost(OK, authResponse.toString())
+              stubPost(s"/write/.*", OK, """{"x":2}""")
+
+              val res = buildRequest(urlPath, followRedirects = false)
+                .addCookies(DefaultWSCookie("mdtp", authCookie))
+                .addHttpHeaders(xSessionId, csrfContent)
+                .get()
+
+              whenReady(res) { resp =>
+                resp.status shouldBe SEE_OTHER
+                resp.header("Location").get should include(
+                  relativeUrl
+                )
+              }
+            }
+
+            "the redirectUrl is a valid encoded absolute localhost url" in {
+              val absoluteUrl = testOnly.routes.TestOnlyController.successfulCall
+                .absoluteURL(false, teaHost)
+              val encodedUrl = URLEncoder.encode(absoluteUrl, "UTF-8")
+              val urlPath = s"/protect-tax-info?redirectUrl=$encodedUrl"
+
+              val authResponse = authoriseResponseJson(enrolments = ptEnrolmentOnly)
+              stubAuthorizePost(OK, authResponse.toString())
+              stubPost(s"/write/.*", OK, """{"x":2}""")
+
+              val res = buildRequest(urlPath, followRedirects = false)
+                .addCookies(DefaultWSCookie("mdtp", authCookie))
+                .addHttpHeaders(xSessionId, csrfContent)
+                .get()
+
+              whenReady(res) { resp =>
+                resp.status shouldBe SEE_OTHER
+                resp.header("Location").get should include(
+                  absoluteUrl
+                )
+              }
+            }
+
+            "the redirectUrl is a valid absolute localhost url" in {
+              val absoluteUrl = testOnly.routes.TestOnlyController.successfulCall
+                .absoluteURL(false, teaHost)
+              val urlPath = s"/protect-tax-info?redirectUrl=$absoluteUrl"
+
+              val authResponse = authoriseResponseJson(enrolments = ptEnrolmentOnly)
+              stubAuthorizePost(OK, authResponse.toString())
+              stubPost(s"/write/.*", OK, """{"x":2}""")
+
+              val res = buildRequest(urlPath, followRedirects = false)
+                .addCookies(DefaultWSCookie("mdtp", authCookie))
+                .addHttpHeaders(xSessionId, csrfContent)
+                .get()
+
+              whenReady(res) { resp =>
+                resp.status shouldBe SEE_OTHER
+                resp.header("Location").get should include(
+                  absoluteUrl
+                )
+              }
+            }
+
+
+
+            "the redirectUrl is a valid encoded absolute url with hostname www.tax.service.gov.uk" in {
+              val absoluteUrl = testOnly.routes.TestOnlyController.successfulCall
+                .absoluteURL(true, "www.tax.service.gov.uk")
+              val encodedUrl = URLEncoder.encode(absoluteUrl, "UTF-8")
+              val urlPath = s"/protect-tax-info?redirectUrl=$encodedUrl"
+
+              val authResponse = authoriseResponseJson(enrolments = ptEnrolmentOnly)
+              stubAuthorizePost(OK, authResponse.toString())
+              stubPost(s"/write/.*", OK, """{"x":2}""")
+
+              val res = buildRequest(urlPath, followRedirects = false)
+                .addCookies(DefaultWSCookie("mdtp", authCookie))
+                .addHttpHeaders(xSessionId, csrfContent)
+                .get()
+
+              whenReady(res) { resp =>
+                resp.status shouldBe SEE_OTHER
+                resp.header("Location").get should include(
+                  absoluteUrl
+                )
+              }
+            }
+
+            "the redirectUrl is a valid absolute url with hostname www.tax.service.gov.uk" in {
+              val absoluteUrl = testOnly.routes.TestOnlyController.successfulCall
+                .absoluteURL(true, "www.tax.service.gov.uk")
+              val urlPath = s"/protect-tax-info?redirectUrl=$absoluteUrl"
+
+              val authResponse = authoriseResponseJson(enrolments = ptEnrolmentOnly)
+              stubAuthorizePost(OK, authResponse.toString())
+              stubPost(s"/write/.*", OK, """{"x":2}""")
+
+              val res = buildRequest(urlPath, followRedirects = false)
+                .addCookies(DefaultWSCookie("mdtp", authCookie))
+                .addHttpHeaders(xSessionId, csrfContent)
+                .get()
+
+              whenReady(res) { resp =>
+                resp.status shouldBe SEE_OTHER
+                resp.header("Location").get should include(
+                  absoluteUrl
+                )
+              }
+            }
+          }
+
+          "render the error page" when {
+            "an invalid redirectUrl supplied" in {
+              val urlPath = s"/protect-tax-info?redirectUrl=not-a-url"
+
+              val authResponse = authoriseResponseJson(enrolments = ptEnrolmentOnly)
+              stubAuthorizePost(OK, authResponse.toString())
+              stubPost(s"/write/.*", OK, """{"x":2}""")
+
+              val res = buildRequest(urlPath, followRedirects = false)
+                .addCookies(DefaultWSCookie("mdtp", authCookie))
+                .addHttpHeaders(xSessionId, csrfContent)
+                .get()
+
+              whenReady(res) { resp =>
+                resp.status shouldBe BAD_REQUEST
+                resp.body should include(ErrorTemplateMessages.title)
+              }
+            }
+
+            "a non supported redirect host is supplied" in {
+              val urlPath = s"/protect-tax-info?redirectUrl=https://notSupportedHost.com/test"
+
+              val authResponse = authoriseResponseJson(enrolments = ptEnrolmentOnly)
+              stubAuthorizePost(OK, authResponse.toString())
+              stubPost(s"/write/.*", OK, """{"x":2}""")
+
+              val res = buildRequest(urlPath, followRedirects = false)
+                .addCookies(DefaultWSCookie("mdtp", authCookie))
+                .addHttpHeaders(xSessionId, csrfContent)
+                .get()
+
+              whenReady(res) { resp =>
+                resp.status shouldBe BAD_REQUEST
+                resp.body should include(ErrorTemplateMessages.title)
+              }
+            }
           }
         }
       }

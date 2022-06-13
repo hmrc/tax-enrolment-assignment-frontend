@@ -39,4 +39,5 @@ case class UnexpectedPTEnrolment(accountTypes: AccountTypes.Value) extends TaxEn
 
 object ResponseBodyInvalidFromAddTaxesFrontendSASetup extends TaxEnrolmentAssignmentErrors
 object UnexpectedResponseFromAddTaxesFrontendSASetup extends TaxEnrolmentAssignmentErrors
+object InvalidRedirectUrl extends TaxEnrolmentAssignmentErrors
 

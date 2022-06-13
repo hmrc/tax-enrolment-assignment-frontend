@@ -435,7 +435,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
 
         status(res) shouldBe SEE_OTHER
         redirectLocation(res) shouldBe Some(
-          UrlPaths.enrolledPTSAOnOtherAccountPath
+          UrlPaths.enrolledPTNoSAOnAnyAccountPath
         )
       }
     }

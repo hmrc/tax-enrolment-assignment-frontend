@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package config
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.config
 
 import play.api.Configuration
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
@@ -27,12 +27,14 @@ class TestSetup(addTaxesFrontendTestEnabled: Boolean) {
   val appConfigWithFakeServicesConfig = new AppConfig(new ServicesConfig(Configuration.from(Map(
     "microservice.services.add-taxes-frontend.isTest" -> addTaxesFrontendTestEnabled.toString,
     "microservice.services.add-taxes-frontend.host" -> "foo",
-    "microservice.services.add-taxes-frontend.port" -> "123"
+    "microservice.services.add-taxes-frontend.port" -> "123",
+    "microservice.services.tax-enrolment-assignment-frontend.host" -> "bar",
+    "microservice.services.tax-enrolment-assignment-frontend.port" -> "456"
   ))))
 }
   "ADD_TAXES_FRONTEND_SA_INIT_URL" should {
     "return test onl reverse route when feature switch enabled" in new TestSetup(true) {
-      appConfigWithFakeServicesConfig.ADD_TAXES_FRONTEND_SA_INIT_URL shouldBe "/add-taxes-frontend/test-only/self-assessment/enrol-for-sa"
+      appConfigWithFakeServicesConfig.ADD_TAXES_FRONTEND_SA_INIT_URL shouldBe "http://bar:456/add-taxes-frontend/test-only/self-assessment/enrol-for-sa"
 
     }
     "return route of add taxes frontend when feature switch disabled" in new TestSetup(false) {

@@ -14,26 +14,22 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers
 
 import com.google.inject.Inject
 import play.api.Logger
-import play.api.i18n.I18nSupport
 import play.api.mvc.{MessagesControllerComponents, Result}
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
-import uk.gov.hmrc.play.bootstrap.controller.WithDefaultFormBinding
-import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, InvalidRedirectUrl, TaxEnrolmentAssignmentErrors, UnexpectedPTEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logUnexpectedErrorOccurred
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
 class ErrorHandler @Inject()(errorView: ErrorTemplate, logger: EventLoggerService, mcc: MessagesControllerComponents)
-  extends FrontendController(mcc)
-    with I18nSupport
-    with WithDefaultFormBinding {
+  extends TEAFrontendController(mcc)  {
 
   def handleErrors(error: TaxEnrolmentAssignmentErrors, classAndMethod: String)(
     implicit request: RequestWithUserDetailsFromSession[_],

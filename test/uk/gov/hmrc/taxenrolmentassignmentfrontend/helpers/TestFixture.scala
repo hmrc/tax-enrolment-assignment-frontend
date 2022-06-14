@@ -42,7 +42,8 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{AddTaxesFrontendConnector, EACDConnector, IVConnector, LegacyAuthConnector, TaxEnrolmentsConnector}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{ErrorHandler, SignOutController}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{SignOutController}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.ErrorHandler
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{TaxEnrolmentAssignmentErrors, UnexpectedError}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{randomAccountType, userDetailsNoEnrolments}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
@@ -121,8 +122,8 @@ trait TestFixture
   val mockMultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
   val mockSilentAssignmentService: SilentAssignmentService =
     mock[SilentAssignmentService]
+  val mockAddTaxesFrontendService: AddTaxesFrontendService = mock[AddTaxesFrontendService]
   val mockAuditHandler: AuditHandler = mock[AuditHandler]
-
   val mockThrottlingService = mock[ThrottlingService]
   implicit lazy val fakeRequest: FakeRequest[AnyContentAsEmpty.type] =
     FakeRequest("", requestPath)

@@ -17,20 +17,17 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import cats.data.EitherT
-import play.api.Logger
-import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction, ThrottleAction}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SignInWithSAAccount
-import uk.gov.hmrc.play.bootstrap.controller.WithDefaultFormBinding
-import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SignInWithSAAccount
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 
@@ -46,11 +43,7 @@ class SignInWithSAAccountController @Inject()(
                                                auditHandler: AuditHandler,
                                                errorHandler: ErrorHandler
 )(implicit ec: ExecutionContext)
-    extends FrontendController(mcc)
-    with I18nSupport
-      with WithDefaultFormBinding {
-
-  implicit val baseLogger: Logger = Logger(this.getClass.getName)
+    extends TEAFrontendController(mcc) {
 
   def view(): Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
     val res = for {

@@ -77,6 +77,7 @@ trait TestHelper extends IntegrationSpecBase {
       routes.KeepAccessToSAController.view.url
     val saOnOtherAccountSigninAgainPath =
       routes.SignInWithSAAccountController.view.url
+    val enrolForSAPath = routes.EnrolForSAController.enrolForSA.url
     val ptOnOtherAccountPath =
       routes.PTEnrolmentOnOtherAccountController.view.url
     val logoutPath = routes.SignOutController.signOut.url

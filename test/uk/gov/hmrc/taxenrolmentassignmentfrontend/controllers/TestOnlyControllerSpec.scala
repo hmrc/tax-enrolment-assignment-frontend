@@ -103,7 +103,7 @@ class TestOnlyControllerSpec extends TestFixture {
     s"return $OK with success message" in {
       val res = testOnlyController.addTaxesFrontendStub()(fakeReq)
       status(res) shouldBe OK
-      contentAsJson(res) shouldBe Json.toJson(SASetupJourneyResponse(testOnly.routes.TestOnlyController.successfulCall.url))
+      contentAsJson(res) shouldBe Json.toJson(SASetupJourneyResponse(testOnly.routes.TestOnlyController.successfulSACall.url))
     }
   }
 }

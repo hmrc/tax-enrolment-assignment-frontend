@@ -18,15 +18,11 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import cats.data.EitherT
 import com.google.inject.{Inject, Singleton}
-import play.api.Logger
-import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.play.bootstrap.controller.WithDefaultFormBinding
-import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_OTHER_USER}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction, ThrottleAction}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedPTEnrolment
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logAssignedEnrolmentAfterReportingFraud
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
@@ -50,11 +46,7 @@ class ReportSuspiciousIDController @Inject()(
   auditHandler: AuditHandler,
   errorHandler: ErrorHandler
 )(implicit ec: ExecutionContext, appConfig: AppConfig)
-    extends FrontendController(mcc)
-    with I18nSupport
-    with WithDefaultFormBinding {
-
-  implicit val baseLogger: Logger = Logger(this.getClass.getName)
+    extends TEAFrontendController(mcc)  {
 
   def viewNoSA(): Action[AnyContent] =
     authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>

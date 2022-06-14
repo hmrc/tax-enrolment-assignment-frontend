@@ -20,11 +20,12 @@ import com.google.inject.Inject
 import play.api.Logger
 import play.api.i18n.I18nSupport
 import play.api.mvc.{MessagesControllerComponents, Result}
+import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
 import uk.gov.hmrc.play.bootstrap.controller.WithDefaultFormBinding
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, TaxEnrolmentAssignmentErrors, UnexpectedPTEnrolment}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, InvalidRedirectUrl, TaxEnrolmentAssignmentErrors, UnexpectedPTEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logUnexpectedErrorOccurred
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
@@ -40,9 +41,10 @@ class ErrorHandler @Inject()(errorView: ErrorTemplate, logger: EventLoggerServic
   ): Result = {
     error match {
       case IncorrectUserType(redirectUrl, _) =>
-        Redirect(routes.AccountCheckController.accountCheck(redirectUrl))
+        Redirect(routes.AccountCheckController.accountCheck(RedirectUrl.apply(redirectUrl)))
       case UnexpectedPTEnrolment(accountType) if accountType == SA_ASSIGNED_TO_OTHER_USER =>
         Redirect(routes.EnrolledPTWithSAOnOtherAccountController.view)
+      case InvalidRedirectUrl => BadRequest(errorView())
       case _ =>
         logger.logEvent(
           logUnexpectedErrorOccurred(

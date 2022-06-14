@@ -25,6 +25,8 @@ import javax.inject.{Inject, Singleton}
 class AppConfig @Inject()(val config: ServicesConfig) {
   lazy val welshLanguageSupportEnabled: Boolean = config
     .getConfBool("features.welsh-language-support", defBool = true)
+  lazy val validRedirectHostNames: Set[String] = config.getConfString("validRedirectHostNames", "").split(",").toSet
+
   lazy val taxEnrolmentsLocalEnabled: Boolean = config
     .getConfBool("features.taxEnrolmentsServiceListLocal", defBool = false)
 
@@ -66,4 +68,5 @@ class AppConfig @Inject()(val config: ServicesConfig) {
 
   lazy val percentageOfUsersThrottledToGetFakeEnrolment: Int =
     config.getInt("throttle.percentage") - 1
+
 }

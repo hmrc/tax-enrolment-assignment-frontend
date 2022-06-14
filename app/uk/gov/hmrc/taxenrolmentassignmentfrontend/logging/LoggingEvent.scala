@@ -329,6 +329,14 @@ object LoggingEvent {
       )
     }
 
+  def logInvalidRedirectUrl(error: String): LoggingEvent = {
+    Warn(
+      Event(
+        "[AccountCheckController][accountCheck]", errorDetails = Some(error)
+      )
+    )
+  }
+
   def logUnexpectedErrorOccurred(
     credentialId: String,
     classAndMethod: String,

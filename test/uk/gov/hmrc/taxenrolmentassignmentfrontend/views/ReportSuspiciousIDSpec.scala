@@ -138,7 +138,7 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
     }
 
     "contains the contact UK telephone details " in {
-      val telephoneBlock = document.select("#telephone li")
+      val telephoneBlock = document.select("#telephone-numbers li")
 
       telephoneBlock
         .get(0)
@@ -150,14 +150,14 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
     }
 
     "contains the outside UK contact details " in {
-      val outsideUKBlock = document.select("#outsideUk-telephone li")
+      val outsideUKBlock = document.select("#telephone-numbers li")
 
       outsideUKBlock
-        .get(0)
+        .get(2)
         .text() shouldBe ReportSuspiciousIDMessages.outsideUK(0)
 
       outsideUKBlock
-        .get(1)
+        .get(3)
         .text() shouldBe ReportSuspiciousIDMessages.outsideUK(1)
     }
 

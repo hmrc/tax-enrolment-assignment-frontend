@@ -20,6 +20,7 @@ import helpers.TestITData._
 import play.api.libs.json.{JsString, JsValue, Json}
 import play.api.mvc.{AnyContent, Request}
 import play.api.test.FakeRequest
+import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo, UserDetailsFromSession}
@@ -61,7 +62,7 @@ trait TestHelper extends IntegrationSpecBase {
     val returnUrl: String = testOnly.routes.TestOnlyController.successfulCall
       .absoluteURL(false, teaHost)
     val accountCheckPath =
-      routes.AccountCheckController.accountCheck(returnUrl).url
+      routes.AccountCheckController.accountCheck(RedirectUrl.apply(returnUrl)).url
     val enrolledPTNoSAOnAnyAccountPath    = routes.EnrolledForPTController.view.url
     val enrolledPTWithSAOnAnyAccountPath  = routes.EnrolledForPTWithSAController.view.url
     val enrolledPTSAOnOtherAccountPath =
@@ -76,6 +77,7 @@ trait TestHelper extends IntegrationSpecBase {
       routes.KeepAccessToSAController.view.url
     val saOnOtherAccountSigninAgainPath =
       routes.SignInWithSAAccountController.view.url
+    val enrolForSAPath = routes.EnrolForSAController.enrolForSA.url
     val ptOnOtherAccountPath =
       routes.PTEnrolmentOnOtherAccountController.view.url
     val logoutPath = routes.SignOutController.signOut.url

@@ -155,6 +155,12 @@ object WiremockHelper extends Eventually with IntegrationPatience {
         .willReturn(aResponse().withStatus(status).withBody(responseBody))
     )
 
+  def verifyNoPOSTmade(url: String) = {
+    eventually(
+      verify(0,
+        postRequestedFor(urlMatching(url))
+      ))
+  }
   def verifyAuditEventSent(auditEvent: AuditEvent) = {
     eventually(
       verify(

@@ -17,17 +17,14 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import com.google.inject.{Inject, Singleton}
-import play.api.Logger
-import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction, ThrottleAction}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logRedirectingToReturnUrl
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTWithSAOnOtherAccount
-import uk.gov.hmrc.play.bootstrap.controller.WithDefaultFormBinding
 
 import scala.concurrent.ExecutionContext
 
@@ -42,11 +39,7 @@ class EnrolledPTWithSAOnOtherAccountController @Inject()(
   val logger: EventLoggerService,
   errorHandler: ErrorHandler
 )(implicit ec: ExecutionContext, appConfig: AppConfig)
-    extends FrontendController(mcc)
-    with I18nSupport
-      with WithDefaultFormBinding {
-
-  implicit val baseLogger: Logger = Logger(this.getClass.getName)
+    extends TEAFrontendController(mcc) {
 
   def view(): Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
     val res = for {

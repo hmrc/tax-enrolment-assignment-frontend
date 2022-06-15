@@ -16,11 +16,10 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
 
-import play.api.Logger
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthAction
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TEAFrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.formats.EnrolmentsFormats
@@ -33,9 +32,7 @@ import scala.concurrent.Future
 class TestOnlyController @Inject()(mcc: MessagesControllerComponents,
                                    authAction: AuthAction,
                                    logger: EventLoggerService)
-    extends FrontendController(mcc) {
-
-  implicit val baseLogger: Logger = Logger(this.getClass.getName)
+    extends TEAFrontendController(mcc)  {
 
   def successfulCall: Action[AnyContent] = Action.async { implicit request =>
     logger.logEvent(logSuccessfulRedirectToReturnUrl)
@@ -65,6 +62,6 @@ class TestOnlyController @Inject()(mcc: MessagesControllerComponents,
   }
 
   val addTaxesFrontendStub: Action[AnyContent] = Action { implicit request =>
-    Ok(Json.toJson(SASetupJourneyResponse(routes.TestOnlyController.successfulCall.url)))
+    Ok(Json.toJson(SASetupJourneyResponse(routes.TestOnlyController.successfulSACall.url)))
   }
 }

@@ -17,13 +17,10 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import com.google.inject.{Inject, Singleton}
-import play.api.Logger
-import play.api.i18n.I18nSupport
 import play.api.mvc._
-import uk.gov.hmrc.play.bootstrap.controller.WithDefaultFormBinding
-import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction, ThrottleAction}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
@@ -44,10 +41,7 @@ class KeepAccessToSAController @Inject()(
                                           auditHandler: AuditHandler,
                                           errorHandler: ErrorHandler
 )(implicit config: AppConfig, ec: ExecutionContext)
-    extends FrontendController(mcc)
-    with I18nSupport with WithDefaultFormBinding {
-
-  implicit val baseLogger: Logger = Logger(this.getClass.getName)
+    extends TEAFrontendController(mcc)  {
 
   def view(): Action[AnyContent] =
     authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>

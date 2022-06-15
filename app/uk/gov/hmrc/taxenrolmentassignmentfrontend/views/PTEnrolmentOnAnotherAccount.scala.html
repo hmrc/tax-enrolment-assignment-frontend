@@ -29,7 +29,7 @@ summaryRow: CreateSummaryRow,
 govukInsetText : GovukInsetText
 )
 
-@(ptEnrolmentOtherAccountViewModel: PTEnrolmentOnOtherAccount)(implicit request: Request[AnyRef], messages: Messages, appConfig: AppConfig)
+@(ptEnrolmentOtherAccountViewModel: PTEnrolmentOnOtherAccount)(implicit request: Request[AnyRef], messages: Messages)
 
 @content = {
     <a class = "govuk-link" href=@routes.ReportSuspiciousIDController.viewNoSA>@messages("ptEnrolmentOnOtherAccount.linkText")</a>
@@ -72,7 +72,7 @@ govukInsetText : GovukInsetText
 
      @if(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.currentAccountDetails.userId)){
     <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.saText3")
-        <a href="@appConfig.selfAssessmentUrl" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.saLink")</a>.
+        <a href="@routes.EnrolForSAController.enrolForSA" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.saLink")</a>.
     </p>
 
     } else if(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.ptAccountDetails.userId)){

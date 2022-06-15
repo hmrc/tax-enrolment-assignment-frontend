@@ -110,7 +110,7 @@ class TestOnlyControllerISpec extends IntegrationSpecBase with Status {
 
       whenReady(res) { resp =>
         resp.status shouldBe OK
-        resp.json shouldBe Json.toJson(SASetupJourneyResponse(testOnly.routes.TestOnlyController.successfulCall.url))
+        resp.json shouldBe Json.toJson(SASetupJourneyResponse(testOnly.routes.TestOnlyController.successfulSACall.url))
       }
     }
   }

@@ -94,7 +94,6 @@ class AccountDetailsSpec extends TestFixture {
         "return the expected account details" in {
           val lastAccessedDate =
             "2022-02-27T12:00:27Z"
-          println(lastAccessedDate)
           val ugsResp =
             usersGroupResponse(lastAccessedDate, List(additionalFactorTotp))
 
@@ -111,7 +110,6 @@ class AccountDetailsSpec extends TestFixture {
         "return the expected account details" in {
           val lastAccessedDate =
             "2022-02-27T12:00:27Z"
-          println(lastAccessedDate)
           val ugsResp =
             usersGroupResponse(
               lastAccessedDate,

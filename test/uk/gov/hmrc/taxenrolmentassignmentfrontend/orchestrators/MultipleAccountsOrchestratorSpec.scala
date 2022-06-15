@@ -55,7 +55,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
     )
 
   s"getDetailsForEnrolledPT" when {
-    List(MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER).foreach { accountType =>
+    List(MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER).foreach { accountType =>
       s"the account type is correct for $accountType" should {
         "return the userdetails for the account" in {
           (mockUsersGroupService
@@ -81,8 +81,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
     List(
       SINGLE_ACCOUNT,
       PT_ASSIGNED_TO_OTHER_USER,
-      PT_ASSIGNED_TO_CURRENT_USER,
-      SA_ASSIGNED_TO_OTHER_USER
+      PT_ASSIGNED_TO_CURRENT_USER
     ).foreach { accountType =>
       s"the accountType is $accountType" should {
         s"return the $IncorrectUserType containing redirectUrl" in {

@@ -58,7 +58,6 @@ trait ViewSpecHelper extends TestFixture {
       .getElementsByClass("govuk-link hmrc-report-technical-issue ")
     "contain a technical help link" that {
       "has the expected text" in {
-        println(doc)
         technicalHelpLink
           .text() shouldBe "Is this page not working properly? (opens in new tab)"
       }

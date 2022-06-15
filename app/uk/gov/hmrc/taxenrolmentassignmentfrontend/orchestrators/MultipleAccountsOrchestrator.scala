@@ -56,7 +56,7 @@ class MultipleAccountsOrchestrator @Inject()(
                                hc: HeaderCarrier,
                                ec: ExecutionContext
   ): TEAFResult[AccountDetails] = {
-    checkValidAccountType(List(MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER)) match {
+    checkValidAccountType(List(MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER)) match {
       case Left(error) => EitherT.left(Future.successful(error))
       case Right(_)    => usersGroupSearchService.getAccountDetails(
         requestWithUserDetails.userDetails.credId

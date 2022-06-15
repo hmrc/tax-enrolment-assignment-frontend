@@ -17,20 +17,17 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import cats.data.EitherT
-import javax.inject.{Inject, Singleton}
-import play.api.Logger
-import play.api.http.ContentTypeOf.contentTypeOf_Html
-import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.bootstrap.controller.WithDefaultFormBinding
-import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl._
+import uk.gov.hmrc.play.bootstrap.binders._
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AuthAction, RequestWithUserDetailsFromSession, ThrottleAction}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{InvalidRedirectUrl, TaxEnrolmentAssignmentErrors}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.AccountCheckOrchestrator
@@ -38,9 +35,10 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHa
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REDIRECT_URL
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success, Try}
 
 @Singleton
 class AccountCheckController @Inject()(
@@ -51,23 +49,30 @@ class AccountCheckController @Inject()(
                                         auditHandler: AuditHandler,
                                         mcc: MessagesControllerComponents,
                                         sessionCache: TEASessionCache,
+                                        appConfig: AppConfig,
                                         val logger: EventLoggerService,
                                         errorHandler: ErrorHandler
 )(implicit ec: ExecutionContext)
-    extends FrontendController(mcc)
-    with I18nSupport
-      with WithDefaultFormBinding {
+extends TEAFrontendController(mcc) {
 
-  implicit val baseLogger: Logger = Logger(this.getClass.getName)
-
-  def accountCheck(redirectUrl: String): Action[AnyContent] = authAction.async {
+  def accountCheck(redirectUrl: RedirectUrl): Action[AnyContent] = authAction.async {
     implicit request =>
-      handleRequest(redirectUrl).value.map {
-        case Right((_, Some(redirectResult))) => redirectResult
-        case Right((accountType, _)) => handleNoneThrottledUsers(accountType, redirectUrl)
-        case Left(error) =>
-          errorHandler.handleErrors(error, "[AccountCheckController][accountCheck]")
+      Try {
+        redirectUrl.get(OnlyRelative | AbsoluteWithHostnameFromAllowlist(appConfig.validRedirectHostNames)).url
+      } match {
+        case Success(redirectUrlString) => handleRequest(redirectUrlString).value.map {
+          case Right((_, Some(redirectResult))) => redirectResult
+          case Right((accountType, _)) => handleNoneThrottledUsers(accountType, redirectUrlString)
+          case Left(error) =>
+            errorHandler.handleErrors(error, "[AccountCheckController][accountCheck]")
+        }
+        case Failure(error) =>
+          logger.logEvent(logInvalidRedirectUrl(error.getMessage), error)
+          Future.successful(
+          errorHandler.handleErrors(InvalidRedirectUrl, "[AccountCheckController][accountCheck]")
+        )
       }
+
   }
 
   private def handleRequest(redirectUrl: String)(implicit request: RequestWithUserDetailsFromSession[_],

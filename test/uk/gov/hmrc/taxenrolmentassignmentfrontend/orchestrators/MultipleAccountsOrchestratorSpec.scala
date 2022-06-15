@@ -21,17 +21,19 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
 import play.api.libs.json.{Format, JsBoolean, Json}
 import play.api.mvc.AnyContent
+import play.api.test.FakeRequest
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo, UserDetailsFromSession}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.setupSAJourney.SASetupJourneyResponse
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM, USER_ASSIGNED_SA_ENROLMENT}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -48,6 +50,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
       mockUsersGroupService,
       mockSilentAssignmentService,
       mockEacdService,
+      mockAddTaxesFrontendService,
       logger
     )
 
@@ -157,7 +160,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
             _: HeaderCarrier,
             _: ExecutionContext
           ))
-          .expects( *, *, *)
+          .expects(*, *, *)
           .returning(createInboundResult(UsersAssignedEnrolment(None)))
 
         val res = orchestrator
@@ -167,7 +170,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
               additionalCacheData = additionalCacheData),
             implicitly, implicitly)
         whenReady(res.value) { result =>
-          result shouldBe Right(ptEnrolmentDataModel(None,accountDetailsWithPT.copy(hasSA = None)))
+          result shouldBe Right(ptEnrolmentDataModel(None, accountDetailsWithPT.copy(hasSA = None)))
         }
       }
     }
@@ -200,7 +203,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
             _: HeaderCarrier,
             _: ExecutionContext
           ))
-          .expects( *, *, *)
+          .expects(*, *, *)
           .returning(createInboundResult(UsersAssignedEnrolment(Some(CREDENTIAL_ID))))
 
         val res = orchestrator.getCurrentAndPTAAndSAIfExistsForUser(
@@ -240,7 +243,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
             _: HeaderCarrier,
             _: ExecutionContext
           ))
-          .expects( *, *, *)
+          .expects(*, *, *)
           .returning(createInboundResult(UsersAssignedEnrolment(Some(CREDENTIAL_ID_1))))
 
         val res = orchestrator.getCurrentAndPTAAndSAIfExistsForUser(
@@ -279,7 +282,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
             _: HeaderCarrier,
             _: ExecutionContext
           ))
-          .expects( *, *, *)
+          .expects(*, *, *)
           .returning(createInboundResult(UsersAssignedEnrolment(Some(CREDENTIAL_ID_2))))
 
         (mockUsersGroupService
@@ -348,7 +351,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
               }
             }
           } else {
-           s"return $IncorrectUserType" in {
+            s"return $IncorrectUserType" in {
 
               val res = orchestrator.checkValidAccountTypeAndEnrolForPT(
                 inputAccountType
@@ -603,6 +606,82 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
               result shouldBe Left(IncorrectUserType(UrlPaths.returnUrl, accountType))
             }
           }
+        }
+      }
+    }
+  }
+  "enrolForSA" when {
+    List(
+      SINGLE_ACCOUNT,
+      PT_ASSIGNED_TO_CURRENT_USER,
+      MULTIPLE_ACCOUNTS,
+      SA_ASSIGNED_TO_OTHER_USER,
+      SA_ASSIGNED_TO_CURRENT_USER
+    ).foreach { accountType =>
+      s"the accountType is $accountType" should {
+        s"return Left $IncorrectUserType containing redirectUrl" in {
+          val res  = orchestrator.enrolForSA(requestWithAccountType(accountType), implicitly, implicitly)
+
+          whenReady(res.value) { result =>
+            result shouldBe Left(IncorrectUserType(UrlPaths.returnUrl, accountType))
+          }
+        }
+      }
+    }
+    s"the accountType is $PT_ASSIGNED_TO_OTHER_USER" should {
+      "enrol using the add taxes endpoint when user has sa on current" should {
+        "return right when service call is success" in {
+          val requestForTest = RequestWithUserDetailsFromSessionAndMongo(
+            request,
+            request.userDetails.copy(hasSAEnrolment = true),
+            request.sessionID,
+            AccountDetailsFromMongo(PT_ASSIGNED_TO_OTHER_USER, "foo",
+              generateBasicCacheData(PT_ASSIGNED_TO_OTHER_USER, "foo")))
+
+          (mockAddTaxesFrontendService.saSetupJourney(_: UserDetailsFromSession)(_: HeaderCarrier, _: ExecutionContext))
+            .expects(requestForTest.userDetails, *, *)
+            .returning(createInboundResult(SASetupJourneyResponse("responseFromConnector")))
+            .once()
+
+          val res = orchestrator.enrolForSA(requestForTest, implicitly, implicitly)
+
+          whenReady(res.value) { result =>
+            result shouldBe Right(SASetupJourneyResponse("responseFromConnector"))
+          }
+        }
+        s"return $Left when service call fails" in {
+          val requestForTest = RequestWithUserDetailsFromSessionAndMongo(
+            request,
+            request.userDetails.copy(hasSAEnrolment = true),
+            request.sessionID,
+            AccountDetailsFromMongo(PT_ASSIGNED_TO_OTHER_USER, "foo",
+              generateBasicCacheData(PT_ASSIGNED_TO_OTHER_USER, "foo")))
+
+          (mockAddTaxesFrontendService.saSetupJourney(_: UserDetailsFromSession)(_: HeaderCarrier, _: ExecutionContext))
+            .expects(requestForTest.userDetails, *, *)
+            .returning(createInboundResultError(UnexpectedError))
+            .once()
+
+          val res = orchestrator.enrolForSA(requestForTest, implicitly, implicitly)
+
+          whenReady(res.value) { result =>
+            result shouldBe Left(UnexpectedError)
+          }
+        }
+      }
+
+      s"return Left $UserDoesNotHaveSAOnCurrentToEnrol when user does not have SA" in {
+        val requestForTest = RequestWithUserDetailsFromSessionAndMongo(
+          request,
+          request.userDetails.copy(hasSAEnrolment = false),
+          request.sessionID,
+          AccountDetailsFromMongo(PT_ASSIGNED_TO_OTHER_USER, "foo",
+            generateBasicCacheData(PT_ASSIGNED_TO_OTHER_USER, "foo")))
+
+        val res = orchestrator.enrolForSA(requestForTest, implicitly, implicitly)
+
+        whenReady(res.value) { result =>
+          result shouldBe Left(UserDoesNotHaveSAOnCurrentToEnrol)
         }
       }
     }

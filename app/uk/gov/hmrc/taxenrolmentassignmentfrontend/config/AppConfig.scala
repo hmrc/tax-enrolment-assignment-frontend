@@ -25,6 +25,8 @@ import javax.inject.{Inject, Singleton}
 class AppConfig @Inject()(val config: ServicesConfig) {
   lazy val welshLanguageSupportEnabled: Boolean = config
     .getConfBool("features.welsh-language-support", defBool = true)
+  lazy val validRedirectHostNames: Set[String] = config.getConfString("validRedirectHostNames", "").split(",").toSet
+
   lazy val taxEnrolmentsLocalEnabled: Boolean = config
     .getConfBool("features.taxEnrolmentsServiceListLocal", defBool = false)
 
@@ -38,7 +40,7 @@ class AppConfig @Inject()(val config: ServicesConfig) {
 
   lazy val ADD_TAXES_FRONTEND_SA_INIT_URL: String = {
     if(config.getConfBool("add-taxes-frontend.isTest", defBool = false)) {
-      testOnly.routes.TestOnlyController.addTaxesFrontendStub.url
+      s"$tenBaseUrl/add-taxes-frontend/test-only/self-assessment/enrol-for-sa"
     } else {
       s"${config.baseUrl("add-taxes-frontend")}/internal/self-assessment/enrol-for-sa"
     }
@@ -61,9 +63,9 @@ class AppConfig @Inject()(val config: ServicesConfig) {
   lazy val keepAliveUrl: String =
     s"/protect-tax-info/keepAlive"
 
-  lazy val selfAssessmentUrl: String = "?"
   lazy val appName = config.getString("appName")
 
   lazy val percentageOfUsersThrottledToGetFakeEnrolment: Int =
     config.getInt("throttle.percentage") - 1
+
 }

@@ -21,7 +21,7 @@ import play.api.Logger
 import play.api.mvc._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.ErrorHandler
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.ErrorHandler
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 
@@ -57,7 +57,6 @@ class AccountMongoDetailsAction @Inject()(
 )(implicit val executionContext: ExecutionContext)
     extends AccountMongoDetailsActionTrait {
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
-
   override protected def refine[A](
     request: RequestWithUserDetailsFromSession[A]
   ): Future[Either[Result, RequestWithUserDetailsFromSessionAndMongo[A]]] = {

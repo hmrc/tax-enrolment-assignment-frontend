@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
+import java.net.URLEncoder
+
 import cats.data.EitherT
 import play.api.http.Status.SEE_OTHER
 import play.api.i18n.MessagesApi
@@ -24,6 +26,7 @@ import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
@@ -46,9 +49,12 @@ class AccountCheckControllerSpec extends TestFixture {
     mockAuditHandler,
     mcc,
     teaSessionCache,
+    appConfig,
     logger,
     errorHandler
   )
+
+  lazy val returnUrl = RedirectUrl.apply(testOnly.routes.TestOnlyController.successfulCall.url)
 
   "accountCheck" when {
     "a single credential exists for a given nino with no PT enrolment" should {
@@ -61,7 +67,7 @@ class AccountCheckControllerSpec extends TestFixture {
           mockAccountShouldNotBeThrottled(SINGLE_ACCOUNT, NINO, noEnrolments.enrolments)
 
           val result = controller
-            .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
+            .accountCheck(returnUrl)
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
           status(result) shouldBe SEE_OTHER
@@ -76,7 +82,7 @@ class AccountCheckControllerSpec extends TestFixture {
           mockAccountShouldNotBeThrottled(SINGLE_ACCOUNT, NINO, ptEnrolmentOnly.enrolments)
 
           val result = controller
-            .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
+            .accountCheck(returnUrl)
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
           status(result) shouldBe SEE_OTHER
@@ -91,7 +97,7 @@ class AccountCheckControllerSpec extends TestFixture {
         mockAccountShouldNotBeThrottled(SINGLE_ACCOUNT, NINO, noEnrolments.enrolments)
 
         val result = controller
-          .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
+          .accountCheck(returnUrl)
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
@@ -106,7 +112,7 @@ class AccountCheckControllerSpec extends TestFixture {
         mockAccountShouldNotBeThrottled(PT_ASSIGNED_TO_CURRENT_USER, NINO, noEnrolments.enrolments)
 
         val result = controller
-          .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
+          .accountCheck(returnUrl)
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe SEE_OTHER
@@ -121,7 +127,7 @@ class AccountCheckControllerSpec extends TestFixture {
         mockAccountShouldNotBeThrottled(PT_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
 
         val result = controller
-          .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
+          .accountCheck(returnUrl)
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe SEE_OTHER
@@ -139,7 +145,7 @@ class AccountCheckControllerSpec extends TestFixture {
           mockAuditPTEnrolled(MULTIPLE_ACCOUNTS, requestWithUserDetails(), messagesApi)
 
           val result = controller
-            .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
+            .accountCheck(returnUrl)
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
           status(result) shouldBe SEE_OTHER
@@ -156,7 +162,7 @@ class AccountCheckControllerSpec extends TestFixture {
           mockAccountShouldNotBeThrottled(MULTIPLE_ACCOUNTS, NINO, ptEnrolmentOnly.enrolments)
 
           val result = controller
-            .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
+            .accountCheck(returnUrl)
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
           status(result) shouldBe SEE_OTHER
@@ -177,7 +183,7 @@ class AccountCheckControllerSpec extends TestFixture {
           mockAuditPTEnrolled(SA_ASSIGNED_TO_CURRENT_USER, requestWithUserDetails(userDetailsWithSAEnrolment), messagesApi)
 
           val result = controller
-            .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
+            .accountCheck(returnUrl)
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
           status(result) shouldBe SEE_OTHER
@@ -194,7 +200,7 @@ class AccountCheckControllerSpec extends TestFixture {
           mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_CURRENT_USER, NINO, saAndptEnrolments.enrolments)
 
           val result = controller
-            .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
+            .accountCheck(returnUrl)
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
           status(result) shouldBe SEE_OTHER
@@ -213,7 +219,7 @@ class AccountCheckControllerSpec extends TestFixture {
           mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
 
           val result = controller
-            .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
+            .accountCheck(returnUrl)
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
           status(result) shouldBe SEE_OTHER
@@ -230,7 +236,7 @@ class AccountCheckControllerSpec extends TestFixture {
           mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, ptEnrolmentOnly.enrolments)
 
           val result = controller
-            .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
+            .accountCheck(returnUrl)
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
           status(result) shouldBe SEE_OTHER
@@ -247,7 +253,7 @@ class AccountCheckControllerSpec extends TestFixture {
         mockGetAccountTypeFailure(UnexpectedResponseFromIV)
 
         val res = controller
-          .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
+          .accountCheck(returnUrl)
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(res) shouldBe INTERNAL_SERVER_ERROR
@@ -262,7 +268,7 @@ class AccountCheckControllerSpec extends TestFixture {
         mockAccountCheckSuccess(SA_ASSIGNED_TO_OTHER_USER)
 
         val res = controller
-          .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
+          .accountCheck(returnUrl)
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(res) shouldBe SEE_OTHER
@@ -278,7 +284,7 @@ class AccountCheckControllerSpec extends TestFixture {
         mockAccountCheckSuccess(SA_ASSIGNED_TO_OTHER_USER)
 
         val res = controller
-          .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
+          .accountCheck(returnUrl)
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(res) shouldBe INTERNAL_SERVER_ERROR

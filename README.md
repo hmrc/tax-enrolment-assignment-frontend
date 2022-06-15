@@ -1,5 +1,12 @@
 
 # Tax Enrolment Assignment Frontend
+## How it works
+https://confluence.tools.tax.service.gov.uk/pages/viewpage.action?spaceKey=TEN&title=How+Tax+Enrolment+Assignment+Frontend+works
+
+## Easiest way to integrate in QA (calling service)
+- https://confluence.tools.tax.service.gov.uk/display/TEN/Journey+Testing+-+Data+setup+requirements#JourneyTestingDatasetuprequirements-SimplestIntegrationUserQA
+- They must start their journey on  `/protect-tax-info?redirectUrl=<providing-a-url-desitination-of-where-users-should-be-redirected-to>`
+- where redirectUrl should be URL encoded such as `/protect-tax-info?redirectUrl=%2FurlHere`
 
 ## Development Setup For Local Unit and IT tests
 - Download rancher: `brew install rancher`
@@ -10,8 +17,7 @@
 
      *(please use latest version as per MDTP best practices, this is just an example)*
 
-
-## Development Setup for local running
+## Development Setup for LOCAL RUNNING (to walk the journey)
 - please complete all pre-requisites within https://github.com/hmrc/tax-enrolment-assignment-journey-tests readme
 - Run locally: `sbt run` which runs on port `7750` by default
 - OR Run with test endpoints: `run.sh` or `sbt 'run -Dapplication.router=testOnlyDoNotUseInAppConf.Routes'`
@@ -31,12 +37,6 @@ Run Performance Tests see [here](https://github.com/hmrc/tax-enrolment-assignmen
 
 ## API
 
-### For a service to integrate with us.
-
-- They must start their journey on  `/protect-tax-info?redirectUrl=<providing-a-url-desitination-of-where-users-should-be-redirected-to>`
-- where redirectUrl should be URL encoded such as `/protect-tax-info?redirectUrl=%2FurlHere`
-
-
 | Path | Supported Methods | Type | Description                            |
 |---------------------------------------------------|:-------------------:|:-------|----------------------------------------|
 | `/protect-tax-info/test-only/successful`          | GET | Test | Endpoint to get a successful redirect. |
@@ -51,6 +51,9 @@ Run Performance Tests see [here](https://github.com/hmrc/tax-enrolment-assignmen
 - set to 0 to disable
 - set to 1 to throttle NINOs with pattern QQ112200Q
 - set to 100 to throttle NINOS with pattern QQ112299Q
+
+## Audits
+https://confluence.tools.tax.service.gov.uk/display/TEN/CIP+Assessment+tracker+-+TENINO
 
 ### License
 This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html").

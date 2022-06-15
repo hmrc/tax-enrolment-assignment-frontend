@@ -42,7 +42,6 @@ case class AccountDetailsFromMongo(accountType: AccountTypes.Value,
 }
 
 object AccountDetailsFromMongo {
-
   val optAccountType: Map[String, JsValue] => Option[AccountTypes.Value] = (sessionData: Map[String, JsValue]) =>
     sessionData.get(ACCOUNT_TYPE).map(_.as[AccountTypes.Value])
   val optRedirectUrl: Map[String, JsValue] => Option[String] = (sessionData: Map[String, JsValue]) =>

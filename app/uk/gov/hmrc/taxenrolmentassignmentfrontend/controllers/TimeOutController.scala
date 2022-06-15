@@ -16,12 +16,9 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
-import play.api.Logging
-import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.play.bootstrap.controller.WithDefaultFormBinding
-import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthAction
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TEAFrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.TimedOutView
 
@@ -35,10 +32,7 @@ class TimeOutController @Inject()(
   sessionCache: TEASessionCache,
   timedoutView: TimedOutView
 )(implicit ec: ExecutionContext)
-    extends FrontendController(mcc)
-    with Logging
-    with I18nSupport
-      with WithDefaultFormBinding{
+    extends TEAFrontendController(mcc) {
 
   def keepAlive: Action[AnyContent] = authAction.async { implicit request =>
     sessionCache.extendSession()

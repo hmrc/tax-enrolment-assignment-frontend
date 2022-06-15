@@ -83,8 +83,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
         status(result) shouldBe OK
         contentAsString(result) shouldBe view(ptEnrolmentDataModelNone)(
           fakeRequest,
-          stubMessages(),
-          appConfig
+          stubMessages()
         ).toString
       }
     }
@@ -125,8 +124,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
         status(result) shouldBe OK
         contentAsString(result) shouldBe view(ptEnrolmentModel)(
           fakeRequest,
-          stubMessages(),
-          appConfig
+          stubMessages()
         ).toString
       }
     }
@@ -167,8 +165,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
         status(result) shouldBe OK
         contentAsString(result) shouldBe view(ptEnrolmentModel)(
           fakeRequest,
-          stubMessages(),
-          appConfig
+          stubMessages()
         ).toString
       }
     }
@@ -209,8 +206,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
         status(result) shouldBe OK
         contentAsString(result) shouldBe view(ptEnrolmentModel)(
           fakeRequest,
-          stubMessages(),
-          appConfig
+          stubMessages()
         ).toString
       }
     }
@@ -251,8 +247,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
         status(result) shouldBe OK
         contentAsString(result) shouldBe view(ptEnrolmentModel)(
           fakeRequest,
-          stubMessages(),
-          appConfig
+          stubMessages()
         ).toString
       }
     }

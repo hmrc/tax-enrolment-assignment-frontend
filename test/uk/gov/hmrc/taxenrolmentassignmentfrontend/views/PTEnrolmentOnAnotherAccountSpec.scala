@@ -17,24 +17,16 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.views
 
 import play.api.test.FakeRequest
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.PTEnrolmentOtherAccountMesages
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
-  AccountDetails,
-  MFADetails
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnotherAccount
 
 class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
 
   lazy val view: PTEnrolmentOnAnotherAccount =
     inject[PTEnrolmentOnAnotherAccount]
-
-  lazy val appConfigForTest = new AppConfig(servicesConfig) {
-    override lazy val selfAssessmentUrl: String =
-      PTEnrolmentOtherAccountMesages.saUrl
-  }
 
   object Selectors {
     val heading = "govuk-heading-xl"
@@ -84,22 +76,19 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
   val htmlSignedInWithSA =
     view(ptEnrolmentDataModel(Some(USER_ID), testAccountDetailsWithSA))(
       FakeRequest(),
-      testMessages,
-      appConfigForTest
+      testMessages
     )
 
   val htmlWithSA =
     view(ptEnrolmentDataModel(Some(PT_USER_ID), testAccountDetailsWithSA))(
       FakeRequest(),
-      testMessages,
-      appConfigForTest
+      testMessages
     )
 
   val htmlOtherAccountWithSA =
     view(ptEnrolmentDataModel(Some(PT_USER_ID), testAccountDetails))(
       FakeRequest(),
-      testMessages,
-      appConfigForTest
+      testMessages
     )
 
   val documentWithSA = doc(htmlWithSA)
@@ -109,14 +98,13 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
   val htmlNoEmail =
     view(
       ptEnrolmentDataModel(Some(NO_EMAIL_USER_ID), accountDetailsWithNoEmail)
-    )(FakeRequest(), testMessages, appConfigForTest)
+    )(FakeRequest(), testMessages)
   val documentNoEmail = doc(htmlNoEmail)
 
   val html =
     view(ptEnrolmentDataModel(None, testAccountDetails))(
       FakeRequest(),
-      testMessages,
-      appConfigForTest
+      testMessages
     )
   val document = doc(html)
 
@@ -145,7 +133,7 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
           .getElementsByClass(Selectors.body)
           .get(2)
           .select("a")
-          .attr("href") shouldBe PTEnrolmentOtherAccountMesages.saUrl
+          .attr("href") shouldBe PTEnrolmentOtherAccountMesages.logOut
       }
     }
     "contain a summary list" that {
@@ -231,13 +219,13 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
         "has the expected text" in {
           textElement.text() shouldBe PTEnrolmentOtherAccountMesages.saText
         }
-        "has a link to self-assessment" in {
+        "has a link to log out" in {
           textElement
             .select("a")
-            .attr("href") shouldBe PTEnrolmentOtherAccountMesages.saUrl
+            .attr("href") shouldBe PTEnrolmentOtherAccountMesages.logOut
         }
       }
-      "the current account has SA but the PT enrolment is on another account" that {
+      "the current account has SA (cred matches sa cred) but the PT enrolment is on another account" that {
         val textElement = documentWithSA
           .getElementsByClass(Selectors.body)
           .get(2)
@@ -249,10 +237,10 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
         "has the expected text" in {
           textElement.text() shouldBe PTEnrolmentOtherAccountMesages.saText2
         }
-        "has a link to self-assessment" in {
+        "has a link to logout" in {
           textElement
             .select("a")
-            .attr("href") shouldBe PTEnrolmentOtherAccountMesages.saUrl
+            .attr("href") shouldBe PTEnrolmentOtherAccountMesages.logOut
         }
       }
 
@@ -271,7 +259,7 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
         "has a link to self-assessment" in {
           textElement
             .select("a")
-            .attr("href") shouldBe PTEnrolmentOtherAccountMesages.saUrl
+            .attr("href") shouldBe routes.EnrolForSAController.enrolForSA.url
         }
       }
     }

@@ -114,7 +114,7 @@ class ReportSuspiciousIDController @Inject()(
               )
             )
             auditHandler.audit(AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true))
-            Redirect(routes.EnrolledPTWithSAOnOtherAccountController.view)
+            Redirect(routes.EnrolledForPTController.view)
           case Left(error) =>
             errorHandler.handleErrors(
               error,

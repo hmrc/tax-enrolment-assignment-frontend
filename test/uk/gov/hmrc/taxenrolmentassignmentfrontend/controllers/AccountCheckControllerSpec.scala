@@ -18,6 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import cats.data.EitherT
 import play.api.http.Status.SEE_OTHER
+import play.api.i18n.MessagesApi
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
@@ -56,7 +57,7 @@ class AccountCheckControllerSpec extends TestFixture {
           mockAuthCall()
           mockAccountCheckSuccess(SINGLE_ACCOUNT)
           mockSilentEnrolSuccess
-          mockAuditPTEnrolled(SINGLE_ACCOUNT, requestWithUserDetails())
+          mockAuditPTEnrolled(SINGLE_ACCOUNT, requestWithUserDetails(), messagesApi)
           mockAccountShouldNotBeThrottled(SINGLE_ACCOUNT, NINO, noEnrolments.enrolments)
 
           val result = controller
@@ -135,7 +136,7 @@ class AccountCheckControllerSpec extends TestFixture {
           mockAccountCheckSuccess(MULTIPLE_ACCOUNTS)
           mockSilentEnrolSuccess
           mockAccountShouldNotBeThrottled(MULTIPLE_ACCOUNTS, NINO, noEnrolments.enrolments)
-          mockAuditPTEnrolled(MULTIPLE_ACCOUNTS, requestWithUserDetails())
+          mockAuditPTEnrolled(MULTIPLE_ACCOUNTS, requestWithUserDetails(), messagesApi)
 
           val result = controller
             .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
@@ -173,7 +174,7 @@ class AccountCheckControllerSpec extends TestFixture {
           mockAccountCheckSuccess(SA_ASSIGNED_TO_CURRENT_USER)
           mockSilentEnrolSuccess
           mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_CURRENT_USER, NINO, saEnrolmentOnly.enrolments)
-          mockAuditPTEnrolled(SA_ASSIGNED_TO_CURRENT_USER, requestWithUserDetails(userDetailsWithSAEnrolment))
+          mockAuditPTEnrolled(SA_ASSIGNED_TO_CURRENT_USER, requestWithUserDetails(userDetailsWithSAEnrolment), messagesApi)
 
           val result = controller
             .accountCheck(testOnly.routes.TestOnlyController.successfulCall.url)
@@ -376,8 +377,11 @@ class AccountCheckControllerSpec extends TestFixture {
           createInboundResultError(UnexpectedResponseFromTaxEnrolments)
         )
 
-    def mockAuditPTEnrolled(accountType: AccountTypes.Value, requestWithUserDetailsFromSession: RequestWithUserDetailsFromSession[_]) = {
-      val expectedAudit = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(accountType)(requestWithUserDetailsFromSession)
+    def mockAuditPTEnrolled(accountType: AccountTypes.Value,
+                            requestWithUserDetailsFromSession: RequestWithUserDetailsFromSession[_],
+                            messagesApi: MessagesApi) = {
+      val expectedAudit = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(accountType)(
+        requestWithUserDetailsFromSession, messagesApi)
       (mockAuditHandler
         .audit(_: AuditEvent)(_: HeaderCarrier))
         .expects(expectedAudit, *)

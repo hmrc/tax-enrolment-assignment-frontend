@@ -93,7 +93,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
 
         val auditEvent = AuditEvent.auditReportSuspiciousPTAccount(
           accountDetails
-        )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER))
+        )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), stubbedMessagesApi)
         (mockAuditHandler
           .audit(_: AuditEvent)(_: HeaderCarrier))
           .expects(auditEvent, *)
@@ -228,7 +228,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
 
           val auditEvent = AuditEvent.auditReportSuspiciousSAAccount(
             accountDetails
-          )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER))
+          )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER), stubbedMessagesApi)
           (mockAuditHandler
             .audit(_: AuditEvent)(_: HeaderCarrier))
             .expects(auditEvent, *)
@@ -423,7 +423,8 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
         mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData)
         mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
         val auditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true
-        )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData = additionalCacheData))
+        )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData = additionalCacheData),
+          stubbedMessagesApi)
         (mockAuditHandler
           .audit(_: AuditEvent)(_: HeaderCarrier))
           .expects(auditEvent, *)

@@ -17,6 +17,7 @@
 package helpers
 
 import helpers.TestITData._
+import play.api.i18n.MessagesApi
 import play.api.libs.json.{JsString, JsValue, Json}
 import play.api.mvc.{AnyContent, Request}
 import play.api.test.FakeRequest
@@ -57,6 +58,10 @@ trait TestHelper extends IntegrationSpecBase {
       userDetails,
       sessionId
     )
+
+  def messagesApi: MessagesApi = {
+    app.injector.instanceOf[MessagesApi]
+  }
 
   object UrlPaths {
     val returnUrl: String = testOnly.routes.TestOnlyController.successfulCall

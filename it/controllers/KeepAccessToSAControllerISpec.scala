@@ -410,7 +410,7 @@ class KeepAccessToSAControllerISpec extends TestHelper with Status with Throttle
               UrlPaths.enrolledPTSAOnOtherAccountPath
             )
             val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(
-            )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, mongoCacheData = cacheData))
+            )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, mongoCacheData = cacheData), messagesApi)
             verifyAuditEventSent(expectedAuditEvent)
           }
         }

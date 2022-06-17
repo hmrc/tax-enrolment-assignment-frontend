@@ -62,7 +62,8 @@ trait TestFixture
     with MockFactory
     with GuiceOneAppPerSuite
     with Matchers
-    with Injecting {
+    with Injecting
+    with StubMessagesFactory {
 
   val TIME_OUT = 5
   val INTERVAL = 5
@@ -85,10 +86,11 @@ trait TestFixture
   def requestWithAccountType(
     accountType: AccountTypes.Value = SINGLE_ACCOUNT,
     redirectUrl: String = UrlPaths.returnUrl,
-    additionalCacheData: Map[String, JsValue] = Map()
+    additionalCacheData: Map[String, JsValue] = Map(),
+    langCode: String =  "en"
   ): RequestWithUserDetailsFromSessionAndMongo[_] =
     RequestWithUserDetailsFromSessionAndMongo(
-      request.request,
+      request.request.withTransientLang(langCode),
       request.userDetails,
       request.sessionID,
       AccountDetailsFromMongo(accountType, redirectUrl, generateBasicCacheData(accountType, redirectUrl) ++ additionalCacheData)
@@ -103,6 +105,7 @@ trait TestFixture
   lazy val logger: EventLoggerService = new EventLoggerService()
   implicit val appConfig: AppConfig = injector.instanceOf[AppConfig]
   lazy val messagesApi: MessagesApi = inject[MessagesApi]
+  lazy val stubbedMessagesApi = stubMessagesApi()
   implicit lazy val messages: Messages = messagesApi.preferred(fakeRequest)
   lazy val UCView: UnderConstructionView = inject[UnderConstructionView]
   val mockAuthConnector: AuthConnector = mock[AuthConnector]

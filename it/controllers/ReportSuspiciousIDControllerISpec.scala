@@ -83,7 +83,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
             new AccountDetails(usersGroupSearchResponse, CREDENTIAL_ID_2)
           val expectedAuditEvent = AuditEvent.auditReportSuspiciousSAAccount(
             saAccountDetails
-          )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER))
+          )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER), messagesApi)
           verifyAuditEventSent(expectedAuditEvent)
         }
       }
@@ -130,7 +130,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
               new AccountDetails(usersGroupSearchResponse, CREDENTIAL_ID_2)
             val expectedAuditEvent = AuditEvent.auditReportSuspiciousSAAccount(
               saAccountDetails
-            )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER))
+            )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER), messagesApi)
           }
         }
       }
@@ -465,7 +465,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
             new AccountDetails(usersGroupSearchResponse, CREDENTIAL_ID_2)
           val expectedAuditEvent = AuditEvent.auditReportSuspiciousPTAccount(
             ptAccountDetails
-          )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER))
+          )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
           verifyAuditEventSent(expectedAuditEvent)
         }
       }
@@ -797,7 +797,8 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
             resp.header("Location").get should include(
               "/protect-tax-info/enrol-pt/enrolment-success-no-sa"
             )
-            val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, mongoCacheData = cacheData))
+            val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(
+              true)(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, mongoCacheData = cacheData), messagesApi)
             verifyAuditEventSent(expectedAuditEvent)
           }
         }

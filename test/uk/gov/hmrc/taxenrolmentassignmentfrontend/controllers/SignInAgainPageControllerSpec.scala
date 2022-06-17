@@ -247,7 +247,9 @@ class SignInAgainPageControllerSpec extends TestFixture with ThrottleHelperSpec 
 
         mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData)
         mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
-        val auditEvent = AuditEvent.auditSigninAgainWithSACredential()(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData = additionalCacheData))
+        val auditEvent = AuditEvent.auditSigninAgainWithSACredential()(
+          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData = additionalCacheData),
+          stubbedMessagesApi)
         (mockAuditHandler
           .audit(_: AuditEvent)(_: HeaderCarrier))
           .expects(auditEvent, *)

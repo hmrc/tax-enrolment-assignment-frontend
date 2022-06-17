@@ -343,7 +343,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
 
             val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
               SINGLE_ACCOUNT
-            )(requestWithUserDetails())
+            )(requestWithUserDetails(), messagesApi)
             verifyAuditEventSent(expectedAuditEvent)
           }
         }
@@ -475,7 +475,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
 
             val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
               SA_ASSIGNED_TO_CURRENT_USER
-            )(requestWithUserDetails(userDetailsNoEnrolments.copy(hasSAEnrolment = true)))
+            )(requestWithUserDetails(userDetailsNoEnrolments.copy(hasSAEnrolment = true)), messagesApi)
             verifyAuditEventSent(expectedAuditEvent)
           }
         }
@@ -538,7 +538,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
             )
             val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
               SA_ASSIGNED_TO_CURRENT_USER
-            )(requestWithUserDetails())
+            )(requestWithUserDetails(), messagesApi)
             verifyAuditEventSent(expectedAuditEvent)
           }
         }
@@ -595,7 +595,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
             )
             val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
               MULTIPLE_ACCOUNTS
-            )(requestWithUserDetails())
+            )(requestWithUserDetails(), messagesApi)
             verifyAuditEventSent(expectedAuditEvent)
           }
         }

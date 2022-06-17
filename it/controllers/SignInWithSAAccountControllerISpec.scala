@@ -385,7 +385,8 @@ class SignInWithSAAccountControllerISpec extends TestHelper with Status with Thr
           resp.header("Location").get should include(
             UrlPaths.logoutPath
           )
-          val expectedAuditEvent = AuditEvent.auditSigninAgainWithSACredential()(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, mongoCacheData = cacheData))
+          val expectedAuditEvent = AuditEvent.auditSigninAgainWithSACredential()(
+            requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, mongoCacheData = cacheData), messagesApi)
           verifyAuditEventSent(expectedAuditEvent)
         }
       }

@@ -21,8 +21,11 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthAction
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TEAFrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-
 import javax.inject.{Inject, Singleton}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logUserSigninAgain
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REDIRECT_URL
+
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -30,15 +33,24 @@ class SignOutController @Inject()(
   authAction: AuthAction,
   mcc: MessagesControllerComponents,
   appConfig: AppConfig,
-  sessionCache: TEASessionCache
+  sessionCache: TEASessionCache,
+  val logger: EventLoggerService
 )(implicit ec: ExecutionContext)
     extends TEAFrontendController(mcc) {
 
   def signOut(): Action[AnyContent] = authAction.async { implicit request =>
-    sessionCache.removeAll()
-    Future.successful(
-      Redirect(appConfig.signOutUrl)
-        .removingFromSession("X-Request-ID", "Session-Id")
-    )
+    sessionCache.fetch().map{cacheData =>
+      val optRedirectUrl = cacheData.fold[Option[String]](None)(_.data.get(
+        REDIRECT_URL
+      ).map(_.as[String]))
+      sessionCache.removeAll()
+      logger.logEvent(logUserSigninAgain(request.userDetails.credId))
+      optRedirectUrl match {
+        case Some(redirectUrl) => Redirect(appConfig.signOutUrl, Map("continueUrl"-> Seq(redirectUrl)))
+          .removingFromSession("X-Request-ID", "Session-Id")
+        case None => Redirect(appConfig.signOutUrl)
+          .removingFromSession("X-Request-ID", "Session-Id")
+      }
+    }
   }
 }

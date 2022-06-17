@@ -337,6 +337,14 @@ object LoggingEvent {
     )
   }
 
+  def logUserSigninAgain(credId: String): LoggingEvent  = {
+    Info(
+      Event(
+        "[SignOutController][signOut]", details = Some(s"User $credId has chosen to sign in with another account")
+      )
+    )
+  }
+
   def logUnexpectedErrorOccurred(
     credentialId: String,
     classAndMethod: String,

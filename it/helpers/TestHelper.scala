@@ -89,6 +89,7 @@ trait TestHelper extends IntegrationSpecBase {
     val unauthorizedPath = routes.AuthorisationController.notAuthorised.url
     val keepAlive = routes.TimeOutController.keepAlive.url
     val timeout = routes.TimeOutController.timeout.url
+    val signout = routes.SignOutController.signOut().url
   }
 
 }

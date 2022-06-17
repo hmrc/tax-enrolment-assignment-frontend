@@ -16,6 +16,9 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
+import java.net.URLEncoder
+
+import play.api.libs.json.{JsString, Json}
 import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -23,20 +26,19 @@ import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{
-  predicates,
-  retrievalResponse,
-  retrievals
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
+import uk.gov.hmrc.http.cache.client.CacheMap
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.PT_ASSIGNED_TO_CURRENT_USER
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{predicates, retrievalResponse, retrievals}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, UrlPaths}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class SignOutControllerSpec extends TestFixture {
 
-  val teaSessionCache = new TestTeaSessionCache
   val controller =
-    new SignOutController(mockAuthAction, mcc, appConfig, teaSessionCache)
+    new SignOutController(mockAuthAction, mcc, appConfig, mockTeaSessionCache, logger)
   def fakeReq(method: String,
               url: String = "N/A"): FakeRequest[AnyContentAsEmpty.type] = {
     FakeRequest(method, url)
@@ -46,27 +48,110 @@ class SignOutControllerSpec extends TestFixture {
       )
   }
 
-  "signOut" should {
-    "clear down the user's data and sign them out" in {
-      (mockAuthConnector
-        .authorise(
-          _: Predicate,
-          _: Retrieval[
-            ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-              String
-            ] ~ Option[AffinityGroup]
-          ]
-        )(_: HeaderCarrier, _: ExecutionContext))
-        .expects(predicates, retrievals, *, *)
-        .returning(Future.successful(retrievalResponse()))
+  "signOut" when {
+    "the session contains a redirectUrl" should {
+      "clear down the user's data and redirect to signout with continueUrl" in {
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup]
+            ]
+          )(_: HeaderCarrier, _: ExecutionContext))
+          .expects(predicates, retrievals, *, *)
+          .returning(Future.successful(retrievalResponse()))
 
-      val result = controller.signOut().apply(fakeReq("GET"))
+        (mockTeaSessionCache
+          .fetch()(
+            _: RequestWithUserDetailsFromSession[_]))
+          .expects(*)
+          .returning(Future.successful(Some(CacheMap("id", Map(REDIRECT_URL -> JsString(UrlPaths.returnUrl))))))
 
-      status(result) shouldBe SEE_OTHER
-      headers(result).contains("X-Request-ID") shouldBe false
-      redirectLocation(result) shouldBe Some(
-        "http://localhost:9553/bas-gateway/sign-out-without-state"
-      )
+        (mockTeaSessionCache.removeAll()(
+          _: RequestWithUserDetailsFromSession[_]))
+          .expects(*)
+          .returning(Future.successful(true))
+
+        val result = controller.signOut().apply(fakeReq("GET"))
+
+        status(result) shouldBe SEE_OTHER
+        headers(result).contains("X-Request-ID") shouldBe false
+        redirectLocation(result) shouldBe Some(
+          s"http://localhost:9553/bas-gateway/sign-out-without-state?continueUrl=${URLEncoder.encode(UrlPaths.returnUrl, "UTF-8")}"
+        )
+      }
+    }
+
+    "the session exists but does not contain the redirectUrl" should {
+      "clear down the user's data and redirect to signout without continueUrl" in {
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup]
+            ]
+          )(_: HeaderCarrier, _: ExecutionContext))
+          .expects(predicates, retrievals, *, *)
+          .returning(Future.successful(retrievalResponse()))
+
+        (mockTeaSessionCache
+          .fetch()(
+            _: RequestWithUserDetailsFromSession[_]))
+          .expects(*)
+          .returning(Future.successful(Some(CacheMap("id", Map()))))
+
+        (mockTeaSessionCache.removeAll()(
+          _: RequestWithUserDetailsFromSession[_]))
+          .expects(*)
+          .returning(Future.successful(true))
+
+        val result = controller.signOut().apply(fakeReq("GET"))
+
+        status(result) shouldBe SEE_OTHER
+        headers(result).contains("X-Request-ID") shouldBe false
+        redirectLocation(result) shouldBe Some(
+          s"http://localhost:9553/bas-gateway/sign-out-without-state"
+        )
+      }
+    }
+
+    "the session does not exists" should {
+      "redirect to signout without continueUrl" in {
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup]
+            ]
+          )(_: HeaderCarrier, _: ExecutionContext))
+          .expects(predicates, retrievals, *, *)
+          .returning(Future.successful(retrievalResponse()))
+
+        (mockTeaSessionCache
+          .fetch()(
+            _: RequestWithUserDetailsFromSession[_]))
+          .expects(*)
+          .returning(Future.successful(None))
+
+        (mockTeaSessionCache.removeAll()(
+          _: RequestWithUserDetailsFromSession[_]))
+          .expects(*)
+          .returning(Future.successful(true))
+
+        val result = controller.signOut().apply(fakeReq("GET"))
+
+        status(result) shouldBe SEE_OTHER
+        headers(result).contains("X-Request-ID") shouldBe false
+        redirectLocation(result) shouldBe Some(
+          s"http://localhost:9553/bas-gateway/sign-out-without-state"
+        )
+      }
     }
   }
 

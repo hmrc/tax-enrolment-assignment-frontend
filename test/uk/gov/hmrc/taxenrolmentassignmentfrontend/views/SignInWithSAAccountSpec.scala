@@ -40,7 +40,8 @@ class SignInWithSAAccountSpec extends ViewSpecHelper {
     mockAuthAction,
     mcc,
     appConfig,
-    testTeaSessionCache
+    testTeaSessionCache,
+    logger
   )
   lazy val signInAgainPage: SignInWithSAAccount = inject[SignInWithSAAccount]
   lazy val reportSuspiciousIDPage: ReportSuspiciousID =

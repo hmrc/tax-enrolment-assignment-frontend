@@ -254,6 +254,10 @@ class KeepAccessToSASpec extends ViewSpecHelper {
         view(formWithErrors)(FakeRequest(), testMessages)
       val document = doc(html)
 
+      "have a page title containing error" in {
+        document.title() shouldBe s"Error - ${KeepAccessToSAMessages.title}"
+      }
+
       "have an error summary" that {
         "has title" in {
           document

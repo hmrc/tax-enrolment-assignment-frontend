@@ -3,7 +3,7 @@
 ## How it works
 https://confluence.tools.tax.service.gov.uk/pages/viewpage.action?spaceKey=TEN&title=How+Tax+Enrolment+Assignment+Frontend+works
 
-## For a service to requiring to integrate with us.
+## For a NEW service to requiring to integrate with us 
 - YOU MUST, get in contact with the team that owns this service, we will need to increase our performance tests JPS to take into account your additional users being sent to us.
 - We would advise integrating in QA, see https://confluence.tools.tax.service.gov.uk/display/TEN/Journey+Testing+-+Data+setup+requirements#JourneyTestingDatasetuprequirements-SimplestIntegrationUserQA
 - They must start their journey on  `/protect-tax-info?redirectUrl=<providing-a-url-desitination-of-where-users-should-be-redirected-to>`

@@ -39,6 +39,7 @@ class ErrorTemplateSpec extends ViewSpecHelper {
 
     validateTimeoutDialog(document)
     validateTechnicalHelpLinkPresent(document)
+    validateAccessibilityStatementLinkPresent(document)
 
     "contain the correct paragraph" in {
       document

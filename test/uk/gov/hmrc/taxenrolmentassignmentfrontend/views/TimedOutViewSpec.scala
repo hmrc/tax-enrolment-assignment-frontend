@@ -53,6 +53,7 @@ class TimedOutViewSpec extends ViewSpecHelper {
 
     validateNoTimeoutDialog(document)
     validateTechnicalHelpLinkPresent(document)
+    validateAccessibilityStatementLinkPresent(document)
 
   }
 

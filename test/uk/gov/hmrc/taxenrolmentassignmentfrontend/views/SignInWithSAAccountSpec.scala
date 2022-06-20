@@ -177,6 +177,7 @@ class SignInWithSAAccountSpec extends ViewSpecHelper {
 
     validateTimeoutDialog(document)
     validateTechnicalHelpLinkPresent(document)
+    validateAccessibilityStatementLinkPresent(document)
 
   }
 }

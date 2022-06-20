@@ -19,8 +19,6 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions
 import com.google.inject.Inject
 import play.api.Logger
 import play.api.mvc._
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.ErrorHandler
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
@@ -60,8 +58,6 @@ class AccountMongoDetailsAction @Inject()(
   override protected def refine[A](
     request: RequestWithUserDetailsFromSession[A]
   ): Future[Either[Result, RequestWithUserDetailsFromSessionAndMongo[A]]] = {
-    implicit val hc: HeaderCarrier =
-      HeaderCarrierConverter.fromRequestAndSession(request, request.session)
 
     getAccountDetailsFromMongoFromCache(request).map {
       case Right(accountDetailsFromMongo) => Right(

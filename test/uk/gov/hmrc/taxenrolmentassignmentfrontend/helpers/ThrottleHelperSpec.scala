@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers
 
-import play.api.mvc.{Action, AnyContent, Request, Result}
+import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
 import play.api.test.Helpers._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{NINO, buildFakeRequestWithSessionId, noEnrolments, predicates, randomAccountType, retrievalResponse, retrievals, saEnrolmentOnly}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{NINO, buildFakeRequestWithSessionId, noEnrolments, predicates, randomAccountType, retrievalResponse, retrievals}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.ThrottleApplied
 
 import scala.concurrent.{ExecutionContext, Future}

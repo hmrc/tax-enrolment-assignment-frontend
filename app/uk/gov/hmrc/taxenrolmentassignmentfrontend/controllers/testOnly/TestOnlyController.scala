@@ -34,13 +34,13 @@ class TestOnlyController @Inject()(mcc: MessagesControllerComponents,
                                    logger: EventLoggerService)
     extends TEAFrontendController(mcc)  {
 
-  def successfulCall: Action[AnyContent] = Action.async { implicit request =>
+  def successfulCall: Action[AnyContent] = Action.async { _ =>
     logger.logEvent(logSuccessfulRedirectToReturnUrl)
     Future.successful(Ok("Successful"))
   }
 
   def usersGroupSearchCall(credId: String): Action[AnyContent] = Action.async {
-    implicit request =>
+    _ =>
       UsersGroupsFixedData.usersGroupSearchCreds.get(credId) match {
         case Some(userDetails) =>
           Future.successful(
@@ -57,11 +57,11 @@ class TestOnlyController @Inject()(mcc: MessagesControllerComponents,
       Ok(Json.toJson(request.userDetails.enrolments.enrolments)(EnrolmentsFormats.writes).toString())
   }
 
-  val successfulSACall: Action[AnyContent] = Action.async { implicit request =>
+  val successfulSACall: Action[AnyContent] = Action.async { _ =>
     Future.successful(Ok("Successful Redirect to SA"))
   }
 
-  val addTaxesFrontendStub: Action[AnyContent] = Action { implicit request =>
+  val addTaxesFrontendStub: Action[AnyContent] = Action { _ =>
     Ok(Json.toJson(SASetupJourneyResponse(routes.TestOnlyController.successfulSACall.url)))
   }
 }

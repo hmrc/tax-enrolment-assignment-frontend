@@ -19,7 +19,6 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions
 import play.api.Logger
 import play.api.mvc.Results.Redirect
 import play.api.mvc._
-import uk.gov.hmrc.auth.core.Enrolment
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes

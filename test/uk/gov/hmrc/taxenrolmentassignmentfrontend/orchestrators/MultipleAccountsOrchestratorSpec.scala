@@ -21,7 +21,6 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
 import play.api.libs.json.{Format, JsBoolean, Json}
 import play.api.mvc.AnyContent
-import play.api.test.FakeRequest
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
@@ -33,7 +32,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, UrlPaths
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.setupSAJourney.SASetupJourneyResponse
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM, USER_ASSIGNED_SA_ENROLMENT}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -493,7 +492,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
           "return an empty form" when {
             "there is no form stored in session" in {
 
-              val res = orchestrator.getDetailsForKeepAccessToSA(requestWithAccountType(accountType), implicitly, implicitly)
+              val res = orchestrator.getDetailsForKeepAccessToSA(requestWithAccountType(accountType), implicitly)
 
               whenReady(res.value) { result =>
                 result shouldBe Right(
@@ -507,7 +506,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
               val additionalCacheData = Map("KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM" -> Json.toJson(KeepAccessToSAThroughPTA(true)))
 
               val res = orchestrator.getDetailsForKeepAccessToSA(
-                requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData), implicitly, implicitly)
+                requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData), implicitly)
               whenReady(res.value) { result =>
                 result shouldBe Right(
                   KeepAccessToSAThroughPTAForm.keepAccessToSAThroughPTAForm
@@ -518,7 +517,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
           }
         } else {
           s"return $IncorrectUserType error" in {
-            val res = orchestrator.getDetailsForKeepAccessToSA(requestWithAccountType(accountType), implicitly, implicitly)
+            val res = orchestrator.getDetailsForKeepAccessToSA(requestWithAccountType(accountType), implicitly)
 
             whenReady(res.value) { result =>
               result shouldBe Left(IncorrectUserType(UrlPaths.returnUrl, accountType))
@@ -599,7 +598,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
           }
         } else {
           s"return $IncorrectUserType error" in {
-            val res = orchestrator.getDetailsForKeepAccessToSA(requestWithAccountType(accountType), implicitly, implicitly)
+            val res = orchestrator.getDetailsForKeepAccessToSA(requestWithAccountType(accountType), implicitly)
 
             whenReady(res.value) { result =>
               result shouldBe Left(IncorrectUserType(UrlPaths.returnUrl, accountType))

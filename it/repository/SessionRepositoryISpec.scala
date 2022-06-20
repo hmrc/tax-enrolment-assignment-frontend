@@ -25,8 +25,6 @@ import play.api.libs.json.JsString
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.DatedCacheMap
 
-import scala.language.implicitConversions
-
 class SessionRepositoryISpec extends IntegrationSpecBase {
 
   "upsert" when {

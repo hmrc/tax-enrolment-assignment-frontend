@@ -17,10 +17,9 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.logging
 
 import ch.qos.logback.classic.spi.ILoggingEvent
-import play.api.{Logger, LoggerLike}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import ch.qos.logback.classic.{Level, Logger => LogbackLogger}
 import ch.qos.logback.core.read.ListAppender
+import play.api.{Logger, LoggerLike}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 

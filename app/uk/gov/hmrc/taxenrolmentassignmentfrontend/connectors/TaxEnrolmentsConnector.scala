@@ -26,9 +26,9 @@ import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromTaxEnrolments
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{logPTEnrolmentHasAlreadyBeenAssigned, logUnexpectedResponseFromTaxEnrolments, logUnexpectedResponseFromTaxEnrolmentsKnownFacts}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.{IRSAKey, hmrcPTKey}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AssignHMRCPTRequest, IdentifiersOrVerifiers, PersonalTaxEnrolment}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{logPTEnrolmentHasAlreadyBeenAssigned, logUnexpectedResponseFromTaxEnrolmentsKnownFacts}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.hmrcPTKey
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AssignHMRCPTRequest, IdentifiersOrVerifiers}
 
 import scala.concurrent.ExecutionContext
 

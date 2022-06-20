@@ -16,18 +16,14 @@
 
 package controllers
 
-import java.net.URLEncoder
-import java.time.LocalDateTime
-
 import helpers.TestHelper
 import helpers.TestITData.{authoriseResponseJson, sessionId, xRequestId, xSessionId}
 import helpers.WiremockHelper.{stubAuthorizePost, stubPost}
-import helpers.messages.TimedOutMessages
-import org.jsoup.Jsoup
 import play.api.http.Status
 import play.api.libs.json.JsString
 import play.api.libs.ws.DefaultWSCookie
 
+import java.net.URLEncoder
 import scala.concurrent.Future
 
 class SignOutControllerISpec extends TestHelper with Status {

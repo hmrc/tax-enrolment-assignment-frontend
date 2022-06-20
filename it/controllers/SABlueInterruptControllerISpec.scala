@@ -26,7 +26,6 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import play.api.libs.ws.DefaultWSCookie
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes.AccountCheckController
 
 class SABlueInterruptControllerISpec extends TestHelper with Status with ThrottleHelperISpec {
   val urlPath: String = UrlPaths.saOnOtherAccountInterruptPath
@@ -87,8 +86,6 @@ class SABlueInterruptControllerISpec extends TestHelper with Status with Throttl
             .get()
 
           whenReady(res) { resp =>
-            val page = Jsoup.parse(resp.body)
-
             resp.status shouldBe SEE_OTHER
             resp.header("Location").get should include(
               UrlPaths.enrolledPTSAOnOtherAccountPath

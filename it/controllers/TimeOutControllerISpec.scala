@@ -16,21 +16,15 @@
 
 package controllers
 
-import java.time.LocalDateTime
-
 import helpers.TestHelper
-import helpers.TestITData.{
-  authoriseResponseJson,
-  sessionId,
-  xRequestId,
-  xSessionId
-}
+import helpers.TestITData.{authoriseResponseJson, sessionId, xRequestId, xSessionId}
 import helpers.WiremockHelper.{stubAuthorizePost, stubPost}
-import helpers.messages.{EnrolledForPTPageMessages, TimedOutMessages}
+import helpers.messages.TimedOutMessages
 import org.jsoup.Jsoup
 import play.api.http.Status
 import play.api.libs.ws.DefaultWSCookie
 
+import java.time.LocalDateTime
 import scala.concurrent.Future
 
 class TimeOutControllerISpec extends TestHelper with Status {

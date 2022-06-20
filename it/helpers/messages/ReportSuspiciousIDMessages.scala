@@ -28,7 +28,7 @@ object ReportSuspiciousIDMessages {
   val outsideUK = Seq("Outside UK:", "+44 161 930 8445")
 
   val informationBlock = Seq(
-    "Information about opening hours, call charges and more",
+    "Information about opening hours, Relay UK and call charges",
     "Opening hours are Monday to Friday: 8am to 6pm (closed weekends and bank holidays).",
     "You can also use Relay UK (opens in new tab) if you cannot hear or speak on the phone: dial 18001 then 0300 200 3600.",
     "Calls are charged at standard local rates but may be free to call depending on your phone tariff."

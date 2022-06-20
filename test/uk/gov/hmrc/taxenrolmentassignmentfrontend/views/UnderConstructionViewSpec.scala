@@ -54,6 +54,7 @@ class UnderConstructionViewSpec extends ViewSpecHelper {
 
     validateTimeoutDialog(document)
     validateTechnicalHelpLinkPresent(document)
+    validateAccessibilityStatementLinkPresent(document)
   }
 
 }

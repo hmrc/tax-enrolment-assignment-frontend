@@ -56,6 +56,7 @@ class EnrolledForPTPageSpec extends ViewSpecHelper {
 
       validateTimeoutDialog(documentWithSA)
       validateTechnicalHelpLinkPresent(documentWithSA)
+      validateAccessibilityStatementLinkPresent(documentWithSA)
 
       "contain the correct body" in {
         documentWithSA

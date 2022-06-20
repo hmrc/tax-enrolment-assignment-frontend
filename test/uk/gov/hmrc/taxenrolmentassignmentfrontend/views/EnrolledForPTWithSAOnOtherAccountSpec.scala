@@ -57,6 +57,7 @@ class EnrolledForPTWithSAOnOtherAccountSpec extends ViewSpecHelper {
 
       validateTimeoutDialog(documentSA)
       validateTechnicalHelpLinkPresent(documentSA)
+      validateAccessibilityStatementLinkPresent(documentSA)
 
       "contain the correct body" which {
         val subHeadings = documentSA.getElementsByClass(Selectors.subHeading)

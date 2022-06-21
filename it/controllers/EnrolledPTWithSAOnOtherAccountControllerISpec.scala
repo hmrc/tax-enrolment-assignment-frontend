@@ -27,7 +27,6 @@ import play.api.libs.ws.DefaultWSCookie
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.USER_ASSIGNED_SA_ENROLMENT
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes.AccountCheckController
 
 class EnrolledPTWithSAOnOtherAccountControllerISpec
     extends TestHelper

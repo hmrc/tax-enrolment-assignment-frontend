@@ -23,7 +23,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.TimedOutView
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 @Singleton
 class TimeOutController @Inject()(
@@ -31,7 +31,7 @@ class TimeOutController @Inject()(
   mcc: MessagesControllerComponents,
   sessionCache: TEASessionCache,
   timedoutView: TimedOutView
-)(implicit ec: ExecutionContext)
+)
     extends TEAFrontendController(mcc) {
 
   def keepAlive: Action[AnyContent] = authAction.async { implicit request =>

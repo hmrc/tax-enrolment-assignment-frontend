@@ -17,7 +17,6 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.config
 
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
 
 import javax.inject.{Inject, Singleton}
 

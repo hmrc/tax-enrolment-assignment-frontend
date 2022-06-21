@@ -16,8 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.logging
 
-import play.api.http.Status.BAD_REQUEST
-import play.api.libs.json.{Format, JsValue, Json}
+import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.{IRSAKey, hmrcPTKey}

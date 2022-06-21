@@ -19,19 +19,11 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.views
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import play.api.test.FakeRequest
-import play.twirl.api.HtmlFormat
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignOutController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.CREDENTIAL_ID
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.SignInAgainMessages
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
-  AccountDetails,
-  MFADetails
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{
-  ReportSuspiciousID,
-  SignInWithSAAccount
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{ReportSuspiciousID, SignInWithSAAccount}
 
 class SignInWithSAAccountSpec extends ViewSpecHelper {
 

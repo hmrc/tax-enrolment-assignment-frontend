@@ -189,7 +189,6 @@ class TEASessionCacheSpec extends IntegrationSpecBase {
   "extendSession" when {
     "there is no record in the database" should {
       "upsert empty data to mongo and return true" in {
-        val dataToUpsert = CacheMap(sessionId, Map.empty)
         val res = teaSessionCache.extendSession()
 
         whenReady(res) { result =>

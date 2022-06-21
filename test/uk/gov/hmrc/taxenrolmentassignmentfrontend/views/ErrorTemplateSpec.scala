@@ -18,7 +18,6 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.views
 
 import play.api.test.FakeRequest
 import play.twirl.api.HtmlFormat
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.ErrorTemplateMessages
 
 class ErrorTemplateSpec extends ViewSpecHelper {

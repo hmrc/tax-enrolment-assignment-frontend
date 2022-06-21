@@ -85,9 +85,8 @@ extends TEAFrontendController(mcc) {
     } yield (accountType, throttle)
   }
 
-  private def handleNoneThrottledUsers(accountType: AccountTypes.Value, redirectUrl: String)
-                                      (implicit request: RequestWithUserDetailsFromSession[_],
-                                       hc: HeaderCarrier): Result = {
+   def handleNoneThrottledUsers(accountType: AccountTypes.Value, redirectUrl: String)
+                                      (implicit request: RequestWithUserDetailsFromSession[_]): Result = {
     accountType match {
       case PT_ASSIGNED_TO_OTHER_USER => Redirect(routes.PTEnrolmentOnOtherAccountController.view)
       case SA_ASSIGNED_TO_OTHER_USER if request.userDetails.hasPTEnrolment => Redirect(routes.EnrolledPTWithSAOnOtherAccountController.view)

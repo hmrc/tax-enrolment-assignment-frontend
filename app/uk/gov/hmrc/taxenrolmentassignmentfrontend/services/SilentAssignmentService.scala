@@ -21,15 +21,15 @@ import cats.implicits._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{EACDConnector, IVConnector, TaxEnrolmentsConnector}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSession}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IVNinoStoreEntry
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IVNinoStoreEntry._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.{IRSAKey, saEnrolmentSet}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.saEnrolmentSet
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.OTHER_VALID_PTA_ACCOUNTS
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import javax.inject.Inject
 
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class SilentAssignmentService @Inject()(

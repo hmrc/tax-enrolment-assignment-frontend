@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
-import java.net.URLEncoder
-
 import cats.data.EitherT
 import play.api.http.Status.SEE_OTHER
 import play.api.i18n.MessagesApi

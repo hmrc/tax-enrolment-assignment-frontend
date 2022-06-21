@@ -24,7 +24,7 @@ import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_OTHER_USER}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, UnexpectedPTEnrolment, UnexpectedResponseFromTaxEnrolments}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm.keepAccessToSAThroughPTAForm
@@ -76,10 +76,9 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
         (mockMultipleAccountsOrchestrator
           .getDetailsForKeepAccessToSA(
             _: RequestWithUserDetailsFromSessionAndMongo[_],
-            _: HeaderCarrier,
             _: ExecutionContext
           ))
-          .expects(*, *, *)
+          .expects(*, *)
           .returning(createInboundResult(keepAccessToSAThroughPTAForm))
         mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
         mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
@@ -120,10 +119,9 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
         (mockMultipleAccountsOrchestrator
           .getDetailsForKeepAccessToSA(
             _: RequestWithUserDetailsFromSessionAndMongo[_],
-            _: HeaderCarrier,
             _: ExecutionContext
           ))
-          .expects(*, *, *)
+          .expects(*, *)
           .returning(
             createInboundResult(
               keepAccessToSAThroughPTAForm.fill(KeepAccessToSAThroughPTA(true))
@@ -168,10 +166,9 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
         (mockMultipleAccountsOrchestrator
           .getDetailsForKeepAccessToSA(
             _: RequestWithUserDetailsFromSessionAndMongo[_],
-            _: HeaderCarrier,
             _: ExecutionContext
           ))
-          .expects(*, *, *)
+          .expects(*, *)
           .returning(
             createInboundResult(
               keepAccessToSAThroughPTAForm.fill(KeepAccessToSAThroughPTA(false))
@@ -216,10 +213,9 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
         (mockMultipleAccountsOrchestrator
           .getDetailsForKeepAccessToSA(
             _: RequestWithUserDetailsFromSessionAndMongo[_],
-            _: HeaderCarrier,
             _: ExecutionContext
           ))
-          .expects(*, *, *)
+          .expects(*, *)
           .returning(createInboundResultError(UnexpectedPTEnrolment(SA_ASSIGNED_TO_OTHER_USER)))
         mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
         mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, ptEnrolmentOnly.enrolments)
@@ -249,10 +245,9 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
         (mockMultipleAccountsOrchestrator
           .getDetailsForKeepAccessToSA(
             _: RequestWithUserDetailsFromSessionAndMongo[_],
-            _: HeaderCarrier,
             _: ExecutionContext
           ))
-          .expects(*, *, *)
+          .expects(*, *)
           .returning(
             createInboundResultError(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
           )

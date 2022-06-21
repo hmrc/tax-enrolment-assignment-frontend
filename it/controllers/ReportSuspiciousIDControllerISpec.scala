@@ -28,7 +28,6 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, UsersAssignedEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes.AccountCheckController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
 
 class ReportSuspiciousIDControllerISpec extends TestHelper with Status with ThrottleHelperISpec {

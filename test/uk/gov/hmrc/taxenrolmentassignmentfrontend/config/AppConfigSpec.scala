@@ -18,7 +18,6 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.config
 
 import play.api.Configuration
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 
 class AppConfigSpec extends TestFixture {

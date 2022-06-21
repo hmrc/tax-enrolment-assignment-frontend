@@ -19,14 +19,11 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 import com.google.inject.{Inject, Singleton}
 import play.api.mvc._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction, ThrottleAction}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SABlueInterrupt
-
-import scala.concurrent.ExecutionContext
 
 @Singleton
 class SABlueInterruptController @Inject()(
@@ -38,7 +35,7 @@ class SABlueInterruptController @Inject()(
   val logger: EventLoggerService,
   saBlueInterrupt: SABlueInterrupt,
   errorHandler: ErrorHandler
-)(implicit config: AppConfig, ec: ExecutionContext)
+)
     extends TEAFrontendController(mcc)   {
 
   def view(): Action[AnyContent] =

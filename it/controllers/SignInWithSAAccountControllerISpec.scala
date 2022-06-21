@@ -29,7 +29,6 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL, USER_ASSIGNED_SA_ENROLMENT, accountDetailsForCredential}
 import play.api.libs.ws.DefaultWSCookie
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes.AccountCheckController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
 
 class SignInWithSAAccountControllerISpec extends TestHelper with Status with ThrottleHelperISpec {
@@ -113,8 +112,6 @@ class SignInWithSAAccountControllerISpec extends TestHelper with Status with Thr
             .get()
 
           whenReady(res) { resp =>
-            val page = Jsoup.parse(resp.body)
-
             resp.status shouldBe SEE_OTHER
             resp.header("Location").get should include(
               UrlPaths.enrolledPTSAOnOtherAccountPath

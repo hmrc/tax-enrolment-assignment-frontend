@@ -32,7 +32,7 @@
 @formError = @{form.errors.map(_.message).headOption}
 
 @layout(
-    pageTitle = Some(messages("keepAccessToSA.title"))) {
+    pageTitle = Some(messages("keepAccessToSA.title")), hasError = formError.isDefined) {
 
     @formHelper(action = routes.KeepAccessToSAController.continue) {
         @if(formError.isDefined) {

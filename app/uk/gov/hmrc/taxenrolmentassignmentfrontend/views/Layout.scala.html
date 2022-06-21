@@ -29,7 +29,8 @@
 @(pageTitle: Option[String] = None,
   optBackLinkUrl: Option[String] = None,
   mainLayout: Option[Html => Html] = Some(defaultMainContent(_)),
-  displaySignout: Boolean = true)(contentBlock: Html)(implicit request: Request[_], messages: Messages)
+  displaySignout: Boolean = true,
+  hasError: Boolean = false)(contentBlock: Html)(implicit request: Request[_], messages: Messages)
 
 @headBlock = {
 @if(displaySignout) {
@@ -48,7 +49,7 @@
 
 @hmrcLayout(
  additionalHeadBlock = Some(headBlock),
- pageTitle = Some(messages("common.pageTitle", pageTitle.getOrElse(""), messages("service.name"))),
+ pageTitle = Some(messages(if(hasError) {"common.pageTitle.error"} else {"common.pageTitle"}, pageTitle.getOrElse(""), messages("service.name"))),
  nonce = CSPNonce.get,
  serviceName = Some(messages("service.name")),
  isWelshTranslationAvailable = appConfig.welshLanguageSupportEnabled,

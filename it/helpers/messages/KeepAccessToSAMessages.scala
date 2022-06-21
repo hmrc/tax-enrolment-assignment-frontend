@@ -29,7 +29,7 @@ object KeepAccessToSAMessages {
   val fraudReportingUrl =
     "/protect-tax-info/enrol-pt/contact-hmrc-sa"
   val errorTitle = "There is a problem"
-  val errorMessage = "Select option to continue"
+  val errorMessage = "Select yes if you want to keep access to Self Assessment from your personal tax account"
   val button = "Continue"
   val action =
     "/protect-tax-info/enrol-pt/other-user-id-has-sa/keep-access-to-sa-from-pta"

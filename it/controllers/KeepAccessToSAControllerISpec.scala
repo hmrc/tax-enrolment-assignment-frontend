@@ -597,13 +597,14 @@ class KeepAccessToSAControllerISpec extends TestHelper with Status with Throttle
         whenReady(res) { resp =>
           resp.status shouldBe BAD_REQUEST
           val page = Jsoup.parse(resp.body)
+          page.title() should include(s"Error - ${KeepAccessToSAMessages.title}")
           page
             .getElementsByClass("govuk-error-summary__title")
-            .text() shouldBe "There is a problem"
+            .text() shouldBe KeepAccessToSAMessages.errorTitle
           page
             .getElementsByClass("govuk-list govuk-error-summary__list")
             .first()
-            .text() shouldBe "Select option to continue"
+            .text() shouldBe KeepAccessToSAMessages.errorMessage
         }
       }
     }

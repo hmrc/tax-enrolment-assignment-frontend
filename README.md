@@ -38,11 +38,14 @@ Run Performance Tests see [here](https://github.com/hmrc/tax-enrolment-assignmen
 
 ## API
 
-| Path | Supported Methods | Type | Description                            |
-|---------------------------------------------------|:-------------------:|:-------|----------------------------------------|
-| `/protect-tax-info/test-only/successful`          | GET | Test | Endpoint to get a successful redirect. |
-| `/users-groups-search/test-only/users/:credId`    | GET | Test | Mimic UGS locally and in staging.      |
-| `/protect-tax-info/test-only/auth/enrolments`     | GET | Test | Return enrolments in session from auth |
+| Path                                                         | Supported Methods | Type | Description                                             |
+|--------------------------------------------------------------|:-----------------:|:-----|---------------------------------------------------------|
+| `/protect-tax-info/redirectUrl=<urlHere>`                    |        GET        | Prod | Main endpoint for users to start their journey          |
+| `/protect-tax-info/test-only/successful`                     |        GET        | Test | Endpoint to get a successful redirect.                  |
+| `/users-groups-search/test-only/users/:credId`               |        GET        | Test | Mimic UGS locally and in staging.                       |
+| `/protect-tax-info/test-only/auth/enrolments`                |        GET        | Test | Return enrolments in session from auth                  |
+| `/add-taxes-frontend/test-only/self-assessment/enrol-for-sa` |       POST        | Test | Mimic Add taxes frontend enrol for sa endpoint          |
+| `/sa/test-only/start`                                        |        GET        | Test | Mimic Endpoint returned from Add taxes frontend in JSON |
 
 ## Throttling
 
@@ -52,6 +55,7 @@ Run Performance Tests see [here](https://github.com/hmrc/tax-enrolment-assignmen
 - set to 0 to disable
 - set to 1 to throttle NINOs with pattern QQ112200Q
 - set to 100 to throttle NINOS with pattern QQ112299Q
+- https://confluence.tools.tax.service.gov.uk/display/TEN/Throttling+processes
 
 ## Audits
 https://confluence.tools.tax.service.gov.uk/display/TEN/CIP+Assessment+tracker+-+TENINO

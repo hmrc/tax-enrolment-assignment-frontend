@@ -38,6 +38,9 @@ class AccountCheckControllerISpec extends TestHelper with Status {
 
   val urlPath: String = UrlPaths.accountCheckPath
   val ninoBelowThreshold = "QQ123400A"
+  val ninoSameAsThrottlePercentage = "QQ123402A"
+  val throttlePercentage = config.get("throttle.percentage")
+
   val newEnrolment = (nino: String) => Enrolment(s"$hmrcPTKey", Seq(EnrolmentIdentifier("NINO", nino)), "Activated", None)
 
   s"GET $urlPath" when {
@@ -267,6 +270,152 @@ class AccountCheckControllerISpec extends TestHelper with Status {
             resp.header("Location").get should include(UrlPaths.returnUrl)
           }
         }
+
+
+        s"the current user has $MULTIPLE_ACCOUNTS where Nino's last 2 digits are same as throttle percentage" in {
+          val authResponse = authoriseResponseJson(optNino = Some(ninoSameAsThrottlePercentage), enrolments = noEnrolments)
+          stubAuthorizePost(OK, authResponse.toString())
+          stubPost(s"/write/.*", OK, """{"x":2}""")
+          stubGet(
+            s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$ninoSameAsThrottlePercentage/users",
+            Status.OK,
+            es0ResponseNoRecordCred
+          )
+          stubGetWithQueryParam(
+            "/identity-verification/nino",
+            "nino",
+            ninoSameAsThrottlePercentage,
+            Status.OK,
+            ivResponseMultiCredsJsonString
+          )
+          stubGetMatching(
+            s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_3/enrolments?type=principal",
+            Status.NO_CONTENT,
+            ""
+          )
+          stubGetMatching(
+            s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_4/enrolments?type=principal",
+            Status.NO_CONTENT,
+            ""
+          )
+
+          stubPost(
+            s"/enrolment-store-proxy/enrolment-store/enrolments",
+            Status.NO_CONTENT,
+            ""
+          )
+          stubPut(
+            s"/tax-enrolments/service/HMRC-PT/enrolment",
+            Status.NO_CONTENT,
+            ""
+          )
+
+          val result = buildRequest(urlPath)
+            .addCookies(DefaultWSCookie("mdtp", authCookie))
+            .addHttpHeaders(xSessionId, csrfContent)
+            .get()
+
+          whenReady(result) { resp =>
+            resp.status shouldBe SEE_OTHER
+            resp.header("Location").get should include(
+              UrlPaths.enrolledPTNoSAOnAnyAccountPath)
+          }
+        }
+
+        s"the current user has $SA_ASSIGNED_TO_OTHER_USER where Nino's last 2 digits are same as throttle percentage" in {
+          val authResponse = authoriseResponseJson(optNino = Some(ninoSameAsThrottlePercentage), enrolments = noEnrolments)
+          stubAuthorizePost(OK, authResponse.toString())
+          stubPost(s"/write/.*", OK, """{"x":2}""")
+          stubGet(
+            s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$ninoSameAsThrottlePercentage/users",
+            Status.OK,
+            es0ResponseNoRecordCred
+          )
+          stubGetWithQueryParam(
+            "/identity-verification/nino",
+            "nino",
+            ninoSameAsThrottlePercentage,
+            Status.OK,
+            ivResponseMultiCredsJsonString
+          )
+          stubGetMatching(
+            s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_3/enrolments?type=principal",
+            Status.NO_CONTENT,
+            ""
+          )
+          stubGetMatching(
+            s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_4/enrolments?type=principal",
+            Status.NO_CONTENT,
+            ""
+          )
+
+          stubPost(
+            s"/enrolment-store-proxy/enrolment-store/enrolments",
+            Status.OK,
+            eacdResponse
+          )
+          stubGet(
+            s"/enrolment-store-proxy/enrolment-store/enrolments/IR-SA~UTR~$UTR/users",
+            Status.OK,
+            es0ResponseNotMatchingCred
+          )
+
+          val result = buildRequest(urlPath)
+            .addCookies(DefaultWSCookie("mdtp", authCookie))
+            .addHttpHeaders(xSessionId, csrfContent)
+            .get()
+
+          whenReady(result) { resp =>
+            resp.status shouldBe SEE_OTHER
+            resp.header("Location").get should include(
+              UrlPaths.saOnOtherAccountInterruptPath)
+          }
+        }
+
+        s"the current user has $SA_ASSIGNED_TO_CURRENT_USER where Nino's last 2 digits are same as throttle percentage" in {
+          val authResponse = authoriseResponseJson(optNino = Some(ninoSameAsThrottlePercentage), enrolments = saEnrolmentOnly)
+          stubAuthorizePost(OK, authResponse.toString())
+          stubPost(s"/write/.*", OK, """{"x":2}""")
+          stubGet(
+            s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$ninoSameAsThrottlePercentage/users",
+            Status.OK,
+            es0ResponseNoRecordCred
+          )
+          stubGetWithQueryParam(
+            "/identity-verification/nino",
+            "nino",
+            ninoSameAsThrottlePercentage,
+            Status.OK,
+            ivResponseMultiCredsJsonString
+          )
+          stubGetMatching(
+            s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_3/enrolments?type=principal",
+            Status.NO_CONTENT,
+            ""
+          )
+          stubGetMatching(
+            s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_4/enrolments?type=principal",
+            Status.NO_CONTENT,
+            ""
+          )
+
+          stubPut(
+            s"/tax-enrolments/service/HMRC-PT/enrolment",
+            Status.NO_CONTENT,
+            ""
+          )
+
+          val result = buildRequest(urlPath)
+            .addCookies(DefaultWSCookie("mdtp", authCookie))
+            .addHttpHeaders(xSessionId, csrfContent)
+            .get()
+
+          whenReady(result) { res =>
+            res.status shouldBe SEE_OTHER
+            res.header("Location").get should include(UrlPaths.enrolledPTWithSAOnAnyAccountPath)
+          }
+        }
+
       }
 
       s"redirect to ${UrlPaths.returnUrl}" when {

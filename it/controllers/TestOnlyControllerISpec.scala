@@ -52,10 +52,12 @@ class TestOnlyControllerISpec extends IntegrationSpecBase with Status {
         }
       }
 
-      "return NOT_FOUND " when {
+      "return default user details " when {
         "the credential is not recognised" in {
           val credId = "2568836745857973"
           val url = s"/users-groups-search/test-only/users/$credId"
+          val expectedResponse =
+            """{"obfuscatedUserId":"********6121","email":"email11@test.com","lastAccessedTimestamp":"2022-09-16T14:40:25Z","additionalFactors":[{"factorType":"totp","name":"HMRC App"}]}"""
           val res = buildTestOnlyRequest(url, followRedirects = true)
             .addCookies(DefaultWSCookie("mdtp", authCookie))
             .addHttpHeaders(xSessionId, csrfContent)
@@ -63,7 +65,8 @@ class TestOnlyControllerISpec extends IntegrationSpecBase with Status {
             .get()
 
           whenReady(res) { resp =>
-            resp.status shouldBe NOT_FOUND
+            resp.status shouldBe NON_AUTHORITATIVE_INFORMATION
+            resp.body shouldBe expectedResponse
           }
         }
       }

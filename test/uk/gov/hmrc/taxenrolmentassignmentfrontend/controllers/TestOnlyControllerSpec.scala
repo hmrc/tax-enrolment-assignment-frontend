@@ -62,10 +62,27 @@ class TestOnlyControllerSpec extends TestFixture {
       }
     }
     "the credential is not recognised" should {
-      "return not found" in {
+      "return the default userdetails" in {
         val credId = "3568836745857979"
+        val expectedResponse = {
+          Json.obj(
+            ("obfuscatedUserId", JsString("********6121")),
+            ("email", JsString("email11@test.com")),
+            ("lastAccessedTimestamp", JsString("2022-09-16T14:40:25Z")),
+            (
+              "additionalFactors",
+              Json.arr(
+                Json.obj(
+                  ("factorType", JsString("totp")),
+                  ("name", JsString("HMRC App"))
+                )
+              )
+            )
+          )
+        }
         val res = testOnlyController.usersGroupSearchCall(credId)(fakeReq)
-        status(res) shouldBe NOT_FOUND
+        status(res) shouldBe NON_AUTHORITATIVE_INFORMATION
+        contentAsJson(res) shouldBe expectedResponse
       }
     }
   }

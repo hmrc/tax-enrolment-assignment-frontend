@@ -41,15 +41,12 @@ class TestOnlyController @Inject()(mcc: MessagesControllerComponents,
 
   def usersGroupSearchCall(credId: String): Action[AnyContent] = Action.async {
     _ =>
-      UsersGroupsFixedData.usersGroupSearchCreds.get(credId) match {
-        case Some(userDetails) =>
-          Future.successful(
-            NonAuthoritativeInformation(
-              UsersGroupsFixedData.toJson(userDetails)
-            )
+      val userDetails = UsersGroupsFixedData.usersGroupSearchCreds.getOrElse(credId, UsersGroupsFixedData.defaultUserResponse)
+        Future.successful(
+          NonAuthoritativeInformation(
+            UsersGroupsFixedData.toJson(userDetails)
           )
-        case None => Future.successful(NotFound)
-      }
+        )
   }
 
   def enrolmentsFromAuth(): Action[AnyContent] = authAction {

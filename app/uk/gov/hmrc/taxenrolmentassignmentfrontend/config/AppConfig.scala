@@ -40,7 +40,7 @@ class AppConfig @Inject()(val config: ServicesConfig) {
     }
   }
   lazy val AUTH_BASE_URL: String = {
-    if (config.getConfBool("tax-enrolments.isTest", defBool = false)) {
+    if (config.getConfBool("auth.isTest", defBool = false)) {
       s"$tenBaseUrl/auth/test-only"
     } else {
       config.baseUrl("auth") + "/auth"

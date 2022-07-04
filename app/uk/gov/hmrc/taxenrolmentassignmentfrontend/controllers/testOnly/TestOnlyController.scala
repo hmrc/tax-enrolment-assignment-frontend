@@ -61,4 +61,12 @@ class TestOnlyController @Inject()(mcc: MessagesControllerComponents,
   val addTaxesFrontendStub: Action[AnyContent] = Action { _ =>
     Ok(Json.toJson(SASetupJourneyResponse(routes.TestOnlyController.successfulSACall.url)))
   }
+
+  val authStub: Action[AnyContent] = Action { _ =>
+    Ok
+  }
+
+  val taxEnrolmentsStub: Action[AnyContent] = Action { _ =>
+    NoContent
+  }
 }

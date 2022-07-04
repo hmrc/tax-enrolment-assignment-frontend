@@ -42,7 +42,7 @@ class LegacyAuthConnector @Inject()(httpClient: HttpClient,
                         implicit ec: ExecutionContext,
                         hc: HeaderCarrier): TEAFResult[Unit] = EitherT {
     httpClient
-      .PUT[Set[Enrolment], HttpResponse](s"${appConfig.AUTH_BASE_URL}/auth/enrolments", enrolments)(wts = EnrolmentsFormats.writes, implicitly, implicitly, implicitly)
+      .PUT[Set[Enrolment], HttpResponse](s"${appConfig.AUTH_BASE_URL}/enrolments", enrolments)(wts = EnrolmentsFormats.writes, implicitly, implicitly, implicitly)
       .map(httpResponse =>
         httpResponse.status match {
         case OK => Right(Unit)

@@ -118,4 +118,31 @@ class TestOnlyControllerISpec extends IntegrationSpecBase with Status {
     }
   }
 
+
+  "PUT /tax-enrolments/test-only/service/HMRC-PT/enrolment" should {
+    s"return $OK" in {
+      val res = buildTestOnlyRequest("/tax-enrolments/test-only/service/HMRC-PT/enrolment")
+        .addCookies(DefaultWSCookie("mdtp", authCookie))
+        .addHttpHeaders(xSessionId, csrfContent)
+        .put(Json.obj())
+
+      whenReady(res) { resp =>
+        resp.status shouldBe NO_CONTENT
+      }
+    }
+  }
+
+  "PUT /auth/test-only/enrolments" should {
+    s"return $NO_CONTENT" in {
+      val res = buildTestOnlyRequest("/auth/test-only/enrolments")
+        .addCookies(DefaultWSCookie("mdtp", authCookie))
+        .addHttpHeaders(xSessionId, csrfContent)
+        .put(Json.obj())
+
+      whenReady(res) { resp =>
+        resp.status shouldBe OK
+      }
+    }
+  }
+
 }

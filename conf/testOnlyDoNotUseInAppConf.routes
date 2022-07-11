@@ -18,3 +18,7 @@ GET        /protect-tax-info/test-only/auth/enrolments                          
 GET        /sa/test-only/start                                                                                uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController.successfulSACall
 +nocsrf
 POST       /add-taxes-frontend/test-only/self-assessment/enrol-for-sa                                         uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController.addTaxesFrontendStub
++nocsrf
+PUT       /auth/test-only/enrolments                                         uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController.authStub
++nocsrf
+PUT       /tax-enrolments/test-only/service/HMRC-PT/enrolment                                         uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController.taxEnrolmentsStub

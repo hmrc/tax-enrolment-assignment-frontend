@@ -123,4 +123,18 @@ class TestOnlyControllerSpec extends TestFixture {
       contentAsJson(res) shouldBe Json.toJson(SASetupJourneyResponse(testOnly.routes.TestOnlyController.successfulSACall.url))
     }
   }
+
+  "authStub" should {
+    s"return $OK" in {
+      val res = testOnlyController.authStub()(fakeReq)
+      status(res) shouldBe OK
+    }
+  }
+
+  "taxEnrolmentsStub" should {
+    s"return $NO_CONTENT" in {
+      val res = testOnlyController.taxEnrolmentsStub()(fakeReq)
+      status(res) shouldBe NO_CONTENT
+    }
+  }
 }

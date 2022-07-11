@@ -32,8 +32,20 @@ class AppConfig @Inject()(val config: ServicesConfig) {
   lazy val EACD_BASE_URL
     : String = config.baseUrl("enrolment-store-proxy") + "/enrolment-store-proxy"
   lazy val TAX_ENROLMENTS_BASE_URL
-    : String = config.baseUrl("tax-enrolments") + "/tax-enrolments"
-  lazy val AUTH_BASE_URL: String = config.baseUrl("auth")
+    : String = {
+    if (config.getConfBool("tax-enrolments.isTest", defBool = false)) {
+      s"$tenBaseUrl/tax-enrolments/test-only"
+    } else {
+      config.baseUrl("tax-enrolments") + "/tax-enrolments"
+    }
+  }
+  lazy val AUTH_BASE_URL: String = {
+    if (config.getConfBool("auth.isTest", defBool = false)) {
+      s"$tenBaseUrl/auth/test-only"
+    } else {
+      config.baseUrl("auth") + "/auth"
+    }
+  }
 
   lazy val ADD_TAXES_FRONTEND_SA_INIT_URL: String = {
     if(config.getConfBool("add-taxes-frontend.isTest", defBool = false)) {

@@ -98,7 +98,9 @@ class AuthAction @Inject()(
             hasSAEnrolment
           )
 
-          val sessionID = UUID.randomUUID().toString
+          val sessionID = request.session
+            .get("sessionId")
+            .getOrElse(UUID.randomUUID().toString)
           block(
             RequestWithUserDetailsFromSession(request, userDetails, sessionID)
           )

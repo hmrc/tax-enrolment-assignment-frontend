@@ -401,8 +401,13 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
         }
       }
 
-      "return NoPTEnrolmentWhenOneExpected" when {
+      "return NoSAEnrolmentWhenOneExpected" when {
         "the sa user in the cache is empty" in {
+          (mockEacdService.getUsersAssignedSAEnrolment(_: RequestWithUserDetailsFromSession[_],
+            _: HeaderCarrier,
+            _: ExecutionContext))
+            .expects(*, *, *)
+            .returning(createInboundResult(UsersAssignedEnrolmentEmpty))
           val additionalCacheData = Map("USER_ASSIGNED_SA_ENROLMENT" -> Json.toJson(UsersAssignedEnrolmentEmpty))
 
           val res = orchestrator.getSACredentialIfNotFraud(
@@ -414,6 +419,12 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
         }
 
         "the cache is empty" in {
+          (mockEacdService.getUsersAssignedSAEnrolment(_: RequestWithUserDetailsFromSession[_],
+            _: HeaderCarrier,
+            _: ExecutionContext))
+            .expects(*, *, *)
+            .returning(createInboundResult(UsersAssignedEnrolmentEmpty))
+
           val res = orchestrator.getSACredentialIfNotFraud(requestWithAccountType(randomAccountType), implicitly, implicitly)
 
           whenReady(res.value) { result =>

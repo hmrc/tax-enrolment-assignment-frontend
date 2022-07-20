@@ -118,12 +118,9 @@ class AccountCheckOrchestrator @Inject()(
     hc: HeaderCarrier,
     ec: ExecutionContext
   ): TEAFResult[AccountTypes.Value] = {
-
-    val isMultipleAccount = silentAssignmentService.hasOtherAccountsWithPTAAccess
-    val accountTypeIfHasSA = getAccountTypeIfHasSA
     for {
-      hasMultipleAccounts <- isMultipleAccount
-      optSAAccountType <- accountTypeIfHasSA
+      hasMultipleAccounts <- silentAssignmentService.hasOtherAccountsWithPTAAccess
+      optSAAccountType <- getAccountTypeIfHasSA
     } yield determineAccountType(hasMultipleAccounts, optSAAccountType)
   }
 

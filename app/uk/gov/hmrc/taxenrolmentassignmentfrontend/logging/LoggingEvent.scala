@@ -24,13 +24,14 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.{IR
 object LoggingEvent {
 
   def logSingleAccountHolderAssignedEnrolment(
-    credentialId: String
+    credentialId: String,
+    nino: String
   ): LoggingEvent =
     Info(
       Event(
         "[AccountCheckController][silentEnrol]",
         details = Some(
-          s"$hmrcPTKey enrolment assigned to single account credential $credentialId"
+          s"$hmrcPTKey enrolment assigned to single account credential $credentialId with nino $nino"
         )
       )
     )
@@ -46,13 +47,14 @@ object LoggingEvent {
   )
 
   def logMultipleAccountHolderAssignedEnrolment(
-    credentialId: String
+    credentialId: String,
+    nino: String
   ): LoggingEvent =
     Info(
       Event(
         "[AccountCheckController][silentEnrol]",
         details = Some(
-          s"$hmrcPTKey enrolment assigned to credential $credentialId which has multiple accounts"
+          s"$hmrcPTKey enrolment assigned to credential $credentialId which has multiple accounts with nino $nino"
         )
       )
     )
@@ -86,12 +88,12 @@ object LoggingEvent {
         details = Some(s"Add taxes frontend returned $status with ${body.toString()} when setting up journey")
       )
     )
-    def logUserThrottled(credentialId: String, accountType: AccountTypes.Value): LoggingEvent =
+    def logUserThrottled(credentialId: String, accountType: AccountTypes.Value, nino: String): LoggingEvent =
     Info(
       Event(
         "[Throttling]",
         details = Some(
-          s"$credentialId has been throttled with the account type $accountType"
+          s"$credentialId has been throttled with the account type $accountType and nino $nino"
         )
       )
     )

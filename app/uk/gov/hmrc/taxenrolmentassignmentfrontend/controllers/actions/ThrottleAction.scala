@@ -46,7 +46,7 @@ class ThrottleAction @Inject()(throttlingService: ThrottlingService,
       requestWithUserDetailsFromSession.userDetails.enrolments.enrolments
     )(ec, hc).value.map {
       case Right(ThrottleApplied) =>
-        logger.logEvent(LoggingEvent.logUserThrottled(requestWithUserDetailsFromSession.userDetails.credId, accountType))
+        logger.logEvent(LoggingEvent.logUserThrottled(requestWithUserDetailsFromSession.userDetails.credId, accountType, requestWithUserDetailsFromSession.userDetails.nino))
         Some(Redirect(redirectUrl))
       case Right(ThrottleDoesNotApply) => None
       case Left(error) => Some(errorHandler

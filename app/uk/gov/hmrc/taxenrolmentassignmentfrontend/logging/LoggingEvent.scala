@@ -213,6 +213,18 @@ object LoggingEvent {
       )
     )
 
+
+  def logResponseFromIV(nino: String,
+                        jsonResponse: String): LoggingEvent =
+    Info(
+      Event(
+        "[IVConnector][getCredentialsWithNino]",
+        details = Some(
+          s"Identity Verification returned $jsonResponse for NINO $nino"
+        )
+      )
+    )
+
   def logUnexpectedResponseFromEACD(
     enrolmentType: String,
     statusReturned: Int,

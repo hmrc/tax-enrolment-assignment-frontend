@@ -49,7 +49,11 @@ class IVConnector @Inject()(httpClient: HttpClient,
       .map(
         httpResponse =>
           httpResponse.status match {
-            case OK => Right(httpResponse.json.as[List[IVNinoStoreEntry]])
+            case OK =>
+              logger.logEvent(
+                logResponseFromIV(nino, httpResponse.json.toString())
+              )
+              Right(httpResponse.json.as[List[IVNinoStoreEntry]])
             case status =>
               logger.logEvent(logUnexpectedResponseFromIV(nino, status))
               Left(UnexpectedResponseFromIV)

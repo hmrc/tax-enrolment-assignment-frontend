@@ -27,7 +27,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromE
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{IVNinoStoreEntry, UserEnrolmentsListResponse}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.OTHER_VALID_PTA_ACCOUNTS
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.HAS_OTHER_VALID_PTA_ACCOUNTS
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -68,49 +68,55 @@ class SilentAssignmentServiceSpec extends TestFixture with ScalaFutures {
           Some(businessEnrolmentResponse)
         ).returning(createInboundResult(Some(businessEnrolmentResponse)))
 
-        mockSaveCacheOtherValidPTAAccounts(Seq.empty[IVNinoStoreEntry])
+        mockSaveCacheOtherValidPTAAccounts(false)
 
-        val res = service.getOtherAccountsWithPTAAccess
+        val res = service.hasOtherAccountsWithPTAAccess
 
         whenReady(res.value) { result =>
-          result shouldBe Right(Seq.empty[IVNinoStoreEntry])
+          result shouldBe Right(false)
         }
       }
 
-      "there are more than 10 CL200 accounts" in new TestHelper {
+      "there are more than 10 CL200 accounts that are business accounts" in new TestHelper {
         mockIVCall(multiCL200IVCreds)
-        mockSaveCacheOtherValidPTAAccounts(Seq.empty[IVNinoStoreEntry])
+        multiCL200IVCreds.take(10).map(ivEntry =>
+          mockEACDGetEnrolments(
+            ivEntry.credId,
+            Some(businessEnrolmentResponse)
+          )
+        )
 
-        val res = service.getOtherAccountsWithPTAAccess
+        mockSaveCacheOtherValidPTAAccounts(false)
+
+        val res = service.hasOtherAccountsWithPTAAccess
 
         whenReady(res.value) { result =>
-          result shouldBe Right(Seq.empty[IVNinoStoreEntry])
+          result shouldBe Right(false)
         }
       }
 
       "IV only returns signed in credential" in new TestHelper {
         mockIVCall(List(ivNinoStoreEntryCurrent))
-        mockSaveCacheOtherValidPTAAccounts(Seq.empty[IVNinoStoreEntry])
+        mockSaveCacheOtherValidPTAAccounts(false)
 
-        val res = service.getOtherAccountsWithPTAAccess
+        val res = service.hasOtherAccountsWithPTAAccess
 
         whenReady(res.value) { result =>
-          result shouldBe Right(Seq.empty[IVNinoStoreEntry])
+          result shouldBe Right(false)
         }
       }
 
-      //TODO is this incorrect handling? Should we not ignore the errors and retry
       "the calls to EACD respond with an error" in new TestHelper {
         mockIVCall(multiIVCreds)
         mockEACDGetEnrolmentsFailure("8316291481001919")
         mockEACDGetEnrolmentsFailure("0493831301037584")
         mockEACDGetEnrolmentsFailure("2884521810163541")
-        mockSaveCacheOtherValidPTAAccounts(Seq.empty[IVNinoStoreEntry])
+        mockSaveCacheOtherValidPTAAccounts(false)
 
-        val res = service.getOtherAccountsWithPTAAccess
+        val res = service.hasOtherAccountsWithPTAAccess
 
         whenReady(res.value) { result =>
-          result shouldBe Right(Seq.empty[IVNinoStoreEntry])
+          result shouldBe Right(false)
         }
       }
     }
@@ -122,28 +128,24 @@ class SilentAssignmentServiceSpec extends TestFixture with ScalaFutures {
       "the accounts have no enrolments" in new TestHelper {
         mockIVCall(multiIVCreds)
         mockEACDGetEnrolments("8316291481001919", None)
-        mockEACDGetEnrolments("0493831301037584", None)
-        mockEACDGetEnrolments("2884521810163541", None)
-        mockSaveCacheOtherValidPTAAccounts(validPtaList)
+        mockSaveCacheOtherValidPTAAccounts(true)
 
-        val res = service.getOtherAccountsWithPTAAccess
+        val res = service.hasOtherAccountsWithPTAAccess
 
         whenReady(res.value) { result =>
-          result shouldBe Right(validPtaList)
+          result shouldBe Right(true)
         }
       }
 
       "the accounts have no business enrolments" in new TestHelper {
         mockIVCall(multiIVCreds)
         mockEACDGetEnrolments("8316291481001919", Some(irsaResponse))
-        mockEACDGetEnrolments("0493831301037584", Some(irsaResponse))
-        mockEACDGetEnrolments("2884521810163541", Some(irsaResponse))
-        mockSaveCacheOtherValidPTAAccounts(validPtaList)
+        mockSaveCacheOtherValidPTAAccounts(true)
 
-        val res = service.getOtherAccountsWithPTAAccess
+        val res = service.hasOtherAccountsWithPTAAccess
 
         whenReady(res.value) { result =>
-          result shouldBe Right(validPtaList)
+          result shouldBe Right(true)
         }
       }
     }
@@ -183,14 +185,14 @@ class SilentAssignmentServiceSpec extends TestFixture with ScalaFutures {
         .once()
 
     def mockSaveCacheOtherValidPTAAccounts(
-      otherValidPtaAccounts: Seq[IVNinoStoreEntry]
+      hasOtherValidPtaAccounts: Boolean
     ) =
       (mockTeaSessionCache
-        .save(_: String, _: Seq[IVNinoStoreEntry])(
+        .save(_: String, _: Boolean)(
           _: RequestWithUserDetailsFromSession[AnyContent],
-          _: Format[Seq[IVNinoStoreEntry]]
+          _: Format[Boolean]
         ))
-        .expects(OTHER_VALID_PTA_ACCOUNTS, otherValidPtaAccounts, *, *)
+        .expects(HAS_OTHER_VALID_PTA_ACCOUNTS, hasOtherValidPtaAccounts, *, *)
         .returning(Future(CacheMap(request.sessionID, Map())))
         .once()
   }

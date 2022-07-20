@@ -20,7 +20,7 @@ import play.api.libs.json.JsValue
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, IVNinoStoreEntry, UsersAssignedEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM, OTHER_VALID_PTA_ACCOUNTS, REDIRECT_URL, REPORTED_FRAUD, USER_ASSIGNED_PT_ENROLMENT, USER_ASSIGNED_SA_ENROLMENT, accountDetailsForCredential}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM, REDIRECT_URL, REPORTED_FRAUD, USER_ASSIGNED_PT_ENROLMENT, USER_ASSIGNED_SA_ENROLMENT, accountDetailsForCredential}
 
 case class AccountDetailsFromMongo(accountType: AccountTypes.Value,
                                    redirectUrl: String,
@@ -34,8 +34,6 @@ case class AccountDetailsFromMongo(accountType: AccountTypes.Value,
     sessionData.get(USER_ASSIGNED_SA_ENROLMENT).map(_.as[UsersAssignedEnrolment])
   val optUserAssignedPT: Option[UsersAssignedEnrolment] =
     sessionData.get(USER_ASSIGNED_PT_ENROLMENT).map(_.as[UsersAssignedEnrolment])
-  val optOtherValidPTAAccounts: Option[Seq[IVNinoStoreEntry]] =
-    sessionData.get(OTHER_VALID_PTA_ACCOUNTS).map(_.as[Seq[IVNinoStoreEntry]])
   def optAccountDetails(credId: String): Option[AccountDetails] =
     sessionData.get(accountDetailsForCredential(credId)).map(_.as[AccountDetails])
 

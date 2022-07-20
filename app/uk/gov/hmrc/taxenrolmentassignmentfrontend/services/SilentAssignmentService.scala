@@ -26,7 +26,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentE
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IVNinoStoreEntry
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IVNinoStoreEntry._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.saEnrolmentSet
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.OTHER_VALID_PTA_ACCOUNTS
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{HAS_OTHER_VALID_PTA_ACCOUNTS}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 
 import javax.inject.Inject
@@ -52,62 +52,57 @@ class SilentAssignmentService @Inject()(
     taxEnrolmentsConnector.assignPTEnrolmentWithKnownFacts(details.nino)
   }
 
-  def getOtherAccountsWithPTAAccess(
+  def hasOtherAccountsWithPTAAccess(
     implicit requestWithUserDetails: RequestWithUserDetailsFromSession[_],
     hc: HeaderCarrier,
     ec: ExecutionContext
-  ): TEAFResult[Seq[IVNinoStoreEntry]] = {
+  ): TEAFResult[Boolean] = {
     for {
       allCreds <- ivConnector.getCredentialsWithNino(
         requestWithUserDetails.userDetails.nino
       )
-      otherValidPTACreds <- EitherT.right[TaxEnrolmentAssignmentErrors](
-        getOtherNoneBusinessAccounts(
+      hasOtherValidPTACreds <- EitherT.right[TaxEnrolmentAssignmentErrors](
+        hasOtherNoneBusinessAccounts(
           allCreds,
           requestWithUserDetails.userDetails.credId
         )
       )
       _ <- EitherT.right[TaxEnrolmentAssignmentErrors](
-        sessionCache.save[Seq[IVNinoStoreEntry]](
-          OTHER_VALID_PTA_ACCOUNTS,
-          otherValidPTACreds
+        sessionCache.save[Boolean](
+          HAS_OTHER_VALID_PTA_ACCOUNTS,
+          hasOtherValidPTACreds
         )
       )
     } yield {
-      otherValidPTACreds
+      hasOtherValidPTACreds
     }
   }
 
-  private def getOtherNoneBusinessAccounts(list: Seq[IVNinoStoreEntry],
+  private def hasOtherNoneBusinessAccounts(list: Seq[IVNinoStoreEntry],
                                            currentCredId: String)(
     implicit hc: HeaderCarrier,
     ec: ExecutionContext
-  ): Future[Seq[IVNinoStoreEntry]] = {
+  ): Future[Boolean] = {
     val otherCreds = list.filterNot(_.credId == currentCredId)
     lazy val filteredCL200List: Seq[IVNinoStoreEntry] = filterCL200Accounts(
       otherCreds
     )
-    if (otherCreds.nonEmpty && filteredCL200List.nonEmpty && filteredCL200List.size < 10) {
-      filterNoneBusinessAccounts(filteredCL200List)
-    } else {
-      Future.successful(Seq.empty[IVNinoStoreEntry])
-
-    }
+    checkIfAnyOtherNoneBusinessAccounts(filteredCL200List)
   }
 
-  private def filterNoneBusinessAccounts(list: Seq[IVNinoStoreEntry])(
-    implicit hc: HeaderCarrier,
-    ec: ExecutionContext
-  ): Future[Seq[IVNinoStoreEntry]] = {
-
-    val validPtaAccountList = list.map { ninoEntry =>
-      isNotBusinessAccount(ninoEntry).map {
-        case true  => Some(ninoEntry)
-        case false => None
+  private def checkIfAnyOtherNoneBusinessAccounts(list: Seq[IVNinoStoreEntry], attemptsRemaining: Int = 10)
+                                                 (implicit hc: HeaderCarrier,
+                                                  ec: ExecutionContext): Future[Boolean] = {
+    if(attemptsRemaining == 0) {
+      Future.successful(false)
+    } else list match {
+      case ivStoreEntry :: tail if tail.isEmpty => isNotBusinessAccount(ivStoreEntry)
+      case ivStoreEntry :: tail => isNotBusinessAccount(ivStoreEntry).flatMap{
+        case true => Future.successful(true)
+        case false => checkIfAnyOtherNoneBusinessAccounts(tail, attemptsRemaining - 1)
       }
+      case Nil =>  Future.successful(false)
     }
-
-    Future.sequence(validPtaAccountList).map(_.flatten)
   }
 
   private def isNotBusinessAccount(

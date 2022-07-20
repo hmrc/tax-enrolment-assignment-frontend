@@ -254,6 +254,13 @@ class AccountCheckControllerISpec extends TestHelper with Status {
             Status.OK,
             ivResponseSingleCredsJsonString
           )
+
+          stubPost(
+            s"/enrolment-store-proxy/enrolment-store/enrolments",
+            Status.NO_CONTENT,
+            ""
+          )
+
           stubPut(
             s"/tax-enrolments/service/HMRC-PT/enrolment",
             Status.NO_CONTENT,
@@ -474,6 +481,12 @@ class AccountCheckControllerISpec extends TestHelper with Status {
             Status.OK,
             ivResponseSingleCredsJsonString
           )
+
+        stubPost(
+          s"/enrolment-store-proxy/enrolment-store/enrolments",
+          Status.NO_CONTENT,
+          ""
+        )
 
           stubPut(
             s"/tax-enrolments/service/HMRC-PT/enrolment",

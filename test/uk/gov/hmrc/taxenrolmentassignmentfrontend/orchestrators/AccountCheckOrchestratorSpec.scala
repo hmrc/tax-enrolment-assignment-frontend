@@ -91,15 +91,6 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
             .expects(*, *, *)
             .returning(createInboundResult(false))
 
-          (mockEacdService
-            .getUsersAssignedSAEnrolment(
-              _: RequestWithUserDetailsFromSession[AnyContent],
-              _: HeaderCarrier,
-              _: ExecutionContext
-            ))
-            .expects(*, *, *)
-            .returning(createInboundResult(UsersAssignedEnrolmentEmpty))
-
           (mockTeaSessionCache
             .save(_: String, _: AccountTypes.Value)(
               _: RequestWithUserDetailsFromSession[AnyContent],
@@ -112,58 +103,6 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
 
           whenReady(res.value) { result =>
             result shouldBe Right(SINGLE_ACCOUNT)
-          }
-        }
-      }
-
-      "has no PT enrolment in session or EACD but has SA on a business account" should {
-        s"return SA_ASSIGNED_TO_OTHER_USER" in {
-          (mockTeaSessionCache
-            .fetch()(
-              _: RequestWithUserDetailsFromSession[AnyContent]
-            ))
-            .expects(*)
-            .returning(Future.successful(None))
-
-          (mockEacdService
-            .getUsersAssignedPTEnrolment(
-              _: RequestWithUserDetailsFromSession[AnyContent],
-              _: HeaderCarrier,
-              _: ExecutionContext
-            ))
-            .expects(*, *, *)
-            .returning(createInboundResult(UsersAssignedEnrolmentEmpty))
-
-          (mockSilentAssignmentService
-            .hasOtherAccountsWithPTAAccess(
-              _: RequestWithUserDetailsFromSession[AnyContent],
-              _: HeaderCarrier,
-              _: ExecutionContext
-            ))
-            .expects(*, *, *)
-            .returning(createInboundResult(false))
-
-          (mockEacdService
-            .getUsersAssignedSAEnrolment(
-              _: RequestWithUserDetailsFromSession[AnyContent],
-              _: HeaderCarrier,
-              _: ExecutionContext
-            ))
-            .expects(*, *, *)
-            .returning(createInboundResult(UsersAssignedEnrolment1))
-
-          (mockTeaSessionCache
-            .save(_: String, _: AccountTypes.Value)(
-              _: RequestWithUserDetailsFromSession[AnyContent],
-              _: Format[AccountTypes.Value]
-            ))
-            .expects(ACCOUNT_TYPE, SA_ASSIGNED_TO_OTHER_USER, *, *)
-            .returning(Future(CacheMap(request.sessionID, Map())))
-
-          val res = orchestrator.getAccountType
-
-          whenReady(res.value) { result =>
-            result shouldBe Right(SA_ASSIGNED_TO_OTHER_USER)
           }
         }
       }

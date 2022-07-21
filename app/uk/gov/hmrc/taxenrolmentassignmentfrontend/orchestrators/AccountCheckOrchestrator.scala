@@ -117,27 +117,14 @@ class AccountCheckOrchestrator @Inject()(
     implicit requestWithUserDetails: RequestWithUserDetailsFromSession[_],
     hc: HeaderCarrier,
     ec: ExecutionContext
-  ): TEAFResult[AccountTypes.Value] = {
-    for {
-      hasMultipleAccounts <- silentAssignmentService.hasOtherAccountsWithPTAAccess
-      optSAAccountType <- getAccountTypeIfHasSA
-    } yield determineAccountType(hasMultipleAccounts, optSAAccountType)
-  }
-
-  def determineAccountType(hasMultipleAccounts: Boolean, optSAAccountType: Option[AccountTypes.Value])(
-    implicit requestWithUserDetails: RequestWithUserDetailsFromSession[_],
-    hc: HeaderCarrier,
-    ec: ExecutionContext
-  ): AccountTypes.Value = {
-    if(hasMultipleAccounts) {
-      logger.logEvent(logCurrentUserhasMultipleAccounts(requestWithUserDetails.userDetails.credId))
-      optSAAccountType.getOrElse(MULTIPLE_ACCOUNTS)
-    } else if(optSAAccountType.contains(SA_ASSIGNED_TO_OTHER_USER)){
-        SA_ASSIGNED_TO_OTHER_USER
-      } else {
-        logger.logEvent(logCurrentUserhasOneAccount(requestWithUserDetails.userDetails.credId))
-        SINGLE_ACCOUNT
-      }
+  ): TEAFResult[AccountTypes.Value] = EitherT {
+    silentAssignmentService.hasOtherAccountsWithPTAAccess.value.flatMap {
+      case Right(true) => logger.logEvent(logCurrentUserhasMultipleAccounts(requestWithUserDetails.userDetails.credId))
+        getAccountTypeIfHasSA.map(_.getOrElse(MULTIPLE_ACCOUNTS)).value
+      case Right(_) => logger.logEvent(logCurrentUserhasOneAccount(requestWithUserDetails.userDetails.credId))
+        Future.successful(Right(SINGLE_ACCOUNT))
+      case Left(error) => Future.successful(Left(error))
+    }
   }
 
   private def getAccountTypeIfHasSA(

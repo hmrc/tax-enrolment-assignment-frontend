@@ -117,54 +117,26 @@ class AccountCheckOrchestrator @Inject()(
     implicit requestWithUserDetails: RequestWithUserDetailsFromSession[_],
     hc: HeaderCarrier,
     ec: ExecutionContext
-  ): TEAFResult[AccountTypes.Value] = {
-    for {
-      singleOrMultipleAccount <- checkIfSingleOrMultipleAccounts
-      accountType <- singleOrMultipleAccount match {
-        case SINGLE_ACCOUNT =>
-          EitherT.right[TaxEnrolmentAssignmentErrors](
-            Future.successful(SINGLE_ACCOUNT)
-          )
-        case _ => checkMultipleAccountType
-      }
-    } yield accountType
+  ): TEAFResult[AccountTypes.Value] = EitherT {
+    silentAssignmentService.hasOtherAccountsWithPTAAccess.value.flatMap {
+      case Right(true) => logger.logEvent(logCurrentUserhasMultipleAccounts(requestWithUserDetails.userDetails.credId))
+        getAccountTypeIfHasSA.map(_.getOrElse(MULTIPLE_ACCOUNTS)).value
+      case Right(_) => logger.logEvent(logCurrentUserhasOneAccount(requestWithUserDetails.userDetails.credId))
+        Future.successful(Right(SINGLE_ACCOUNT))
+      case Left(error) => Future.successful(Left(error))
+    }
   }
 
-  private def checkIfSingleOrMultipleAccounts(
-    implicit requestWithUserDetails: RequestWithUserDetailsFromSession[_],
-    hc: HeaderCarrier,
-    ec: ExecutionContext
-  ): TEAFResult[AccountTypes.Value] = {
-    silentAssignmentService.getOtherAccountsWithPTAAccess.map(
-      otherCreds =>
-        if (otherCreds.isEmpty) {
-          logger.logEvent(
-            logCurrentUserhasOneAccount(
-              requestWithUserDetails.userDetails.credId
-            )
-          )
-          SINGLE_ACCOUNT
-        } else {
-          logger.logEvent(
-            logCurrentUserhasMultipleAccounts(
-              requestWithUserDetails.userDetails.credId
-            )
-          )
-          MULTIPLE_ACCOUNTS
-      }
-    )
-  }
-
-  private def checkMultipleAccountType(
+  private def getAccountTypeIfHasSA(
     implicit hc: HeaderCarrier,
     ec: ExecutionContext,
     requestWithUserDetails: RequestWithUserDetailsFromSession[_]
-  ): TEAFResult[AccountTypes.Value] = {
+  ): TEAFResult[Option[AccountTypes.Value]] = {
     if (requestWithUserDetails.userDetails.hasSAEnrolment) {
       logger.logEvent(
         logCurrentUserHasSAEnrolment(requestWithUserDetails.userDetails.credId)
       )
-      EitherT.right(Future.successful(SA_ASSIGNED_TO_CURRENT_USER))
+      EitherT.right(Future.successful(Some(SA_ASSIGNED_TO_CURRENT_USER)))
     } else {
       eacdService.getUsersAssignedSAEnrolment
         .map(
@@ -188,7 +160,6 @@ class AccountCheckOrchestrator @Inject()(
                   SA_ASSIGNED_TO_OTHER_USER
                 }
               }
-              .getOrElse(MULTIPLE_ACCOUNTS)
         )
     }
   }

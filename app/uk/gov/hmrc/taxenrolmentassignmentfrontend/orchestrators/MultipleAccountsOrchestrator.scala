@@ -32,7 +32,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logNoUserFoundWithPTEnrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.setupSAJourney.SASetupJourneyResponse
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, CADetailsPTADetailsSADetailsIfExists, PTEnrolmentOnOtherAccount}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, CADetailsPTADetailsSADetailsIfExists, PTEnrolmentOnOtherAccount, UsersAssignedEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{AddTaxesFrontendService, EACDService, SilentAssignmentService, UsersGroupsSearchService}
@@ -152,7 +152,11 @@ class MultipleAccountsOrchestrator @Inject()(
     optCredential.fold[Option[String]](None)(_.enrolledCredential) match {
       case Some(saCred) =>
         usersGroupSearchService.getAccountDetails(saCred)(implicitly, implicitly, requestWithUserDetails).value
-      case _ => Future.successful(Left(NoSAEnrolmentWhenOneExpected))
+      case _ => eacdService.getUsersAssignedSAEnrolment(requestWithUserDetails, implicitly, implicitly).value.flatMap {
+        case Right(UsersAssignedEnrolment(Some(credId))) =>
+          usersGroupSearchService.getAccountDetails(credId)(implicitly, implicitly, requestWithUserDetails).value
+        case _ => Future.successful(Left(NoSAEnrolmentWhenOneExpected))
+      }
     }
   }
 

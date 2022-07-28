@@ -115,11 +115,11 @@ extends TEAFrontendController(mcc) {
         auditHandler.audit(AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(accountType))
         if (accountType == SINGLE_ACCOUNT) {
           logger.logEvent(
-            logSingleAccountHolderAssignedEnrolment(request.userDetails.credId)
+            logSingleAccountHolderAssignedEnrolment(request.userDetails.credId, request.userDetails.nino)
           )
         } else {
           logger.logEvent(
-            logMultipleAccountHolderAssignedEnrolment(request.userDetails.credId)
+            logMultipleAccountHolderAssignedEnrolment(request.userDetails.credId, request.userDetails.nino)
           )
         }
       }

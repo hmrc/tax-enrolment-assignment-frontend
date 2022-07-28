@@ -83,13 +83,13 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
             .returning(createInboundResult(UsersAssignedEnrolmentEmpty))
 
           (mockSilentAssignmentService
-            .getOtherAccountsWithPTAAccess(
+            .hasOtherAccountsWithPTAAccess(
               _: RequestWithUserDetailsFromSession[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
             .expects(*, *, *)
-            .returning(createInboundResult(Seq.empty[IVNinoStoreEntry]))
+            .returning(createInboundResult(false))
 
           (mockTeaSessionCache
             .save(_: String, _: AccountTypes.Value)(
@@ -224,13 +224,13 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
             .returning(createInboundResult(UsersAssignedEnrolmentEmpty))
 
           (mockSilentAssignmentService
-            .getOtherAccountsWithPTAAccess(
+            .hasOtherAccountsWithPTAAccess(
               _: RequestWithUserDetailsFromSession[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
             .expects(*, *, *)
-            .returning(createInboundResult(multiIVCreds))
+            .returning(createInboundResult(true))
 
           (mockEacdService
             .getUsersAssignedSAEnrolment(
@@ -276,13 +276,13 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
             .returning(createInboundResult(UsersAssignedEnrolmentEmpty))
 
           (mockSilentAssignmentService
-            .getOtherAccountsWithPTAAccess(
+            .hasOtherAccountsWithPTAAccess(
               _: RequestWithUserDetailsFromSession[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
             .expects(*, *, *)
-            .returning(createInboundResult(multiIVCreds))
+            .returning(createInboundResult(true))
 
           (mockTeaSessionCache
             .save(_: String, _: AccountTypes.Value)(
@@ -323,13 +323,13 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
             .returning(createInboundResult(UsersAssignedEnrolmentEmpty))
 
           (mockSilentAssignmentService
-            .getOtherAccountsWithPTAAccess(
+            .hasOtherAccountsWithPTAAccess(
               _: RequestWithUserDetailsFromSession[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
             .expects(*, *, *)
-            .returning(createInboundResult(multiIVCreds))
+            .returning(createInboundResult(true))
 
           (mockEacdService
             .getUsersAssignedSAEnrolment(
@@ -375,13 +375,13 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
             .returning(createInboundResult(UsersAssignedEnrolmentEmpty))
 
           (mockSilentAssignmentService
-            .getOtherAccountsWithPTAAccess(
+            .hasOtherAccountsWithPTAAccess(
               _: RequestWithUserDetailsFromSession[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
             .expects(*, *, *)
-            .returning(createInboundResult(multiIVCreds))
+            .returning(createInboundResult(true))
 
           (mockEacdService
             .getUsersAssignedSAEnrolment(
@@ -427,13 +427,13 @@ class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
             .returning(createInboundResult(UsersAssignedEnrolmentEmpty))
 
           (mockSilentAssignmentService
-            .getOtherAccountsWithPTAAccess(
+            .hasOtherAccountsWithPTAAccess(
               _: RequestWithUserDetailsFromSession[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
             .expects(*, *, *)
-            .returning(createInboundResult(multiIVCreds))
+            .returning(createInboundResult(true))
 
           (mockEacdService
             .getUsersAssignedSAEnrolment(

@@ -52,7 +52,7 @@ class SilentAssignmentServiceSpec extends TestFixture with ScalaFutures {
   )
 
   "getOtherAccountsWithPTAAccess" should {
-    "save to cache and return an empty list" when {
+    "save to cache and return false" when {
       "all CL200 accounts have a business enrolment" in new TestHelper {
         mockIVCall(multiIVCreds)
         mockEACDGetEnrolments(
@@ -77,7 +77,7 @@ class SilentAssignmentServiceSpec extends TestFixture with ScalaFutures {
         }
       }
 
-      "there are more than 10 CL200 accounts that are business accounts" in new TestHelper {
+      "there are more than 10 CL200 accounts that are all business accounts" in new TestHelper {
         mockIVCall(multiCL200IVCreds)
         multiCL200IVCreds.take(10).map(ivEntry =>
           mockEACDGetEnrolments(
@@ -121,7 +121,7 @@ class SilentAssignmentServiceSpec extends TestFixture with ScalaFutures {
       }
     }
 
-    "save to cache and return the other PTA valid credentials" when {
+    "save to cache and return true" when {
       val validPtaList =
         Seq(ivNinoStoreEntry2, ivNinoStoreEntry3, ivNinoStoreEntry4)
 
@@ -140,6 +140,46 @@ class SilentAssignmentServiceSpec extends TestFixture with ScalaFutures {
       "the accounts have no business enrolments" in new TestHelper {
         mockIVCall(multiIVCreds)
         mockEACDGetEnrolments("8316291481001919", Some(irsaResponse))
+        mockSaveCacheOtherValidPTAAccounts(true)
+
+        val res = service.hasOtherAccountsWithPTAAccess
+
+        whenReady(res.value) { result =>
+          result shouldBe Right(true)
+        }
+      }
+
+      "there is more than 10 accounts and the 10th has no enrolments" in new TestHelper {
+        mockIVCall(multiCL200IVCreds)
+        def createMocksForEACD(ivCreds: List[IVNinoStoreEntry], count: Int = 10): Unit = {
+          if(count == 1) {
+            mockEACDGetEnrolments(ivCreds.head.credId, None)
+          } else {
+            mockEACDGetEnrolments(ivCreds.head.credId, Some(businessEnrolmentResponse))
+            createMocksForEACD(ivCreds.tail, count - 1)
+          }
+        }
+        createMocksForEACD(multiCL200IVCreds)
+        mockSaveCacheOtherValidPTAAccounts(true)
+
+        val res = service.hasOtherAccountsWithPTAAccess
+
+        whenReady(res.value) { result =>
+          result shouldBe Right(true)
+        }
+      }
+
+      "there is more than 10 accounts and the 10th has no business enrolments" in new TestHelper {
+        mockIVCall(multiCL200IVCreds)
+        def createMocksForEACD(ivCreds: List[IVNinoStoreEntry], count: Int = 10): Unit = {
+          if(count == 1) {
+            mockEACDGetEnrolments(ivCreds.head.credId, Some(irsaResponse))
+          } else {
+            mockEACDGetEnrolments(ivCreds.head.credId, Some(businessEnrolmentResponse))
+            createMocksForEACD(ivCreds.tail, count - 1)
+          }
+        }
+        createMocksForEACD(multiCL200IVCreds)
         mockSaveCacheOtherValidPTAAccounts(true)
 
         val res = service.hasOtherAccountsWithPTAAccess

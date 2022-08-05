@@ -63,7 +63,7 @@ object AccountDetails {
       credId = accountDetails.credId,
       userId = AccountDetails.trimmedUserId(accountDetails.userId),
       email = accountDetails.email,
-      lastLoginDate = AccountDetails.formatDate(accountDetails.lastLoginDate),
+      lastLoginDate = AccountDetails.formatDate(accountDetails.lastLoginDate)
     )
   }
 

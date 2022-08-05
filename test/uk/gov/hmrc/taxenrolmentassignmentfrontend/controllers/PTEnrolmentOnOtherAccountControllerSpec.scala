@@ -85,7 +85,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
           ptEnrolmentDataModelNone
             .copy(
               currentAccountDetails = ptEnrolmentDataModelNone.currentAccountDetails.copy(lastLoginDate = "27 common.month2 2022 common.dateToTime 12:00 PM"),
-              ptAccountDetails = ptEnrolmentDataModelNone.ptAccountDetails.copy(lastLoginDate = "27 common.month2 2022 common.dateToTime 12:00 PM"),
+              ptAccountDetails = ptEnrolmentDataModelNone.ptAccountDetails.copy(lastLoginDate = "27 common.month2 2022 common.dateToTime 12:00 PM")
             ))(
           fakeRequest,
           stubMessages()

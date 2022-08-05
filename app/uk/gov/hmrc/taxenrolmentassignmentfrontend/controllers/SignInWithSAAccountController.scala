@@ -23,6 +23,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMo
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SignInWithSAAccount
@@ -55,7 +56,7 @@ class SignInWithSAAccountController @Inject()(
 
     res.value.map {
       case Right(saAccount) =>
-        Ok(signInWithSAAccount(saAccount))
+        Ok(signInWithSAAccount(AccountDetails.userFriendlyAccountDetails(saAccount)))
       case Left(error) =>
         errorHandler.handleErrors(error, "[SignInWithSAAccountController][view]")(request, implicitly)
     }

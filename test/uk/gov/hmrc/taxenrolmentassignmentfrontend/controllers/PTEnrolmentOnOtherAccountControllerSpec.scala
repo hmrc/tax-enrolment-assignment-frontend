@@ -81,7 +81,12 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe OK
-        contentAsString(result) shouldBe view(ptEnrolmentDataModelNone)(
+        contentAsString(result) shouldBe view(
+          ptEnrolmentDataModelNone
+            .copy(
+              currentAccountDetails = ptEnrolmentDataModelNone.currentAccountDetails.copy(lastLoginDate = "27 common.month2 2022 common.dateToTime 12:00 PM"),
+              ptAccountDetails = ptEnrolmentDataModelNone.ptAccountDetails.copy(lastLoginDate = "27 common.month2 2022 common.dateToTime 12:00 PM"),
+            ))(
           fakeRequest,
           stubMessages()
         ).toString
@@ -122,7 +127,10 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe OK
-        contentAsString(result) shouldBe view(ptEnrolmentModel)(
+        contentAsString(result) shouldBe view(ptEnrolmentModel.copy(
+          currentAccountDetails = ptEnrolmentModel.currentAccountDetails.copy(lastLoginDate = "27 common.month2 2022 common.dateToTime 12:00 PM"),
+          ptAccountDetails = ptEnrolmentModel.ptAccountDetails.copy(lastLoginDate = "27 common.month2 2022 common.dateToTime 12:00 PM")
+        ))(
           fakeRequest,
           stubMessages()
         ).toString
@@ -163,7 +171,10 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe OK
-        contentAsString(result) shouldBe view(ptEnrolmentModel)(
+        contentAsString(result) shouldBe view(ptEnrolmentModel.copy(
+          currentAccountDetails = ptEnrolmentModel.currentAccountDetails.copy(lastLoginDate = "27 common.month2 2022 common.dateToTime 12:00 PM"),
+          ptAccountDetails = ptEnrolmentModel.ptAccountDetails.copy(lastLoginDate = "27 common.month2 2022 common.dateToTime 12:00 PM")
+        ))(
           fakeRequest,
           stubMessages()
         ).toString
@@ -204,7 +215,10 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe OK
-        contentAsString(result) shouldBe view(ptEnrolmentModel)(
+        contentAsString(result) shouldBe view(ptEnrolmentModel.copy(
+          currentAccountDetails = ptEnrolmentModel.currentAccountDetails.copy(lastLoginDate = "27 common.month2 2022 common.dateToTime 12:00 PM"),
+          ptAccountDetails = ptEnrolmentModel.ptAccountDetails.copy(lastLoginDate = "27 common.month2 2022 common.dateToTime 12:00 PM")
+        ))(
           fakeRequest,
           stubMessages()
         ).toString
@@ -245,7 +259,10 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe OK
-        contentAsString(result) shouldBe view(ptEnrolmentModel)(
+        contentAsString(result) shouldBe view(ptEnrolmentModel.copy(
+          currentAccountDetails = ptEnrolmentModel.currentAccountDetails.copy(lastLoginDate = "27 common.month2 2022 common.dateToTime 12:00 PM"),
+          ptAccountDetails = ptEnrolmentModel.ptAccountDetails.copy(lastLoginDate = "27 common.month2 2022 common.dateToTime 12:00 PM")
+        ))(
           fakeRequest,
           stubMessages()
         ).toString

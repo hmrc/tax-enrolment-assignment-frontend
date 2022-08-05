@@ -22,6 +22,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMo
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logRedirectingToReturnUrl
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTWithSAOnOtherAccount
 
@@ -44,7 +45,8 @@ class EnrolledPTWithSAOnOtherAccountController @Inject()(
     val res = for {
       currentAccount <- multipleAccountsOrchestrator.getDetailsForEnrolledPTWithSAOnOtherAccount
       optSAAccount <- multipleAccountsOrchestrator.getSACredentialIfNotFraud
-    } yield (currentAccount.userId, optSAAccount.map(_.userId))
+
+    } yield (AccountDetails.userFriendlyAccountDetails(currentAccount).userId, optSAAccount.map(AccountDetails.userFriendlyAccountDetails).map(_.userId))
 
     res.value.map {
       case Right((currentUserId, optSAUserId)) =>

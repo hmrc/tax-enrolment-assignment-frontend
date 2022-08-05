@@ -92,7 +92,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
         mockAccountShouldNotBeThrottled(PT_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
 
         val auditEvent = AuditEvent.auditReportSuspiciousPTAccount(
-          accountDetails
+          accountDetails.copy(lastLoginDate = "27 common.month2 2022 common.dateToTime 12:00 PM")
         )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), stubbedMessagesApi)
         (mockAuditHandler
           .audit(_: AuditEvent)(_: HeaderCarrier))
@@ -227,7 +227,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
           mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
 
           val auditEvent = AuditEvent.auditReportSuspiciousSAAccount(
-            accountDetails
+            accountDetails.copy(lastLoginDate = "27 common.month2 2022 common.dateToTime 12:00 PM")
           )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER), stubbedMessagesApi)
           (mockAuditHandler
             .audit(_: AuditEvent)(_: HeaderCarrier))

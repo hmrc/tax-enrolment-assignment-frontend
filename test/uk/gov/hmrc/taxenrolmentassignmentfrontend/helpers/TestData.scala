@@ -25,23 +25,9 @@ import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals._
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{
-  MULTIPLE_ACCOUNTS,
-  PT_ASSIGNED_TO_CURRENT_USER,
-  PT_ASSIGNED_TO_OTHER_USER,
-  SA_ASSIGNED_TO_CURRENT_USER,
-  SA_ASSIGNED_TO_OTHER_USER,
-  SINGLE_ACCOUNT
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.UserDetailsFromSession
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
-  IVNinoStoreEntry,
-  IdentifiersOrVerifiers,
-  UserEnrolment,
-  UsersAssignedEnrolment,
-  EACDEnrolment => _,
-  _
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{IVNinoStoreEntry, IdentifiersOrVerifiers, UserEnrolment, UsersAssignedEnrolment, EACDEnrolment => _, _}
 
 object TestData {
 
@@ -185,7 +171,7 @@ object TestData {
     credId = CREDENTIAL_ID,
     userId = USER_ID,
     email = Some("email1@test.com"),
-    lastLoginDate = "27 February 2022 at 12:00 PM",
+    lastLoginDate = "2022-02-27T12:00:27Z",
     mfaDetails = List(MFADetails("mfaDetails.text", "24321"))
   )
 
@@ -201,7 +187,7 @@ object TestData {
     credId = CREDENTIAL_ID_1,
     userId = PT_USER_ID,
     email = Some("email.otherUser@test.com"),
-    lastLoginDate = "27 February 2022 at 12:00 PM",
+    lastLoginDate = "2022-02-27T12:00:27Z",
     mfaDetails = List(MFADetails("mfaDetails.text", "26543")),
     hasSA = Some(true)
   )

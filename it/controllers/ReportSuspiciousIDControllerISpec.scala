@@ -78,11 +78,11 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
           resp.status shouldBe OK
           page.title should include(ReportSuspiciousIDMessages.title)
           page.getElementsByClass("govuk-button").size() shouldBe 1
-          val saAccountDetails =
-            new AccountDetails(usersGroupSearchResponse, CREDENTIAL_ID_2)
+
           val expectedAuditEvent = AuditEvent.auditReportSuspiciousSAAccount(
-            saAccountDetails
+            accountDetailsUserFriendly(CREDENTIAL_ID_2)
           )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER), messagesApi)
+
           verifyAuditEventSent(expectedAuditEvent)
         }
       }
@@ -125,10 +125,9 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
             resp.status shouldBe OK
             page.title should include(ReportSuspiciousIDMessages.title)
             page.getElementsByClass("govuk-button").size() shouldBe 1
-            val saAccountDetails =
-              new AccountDetails(usersGroupSearchResponse, CREDENTIAL_ID_2)
+
             val expectedAuditEvent = AuditEvent.auditReportSuspiciousSAAccount(
-              saAccountDetails
+              accountDetailsUserFriendly(CREDENTIAL_ID_2)
             )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER), messagesApi)
           }
         }
@@ -460,10 +459,9 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
           resp.status shouldBe OK
           page.title should include(ReportSuspiciousIDMessages.title)
           page.getElementsByClass("govuk-button").size() shouldBe 0
-          val ptAccountDetails =
-            new AccountDetails(usersGroupSearchResponse, CREDENTIAL_ID_2)
+
           val expectedAuditEvent = AuditEvent.auditReportSuspiciousPTAccount(
-            ptAccountDetails
+            accountDetailsUserFriendly(CREDENTIAL_ID_2)
           )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
           verifyAuditEventSent(expectedAuditEvent)
         }

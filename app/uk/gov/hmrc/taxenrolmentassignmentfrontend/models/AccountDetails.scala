@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 
+import play.api.i18n.Messages
 import play.api.libs.json.{Format, Json}
 
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import java.time.{ZoneId, ZonedDateTime}
 
 case class MFADetails(factorNameKey: String, factorValue: String) {
   def this(additonalFactors: AdditonalFactors) =
@@ -43,51 +44,38 @@ case class AccountDetails(credId: String,
                           lastLoginDate: String,
                           mfaDetails: Seq[MFADetails],
                           hasSA: Option[Boolean] = None) {
-  def this(usersGroupResponse: UsersGroupResponse, credId: String) =
-    this(
-      credId = credId,
-      userId = AccountDetails.trimmedUserId(usersGroupResponse.obfuscatedUserId),
-      email = usersGroupResponse.email,
-      lastLoginDate =
-        AccountDetails.formatDate(usersGroupResponse.lastAccessedTimestamp),
-      mfaDetails = usersGroupResponse.additionalFactors
-        .fold[Seq[MFADetails]](Seq.empty[MFADetails]) { additionalFactors =>
-          additionalFactors.map { additionalFactor =>
-            new MFADetails(additionalFactor)
-          }
-        }
-    )
+
 }
 
+
 object AccountDetails {
+
+  def additionalFactorsToMFADetails(additionalFactors: Option[List[AdditonalFactors]]): Seq[MFADetails] = {
+    additionalFactors.fold[Seq[MFADetails]](Seq.empty[MFADetails]) { additionalFactors =>
+      additionalFactors.map { additionalFactor =>
+        new MFADetails(additionalFactor)
+      }
+    }
+  }
+
+  def userFriendlyAccountDetails(accountDetails: AccountDetails)(implicit messages: Messages): AccountDetails = {
+    accountDetails.copy(
+      credId = accountDetails.credId,
+      userId = AccountDetails.trimmedUserId(accountDetails.userId),
+      email = accountDetails.email,
+      lastLoginDate = AccountDetails.formatDate(accountDetails.lastLoginDate)
+    )
+  }
 
   def trimmedUserId(obfuscatedId: String): String =
     obfuscatedId.replaceAll("[*]", "")
 
-  def formatDate(date: String): String = {
+  def formatDate(date: String)(implicit messages: Messages): String = {
     val zonedDateTime = ZonedDateTime.parse(date)
-    val datetimeFormatter = {
-      DateTimeFormatter.ofPattern("d MMMM uuuu - h:mm a")
+    val timeFormatter = {
+      DateTimeFormatter.ofPattern("h:mm a")
     }
-    if (isToday(zonedDateTime)) {
-      "Today"
-    } else if (isYesterday(zonedDateTime)) {
-      "Yesterday"
-    } else {
-      zonedDateTime
-        .format(datetimeFormatter)
-        .replaceFirst("[-]", "at")
-    }
-  }
-
-  def isToday(date: ZonedDateTime): Boolean = {
-    val todaysDate = ZonedDateTime.now(ZoneId.of("UTC"))
-    todaysDate.getYear == date.getYear && todaysDate.getMonth == date.getMonth && todaysDate.getDayOfMonth == date.getDayOfMonth
-  }
-
-  def isYesterday(date: ZonedDateTime): Boolean = {
-    val yesterdaysDate = ZonedDateTime.now(ZoneId.of("UTC")).minusDays(1L)
-    yesterdaysDate.getYear == date.getYear && yesterdaysDate.getMonth == date.getMonth && yesterdaysDate.getDayOfMonth == date.getDayOfMonth
+    s"${zonedDateTime.getDayOfMonth} ${messages(s"common.month${zonedDateTime.getMonth.getValue}")} ${zonedDateTime.getYear} ${messages("common.dateToTime")} ${zonedDateTime.format(timeFormatter)}"
   }
 
   implicit val format: Format[AccountDetails] = Json.format[AccountDetails]

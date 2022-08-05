@@ -16,8 +16,9 @@
 
 package helpers
 
-import java.util.UUID
+import play.api.i18n.Messages
 
+import java.util.UUID
 import play.api.libs.json._
 import uk.gov.hmrc.auth.core.AffinityGroup.Individual
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
@@ -184,6 +185,15 @@ object TestITData {
     lastAccessedTimestamp = "2022-01-16T14:40:05Z",
     additionalFactors = Some(List(AdditonalFactors("sms", Some("07783924321"))))
   )
+  def accountDetailsUserFriendly(credId: String)(implicit messages: Messages) =
+    AccountDetails(
+      credId,
+      "6037",
+      Some("email1@test.com"),
+      "16 January 2022 at 2:40 PM",
+      List(MFADetails("mfaDetails.text", "24321")),
+      None
+    )
 
   val usersGroupSearchResponsePTEnrolment =
     usersGroupSearchResponse.copy(obfuscatedUserId = "********1234")

@@ -24,6 +24,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMo
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logAssignedEnrolmentAfterReportingFraud
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REPORTED_FRAUD
@@ -57,7 +58,7 @@ class ReportSuspiciousIDController @Inject()(
           )
         }
         ptAccount <- multipleAccountsOrchestrator.getPTCredentialDetails
-      } yield ptAccount
+      } yield AccountDetails.userFriendlyAccountDetails(ptAccount)
 
       res.value.map {
         case Right(ptAccount) =>
@@ -82,7 +83,7 @@ class ReportSuspiciousIDController @Inject()(
           )
         }
         saAccount <- multipleAccountsOrchestrator.getSACredentialDetails
-      } yield saAccount
+      } yield AccountDetails.userFriendlyAccountDetails(saAccount)
 
       res.value.map {
         case Right(saAccount) =>

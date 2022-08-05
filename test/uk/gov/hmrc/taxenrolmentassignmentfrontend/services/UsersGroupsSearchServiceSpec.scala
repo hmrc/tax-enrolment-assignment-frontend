@@ -62,13 +62,13 @@ class UsersGroupsSearchServiceSpec extends TestFixture with ScalaFutures {
             _: RequestWithUserDetailsFromSession[AnyContent],
             _: Format[AccountDetails]
           ))
-          .expects(s"AccountDetailsFor$CREDENTIAL_ID", accountDetails, *, *)
+          .expects(s"AccountDetailsFor$CREDENTIAL_ID", accountDetails.copy(userId = "********6037"), *, *)
           .returning(Future(CacheMap(request.sessionID, Map())))
         val result = service.getAccountDetails(CREDENTIAL_ID)(
           implicitly, implicitly,
           requestWithAccountType())
         whenReady(result.value) { res =>
-          res shouldBe Right(accountDetails)
+          res shouldBe Right(accountDetails.copy(userId = "********6037"))
         }
       }
     }

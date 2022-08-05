@@ -16,10 +16,9 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 
+import play.api.i18n.Lang
+import play.api.test.FakeRequest
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
-
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
 
 class AccountDetailsSpec extends TestFixture {
 
@@ -54,37 +53,78 @@ class AccountDetailsSpec extends TestFixture {
     )
   }
 
-  "AccountDetails" when {
-    "presented with a usersGroupResponse" that {
-      "has a lastAccessedTimestamp of today, a sms additionalFactor" should {
+  "userFriendlyAccountDetails" when {
+    "userFriendlyAccountDetails is called with Welsh Messages" that {
+      Map(
+        "Ionawr" ->  "2022-01-27T12:00:27Z",
+        "Chwefror" ->  "2022-02-27T12:00:27Z",
+        "Mawrth" ->  "2022-03-27T12:00:27Z",
+        "Ebrill" ->  "2022-04-27T12:00:27Z",
+        "Mai" ->  "2022-05-27T12:00:27Z",
+        "Mehefin" ->  "2022-06-27T12:00:27Z",
+        "Gorffennaf" ->  "2022-07-27T12:00:27Z",
+        "Awst" ->  "2022-08-27T12:00:27Z",
+        "Medi" ->  "2022-09-27T12:00:27Z",
+        "Hydref" ->  "2022-10-27T12:00:27Z",
+        "Tachwedd" ->  "2022-11-27T12:00:27Z",
+        "Rhagfyr" ->  "2022-12-27T12:00:27Z"
+      ).foreach { test =>
+        s"${test._1} should display correctly for ${test._2}" in {
+          val expectedResult = accountDetails(s"27 ${test._1} 2022 yn 12:00 PM", List(mfaDetailsText))
+
+          val res = AccountDetails.userFriendlyAccountDetails(AccountDetails("credId", "********6037", Some("email1@test.com"), test._2, List(mfaDetailsText)))(
+            messagesApi.preferred(List(Lang("cy"))))
+
+          res shouldBe expectedResult
+        }
+      }
+    }
+    "userFriendlyAccountDetails is called with English Messages" that {
+      Map(
+        "January" ->  "2022-01-27T12:00:27Z",
+        "February" ->  "2022-02-27T12:00:27Z",
+        "March" ->  "2022-03-27T12:00:27Z",
+        "April" ->  "2022-04-27T12:00:27Z",
+        "May" ->  "2022-05-27T12:00:27Z",
+        "June" ->  "2022-06-27T12:00:27Z",
+        "July" ->  "2022-07-27T12:00:27Z",
+        "August" ->  "2022-08-27T12:00:27Z",
+        "September" ->  "2022-09-27T12:00:27Z",
+        "October" ->  "2022-10-27T12:00:27Z",
+        "November" ->  "2022-11-27T12:00:27Z",
+        "December" ->  "2022-12-27T12:00:27Z"
+      ).foreach { test =>
+        s"${test._1} should display correctly for ${test._2}" in {
+          val expectedResult = accountDetails(s"27 ${test._1} 2022 at 12:00 PM", List(mfaDetailsText))
+
+          val res = AccountDetails.userFriendlyAccountDetails(AccountDetails("credId", "********6037", Some("email1@test.com"), test._2, List(mfaDetailsText)))(
+            messagesApi.preferred(List(Lang("en"))))
+
+          res shouldBe expectedResult
+        }
+      }
+      "has a sms additionalFactor" should {
         "return the expected account details" in {
           val lastAccessedDate =
-            ZonedDateTime.now().format(DateTimeFormatter.ISO_INSTANT)
-          val ugsResp =
-            usersGroupResponse(lastAccessedDate, List(additionalFactorText))
+            "2022-02-27T12:00:27Z"
 
-          val expectedResult = accountDetails("Today", List(mfaDetailsText))
+          val expectedResult = accountDetails("27 February 2022 at 12:00 PM", List(mfaDetailsText))
 
-          val res = new AccountDetails(ugsResp, "credId")
+          val res = AccountDetails.userFriendlyAccountDetails(AccountDetails("credId", "********6037", Some("email1@test.com"), lastAccessedDate, List(mfaDetailsText)))(messages)
 
           res shouldBe expectedResult
         }
       }
 
-      "has a lastAccessedTimestamp of yesterday, a voice additionalFactor" should {
+      "has a voice additionalFactor" should {
         "return the expected account details" in {
           val lastAccessedDate =
-            ZonedDateTime
-              .now()
-              .minusDays(1L)
-              .format(DateTimeFormatter.ISO_INSTANT)
-          val ugsResp =
-            usersGroupResponse(lastAccessedDate, List(additionalFactorVoice))
+            "2022-02-27T12:00:27Z"
 
           val expectedResult =
-            accountDetails("Yesterday", List(mfaDetailsVoice))
+            accountDetails("27 February 2022 at 12:00 PM", List(mfaDetailsVoice))
 
-          val res = new AccountDetails(ugsResp, "credId")
+          val res = AccountDetails.userFriendlyAccountDetails(AccountDetails("credId", "********6037",Some("email1@test.com"), lastAccessedDate, List(mfaDetailsVoice), None))(messages)
 
           res shouldBe expectedResult
         }
@@ -94,13 +134,11 @@ class AccountDetailsSpec extends TestFixture {
         "return the expected account details" in {
           val lastAccessedDate =
             "2022-02-27T12:00:27Z"
-          val ugsResp =
-            usersGroupResponse(lastAccessedDate, List(additionalFactorTotp))
 
           val expectedResult =
             accountDetails("27 February 2022 at 12:00 PM", List(mfaDetailsTotp))
 
-          val res = new AccountDetails(ugsResp, "credId")
+          val res = AccountDetails.userFriendlyAccountDetails(AccountDetails("credId", "********6037", Some("email1@test.com"), lastAccessedDate, List(mfaDetailsTotp)))(messages)
 
           res shouldBe expectedResult
         }
@@ -109,23 +147,16 @@ class AccountDetailsSpec extends TestFixture {
       "has a lastAccessedTimestamp over 2 days ago and a more than one factor" should {
         "return the expected account details" in {
           val lastAccessedDate =
-            "2022-02-27T12:00:27Z"
-          val ugsResp =
-            usersGroupResponse(
-              lastAccessedDate,
-              List(
-                additionalFactorText,
-                additionalFactorVoice,
-                additionalFactorTotp
-              )
-            )
+            "2022-03-27T12:00:27Z"
 
           val expectedResult = accountDetails(
-            "27 February 2022 at 12:00 PM",
+            "27 March 2022 at 12:00 PM",
             List(mfaDetailsText, mfaDetailsVoice, mfaDetailsTotp)
           )
 
-          val res = new AccountDetails(ugsResp, "credId")
+
+          val res = AccountDetails.userFriendlyAccountDetails(AccountDetails("credId", "********6037", Some("email1@test.com"), lastAccessedDate, List(mfaDetailsText, mfaDetailsVoice, mfaDetailsTotp)))(messages)
+
 
           res shouldBe expectedResult
         }

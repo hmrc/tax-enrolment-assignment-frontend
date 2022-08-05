@@ -21,6 +21,7 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction, ThrottleAction}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, PTEnrolmentOnOtherAccount}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnotherAccount
 
@@ -46,7 +47,11 @@ class PTEnrolmentOnOtherAccountController @Inject()(
       case Right(accountDetails) =>
         Ok(
           ptEnrolmentOnAnotherAccountView(
-            accountDetails
+            PTEnrolmentOnOtherAccount(
+              AccountDetails.userFriendlyAccountDetails(accountDetails.currentAccountDetails),
+              AccountDetails.userFriendlyAccountDetails(accountDetails.ptAccountDetails),
+              accountDetails.saUserCred.map(AccountDetails.trimmedUserId)
+            )
           )
         )
       case Left(error) =>

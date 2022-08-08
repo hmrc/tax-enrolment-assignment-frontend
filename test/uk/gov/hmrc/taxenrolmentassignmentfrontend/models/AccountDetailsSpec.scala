@@ -70,7 +70,7 @@ class AccountDetailsSpec extends TestFixture {
         "Rhagfyr" ->  "2022-12-27T12:00:27Z"
       ).foreach { test =>
         s"${test._1} should display correctly for ${test._2}" in {
-          val expectedResult = accountDetails(s"27 ${test._1} 2022 yn 12:00 PM", List(mfaDetailsText))
+          val expectedResult = accountDetails(s"27 ${test._1} 2022 am 12:00 PM", List(mfaDetailsText))
 
           val res = AccountDetails.userFriendlyAccountDetails(AccountDetails("credId", "********6037", Some("email1@test.com"), test._2, List(mfaDetailsText)))(
             messagesApi.preferred(List(Lang("cy"))))

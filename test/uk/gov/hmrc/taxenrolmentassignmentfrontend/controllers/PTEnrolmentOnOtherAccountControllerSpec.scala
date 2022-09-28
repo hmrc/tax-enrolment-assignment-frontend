@@ -28,6 +28,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWit
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, ThrottleHelperSpec, UrlPaths}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnotherAccount
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -45,7 +46,8 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
     mockMultipleAccountsOrchestrator,
     view,
     logger,
-    errorHandler
+    errorHandler,
+    mockAuditHandler
   )
 
   "view" when {
@@ -76,6 +78,16 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
           .returning(createInboundResult(ptEnrolmentDataModelNone))
         mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
+
+        val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
+          accountDetailsWithPT
+        )(requestWithAccountType(randomAccountType), stubbedMessagesApi)
+
+        (mockAuditHandler
+          .audit(_: AuditEvent)(_: HeaderCarrier))
+          .expects(auditEvent, *)
+          .returning(Future.successful((): Unit))
+          .once()
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -123,6 +135,16 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
         mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
 
+        val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
+          accountDetailsWithPT
+        )(requestWithAccountType(randomAccountType), stubbedMessagesApi)
+
+        (mockAuditHandler
+          .audit(_: AuditEvent)(_: HeaderCarrier))
+          .expects(auditEvent, *)
+          .returning(Future.successful((): Unit))
+          .once()
+
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
@@ -166,6 +188,16 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
           .returning(createInboundResult(ptEnrolmentModel))
         mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
+
+        val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
+          accountDetailsWithPT
+        )(requestWithAccountType(randomAccountType), stubbedMessagesApi)
+
+        (mockAuditHandler
+          .audit(_: AuditEvent)(_: HeaderCarrier))
+          .expects(auditEvent, *)
+          .returning(Future.successful((): Unit))
+          .once()
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -211,6 +243,16 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
         mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
 
+        val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
+          accountDetailsWithPT
+        )(requestWithAccountType(randomAccountType), stubbedMessagesApi)
+
+        (mockAuditHandler
+          .audit(_: AuditEvent)(_: HeaderCarrier))
+          .expects(auditEvent, *)
+          .returning(Future.successful((): Unit))
+          .once()
+
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
@@ -254,6 +296,16 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
           .returning(createInboundResult(ptEnrolmentModel))
         mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
+
+        val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
+          accountDetailsWithPT
+        )(requestWithAccountType(randomAccountType), stubbedMessagesApi)
+
+        (mockAuditHandler
+          .audit(_: AuditEvent)(_: HeaderCarrier))
+          .expects(auditEvent, *)
+          .returning(Future.successful((): Unit))
+          .once()
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))

@@ -23,6 +23,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHand
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, PTEnrolmentOnOtherAccount}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnotherAccount
 
 import scala.concurrent.ExecutionContext
@@ -36,8 +37,9 @@ class PTEnrolmentOnOtherAccountController @Inject()(
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
   ptEnrolmentOnAnotherAccountView: PTEnrolmentOnAnotherAccount,
   val logger: EventLoggerService,
-  errorHandler: ErrorHandler
-)(implicit ec: ExecutionContext) extends TEAFrontendController(mcc) {
+  errorHandler: ErrorHandler,
+  auditHandler: AuditHandler
+                                                   )(implicit ec: ExecutionContext) extends TEAFrontendController(mcc) {
 
   def view(): Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
 
@@ -45,6 +47,9 @@ class PTEnrolmentOnOtherAccountController @Inject()(
 
     res.value.map {
       case Right(accountDetails) =>
+        val accountFriendlyDetails  = AccountDetails.userFriendlyAccountDetails(accountDetails.ptAccountDetails)
+          auditHandler
+          .audit(AuditEvent.auditPTEnrolmentOnOtherAccount(accountFriendlyDetails))
         Ok(
           ptEnrolmentOnAnotherAccountView(
             PTEnrolmentOnOtherAccount(

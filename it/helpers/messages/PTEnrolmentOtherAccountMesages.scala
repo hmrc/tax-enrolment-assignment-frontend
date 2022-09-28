@@ -23,7 +23,7 @@ object PTEnrolmentOtherAccountMesages {
   val heading =
     "We have found your personal tax account under a different Government Gateway user ID"
   val text1 =
-    s"To protect your information, access to your personal tax account was limited to the user ID below, ending with 1234."
+    s"To protect your information, access to your personal tax account was limited to the user ID below, ending with 6037."
   val signoutUrl = "http://test/signout"
   val notMyUserId = "The above user ID does not belong to me"
   val fraudReportingUrl =

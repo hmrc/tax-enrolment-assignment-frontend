@@ -80,7 +80,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-          accountDetailsWithPT
+          accountDetailsWithPT.copy(lastLoginDate = "27 common.month2 2022 common.dateToTime 12:00 PM")
         )(requestWithAccountType(randomAccountType), stubbedMessagesApi)
 
         (mockAuditHandler
@@ -136,7 +136,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-          accountDetailsWithPT
+          accountDetailsWithPT.copy(lastLoginDate = "27 common.month2 2022 common.dateToTime 12:00 PM")
         )(requestWithAccountType(randomAccountType), stubbedMessagesApi)
 
         (mockAuditHandler
@@ -190,7 +190,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-          accountDetailsWithPT
+          accountDetailsWithPT.copy(lastLoginDate = "27 common.month2 2022 common.dateToTime 12:00 PM")
         )(requestWithAccountType(randomAccountType), stubbedMessagesApi)
 
         (mockAuditHandler
@@ -244,7 +244,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-          accountDetailsWithPT
+          accountDetailsWithPT.copy(lastLoginDate = "27 common.month2 2022 common.dateToTime 12:00 PM")
         )(requestWithAccountType(randomAccountType), stubbedMessagesApi)
 
         (mockAuditHandler
@@ -298,7 +298,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-          accountDetailsWithPT
+          accountDetailsWithPT.copy(lastLoginDate = "27 common.month2 2022 common.dateToTime 12:00 PM")
         )(requestWithAccountType(randomAccountType), stubbedMessagesApi)
 
         (mockAuditHandler

@@ -59,11 +59,25 @@ object AuditEvent {
     )
   }
 
+  def auditPTEnrolmentOnOtherAccount(enrolledAccountDetails: AccountDetails)(
+    implicit request: RequestWithUserDetailsFromSessionAndMongo[_],
+    messagesApi: MessagesApi
+  ): AuditEvent = {
+    implicit val lang = getLang(request, implicitly)
+    AuditEvent(
+      auditType = "EnrolledOnAnotherAccount",
+      transactionName = "enrolled-on-another-account",
+      detail = getDetailsForEnrolmentOnAnotherAccount(
+        enrolledAccountDetails
+      )
+    )
+  }
+
   def auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(accountType: AccountTypes.Value)(
     implicit request: RequestWithUserDetailsFromSession[_],
     messagesApi: MessagesApi): AuditEvent = {
     implicit val lang = getLang
-    val optSACredentialId: Option[String] = if(request.userDetails.hasSAEnrolment || accountType == SA_ASSIGNED_TO_CURRENT_USER) {
+    val optSACredentialId: Option[String] = if (request.userDetails.hasSAEnrolment || accountType == SA_ASSIGNED_TO_CURRENT_USER) {
       Some(request.userDetails.credId)
     }
     else {
@@ -78,12 +92,12 @@ object AuditEvent {
     implicit request: RequestWithUserDetailsFromSessionAndMongo[_],
     messagesApi: MessagesApi): AuditEvent = {
     implicit val lang = getLang(request, implicitly)
-    val optSACredentialId: Option[String] = if(request.userDetails.hasSAEnrolment) {
+    val optSACredentialId: Option[String] = if (request.userDetails.hasSAEnrolment) {
       Some(request.userDetails.credId)
     } else {
       request.accountDetailsFromMongo.optUserAssignedSA.fold[Option[String]](None)(_.enrolledCredential)
     }
-    val suspiciousAccountDetails: Option[AccountDetails] = if(enrolledAfterReportingFraud) {
+    val suspiciousAccountDetails: Option[AccountDetails] = if (enrolledAfterReportingFraud) {
       optSACredentialId.fold[Option[AccountDetails]](None)(credId => request.accountDetailsFromMongo.optAccountDetails(credId))
     } else {
       None
@@ -115,19 +129,37 @@ object AuditEvent {
   }
 
   private def getDetailsForReportingFraud(
-    suspiciousAccountDetails: AccountDetails
-  )(implicit request: RequestWithUserDetailsFromSessionAndMongo[_],
-    messagesApi: MessagesApi,
-    lang: Lang): JsObject = {
+                                           suspiciousAccountDetails: AccountDetails
+                                         )(implicit request: RequestWithUserDetailsFromSessionAndMongo[_],
+                                           messagesApi: MessagesApi,
+                                           lang: Lang): JsObject = {
     val userDetails: UserDetailsFromSession = request.userDetails
     val defaultDetails = Json.obj(
       ("NINO", JsString(userDetails.nino)),
       ("currentAccount", getCurrentAccountJson(userDetails, request.accountDetailsFromMongo.accountType)),
       ("reportedAccount", getPresentedAccountJson(suspiciousAccountDetails))
     )
-    if(translationRequired) {
+    if (translationRequired) {
       defaultDetails ++
-      Json.obj(("reportedAccountEN", getTranslatedAccountJson(suspiciousAccountDetails)))
+        Json.obj(("reportedAccountEN", getTranslatedAccountJson(suspiciousAccountDetails)))
+    } else {
+      defaultDetails
+    }
+  }
+private def getDetailsForEnrolmentOnAnotherAccount(
+                                                    enrolledAccountDetails: AccountDetails
+                                         )(implicit request: RequestWithUserDetailsFromSessionAndMongo[_],
+                                           messagesApi: MessagesApi,
+                                           lang: Lang): JsObject = {
+    val userDetails: UserDetailsFromSession = request.userDetails
+    val defaultDetails = Json.obj(
+      ("NINO", JsString(userDetails.nino)),
+      ("currentAccount", getCurrentAccountJson(userDetails, request.accountDetailsFromMongo.accountType)),
+      ("enrolledAccount", getPresentedAccountJson(enrolledAccountDetails))
+    )
+    if (translationRequired) {
+      defaultDetails ++
+        Json.obj(("enrolledAccountEN", getTranslatedAccountJson(enrolledAccountDetails)))
     } else {
       defaultDetails
     }
@@ -142,13 +174,13 @@ object AuditEvent {
 
     val userDetails: UserDetailsFromSession = request.userDetails
     val optSACredIdJson: JsObject = optSACredentialId.fold(Json.obj())(credId => Json.obj(("saAccountCredentialId", JsString(credId))))
-    val optReportedAccountJson: JsObject = suspiciousAccountDetails.fold(Json.obj()){accountDetails =>
+    val optReportedAccountJson: JsObject = suspiciousAccountDetails.fold(Json.obj()) { accountDetails =>
       val defaultReportedAccountDetails = Json.obj(("reportedAccount", getPresentedAccountJson(accountDetails)))
-      if(translationRequired) {
+      if (translationRequired) {
         defaultReportedAccountDetails ++
-        Json.obj(("reportedAccountEN", getTranslatedAccountJson(accountDetails)))
+          Json.obj(("reportedAccountEN", getTranslatedAccountJson(accountDetails)))
       } else {
-      defaultReportedAccountDetails
+        defaultReportedAccountDetails
       }
     }
 
@@ -175,7 +207,7 @@ object AuditEvent {
             defaultSAAccountDetails
           }
         }
-  }
+    }
 
     Json.obj(
       ("NINO", JsString(userDetails.nino)),

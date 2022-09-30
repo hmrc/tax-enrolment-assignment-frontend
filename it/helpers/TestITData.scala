@@ -53,6 +53,7 @@ object TestITData {
   )
   val AUTHORIZE_HEADER_VALUE =
     "Bearer BXQ3/Treo4kQCZvVcCqKPhhpBYpRtQQKWTypn1WBfRHWUopu5V/IFWF5phY/fymAP1FMqQR27MmCJxb50Hi5GD6G3VMjMtSLu7TAAIuqDia6jByIpXJpqOgLQuadi7j0XkyDVkl0Zp/zbKtHiNrxpa0nVHm3+GUC4H2h4Ki8OjP9KwIkeIPK/mMlBESjue4V"
+
   def createEnrolmentJson(key: String,
                           identifierKey: String,
                           identifierValue: String): JsValue = {
@@ -100,7 +101,7 @@ object TestITData {
             "providerId" -> JsString(creds.providerId),
             "providerType" -> JsString("GovernmentGateway")
           )
-      )
+        )
     )
     val groupIdJson = optGroupId.fold[JsObject](Json.obj())(
       groupId => Json.obj("groupIdentifier" -> JsString(groupId))
@@ -115,8 +116,8 @@ object TestITData {
                                        optCreds: Option[Credentials] = Some(creds),
                                        optGroupId: Option[String] = Some(GROUP_ID),
                                        affinityGroup: AffinityGroup = Individual,
-                                       hasSA: Boolean  = false) = {
-    val enrolments = if(hasSA) saAndptEnrolments else ptEnrolmentOnly
+                                       hasSA: Boolean = false) = {
+    val enrolments = if (hasSA) saAndptEnrolments else ptEnrolmentOnly
     authoriseResponseJson(optNino, optCreds, optGroupId, affinityGroup, enrolments)
   }
 
@@ -185,19 +186,24 @@ object TestITData {
     lastAccessedTimestamp = "2022-01-16T14:40:05Z",
     additionalFactors = Some(List(AdditonalFactors("sms", Some("07783924321"))))
   )
-  def accountDetailsUserFriendly(credId: String)(implicit messages: Messages) =
+
+  def accountDetailsUserFriendly(
+                                  credId: String,
+                                  userId: String = USER_ID
+                                )(implicit messages: Messages): AccountDetails =
     AccountDetails(
       credId,
-      "6037",
+      userId,
       Some("email1@test.com"),
       "16 January 2022 at 2:40 PM",
       List(MFADetails("mfaDetails.text", "24321")),
       None
     )
 
-  val usersGroupSearchResponsePTEnrolment =
-    usersGroupSearchResponse.copy(obfuscatedUserId = "********1234")
-  val usersGroupSearchResponseSAEnrolment =
+  def usersGroupSearchResponsePTEnrolment(userId: String = "********1234"): UsersGroupResponse =
+    usersGroupSearchResponse.copy(userId)
+
+  val usersGroupSearchResponseSAEnrolment: UsersGroupResponse =
     usersGroupSearchResponse.copy(obfuscatedUserId = "********1243")
 
   def additionalFactorsJson(additionalFactors: List[AdditonalFactors]) =
@@ -215,9 +221,10 @@ object TestITData {
       }
       a.append(jsObject)
     }
+
   def usergroupsResponseJson(
-    usersGroupResponse: UsersGroupResponse = usersGroupSearchResponse
-  ): JsObject = {
+                              usersGroupResponse: UsersGroupResponse = usersGroupSearchResponse
+                            ): JsObject = {
     val compulsaryJson = Json.obj(
       ("obfuscatedUserId", JsString(usersGroupResponse.obfuscatedUserId)),
       ("email", JsString(usersGroupResponse.email.get)),
@@ -337,7 +344,7 @@ object TestITData {
       |}
       |""".stripMargin
 
-  val   es0ResponseNotMatchingCred =
+  val es0ResponseNotMatchingCred =
     """
       |{
       |    "principalUserIds": [

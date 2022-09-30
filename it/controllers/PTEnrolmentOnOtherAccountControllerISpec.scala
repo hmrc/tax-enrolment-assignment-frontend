@@ -28,6 +28,7 @@ import play.api.libs.ws.DefaultWSCookie
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{UsersAssignedEnrolment, UsersGroupResponse}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_ASSIGNED_PT_ENROLMENT, USER_ASSIGNED_SA_ENROLMENT}
 
 import java.util.UUID
@@ -51,7 +52,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status wi
         stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
         stubUserGroupSearchSuccess(
           CREDENTIAL_ID_2,
-          usersGroupSearchResponsePTEnrolment
+          usersGroupSearchResponsePTEnrolment(USER_ID)
         )
 
         val res = buildRequest(urlPath, followRedirects = true)
@@ -74,6 +75,13 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status wi
             .map(_.text()) should contain(
             PTEnrolmentOtherAccountMesages.saText3
           )
+
+          val expectedAuditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
+            accountDetailsUserFriendly(CREDENTIAL_ID_2)
+          )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
+
+          verifyAuditEventSent(expectedAuditEvent)
+
         }
       }
     }
@@ -85,7 +93,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status wi
         stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
         stubUserGroupSearchSuccess(
           CREDENTIAL_ID_2,
-          usersGroupSearchResponsePTEnrolment
+          usersGroupSearchResponsePTEnrolment()
         )
 
         val res = buildRequest(urlPath, followRedirects = true)
@@ -109,6 +117,13 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status wi
             .map(_.text()) should contain(
             PTEnrolmentOtherAccountMesages.saText2
           )
+
+          val expectedAuditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
+            accountDetailsUserFriendly(CREDENTIAL_ID_2, "1234")
+          )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
+
+          verifyAuditEventSent(expectedAuditEvent)
+
         }
       }
     }
@@ -120,7 +135,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status wi
         stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
         stubUserGroupSearchSuccess(
           CREDENTIAL_ID_2,
-          usersGroupSearchResponsePTEnrolment
+          usersGroupSearchResponsePTEnrolment(USER_ID)
         )
         stubUserGroupSearchSuccess(
           CREDENTIAL_ID_3,
@@ -145,6 +160,13 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status wi
             .asScala
             .toList
             .map(_.text()) should contain(PTEnrolmentOtherAccountMesages.saText)
+
+          val expectedAuditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
+            accountDetailsUserFriendly(CREDENTIAL_ID_2)
+          )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
+
+          verifyAuditEventSent(expectedAuditEvent)
+
         }
       }
     }
@@ -156,7 +178,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status wi
         stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
         stubUserGroupSearchSuccess(
           CREDENTIAL_ID_2,
-          usersGroupSearchResponsePTEnrolment
+          usersGroupSearchResponsePTEnrolment(USER_ID)
         )
 
         val res = buildRequest(urlPath, followRedirects = true)
@@ -170,6 +192,13 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status wi
           resp.status shouldBe OK
           page.title should include(PTEnrolmentOtherAccountMesages.title)
           page.getElementsByClass("govuk-heading-m").text().isEmpty
+
+          val expectedAuditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
+            accountDetailsUserFriendly(CREDENTIAL_ID_2)
+          )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
+
+          verifyAuditEventSent(expectedAuditEvent)
+
         }
       }
     }
@@ -314,7 +343,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status wi
         stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
         stubUserGroupSearchSuccess(
           CREDENTIAL_ID_2,
-          usersGroupSearchResponsePTEnrolment
+          usersGroupSearchResponsePTEnrolment()
         )
         stubUserGroupSearchFailure(CREDENTIAL_ID)
 

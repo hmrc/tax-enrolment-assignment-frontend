@@ -54,7 +54,7 @@ class PTEnrolmentOnOtherAccountController @Inject()(
           ptEnrolmentOnAnotherAccountView(
             PTEnrolmentOnOtherAccount(
               AccountDetails.userFriendlyAccountDetails(accountDetails.currentAccountDetails),
-              AccountDetails.userFriendlyAccountDetails(accountDetails.ptAccountDetails),
+              accountFriendlyDetails,
               accountDetails.saUserCred.map(AccountDetails.trimmedUserId)
             )
           )

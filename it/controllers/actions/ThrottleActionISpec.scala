@@ -48,7 +48,7 @@ class ThrottleActionISpec extends TestHelper with Status {
       false
     ),
     "sesh",
-    AccountDetailsFromMongo(SA_ASSIGNED_TO_OTHER_USER, "redirectURL", exampleMongoSessionData)
+    AccountDetailsFromMongo(SA_ASSIGNED_TO_OTHER_USER, "redirectURL", exampleMongoSessionData)(crypto.crypto)
   )
   val exampleRequestAboveThreshold = RequestWithUserDetailsFromSessionAndMongo(
     FakeRequest(),
@@ -62,7 +62,7 @@ class ThrottleActionISpec extends TestHelper with Status {
       false
     ),
     "sesh",
-    AccountDetailsFromMongo(SA_ASSIGNED_TO_OTHER_USER, "redirectURL", exampleMongoSessionData)
+    AccountDetailsFromMongo(SA_ASSIGNED_TO_OTHER_USER, "redirectURL", exampleMongoSessionData)(crypto.crypto)
   )
   val newEnrolment = (nino: String) =>
     Enrolment(

@@ -21,6 +21,7 @@ import helpers.TestITData._
 import helpers.WiremockHelper._
 import helpers.messages._
 import org.jsoup.Jsoup
+import org.mongodb.scala.bson.BsonDocument
 import play.api.http.Status
 import play.api.libs.json.{JsString, Json}
 import play.api.libs.ws.DefaultWSCookie
@@ -35,14 +36,14 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
   val urlPathSA: String = UrlPaths.reportFraudSAAccountPath
   val urlPathPT: String = UrlPaths.reportFraudPTAccountPath
 
-  s"GET $urlPathSA" when {
+  s"GET $urlPathSA" should {
 
     throttleSpecificTests(() => buildRequest(urlPathSA)
       .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
       .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
       .get())
 
-    "the session cache has a credential for SA enrolment that is not the signed in account" should {
+    "the session cache has a credential for SA enrolment that is not the signed in account" when {
       s"render the report suspiciousId page with a continue button" in {
         await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
         await(
@@ -88,7 +89,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
       }
     }
 
-    "the session cache has a credential for SA enrolment that is not the signed in account" should {
+    "the session cache has a credential for SA enrolment that is not the signed in account" when {
       s"still render the report suspiciousId page with a continue button" when {
         "the current user has been assigned a PT enrolment" in {
           await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
@@ -141,7 +142,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
       PT_ASSIGNED_TO_OTHER_USER,
       SA_ASSIGNED_TO_CURRENT_USER
     ).foreach { accountType =>
-      s"the session cache has a credential with account type ${accountType.toString}" should {
+      s"the session cache has a credential with account type ${accountType.toString}" when {
         s"redirect to ${UrlPaths.accountCheckPath}" in {
           await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
           await(
@@ -166,7 +167,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
       }
     }
 
-    s"the session cache has a credential for SA enrolment that is the signed in account" should {
+    s"the session cache has a credential for SA enrolment that is the signed in account" when {
       s"render the error page" in {
         await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
         await(
@@ -199,7 +200,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
       }
     }
 
-    s"the session cache has no credentials with SA enrolment" should {
+    s"the session cache has no credentials with SA enrolment" when {
       s"render the error page" in {
         await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
         await(
@@ -232,7 +233,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
       }
     }
 
-    "the session cache has no redirectUrl" should {
+    "the session cache has no redirectUrl" when {
       s"return $INTERNAL_SERVER_ERROR" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
@@ -249,7 +250,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
       }
     }
 
-    "users group search returns an error" should {
+    "users group search returns an error" when {
       "render the error page" in {
         await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
         await(
@@ -286,7 +287,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
       }
     }
 
-    "an authorised user with no credential uses the service" should {
+    "an authorised user with no credential uses the service" when {
       s"render the error page" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
@@ -318,7 +319,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
       }
     }
 
-    "an authorised user but IV returns internal error" should {
+    "an authorised user but IV returns internal error" when {
       s"return $INTERNAL_SERVER_ERROR" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
@@ -342,7 +343,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
       }
     }
 
-    "the user has a session missing required element NINO" should {
+    "the user has a session missing required element NINO" when {
       s"redirect to ${UrlPaths.unauthorizedPath}" in {
         val authResponse = authoriseResponseJson(optNino = None)
         stubAuthorizePost(OK, authResponse.toString())
@@ -361,7 +362,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
       }
     }
 
-    "the user has a session missing required element Credentials" should {
+    "the user has a session missing required element Credentials" when {
       s"redirect to ${UrlPaths.unauthorizedPath}" in {
         val authResponse = authoriseResponseJson(optCreds = None)
         stubAuthorizePost(OK, authResponse.toString())
@@ -380,7 +381,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
       }
     }
 
-    "the user has a insufficient confidence level" should {
+    "the user has a insufficient confidence level" when {
       s"redirect to ${UrlPaths.unauthorizedPath}" in {
         stubAuthorizePostUnauthorised(insufficientConfidenceLevel)
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -398,7 +399,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
       }
     }
 
-    "the user has no active session" should {
+    "the user has no active session" when {
       s"redirect to login" in {
         stubAuthorizePostUnauthorised(sessionNotFound)
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -423,7 +424,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
       .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
       .get())
 
-    "the session cache has a credential for PT enrolment that is not the signed in account" should {
+    "the session cache has a credential for PT enrolment that is not the signed in account" when {
       s"render the report suspiciousId page with no continue button" in {
         await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
         await(
@@ -475,7 +476,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
       SA_ASSIGNED_TO_OTHER_USER,
       SA_ASSIGNED_TO_CURRENT_USER
     ).foreach { accountType =>
-      s"the session cache has a credential with account type ${accountType.toString}" should {
+      s"the session cache has a credential with account type ${accountType.toString}" when {
         s"redirect to ${UrlPaths.accountCheckPath}" in {
           await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
           await(
@@ -500,7 +501,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
       }
     }
 
-    s"the session cache has a credential for PT enrolment that is the signed in account" should {
+    s"the session cache has a credential for PT enrolment that is the signed in account" when {
       s"render the error page" in {
         await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
         await(
@@ -533,7 +534,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
       }
     }
 
-    s"the session cache has no credentials with PT enrolment" should {
+    s"the session cache has no credentials with PT enrolment" when {
       s"render the error page" in {
         await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
         await(
@@ -566,7 +567,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
       }
     }
 
-    "the session cache has no redirectUrl" should {
+    "the session cache has no redirectUrl" when {
       s"return $INTERNAL_SERVER_ERROR" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
@@ -583,7 +584,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
       }
     }
 
-    "users group search returns an error" should {
+    "users group search returns an error" when {
       "render the error page" in {
         await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
         await(
@@ -620,7 +621,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
       }
     }
 
-    "an authorised user with no credential uses the service" should {
+    "an authorised user with no credential uses the service" when {
       s"render the error page" in {
         val authResponse = authoriseResponseJson()
         await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
@@ -652,7 +653,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
       }
     }
 
-    "an authorised user but IV returns internal error" should {
+    "an authorised user but IV returns internal error" when {
       s"render the error page" in {
         val authResponse = authoriseResponseJson()
         await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
@@ -684,7 +685,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
       }
     }
 
-    "the user has a session missing required element NINO" should {
+    "the user has a session missing required element NINO" when {
       s"redirect to ${UrlPaths.unauthorizedPath}" in {
         val authResponse = authoriseResponseJson(optNino = None)
         stubAuthorizePost(OK, authResponse.toString())
@@ -703,7 +704,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
       }
     }
 
-    "the user has a session missing required element Credentials" should {
+    "the user has a session missing required element Credentials" when {
       s"redirect to ${UrlPaths.unauthorizedPath}" in {
         val authResponse = authoriseResponseJson(optCreds = None)
         stubAuthorizePost(OK, authResponse.toString())
@@ -722,7 +723,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
       }
     }
 
-    "the user has a insufficient confidence level" should {
+    "the user has a insufficient confidence level" when {
       s"redirect to ${UrlPaths.unauthorizedPath}" in {
         stubAuthorizePostUnauthorised(insufficientConfidenceLevel)
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -740,7 +741,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
       }
     }
 
-    "the user has no active session" should {
+    "the user has no active session" when {
       s"redirect to login" in {
         stubAuthorizePostUnauthorised(sessionNotFound)
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -765,14 +766,14 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
       .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
       .post(Json.obj()))
 
-    "the user has account type of SA_ASSIGNED_TO_OTHER_USER" should {
+    "the user has account type of SA_ASSIGNED_TO_OTHER_USER" when {
       s"enrol the user for PT and redirect to the EnroledAfterReportingFraud" when {
         "the user hasn't already been assigned a PT enrolment" in {
           val cacheData = Map(
             ACCOUNT_TYPE -> Json.toJson(SA_ASSIGNED_TO_OTHER_USER),
             REDIRECT_URL -> JsString(UrlPaths.returnUrl),
             USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(saUsers),
-            accountDetailsForCredential(CREDENTIAL_ID_2) -> Json.toJson(accountDetails)
+            accountDetailsForCredential(CREDENTIAL_ID_2) -> Json.toJson(accountDetails) (AccountDetails.mongoFormats(crypto.crypto))
           )
           await(save(sessionId, cacheData))
           val authResponse = authoriseResponseJson()
@@ -829,7 +830,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
       }
     }
 
-    "the user has account type of SA_ASSIGNED_TO_OTHER_USER but silent enrolment fails" should {
+    "the user has account type of SA_ASSIGNED_TO_OTHER_USER but silent enrolment fails" when {
       s"render the error page" in {
         await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
         await(
@@ -867,7 +868,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
       MULTIPLE_ACCOUNTS,
       SA_ASSIGNED_TO_CURRENT_USER
     ).foreach { accountType =>
-      s"the session cache has Account type of $accountType" should {
+      s"the session cache has Account type of $accountType" when {
         s"redirect to accountCheck" in {
           await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
           await(
@@ -892,8 +893,9 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
       }
     }
 
-    "the session cache is empty" should {
+    "the session cache is empty" when {
       s"return $INTERNAL_SERVER_ERROR" in {
+        await(mongoRepository.collection.deleteMany(BsonDocument()).toFuture())
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -903,6 +905,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
           .post(Json.obj())
 
         whenReady(res) { resp =>
+
           resp.status shouldBe INTERNAL_SERVER_ERROR
           resp.body should include(ErrorTemplateMessages.title)
         }

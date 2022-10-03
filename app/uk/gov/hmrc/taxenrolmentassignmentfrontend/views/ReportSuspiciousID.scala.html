@@ -51,7 +51,7 @@ pageTitle = Some(messages("ReportSuspiciousID.title")), optBackLinkUrl = Some("j
 <dl class="govuk-summary-list">
 
     @summaryRow("common.userId", ptAccountDetails.userId)
-    @summaryRow("ReportSuspiciousID.email", ptAccountDetails.email.get)
+    @summaryRow("ReportSuspiciousID.email", ptAccountDetails.emailDecrypted.get)
     @summaryRow("ReportSuspiciousID.lastLoginDate", ptAccountDetails.lastLoginDate)
     @for(mfaDetail <- ptAccountDetails.mfaDetails) {
     @summaryRow(mfaDetail.factorNameKey, mfaDetail.factorValue)

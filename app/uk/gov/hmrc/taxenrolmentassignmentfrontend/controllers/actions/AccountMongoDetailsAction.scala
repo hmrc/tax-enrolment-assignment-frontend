@@ -22,6 +22,7 @@ import play.api.mvc._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.ErrorHandler
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.TENCrypto
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -52,7 +53,7 @@ class AccountMongoDetailsAction @Inject()(
   teaSessionCache: TEASessionCache,
   val parser: BodyParsers.Default,
   errorHandler: ErrorHandler
-)(implicit val executionContext: ExecutionContext)
+)(implicit val executionContext: ExecutionContext, crypto: TENCrypto)
     extends AccountMongoDetailsActionTrait {
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
   override protected def refine[A](
@@ -76,14 +77,14 @@ class AccountMongoDetailsAction @Inject()(
 
   private def getAccountDetailsFromMongoFromCache
   (implicit request: RequestWithUserDetailsFromSession[_]): Future[Either[TaxEnrolmentAssignmentErrors, AccountDetailsFromMongo]] = {
-    teaSessionCache.fetch().map {optCachedMap =>
+    teaSessionCache.fetch().map { optCachedMap =>
       optCachedMap
         .fold[Either[TaxEnrolmentAssignmentErrors, AccountDetailsFromMongo]](
           Left(CacheNotCompleteOrNotCorrect(None, None))
         ) { cachedMap =>
           (AccountDetailsFromMongo.optAccountType(cachedMap.data), AccountDetailsFromMongo.optRedirectUrl(cachedMap.data)) match {
             case (Some(accountType), Some(redirectUrl)) => Right(
-              AccountDetailsFromMongo(accountType, redirectUrl, cachedMap.data)
+              AccountDetailsFromMongo(accountType, redirectUrl, cachedMap.data)(crypto.crypto)
             )
             case (optAccountType, optRedirectUrl) => Left(
               CacheNotCompleteOrNotCorrect(optRedirectUrl, optAccountType)

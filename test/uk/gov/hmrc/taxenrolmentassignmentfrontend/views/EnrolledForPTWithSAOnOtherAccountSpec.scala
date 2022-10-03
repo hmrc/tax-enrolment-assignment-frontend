@@ -42,7 +42,6 @@ class EnrolledForPTWithSAOnOtherAccountSpec extends ViewSpecHelper {
     val button = "govuk-button"
     val form = "form"
   }
-
   "EnrolledForPTWithSAOnOtherAccount" when {
     "the user has choosen to keep SA separate" should {
       "contain the correct title" in {

@@ -486,20 +486,5 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status wi
           stubAuthorizePost(OK, authResponse.toString())
       }
     }
-
-    def stubUserGroupSearchSuccess(
-                                    credId: String,
-                                    usersGroupResponse: UsersGroupResponse
-                                  ): StubMapping = stubGet(
-      s"/users-groups-search/users/$credId",
-      NON_AUTHORITATIVE_INFORMATION,
-      usergroupsResponseJson(usersGroupResponse).toString()
-    )
-
-    def stubUserGroupSearchFailure(
-                                    credId: String,
-                                    responseCode: Int = INTERNAL_SERVER_ERROR
-                                  ): StubMapping =
-      stubGet(s"/users-groups-search/users/$credId", INTERNAL_SERVER_ERROR, "")
   }
 }

@@ -32,7 +32,8 @@ import play.api.{Application, Environment, Mode}
 import uk.gov.hmrc.crypto.PlainText
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
 import uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.SessionCookieCrypto
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.{CascadeUpsert, SessionRepository}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.{CascadeUpsert, MongoRepository, SessionRepository}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.TENCrypto
 
 import scala.concurrent.ExecutionContext
 
@@ -96,6 +97,8 @@ trait IntegrationSpecBase
     .configure(config)
     .build
 
+  implicit lazy val crypto = app.injector.instanceOf[TENCrypto]
+
   val sessionBaker: SessionCookieBaker = app.injector.instanceOf[SessionCookieBaker]
   val cookieHeaderEncoding: CookieHeaderEncoding = app.injector.instanceOf[CookieHeaderEncoding]
   val sessionCookieCrypto: SessionCookieCrypto = app.injector.instanceOf[SessionCookieCrypto]
@@ -108,7 +111,8 @@ trait IntegrationSpecBase
       sessionCookie.copy(value = encryptedSessionCookieValue)
     cookieHeaderEncoding.encodeCookieHeader(Seq(encryptedSessionCookie))
   }
-  val sessionRepository: SessionRepository = app.injector.instanceOf[SessionRepository]
+  lazy val sessionRepository: SessionRepository = app.injector.instanceOf[SessionRepository]
+  lazy val mongoRepository: MongoRepository = sessionRepository()
   val cascadeUpsert: CascadeUpsert = app.injector.instanceOf[CascadeUpsert]
   val authData = Map("authToken" -> AUTHORIZE_HEADER_VALUE)
   val sessionAndAuth  = Map("authToken" -> AUTHORIZE_HEADER_VALUE, "sessionId" -> sessionId)
@@ -118,7 +122,7 @@ trait IntegrationSpecBase
 
   override def beforeEach(): Unit = {
     resetWiremock()
-    await(sessionRepository().collection.deleteMany(BsonDocument()).toFuture())
+    await(mongoRepository.collection.deleteMany(BsonDocument()).toFuture())
   }
 
   override def beforeAll(): Unit = {

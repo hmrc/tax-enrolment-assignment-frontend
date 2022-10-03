@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 
-import play.api.libs.json.{Format, JsObject, JsValue, Json, Reads, Writes}
+import play.api.libs.json._
 
 case class UsersAssignedEnrolment(enrolledCredential: Option[String])
 

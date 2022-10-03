@@ -17,6 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting
 
 import play.api.libs.json.{JsObject, JsString, Json}
+import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
@@ -29,7 +30,7 @@ class AuditEventSpec extends TestFixture {
   val accountDetailsWithOneMFADetails = AccountDetails(
     credId = CREDENTIAL_ID_1,
     userId = "6037",
-    email = Some("test@mail.com"),
+    email = Some(SensitiveString("test@mail.com")),
     lastLoginDate = "27 February 2022 at 12:00 PM",
     mfaDetails = Seq(MFADetails("mfaDetails.text", "24321"))
   )
@@ -63,7 +64,7 @@ class AuditEventSpec extends TestFixture {
     Json.obj(
       ("credentialId", JsString(accountDetails.credId)),
       ("userId", JsString(getEndingWith(accountDetails.userId, isWelsh))),
-      ("email", JsString(accountDetails.email.getOrElse("-"))),
+      ("email", JsString(accountDetails.emailDecrypted.getOrElse("-"))),
       ("lastSignedIn", JsString(accountDetails.lastLoginDate)),
       ("mfaDetails", mfaJson)
     )
@@ -487,7 +488,7 @@ class AuditEventSpec extends TestFixture {
     "the user has enrolled after choosing to keep PT and SA separate" should {
       "return an audit event with the expected details" in {
         val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsSA))
+          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsSA)(AccountDetails.mongoFormats(crypto.crypto)))
         val requestForAudit =
           requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
         val expectedAuditEvent =
@@ -510,7 +511,7 @@ class AuditEventSpec extends TestFixture {
             getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_OTHER_USER, Some(reportedAccountDetails), Some(CREDENTIAL_ID_1))
 
           val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmailOrMFA))
+            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmailOrMFA)(AccountDetails.mongoFormats(crypto.crypto)))
           val requestForAudit =
             requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
@@ -528,7 +529,7 @@ class AuditEventSpec extends TestFixture {
             getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_OTHER_USER, Some(reportedAccountDetails), Some(CREDENTIAL_ID_1))
 
           val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmail))
+            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmail)(AccountDetails.mongoFormats(crypto.crypto)))
           val requestForAudit =
             requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
@@ -540,11 +541,12 @@ class AuditEventSpec extends TestFixture {
         "the reported account has no mfaDetails" in {
           val accountDetailsNoMFA = accountDetailsWithOneMFADetails
             .copy(mfaDetails = Seq.empty)
+
           val reportedAccountDetails = Json.obj(("reportedAccount", getReportedAccountJson(accountDetailsNoMFA)))
           val expectedAuditEvent =
             getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_OTHER_USER, Some(reportedAccountDetails), Some(CREDENTIAL_ID_1))
           val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoMFA))
+            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoMFA)(AccountDetails.mongoFormats(crypto.crypto)))
           val requestForAudit =
             requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
@@ -568,7 +570,7 @@ class AuditEventSpec extends TestFixture {
             getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_OTHER_USER, Some(reportedAccountDetails), Some(CREDENTIAL_ID_1))
 
           val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsWithThreeMFADetails))
+            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsWithThreeMFADetails)(AccountDetails.mongoFormats(crypto.crypto)))
           val requestForAudit =
             requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
@@ -591,7 +593,7 @@ class AuditEventSpec extends TestFixture {
             getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_OTHER_USER, Some(reportedAccountDetails), Some(CREDENTIAL_ID_1))
 
           val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmailOrMFA))
+            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmailOrMFA)(AccountDetails.mongoFormats(crypto.crypto)))
           val requestForAudit =
             requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER,
               additionalCacheData = additionalCacheData,
@@ -612,7 +614,7 @@ class AuditEventSpec extends TestFixture {
             getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_OTHER_USER, Some(reportedAccountDetails), Some(CREDENTIAL_ID_1))
 
           val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmail))
+            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmail)(AccountDetails.mongoFormats(crypto.crypto)))
           val requestForAudit =
             requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER,
               additionalCacheData = additionalCacheData,
@@ -631,7 +633,7 @@ class AuditEventSpec extends TestFixture {
           val expectedAuditEvent =
             getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_OTHER_USER, Some(reportedAccountDetails), Some(CREDENTIAL_ID_1))
           val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoMFA))
+            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoMFA)(AccountDetails.mongoFormats(crypto.crypto)))
           val requestForAudit =
             requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER,
               additionalCacheData = additionalCacheData,
@@ -658,7 +660,7 @@ class AuditEventSpec extends TestFixture {
             getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_OTHER_USER, Some(reportedAccountDetails), Some(CREDENTIAL_ID_1))
 
           val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsWithThreeMFADetails))
+            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsWithThreeMFADetails)(AccountDetails.mongoFormats(crypto.crypto)))
           val requestForAudit =
             requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER,
               additionalCacheData = additionalCacheData,
@@ -683,7 +685,7 @@ class AuditEventSpec extends TestFixture {
           getExpectedAuditForSigninWithSA(Some(saAccountDetails))
 
         val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmailOrMFA))
+          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmailOrMFA)(AccountDetails.mongoFormats(crypto.crypto)))
         val requestForAudit =
           requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
@@ -701,7 +703,7 @@ class AuditEventSpec extends TestFixture {
           getExpectedAuditForSigninWithSA(Some(saAccountDetails))
 
         val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmail))
+          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmail)(AccountDetails.mongoFormats(crypto.crypto)))
         val requestForAudit =
           requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
@@ -717,7 +719,7 @@ class AuditEventSpec extends TestFixture {
         val expectedAuditEvent =
           getExpectedAuditForSigninWithSA(Some(saAccountDetails))
         val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoMFA))
+          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoMFA)(AccountDetails.mongoFormats(crypto.crypto)))
         val requestForAudit =
           requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
@@ -741,7 +743,7 @@ class AuditEventSpec extends TestFixture {
           getExpectedAuditForSigninWithSA(Some(saAccountDetails))
 
         val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsWithThreeMFADetails))
+          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsWithThreeMFADetails)(AccountDetails.mongoFormats(crypto.crypto)))
         val requestForAudit =
           requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
@@ -774,7 +776,7 @@ class AuditEventSpec extends TestFixture {
           getExpectedAuditForSigninWithSA(Some(saAccountDetails))
 
         val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmailOrMFA))
+          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmailOrMFA)(AccountDetails.mongoFormats(crypto.crypto)))
         val requestForAudit =
           requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER,
             additionalCacheData = additionalCacheData,
@@ -795,7 +797,7 @@ class AuditEventSpec extends TestFixture {
           getExpectedAuditForSigninWithSA(Some(saAccountDetails))
 
         val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmail))
+          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmail)(AccountDetails.mongoFormats(crypto.crypto)))
         val requestForAudit =
           requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER,
             additionalCacheData = additionalCacheData,
@@ -815,7 +817,7 @@ class AuditEventSpec extends TestFixture {
         val expectedAuditEvent =
           getExpectedAuditForSigninWithSA(Some(saAccountDetails))
         val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoMFA))
+          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoMFA)(AccountDetails.mongoFormats(crypto.crypto)))
         val requestForAudit =
           requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER,
             additionalCacheData = additionalCacheData,
@@ -843,7 +845,7 @@ class AuditEventSpec extends TestFixture {
           getExpectedAuditForSigninWithSA(Some(saAccountDetails))
 
         val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsWithThreeMFADetails))
+          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsWithThreeMFADetails)(AccountDetails.mongoFormats(crypto.crypto)))
         val requestForAudit =
           requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER,
             additionalCacheData = additionalCacheData,

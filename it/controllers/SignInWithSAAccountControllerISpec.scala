@@ -26,7 +26,7 @@ import play.api.libs.json.{JsString, Json}
 import play.api.libs.ws.DefaultWSCookie
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, UsersAssignedEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL, USER_ASSIGNED_SA_ENROLMENT, accountDetailsForCredential}
 import play.api.libs.ws.DefaultWSCookie
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
@@ -366,7 +366,7 @@ class SignInWithSAAccountControllerISpec extends TestHelper with Status with Thr
           ACCOUNT_TYPE -> Json.toJson(SA_ASSIGNED_TO_OTHER_USER),
           REDIRECT_URL -> JsString(UrlPaths.returnUrl),
           USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(saUsers),
-          accountDetailsForCredential(CREDENTIAL_ID_2) -> Json.toJson(accountDetails)
+          accountDetailsForCredential(CREDENTIAL_ID_2) -> Json.toJson(accountDetails) (AccountDetails.mongoFormats(crypto.crypto))
         )
         await(save(sessionId, cacheData))
         val authResponse = authoriseResponseJson()

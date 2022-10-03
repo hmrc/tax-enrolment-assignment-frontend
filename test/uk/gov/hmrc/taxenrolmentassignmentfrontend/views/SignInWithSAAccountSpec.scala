@@ -19,6 +19,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.views
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import play.api.test.FakeRequest
+import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignOutController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.CREDENTIAL_ID
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.SignInAgainMessages
@@ -70,7 +71,7 @@ class SignInWithSAAccountSpec extends ViewSpecHelper {
   val accountDetails = AccountDetails(
     credId = CREDENTIAL_ID,
     "********3214",
-    Some("email1@test.com"),
+    Some(SensitiveString("email1@test.com")),
     "Yesterday",
     mfaDetails
   )
@@ -121,7 +122,7 @@ class SignInWithSAAccountSpec extends ViewSpecHelper {
           summaryListRows
             .get(1)
             .getElementsByClass(Selectors.summaryListValue)
-            .text() shouldBe accountDetails.email.get
+            .text() shouldBe accountDetails.emailDecrypted.get
         }
       }
 

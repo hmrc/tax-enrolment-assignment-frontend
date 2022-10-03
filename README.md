@@ -60,5 +60,8 @@ Run Performance Tests see [here](https://github.com/hmrc/tax-enrolment-assignmen
 ## Audits
 https://confluence.tools.tax.service.gov.uk/display/TEN/CIP+Assessment+tracker+-+TENINO
 
+## Encryption
+The result of UGS contains an email address which we display to the user, we encrypt this when we store it in mongo
+
 ### License
 This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html").

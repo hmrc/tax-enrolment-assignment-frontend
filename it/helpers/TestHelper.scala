@@ -16,7 +16,10 @@
 
 package helpers
 
+import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import helpers.TestITData._
+import helpers.WiremockHelper.stubGet
+import play.api.http.Status.{INTERNAL_SERVER_ERROR, NON_AUTHORITATIVE_INFORMATION}
 import play.api.i18n.{Lang, Messages, MessagesApi}
 import play.api.libs.json.{JsString, JsValue, Json}
 import play.api.mvc.{AnyContent, Request}
@@ -26,10 +29,12 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo, UserDetailsFromSession}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{routes, testOnly}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersGroupResponse
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
 trait TestHelper extends IntegrationSpecBase {
+
 
   val teaHost = s"localhost:$port"
   val sessionCookie
@@ -49,7 +54,7 @@ trait TestHelper extends IntegrationSpecBase {
       FakeRequest().asInstanceOf[Request[AnyContent]],
       userDetailsNoEnrolments,
       sessionId,
-      AccountDetailsFromMongo(accountType, redirectUrl, mongoCacheData)
+      AccountDetailsFromMongo(accountType, redirectUrl, mongoCacheData)(crypto.crypto)
     )
 
   def requestWithUserDetails(userDetails: UserDetailsFromSession = userDetailsNoEnrolments): RequestWithUserDetailsFromSession[_] =
@@ -92,5 +97,20 @@ trait TestHelper extends IntegrationSpecBase {
     val timeout = routes.TimeOutController.timeout.url
     val signout = routes.SignOutController.signOut().url
   }
+
+  def stubUserGroupSearchSuccess(
+                                  credId: String,
+                                  usersGroupResponse: UsersGroupResponse
+                                ): StubMapping = stubGet(
+    s"/users-groups-search/users/$credId",
+    NON_AUTHORITATIVE_INFORMATION,
+    usergroupsResponseJson(usersGroupResponse).toString()
+  )
+
+  def stubUserGroupSearchFailure(
+                                  credId: String,
+                                  responseCode: Int = INTERNAL_SERVER_ERROR
+                                ): StubMapping =
+    stubGet(s"/users-groups-search/users/$credId", INTERNAL_SERVER_ERROR, "")
 
 }

@@ -42,7 +42,7 @@ class UsersGroupsSearchServiceSpec extends TestFixture with ScalaFutures {
   "getAccountDetails" when {
     "the account details are already in the cache" should {
       "not call the users-groups-search and return value from cache" in {
-        val additionCacheData = Map(s"AccountDetailsFor$CREDENTIAL_ID" -> Json.toJson(accountDetails))
+        val additionCacheData = Map(s"AccountDetailsFor$CREDENTIAL_ID" -> Json.toJson(accountDetails)(AccountDetails.mongoFormats(crypto.crypto)))
         val result = service.getAccountDetails(CREDENTIAL_ID)(
           implicitly, implicitly,
           requestWithAccountType(additionalCacheData = additionCacheData))

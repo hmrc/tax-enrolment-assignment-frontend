@@ -645,7 +645,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
             request.userDetails.copy(hasSAEnrolment = true),
             request.sessionID,
             AccountDetailsFromMongo(PT_ASSIGNED_TO_OTHER_USER, "foo",
-              generateBasicCacheData(PT_ASSIGNED_TO_OTHER_USER, "foo")))
+              generateBasicCacheData(PT_ASSIGNED_TO_OTHER_USER, "foo"))(crypto.crypto))
 
           (mockAddTaxesFrontendService.saSetupJourney(_: UserDetailsFromSession)(_: HeaderCarrier, _: ExecutionContext))
             .expects(requestForTest.userDetails, *, *)
@@ -664,7 +664,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
             request.userDetails.copy(hasSAEnrolment = true),
             request.sessionID,
             AccountDetailsFromMongo(PT_ASSIGNED_TO_OTHER_USER, "foo",
-              generateBasicCacheData(PT_ASSIGNED_TO_OTHER_USER, "foo")))
+              generateBasicCacheData(PT_ASSIGNED_TO_OTHER_USER, "foo"))(crypto.crypto))
 
           (mockAddTaxesFrontendService.saSetupJourney(_: UserDetailsFromSession)(_: HeaderCarrier, _: ExecutionContext))
             .expects(requestForTest.userDetails, *, *)
@@ -685,7 +685,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
           request.userDetails.copy(hasSAEnrolment = false),
           request.sessionID,
           AccountDetailsFromMongo(PT_ASSIGNED_TO_OTHER_USER, "foo",
-            generateBasicCacheData(PT_ASSIGNED_TO_OTHER_USER, "foo")))
+            generateBasicCacheData(PT_ASSIGNED_TO_OTHER_USER, "foo"))(crypto.crypto))
 
         val res = orchestrator.enrolForSA(requestForTest, implicitly, implicitly)
 

@@ -36,8 +36,8 @@
  <h2 class="govuk-heading-m">@messages("signInAgain.heading2")</h2>
  <dl class="govuk-summary-list">
   @summaryRow("common.userId", saAccountDetails.userId)
-  @if(saAccountDetails.email.isDefined) {
-  @summaryRow("signInAgain.email", saAccountDetails.email.get)
+  @if(saAccountDetails.emailDecrypted.isDefined) {
+  @summaryRow("signInAgain.email", saAccountDetails.emailDecrypted.get)
   }
   @summaryRow("signInAgain.lastLoginDate", saAccountDetails.lastLoginDate)
   @for(mfaDetail <- saAccountDetails.mfaDetails) {

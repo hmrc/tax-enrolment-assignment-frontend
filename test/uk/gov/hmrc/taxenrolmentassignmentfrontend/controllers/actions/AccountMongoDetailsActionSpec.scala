@@ -59,7 +59,7 @@ class AccountMongoDetailsActionSpec extends TestFixture {
         requestWithUserDetailsFromSession.request,
         requestWithUserDetailsFromSession.userDetails,
         requestWithUserDetailsFromSession.sessionID,
-        AccountDetailsFromMongo(PT_ASSIGNED_TO_CURRENT_USER, "foo", exampleMongoSessionData)
+        AccountDetailsFromMongo(PT_ASSIGNED_TO_CURRENT_USER, "foo", exampleMongoSessionData)(crypto.crypto)
       )
 
       val function =
@@ -255,7 +255,7 @@ class AccountMongoDetailsActionSpec extends TestFixture {
           requestWithUserDetailsFromSession.request,
           requestWithUserDetailsFromSession.userDetails,
           requestWithUserDetailsFromSession.sessionID,
-          AccountDetailsFromMongo(SINGLE_ACCOUNT, "redirect", Map())
+          AccountDetailsFromMongo(SINGLE_ACCOUNT, "redirect", Map())(crypto.crypto)
         )
       ) shouldBe requestWithUserDetailsFromSession
     }

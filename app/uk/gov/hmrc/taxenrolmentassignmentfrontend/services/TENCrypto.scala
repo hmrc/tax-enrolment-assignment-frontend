@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.services
 
-import play.api.Logger
-import play.api.i18n.I18nSupport
-import play.api.mvc.MessagesControllerComponents
-import uk.gov.hmrc.play.bootstrap.controller.WithUnsafeDefaultFormBinding
-import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import play.api.Configuration
+import uk.gov.hmrc.crypto.{Decrypter, Encrypter, SymmetricCryptoFactory}
 
-abstract class TEAFrontendController(override val controllerComponents: MessagesControllerComponents)
-  extends FrontendController(controllerComponents) with I18nSupport with WithUnsafeDefaultFormBinding {
+import javax.inject.{Inject, Singleton}
 
-  implicit lazy val baseLogger: Logger = Logger(this.getClass.getName)
+@Singleton
+class TENCrypto @Inject()(config: Configuration) {
 
+  val crypto: Encrypter with Decrypter = {
+    SymmetricCryptoFactory.aesGcmCryptoFromConfig("crypto", config.underlying)
+  }
 }

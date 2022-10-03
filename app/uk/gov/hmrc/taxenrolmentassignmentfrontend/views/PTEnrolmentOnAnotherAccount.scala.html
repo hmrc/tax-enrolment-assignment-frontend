@@ -46,8 +46,8 @@ govukInsetText : GovukInsetText
 
     <dl class="govuk-summary-list">
         @summaryRow("common.userId", ptEnrolmentOtherAccountViewModel.ptAccountDetails.userId)
-        @if(ptEnrolmentOtherAccountViewModel.ptAccountDetails.email.isDefined) {
-          @summaryRow("ptEnrolmentOnOtherAccount.email", ptEnrolmentOtherAccountViewModel.ptAccountDetails.email.get)
+        @if(ptEnrolmentOtherAccountViewModel.ptAccountDetails.emailDecrypted.isDefined) {
+          @summaryRow("ptEnrolmentOnOtherAccount.email", ptEnrolmentOtherAccountViewModel.ptAccountDetails.emailDecrypted.get)
         }
         @summaryRow("ptEnrolmentOnOtherAccount.lastLoginDate", ptEnrolmentOtherAccountViewModel.ptAccountDetails.lastLoginDate)
         @for(mfaDetail <- ptEnrolmentOtherAccountViewModel.ptAccountDetails.mfaDetails) {

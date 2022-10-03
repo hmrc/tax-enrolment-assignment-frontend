@@ -29,6 +29,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWit
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, NoSAEnrolmentWhenOneExpected, UnexpectedPTEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, ThrottleHelperSpec, UrlPaths}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_ASSIGNED_SA_ENROLMENT, accountDetailsForCredential}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SignInWithSAAccount
@@ -231,8 +232,9 @@ class SignInAgainPageControllerSpec extends TestFixture with ThrottleHelperSpec 
     specificThrottleTests(controller.continue())
 
       s"redirect to ${UrlPaths.logoutPath}" in {
-        val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetails))
+        val additionalCacheData = Map(
+          USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetails)(AccountDetails.mongoFormats(crypto.crypto)))
         (mockAuthConnector
           .authorise(
             _: Predicate,

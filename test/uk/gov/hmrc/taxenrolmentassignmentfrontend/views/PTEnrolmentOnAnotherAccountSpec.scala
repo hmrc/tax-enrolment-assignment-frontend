@@ -17,6 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.views
 
 import play.api.test.FakeRequest
+import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.PTEnrolmentOtherAccountMesages
@@ -52,14 +53,14 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
   val testAccountDetails = AccountDetails(
     "credId",
     userId = USER_ID,
-    email = Some("email.otherUser@test.com"),
+    email = Some(SensitiveString("email.otherUser@test.com")),
     lastLoginDate = "27 February 2022 at 12:00 PM",
     mfaDetails
   )
   val testAccountDetailsWithSA = AccountDetails(
     "credId",
     userId = PT_USER_ID,
-    email = Some("email.otherUser@test.com"),
+    email = Some(SensitiveString("email.otherUser@test.com")),
     lastLoginDate = "27 February 2022 at 12:00 PM",
     mfaDetails,
     hasSA = Some(true)
@@ -159,7 +160,7 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
           summaryListRows
             .get(1)
             .getElementsByClass(Selectors.summaryListValue)
-            .text() shouldBe testAccountDetails.email.get
+            .text() shouldBe testAccountDetails.emailDecrypted.get
         }
       }
       "does not include the email" when {

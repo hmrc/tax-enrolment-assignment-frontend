@@ -42,7 +42,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{AddTaxesFrontendConnector, EACDConnector, IVConnector, LegacyAuthConnector, TaxEnrolmentsConnector}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{SignOutController}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignOutController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.ErrorHandler
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{TaxEnrolmentAssignmentErrors, UnexpectedError}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{randomAccountType, userDetailsNoEnrolments}
@@ -93,7 +93,7 @@ trait TestFixture
       request.request.withTransientLang(langCode),
       request.userDetails,
       request.sessionID,
-      AccountDetailsFromMongo(accountType, redirectUrl, generateBasicCacheData(accountType, redirectUrl) ++ additionalCacheData)
+      AccountDetailsFromMongo(accountType, redirectUrl, generateBasicCacheData(accountType, redirectUrl) ++ additionalCacheData)(crypto.crypto)
     )
 
   implicit val ec: ExecutionContext = injector.instanceOf[ExecutionContext]
@@ -107,6 +107,7 @@ trait TestFixture
   lazy val messagesApi: MessagesApi = inject[MessagesApi]
   lazy val stubbedMessagesApi = stubMessagesApi()
   implicit lazy val messages: Messages = messagesApi.preferred(fakeRequest)
+  implicit val crypto = inject[TENCrypto]
   lazy val UCView: UnderConstructionView = inject[UnderConstructionView]
   val mockAuthConnector: AuthConnector = mock[AuthConnector]
   val mockIVConnector: IVConnector = mock[IVConnector]

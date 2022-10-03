@@ -14,10 +14,29 @@
  * limitations under the License.
  */
 
+/*
+ * Copyright 2022 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 
 import play.api.i18n.Lang
-import play.api.test.FakeRequest
+import play.api.libs.json.{JsObject, JsString, Json}
+import uk.gov.hmrc.crypto.{Crypted, PlainText}
+import uk.gov.hmrc.crypto.Sensitive.SensitiveString
+import uk.gov.hmrc.crypto.json.JsonEncryption
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 
 class AccountDetailsSpec extends TestFixture {
@@ -47,7 +66,7 @@ class AccountDetailsSpec extends TestFixture {
     AccountDetails(
       "credId",
       "6037",
-      Some("email1@test.com"),
+      Some(SensitiveString("email1@test.com")),
       formattedLastLoginDate,
       mfaDetails
     )
@@ -72,7 +91,7 @@ class AccountDetailsSpec extends TestFixture {
         s"${test._1} should display correctly for ${test._2}" in {
           val expectedResult = accountDetails(s"27 ${test._1} 2022 am 12:00 PM", List(mfaDetailsText))
 
-          val res = AccountDetails.userFriendlyAccountDetails(AccountDetails("credId", "********6037", Some("email1@test.com"), test._2, List(mfaDetailsText)))(
+          val res = AccountDetails.userFriendlyAccountDetails(AccountDetails("credId", "********6037", Some(SensitiveString("email1@test.com")), test._2, List(mfaDetailsText)))(
             messagesApi.preferred(List(Lang("cy"))))
 
           res shouldBe expectedResult
@@ -97,7 +116,7 @@ class AccountDetailsSpec extends TestFixture {
         s"${test._1} should display correctly for ${test._2}" in {
           val expectedResult = accountDetails(s"27 ${test._1} 2022 at 12:00 PM", List(mfaDetailsText))
 
-          val res = AccountDetails.userFriendlyAccountDetails(AccountDetails("credId", "********6037", Some("email1@test.com"), test._2, List(mfaDetailsText)))(
+          val res = AccountDetails.userFriendlyAccountDetails(AccountDetails("credId", "********6037", Some(SensitiveString("email1@test.com")), test._2, List(mfaDetailsText)))(
             messagesApi.preferred(List(Lang("en"))))
 
           res shouldBe expectedResult
@@ -110,7 +129,7 @@ class AccountDetailsSpec extends TestFixture {
 
           val expectedResult = accountDetails("27 February 2022 at 12:00 PM", List(mfaDetailsText))
 
-          val res = AccountDetails.userFriendlyAccountDetails(AccountDetails("credId", "********6037", Some("email1@test.com"), lastAccessedDate, List(mfaDetailsText)))(messages)
+          val res = AccountDetails.userFriendlyAccountDetails(AccountDetails("credId", "********6037", Some(SensitiveString("email1@test.com")), lastAccessedDate, List(mfaDetailsText)))(messages)
 
           res shouldBe expectedResult
         }
@@ -124,7 +143,7 @@ class AccountDetailsSpec extends TestFixture {
           val expectedResult =
             accountDetails("27 February 2022 at 12:00 PM", List(mfaDetailsVoice))
 
-          val res = AccountDetails.userFriendlyAccountDetails(AccountDetails("credId", "********6037",Some("email1@test.com"), lastAccessedDate, List(mfaDetailsVoice), None))(messages)
+          val res = AccountDetails.userFriendlyAccountDetails(AccountDetails("credId", "********6037",Some(SensitiveString("email1@test.com")), lastAccessedDate, List(mfaDetailsVoice), None))(messages)
 
           res shouldBe expectedResult
         }
@@ -138,7 +157,7 @@ class AccountDetailsSpec extends TestFixture {
           val expectedResult =
             accountDetails("27 February 2022 at 12:00 PM", List(mfaDetailsTotp))
 
-          val res = AccountDetails.userFriendlyAccountDetails(AccountDetails("credId", "********6037", Some("email1@test.com"), lastAccessedDate, List(mfaDetailsTotp)))(messages)
+          val res = AccountDetails.userFriendlyAccountDetails(AccountDetails("credId", "********6037", Some(SensitiveString("email1@test.com")), lastAccessedDate, List(mfaDetailsTotp)))(messages)
 
           res shouldBe expectedResult
         }
@@ -155,12 +174,56 @@ class AccountDetailsSpec extends TestFixture {
           )
 
 
-          val res = AccountDetails.userFriendlyAccountDetails(AccountDetails("credId", "********6037", Some("email1@test.com"), lastAccessedDate, List(mfaDetailsText, mfaDetailsVoice, mfaDetailsTotp)))(messages)
+          val res = AccountDetails.userFriendlyAccountDetails(AccountDetails("credId", "********6037", Some(SensitiveString("email1@test.com")), lastAccessedDate, List(mfaDetailsText, mfaDetailsVoice, mfaDetailsTotp)))(messages)
 
 
           res shouldBe expectedResult
         }
       }
+    }
+  }
+
+  "mongoFormats" should {
+    "write correctly to json" in {
+      val accountDetails = AccountDetails(
+        "credid",
+        "userId",
+        Some(SensitiveString("foo")),
+        "lastLoginDate",
+        Seq(mfaDetailsTotp),
+        None)
+
+      val res = Json.toJson(accountDetails)(AccountDetails.mongoFormats(crypto.crypto))
+      res.as[JsObject] - "email" shouldBe Json.obj(
+        "credId" -> "credid",
+        "userId" -> "userId",
+      "lastLoginDate" -> "lastLoginDate",
+      "mfaDetails" -> Json.arr(
+        Json.obj("factorNameKey" -> "mfaDetails.totp", "factorValue" -> "HMRC App")
+      ))
+
+      crypto.crypto.decrypt(Crypted(res.as[JsObject].value.get("email").get.as[String])).value shouldBe """"foo""""
+    }
+    "read from json" in {
+      implicit val ssf = JsonEncryption.sensitiveEncrypterDecrypter(SensitiveString.apply)(implicitly, crypto.crypto)
+      val json = Json.obj(
+        "credId" -> "credid",
+        "userId" -> "userId",
+        "lastLoginDate" -> "lastLoginDate",
+        "email" -> SensitiveString("foo"),
+        "mfaDetails" -> Json.arr(
+          Json.obj("factorNameKey" -> "mfaDetails.totp", "factorValue" -> "HMRC App")
+        ))
+
+      val accountDetails = AccountDetails(
+        "credid",
+        "userId",
+        Some(SensitiveString("foo")),
+        "lastLoginDate",
+        Seq(mfaDetailsTotp),
+        None)
+      Json.fromJson(json)(AccountDetails.mongoFormats(crypto.crypto)).get shouldBe accountDetails
+      accountDetails.emailDecrypted shouldBe Some("foo")
     }
   }
 }

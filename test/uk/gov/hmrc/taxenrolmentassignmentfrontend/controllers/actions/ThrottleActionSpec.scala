@@ -47,7 +47,7 @@ class ThrottleActionSpec extends TestFixture {
       false
     ),
     "sesh",
-    AccountDetailsFromMongo(PT_ASSIGNED_TO_CURRENT_USER, "redirectURL", Map())
+    AccountDetailsFromMongo(PT_ASSIGNED_TO_CURRENT_USER, "redirectURL", Map())(crypto.crypto)
   )
   val exampleRequestSession: RequestWithUserDetailsFromSession[_] = {
     RequestWithUserDetailsFromSession(exampleRequestSessionAndMongo.request, exampleRequestSessionAndMongo.userDetails, exampleRequestSessionAndMongo.sessionID)

@@ -17,7 +17,6 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting
 
 import java.util.Locale
-
 import play.api.i18n.{Lang, MessagesApi}
 import play.api.libs.json._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
@@ -229,7 +228,7 @@ private def getDetailsForEnrolmentOnAnotherAccount(
     Json.obj(
       ("credentialId", JsString(accountDetails.credId)),
       ("userId", JsString(messagesApi("common.endingWith", accountDetails.userId))),
-      ("email", JsString(accountDetails.email.getOrElse("-"))),
+      ("email", JsString(accountDetails.emailDecrypted.getOrElse("-"))),
       ("lastSignedIn", JsString(accountDetails.lastLoginDate)),
       ("mfaDetails", mfaDetailsToJson(accountDetails.mfaDetails))
     )
@@ -241,7 +240,7 @@ private def getDetailsForEnrolmentOnAnotherAccount(
     Json.obj(
       ("credentialId", JsString(accountDetails.credId)),
       ("userId", JsString(messagesApi("common.endingWith", accountDetails.userId)(enLang))),
-      ("email", JsString(accountDetails.email.getOrElse("-"))),
+      ("email", JsString(accountDetails.emailDecrypted.getOrElse("-"))),
       ("lastSignedIn", JsString(accountDetails.lastLoginDate)),
       ("mfaDetails", mfaDetailsToJson(accountDetails.mfaDetails)(messagesApi, enLang))
     )

@@ -18,6 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.views
 
 import play.api.test.FakeRequest
 import play.twirl.api.HtmlFormat
+import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.ReportSuspiciousIDMessages
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.ReportSuspiciousID
@@ -43,7 +44,7 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
     AccountDetails(
       "credId",
       "4533",
-      Some("email1@test.com"),
+      Some(SensitiveString("email1@test.com")),
       "Yesterday",
       mfaDetails
     )
@@ -102,7 +103,7 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
         suspiciousIdDetailsRows
           .get(1)
           .getElementsByClass(Selectors.summaryListValue)
-          .text() shouldBe accountDetails.email.get
+          .text() shouldBe accountDetails.emailDecrypted.get
       }
       "includes the last signed in date" in {
         suspiciousIdDetailsRows

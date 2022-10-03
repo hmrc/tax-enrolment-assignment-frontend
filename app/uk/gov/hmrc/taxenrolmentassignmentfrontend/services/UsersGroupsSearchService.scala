@@ -18,6 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.services
 
 import cats.data.EitherT
 import com.google.inject.{Inject, Singleton}
+import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.UsersGroupsSearchConnector
@@ -32,7 +33,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class UsersGroupsSearchService @Inject()(
   usersGroupsSearchConnector: UsersGroupsSearchConnector,
   sessionCache: TEASessionCache
-) {
+)(implicit crypto: TENCrypto) {
 
   def getAccountDetails(credId: String)(
     implicit ec: ExecutionContext,
@@ -55,19 +56,19 @@ class UsersGroupsSearchService @Inject()(
     usersGroupsSearchConnector
       .getUserDetails(credId)
       .value
-      .map {
+      .flatMap {
         case Right(userDetails) =>
           val accountDetails: AccountDetails = AccountDetails(
             credId,
             userDetails.obfuscatedUserId,
-            userDetails.email,
+            userDetails.email.map(SensitiveString),
             userDetails.lastAccessedTimestamp,
             AccountDetails.additionalFactorsToMFADetails(userDetails.additionalFactors),
             None
           )
-          sessionCache.save[AccountDetails](key, accountDetails)(request, implicitly)
-          Right(accountDetails)
-        case Left(error) => Left(error)
+          sessionCache.save[AccountDetails](key, accountDetails)(request, AccountDetails.mongoFormats(crypto.crypto))
+            .map(_ => Right(accountDetails))
+        case Left(error) => Future.successful(Left(error))
       }
   }
 }

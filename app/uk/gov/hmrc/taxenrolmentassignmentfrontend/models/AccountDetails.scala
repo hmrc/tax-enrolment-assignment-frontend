@@ -17,7 +17,12 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 
 import play.api.i18n.Messages
-import play.api.libs.json.{Format, Json}
+import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
+import play.api.libs.json.{Format, Json, __}
+import uk.gov.hmrc.crypto.{AesGCMCrypto, Decrypter, Encrypter}
+import uk.gov.hmrc.crypto.Sensitive.SensitiveString
+import uk.gov.hmrc.crypto.json.JsonEncryption
+import play.api.libs.json._
 
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -40,13 +45,13 @@ object MFADetails {
 
 case class AccountDetails(credId: String,
                           userId: String,
-                          email: Option[String],
+                          private val email: Option[SensitiveString],
                           lastLoginDate: String,
                           mfaDetails: Seq[MFADetails],
                           hasSA: Option[Boolean] = None) {
 
+  val emailDecrypted: Option[String] = email.map(_.decryptedValue)
 }
-
 
 object AccountDetails {
 
@@ -78,5 +83,30 @@ object AccountDetails {
     s"${zonedDateTime.getDayOfMonth} ${messages(s"common.month${zonedDateTime.getMonth.getValue}")} ${zonedDateTime.getYear} ${messages("common.dateToTime")} ${zonedDateTime.format(timeFormatter)}"
   }
 
-  implicit val format: Format[AccountDetails] = Json.format[AccountDetails]
+  implicit val AccountDetailsWrites: Writes[AccountDetails] = new Writes[AccountDetails] {
+    override def writes(o: AccountDetails): JsValue = {
+      Json.obj(
+        "credId" -> o.credId,
+        "userId" -> o.userId,
+        "lastLoginDate" -> o.lastLoginDate,
+        "mfaDetails" -> o.mfaDetails
+      ) ++ o.emailDecrypted.map(email => Json.obj("email" -> email)).getOrElse(Json.obj()) ++
+        o.hasSA.map(hasSA => Json.obj("hasSA" -> hasSA)).getOrElse(Json.obj())
+    }
+  }
+
+  def mongoFormats(implicit crypto: Encrypter with Decrypter): Format[AccountDetails] = {
+
+    implicit val strFormats: Format[String] = Format(Reads.StringReads, Writes.StringWrites)
+    implicit val ssf = JsonEncryption.sensitiveEncrypterDecrypter(SensitiveString.apply)
+
+    ( (__ \ "credId").format[String] ~
+      (__ \ "userId").format[String] ~
+      (__ \ "email" ).formatNullable[SensitiveString] ~
+      (__ \ "lastLoginDate" ).format[String] ~
+      (__ \ "mfaDetails" ).format[Seq[MFADetails]] ~
+      (__ \ "hasSA" ).formatNullable[Boolean]
+      )(AccountDetails.apply, unlift(AccountDetails.unapply))
+
+  }
 }

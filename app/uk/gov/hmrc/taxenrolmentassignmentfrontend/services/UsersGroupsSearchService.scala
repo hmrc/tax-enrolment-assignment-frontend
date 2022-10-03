@@ -32,7 +32,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class UsersGroupsSearchService @Inject()(
   usersGroupsSearchConnector: UsersGroupsSearchConnector,
-  sessionCache: TEASessionCache,
+  sessionCache: TEASessionCache
 )(implicit crypto: TENCrypto) {
 
   def getAccountDetails(credId: String)(

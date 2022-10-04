@@ -66,7 +66,7 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
         backLink.text() shouldBe "Back"
       }
       "has the expected href" in {
-        backLink.get(0).attr("href") shouldBe "javascript:window.history.back();"
+        backLink.get(0).attr("href") shouldBe "#"
       }
     }
 

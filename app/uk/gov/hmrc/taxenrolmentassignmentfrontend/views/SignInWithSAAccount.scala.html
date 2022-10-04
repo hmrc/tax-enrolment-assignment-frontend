@@ -29,7 +29,7 @@
 
 @(saAccountDetails: AccountDetails)(implicit request: Request[_], messages: Messages)
 
-@layout(pageTitle = Some(messages("signInAgain.title")), optBackLinkUrl = Some("javascript:window.history.back();")) {
+@layout(pageTitle = Some(messages("signInAgain.title")), backLinkEnabled = true) {
 
  <h1 class="govuk-heading-xl">@messages("signInAgain.heading1")</h1>
  <p class="govuk-body">@messages("signInAgain.paragraph")</p>

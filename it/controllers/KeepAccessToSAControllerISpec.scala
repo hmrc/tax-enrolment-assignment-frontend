@@ -340,7 +340,7 @@ class KeepAccessToSAControllerISpec extends TestHelper with Status with Throttle
           val res = buildRequest(urlPath)
             .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
             .addHttpHeaders(csrfContent, xSessionId, xRequestId, sessionCookie)
-            .post(Json.obj("select-continue" -> "yes"))
+            .post(Map("select-continue" -> Seq("yes")))
 
           whenReady(res) { resp =>
             resp.status shouldBe SEE_OTHER
@@ -369,7 +369,7 @@ class KeepAccessToSAControllerISpec extends TestHelper with Status with Throttle
           val res = buildRequest(urlPath)
             .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
             .addHttpHeaders(csrfContent, xSessionId, xRequestId, sessionCookie)
-            .post(Json.obj("select-continue" -> "yes"))
+            .post(Map("select-continue" -> Seq("yes")))
 
           whenReady(res) { resp =>
             resp.status shouldBe SEE_OTHER
@@ -402,7 +402,7 @@ class KeepAccessToSAControllerISpec extends TestHelper with Status with Throttle
           val res = buildRequest(urlPath)
             .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
             .addHttpHeaders(csrfContent, xSessionId, xRequestId, sessionCookie)
-            .post(Json.obj("select-continue" -> "no"))
+            .post(Map("select-continue" -> Seq("no")))
 
           whenReady(res) { resp =>
             resp.status shouldBe SEE_OTHER
@@ -433,7 +433,7 @@ class KeepAccessToSAControllerISpec extends TestHelper with Status with Throttle
           val res = buildRequest(urlPath)
             .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
             .addHttpHeaders(csrfContent, xSessionId, xRequestId, sessionCookie)
-            .post(Json.obj("select-continue" -> "no"))
+            .post(Map("select-continue" -> Seq("no")))
 
           whenReady(res) { resp =>
             resp.status shouldBe SEE_OTHER
@@ -467,7 +467,7 @@ class KeepAccessToSAControllerISpec extends TestHelper with Status with Throttle
           val res = buildRequest(urlPath)
             .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
             .addHttpHeaders(csrfContent, xSessionId, xRequestId, sessionCookie)
-            .post(Json.obj("select-continue" -> "no"))
+            .post(Map("select-continue" -> Seq("no")))
 
           whenReady(res) { resp =>
             resp.status shouldBe INTERNAL_SERVER_ERROR
@@ -503,7 +503,7 @@ class KeepAccessToSAControllerISpec extends TestHelper with Status with Throttle
                 xRequestId,
                 sessionCookie
               )
-              .post(Json.obj("select-continue" -> "yes"))
+              .post(Map("select-continue" -> Seq("yes")))
 
             whenReady(res) { resp =>
               resp.status shouldBe SEE_OTHER
@@ -529,7 +529,7 @@ class KeepAccessToSAControllerISpec extends TestHelper with Status with Throttle
                 xRequestId,
                 sessionCookie
               )
-              .post(Json.obj("select-continue" -> "no"))
+              .post(Map("select-continue" -> Seq("no")))
 
             whenReady(res) { resp =>
               resp.status shouldBe SEE_OTHER
@@ -555,7 +555,7 @@ class KeepAccessToSAControllerISpec extends TestHelper with Status with Throttle
           val res = buildRequest(urlPath)
             .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
             .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
-            .post(Json.obj("select-continue" -> "yes"))
+            .post(Map("select-continue" -> Seq("yes")))
 
           whenReady(res) { resp =>
             resp.status shouldBe INTERNAL_SERVER_ERROR
@@ -592,7 +592,7 @@ class KeepAccessToSAControllerISpec extends TestHelper with Status with Throttle
         val res = buildRequest(urlPath)
           .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
           .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
-          .post(Json.obj("select-continue" -> "error"))
+          .post(Map("select-continue" -> Seq("error")))
 
         whenReady(res) { resp =>
           resp.status shouldBe BAD_REQUEST

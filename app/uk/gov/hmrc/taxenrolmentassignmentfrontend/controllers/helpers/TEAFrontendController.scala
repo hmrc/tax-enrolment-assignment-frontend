@@ -24,7 +24,7 @@ import uk.gov.hmrc.play.bootstrap.controller.WithUnsafeDefaultFormBinding
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 abstract class TEAFrontendController(override val controllerComponents: MessagesControllerComponents)
-  extends FrontendController(controllerComponents) with I18nSupport {
+  extends FrontendController(controllerComponents) with I18nSupport with WithUnsafeDefaultFormBinding {
 
   implicit lazy val baseLogger: Logger = Logger(this.getClass.getName)
 

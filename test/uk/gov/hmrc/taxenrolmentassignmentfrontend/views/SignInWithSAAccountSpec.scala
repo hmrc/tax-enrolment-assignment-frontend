@@ -160,7 +160,7 @@ class SignInWithSAAccountSpec extends ViewSpecHelper {
       val backLink = document
         .getElementsByClass(Selectors.backLink)
       backLink.text shouldBe SignInAgainMessages.backLink
-      backLink.get(0).attr("href") shouldBe "javascript:window.history.back();"
+      backLink.get(0).attr("href") shouldBe "#"
     }
     "contain the correct button" in {
       document

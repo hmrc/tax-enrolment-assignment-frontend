@@ -24,9 +24,9 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{EACDConnector, IVC
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IVNinoStoreEntry
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IVNinoStoreEntry._
+
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.saEnrolmentSet
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{HAS_OTHER_VALID_PTA_ACCOUNTS}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.HAS_OTHER_VALID_PTA_ACCOUNTS
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 
 import javax.inject.Inject
@@ -38,7 +38,6 @@ class SilentAssignmentService @Inject()(
   eacdConnector: EACDConnector,
   sessionCache: TEASessionCache
 ) {
-
 
   private def filterCL200Accounts(
     list: Seq[IVNinoStoreEntry]

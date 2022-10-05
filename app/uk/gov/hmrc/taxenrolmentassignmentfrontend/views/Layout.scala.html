@@ -18,7 +18,7 @@
 @import uk.gov.hmrc.hmrcfrontend.views.html.helpers._
 @import views.html.helper.CSPNonce
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
-
+@import uk.gov.hmrc.govukfrontend.views.viewmodels.backlink.BackLink
 @this(
         appConfig: AppConfig,
         hmrcLayout: HmrcLayout,
@@ -27,7 +27,7 @@
         defaultMainContent: TwoThirdsMainContent
 )
 @(pageTitle: Option[String] = None,
-  optBackLinkUrl: Option[String] = None,
+  backLinkEnabled: Boolean = false,
   mainLayout: Option[Html => Html] = Some(defaultMainContent(_)),
   displaySignout: Boolean = true,
   hasError: Boolean = false)(contentBlock: Html)(implicit request: Request[_], messages: Messages)
@@ -53,7 +53,7 @@
  nonce = CSPNonce.get,
  serviceName = Some(messages("service.name")),
  isWelshTranslationAvailable = appConfig.welshLanguageSupportEnabled,
- backLinkUrl = optBackLinkUrl,
+ backLink = if(backLinkEnabled) Some(BackLink.mimicsBrowserBackButtonViaJavaScript) else None,
  signOutUrl = if(displaySignout) {Some(appConfig.signOutUrl)} else {None},
  mainContentLayout = mainLayout
 )(content)

@@ -17,6 +17,7 @@
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.helpers.CreateSummaryRow
+@import uk.gov.hmrc.govukfrontend.views.viewmodels.backlink.BackLink
 
 @this(
 layout: Layout,
@@ -39,7 +40,7 @@ summaryRow: CreateSummaryRow
 
 
 @layout(
-pageTitle = Some(messages("ReportSuspiciousID.title")), optBackLinkUrl = Some("javascript:window.history.back();")) {
+pageTitle = Some(messages("ReportSuspiciousID.title")), backLinkEnabled = true) {
 
 <h1 class="govuk-heading-xl">@{messages(s"ReportSuspiciousID.heading")}</h1>
 

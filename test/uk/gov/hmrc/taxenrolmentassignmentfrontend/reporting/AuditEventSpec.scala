@@ -20,6 +20,7 @@ import play.api.libs.json.{JsObject, JsString, Json}
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSessionAndMongo}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails}
@@ -107,12 +108,15 @@ class AuditEventSpec extends TestFixture {
   }
 
   def getExpectedAuditForPTEnrolled(accountType: AccountTypes.Value, optReportedAccountDetails: Option[JsObject],
-                                    optSACred: Option[String]) = {
+                                    optSACred: Option[String],
+                                    withEmail: Boolean = true): AuditEvent = {
+    val email = if(withEmail) Json.obj("email" -> CURRENT_USER_EMAIL) else Json.obj()
     val currentAccountDetails = Json.obj(
       ("credentialId", JsString(CREDENTIAL_ID)),
       ("type", JsString(accountType.toString)),
       ("affinityGroup", JsString("Individual"))
-    )
+    ).deepMerge(email)
+
     val details = Json.obj(
       ("NINO", JsString(NINO)),
       ("currentAccount", currentAccountDetails)
@@ -423,7 +427,22 @@ class AuditEventSpec extends TestFixture {
     }
   }
 
-  "auditSuccessfullyAutoEnrolledPersonalTax" when {
+  "auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount" when {
+
+    "email does not exist in user details session" should {
+      "return an audit that does not contain the email" in {
+        val requestForAudit =
+          requestWithUserDetails(userDetailsNoEnrolments.copy(email = None))
+
+        val expectedAuditEvent =
+          getExpectedAuditForPTEnrolled(SINGLE_ACCOUNT, None, None, withEmail = false)
+
+        AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
+          SINGLE_ACCOUNT
+        )(requestForAudit, messagesApi) shouldEqual expectedAuditEvent
+
+      }
+    }
 
     "the user has a single account with no SA" should {
       "return an audit event with the expected details" in {
@@ -483,8 +502,26 @@ class AuditEventSpec extends TestFixture {
     }
   }
 
+  "auditSuccessfullyEnrolledPTWhenSAOnOtherAccount" when {
+    "email does not exist in user details session" should {
+      "return an audit that does not contain the email" in {
+        val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsSA)(AccountDetails.mongoFormats(crypto.crypto)))
+        val requestForAudit =
+          RequestWithUserDetailsFromSessionAndMongo(
+            request.request.withTransientLang("en"),
+            request.userDetails.copy(email = None),
+            request.sessionID,
+            AccountDetailsFromMongo(SA_ASSIGNED_TO_OTHER_USER, "foo", generateBasicCacheData(SA_ASSIGNED_TO_OTHER_USER, "foo") ++ additionalCacheData)(crypto.crypto)
+          )
+        val expectedAuditEvent =
+          getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_OTHER_USER, None, Some(CREDENTIAL_ID_1), withEmail = false)
 
-  "auditSuccessfullyEnrolledPersonalTax" when {
+        AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(
+          false
+        )(requestForAudit, messagesApi) shouldEqual expectedAuditEvent
+        }
+      }
     "the user has enrolled after choosing to keep PT and SA separate" should {
       "return an audit event with the expected details" in {
         val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),

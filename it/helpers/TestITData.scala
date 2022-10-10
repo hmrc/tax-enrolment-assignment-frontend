@@ -111,7 +111,9 @@ object TestITData {
 
     val affinityGroupJson = affinityGroup.toJson.as[JsObject]
 
-    ninoJson ++ credentialsJson ++ enrolmentsJson ++ groupIdJson ++ affinityGroupJson
+    val email = Json.obj("email" -> JsString(CURRENT_USER_EMAIL))
+
+    ninoJson ++ credentialsJson ++ enrolmentsJson ++ groupIdJson ++ affinityGroupJson ++ email
   }
 
   def authoriseResponseWithPTEnrolment(optNino: Option[String] = Some(NINO),

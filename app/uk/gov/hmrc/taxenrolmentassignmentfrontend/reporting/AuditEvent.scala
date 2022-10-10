@@ -219,7 +219,7 @@ private def getDetailsForEnrolmentOnAnotherAccount(
                                     withCurrentEmail: Boolean = false): JsObject = {
 
     val emailObj: JsObject = if (withCurrentEmail) {
-      userDetails.email.map(email => Json.obj("email" -> email)).getOrElse(Json.obj())
+      Json.obj("email" -> JsString(userDetails.email.getOrElse("-")))
     } else {
       Json.obj()
     }
@@ -227,7 +227,6 @@ private def getDetailsForEnrolmentOnAnotherAccount(
       ("credentialId", JsString(userDetails.credId)),
       ("type", JsString(accountType.toString))
     ) ++ userDetails.affinityGroup.toJson.as[JsObject].deepMerge(emailObj)
-
 
   }
 

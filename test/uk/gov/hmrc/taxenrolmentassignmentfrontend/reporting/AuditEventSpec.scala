@@ -109,8 +109,8 @@ class AuditEventSpec extends TestFixture {
 
   def getExpectedAuditForPTEnrolled(accountType: AccountTypes.Value, optReportedAccountDetails: Option[JsObject],
                                     optSACred: Option[String],
-                                    withEmail: Boolean = true): AuditEvent = {
-    val email = if(withEmail) Json.obj("email" -> CURRENT_USER_EMAIL) else Json.obj()
+                                    withEmail: Option[String] = Some(CURRENT_USER_EMAIL)): AuditEvent = {
+    val email = if(withEmail.isDefined) Json.obj("email" -> withEmail.get) else Json.obj()
     val currentAccountDetails = Json.obj(
       ("credentialId", JsString(CREDENTIAL_ID)),
       ("type", JsString(accountType.toString)),
@@ -435,7 +435,7 @@ class AuditEventSpec extends TestFixture {
           requestWithUserDetails(userDetailsNoEnrolments.copy(email = None))
 
         val expectedAuditEvent =
-          getExpectedAuditForPTEnrolled(SINGLE_ACCOUNT, None, None, withEmail = false)
+          getExpectedAuditForPTEnrolled(SINGLE_ACCOUNT, None, None, withEmail = Some("-"))
 
         AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
           SINGLE_ACCOUNT
@@ -515,7 +515,7 @@ class AuditEventSpec extends TestFixture {
             AccountDetailsFromMongo(SA_ASSIGNED_TO_OTHER_USER, "foo", generateBasicCacheData(SA_ASSIGNED_TO_OTHER_USER, "foo") ++ additionalCacheData)(crypto.crypto)
           )
         val expectedAuditEvent =
-          getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_OTHER_USER, None, Some(CREDENTIAL_ID_1), withEmail = false)
+          getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_OTHER_USER, None, Some(CREDENTIAL_ID_1), withEmail = Some("-"))
 
         AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(
           false

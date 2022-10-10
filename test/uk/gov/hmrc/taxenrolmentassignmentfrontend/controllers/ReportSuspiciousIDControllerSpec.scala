@@ -68,7 +68,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ] ~ Option[AffinityGroup]
+              ] ~ Option[AffinityGroup] ~ Option[String]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -118,7 +118,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ] ~ Option[AffinityGroup]
+              ] ~ Option[AffinityGroup] ~ Option[String]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -153,7 +153,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ] ~ Option[AffinityGroup]
+              ] ~ Option[AffinityGroup] ~ Option[String]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -203,7 +203,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
               _: Retrieval[
                 ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                   String
-                ] ~ Option[AffinityGroup]
+                ] ~ Option[AffinityGroup] ~ Option[String]
               ]
             )(_: HeaderCarrier, _: ExecutionContext))
             .expects(predicates, retrievals, *, *)
@@ -251,7 +251,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
               _: Retrieval[
                 ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                   String
-                ] ~ Option[AffinityGroup]
+                ] ~ Option[AffinityGroup] ~ Option[String]
               ]
             )(_: HeaderCarrier, _: ExecutionContext))
             .expects(predicates, retrievals, *, *)
@@ -292,7 +292,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ] ~ Option[AffinityGroup]
+              ] ~ Option[AffinityGroup] ~ Option[String]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -316,7 +316,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ] ~ Option[AffinityGroup]
+              ] ~ Option[AffinityGroup] ~ Option[String]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -350,7 +350,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ] ~ Option[AffinityGroup]
+              ] ~ Option[AffinityGroup] ~ Option[String]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -399,7 +399,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ] ~ Option[AffinityGroup]
+              ] ~ Option[AffinityGroup] ~ Option[String]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -453,7 +453,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ] ~ Option[AffinityGroup]
+              ] ~ Option[AffinityGroup] ~ Option[String]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -497,7 +497,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ] ~ Option[AffinityGroup]
+              ] ~ Option[AffinityGroup] ~ Option[String]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -521,7 +521,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ] ~ Option[AffinityGroup]
+              ] ~ Option[AffinityGroup] ~ Option[String]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
@@ -566,7 +566,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
             _: Retrieval[
               ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
                 String
-              ] ~ Option[AffinityGroup]
+              ] ~ Option[AffinityGroup] ~ Option[String]
             ]
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)

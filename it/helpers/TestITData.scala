@@ -31,6 +31,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models._
 object TestITData {
 
   val NINO: String = "JT872173A"
+  val CURRENT_USER_EMAIL = "foobarwizz"
   val CREDENTIAL_ID: String = "6902202884164548"
   val CREDENTIAL_ID_2: String = "8316291481001919"
   val CREDENTIAL_ID_3: String = "0493831301037584"
@@ -395,6 +396,7 @@ object TestITData {
       CREDENTIAL_ID,
       NINO,
       GROUP_ID,
+      Some(CURRENT_USER_EMAIL),
       Individual,
       Enrolments(Set.empty[Enrolment]),
       hasPTEnrolment = false,

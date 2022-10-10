@@ -38,6 +38,7 @@ import scala.concurrent.{ExecutionContext, Future}
 case class UserDetailsFromSession(credId: String,
                                   nino: String,
                                   groupId: String,
+                                  email: Option[String],
                                   affinityGroup: AffinityGroup,
                                   enrolments: Enrolments,
                                   hasPTEnrolment: Boolean,
@@ -79,11 +80,10 @@ class AuthAction @Inject()(
 
     authorised(AuthProviders(GovernmentGateway) and ConfidenceLevel.L200)
       .retrieve(
-        nino and credentials and allEnrolments and groupIdentifier and affinityGroup
+        nino and credentials and allEnrolments and groupIdentifier and affinityGroup and email
       ) {
         case Some(nino) ~ Some(credentials) ~ enrolments ~ Some(groupId) ~ Some(
-              affinityGroup
-            ) =>
+              affinityGroup) ~ email =>
           val hasSAEnrolment =
             enrolments.getEnrolment(s"$IRSAKey").fold(false)(_.isActivated)
           val hasPTEnrolment = enrolments.getEnrolment(s"$hmrcPTKey").isDefined
@@ -92,6 +92,7 @@ class AuthAction @Inject()(
             credentials.providerId,
             nino,
             groupId,
+            email,
             affinityGroup,
             enrolments,
             hasPTEnrolment,

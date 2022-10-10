@@ -46,7 +46,8 @@ object WiremockHelper extends Eventually with IntegrationPatience {
         JsString("optionalCredentials"),
         JsString("allEnrolments"),
         JsString("groupIdentifier"),
-        JsString("affinityGroup")
+        JsString("affinityGroup"),
+        JsString("email")
       )
     )
     stubPost(

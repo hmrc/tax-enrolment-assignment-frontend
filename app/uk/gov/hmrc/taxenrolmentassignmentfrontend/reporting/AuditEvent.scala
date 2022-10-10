@@ -185,7 +185,7 @@ private def getDetailsForEnrolmentOnAnotherAccount(
 
     Json.obj(
       ("NINO", JsString(userDetails.nino)),
-      ("currentAccount", getCurrentAccountJson(userDetails, accountType))
+      ("currentAccount", getCurrentAccountJson(userDetails, accountType, withCurrentEmail = true))
     ) ++ optSACredIdJson ++ optReportedAccountJson
   }
 
@@ -215,11 +215,19 @@ private def getDetailsForEnrolmentOnAnotherAccount(
   }
 
   private def getCurrentAccountJson(userDetails: UserDetailsFromSession,
-                                    accountType: AccountTypes.Value): JsObject = {
+                                    accountType: AccountTypes.Value,
+                                    withCurrentEmail: Boolean = false): JsObject = {
+
+    val emailObj: JsObject = if (withCurrentEmail) {
+      Json.obj("email" -> JsString(userDetails.email.getOrElse("-")))
+    } else {
+      Json.obj()
+    }
     Json.obj(
       ("credentialId", JsString(userDetails.credId)),
       ("type", JsString(accountType.toString))
-    ) ++ userDetails.affinityGroup.toJson.as[JsObject]
+    ) ++ userDetails.affinityGroup.toJson.as[JsObject].deepMerge(emailObj)
+
   }
 
   private def getPresentedAccountJson(accountDetails: AccountDetails)(

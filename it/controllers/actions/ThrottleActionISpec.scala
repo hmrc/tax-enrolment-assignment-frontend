@@ -28,6 +28,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OT
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSessionAndMongo, ThrottleAction, UserDetailsFromSession}
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AffinityGroup.Individual
+import helpers.TestITData
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.hmrcPTKey
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.formats.EnrolmentsFormats
 
@@ -42,6 +43,7 @@ class ThrottleActionISpec extends TestHelper with Status {
       "123",
       "QQ123400A",
       "gID",
+      Some(TestITData.CURRENT_USER_EMAIL),
       Individual,
       Enrolments(Set(Enrolment("foo"))),
       false,
@@ -56,6 +58,7 @@ class ThrottleActionISpec extends TestHelper with Status {
       "123",
       "QQ123499A",
       "gID",
+      Some(TestITData.CURRENT_USER_EMAIL),
       Individual,
       Enrolments(Set(Enrolment("foo"))),
       false,

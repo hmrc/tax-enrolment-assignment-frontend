@@ -31,6 +31,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models._
 object TestITData {
 
   val NINO: String = "JT872173A"
+  val CURRENT_USER_EMAIL = "foobarwizz"
   val CREDENTIAL_ID: String = "6902202884164548"
   val CREDENTIAL_ID_2: String = "8316291481001919"
   val CREDENTIAL_ID_3: String = "0493831301037584"
@@ -110,7 +111,9 @@ object TestITData {
 
     val affinityGroupJson = affinityGroup.toJson.as[JsObject]
 
-    ninoJson ++ credentialsJson ++ enrolmentsJson ++ groupIdJson ++ affinityGroupJson
+    val email = Json.obj("email" -> JsString(CURRENT_USER_EMAIL))
+
+    ninoJson ++ credentialsJson ++ enrolmentsJson ++ groupIdJson ++ affinityGroupJson ++ email
   }
 
   def authoriseResponseWithPTEnrolment(optNino: Option[String] = Some(NINO),
@@ -395,6 +398,7 @@ object TestITData {
       CREDENTIAL_ID,
       NINO,
       GROUP_ID,
+      Some(CURRENT_USER_EMAIL),
       Individual,
       Enrolments(Set.empty[Enrolment]),
       hasPTEnrolment = false,

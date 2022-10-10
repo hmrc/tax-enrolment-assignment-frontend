@@ -39,6 +39,7 @@ object TestData {
   val PT_USER_ID = "2341"
   val NO_EMAIL_USER_ID = "9871"
   val CREDENTIAL_ID_1 = "6102202884164541"
+  val CURRENT_USER_EMAIL = "foobarwizz"
 
   val CREDENTIAL_ID_2 = "6102202884164542"
   val UTR = "123456789"
@@ -88,28 +89,29 @@ object TestData {
   val retrievals: Retrieval[
     Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String] ~ Option[
       AffinityGroup
-    ]
-  ] = nino and credentials and allEnrolments and groupIdentifier and affinityGroup
+    ] ~ Option[String]
+  ] = nino and credentials and allEnrolments and groupIdentifier and affinityGroup and email
 
   def retrievalResponse(
     optNino: Option[String] = Some(NINO),
     optCredentials: Option[Credentials] = Some(creds),
     enrolments: Enrolments = noEnrolments,
     optGroupId: Option[String] = Some(GROUP_ID),
-    optAffinityGroup: Option[AffinityGroup] = Some(Individual)
-  ): ((((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[String]) ~ Option[
-    AffinityGroup
-  ]) =
-    new ~(
+    optAffinityGroup: Option[AffinityGroup] = Some(Individual),
+    email: Option[String] = Some(CURRENT_USER_EMAIL)
+  ): (((((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[String]) ~ Option[
+    AffinityGroup]) ~ Option[String]) =
+    new ~( new ~(
       new ~(new ~(new ~(optNino, optCredentials), enrolments), optGroupId),
       optAffinityGroup
-    )
+    ), email )
 
   val userDetailsNoEnrolments =
     UserDetailsFromSession(
       CREDENTIAL_ID,
       NINO,
       GROUP_ID,
+      Some(CURRENT_USER_EMAIL),
       Individual,
       enrolments = Enrolments(Set.empty[Enrolment]),
       hasPTEnrolment = false,
@@ -120,6 +122,7 @@ object TestData {
       CREDENTIAL_ID,
       NINO,
       GROUP_ID,
+      Some(CURRENT_USER_EMAIL),
       Individual,
       enrolments = ptEnrolmentOnly,
       hasPTEnrolment = true,
@@ -130,6 +133,7 @@ object TestData {
       CREDENTIAL_ID,
       NINO,
       GROUP_ID,
+      Some(CURRENT_USER_EMAIL),
       Individual,
       enrolments = saEnrolmentOnly,
       hasPTEnrolment = false,
@@ -140,6 +144,7 @@ object TestData {
       CREDENTIAL_ID,
       NINO,
       GROUP_ID,
+      Some(CURRENT_USER_EMAIL),
       Individual,
       enrolments = saAndptEnrolments,
       hasPTEnrolment = true,

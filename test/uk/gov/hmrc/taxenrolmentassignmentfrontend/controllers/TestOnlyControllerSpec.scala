@@ -95,7 +95,7 @@ class TestOnlyControllerSpec extends TestFixture {
           _: Retrieval[
             ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
               String
-            ] ~ Option[AffinityGroup]
+            ] ~ Option[AffinityGroup] ~ Option[String]
           ]
         )(_: HeaderCarrier, _: ExecutionContext))
         .expects(predicates, retrievals, *, *)

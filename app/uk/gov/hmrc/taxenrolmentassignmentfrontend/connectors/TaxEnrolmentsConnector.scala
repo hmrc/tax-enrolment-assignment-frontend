@@ -62,7 +62,7 @@ class TaxEnrolmentsConnector @Inject()(httpClient: HttpClient,
               Right(())
             case status =>
               logger
-                .logEvent(logUnexpectedResponseFromTaxEnrolmentsKnownFacts(nino, status, httpResponse.body))
+                .logEvent(logUnexpectedResponseFromTaxEnrolmentsKnownFacts(nino, status))
               Left(UnexpectedResponseFromTaxEnrolments)
           }
       )

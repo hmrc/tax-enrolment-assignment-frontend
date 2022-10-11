@@ -215,18 +215,6 @@ object LoggingEvent {
       )
     )
 
-
-  def logResponseFromIV(nino: String,
-                        jsonResponse: String): LoggingEvent =
-    Info(
-      Event(
-        "[IVConnector][getCredentialsWithNino]",
-        details = Some(
-          s"Identity Verification returned $jsonResponse for NINO $nino"
-        )
-      )
-    )
-
   def logUnexpectedResponseFromEACD(
     enrolmentType: String,
     statusReturned: Int,
@@ -294,15 +282,13 @@ object LoggingEvent {
 
   def logUnexpectedResponseFromTaxEnrolmentsKnownFacts(
     nino: String,
-    statusReturned: Int,
-    errorMsg: String = ""
+    statusReturned: Int
   ): LoggingEvent =
     Error(
       Event(
         "[TaxEnrolmentsConnector][assignPTEnrolmentWithKnownFacts]",
         errorDetails = Some(
-          s"Tax Enrolments return status of $statusReturned when allocating $hmrcPTKey enrolment for users with $nino NINO," +
-            s"Error message - $errorMsg"
+          s"Tax Enrolments return status of $statusReturned when allocating $hmrcPTKey enrolment for users with $nino NINO"
         )
       )
     )

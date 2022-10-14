@@ -83,7 +83,13 @@ class MultipleAccountsOrchestrator @Inject()(
                    hc: HeaderCarrier,
                    ec: ExecutionContext): TEAFResult[SASetupJourneyResponse] = {
 
-    (checkValidAccountType(List(PT_ASSIGNED_TO_OTHER_USER)), requestWithUserDetailsFromSessionAndMongo.userDetails.hasSAEnrolment)  match {
+    val hasSA = requestWithUserDetailsFromSessionAndMongo
+      .userDetails
+      .hasSAEnrolment || requestWithUserDetailsFromSessionAndMongo
+      .accountDetailsFromMongo
+      .currentUserHasEnrolment(requestWithUserDetailsFromSessionAndMongo.userDetails.credId)
+
+    (checkValidAccountType(List(PT_ASSIGNED_TO_OTHER_USER)), hasSA)  match {
         case (Left(error), _) => EitherT.left(Future.successful(error))
         case (Right(_), false) => EitherT.left(Future.successful(UserDoesNotHaveSAOnCurrentToEnrol))
         case (Right(_), _) => addTaxesFrontendService.saSetupJourney(requestWithUserDetailsFromSessionAndMongo.userDetails)

@@ -38,6 +38,9 @@ case class AccountDetailsFromMongo(accountType: AccountTypes.Value,
   def optAccountDetails(credId: String): Option[AccountDetails] =
     sessionData.get(accountDetailsForCredential(credId)).map(_.as[AccountDetails](AccountDetails.mongoFormats(crypto)))
 
+  def currentUserHasEnrolment(currentCredId: String): Boolean =
+    optUserAssignedSA.fold[Boolean](false)(_.enrolledCredential.fold[Boolean](false)(_ == currentCredId))
+
 }
 
 object AccountDetailsFromMongo {

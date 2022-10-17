@@ -619,79 +619,38 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
       }
     }
   }
-  "enrolForSA" when {
-    List(
-      SINGLE_ACCOUNT,
-      PT_ASSIGNED_TO_CURRENT_USER,
-      MULTIPLE_ACCOUNTS,
-      SA_ASSIGNED_TO_OTHER_USER,
-      SA_ASSIGNED_TO_CURRENT_USER
-    ).foreach { accountType =>
-      s"the accountType is $accountType" should {
-        s"return Left $IncorrectUserType containing redirectUrl" in {
-          val res  = orchestrator.enrolForSA(requestWithAccountType(accountType), implicitly, implicitly)
 
-          whenReady(res.value) { result =>
-            result shouldBe Left(IncorrectUserType(UrlPaths.returnUrl, accountType))
-          }
-        }
+  "enrolForSA" when {
+    "user has SA in session, return Right when add taxes is called and is successful" in {
+      (mockAddTaxesFrontendService.saSetupJourney(_: UserDetailsFromSession)(_: HeaderCarrier, _: ExecutionContext))
+        .expects(userDetailsWithSAEnrolment, *, *)
+        .returning(createInboundResult(SASetupJourneyResponse("responseFromConnector")))
+        .once()
+
+      val res  = orchestrator.enrolForSA(userDetailsWithSAEnrolment)(implicitly, implicitly)
+
+      whenReady(res.value) { result =>
+        result shouldBe Right(SASetupJourneyResponse("responseFromConnector"))
       }
     }
-    s"the accountType is $PT_ASSIGNED_TO_OTHER_USER" should {
-      "enrol using the add taxes endpoint when user has sa on current" should {
-        "return right when service call is success" in {
-          val requestForTest = RequestWithUserDetailsFromSessionAndMongo(
-            request,
-            request.userDetails.copy(hasSAEnrolment = true),
-            request.sessionID,
-            AccountDetailsFromMongo(PT_ASSIGNED_TO_OTHER_USER, "foo",
-              generateBasicCacheData(PT_ASSIGNED_TO_OTHER_USER, "foo"))(crypto.crypto))
+    "user has SA in session, return Left when add taxes is called and is NOT successful" in {
+      (mockAddTaxesFrontendService.saSetupJourney(_: UserDetailsFromSession)(_: HeaderCarrier, _: ExecutionContext))
+        .expects(userDetailsWithSAEnrolment, *, *)
+        .returning(createInboundResultError(UnexpectedError))
+        .once()
 
-          (mockAddTaxesFrontendService.saSetupJourney(_: UserDetailsFromSession)(_: HeaderCarrier, _: ExecutionContext))
-            .expects(requestForTest.userDetails, *, *)
-            .returning(createInboundResult(SASetupJourneyResponse("responseFromConnector")))
-            .once()
+      val res  = orchestrator.enrolForSA(userDetailsWithSAEnrolment)(implicitly, implicitly)
 
-          val res = orchestrator.enrolForSA(requestForTest, implicitly, implicitly)
-
-          whenReady(res.value) { result =>
-            result shouldBe Right(SASetupJourneyResponse("responseFromConnector"))
-          }
-        }
-        s"return $Left when service call fails" in {
-          val requestForTest = RequestWithUserDetailsFromSessionAndMongo(
-            request,
-            request.userDetails.copy(hasSAEnrolment = true),
-            request.sessionID,
-            AccountDetailsFromMongo(PT_ASSIGNED_TO_OTHER_USER, "foo",
-              generateBasicCacheData(PT_ASSIGNED_TO_OTHER_USER, "foo"))(crypto.crypto))
-
-          (mockAddTaxesFrontendService.saSetupJourney(_: UserDetailsFromSession)(_: HeaderCarrier, _: ExecutionContext))
-            .expects(requestForTest.userDetails, *, *)
-            .returning(createInboundResultError(UnexpectedError))
-            .once()
-
-          val res = orchestrator.enrolForSA(requestForTest, implicitly, implicitly)
-
-          whenReady(res.value) { result =>
-            result shouldBe Left(UnexpectedError)
-          }
-        }
+      whenReady(res.value) { result =>
+        result shouldBe Left(UnexpectedError)
       }
+    }
 
-      s"return Left $UserDoesNotHaveSAOnCurrentToEnrol when user does not have SA" in {
-        val requestForTest = RequestWithUserDetailsFromSessionAndMongo(
-          request,
-          request.userDetails.copy(hasSAEnrolment = false),
-          request.sessionID,
-          AccountDetailsFromMongo(PT_ASSIGNED_TO_OTHER_USER, "foo",
-            generateBasicCacheData(PT_ASSIGNED_TO_OTHER_USER, "foo"))(crypto.crypto))
+    s"user does not have SA in session return Left $UserDoesNotHaveSAOnCurrentToEnrol" in {
+      val res  = orchestrator.enrolForSA(userDetailsNoEnrolments)(implicitly, implicitly)
 
-        val res = orchestrator.enrolForSA(requestForTest, implicitly, implicitly)
-
-        whenReady(res.value) { result =>
-          result shouldBe Left(UserDoesNotHaveSAOnCurrentToEnrol)
-        }
+      whenReady(res.value) { result =>
+        result shouldBe Left(UserDoesNotHaveSAOnCurrentToEnrol)
       }
     }
   }

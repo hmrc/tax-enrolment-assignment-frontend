@@ -25,7 +25,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo, UserDetailsFromSession}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
@@ -79,14 +79,13 @@ class MultipleAccountsOrchestrator @Inject()(
       )(implicitly, implicitly, requestWithUserDetails)
     }
   }
-  def enrolForSA(implicit requestWithUserDetailsFromSessionAndMongo: RequestWithUserDetailsFromSessionAndMongo[_],
-                   hc: HeaderCarrier,
-                   ec: ExecutionContext): TEAFResult[SASetupJourneyResponse] = {
 
-    (checkValidAccountType(List(PT_ASSIGNED_TO_OTHER_USER)), requestWithUserDetailsFromSessionAndMongo.userDetails.hasSAEnrolment)  match {
-        case (Left(error), _) => EitherT.left(Future.successful(error))
-        case (Right(_), false) => EitherT.left(Future.successful(UserDoesNotHaveSAOnCurrentToEnrol))
-        case (Right(_), _) => addTaxesFrontendService.saSetupJourney(requestWithUserDetailsFromSessionAndMongo.userDetails)
+  def enrolForSA(userDetails: UserDetailsFromSession)(implicit
+                                                      hc: HeaderCarrier,
+                                                      ec: ExecutionContext): TEAFResult[SASetupJourneyResponse] = {
+    userDetails.hasSAEnrolment match {
+        case false => EitherT.left(Future.successful(UserDoesNotHaveSAOnCurrentToEnrol))
+        case true => addTaxesFrontendService.saSetupJourney(userDetails)
       }
     }
 

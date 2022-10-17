@@ -33,8 +33,8 @@ class EnrolForSAController @Inject()(
                                       errorHandler: ErrorHandler)(implicit ec: ExecutionContext)
   extends TEAFrontendController(mcc) {
 
-val enrolForSA: Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
-  multipleAccountsOrchestrator.enrolForSA.value.map {
+val enrolForSA: Action[AnyContent] = authAction.async { implicit request =>
+  multipleAccountsOrchestrator.enrolForSA(request.userDetails).value.map {
     case Left(error) => errorHandler.handleErrors(error, "[EnrolForSAController][enrolForSA]")(request, implicitly)
     case Right(response) => Redirect(response.redirectUrl, Map.empty, SEE_OTHER)
   }

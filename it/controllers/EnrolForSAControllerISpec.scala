@@ -18,13 +18,11 @@ package controllers
 
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import helpers.TestITData._
-import helpers.WiremockHelper.{stubAuthorizePost, stubPost, verifyNoPOSTmade}
+import helpers.WiremockHelper.{stubAuthorizePost, stubPost}
 import helpers.messages.ErrorTemplateMessages
 import helpers.{TestHelper, ThrottleHelperISpec}
 import play.api.http.Status
-import play.api.libs.json.JsString
 import play.api.libs.ws.DefaultWSCookie
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
 
 class EnrolForSAControllerISpec extends TestHelper with Status with ThrottleHelperISpec {
 

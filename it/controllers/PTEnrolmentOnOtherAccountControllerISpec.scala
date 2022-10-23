@@ -286,8 +286,9 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status wi
 
     "the session cache has no redirectUrl" should {
       "render the error page" in new DataAndMockSetup {
+        await(save[AccountTypes.Value](sessionID, "ACCOUNT_TYPE", PT_ASSIGNED_TO_CURRENT_USER))
         stubAuthoriseSuccess()
-        val res = buildRequest(urlPath, followRedirects = true)
+        val res = buildRequest(urlPath, followRedirects = false)
           .addCookies(DefaultWSCookie("mdtp", sessionAndAuthForTestForTest))
           .addHttpHeaders(xSessionID, xRequestId, sessionCookie)
           .get()

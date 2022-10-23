@@ -36,7 +36,9 @@ class AccountMongoDetailsActionSpec extends TestFixture {
     new AccountMongoDetailsAction(
       mockTeaSessionCache,
       testBodyParser,
-      errorHandler
+      errorHandler,
+      appConfig,
+      logger
     )
 
   "invoke" should {
@@ -83,6 +85,47 @@ class AccountMongoDetailsActionSpec extends TestFixture {
         function
       )
       contentAsString(res) shouldBe expectedConversion.toString()
+    }
+    s"Redirect to login" when {
+      "the cache is empty" in {
+        val requestWithUserDetailsFromSession = RequestWithUserDetailsFromSession(
+          FakeRequest(),
+          UserDetailsFromSession(
+            "foo",
+            "bar",
+            "wizz",
+            Some(CURRENT_USER_EMAIL),
+            Individual,
+            Enrolments(Set.empty[Enrolment]),
+            true,
+            true
+          ),
+          "foo"
+        )
+        val function =
+          (requestWithUserDetailsFromSessionAndMongo: RequestWithUserDetailsFromSessionAndMongo[
+            _
+          ]) =>
+            Future.successful(
+              Ok(requestWithUserDetailsFromSessionAndMongo.toString())
+            )
+
+        (mockTeaSessionCache
+          .fetch()(
+            _: RequestWithUserDetailsFromSession[_]))
+          .expects(*)
+          .returning(Future.successful(None))
+
+        val res = accountMongoDetailsAction.invokeBlock(
+          requestWithUserDetailsFromSession,
+          function
+        )
+        val loginUrl = "http://localhost:9553/bas-gateway/sign-in?continue_url=http%3A%2F%2Flocalhost%3A9232%2F" +
+          "personal-account&origin=tax-enrolment-assignment-frontend"
+
+        status(res) shouldBe SEE_OTHER
+        redirectLocation(res) shouldBe Some(loginUrl)
+      }
     }
     s"Return $INTERNAL_SERVER_ERROR" when {
       s"the session cache contains the redirectUrl but no the accountType" in {
@@ -163,43 +206,6 @@ class AccountMongoDetailsActionSpec extends TestFixture {
         status(res) shouldBe INTERNAL_SERVER_ERROR
         contentAsString(res) should include("enrolmentError.heading")
       }
-    }
-
-    "the cache is empty" in {
-      val requestWithUserDetailsFromSession = RequestWithUserDetailsFromSession(
-        FakeRequest(),
-        UserDetailsFromSession(
-          "foo",
-          "bar",
-          "wizz",
-          Some(CURRENT_USER_EMAIL),
-          Individual,
-          Enrolments(Set.empty[Enrolment]),
-          true,
-          true
-        ),
-        "foo"
-      )
-      val function =
-        (requestWithUserDetailsFromSessionAndMongo: RequestWithUserDetailsFromSessionAndMongo[
-          _
-        ]) =>
-          Future.successful(
-            Ok(requestWithUserDetailsFromSessionAndMongo.toString())
-        )
-
-      (mockTeaSessionCache
-        .fetch()(
-          _: RequestWithUserDetailsFromSession[_]))
-        .expects(*)
-        .returning(Future.successful(None))
-
-      val res = accountMongoDetailsAction.invokeBlock(
-        requestWithUserDetailsFromSession,
-        function
-      )
-      status(res) shouldBe INTERNAL_SERVER_ERROR
-      contentAsString(res) should include("enrolmentError.heading")
     }
 
     "when reading from cache returns an exception" in {

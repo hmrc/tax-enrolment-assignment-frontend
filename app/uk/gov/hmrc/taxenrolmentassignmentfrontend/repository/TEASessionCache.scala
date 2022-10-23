@@ -29,11 +29,15 @@ class TEASessionCacheImpl @Inject()(
 )(implicit val ec: ExecutionContext)
     extends TEASessionCache {
 
+  val sessionRepo: MongoRepository = sessionRepository()
+
+
+
   def save[A](key: String, value: A)(
     implicit request: RequestWithUserDetailsFromSession[_],
     fmt: Format[A]
   ): Future[CacheMap] = {
-    sessionRepository().get(request.sessionID).flatMap { optionalCacheMap =>
+    sessionRepo.get(request.sessionID).flatMap { optionalCacheMap =>
       val updatedCacheMap = cascadeUpsert(
         key,
         value,
@@ -48,31 +52,29 @@ class TEASessionCacheImpl @Inject()(
   def remove(
     key: String
   )(implicit request: RequestWithUserDetailsFromSession[_]): Future[Boolean] = {
-    sessionRepository().get(request.sessionID).flatMap { optionalCacheMap =>
+    sessionRepo.get(request.sessionID).flatMap { optionalCacheMap =>
       optionalCacheMap.fold(Future(false)) { cacheMap =>
         val newCacheMap = cacheMap copy (data = cacheMap.data - key)
-        sessionRepository().upsert(newCacheMap)
+        sessionRepo.upsert(newCacheMap)
       }
     }
   }
 
-  def removeAll()(
+  def removeRecord(
     implicit request: RequestWithUserDetailsFromSession[_]
   ): Future[Boolean] = {
-    sessionRepository().upsert(
-      CacheMap(request.sessionID, Map("" -> JsString("")))
-    )
+    sessionRepo.removeRecord(request.sessionID)
   }
 
   def fetch()(
     implicit request: RequestWithUserDetailsFromSession[_]
   ): Future[Option[CacheMap]] =
-    sessionRepository().get(request.sessionID)
+    sessionRepo.get(request.sessionID)
 
   def extendSession()(
     implicit request: RequestWithUserDetailsFromSession[_]
   ): Future[Boolean] = {
-    sessionRepository().updateLastUpdated(request.sessionID)
+    sessionRepo.updateLastUpdated(request.sessionID)
   }
 }
 
@@ -87,7 +89,7 @@ trait TEASessionCache {
     implicit request: RequestWithUserDetailsFromSession[_]
   ): Future[Boolean]
 
-  def removeAll()(
+  def removeRecord(
     implicit request: RequestWithUserDetailsFromSession[_]
   ): Future[Boolean]
 

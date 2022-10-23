@@ -140,19 +140,47 @@ class TEASessionCacheSpec extends IntegrationSpecBase {
     }
   }
 
-  "removeAll" should {
-    "remove all the data and return true" in {
+  "removeRecord" should {
+    "remove all the data for session id and return true" in {
       val data = CacheMap(sessionId, Map("test" -> JsString("abc")))
       val res = for {
         _ <- sessionRepository().upsert(data)
-        remove <- teaSessionCache.removeAll()
+        remove <- teaSessionCache.removeRecord
         fetched <- fetch(sessionId)
       } yield (remove, fetched)
 
       whenReady(res) {
         case (remove, fetched) =>
           remove shouldBe true
-          fetched shouldBe Some(CacheMap(sessionId, Map("" -> JsString(""))))
+          fetched shouldBe None
+      }
+    }
+    "remove all the data for session id and return true but leave another record with another sessionid" in {
+      val data = CacheMap("fooboochoo", Map("test" -> JsString("abc")))
+      val dataToBeDeleted = CacheMap(sessionId, Map("test" -> JsString("abc")))
+      val res = for {
+        _ <- sessionRepository().upsert(data)
+        _ <- sessionRepository().upsert(dataToBeDeleted)
+        remove <- teaSessionCache.removeRecord
+        fetched <- fetch("foodBooChoo")
+      } yield (remove, fetched)
+
+      whenReady(res) {
+        case (remove, fetched) =>
+          remove shouldBe true
+          fetched shouldBe Some(data)
+      }
+    }
+    "no data exists return false" in {
+      val res = for {
+        remove <- teaSessionCache.removeRecord
+        fetched <- fetch(sessionId)
+      } yield (remove, fetched)
+
+      whenReady(res) {
+        case (remove, fetched) =>
+          remove shouldBe false
+          fetched shouldBe None
       }
     }
   }

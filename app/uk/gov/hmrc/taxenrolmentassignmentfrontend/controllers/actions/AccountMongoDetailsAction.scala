@@ -19,8 +19,10 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions
 import com.google.inject.Inject
 import play.api.Logger
 import play.api.mvc._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.ErrorHandler
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.{EventLoggerService, LoggingEvent}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.TENCrypto
 
@@ -52,9 +54,11 @@ trait AccountMongoDetailsActionTrait
 class AccountMongoDetailsAction @Inject()(
   teaSessionCache: TEASessionCache,
   val parser: BodyParsers.Default,
-  errorHandler: ErrorHandler
+  errorHandler: ErrorHandler,
+  val appConfig: AppConfig,
+  logger: EventLoggerService
 )(implicit val executionContext: ExecutionContext, crypto: TENCrypto)
-    extends AccountMongoDetailsActionTrait {
+    extends AccountMongoDetailsActionTrait with RedirectHelper {
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
   override protected def refine[A](
     request: RequestWithUserDetailsFromSession[A]
@@ -66,6 +70,9 @@ class AccountMongoDetailsAction @Inject()(
           request.request, request.userDetails, request.sessionID, accountDetailsFromMongo
         )
       )
+      case Left(CacheNotCompleteOrNotCorrect(None, None)) =>
+        logger.logEvent(LoggingEvent.logUserHasNoCacheInMongo(request.userDetails.credId, request.sessionID))
+        Left(toGGLogin)
       case Left(error) =>
         Left(errorHandler
           .handleErrors(error, "[AccountTypeAction][invokeBlock]")(request, baseLogger))

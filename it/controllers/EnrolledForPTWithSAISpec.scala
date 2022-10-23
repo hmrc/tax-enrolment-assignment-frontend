@@ -94,7 +94,7 @@ class EnrolledForPTWithSAISpec extends TestHelper with Status with ThrottleHelpe
       }
 
     "the session cache is empty" should {
-      s"return $INTERNAL_SERVER_ERROR" in {
+      s"redirect to login" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -104,8 +104,8 @@ class EnrolledForPTWithSAISpec extends TestHelper with Status with ThrottleHelpe
           .get()
 
         whenReady(res) { resp =>
-          resp.status shouldBe INTERNAL_SERVER_ERROR
-          resp.body should include(ErrorTemplateMessages.title)
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include("/bas-gateway/sign-in")
         }
       }
     }
@@ -265,8 +265,8 @@ class EnrolledForPTWithSAISpec extends TestHelper with Status with ThrottleHelpe
       }
     }
 
-    "the session cache does not contain the redirect url" should {
-      s"return $INTERNAL_SERVER_ERROR" in {
+    "the session cache is empty" should {
+      s"redirect to login" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -277,8 +277,8 @@ class EnrolledForPTWithSAISpec extends TestHelper with Status with ThrottleHelpe
           .post(Json.obj())
 
         whenReady(res) { resp =>
-          resp.status shouldBe INTERNAL_SERVER_ERROR
-          resp.body should include(ErrorTemplateMessages.title)
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include("/bas-gateway/sign-in")
         }
       }
     }

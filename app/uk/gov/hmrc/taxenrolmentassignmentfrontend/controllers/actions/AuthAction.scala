@@ -63,10 +63,11 @@ class AuthAction @Inject()(
   override val authConnector: AuthConnector,
   val parser: BodyParsers.Default,
   logger: EventLoggerService,
-  appConfig: AppConfig
+  val appConfig: AppConfig
 )(implicit val executionContext: ExecutionContext)
     extends AuthorisedFunctions
-    with AuthIdentifierAction {
+    with AuthIdentifierAction
+    with RedirectHelper {
 
   val origin: String = "tax-enrolment-assignment-frontend"
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
@@ -132,15 +133,5 @@ class AuthAction @Inject()(
         )
         Redirect(routes.AuthorisationController.notAuthorised().url)
     }
-  }
-
-  def toGGLogin: Result = {
-    Redirect(
-      appConfig.loginURL,
-      Map(
-        "continue_url" -> Seq(appConfig.loginCallback),
-        "origin" -> Seq("tax-enrolment-assignment-frontend")
-      )
-    )
   }
 }

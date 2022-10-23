@@ -67,7 +67,7 @@ class SignOutControllerSpec extends TestFixture {
           .expects(*)
           .returning(Future.successful(Some(CacheMap("id", Map(REDIRECT_URL -> JsString(UrlPaths.returnUrl))))))
 
-        (mockTeaSessionCache.removeAll()(
+        (mockTeaSessionCache.removeRecord(
           _: RequestWithUserDetailsFromSession[_]))
           .expects(*)
           .returning(Future.successful(true))
@@ -102,7 +102,7 @@ class SignOutControllerSpec extends TestFixture {
           .expects(*)
           .returning(Future.successful(Some(CacheMap("id", Map()))))
 
-        (mockTeaSessionCache.removeAll()(
+        (mockTeaSessionCache.removeRecord(
           _: RequestWithUserDetailsFromSession[_]))
           .expects(*)
           .returning(Future.successful(true))
@@ -137,7 +137,7 @@ class SignOutControllerSpec extends TestFixture {
           .expects(*)
           .returning(Future.successful(None))
 
-        (mockTeaSessionCache.removeAll()(
+        (mockTeaSessionCache.removeRecord(
           _: RequestWithUserDetailsFromSession[_]))
           .expects(*)
           .returning(Future.successful(true))

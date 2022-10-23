@@ -233,8 +233,8 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
       }
     }
 
-    "the session cache has no redirectUrl" when {
-      s"return $INTERNAL_SERVER_ERROR" in {
+    "the session cache is empty" when {
+      s"redirect to login" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -244,8 +244,8 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
           .get()
 
         whenReady(res) { resp =>
-          resp.status shouldBe INTERNAL_SERVER_ERROR
-          resp.body should include(ErrorTemplateMessages.title)
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include("/bas-gateway/sign-in")
         }
       }
     }
@@ -321,6 +321,14 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
 
     "an authorised user but IV returns internal error" when {
       s"return $INTERNAL_SERVER_ERROR" in {
+        await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
+        await(
+          save[AccountTypes.Value](
+            sessionId,
+            "ACCOUNT_TYPE",
+            SA_ASSIGNED_TO_OTHER_USER
+          )
+        )
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -569,6 +577,13 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
 
     "the session cache has no redirectUrl" when {
       s"return $INTERNAL_SERVER_ERROR" in {
+        await(
+          save[AccountTypes.Value](
+            sessionId,
+            "ACCOUNT_TYPE",
+            PT_ASSIGNED_TO_OTHER_USER
+          )
+        )
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -894,7 +909,7 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
     }
 
     "the session cache is empty" when {
-      s"return $INTERNAL_SERVER_ERROR" in {
+      s"redirect to login" in {
         await(mongoRepository.collection.deleteMany(BsonDocument()).toFuture())
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
@@ -905,9 +920,8 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
           .post(Json.obj())
 
         whenReady(res) { resp =>
-
-          resp.status shouldBe INTERNAL_SERVER_ERROR
-          resp.body should include(ErrorTemplateMessages.title)
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include("/bas-gateway/sign-in")
         }
       }
     }

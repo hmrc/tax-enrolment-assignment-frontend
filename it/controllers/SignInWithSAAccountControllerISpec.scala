@@ -221,6 +221,13 @@ class SignInWithSAAccountControllerISpec extends TestHelper with Status with Thr
 
     "the session cache has no redirectUrl" should {
       s"return $INTERNAL_SERVER_ERROR" in {
+        await(
+          save[AccountTypes.Value](
+            sessionId,
+            "ACCOUNT_TYPE",
+            SA_ASSIGNED_TO_OTHER_USER
+          )
+        )
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -391,6 +398,13 @@ class SignInWithSAAccountControllerISpec extends TestHelper with Status with Thr
 
     "the session cache has no redirectUrl" should {
       s"return $INTERNAL_SERVER_ERROR" in {
+        await(
+          save[AccountTypes.Value](
+            sessionId,
+            "ACCOUNT_TYPE",
+            SA_ASSIGNED_TO_OTHER_USER
+          )
+        )
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")

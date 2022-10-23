@@ -162,7 +162,7 @@ class TEASessionCacheSpec extends IntegrationSpecBase {
         _ <- sessionRepository().upsert(data)
         _ <- sessionRepository().upsert(dataToBeDeleted)
         remove <- teaSessionCache.removeRecord
-        fetched <- fetch("foodBooChoo")
+        fetched <- fetch("fooboochoo")
       } yield (remove, fetched)
 
       whenReady(res) {

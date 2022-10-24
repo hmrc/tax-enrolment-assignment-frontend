@@ -40,7 +40,7 @@ class TimeOutController @Inject()(
   }
 
   def timeout: Action[AnyContent] = authAction.async { implicit request =>
-    sessionCache.removeAll()
+    sessionCache.removeRecord
     Future.successful(Ok(timedoutView()))
   }
 

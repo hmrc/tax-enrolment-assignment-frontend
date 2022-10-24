@@ -54,7 +54,7 @@ class SignOutControllerISpec extends TestHelper with Status {
           resp.header("Location").get should include(
             s"/bas-gateway/sign-out-without-state?continueUrl=${URLEncoder.encode(UrlPaths.returnUrl, "UTF-8")}"
           )
-          sessionRepository().get(sessionId).map(session => assert(session.isEmpty))
+          await(sessionRepository().get(sessionId)) shouldBe None
         }
       }
     }

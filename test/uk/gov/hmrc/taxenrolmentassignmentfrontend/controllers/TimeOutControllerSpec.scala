@@ -90,7 +90,7 @@ class TimeOutControllerSpec extends TestFixture {
         .returning(Future.successful(retrievalResponse()))
 
       (mockTeaSessionCache
-        .removeAll()(_: RequestWithUserDetailsFromSession[AnyContent]))
+        .removeRecord(_: RequestWithUserDetailsFromSession[AnyContent]))
         .expects(*)
         .returning(Future.successful(true))
 
@@ -102,5 +102,4 @@ class TimeOutControllerSpec extends TestFixture {
       page.body().text() should include("timedout.heading")
     }
   }
-
 }

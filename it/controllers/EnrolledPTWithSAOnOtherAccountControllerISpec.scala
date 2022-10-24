@@ -189,7 +189,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
     }
 
     "the session cache is empty" should {
-      s"return $INTERNAL_SERVER_ERROR" in {
+      s"redirect to login" in {
         val authResponse = authoriseResponseWithPTEnrolment()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -199,8 +199,8 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
           .get()
 
         whenReady(res) { resp =>
-          resp.status shouldBe INTERNAL_SERVER_ERROR
-          resp.body should include(ErrorTemplateMessages.title)
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include("/bas-gateway/sign-in")
         }
       }
     }
@@ -306,8 +306,8 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
       }
     }
 
-    "the session cache does not contain the redirect url" should {
-      s"return $INTERNAL_SERVER_ERROR" in {
+    "the session cache is empty" should {
+      s"redirect to login" in {
         val authResponse = authoriseResponseWithPTEnrolment()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -318,8 +318,8 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
           .post(Json.obj())
 
         whenReady(res) { resp =>
-          resp.status shouldBe INTERNAL_SERVER_ERROR
-          resp.body should include(ErrorTemplateMessages.title)
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include("/bas-gateway/sign-in")
         }
       }
     }

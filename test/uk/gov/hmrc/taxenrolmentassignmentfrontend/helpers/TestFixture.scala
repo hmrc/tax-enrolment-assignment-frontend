@@ -145,7 +145,9 @@ trait TestFixture
     new AccountMongoDetailsAction(
       mockTeaSessionCache,
       testBodyParser,
-      errorHandler
+      errorHandler,
+      appConfig,
+      logger
     )
 
   lazy val mockThrottleAction =
@@ -244,7 +246,7 @@ trait TestFixture
       implicit request: RequestWithUserDetailsFromSession[_]
     ): Future[Boolean] = ???
 
-    override def removeAll()(
+    override def removeRecord(
       implicit request: RequestWithUserDetailsFromSession[_]
     ): Future[Boolean] = Future.successful(true)
 

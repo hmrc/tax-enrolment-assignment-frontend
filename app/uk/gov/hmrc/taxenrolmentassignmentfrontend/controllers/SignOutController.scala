@@ -43,7 +43,7 @@ class SignOutController @Inject()(
       val optRedirectUrl = cacheData.fold[Option[String]](None)(_.data.get(
         REDIRECT_URL
       ).map(_.as[String]))
-      sessionCache.removeAll()
+      sessionCache.removeRecord
       logger.logEvent(logUserSigninAgain(request.userDetails.credId))
       optRedirectUrl match {
         case Some(redirectUrl) => Redirect(appConfig.signOutUrl, Map("continueUrl"-> Seq(redirectUrl)))

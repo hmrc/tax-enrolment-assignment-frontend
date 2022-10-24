@@ -335,6 +335,13 @@ object LoggingEvent {
       )
     )
   }
+  def logUserHasNoCacheInMongo(credId: String, sessionId: String): LoggingEvent = {
+    Warn(
+      Event(
+        "[AccountMongoDetailsAction]", details = Some(s"User $credId has no record in mongo for $sessionId")
+      )
+    )
+  }
 
   def logUserSigninAgain(credId: String): LoggingEvent  = {
     Info(

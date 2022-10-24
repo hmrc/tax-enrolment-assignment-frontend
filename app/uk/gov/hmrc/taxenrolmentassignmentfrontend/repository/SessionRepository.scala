@@ -91,6 +91,9 @@ class MongoRepository(config: Configuration, mongo: MongoComponent)
         result.wasAcknowledged()
       }
   }
+  def removeRecord(id: String): Future[Boolean] = {
+    collection.deleteOne(equal("id", id)).toFuture().map(_.getDeletedCount > 0)
+  }
 
   def get(id: String): Future[Option[CacheMap]] = {
     collection.find(equal("id", id)).headOption().map { datedCacheMap =>

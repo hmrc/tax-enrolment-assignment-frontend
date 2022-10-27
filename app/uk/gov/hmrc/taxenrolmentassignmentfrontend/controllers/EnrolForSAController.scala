@@ -20,9 +20,10 @@ import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction, ThrottleAction}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 
 import javax.inject.Inject
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 class EnrolForSAController @Inject()(
                                       authAction: AuthAction,
@@ -30,13 +31,15 @@ class EnrolForSAController @Inject()(
                                       throttleAction: ThrottleAction,
                                       mcc: MessagesControllerComponents,
                                       multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
-                                      errorHandler: ErrorHandler)(implicit ec: ExecutionContext)
+                                      errorHandler: ErrorHandler,
+                                      teaSessionCache: TEASessionCache)(implicit ec: ExecutionContext)
   extends TEAFrontendController(mcc) {
 
 val enrolForSA: Action[AnyContent] = authAction.async { implicit request =>
-  multipleAccountsOrchestrator.enrolForSA(request.userDetails).value.map {
-    case Left(error) => errorHandler.handleErrors(error, "[EnrolForSAController][enrolForSA]")(request, implicitly)
-    case Right(response) => Redirect(response.redirectUrl, Map.empty, SEE_OTHER)
+  multipleAccountsOrchestrator.enrolForSA(request.userDetails).value.flatMap {
+    case Left(error) => Future.successful(errorHandler.handleErrors(error, "[EnrolForSAController][enrolForSA]")(request, implicitly))
+    case Right(response) =>
+      teaSessionCache.removeRecord.map(_ => Redirect(response.redirectUrl, Map.empty, SEE_OTHER))
   }
 }
 

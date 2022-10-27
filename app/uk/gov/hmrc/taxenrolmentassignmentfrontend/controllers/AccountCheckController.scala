@@ -111,21 +111,28 @@ extends TEAFrontendController(mcc) {
     val hasPTEnrolmentAlready = request.userDetails.hasPTEnrolment
 
     if (isThrottled && !hasPTEnrolmentAlready && accountTypesToEnrolForPT.contains(accountType)) {
-      silentAssignmentService.enrolUser().map {_ =>
-        auditHandler.audit(AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(accountType))
-        if (accountType == SINGLE_ACCOUNT) {
-          logger.logEvent(
-            logSingleAccountHolderAssignedEnrolment(request.userDetails.credId, request.userDetails.nino)
-          )
-        } else {
-          logger.logEvent(
-            logMultipleAccountHolderAssignedEnrolment(request.userDetails.credId, request.userDetails.nino)
-          )
+      silentAssignmentService.enrolUser().flatMap { _ =>
+          auditHandler.audit(AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(accountType))
+          EitherT.right(
+            if (accountType == SINGLE_ACCOUNT) {
+            sessionCache.removeRecord.map { _ =>
+              logger.logEvent(
+                logSingleAccountHolderAssignedEnrolment(request.userDetails.credId, request.userDetails.nino)
+              )
+
+            }
+          } else {
+            Future.successful(logger.logEvent(
+              logMultipleAccountHolderAssignedEnrolment(request.userDetails.credId, request.userDetails.nino)
+            ))
+          })
         }
       }
+    else if (hasPTEnrolmentAlready) {
+      EitherT.right(sessionCache.removeRecord.map(_ => (): Unit))
     } else {
-      EitherT.right(Future.successful((): Unit))
-    }
+        EitherT.right(Future.successful((): Unit))
+      }
   }
 }
 

@@ -76,7 +76,6 @@ object TestITData {
 
   val randomId = UUID.randomUUID().toString
   val randomSessionId = s"sessionId-$randomId"
-  val randomXSessionId: (String, String) = "X-Session-ID" -> randomSessionId
   val sessionId = "sessionId-eb3158c2-0aff-4ce8-8d1b-f2208ace52fe"
   val xSessionId: (String, String) = "X-Session-ID" -> sessionId
   val xRequestId: (String, String) = "X-Request-ID" -> sessionId

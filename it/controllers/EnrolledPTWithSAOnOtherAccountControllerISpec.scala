@@ -302,6 +302,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
         whenReady(res) { resp =>
           resp.status shouldBe OK
           resp.uri.toString shouldBe UrlPaths.returnUrl
+          recordExistsInMongo shouldBe false
         }
       }
     }

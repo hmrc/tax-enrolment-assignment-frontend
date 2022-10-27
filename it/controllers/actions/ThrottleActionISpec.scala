@@ -80,6 +80,7 @@ class ThrottleActionISpec extends TestHelper with Status {
 
   "invokeBlock" should {
     "call to auth for a valid throttle scenario and redirect the user to their redirect url" in {
+      save("sesh", Map.empty)
       stubPost(
         url = s"/write/.*",
         status = NO_CONTENT,
@@ -102,20 +103,25 @@ class ThrottleActionISpec extends TestHelper with Status {
         exampleRequestBelowThreshold,
         exampleControllerFunction
       )
+
       redirectLocation(res).get shouldBe exampleRequestBelowThreshold.accountDetailsFromMongo.redirectUrl
       status(res) shouldBe SEE_OTHER
+      await(fetch("sesh")) shouldBe None
     }
 
     "NOT call to auth for a invalid valid throttle scenario (above threshold) and not redirect to users redirect url " in {
+      save("123", Map.empty)
       val res = throttleAction.invokeBlock(
         exampleRequestAboveThreshold,
         exampleControllerFunction
       )
       status(res) shouldBe OK
       contentAsString(res) shouldBe "no throttle"
+      await(fetch("123")).isDefined shouldBe true
     }
 
     s"call to auth for a valid throttle but call to auth fails, return $INTERNAL_SERVER_ERROR" in {
+      save("sesh", Map.empty)
       stubPost(
         url = s"/write/.*",
         status = NO_CONTENT,
@@ -139,6 +145,7 @@ class ThrottleActionISpec extends TestHelper with Status {
       )
       status(res) shouldBe INTERNAL_SERVER_ERROR
       contentAsString(res) should include(ErrorTemplateMessages.title)
+      await(fetch("sesh")).isDefined shouldBe true
     }
   }
 }

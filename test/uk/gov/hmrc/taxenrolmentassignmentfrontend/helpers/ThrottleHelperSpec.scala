@@ -48,7 +48,7 @@ _: TestFixture =>
 
         mockGetDataFromCacheForActionSuccess(accountType = randomAccountType, redirectUrl = "redirect")
         mockAccountShouldBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
-
+        mockDeleteDataFromCache
         val res = controllerFunction.apply(buildFakeRequestWithSessionId("", ""))
 
         redirectLocation(res).get shouldBe "redirect"

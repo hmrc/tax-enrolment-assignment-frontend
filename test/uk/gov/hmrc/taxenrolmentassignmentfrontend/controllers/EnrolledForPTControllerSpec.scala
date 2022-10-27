@@ -43,7 +43,8 @@ class EnrolledForPTControllerSpec extends TestFixture with ThrottleHelperSpec {
     mockMultipleAccountsOrchestrator,
     logger,
     view,
-    errorHandler
+    errorHandler,
+    mockTeaSessionCache
   )
 
   "view" when {

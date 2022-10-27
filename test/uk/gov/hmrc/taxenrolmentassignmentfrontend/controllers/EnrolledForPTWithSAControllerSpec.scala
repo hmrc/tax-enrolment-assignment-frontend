@@ -43,7 +43,8 @@ class EnrolledForPTWithSAControllerSpec extends TestFixture with ThrottleHelperS
     mockMultipleAccountsOrchestrator,
     logger,
     view,
-    errorHandler
+    errorHandler,
+    mockTeaSessionCache
   )
 
   "view" when {
@@ -105,12 +106,9 @@ class EnrolledForPTWithSAControllerSpec extends TestFixture with ThrottleHelperS
           )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse(enrolments = saEnrolmentOnly)))
-
-
+        mockDeleteDataFromCache
         mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_CURRENT_USER, UrlPaths.returnUrl)
-
         mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_CURRENT_USER, NINO, saEnrolmentOnly.enrolments)
-
 
         val result = controller
           .continue()

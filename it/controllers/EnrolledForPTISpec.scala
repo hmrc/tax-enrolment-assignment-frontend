@@ -256,6 +256,7 @@ class EnrolledForPTISpec extends TestHelper with Status with ThrottleHelperISpec
         whenReady(res) { resp =>
           resp.status shouldBe SEE_OTHER
           resp.header("Location").get should include(UrlPaths.returnUrl)
+          recordExistsInMongo shouldBe false
         }
       }
     }

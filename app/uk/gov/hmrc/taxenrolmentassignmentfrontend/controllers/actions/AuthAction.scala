@@ -102,7 +102,10 @@ class AuthAction @Inject()(
 
           val sessionID = request.session
             .get("sessionId")
-            .getOrElse(UUID.randomUUID().toString)
+            .getOrElse {
+              logger.logEvent(logUserDidNotHaveSessionIdGeneratedSessionId(credentials.providerId))
+              UUID.randomUUID().toString
+            }
           block(
             RequestWithUserDetailsFromSession(request, userDetails, sessionID)
           )

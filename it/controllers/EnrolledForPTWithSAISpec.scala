@@ -261,6 +261,7 @@ class EnrolledForPTWithSAISpec extends TestHelper with Status with ThrottleHelpe
         whenReady(res) { resp =>
           resp.status shouldBe SEE_OTHER
           resp.header("Location").get should include(UrlPaths.returnUrl)
+          recordExistsInMongo shouldBe false
         }
       }
     }

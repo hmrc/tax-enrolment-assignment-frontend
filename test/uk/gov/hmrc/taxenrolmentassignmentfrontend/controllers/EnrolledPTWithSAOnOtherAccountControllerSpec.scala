@@ -44,7 +44,8 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture with Thro
     mcc,
     view,
     logger,
-    errorHandler
+    errorHandler,
+    mockTeaSessionCache
   )
 
   "view" when {
@@ -249,5 +250,27 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends TestFixture with Thro
   }
   "continue" when {
     specificThrottleTests(controller.continue)
+    "the call to continue deletes user data and redirects to their redirectURL" in {
+      (mockAuthConnector
+        .authorise(
+          _: Predicate,
+          _: Retrieval[
+            ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+              String
+            ] ~ Option[AffinityGroup] ~ Option[String]
+          ]
+        )(_: HeaderCarrier, _: ExecutionContext))
+        .expects(predicates, retrievals, *, *)
+        .returning(Future.successful(retrievalResponse()))
+      mockGetDataFromCacheForActionSuccess(accountType = randomAccountType, redirectUrl = "redirect")
+      mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
+      mockDeleteDataFromCache
+      val res = controller.continue
+        .apply(buildFakeRequestWithSessionId("", ""))
+
+      status(res) shouldBe SEE_OTHER
+      redirectLocation(res).get shouldBe "redirect"
+
+    }
   }
 }

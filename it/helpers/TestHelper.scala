@@ -44,7 +44,6 @@ trait TestHelper extends IntegrationSpecBase {
 
   val exampleMongoSessionData = Map(ACCOUNT_TYPE -> Json.toJson(SA_ASSIGNED_TO_OTHER_USER), REDIRECT_URL -> JsString("redirectURL"))
 
-
   def requestWithAccountType(
     accountType: AccountTypes.Value,
     redirectUrl: String = UrlPaths.returnUrl,

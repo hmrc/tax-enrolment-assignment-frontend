@@ -24,6 +24,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logRedirectingToReturnUrl
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTWithSAOnOtherAccount
 
 import scala.concurrent.ExecutionContext
@@ -37,7 +38,8 @@ class EnrolledPTWithSAOnOtherAccountController @Inject()(
   mcc: MessagesControllerComponents,
   enrolledForPTPage: EnrolledForPTWithSAOnOtherAccount,
   val logger: EventLoggerService,
-  errorHandler: ErrorHandler
+  errorHandler: ErrorHandler,
+  teaSessionCache: TEASessionCache
 )(implicit ec: ExecutionContext)
     extends TEAFrontendController(mcc) {
 
@@ -56,14 +58,14 @@ class EnrolledPTWithSAOnOtherAccountController @Inject()(
     }
   }
 
-  def continue: Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).andThen(throttleAction) { implicit request =>
+  def continue: Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
         logger.logEvent(
           logRedirectingToReturnUrl(
             request.userDetails.credId,
             "[EnrolledWithSAOnOtherAccountController][continue]"
           )
         )
-        Redirect(request.accountDetailsFromMongo.redirectUrl)
+    teaSessionCache.removeRecord(request).map(_ => Redirect(request.accountDetailsFromMongo.redirectUrl))
   }
 
 }

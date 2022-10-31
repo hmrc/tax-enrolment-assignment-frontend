@@ -24,6 +24,7 @@ import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.ErrorHandler
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.{EventLoggerService, LoggingEvent}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{ThrottleApplied, ThrottleDoesNotApply, ThrottlingService}
 
 import javax.inject.Inject
@@ -34,7 +35,8 @@ trait ThrottleActionTrait extends ActionFilter[RequestWithUserDetailsFromSession
 class ThrottleAction @Inject()(throttlingService: ThrottlingService,
                                val parser: BodyParsers.Default,
                                errorHandler: ErrorHandler,
-                               val logger: EventLoggerService)(implicit val executionContext: ExecutionContext) extends ThrottleActionTrait {
+                               val logger: EventLoggerService,
+                               teaSessionCache: TEASessionCache)(implicit val executionContext: ExecutionContext) extends ThrottleActionTrait {
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
   def throttle(accountType: AccountTypes.Value, redirectUrl : String)(
@@ -44,13 +46,13 @@ class ThrottleAction @Inject()(throttlingService: ThrottlingService,
       accountType,
       requestWithUserDetailsFromSession.userDetails.nino,
       requestWithUserDetailsFromSession.userDetails.enrolments.enrolments
-    )(ec, hc).value.map {
+    )(ec, hc).value.flatMap {
       case Right(ThrottleApplied) =>
         logger.logEvent(LoggingEvent.logUserThrottled(requestWithUserDetailsFromSession.userDetails.credId, accountType, requestWithUserDetailsFromSession.userDetails.nino))
-        Some(Redirect(redirectUrl))
-      case Right(ThrottleDoesNotApply) => None
-      case Left(error) => Some(errorHandler
-        .handleErrors(error, "[ThrottleAction][filter]")(requestWithUserDetailsFromSession, baseLogger))
+        teaSessionCache.removeRecord.map(_ => Some(Redirect(redirectUrl)))(ec)
+      case Right(ThrottleDoesNotApply) => Future.successful(None)
+      case Left(error) => Future.successful(Some(errorHandler
+        .handleErrors(error, "[ThrottleAction][filter]")(requestWithUserDetailsFromSession, baseLogger)))
     }(ec)
   }
 

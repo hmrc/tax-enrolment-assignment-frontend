@@ -39,6 +39,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
   val urlPath: String = UrlPaths.accountCheckPath
   val ninoBelowThreshold = "QQ123400A"
   val ninoSameAsThrottlePercentage = "QQ123402A"
+  val ninoAboveThrottlePercentage = "QQ123403A"
   val throttlePercentage = config.get("throttle.percentage")
 
   val newEnrolment = (nino: String) => Enrolment(s"$hmrcPTKey", Seq(EnrolmentIdentifier("NINO", nino)), "Activated", None)
@@ -97,6 +98,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
             whenReady(result) { res =>
               res.status shouldBe SEE_OTHER
               res.header("Location").get should include(UrlPaths.returnUrl)
+              recordExistsInMongo shouldBe false
             }
           }
 
@@ -151,6 +153,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
             whenReady(result) { res =>
               res.status shouldBe SEE_OTHER
               res.header("Location").get should include(UrlPaths.returnUrl)
+              recordExistsInMongo shouldBe false
             }
           }
 
@@ -194,6 +197,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
             whenReady(result) { res =>
               res.status shouldBe SEE_OTHER
               res.header("Location").get should include(UrlPaths.returnUrl)
+              recordExistsInMongo shouldBe false
             }
           }
         }
@@ -214,6 +218,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
           whenReady(res) { resp =>
             resp.status shouldBe SEE_OTHER
             resp.header("Location").get should include(UrlPaths.returnUrl)
+            recordExistsInMongo shouldBe false
           }
         }
 
@@ -235,6 +240,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
           whenReady(res) { resp =>
             resp.status shouldBe SEE_OTHER
             resp.header("Location").get should include(UrlPaths.ptOnOtherAccountPath)
+            recordExistsInMongo shouldBe true
           }
         }
 
@@ -275,23 +281,24 @@ class AccountCheckControllerISpec extends TestHelper with Status {
           whenReady(res) { resp =>
             resp.status shouldBe SEE_OTHER
             resp.header("Location").get should include(UrlPaths.returnUrl)
+            recordExistsInMongo shouldBe false
           }
         }
 
 
-        s"the current user has $MULTIPLE_ACCOUNTS where Nino's last 2 digits are same as throttle percentage" in {
-          val authResponse = authoriseResponseJson(optNino = Some(ninoSameAsThrottlePercentage), enrolments = noEnrolments)
+        s"the current user has $MULTIPLE_ACCOUNTS where Nino's last 2 digits are above throttle" in {
+          val authResponse = authoriseResponseJson(optNino = Some(ninoAboveThrottlePercentage), enrolments = noEnrolments)
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
           stubGet(
-            s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$ninoSameAsThrottlePercentage/users",
+            s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$ninoAboveThrottlePercentage/users",
             Status.OK,
             es0ResponseNoRecordCred
           )
           stubGetWithQueryParam(
             "/identity-verification/nino",
             "nino",
-            ninoSameAsThrottlePercentage,
+            ninoAboveThrottlePercentage,
             Status.OK,
             ivResponseMultiCredsJsonString
           )
@@ -326,22 +333,23 @@ class AccountCheckControllerISpec extends TestHelper with Status {
             resp.status shouldBe SEE_OTHER
             resp.header("Location").get should include(
               UrlPaths.enrolledPTNoSAOnAnyAccountPath)
+            recordExistsInMongo shouldBe true
           }
         }
 
-        s"the current user has $SA_ASSIGNED_TO_OTHER_USER where Nino's last 2 digits are same as throttle percentage" in {
-          val authResponse = authoriseResponseJson(optNino = Some(ninoSameAsThrottlePercentage), enrolments = noEnrolments)
+        s"the current user has $SA_ASSIGNED_TO_OTHER_USER where Nino's last 2 digits are above throttle" in {
+          val authResponse = authoriseResponseJson(optNino = Some(ninoAboveThrottlePercentage), enrolments = noEnrolments)
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
           stubGet(
-            s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$ninoSameAsThrottlePercentage/users",
+            s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$ninoAboveThrottlePercentage/users",
             Status.OK,
             es0ResponseNoRecordCred
           )
           stubGetWithQueryParam(
             "/identity-verification/nino",
             "nino",
-            ninoSameAsThrottlePercentage,
+            ninoAboveThrottlePercentage,
             Status.OK,
             ivResponseMultiCredsJsonString
           )
@@ -376,22 +384,23 @@ class AccountCheckControllerISpec extends TestHelper with Status {
             resp.status shouldBe SEE_OTHER
             resp.header("Location").get should include(
               UrlPaths.saOnOtherAccountInterruptPath)
+            recordExistsInMongo shouldBe true
           }
         }
 
-        s"the current user has $SA_ASSIGNED_TO_CURRENT_USER where Nino's last 2 digits are same as throttle percentage" in {
-          val authResponse = authoriseResponseJson(optNino = Some(ninoSameAsThrottlePercentage), enrolments = saEnrolmentOnly)
+        s"the current user has $SA_ASSIGNED_TO_CURRENT_USER where Nino's last 2 digits are above throttle" in {
+          val authResponse = authoriseResponseJson(optNino = Some(ninoAboveThrottlePercentage), enrolments = saEnrolmentOnly)
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
           stubGet(
-            s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$ninoSameAsThrottlePercentage/users",
+            s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$ninoAboveThrottlePercentage/users",
             Status.OK,
             es0ResponseNoRecordCred
           )
           stubGetWithQueryParam(
             "/identity-verification/nino",
             "nino",
-            ninoSameAsThrottlePercentage,
+            ninoAboveThrottlePercentage,
             Status.OK,
             ivResponseMultiCredsJsonString
           )
@@ -420,6 +429,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
           whenReady(result) { res =>
             res.status shouldBe SEE_OTHER
             res.header("Location").get should include(UrlPaths.enrolledPTWithSAOnAnyAccountPath)
+            recordExistsInMongo shouldBe true
           }
         }
 
@@ -459,6 +469,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
             whenReady(res) { resp =>
               resp.status shouldBe OK
               resp.uri.toString shouldBe UrlPaths.returnUrl
+              recordExistsInMongo shouldBe false
             }
           }
         }
@@ -502,6 +513,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
           whenReady(res) { resp =>
             resp.status shouldBe SEE_OTHER
             resp.header("Location").get should include(UrlPaths.returnUrl)
+            recordExistsInMongo shouldBe false
 
             val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
               SINGLE_ACCOUNT
@@ -532,6 +544,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
                 resp.header("Location").get should include(
                   UrlPaths.ptOnOtherAccountPath
                 )
+                recordExistsInMongo shouldBe true
               }
             }
           }
@@ -586,6 +599,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
             resp.header("Location").get should include(
               UrlPaths.saOnOtherAccountInterruptPath
             )
+            recordExistsInMongo shouldBe true
           }
         }
       }
@@ -634,6 +648,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
             resp.header("Location").get should include(
               UrlPaths.enrolledPTWithSAOnAnyAccountPath
             )
+            recordExistsInMongo shouldBe true
 
             val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
               SA_ASSIGNED_TO_CURRENT_USER
@@ -698,6 +713,8 @@ class AccountCheckControllerISpec extends TestHelper with Status {
             resp.header("Location").get should include(
               UrlPaths.enrolledPTWithSAOnAnyAccountPath
             )
+            recordExistsInMongo shouldBe true
+
             val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
               SA_ASSIGNED_TO_CURRENT_USER
             )(requestWithUserDetails(), messagesApi)
@@ -755,6 +772,8 @@ class AccountCheckControllerISpec extends TestHelper with Status {
             resp.header("Location").get should include(
               UrlPaths.enrolledPTNoSAOnAnyAccountPath
             )
+            recordExistsInMongo shouldBe true
+
             val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
               MULTIPLE_ACCOUNTS
             )(requestWithUserDetails(), messagesApi)
@@ -785,6 +804,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
                 resp.header("Location").get should include(
                   relativeUrl
                 )
+                recordExistsInMongo shouldBe false
               }
             }
 
@@ -806,6 +826,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
                 resp.header("Location").get should include(
                   relativeUrl
                 )
+                recordExistsInMongo shouldBe false
               }
             }
 
@@ -829,6 +850,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
                 resp.header("Location").get should include(
                   absoluteUrl
                 )
+                recordExistsInMongo shouldBe false
               }
             }
 
@@ -851,6 +873,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
                 resp.header("Location").get should include(
                   absoluteUrl
                 )
+                recordExistsInMongo shouldBe false
               }
             }
 
@@ -876,6 +899,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
                 resp.header("Location").get should include(
                   absoluteUrl
                 )
+                recordExistsInMongo shouldBe false
               }
             }
 
@@ -898,6 +922,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
                 resp.header("Location").get should include(
                   absoluteUrl
                 )
+                recordExistsInMongo shouldBe false
               }
             }
           }
@@ -918,6 +943,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
               whenReady(res) { resp =>
                 resp.status shouldBe BAD_REQUEST
                 resp.body should include(ErrorTemplateMessages.title)
+                recordExistsInMongo shouldBe false
               }
             }
 
@@ -936,6 +962,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
               whenReady(res) { resp =>
                 resp.status shouldBe BAD_REQUEST
                 resp.body should include(ErrorTemplateMessages.title)
+                recordExistsInMongo shouldBe false
               }
             }
           }
@@ -973,6 +1000,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
                 resp.header("Location").get should include(
                   redirectUrl
                 )
+                recordExistsInMongo shouldBe false
               }
             }
           }
@@ -994,6 +1022,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
                 resp.header("Location").get should include(
                   redirectUrl
                 )
+                recordExistsInMongo shouldBe false
               }
             }
           }
@@ -1014,6 +1043,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
         whenReady(res) { resp =>
           resp.status shouldBe SEE_OTHER
           resp.header("Location").get should include(UrlPaths.unauthorizedPath)
+          recordExistsInMongo shouldBe false
         }
       }
     }
@@ -1031,6 +1061,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
         whenReady(res) { resp =>
           resp.status shouldBe SEE_OTHER
           resp.header("Location").get should include(UrlPaths.unauthorizedPath)
+          recordExistsInMongo shouldBe false
         }
       }
     }
@@ -1048,6 +1079,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
         whenReady(res) { resp =>
           resp.status shouldBe SEE_OTHER
           resp.header("Location").get should include(UrlPaths.unauthorizedPath)
+          recordExistsInMongo shouldBe false
         }
       }
     }
@@ -1065,6 +1097,7 @@ class AccountCheckControllerISpec extends TestHelper with Status {
         whenReady(res) { resp =>
           resp.status shouldBe SEE_OTHER
           resp.header("Location").get should include("/bas-gateway/sign-in")
+          recordExistsInMongo shouldBe false
         }
       }
     }

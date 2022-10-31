@@ -264,7 +264,7 @@ class AccountCheckControllerSpec extends TestFixture {
         mockAuthCall()
         mockAccountShouldBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
         mockAccountCheckSuccess(SA_ASSIGNED_TO_OTHER_USER)
-
+        mockDeleteDataFromCache
         val res = controller
           .accountCheck(returnUrl)
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))

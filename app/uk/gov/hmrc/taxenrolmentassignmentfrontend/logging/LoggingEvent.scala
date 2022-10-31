@@ -196,6 +196,9 @@ object LoggingEvent {
   def logAuthenticationFailure(errorDetails: String): LoggingEvent =
     Warn(Event("[AuthAction][invokeBlock]", errorDetails = Some(errorDetails)))
 
+  def logUserDidNotHaveSessionIdGeneratedSessionId(credId: String): LoggingEvent = {
+    Warn(Event("[AuthAction][invokeBlock]", errorDetails = Some(s"User did not have sessionId, generate sessionId for $credId")))
+  }
   val logSuccessfulRedirectToReturnUrl: LoggingEvent =
     Info(
       Event(

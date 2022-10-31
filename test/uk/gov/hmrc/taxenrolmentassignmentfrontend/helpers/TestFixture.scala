@@ -151,7 +151,7 @@ trait TestFixture
     )
 
   lazy val mockThrottleAction =
-    new ThrottleAction(mockThrottlingService, testBodyParser, errorHandler, logger)
+    new ThrottleAction(mockThrottlingService, testBodyParser, errorHandler, logger, mockTeaSessionCache)
   implicit lazy val testMessages: Messages =
     messagesApi.preferred(FakeRequest())
 
@@ -201,6 +201,13 @@ trait TestFixture
         enrolments, *, *
       )
       .returning(createInboundResult(ThrottleApplied))
+      .once()
+  }
+
+  def mockDeleteDataFromCache = {
+    (mockTeaSessionCache.removeRecord(_: RequestWithUserDetailsFromSession[_]))
+      .expects(*)
+      .returning(Future.successful(true))
       .once()
   }
   def mockErrorFromThrottlingService(accountTypes: AccountTypes.Value, nino: String, enrolments: Set[Enrolment]) = {

@@ -39,7 +39,8 @@ class EnrolForSAControllerSpec extends TestFixture {
     mockThrottleAction,
     mcc,
     mockMultipleAccountsOrchestrator,
-    errorHandler
+    errorHandler,
+    mockTeaSessionCache
   )
   "enrolForSA" when {
     "orchestrator returns Success, redirect to URL provided" in {
@@ -65,7 +66,7 @@ class EnrolForSAControllerSpec extends TestFixture {
         ))
         .expects(*, *, *)
         .returning(createInboundResult(SASetupJourneyResponse("foobar")))
-
+      mockDeleteDataFromCache
       val res = controller.enrolForSA(FakeRequest())
 
       status(res) shouldBe SEE_OTHER

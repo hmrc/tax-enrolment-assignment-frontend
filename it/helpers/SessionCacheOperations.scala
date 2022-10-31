@@ -46,6 +46,8 @@ trait SessionCacheOperations {
     }
   }
 
+  def recordExistsInMongo = await(sessionRepository().collection.find(Filters.empty()).headOption().map(_.isDefined))
+
   def save(sessionId: String,
            dataMap: Map[String, JsValue]): Future[Boolean] = {
     sessionRepository().upsert(CacheMap(sessionId, dataMap))

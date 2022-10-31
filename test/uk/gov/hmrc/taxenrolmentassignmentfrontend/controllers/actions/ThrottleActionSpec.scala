@@ -35,7 +35,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class ThrottleActionSpec extends TestFixture {
 
   val action =
-    new ThrottleAction(mockThrottlingService, testBodyParser, errorHandler, logger)
+    new ThrottleAction(mockThrottlingService, testBodyParser, errorHandler, logger, mockTeaSessionCache)
   val exampleRequestSessionAndMongo: RequestWithUserDetailsFromSessionAndMongo[_] = RequestWithUserDetailsFromSessionAndMongo(
     FakeRequest(),
     UserDetailsFromSession(
@@ -93,6 +93,8 @@ class ThrottleActionSpec extends TestFixture {
           *
         )
         .returning(createInboundResult(ThrottleApplied))
+
+      mockDeleteDataFromCache
 
       val res = action.invokeBlock(exampleRequestSessionAndMongo, exampleControllerFunction)
 
@@ -153,7 +155,7 @@ class ThrottleActionSpec extends TestFixture {
           *
         )
         .returning(createInboundResult(ThrottleApplied))
-
+      mockDeleteDataFromCache
       val res = action.throttle(PT_ASSIGNED_TO_CURRENT_USER,"redirectURL")(implicitly, implicitly, exampleRequestSession)
 
       status(res.map(_.get)) shouldBe SEE_OTHER

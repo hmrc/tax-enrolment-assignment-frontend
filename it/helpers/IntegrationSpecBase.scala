@@ -84,7 +84,7 @@ trait IntegrationSpecBase
     "microservice.services.users-groups-search.port" -> s"$mockPort",
     "microservice.services.users-groups-search.isTest" -> "false",
     "play.http.router" -> "testOnlyDoNotUseInAppConf.Routes",
-    "throttle.percentage" -> "2"
+    "throttle.percentage" -> "3"
   )
 
   override implicit val patienceConfig: PatienceConfig = PatienceConfig(

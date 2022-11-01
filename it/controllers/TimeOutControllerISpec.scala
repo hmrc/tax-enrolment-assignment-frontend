@@ -57,12 +57,7 @@ class TimeOutControllerISpec extends TestHelper with Status {
   }
 
   s"GET $urlPathTimeout" should {
-    "remove the cache, return OK and render the timeout page" in {
-      await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
-      val authResponse = authoriseResponseJson()
-      stubAuthorizePost(OK, authResponse.toString())
-      stubPost(s"/write/.*", OK, """{"x":2}""")
-
+    "return OK and render the timeout page" in {
       val res = buildRequest(urlPathTimeout)
         .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
         .addHttpHeaders(xSessionId, xRequestId)
@@ -72,7 +67,6 @@ class TimeOutControllerISpec extends TestHelper with Status {
         resp.status shouldBe OK
         val page = Jsoup.parse(resp.body)
         page.title should include(TimedOutMessages.title)
-        assert(await(getEntry[String](sessionId, "redirectURL")).isEmpty)
       }
     }
   }

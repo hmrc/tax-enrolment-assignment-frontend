@@ -77,23 +77,6 @@ class TimeOutControllerSpec extends TestFixture {
 
   "timeout" should {
     "render the timeout view" in {
-      (mockAuthConnector
-        .authorise(
-          _: Predicate,
-          _: Retrieval[
-            ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-              String
-            ] ~ Option[AffinityGroup] ~ Option[String]
-          ]
-        )(_: HeaderCarrier, _: ExecutionContext))
-        .expects(predicates, retrievals, *, *)
-        .returning(Future.successful(retrievalResponse()))
-
-      (mockTeaSessionCache
-        .removeRecord(_: RequestWithUserDetailsFromSession[AnyContent]))
-        .expects(*)
-        .returning(Future.successful(true))
-
       val result = controller.timeout().apply(fakeReq("GET"))
 
       status(result) shouldBe OK

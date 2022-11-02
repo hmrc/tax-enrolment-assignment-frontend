@@ -39,7 +39,7 @@ import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SINGLE_ACCOUNT
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{AddTaxesFrontendConnector, EACDConnector, IVConnector, LegacyAuthConnector, TaxEnrolmentsConnector}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{EACDConnector, IVConnector, LegacyAuthConnector, TaxEnrolmentsConnector}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignOutController
@@ -114,7 +114,6 @@ trait TestFixture
   val mockTaxEnrolmentsConnector: TaxEnrolmentsConnector =
     mock[TaxEnrolmentsConnector]
   val mockEacdConnector: EACDConnector = mock[EACDConnector]
-  val mockAddTaxesFrontendConnector: AddTaxesFrontendConnector = mock[AddTaxesFrontendConnector]
   val mockLegacyAuthConnector = mock[LegacyAuthConnector]
   val mockEacdService: EACDService = mock[EACDService]
   val mockUsersGroupService: UsersGroupsSearchService =
@@ -126,7 +125,6 @@ trait TestFixture
   val mockMultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
   val mockSilentAssignmentService: SilentAssignmentService =
     mock[SilentAssignmentService]
-  val mockAddTaxesFrontendService: AddTaxesFrontendService = mock[AddTaxesFrontendService]
   val mockAuditHandler: AuditHandler = mock[AuditHandler]
   val mockThrottlingService = mock[ThrottlingService]
   implicit lazy val fakeRequest: FakeRequest[AnyContentAsEmpty.type] =

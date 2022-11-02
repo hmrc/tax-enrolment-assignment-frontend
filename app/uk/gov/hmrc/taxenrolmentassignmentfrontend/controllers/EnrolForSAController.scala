@@ -17,9 +17,10 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction, ThrottleAction}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.NoSAEnrolmentWhenOneExpected
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 
 import javax.inject.Inject
@@ -30,17 +31,17 @@ class EnrolForSAController @Inject()(
                                       accountMongoDetailsAction: AccountMongoDetailsAction,
                                       throttleAction: ThrottleAction,
                                       mcc: MessagesControllerComponents,
-                                      multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
+                                      appConfig: AppConfig,
                                       errorHandler: ErrorHandler,
                                       teaSessionCache: TEASessionCache)(implicit ec: ExecutionContext)
   extends TEAFrontendController(mcc) {
 
-val enrolForSA: Action[AnyContent] = authAction.async { implicit request =>
-  multipleAccountsOrchestrator.enrolForSA(request.userDetails).value.flatMap {
-    case Left(error) => Future.successful(errorHandler.handleErrors(error, "[EnrolForSAController][enrolForSA]")(request, implicitly))
-    case Right(response) =>
-      teaSessionCache.removeRecord.map(_ => Redirect(response.redirectUrl, Map.empty, SEE_OTHER))
+  def enrolForSA: Action[AnyContent] = authAction.async { implicit request =>
+    request.userDetails.hasSAEnrolment match {
+      case false => Future.successful(errorHandler.handleErrors(NoSAEnrolmentWhenOneExpected, "[EnrolForSAController][enrolForSA]")(request, implicitly))
+      case true =>
+        teaSessionCache.removeRecord.map(_ => Redirect(appConfig.btaUrl))
+    }
   }
-}
 
 }

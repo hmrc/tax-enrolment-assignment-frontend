@@ -17,17 +17,15 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, SEE_OTHER}
-import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.UserDetailsFromSession
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedError
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{predicates, retrievalResponse, retrievals}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.setupSAJourney.SASetupJourneyResponse
+import play.api.mvc.{AnyContent}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession, UserDetailsFromSession}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{buildFakeRequestWithSessionId, predicates, retrievalResponse, retrievals, saEnrolmentOnly}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -38,12 +36,12 @@ class EnrolForSAControllerSpec extends TestFixture {
     mockAccountMongoDetailsAction,
     mockThrottleAction,
     mcc,
-    mockMultipleAccountsOrchestrator,
+    appConfig,
     errorHandler,
     mockTeaSessionCache
   )
-  "enrolForSA" when {
-    "orchestrator returns Success, redirect to URL provided" in {
+  "navigate to bta" when {
+    "users has SA enrolment and PT assigned to other cred that they logged in with and wants to access sa from ten's kick out page " in {
       (mockAuthConnector
         .authorise(
           _: Predicate,
@@ -55,25 +53,24 @@ class EnrolForSAControllerSpec extends TestFixture {
         )(_: HeaderCarrier, _: ExecutionContext))
         .expects(predicates, retrievals, *, *)
         .returning(
-          Future.successful(retrievalResponse())
+          Future.successful(retrievalResponse(enrolments = saEnrolmentOnly))
         )
 
-      (mockMultipleAccountsOrchestrator
-        .enrolForSA(
-          _: UserDetailsFromSession)(
-          _: HeaderCarrier,
-          _: ExecutionContext
-        ))
-        .expects(*, *, *)
-        .returning(createInboundResult(SASetupJourneyResponse("foobar")))
-      mockDeleteDataFromCache
-      val res = controller.enrolForSA(FakeRequest())
+      (mockTeaSessionCache
+        .removeRecord(_: RequestWithUserDetailsFromSession[AnyContent]))
+        .expects(*)
+        .returning(Future.successful(true))
+
+      val res = controller.enrolForSA.apply(buildFakeRequestWithSessionId("GET", ""))
 
       status(res) shouldBe SEE_OTHER
-      redirectLocation(res) shouldBe Some("foobar")
+      redirectLocation(res) shouldBe Some(appConfig.btaUrl)
     }
 
-    "orchestrator returns Error, return Error" in {
+  }
+
+  "throw error message" when {
+    "users has does not have SA enrolment and PT assigned to other cred that they logged in with and wants to access sa from ten's kick out page " in {
       (mockAuthConnector
         .authorise(
           _: Predicate,
@@ -88,19 +85,11 @@ class EnrolForSAControllerSpec extends TestFixture {
           Future.successful(retrievalResponse())
         )
 
-      (mockMultipleAccountsOrchestrator
-        .enrolForSA(
-          _: UserDetailsFromSession)(
-          _: HeaderCarrier,
-          _: ExecutionContext
-        ))
-        .expects(*, *, *)
-        .returning(createInboundResultError(UnexpectedError))
-
-      val res = controller.enrolForSA(FakeRequest())
+      val res = controller.enrolForSA.apply(buildFakeRequestWithSessionId("GET", ""))
 
       status(res) shouldBe INTERNAL_SERVER_ERROR
-      contentAsString(res) should include("enrolmentError.heading")
     }
+
   }
+
 }

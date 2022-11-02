@@ -44,8 +44,6 @@ Run Performance Tests see [here](https://github.com/hmrc/tax-enrolment-assignmen
 | `/protect-tax-info/test-only/successful`                     |        GET        | Test | Endpoint to get a successful redirect.                  |
 | `/users-groups-search/test-only/users/:credId`               |        GET        | Test | Mimic UGS locally and in staging.                       |
 | `/protect-tax-info/test-only/auth/enrolments`                |        GET        | Test | Return enrolments in session from auth                  |
-| `/add-taxes-frontend/test-only/self-assessment/enrol-for-sa` |       POST        | Test | Mimic Add taxes frontend enrol for sa endpoint          |
-| `/sa/test-only/start`                                        |        GET        | Test | Mimic Endpoint returned from Add taxes frontend in JSON |
 
 ## Throttling
 

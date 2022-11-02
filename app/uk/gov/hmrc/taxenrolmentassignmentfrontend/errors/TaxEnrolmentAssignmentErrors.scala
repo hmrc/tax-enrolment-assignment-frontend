@@ -37,8 +37,6 @@ case class IncorrectUserType(redirectUrl: String, accountType: AccountTypes.Valu
 
 case class UnexpectedPTEnrolment(accountTypes: AccountTypes.Value) extends TaxEnrolmentAssignmentErrors
 
-object ResponseBodyInvalidFromAddTaxesFrontendSASetup extends TaxEnrolmentAssignmentErrors
-object UnexpectedResponseFromAddTaxesFrontendSASetup extends TaxEnrolmentAssignmentErrors
 
 object InvalidRedirectUrl extends TaxEnrolmentAssignmentErrors
 object UserDoesNotHaveSAOnCurrentToEnrol extends TaxEnrolmentAssignmentErrors

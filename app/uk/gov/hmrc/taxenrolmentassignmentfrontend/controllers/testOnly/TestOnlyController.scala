@@ -23,7 +23,6 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TEAFronten
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.formats.EnrolmentsFormats
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.setupSAJourney.SASetupJourneyResponse
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
@@ -56,10 +55,6 @@ class TestOnlyController @Inject()(mcc: MessagesControllerComponents,
 
   val successfulSACall: Action[AnyContent] = Action.async { _ =>
     Future.successful(Ok("Successful Redirect to SA"))
-  }
-
-  val addTaxesFrontendStub: Action[AnyContent] = Action { _ =>
-    Ok(Json.toJson(SASetupJourneyResponse(routes.TestOnlyController.successfulSACall.url)))
   }
 
   val authStub: Action[AnyContent] = Action { _ =>

@@ -47,16 +47,9 @@ class AppConfig @Inject()(val config: ServicesConfig) {
     }
   }
 
-  lazy val ADD_TAXES_FRONTEND_SA_INIT_URL: String = {
-    if(config.getConfBool("add-taxes-frontend.isTest", defBool = false)) {
-      s"$tenBaseUrl/add-taxes-frontend/test-only/self-assessment/enrol-for-sa"
-    } else {
-      s"${config.baseUrl("add-taxes-frontend")}/internal/self-assessment/enrol-for-sa"
-    }
-  }
 
   lazy val btaUrl : String =
-    config.getString("business-tax-account.url")
+    config.getString("microservice.services.business-tax-account.url")
 
   lazy val useTestOnlyUsersGroupSearch: Boolean = {
     config.getConfBool("users-groups-search.isTest", defBool = false)

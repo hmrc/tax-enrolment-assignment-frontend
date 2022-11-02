@@ -23,7 +23,6 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TEAFronten
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.formats.EnrolmentsFormats
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.setupSAJourney.SASetupJourneyResponse
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future

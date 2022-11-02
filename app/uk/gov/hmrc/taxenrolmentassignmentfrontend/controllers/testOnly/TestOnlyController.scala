@@ -58,10 +58,6 @@ class TestOnlyController @Inject()(mcc: MessagesControllerComponents,
     Future.successful(Ok("Successful Redirect to SA"))
   }
 
-  val addTaxesFrontendStub: Action[AnyContent] = Action { _ =>
-    Ok(Json.toJson(SASetupJourneyResponse(routes.TestOnlyController.successfulSACall.url)))
-  }
-
   val authStub: Action[AnyContent] = Action { _ =>
     Ok
   }

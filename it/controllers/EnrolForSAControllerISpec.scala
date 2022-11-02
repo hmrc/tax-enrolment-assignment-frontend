@@ -18,8 +18,7 @@ package controllers
 
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import helpers.TestITData._
-import helpers.WiremockHelper.{stubAuthorizePost, stubPost}
-import helpers.messages.ErrorTemplateMessages
+import helpers.WiremockHelper.{stubAuthorizePost}
 import helpers.{TestHelper, ThrottleHelperISpec}
 import play.api.http.Status
 import play.api.libs.ws.DefaultWSCookie
@@ -28,13 +27,12 @@ class EnrolForSAControllerISpec extends TestHelper with Status with ThrottleHelp
 
   val urlPath: String = UrlPaths.enrolForSAPath
 
-  s"POST to $urlPath" should {
 
-    s"return $SEE_OTHER and redirect user to the url returned from ADD TAXES FRONTEND" when {
+  s"GET to $urlPath" should {
+
+    s"return $SEE_OTHER and redirect user to the business-tax-account when SA enrolment found" when {
       s"User hasSA == true" in {
         stubAuthoriseSuccess(hasSAEnrolment = true)
-        stubPost("/internal/self-assessment/enrol-for-sa", OK, """{"redirectUrl" : "foo"}""")
-        stubPost(s"/write/.*", OK, """{"x":2}""")
         val res = buildRequest(urlPath)
           .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
           .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
@@ -42,14 +40,14 @@ class EnrolForSAControllerISpec extends TestHelper with Status with ThrottleHelp
 
         whenReady(res) { resp =>
           resp.status shouldBe SEE_OTHER
-          resp.header("Location").get should include("foo")
+          resp.header("Location").get should include(appConfig.btaUrl)
         }
       }
     }
-    s"return $INTERNAL_SERVER_ERROR" when {
+
+    s"return $INTERNAL_SERVER_ERROR and when No SA enrolment found" when {
       s"User hasSA == false" in {
-        stubAuthoriseSuccess(hasSAEnrolment = false)
-        stubPost(s"/write/.*", OK, """{"x":2}""")
+        stubAuthoriseSuccess()
         val res = buildRequest(urlPath)
           .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
           .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
@@ -57,21 +55,6 @@ class EnrolForSAControllerISpec extends TestHelper with Status with ThrottleHelp
 
         whenReady(res) { resp =>
           resp.status shouldBe INTERNAL_SERVER_ERROR
-          resp.body should include(ErrorTemplateMessages.title)
-        }
-      }
-      "add taxes returns error" in {
-        stubAuthoriseSuccess(hasSAEnrolment = true)
-        stubPost("/internal/self-assessment/enrol-for-sa", INTERNAL_SERVER_ERROR, "")
-        stubPost(s"/write/.*", OK, """{"x":2}""")
-        val res = buildRequest(urlPath)
-          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
-          .get()
-
-        whenReady(res) { resp =>
-          resp.status shouldBe INTERNAL_SERVER_ERROR
-          resp.body should include(ErrorTemplateMessages.title)
         }
       }
     }

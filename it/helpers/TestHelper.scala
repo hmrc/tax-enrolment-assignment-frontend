@@ -27,6 +27,7 @@ import play.api.test.FakeRequest
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo, UserDetailsFromSession}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{routes, testOnly}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersGroupResponse
@@ -37,6 +38,9 @@ trait TestHelper extends IntegrationSpecBase {
 
 
   val teaHost = s"localhost:$port"
+
+  val appConfig = app.injector.instanceOf[AppConfig]
+
   val sessionCookie
     : (String, String) = ("COOKIE" -> createSessionCookieAsString(sessionData))
 

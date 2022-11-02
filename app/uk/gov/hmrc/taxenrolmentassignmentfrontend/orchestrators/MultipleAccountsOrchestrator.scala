@@ -35,7 +35,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.setupSAJourney.SASetupJ
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, CADetailsPTADetailsSADetailsIfExists, PTEnrolmentOnOtherAccount, UsersAssignedEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{AddTaxesFrontendService, EACDService, SilentAssignmentService, UsersGroupsSearchService}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, SilentAssignmentService, UsersGroupsSearchService}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -45,7 +45,6 @@ class MultipleAccountsOrchestrator @Inject()(
   usersGroupSearchService: UsersGroupsSearchService,
   silentAssignmentService: SilentAssignmentService,
   eacdService: EACDService,
-  addTaxesFrontendService: AddTaxesFrontendService,
   logger: EventLoggerService
 ) {
 
@@ -79,15 +78,6 @@ class MultipleAccountsOrchestrator @Inject()(
       )(implicitly, implicitly, requestWithUserDetails)
     }
   }
-
-  def enrolForSA(userDetails: UserDetailsFromSession)(implicit
-                                                      hc: HeaderCarrier,
-                                                      ec: ExecutionContext): TEAFResult[SASetupJourneyResponse] = {
-    userDetails.hasSAEnrolment match {
-        case false => EitherT.left(Future.successful(UserDoesNotHaveSAOnCurrentToEnrol))
-        case true => addTaxesFrontendService.saSetupJourney(userDetails)
-      }
-    }
 
   def getDetailsForKeepAccessToSA(
                                    implicit requestWithUserDetails: RequestWithUserDetailsFromSessionAndMongo[_],

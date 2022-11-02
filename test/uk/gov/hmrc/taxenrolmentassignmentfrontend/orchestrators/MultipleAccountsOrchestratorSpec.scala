@@ -49,7 +49,6 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
       mockUsersGroupService,
       mockSilentAssignmentService,
       mockEacdService,
-      mockAddTaxesFrontendService,
       logger
     )
 
@@ -616,41 +615,6 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
             }
           }
         }
-      }
-    }
-  }
-
-  "enrolForSA" when {
-    "user has SA in session, return Right when add taxes is called and is successful" in {
-      (mockAddTaxesFrontendService.saSetupJourney(_: UserDetailsFromSession)(_: HeaderCarrier, _: ExecutionContext))
-        .expects(userDetailsWithSAEnrolment, *, *)
-        .returning(createInboundResult(SASetupJourneyResponse("responseFromConnector")))
-        .once()
-
-      val res  = orchestrator.enrolForSA(userDetailsWithSAEnrolment)(implicitly, implicitly)
-
-      whenReady(res.value) { result =>
-        result shouldBe Right(SASetupJourneyResponse("responseFromConnector"))
-      }
-    }
-    "user has SA in session, return Left when add taxes is called and is NOT successful" in {
-      (mockAddTaxesFrontendService.saSetupJourney(_: UserDetailsFromSession)(_: HeaderCarrier, _: ExecutionContext))
-        .expects(userDetailsWithSAEnrolment, *, *)
-        .returning(createInboundResultError(UnexpectedError))
-        .once()
-
-      val res  = orchestrator.enrolForSA(userDetailsWithSAEnrolment)(implicitly, implicitly)
-
-      whenReady(res.value) { result =>
-        result shouldBe Left(UnexpectedError)
-      }
-    }
-
-    s"user does not have SA in session return Left $UserDoesNotHaveSAOnCurrentToEnrol" in {
-      val res  = orchestrator.enrolForSA(userDetailsNoEnrolments)(implicitly, implicitly)
-
-      whenReady(res.value) { result =>
-        result shouldBe Left(UserDoesNotHaveSAOnCurrentToEnrol)
       }
     }
   }

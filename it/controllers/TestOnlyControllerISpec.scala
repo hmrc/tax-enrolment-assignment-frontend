@@ -22,9 +22,7 @@ import helpers.WiremockHelper.stubAuthorizePost
 import play.api.http.Status
 import play.api.libs.json.Json
 import play.api.libs.ws.DefaultWSCookie
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.formats.EnrolmentsFormats
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.setupSAJourney.SASetupJourneyResponse
 
 class TestOnlyControllerISpec extends IntegrationSpecBase with Status {
 

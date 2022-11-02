@@ -56,7 +56,7 @@ class AppConfig @Inject()(val config: ServicesConfig) {
   }
 
   lazy val btaUrl : String =
-    s"${config.baseUrl("business-tax-account")}"
+    config.getString("business-tax-account.url")
 
   lazy val useTestOnlyUsersGroupSearch: Boolean = {
     config.getConfBool("users-groups-search.isTest", defBool = false)

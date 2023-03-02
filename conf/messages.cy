@@ -48,6 +48,7 @@ ReportSuspiciousID.detailsComponent.text4 = Codir cyfraddau lleol safonol ar alw
 ReportSuspiciousID.detailsComponent.link = Relay UK (yn agor tab newydd)
 ReportSuspiciousID.detailsComponent.link.href = https://www.relayuk.bt.com/
 ReportSuspiciousID.sa.text1 = Gallwch barhau i’ch cyfrif treth personol gyda’r ID yr ydych wedi mewngofnodi ag ef ar hyn o bryd.
+ReportSuspiciousID.referenceNumberAndHelpdeskTiming=Ffoniwch Wasanaeth Cwsmeriaid Cymraeg CThEF a dyfynnwch y cyfeirnod PTA951. Ar agor o ddydd Llun i ddydd Gwener, o 08:30 i 17:00.
 enrolmentError.title = Mae’n ddrwg gennym, mae problem gyda’r gwasanaeth
 enrolmentError.heading = Mae’n ddrwg gennym, mae problem gyda’r gwasanaeth
 enrolmentError.paragraph1 = Rhowch gynnig arall arni yn nes ymlaen.

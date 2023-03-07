@@ -225,8 +225,7 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
     }
 
     "display the code and helpdesk timing" in {
-      document
-        .body()
+      documentSA
         .text()
         .contains(ReportSuspiciousIDMessages.referenceNumberAndHelpdeskTiming) shouldBe true
     }

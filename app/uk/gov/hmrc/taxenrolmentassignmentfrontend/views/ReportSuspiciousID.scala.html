@@ -61,8 +61,10 @@
 
 
     </dl>
-    <p>@messages("ReportSuspiciousID.referenceNumberAndHelpdeskTiming")
-    </p>
+    @if(saOnOtherAccountJourney) {
+        <p>@messages("ReportSuspiciousID.referenceNumberAndHelpdeskTiming")
+        </p>
+    }
     <ul class="govuk-list" id="telephone-numbers">
         <li>@messages("ReportSuspiciousID.telephone.title")</li>
         <li class="govuk-body govuk-!-font-weight-bold" >@messages("ReportSuspiciousID.telephone.number")</li>

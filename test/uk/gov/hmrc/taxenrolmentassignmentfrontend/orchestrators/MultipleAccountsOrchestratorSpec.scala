@@ -334,7 +334,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
                 .expects(*, *, *)
                 .returning(
                   EitherT.right[TaxEnrolmentAssignmentErrors](
-                    Future.successful(Unit)
+                    Future.successful(())
                   )
                 )
 
@@ -343,7 +343,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
               )(requestWithAccountType(sessionAccountType), implicitly, implicitly)
 
               whenReady(res.value) { result =>
-                result shouldBe Right((): Unit)
+                result shouldBe Right(())
               }
             }
           } else {
@@ -578,7 +578,7 @@ class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
                 .expects(*, *, *)
                 .returning(
                   EitherT.right[TaxEnrolmentAssignmentErrors](
-                    Future.successful(Unit)
+                    Future.successful(())
                   )
                 )
               (mockTeaSessionCache

@@ -24,6 +24,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.LegacyAuthConnector
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.hmrcPTKey
 
 import javax.inject.Inject
@@ -41,7 +42,7 @@ class ThrottlingService @Inject()(legacyAuthConnector: LegacyAuthConnector, appC
     if(shouldAccountTypeBeThrottled(accountType, appConfig.percentageOfUsersThrottledToGetFakeEnrolment, nino)) {
       legacyAuthConnector.updateEnrolments(addPTEnrolmentToEnrolments(currentEnrolments, nino)).map(_ => ThrottleApplied)
     } else {
-      EitherT.right(Future.successful(ThrottleDoesNotApply))
+      EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](ThrottleDoesNotApply)
     }
   }
 

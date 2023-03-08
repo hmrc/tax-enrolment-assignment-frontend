@@ -366,7 +366,7 @@ class AccountCheckControllerSpec extends TestFixture {
         ))
         .expects(*, *, *)
         .returning(
-          EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(Unit))
+          EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(()))
         )
 
     def mockSilentEnrolFailure =

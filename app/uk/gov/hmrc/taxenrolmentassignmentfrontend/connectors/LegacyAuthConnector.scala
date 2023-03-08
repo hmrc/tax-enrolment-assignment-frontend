@@ -45,7 +45,7 @@ class LegacyAuthConnector @Inject()(httpClient: HttpClient,
       .PUT[Set[Enrolment], HttpResponse](s"${appConfig.AUTH_BASE_URL}/enrolments", enrolments)(wts = EnrolmentsFormats.writes, implicitly, implicitly, implicitly)
       .map(httpResponse =>
         httpResponse.status match {
-        case OK => Right(Unit)
+        case OK => Right(())
         case _ =>
           logger.logEvent(LoggingEvent.logUnexpectedErrorFromAuthWhenUsingLegacyEndpoint(httpResponse.status))
           Left(UnexpectedResponseAssigningTemporaryPTAEnrolment)

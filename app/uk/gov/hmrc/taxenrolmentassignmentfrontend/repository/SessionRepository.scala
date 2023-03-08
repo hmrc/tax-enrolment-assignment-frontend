@@ -30,8 +30,8 @@ import java.time.{LocalDateTime, ZoneId}
 import java.util.concurrent.TimeUnit
 import javax.inject.{Inject, Singleton}
 import org.mongodb.scala.model.Updates.set
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+
+import scala.concurrent.{ExecutionContext, Future}
 import scala.language.implicitConversions
 
 case class DatedCacheMap(id: String,
@@ -54,7 +54,7 @@ object DatedCacheMap {
   implicit val formats: OFormat[DatedCacheMap] = Json.format[DatedCacheMap]
 }
 
-class MongoRepository(config: Configuration, mongo: MongoComponent)
+class MongoRepository(config: Configuration, mongo: MongoComponent)(implicit ec: ExecutionContext)
     extends PlayMongoRepository[DatedCacheMap](
       mongoComponent = mongo,
       collectionName = config.get[String]("appName"),
@@ -118,7 +118,8 @@ class MongoRepository(config: Configuration, mongo: MongoComponent)
 
 @Singleton
 class SessionRepository @Inject()(config: Configuration,
-                                  mongoComponent: MongoComponent) {
+                                  mongoComponent: MongoComponent
+                                 )(implicit ec: ExecutionContext) {
 
   private lazy val sessionRepository =
     new MongoRepository(config, mongoComponent)

@@ -80,7 +80,7 @@ object AccountDetails {
     val timeFormatter = {
       DateTimeFormatter.ofPattern("h:mm a")
     }
-    s"${zonedDateTime.getDayOfMonth} ${messages(s"common.month${zonedDateTime.getMonth.getValue}")} ${zonedDateTime.getYear} ${messages("common.dateToTime")} ${zonedDateTime.format(timeFormatter)}"
+    s"${zonedDateTime.getDayOfMonth} ${messages(s"common.month${zonedDateTime.getMonth.getValue}")} ${zonedDateTime.getYear} ${messages("common.dateToTime")} ${zonedDateTime.format(timeFormatter).toUpperCase}"
   }
 
   implicit val AccountDetailsWrites: Writes[AccountDetails] = new Writes[AccountDetails] {

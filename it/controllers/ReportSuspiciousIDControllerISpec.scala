@@ -127,9 +127,6 @@ class ReportSuspiciousIDControllerISpec extends TestHelper with Status with Thro
             page.title should include(ReportSuspiciousIDMessages.title)
             page.getElementsByClass("govuk-button").size() shouldBe 1
 
-            val expectedAuditEvent = AuditEvent.auditReportSuspiciousSAAccount(
-              accountDetailsUserFriendly(CREDENTIAL_ID_2)
-            )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER), messagesApi)
           }
         }
       }

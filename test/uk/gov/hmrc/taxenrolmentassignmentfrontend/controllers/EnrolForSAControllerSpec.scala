@@ -22,10 +22,10 @@ import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
 import uk.gov.hmrc.http.HeaderCarrier
-import play.api.mvc.{AnyContent}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession, UserDetailsFromSession}
+import play.api.mvc.AnyContent
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{buildFakeRequestWithSessionId, predicates, retrievalResponse, retrievals, saEnrolmentOnly}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -33,8 +33,6 @@ class EnrolForSAControllerSpec extends TestFixture {
 
   val controller = new EnrolForSAController(
     mockAuthAction,
-    mockAccountMongoDetailsAction,
-    mockThrottleAction,
     mcc,
     appConfig,
     errorHandler,

@@ -18,7 +18,6 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import cats.data.EitherT
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.crypto.AesGCMCrypto
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction, ThrottleAction}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
@@ -47,7 +46,7 @@ class SignInWithSAAccountController @Inject()(
 )(implicit ec: ExecutionContext)
     extends TEAFrontendController(mcc) {
 
-  def view(): Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
+  def view: Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
     val res = for {
       _ <- EitherT{Future.successful(multipleAccountsOrchestrator.checkAccessAllowedForPage(
         List(SA_ASSIGNED_TO_OTHER_USER)
@@ -68,6 +67,6 @@ class SignInWithSAAccountController @Inject()(
       logUserSignsInAgainWithSAAccount(request.userDetails.credId)
     )
     auditHandler.audit(AuditEvent.auditSigninAgainWithSACredential())
-    Redirect(routes.SignOutController.signOut())
+    Redirect(routes.SignOutController.signOut)
   }
 }

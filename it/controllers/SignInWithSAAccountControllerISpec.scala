@@ -23,7 +23,6 @@ import helpers.messages._
 import org.jsoup.Jsoup
 import play.api.http.Status
 import play.api.libs.json.{JsString, Json}
-import play.api.libs.ws.DefaultWSCookie
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, UsersAssignedEnrolment}

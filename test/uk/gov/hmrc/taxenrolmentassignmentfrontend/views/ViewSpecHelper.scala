@@ -19,7 +19,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.views
 import org.jsoup.nodes.Document
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 
-import scala.collection.JavaConverters.asScalaBufferConverter
+import scala.jdk.CollectionConverters._
 
 trait ViewSpecHelper extends TestFixture {
 

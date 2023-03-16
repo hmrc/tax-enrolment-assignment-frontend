@@ -164,7 +164,7 @@ class ThrottlingServiceSpec extends TestFixture with FutureAwaits with DefaultAw
             .once()
 
           val res = await(throttlingservice(test.percentage).throttle(test.accountType, test.nino, setOfExistingEnrolments).value)
-          res.right.get shouldBe ThrottleApplied
+          res shouldBe Right(ThrottleApplied)
         })
     }
     s"return $ThrottleDoesNotApply" when {
@@ -180,10 +180,10 @@ class ThrottlingServiceSpec extends TestFixture with FutureAwaits with DefaultAw
           (mockLegacyAuthConnector.updateEnrolments(_: Set[Enrolment])(_: ExecutionContext, _: HeaderCarrier))
             .expects(*, *, *)
             .returning(createInboundResult((): Unit))
-            .never
+            .never()
 
           val res = await(throttlingservice(test.percentage).throttle(test.accountType, test.nino, setOfExistingEnrolments).value)
-          res.right.get shouldBe ThrottleDoesNotApply
+          res shouldBe Right(ThrottleDoesNotApply)
         })
     }
     "return Left Error" when {
@@ -199,7 +199,7 @@ class ThrottlingServiceSpec extends TestFixture with FutureAwaits with DefaultAw
               .once()
 
             val res = await(throttlingservice(test.percentage).throttle(test.accountType, test.nino, setOfExistingEnrolments).value)
-            res.left.get shouldBe UnexpectedError
+            res shouldBe Left(UnexpectedError)
           })
       }
     }

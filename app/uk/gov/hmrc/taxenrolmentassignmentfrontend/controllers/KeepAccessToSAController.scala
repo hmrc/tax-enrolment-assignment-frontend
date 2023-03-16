@@ -43,7 +43,7 @@ class KeepAccessToSAController @Inject()(
 )(implicit ec: ExecutionContext)
     extends TEAFrontendController(mcc)  {
 
-  def view(): Action[AnyContent] =
+  def view: Action[AnyContent] =
     authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
       multipleAccountsOrchestrator.getDetailsForKeepAccessToSA.value.map {
         case Right(form) => Ok(keepAccessToSA(form))
@@ -54,7 +54,7 @@ class KeepAccessToSAController @Inject()(
 
   def continue: Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async {
     implicit request =>
-      KeepAccessToSAThroughPTAForm.keepAccessToSAThroughPTAForm.bindFromRequest
+      KeepAccessToSAThroughPTAForm.keepAccessToSAThroughPTAForm.bindFromRequest()
         .fold(
           formWithErrors => {
             Future.successful(BadRequest(keepAccessToSA(formWithErrors)))

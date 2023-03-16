@@ -16,8 +16,6 @@
 
 package helpers
 
-import play.api.i18n.Messages
-
 import java.util.UUID
 import play.api.libs.json._
 import uk.gov.hmrc.auth.core.AffinityGroup.Individual
@@ -193,7 +191,7 @@ object TestITData {
   def accountDetailsUserFriendly(
                                   credId: String,
                                   userId: String = USER_ID
-                                )(implicit messages: Messages): AccountDetails =
+                                ): AccountDetails =
     AccountDetails(
       credId,
       userId,
@@ -207,7 +205,7 @@ object TestITData {
   def usersGroupSearchResponsePTEnrolment(userId: String = "********1234"): UsersGroupResponse =
     usersGroupSearchResponse.copy(userId)
 
-  def accountDetailsUnUserFriendly(credId: String)(implicit messages: Messages) =
+  def accountDetailsUnUserFriendly(credId: String) =
     AccountDetails(
       credId,
       "********6037",

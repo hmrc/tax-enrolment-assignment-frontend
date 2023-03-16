@@ -19,13 +19,9 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.logging
 import com.google.inject.Singleton
 import play.api.Logger
 import play.api.libs.json.Json
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{
-  Error,
-  Event,
-  Info,
-  LoggingEvent,
-  Warn
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{Error, Event, Info, LoggingEvent, Warn}
+
+import scala.language.implicitConversions
 
 @Singleton
 class EventLoggerService {

@@ -17,11 +17,12 @@
 package services
 
 import helpers.TestHelper
-import helpers.TestITData.{CREDENTIAL_ID, accountDetailsUnUserFriendly, sessionId, usersGroupSearchResponse}
+import helpers.TestITData.{CREDENTIAL_ID, accountDetailsUnUserFriendly, usersGroupSearchResponse}
 import play.api.libs.json.JsObject
-import uk.gov.hmrc.crypto.{Crypted, PlainText}
+import uk.gov.hmrc.crypto.Crypted
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.PT_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.UsersGroupsSearchService
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
 
 class UserGroupSearchServiceISpec extends TestHelper {
 
@@ -36,7 +37,7 @@ class UserGroupSearchServiceISpec extends TestHelper {
 
       whenReady(res.value) { response =>
         response shouldBe Right(accountDetailsUnUserFriendly(CREDENTIAL_ID))
-        response.right.get.emailDecrypted shouldBe Some("email1@test.com")
+        response.getOrElse(AccountDetails("", "", None, "", Seq.empty, None)).emailDecrypted shouldBe Some("email1@test.com")
 
       }
      val emailEncrypted: String = {

@@ -19,7 +19,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 import play.api.i18n.Messages
 import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
 import play.api.libs.json.{Format, Json, __}
-import uk.gov.hmrc.crypto.{AesGCMCrypto, Decrypter, Encrypter}
+import uk.gov.hmrc.crypto.{Decrypter, Encrypter}
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.crypto.json.JsonEncryption
 import play.api.libs.json._

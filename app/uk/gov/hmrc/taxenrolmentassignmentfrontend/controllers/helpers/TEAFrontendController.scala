@@ -17,10 +17,8 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers
 
 import play.api.Logger
-import play.api.data.DefaultFormBinding
 import play.api.i18n.I18nSupport
 import play.api.mvc.MessagesControllerComponents
-import uk.gov.hmrc.play.bootstrap.controller.WithUnsafeDefaultFormBinding
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
 abstract class TEAFrontendController(override val controllerComponents: MessagesControllerComponents)

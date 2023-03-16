@@ -22,7 +22,6 @@
 @this(
 layout: Layout,
 formHelper: FormWithCSRF,
-govukSummaryList : GovukSummaryList,
 govukDetails : GovukDetails,
 govukButton: GovukButton,
 summaryRow: CreateSummaryRow
@@ -79,7 +78,7 @@ content = HtmlContent(content)
     <p class="govuk-body">@messages("ReportSuspiciousID.sa.text1") </p>
     <br>
     @govukButton(Button(
-        preventDoubleClick = true,
+        preventDoubleClick = Some(true),
         content = Text(messages("common.continue")),
         )
       )

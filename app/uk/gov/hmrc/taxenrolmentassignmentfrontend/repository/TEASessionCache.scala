@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.repository
 
 import com.google.inject.{ImplementedBy, Inject}
-import play.api.libs.json.{Format, JsString}
+import play.api.libs.json.Format
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 

@@ -17,9 +17,9 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions
 
 import play.api.libs.json.JsValue
-import uk.gov.hmrc.crypto.{AesGCMCrypto, Decrypter, Encrypter}
+import uk.gov.hmrc.crypto.{Decrypter, Encrypter}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, IVNinoStoreEntry, UsersAssignedEnrolment}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, UsersAssignedEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM, REDIRECT_URL, REPORTED_FRAUD, USER_ASSIGNED_PT_ENROLMENT, USER_ASSIGNED_SA_ENROLMENT, accountDetailsForCredential}
 

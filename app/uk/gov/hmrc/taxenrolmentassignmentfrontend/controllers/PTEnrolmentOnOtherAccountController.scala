@@ -41,7 +41,7 @@ class PTEnrolmentOnOtherAccountController @Inject()(
   auditHandler: AuditHandler
                                                    )(implicit ec: ExecutionContext) extends TEAFrontendController(mcc) {
 
-  def view(): Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
+  def view: Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
 
     val res = multipleAccountsOrchestrator.getCurrentAndPTAAndSAIfExistsForUser
 

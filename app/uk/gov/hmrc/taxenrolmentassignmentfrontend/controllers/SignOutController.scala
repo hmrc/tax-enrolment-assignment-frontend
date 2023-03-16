@@ -38,7 +38,7 @@ class SignOutController @Inject()(
 )(implicit ec: ExecutionContext)
     extends TEAFrontendController(mcc) {
 
-  def signOut(): Action[AnyContent] = authAction.async { implicit request =>
+  def signOut: Action[AnyContent] = authAction.async { implicit request =>
     sessionCache.fetch().map{cacheData =>
       val optRedirectUrl = cacheData.fold[Option[String]](None)(_.data.get(
         REDIRECT_URL

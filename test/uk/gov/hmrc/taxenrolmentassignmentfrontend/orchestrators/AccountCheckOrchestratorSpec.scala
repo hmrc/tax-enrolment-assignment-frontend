@@ -27,7 +27,6 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IVNinoStoreEntry
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.ACCOUNT_TYPE
 
 import scala.concurrent.{ExecutionContext, Future}

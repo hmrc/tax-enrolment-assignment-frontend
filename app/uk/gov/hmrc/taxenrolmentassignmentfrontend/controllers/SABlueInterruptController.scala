@@ -38,7 +38,7 @@ class SABlueInterruptController @Inject()(
 )
     extends TEAFrontendController(mcc)   {
 
-  def view(): Action[AnyContent] =
+  def view: Action[AnyContent] =
     authAction.andThen(accountMongoDetailsAction).andThen(throttleAction) { implicit request =>
       multipleAccountsOrchestrator
         .checkAccessAllowedForPage(List(SA_ASSIGNED_TO_OTHER_USER)) match {
@@ -49,7 +49,7 @@ class SABlueInterruptController @Inject()(
         }
     }
 
-  def continue(): Action[AnyContent] =
+  def continue: Action[AnyContent] =
     authAction.andThen(accountMongoDetailsAction).andThen(throttleAction) { implicit request =>
       multipleAccountsOrchestrator
         .checkAccessAllowedForPage(List(SA_ASSIGNED_TO_OTHER_USER)) match {

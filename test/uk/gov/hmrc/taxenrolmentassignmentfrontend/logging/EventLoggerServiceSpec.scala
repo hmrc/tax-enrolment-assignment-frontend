@@ -23,14 +23,14 @@ import play.api.{Logger, LoggerLike}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.reflect.ClassTag
 
 class EventLoggerServiceSpec extends TestFixture {
 
   def withCaptureOfLoggingFrom(
     logger: LoggerLike
-  )(body: (=> List[ILoggingEvent]) => Unit) {
+  )(body: (=> List[ILoggingEvent]) => Unit): Unit = {
     withCaptureOfLoggingFrom(logger.logger.asInstanceOf[LogbackLogger])(body)
   }
 
@@ -42,7 +42,7 @@ class EventLoggerServiceSpec extends TestFixture {
 
   def withCaptureOfLoggingFrom(
     logger: LogbackLogger
-  )(body: (=> List[ILoggingEvent]) => Unit) {
+  )(body: (=> List[ILoggingEvent]) => Unit): Unit = {
     val appender = new ListAppender[ILoggingEvent]()
     appender.setContext(logger.getLoggerContext)
     appender.start()

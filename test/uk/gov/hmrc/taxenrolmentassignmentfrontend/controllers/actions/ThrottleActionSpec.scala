@@ -55,7 +55,7 @@ class ThrottleActionSpec extends TestFixture {
     RequestWithUserDetailsFromSession(exampleRequestSessionAndMongo.request, exampleRequestSessionAndMongo.userDetails, exampleRequestSessionAndMongo.sessionID)
   }
   val exampleControllerFunction =
-    (r: RequestWithUserDetailsFromSessionAndMongo[_]) =>
+    (_: RequestWithUserDetailsFromSessionAndMongo[_]) =>
       Future.successful(Ok("got through"))
 
 

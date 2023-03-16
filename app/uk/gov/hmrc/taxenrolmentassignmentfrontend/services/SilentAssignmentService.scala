@@ -89,6 +89,7 @@ class SilentAssignmentService @Inject()(
     checkIfAnyOtherNoneBusinessAccounts(filteredCL200List)
   }
 
+  //TODO: check this. Why the limit to first 10 elements? Rewrite using fold.
   private def checkIfAnyOtherNoneBusinessAccounts(list: Seq[IVNinoStoreEntry], attemptsRemaining: Int = 10)
                                                  (implicit hc: HeaderCarrier,
                                                   ec: ExecutionContext): Future[Boolean] = {
@@ -100,7 +101,7 @@ class SilentAssignmentService @Inject()(
         case true => Future.successful(true)
         case false => checkIfAnyOtherNoneBusinessAccounts(tail, attemptsRemaining - 1)
       }
-      case Nil =>  Future.successful(false)
+      case _ =>  Future.successful(false)
     }
   }
 

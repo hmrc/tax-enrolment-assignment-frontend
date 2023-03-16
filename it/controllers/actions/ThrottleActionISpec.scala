@@ -75,7 +75,7 @@ class ThrottleActionISpec extends TestHelper with Status {
       None
   )
   val exampleControllerFunction =
-    (r: RequestWithUserDetailsFromSessionAndMongo[_]) =>
+    (_: RequestWithUserDetailsFromSessionAndMongo[_]) =>
       Future.successful(Ok("no throttle"))
 
   "invokeBlock" should {

@@ -117,7 +117,7 @@ class AuthAction @Inject()(
             )
           )
           Future.successful(
-            Redirect(routes.AuthorisationController.notAuthorised().url)
+            Redirect(routes.AuthorisationController.notAuthorised.url)
           )
       } recover {
       case er: NoActiveSession =>
@@ -134,7 +134,7 @@ class AuthAction @Inject()(
             s"Auth exception: ${er.getMessage} for  uri ${request.uri}"
           )
         )
-        Redirect(routes.AuthorisationController.notAuthorised().url)
+        Redirect(routes.AuthorisationController.notAuthorised.url)
     }
   }
 }

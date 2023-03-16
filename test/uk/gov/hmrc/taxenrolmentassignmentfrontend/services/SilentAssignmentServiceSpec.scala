@@ -122,8 +122,6 @@ class SilentAssignmentServiceSpec extends TestFixture with ScalaFutures {
     }
 
     "save to cache and return true" when {
-      val validPtaList =
-        Seq(ivNinoStoreEntry2, ivNinoStoreEntry3, ivNinoStoreEntry4)
 
       "the accounts have no enrolments" in new TestHelper {
         mockIVCall(multiIVCreds)

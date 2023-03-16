@@ -98,7 +98,7 @@ trait TestHelper extends IntegrationSpecBase {
     val unauthorizedPath = routes.AuthorisationController.notAuthorised.url
     val keepAlive = routes.TimeOutController.keepAlive.url
     val timeout = routes.TimeOutController.timeout.url
-    val signout = routes.SignOutController.signOut().url
+    val signout = routes.SignOutController.signOut.url
   }
 
   def stubUserGroupSearchSuccess(
@@ -110,10 +110,7 @@ trait TestHelper extends IntegrationSpecBase {
     usergroupsResponseJson(usersGroupResponse).toString()
   )
 
-  def stubUserGroupSearchFailure(
-                                  credId: String,
-                                  responseCode: Int = INTERNAL_SERVER_ERROR
-                                ): StubMapping =
+  def stubUserGroupSearchFailure(credId: String): StubMapping =
     stubGet(s"/users-groups-search/users/$credId", INTERNAL_SERVER_ERROR, "")
 
 }

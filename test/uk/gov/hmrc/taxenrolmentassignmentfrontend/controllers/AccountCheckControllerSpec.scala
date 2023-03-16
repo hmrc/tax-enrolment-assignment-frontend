@@ -17,6 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import cats.data.EitherT
+import play.api.Configuration
 import play.api.http.Status.SEE_OTHER
 import play.api.i18n.MessagesApi
 import play.api.test.Helpers._
@@ -24,6 +25,7 @@ import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
@@ -32,12 +34,13 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{TaxEnrolmentAssignment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.CascadeUpsert
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class AccountCheckControllerSpec extends TestFixture {
 
-  val teaSessionCache = new TestTeaSessionCache
+  lazy val teaSessionCache = new TestTeaSessionCache(inject[Configuration], inject[MongoComponent], inject[CascadeUpsert])
 
   val controller = new AccountCheckController(
     mockSilentAssignmentService,

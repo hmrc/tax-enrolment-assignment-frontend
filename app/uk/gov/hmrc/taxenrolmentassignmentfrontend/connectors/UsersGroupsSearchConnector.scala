@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors
 
 import cats.data.EitherT
-import com.google.inject.{Inject, Singleton}
+import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.http.Status.NON_AUTHORITATIVE_INFORMATION
 import uk.gov.hmrc.http.HttpReads.Implicits._

@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators
 
 import cats.data.EitherT
 import cats.implicits._
-import com.google.inject.{Inject, Singleton}
+import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.data.Form
 import uk.gov.hmrc.http.HeaderCarrier

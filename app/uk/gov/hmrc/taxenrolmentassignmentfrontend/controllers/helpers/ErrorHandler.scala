@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers
 
-import com.google.inject.Inject
+import javax.inject.Inject
 import play.api.Logger
 import play.api.mvc.{MessagesControllerComponents, Result}
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl

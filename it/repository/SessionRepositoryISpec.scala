@@ -18,7 +18,6 @@ package repository
 
 import java.time.{LocalDateTime, ZoneId}
 import java.util.UUID
-
 import helpers.IntegrationSpecBase
 import org.mongodb.scala.model.Filters
 import play.api.libs.json.JsString

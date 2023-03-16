@@ -121,7 +121,7 @@ trait IntegrationSpecBase
     resetWiremock()
     await(mongoRepository.collection.deleteMany(BsonDocument()).toFuture())
   }
-
+/*
   override def beforeAll(): Unit = {
     super.beforeAll()
     startWiremock()
@@ -130,5 +130,5 @@ trait IntegrationSpecBase
   override def afterAll(): Unit = {
     stopWiremock()
     super.afterAll()
-  }
+  }*/
 }

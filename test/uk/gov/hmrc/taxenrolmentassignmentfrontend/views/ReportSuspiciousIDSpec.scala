@@ -210,7 +210,7 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
     "only display the continue button when SA identified" in {
       documentSA
         .select("p." + Selectors.body)
-        .get(4)
+        .get(5)
         .text() shouldBe ReportSuspiciousIDMessages.saPText
 
       documentSA

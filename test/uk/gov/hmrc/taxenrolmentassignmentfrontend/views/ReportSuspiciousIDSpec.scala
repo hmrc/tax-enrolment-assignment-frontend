@@ -54,7 +54,7 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
     reportSuspiciousIdView(accountDetails)(FakeRequest(), testMessages)
 
   val viewSA: HtmlFormat.Appendable =
-    reportSuspiciousIdView(accountDetails, true)(FakeRequest(), testMessages)
+    reportSuspiciousIdView(accountDetails, saOnOtherAccountJourney = true)(FakeRequest(), testMessages)
 
   val document: Document = doc(view)
   val documentSA: Document = doc(viewSA)

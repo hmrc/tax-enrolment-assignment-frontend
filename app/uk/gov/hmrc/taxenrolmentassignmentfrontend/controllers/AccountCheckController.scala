@@ -57,6 +57,7 @@ extends TEAFrontendController(mcc) {
 
   def accountCheck(redirectUrl: RedirectUrl): Action[AnyContent] = authAction.async {
     implicit request =>
+      println("PPPPPPPP")
       Try {
         redirectUrl.get(OnlyRelative | AbsoluteWithHostnameFromAllowlist(appConfig.validRedirectHostNames)).url
       } match {
@@ -77,8 +78,15 @@ extends TEAFrontendController(mcc) {
 
   private def handleRequest(redirectUrl: String)(implicit request: RequestWithUserDetailsFromSession[_],
   hc: HeaderCarrier): TEAFResult[(AccountTypes.Value, Option[Result])] = {
+    println("PPP UUUUU")
     for {
-      _ <- EitherT.right[TaxEnrolmentAssignmentErrors](sessionCache.save[String](REDIRECT_URL, redirectUrl)(request, implicitly))
+      _ <- {
+        val x = EitherT.right[TaxEnrolmentAssignmentErrors](sessionCache.save[String](REDIRECT_URL, redirectUrl)(request, implicitly))
+        x.map { y =>
+          println("XXXXXX " + y)
+        }
+        x
+      }
       accountType <- accountCheckOrchestrator.getAccountType
       throttle <- EitherT.right[TaxEnrolmentAssignmentErrors](throttleAction.throttle(accountType, redirectUrl))
       _ <- enrolForPTIfRequired(accountType, throttle.isEmpty)
@@ -109,8 +117,9 @@ extends TEAFrontendController(mcc) {
   ): TEAFResult[Unit] = {
     val accountTypesToEnrolForPT = List(SINGLE_ACCOUNT, MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER)
     val hasPTEnrolmentAlready = request.userDetails.hasPTEnrolment
-
+    println(s"PPP $isThrottled && $hasPTEnrolmentAlready && ${accountTypesToEnrolForPT.contains(accountType)}")
     if (isThrottled && !hasPTEnrolmentAlready && accountTypesToEnrolForPT.contains(accountType)) {
+      println("PPP silentAssignmentService.enrolUser()")
       silentAssignmentService.enrolUser().flatMap { _ =>
           auditHandler.audit(AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(accountType))
           EitherT.right(
@@ -129,6 +138,7 @@ extends TEAFrontendController(mcc) {
         }
       }
     else if (hasPTEnrolmentAlready) {
+      println("EitherT.right(sessionCache.removeRecord.map(_ => (): Unit))")
       EitherT.right(sessionCache.removeRecord.map(_ => (): Unit))
     } else {
         EitherT.right(Future.successful((): Unit))

@@ -16,13 +16,16 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
+import play.api.Application
 import play.api.http.Status.OK
+import play.api.i18n.MessagesApi
+import play.api.inject.bind
 import play.api.libs.json.{Format, Json}
-import play.api.mvc.AnyContent
+import play.api.mvc.{AnyContent, BodyParsers}
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
-import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
+import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, Enrolments}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
@@ -30,30 +33,45 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_O
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, NoPTEnrolmentWhenOneExpected, NoSAEnrolmentWhenOneExpected, UnexpectedPTEnrolment, UnexpectedResponseFromTaxEnrolments}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, ThrottleHelperSpec, UrlPaths}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{ControllersBaseSpec, TestFixture, ThrottleHelperSpec, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{REPORTED_FRAUD, USER_ASSIGNED_SA_ENROLMENT, accountDetailsForCredential}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{SilentAssignmentService, ThrottlingService}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.ReportSuspiciousID
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSpec {
+class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
+
+  lazy val mockSilentAssignmentService = mock[SilentAssignmentService]
+  lazy val mockAccountCheckOrchestrator = mock[AccountCheckOrchestrator]
+  lazy val mockAuditHandler = mock[AuditHandler]
+
+  lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
+  lazy val mockMultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
+
+  override lazy val overrides = Seq(
+    bind[TEASessionCache].toInstance(mockTeaSessionCache)
+  )
+
+  override implicit lazy val app: Application = localGuiceApplicationBuilder()
+    .overrides(
+      bind[SilentAssignmentService].toInstance(mockSilentAssignmentService),
+      bind[AccountCheckOrchestrator].toInstance(mockAccountCheckOrchestrator),
+      bind[AuditHandler].toInstance(mockAuditHandler),
+      bind[ThrottlingService].toInstance(mockThrottlingService),
+      bind[AuthConnector].toInstance(mockAuthConnector),
+      bind[BodyParsers.Default].toInstance(testBodyParser),
+      bind[MultipleAccountsOrchestrator].toInstance(mockMultipleAccountsOrchestrator)
+    )
+    .build()
+
+  lazy val controller = app.injector.instanceOf[ReportSuspiciousIDController]
 
   val view: ReportSuspiciousID = app.injector.instanceOf[ReportSuspiciousID]
-  val controller =
-    new ReportSuspiciousIDController(
-      mockAuthAction,
-      mockAccountMongoDetailsAction,
-      mockThrottleAction,
-      mockTeaSessionCache,
-      mockMultipleAccountsOrchestrator,
-      mcc,
-      view,
-      logger,
-      mockAuditHandler,
-      errorHandler
-    )
 
   "viewNoSA" when {
 
@@ -93,8 +111,8 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
         mockAccountShouldNotBeThrottled(PT_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
 
         val auditEvent = AuditEvent.auditReportSuspiciousPTAccount(
-          accountDetails.copy(lastLoginDate = "27 common.month2 2022 common.dateToTime 12:00 PM")
-        )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), stubbedMessagesApi)
+          accountDetails.copy(lastLoginDate = s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
+        )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
         (mockAuditHandler
           .audit(_: AuditEvent)(_: HeaderCarrier))
           .expects(auditEvent, *)
@@ -106,7 +124,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe OK
-        contentAsString(result) should include("ReportSuspiciousID.heading")
+        contentAsString(result) should include(messages("ReportSuspiciousID.heading"))
       }
     }
 
@@ -184,7 +202,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(res) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(res) should include("enrolmentError.heading")
+        contentAsString(res) should include(messages("enrolmentError.heading"))
       }
     }
 
@@ -228,8 +246,8 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
           mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
 
           val auditEvent = AuditEvent.auditReportSuspiciousSAAccount(
-            accountDetails.copy(lastLoginDate = "27 common.month2 2022 common.dateToTime 12:00 PM")
-          )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER), stubbedMessagesApi)
+            accountDetails.copy(lastLoginDate = s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
+          )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER), messagesApi)
           (mockAuditHandler
             .audit(_: AuditEvent)(_: HeaderCarrier))
             .expects(auditEvent, *)
@@ -241,7 +259,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
           status(result) shouldBe OK
-          contentAsString(result) should include("ReportSuspiciousID.heading")
+          contentAsString(result) should include(messages("ReportSuspiciousID.heading"))
         }
 
         "the user has already been assigned a PT enrolment" in {
@@ -280,7 +298,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
           status(result) shouldBe OK
-          contentAsString(result) should include("ReportSuspiciousID.heading")
+          contentAsString(result) should include(messages("ReportSuspiciousID.heading"))
         }
       }
     }
@@ -304,7 +322,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(res) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(res) should include("enrolmentError.heading")
+        contentAsString(res) should include(messages("enrolmentError.heading"))
       }
     }
 
@@ -379,7 +397,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(res) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(res) should include("enrolmentError.heading")
+        contentAsString(res) should include(messages("enrolmentError.heading"))
       }
     }
   }
@@ -425,7 +443,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
         mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
         val auditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true
         )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData = additionalCacheData),
-          stubbedMessagesApi)
+          messagesApi)
         (mockAuditHandler
           .audit(_: AuditEvent)(_: HeaderCarrier))
           .expects(auditEvent, *)
@@ -509,7 +527,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(res) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(res) should include("enrolmentError.heading")
+        contentAsString(res) should include(messages("enrolmentError.heading"))
       }
     }
 
@@ -598,7 +616,7 @@ class ReportSuspiciousIDControllerSpec extends TestFixture with ThrottleHelperSp
           .apply(buildFakeRequestWithSessionId("POST", "Not Used"))
 
         status(res) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(res) should include("enrolmentError.heading")
+        contentAsString(res) should include(messages("enrolmentError.heading"))
       }
     }
   }

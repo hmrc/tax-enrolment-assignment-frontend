@@ -23,9 +23,10 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.ErrorHandler
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.{EventLoggerService, LoggingEvent}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{ThrottleApplied, ThrottleDoesNotApply, ThrottlingService}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{ThrottleApplied, ThrottleDoesNotApply, ThrottleResult, ThrottlingService}
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -40,25 +41,34 @@ class ThrottleAction @Inject()(throttlingService: ThrottlingService,
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
   def throttle(accountType: AccountTypes.Value, redirectUrl : String)(
-    implicit ec: ExecutionContext, hc: HeaderCarrier, requestWithUserDetailsFromSession: RequestWithUserDetailsFromSession[_]): Future[Option[Result]] = {
+    implicit hc: HeaderCarrier, requestWithUserDetailsFromSession: RequestWithUserDetailsFromSession[_]): Future[Option[Result]] = {
+    println("PPP111 actions.ThrottleAction.throttle")
 
     throttlingService.throttle(
       accountType,
       requestWithUserDetailsFromSession.userDetails.nino,
       requestWithUserDetailsFromSession.userDetails.enrolments.enrolments
-    )(ec, hc).value.flatMap {
+    ).value.map { x: Either[TaxEnrolmentAssignmentErrors, ThrottleResult] =>
+      println("PPPPP in here")
+      x
+    }.flatMap {
       case Right(ThrottleApplied) =>
+        println("PPPP Right(ThrottleApplied)")
         logger.logEvent(LoggingEvent.logUserThrottled(requestWithUserDetailsFromSession.userDetails.credId, accountType, requestWithUserDetailsFromSession.userDetails.nino))
-        teaSessionCache.removeRecord.map(_ => Some(Redirect(redirectUrl)))(ec)
-      case Right(ThrottleDoesNotApply) => Future.successful(None)
-      case Left(error) => Future.successful(Some(errorHandler
+        teaSessionCache.removeRecord.map(_ => Some(Redirect(redirectUrl)))
+      case Right(ThrottleDoesNotApply) =>
+        println("PPPP Right(ThrottleDoesNotApply)")
+        Future.successful(None)
+      case Left(error) =>
+        println("PPPP Left(error)" )
+      Future.successful(Some(errorHandler
         .handleErrors(error, "[ThrottleAction][filter]")(requestWithUserDetailsFromSession, baseLogger)))
-    }(ec)
+    }
   }
 
   override protected def filter[A](request: RequestWithUserDetailsFromSessionAndMongo[A]): Future[Option[Result]] = {
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequestAndSession(request, request.session)
-    throttle(request.accountDetailsFromMongo.accountType, request.accountDetailsFromMongo.redirectUrl)(implicitly, implicitly, request)
+    throttle(request.accountDetailsFromMongo.accountType, request.accountDetailsFromMongo.redirectUrl)(implicitly, request)
 
   }
 }

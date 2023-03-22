@@ -32,14 +32,14 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 
-import play.api.i18n.Lang
+import play.api.i18n.{Lang, Messages, MessagesApi, MessagesImpl}
 import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.crypto.Crypted
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.crypto.json.JsonEncryption
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{BaseSpec, TestFixture}
 
-class AccountDetailsSpec extends TestFixture {
+class AccountDetailsSpec extends BaseSpec {
 
   val additionalFactorText = AdditonalFactors("sms", Some("07783924321"))
   val additionalFactorVoice = AdditonalFactors("voice", Some("07783924321"))

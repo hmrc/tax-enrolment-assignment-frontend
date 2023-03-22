@@ -27,10 +27,10 @@ import scala.concurrent.Future
 
 @Singleton
 class TimeOutController @Inject()(
-  authAction: AuthAction,
-  mcc: MessagesControllerComponents,
-  sessionCache: TEASessionCache,
-  timedoutView: TimedOutView
+                                   authAction: AuthAction,
+                                   mcc: MessagesControllerComponents,
+                                   sessionCache: TEASessionCache,
+                                   timedoutView: TimedOutView
 )
     extends TEAFrontendController(mcc) {
 

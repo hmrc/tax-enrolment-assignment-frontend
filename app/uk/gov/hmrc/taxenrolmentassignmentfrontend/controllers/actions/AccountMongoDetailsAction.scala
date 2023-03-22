@@ -52,11 +52,11 @@ trait AccountMongoDetailsActionTrait
   extends ActionRefiner[RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo]
 
 class AccountMongoDetailsAction @Inject()(
-  teaSessionCache: TEASessionCache,
-  val parser: BodyParsers.Default,
-  errorHandler: ErrorHandler,
-  val appConfig: AppConfig,
-  logger: EventLoggerService
+                                           teaSessionCache: TEASessionCache,
+                                           val parser: BodyParsers.Default,
+                                           errorHandler: ErrorHandler,
+                                           val appConfig: AppConfig,
+                                           logger: EventLoggerService
 )(implicit val executionContext: ExecutionContext, crypto: TENCrypto)
     extends AccountMongoDetailsActionTrait with RedirectHelper {
   implicit val baseLogger: Logger = Logger(this.getClass.getName)

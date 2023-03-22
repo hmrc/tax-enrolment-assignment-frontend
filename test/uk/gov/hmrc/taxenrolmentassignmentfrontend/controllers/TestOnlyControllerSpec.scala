@@ -16,20 +16,35 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
+import play.api.Application
+import play.api.inject.bind
 import play.api.libs.json.{JsString, Json}
+import play.api.mvc.BodyParsers
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
+import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, Enrolments}
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{predicates, retrievalResponse, retrievals, saEnrolmentOnly}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{BaseSpec, ControllersBaseSpec, TestFixture}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.formats.EnrolmentsFormats
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditHandler
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{SilentAssignmentService, ThrottlingService}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class TestOnlyControllerSpec extends TestFixture {
+class TestOnlyControllerSpec extends ControllersBaseSpec {
+
+  override implicit lazy val app: Application = localGuiceApplicationBuilder()
+    .overrides(
+      bind[AuthConnector].toInstance(mockAuthConnector)
+    )
+    .build()
+
+  lazy val testOnlyController = app.injector.instanceOf[TestOnlyController]
 
   private val fakeReq =
     FakeRequest("GET", "/users-group-search/test-only/users/:credId")

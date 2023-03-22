@@ -16,21 +16,34 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.services
 
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import play.api.Application
+import play.api.inject.bind
 import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier}
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{EACDConnector, IVConnector, LegacyAuthConnector, TaxEnrolmentsConnector}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedError
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{BaseSpec, TestFixture}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.hmrcPTKey
 
 import scala.concurrent.ExecutionContext
 
-class ThrottlingServiceSpec extends TestFixture with FutureAwaits with DefaultAwaitTimeout {
+class ThrottlingServiceSpec extends BaseSpec {
 
-  val throttlingservice = new ThrottlingService(mockLegacyAuthConnector, appConfig)
+  lazy val mockLegacyAuthConnector = mock[LegacyAuthConnector]
+
+  override implicit lazy val app: Application = localGuiceApplicationBuilder()
+    .overrides(
+      bind[LegacyAuthConnector].toInstance(mockLegacyAuthConnector)
+    )
+    .build()
+
+  lazy val throttlingservice = app.injector.instanceOf[ThrottlingService]
   val validNonRealNino = "QQ123456A"
 
   "isNinoWithinThrottleThreshold" should {
@@ -148,7 +161,7 @@ class ThrottlingServiceSpec extends TestFixture with FutureAwaits with DefaultAw
       Enrolment("bar", Seq(EnrolmentIdentifier("NINO", "foo")), "Activated", None)
     )
     val newEnrolment = (nino: String) => Enrolment(s"$hmrcPTKey", Seq(EnrolmentIdentifier("NINO", nino)), "Activated", None)
-    val throttlingservice = (percentageToThrottle: Int) =>  new ThrottlingService(mockLegacyAuthConnector, new AppConfig(servicesConfig){
+    val throttlingservice = (percentageToThrottle: Int) =>  new ThrottlingService(mockLegacyAuthConnector, new AppConfig(app.injector.instanceOf[ServicesConfig]){
       override lazy val percentageOfUsersThrottledToGetFakeEnrolment: Int = percentageToThrottle
     })
     s"return $ThrottleApplied" when {
@@ -163,7 +176,7 @@ class ThrottlingServiceSpec extends TestFixture with FutureAwaits with DefaultAw
             .returning(createInboundResult((): Unit))
             .once()
 
-          val res = await(throttlingservice(test.percentage).throttle(test.accountType, test.nino, setOfExistingEnrolments).value)
+          val res = throttlingservice(test.percentage).throttle(test.accountType, test.nino, setOfExistingEnrolments).value.futureValue
           res shouldBe Right(ThrottleApplied)
         })
     }
@@ -182,7 +195,7 @@ class ThrottlingServiceSpec extends TestFixture with FutureAwaits with DefaultAw
             .returning(createInboundResult((): Unit))
             .never()
 
-          val res = await(throttlingservice(test.percentage).throttle(test.accountType, test.nino, setOfExistingEnrolments).value)
+          val res = throttlingservice(test.percentage).throttle(test.accountType, test.nino, setOfExistingEnrolments).value.futureValue
           res shouldBe Right(ThrottleDoesNotApply)
         })
     }
@@ -198,7 +211,7 @@ class ThrottlingServiceSpec extends TestFixture with FutureAwaits with DefaultAw
               .returning(createInboundResultError(UnexpectedError))
               .once()
 
-            val res = await(throttlingservice(test.percentage).throttle(test.accountType, test.nino, setOfExistingEnrolments).value)
+            val res = throttlingservice(test.percentage).throttle(test.accountType, test.nino, setOfExistingEnrolments).value.futureValue
             res shouldBe Left(UnexpectedError)
           })
       }

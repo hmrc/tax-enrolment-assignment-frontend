@@ -17,41 +17,60 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import org.jsoup.Jsoup
+import play.api.Application
 import play.api.http.Status.OK
+import play.api.inject.bind
 import play.api.libs.json.Json
+import play.api.mvc.BodyParsers
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
-import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
+import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, Enrolments}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, UnexpectedPTEnrolment, UnexpectedResponseFromTaxEnrolments}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm.keepAccessToSAThroughPTAForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, ThrottleHelperSpec, UrlPaths}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{ControllersBaseSpec, TestFixture, ThrottleHelperSpec, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_ASSIGNED_SA_ENROLMENT, accountDetailsForCredential}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{SilentAssignmentService, ThrottlingService}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.KeepAccessToSA
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
+class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
+
+  lazy val mockSilentAssignmentService = mock[SilentAssignmentService]
+  lazy val mockAccountCheckOrchestrator = mock[AccountCheckOrchestrator]
+  lazy val mockAuditHandler = mock[AuditHandler]
+
+  lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
+  lazy val mockMultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
+
+  override lazy val overrides = Seq(
+    bind[TEASessionCache].toInstance(mockTeaSessionCache)
+  )
+
+  override implicit lazy val app: Application = localGuiceApplicationBuilder()
+    .overrides(
+      bind[SilentAssignmentService].toInstance(mockSilentAssignmentService),
+      bind[AccountCheckOrchestrator].toInstance(mockAccountCheckOrchestrator),
+      bind[AuditHandler].toInstance(mockAuditHandler),
+      bind[ThrottlingService].toInstance(mockThrottlingService),
+      bind[AuthConnector].toInstance(mockAuthConnector),
+      bind[BodyParsers.Default].toInstance(testBodyParser),
+      bind[MultipleAccountsOrchestrator].toInstance(mockMultipleAccountsOrchestrator)
+    )
+    .build()
+
+  lazy val controller = app.injector.instanceOf[KeepAccessToSAController]
 
   val view: KeepAccessToSA = app.injector.instanceOf[KeepAccessToSA]
-
-  val controller = new KeepAccessToSAController(
-    mockAuthAction,
-    mockAccountMongoDetailsAction,
-    mockThrottleAction,
-    mockMultipleAccountsOrchestrator,
-    mcc,
-    logger,
-    view,
-    mockAuditHandler,
-    errorHandler
-  )
 
   "view" when {
 
@@ -90,7 +109,7 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
         val page = Jsoup
           .parse(contentAsString(result))
 
-        page.getElementsByTag("h1").text() shouldBe "keepAccessToSA.heading"
+        page.getElementsByTag("h1").text() shouldBe messages("keepAccessToSA.heading")
         val radioInputs = page.getElementsByClass("govuk-radios__input")
         radioInputs.size() shouldBe 2
         radioInputs.get(0).attr("value") shouldBe "yes"
@@ -137,7 +156,7 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
         val page = Jsoup
           .parse(contentAsString(result))
 
-        page.getElementsByTag("h1").text() shouldBe "keepAccessToSA.heading"
+        page.getElementsByTag("h1").text() shouldBe messages("keepAccessToSA.heading")
         val radioInputs = page.getElementsByClass("govuk-radios__input")
         radioInputs.size() shouldBe 2
         radioInputs.get(0).attr("value") shouldBe "yes"
@@ -184,7 +203,7 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
         val page = Jsoup
           .parse(contentAsString(result))
 
-        page.getElementsByTag("h1").  text() shouldBe "keepAccessToSA.heading"
+        page.getElementsByTag("h1").  text() shouldBe messages("keepAccessToSA.heading")
         val radioInputs = page.getElementsByClass("govuk-radios__input")
         radioInputs.size() shouldBe 2
         radioInputs.get(0).attr("value") shouldBe "yes"
@@ -279,7 +298,7 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(res) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(res) should include("enrolmentError.heading")
+        contentAsString(res) should include(messages("enrolmentError.heading"))
       }
     }
   }
@@ -571,7 +590,7 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
             )
 
           status(res) shouldBe INTERNAL_SERVER_ERROR
-          contentAsString(res) should include("enrolmentError.heading")
+          contentAsString(res) should include(messages("enrolmentError.heading"))
         }
       }
     }
@@ -603,11 +622,11 @@ class KeepAccessToSAControllerSpec extends TestFixture with ThrottleHelperSpec {
         val page = Jsoup.parse(contentAsString(res))
         page
           .getElementsByClass("govuk-error-summary__title")
-          .text() shouldBe "validation.summary.heading"
+          .text() shouldBe messages("validation.summary.heading")
         page
           .getElementsByClass("govuk-list govuk-error-summary__list")
           .first()
-          .text() shouldBe "keepAccessToSA.error.required"
+          .text() shouldBe messages("keepAccessToSA.error.required")
       }
     }
   }

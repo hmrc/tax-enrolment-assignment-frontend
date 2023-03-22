@@ -16,6 +16,9 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions
 
+import org.scalamock.handlers.CallHandler1
+import play.api.Application
+import play.api.inject.bind
 import play.api.libs.json.{JsString, Json}
 import play.api.mvc.Results.Ok
 import play.api.test.FakeRequest
@@ -26,20 +29,36 @@ import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_CURRENT_USER, SINGLE_ACCOUNT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo.requestConversion
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.CURRENT_USER_EMAIL
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{BaseSpec, TestFixture}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.ThrottlingService
 
 import scala.concurrent.Future
 
-class AccountMongoDetailsActionSpec extends TestFixture {
-  val accountMongoDetailsAction: AccountMongoDetailsAction =
-    new AccountMongoDetailsAction(
-      mockTeaSessionCache,
-      testBodyParser,
-      errorHandler,
-      appConfig,
-      logger
+class AccountMongoDetailsActionSpec extends BaseSpec {
+
+  def mockDeleteDataFromCache: CallHandler1[RequestWithUserDetailsFromSession[_], Future[Boolean]] = {
+    (mockTeaSessionCache.removeRecord(_: RequestWithUserDetailsFromSession[_]))
+      .expects(*)
+      .returning(Future.successful(true))
+      .once()
+  }
+
+  lazy val mockTeaSessionCache = mock[TEASessionCache]
+  lazy val mockThrottlingService = mock[ThrottlingService]
+
+  override lazy val overrides = Seq(
+    bind[TEASessionCache].toInstance(mockTeaSessionCache)
+  )
+
+  override implicit lazy val app: Application = localGuiceApplicationBuilder()
+    .overrides(
+      bind[ThrottlingService].toInstance(mockThrottlingService),
     )
+    .build()
+
+  lazy val accountMongoDetailsAction = app.injector.instanceOf[AccountMongoDetailsAction]
 
   "invoke" should {
     "return updated request when orchestrator returns success Some for both account type and redirect url" in {
@@ -165,7 +184,7 @@ class AccountMongoDetailsActionSpec extends TestFixture {
           function
         )
         status(res) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(res) should include("enrolmentError.heading")
+        contentAsString(res) should include(messages("enrolmentError.heading"))
       }
       "the session cache contains the account type but not the redirect url" in {
         val exampleMongoSessionData = Map(ACCOUNT_TYPE -> Json.toJson(PT_ASSIGNED_TO_CURRENT_USER))
@@ -204,7 +223,7 @@ class AccountMongoDetailsActionSpec extends TestFixture {
           function
         )
         status(res) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(res) should include("enrolmentError.heading")
+        contentAsString(res) should include(messages("enrolmentError.heading"))
       }
     }
 
@@ -242,7 +261,7 @@ class AccountMongoDetailsActionSpec extends TestFixture {
         function
       )
       status(res) shouldBe INTERNAL_SERVER_ERROR
-      contentAsString(res) should include("enrolmentError.heading")
+      contentAsString(res) should include(messages("enrolmentError.heading"))
 
     }
   }

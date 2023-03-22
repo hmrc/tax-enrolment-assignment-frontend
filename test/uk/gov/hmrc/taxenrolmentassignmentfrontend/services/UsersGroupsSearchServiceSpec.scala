@@ -17,27 +17,38 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.services
 
 import org.scalatest.concurrent.ScalaFutures
+import play.api.Application
+import play.api.inject.bind
 import play.api.libs.json.{Format, Json}
 import play.api.mvc.AnyContent
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.cache.client.CacheMap
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.UsersGroupsSearchConnector
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{LegacyAuthConnector, UsersGroupsSearchConnector}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromUsersGroupsSearch
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{BaseSpec, TestFixture}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class UsersGroupsSearchServiceSpec extends TestFixture with ScalaFutures {
+class UsersGroupsSearchServiceSpec extends BaseSpec {
 
-  val mockUsersGroupsSearchConnector = mock[UsersGroupsSearchConnector]
+  lazy val mockUsersGroupsSearchConnector = mock[UsersGroupsSearchConnector]
+  lazy val mockTeaSessionCache = mock[TEASessionCache]
 
-  val service = new UsersGroupsSearchService(
-    mockUsersGroupsSearchConnector,
-    mockTeaSessionCache
+  override lazy val overrides = Seq(
+    bind[TEASessionCache].toInstance(mockTeaSessionCache)
   )
+
+  override implicit lazy val app: Application = localGuiceApplicationBuilder()
+    .overrides(
+      bind[UsersGroupsSearchConnector].toInstance(mockUsersGroupsSearchConnector)
+    )
+    .build()
+
+  lazy val service = app.injector.instanceOf[UsersGroupsSearchService]
 
   "getAccountDetails" when {
     "the account details are already in the cache" should {

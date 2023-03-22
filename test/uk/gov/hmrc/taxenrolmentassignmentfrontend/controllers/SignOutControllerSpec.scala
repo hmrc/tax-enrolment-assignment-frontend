@@ -16,27 +16,56 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
+import play.api.Application
+import play.api.inject.bind
 import play.api.libs.json.JsString
-import play.api.mvc.AnyContentAsEmpty
+import play.api.mvc.{AnyContentAsEmpty, BodyParsers}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
-import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
+import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, Enrolments}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{predicates, retrievalResponse, retrievals}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, UrlPaths}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{ControllersBaseSpec, TestFixture, UrlPaths}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditHandler
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REDIRECT_URL
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{SilentAssignmentService, ThrottlingService}
 
 import java.net.URLEncoder
 import scala.concurrent.{ExecutionContext, Future}
 
-class SignOutControllerSpec extends TestFixture {
+class SignOutControllerSpec extends ControllersBaseSpec {
 
-  val controller =
-    new SignOutController(mockAuthAction, mcc, appConfig, mockTeaSessionCache, logger)
+  lazy val mockSilentAssignmentService = mock[SilentAssignmentService]
+  lazy val mockAccountCheckOrchestrator = mock[AccountCheckOrchestrator]
+  lazy val mockAuditHandler = mock[AuditHandler]
+
+  lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
+  lazy val mockMultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
+
+  override lazy val overrides = Seq(
+    bind[TEASessionCache].toInstance(mockTeaSessionCache)
+  )
+
+  override implicit lazy val app: Application = localGuiceApplicationBuilder()
+    .overrides(
+      bind[SilentAssignmentService].toInstance(mockSilentAssignmentService),
+      bind[AccountCheckOrchestrator].toInstance(mockAccountCheckOrchestrator),
+      bind[AuditHandler].toInstance(mockAuditHandler),
+      bind[ThrottlingService].toInstance(mockThrottlingService),
+      bind[AuthConnector].toInstance(mockAuthConnector),
+      bind[BodyParsers.Default].toInstance(testBodyParser),
+      bind[MultipleAccountsOrchestrator].toInstance(mockMultipleAccountsOrchestrator)
+    )
+    .build()
+
+  lazy val controller = app.injector.instanceOf[SignOutController]
+
   def fakeReq(method: String,
               url: String = "N/A"): FakeRequest[AnyContentAsEmpty.type] = {
     FakeRequest(method, url)

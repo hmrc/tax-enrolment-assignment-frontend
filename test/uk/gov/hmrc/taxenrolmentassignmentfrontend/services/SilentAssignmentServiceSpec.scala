@@ -18,32 +18,43 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.services
 
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
+import play.api.Application
 import play.api.libs.json.Format
 import play.api.mvc.AnyContent
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.cache.client.CacheMap
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{EACDConnector, IVConnector, TaxEnrolmentsConnector}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromEACD
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{BaseSpec, TestFixture}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{IVNinoStoreEntry, UserEnrolmentsListResponse}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.HAS_OTHER_VALID_PTA_ACCOUNTS
 
 import scala.concurrent.{ExecutionContext, Future}
+import play.api.inject.bind
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 
-class SilentAssignmentServiceSpec extends TestFixture with ScalaFutures {
+class SilentAssignmentServiceSpec extends BaseSpec {
 
-  implicit val defaultPatience = PatienceConfig(
-    timeout = Span(TIME_OUT, Seconds),
-    interval = Span(INTERVAL, Millis)
+  lazy val mockIVConnector = mock[IVConnector]
+  lazy val mockTaxEnrolmentsConnector = mock[TaxEnrolmentsConnector]
+  lazy val mockEacdConnector = mock[EACDConnector]
+  lazy val mockTeaSessionCache = mock[TEASessionCache]
+
+  override lazy val overrides = Seq(
+    bind[TEASessionCache].toInstance(mockTeaSessionCache)
   )
 
-  val service = new SilentAssignmentService(
-    mockIVConnector,
-    mockTaxEnrolmentsConnector,
-    mockEacdConnector,
-    mockTeaSessionCache
-  )
+  override implicit lazy val app: Application = localGuiceApplicationBuilder()
+    .overrides(
+      bind[IVConnector].toInstance(mockIVConnector),
+      bind[TaxEnrolmentsConnector].toInstance(mockTaxEnrolmentsConnector),
+      bind[EACDConnector].toInstance(mockEacdConnector)
+    )
+    .build()
+
+  val service = app.injector.instanceOf[SilentAssignmentService]
 
   val businessEnrolmentResponse: UserEnrolmentsListResponse =
     UserEnrolmentsListResponse(Seq(userEnrolmentIRPAYE))

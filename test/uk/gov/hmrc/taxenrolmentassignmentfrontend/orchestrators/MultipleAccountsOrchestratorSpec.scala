@@ -19,8 +19,10 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators
 import cats.data.EitherT
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
+import play.api.Application
+import play.api.inject.bind
 import play.api.libs.json.{Format, JsBoolean, Json}
-import play.api.mvc.AnyContent
+import play.api.mvc.{AnyContent, BodyParsers}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
@@ -28,28 +30,38 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWi
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, UrlPaths}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{BaseSpec, TestFixture, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, SilentAssignmentService, UsersGroupsSearchService}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class MultipleAccountsOrchestratorSpec extends TestFixture with ScalaFutures {
+class MultipleAccountsOrchestratorSpec extends BaseSpec {
 
-  implicit val defaultPatience = PatienceConfig(
-    timeout = Span(TIME_OUT, Seconds),
-    interval = Span(INTERVAL, Millis)
+  lazy val mockSilentAssignmentService = mock[SilentAssignmentService]
+  lazy val mockEacdService = mock[EACDService]
+  lazy val mockTeaSessionCache = mock[TEASessionCache]
+
+  lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
+  lazy val mockMultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
+  lazy val mockUsersGroupService = mock[UsersGroupsSearchService]
+
+  override lazy val overrides = Seq(
+    bind[TEASessionCache].toInstance(mockTeaSessionCache)
   )
 
-  val orchestrator =
-    new MultipleAccountsOrchestrator(
-      mockTeaSessionCache,
-      mockUsersGroupService,
-      mockSilentAssignmentService,
-      mockEacdService,
-      logger
+  override implicit lazy val app: Application = localGuiceApplicationBuilder()
+    .overrides(
+      bind[SilentAssignmentService].toInstance(mockSilentAssignmentService),
+      bind[EACDService].toInstance(mockEacdService),
+      bind[UsersGroupsSearchService].toInstance(mockUsersGroupService)
     )
+    .build()
+
+  val orchestrator = app.injector.instanceOf[MultipleAccountsOrchestrator]
 
   s"getDetailsForEnrolledPT" when {
     List(MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER).foreach { accountType =>

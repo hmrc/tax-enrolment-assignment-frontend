@@ -30,11 +30,11 @@ import scala.concurrent.ExecutionContext
 
 @Singleton
 class SignOutController @Inject()(
-  authAction: AuthAction,
-  mcc: MessagesControllerComponents,
-  appConfig: AppConfig,
-  sessionCache: TEASessionCache,
-  val logger: EventLoggerService
+                                   authAction: AuthAction,
+                                   mcc: MessagesControllerComponents,
+                                   appConfig: AppConfig,
+                                   sessionCache: TEASessionCache,
+                                   val logger: EventLoggerService
 )(implicit ec: ExecutionContext)
     extends TEAFrontendController(mcc) {
 

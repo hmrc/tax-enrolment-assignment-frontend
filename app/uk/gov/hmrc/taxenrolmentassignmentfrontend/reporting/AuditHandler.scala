@@ -33,6 +33,7 @@ class AuditHandler @Inject()(
   def audit(
     auditEvent: AuditEvent
   )(implicit hc: HeaderCarrier): Future[Unit] = {
+    println("Uuuu Audit")
     val extendedDataEvent = ExtendedDataEvent(
       auditSource = appConfig.appName,
       auditType = auditEvent.auditType,

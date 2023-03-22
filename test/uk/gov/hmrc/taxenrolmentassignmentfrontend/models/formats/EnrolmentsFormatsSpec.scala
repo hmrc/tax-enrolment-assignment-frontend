@@ -18,9 +18,9 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.models.formats
 
 import play.api.libs.json.Json
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{BaseSpec, TestFixture}
 
-class EnrolmentsFormatsSpec extends TestFixture {
+class EnrolmentsFormatsSpec extends BaseSpec {
 
   "writes" should {
     "write to json correctly" in {

@@ -19,10 +19,11 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.messages
 import org.scalatest.OptionValues
 import play.api.i18n.Messages
 import play.api.i18n.Messages.MessageSource
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{BaseSpec, TestFixture}
+
 import scala.io.Source
 
-class MessagesSpec extends TestFixture with OptionValues {
+class MessagesSpec extends BaseSpec {
 
   private val MatchSingleQuoteOnly = """\w+'{1}\w+""".r
   private val MatchBacktickQuoteOnly = """`+""".r

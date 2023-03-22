@@ -16,36 +16,56 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
-import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
+import play.api.Application
+import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, Enrolments}
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{NINO, accountDetails, buildFakeRequestWithSessionId, predicates, randomAccountType, retrievalResponse, retrievals, saEnrolmentOnly}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, ThrottleHelperSpec, UrlPaths}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{BaseSpec, ControllersBaseSpec, TestFixture, ThrottleHelperSpec, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTPage
 import play.api.http.Status.OK
+import play.api.inject.bind
+import play.api.mvc.BodyParsers
 import play.api.test.Helpers._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_CURRENT_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditHandler
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{SilentAssignmentService, ThrottlingService}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class EnrolledForPTWithSAControllerSpec extends TestFixture with ThrottleHelperSpec {
+class EnrolledForPTWithSAControllerSpec extends ControllersBaseSpec {
+
+  lazy val mockSilentAssignmentService = mock[SilentAssignmentService]
+  lazy val mockAccountCheckOrchestrator = mock[AccountCheckOrchestrator]
+  lazy val mockAuditHandler = mock[AuditHandler]
+
+  lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
+  lazy val mockMultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
+
+  override lazy val overrides = Seq(
+    bind[TEASessionCache].toInstance(mockTeaSessionCache)
+  )
+
+  override implicit lazy val app: Application = localGuiceApplicationBuilder()
+    .overrides(
+      bind[SilentAssignmentService].toInstance(mockSilentAssignmentService),
+      bind[AccountCheckOrchestrator].toInstance(mockAccountCheckOrchestrator),
+      bind[AuditHandler].toInstance(mockAuditHandler),
+      bind[ThrottlingService].toInstance(mockThrottlingService),
+      bind[AuthConnector].toInstance(mockAuthConnector),
+      bind[BodyParsers.Default].toInstance(testBodyParser),
+      bind[MultipleAccountsOrchestrator].toInstance(mockMultipleAccountsOrchestrator)
+    )
+    .build()
+
+  lazy val controller = app.injector.instanceOf[EnrolledForPTWithSAController]
 
   val view: EnrolledForPTPage =
     app.injector.instanceOf[EnrolledForPTPage]
-
-  val controller = new EnrolledForPTWithSAController(
-    mockAuthAction,
-    mockAccountMongoDetailsAction,
-    mockThrottleAction,
-    mcc,
-    mockMultipleAccountsOrchestrator,
-    logger,
-    view,
-    errorHandler,
-    mockTeaSessionCache
-  )
 
   "view" when {
     specificThrottleTests(controller.view)

@@ -17,38 +17,57 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import org.jsoup.Jsoup
-import play.api.mvc.AnyContent
+import play.api.Application
+import play.api.inject.bind
+import play.api.mvc.{AnyContent, BodyParsers}
 import play.api.test.Helpers.{status, _}
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
-import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
+import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, Enrolments}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, UnexpectedPTEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, ThrottleHelperSpec, UrlPaths}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{ControllersBaseSpec, TestFixture, ThrottleHelperSpec, UrlPaths}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditHandler
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{SilentAssignmentService, ThrottlingService}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SABlueInterrupt
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class SABlueInterruptControllerSpec extends TestFixture with ThrottleHelperSpec {
+class SABlueInterruptControllerSpec extends ControllersBaseSpec {
+
+  lazy val mockSilentAssignmentService = mock[SilentAssignmentService]
+  lazy val mockAccountCheckOrchestrator = mock[AccountCheckOrchestrator]
+  lazy val mockAuditHandler = mock[AuditHandler]
+
+  lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
+  lazy val mockMultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
+
+  override lazy val overrides = Seq(
+    bind[TEASessionCache].toInstance(mockTeaSessionCache)
+  )
+
+  override implicit lazy val app: Application = localGuiceApplicationBuilder()
+    .overrides(
+      bind[SilentAssignmentService].toInstance(mockSilentAssignmentService),
+      bind[AccountCheckOrchestrator].toInstance(mockAccountCheckOrchestrator),
+      bind[AuditHandler].toInstance(mockAuditHandler),
+      bind[ThrottlingService].toInstance(mockThrottlingService),
+      bind[AuthConnector].toInstance(mockAuthConnector),
+      bind[BodyParsers.Default].toInstance(testBodyParser),
+      bind[MultipleAccountsOrchestrator].toInstance(mockMultipleAccountsOrchestrator)
+    )
+    .build()
+
+  lazy val controller = app.injector.instanceOf[SABlueInterruptController]
 
   val blueSAView: SABlueInterrupt =
     inject[SABlueInterrupt]
-
-  val controller =
-    new SABlueInterruptController(
-      mockAuthAction,
-      mockAccountMongoDetailsAction,
-      mockThrottleAction,
-      mcc,
-      mockMultipleAccountsOrchestrator,
-      logger,
-      blueSAView,
-      errorHandler
-    )
 
   "view" when {
 
@@ -86,10 +105,10 @@ class SABlueInterruptControllerSpec extends TestFixture with ThrottleHelperSpec 
           val page = Jsoup.parse(contentAsString(result))
           page
             .select("h1")
-            .text() shouldBe "selfAssessmentInterrupt.heading"
+            .text() shouldBe messages("selfAssessmentInterrupt.heading")
           page
             .select("p")
-            .text() shouldBe "selfAssessmentInterrupt.paragraph1"
+            .text() shouldBe messages("selfAssessmentInterrupt.paragraph1")
         }
       }
 
@@ -145,7 +164,7 @@ class SABlueInterruptControllerSpec extends TestFixture with ThrottleHelperSpec 
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(result) should include("enrolmentError.heading")
+        contentAsString(result) should include(messages("enrolmentError.heading"))
       }
     }
 
@@ -241,7 +260,7 @@ class SABlueInterruptControllerSpec extends TestFixture with ThrottleHelperSpec 
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(result) should include("enrolmentError.heading")
+        contentAsString(result) should include(messages("enrolmentError.heading"))
       }
     }
 

@@ -16,26 +16,54 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions
 
+import org.scalamock.handlers.CallHandler1
+import play.api.Application
 import play.api.http.Status.INTERNAL_SERVER_ERROR
+import play.api.inject.bind
+import play.api.mvc.BodyParsers
 import play.api.mvc.Results.Ok
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AffinityGroup.Individual
-import uk.gov.hmrc.auth.core.{Enrolment, Enrolments}
+import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment, Enrolments}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.PT_ASSIGNED_TO_CURRENT_USER
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SABlueInterruptController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedError
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.CURRENT_USER_EMAIL
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{ThrottleApplied, ThrottleDoesNotApply}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{BaseSpec, TestFixture}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditHandler
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{SilentAssignmentService, ThrottleApplied, ThrottleDoesNotApply, ThrottlingService}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class ThrottleActionSpec extends TestFixture {
+class ThrottleActionSpec extends BaseSpec {
 
-  val action =
-    new ThrottleAction(mockThrottlingService, testBodyParser, errorHandler, logger, mockTeaSessionCache)
+  def mockDeleteDataFromCache: CallHandler1[RequestWithUserDetailsFromSession[_], Future[Boolean]] = {
+    (mockTeaSessionCache.removeRecord(_: RequestWithUserDetailsFromSession[_]))
+      .expects(*)
+      .returning(Future.successful(true))
+      .once()
+  }
+
+  lazy val mockTeaSessionCache = mock[TEASessionCache]
+  lazy val mockThrottlingService = mock[ThrottlingService]
+
+  override lazy val overrides = Seq(
+    bind[TEASessionCache].toInstance(mockTeaSessionCache)
+  )
+
+  override implicit lazy val app: Application = localGuiceApplicationBuilder()
+    .overrides(
+      bind[ThrottlingService].toInstance(mockThrottlingService),
+    )
+    .build()
+
+  lazy val action = app.injector.instanceOf[ThrottleAction]
+
   val exampleRequestSessionAndMongo: RequestWithUserDetailsFromSessionAndMongo[_] = RequestWithUserDetailsFromSessionAndMongo(
     FakeRequest(),
     UserDetailsFromSession(
@@ -138,7 +166,7 @@ class ThrottleActionSpec extends TestFixture {
         )
         .returning(createInboundResult(ThrottleDoesNotApply))
 
-      val res = action.throttle(PT_ASSIGNED_TO_CURRENT_USER,"redirectURL")(implicitly, implicitly, exampleRequestSession)
+      val res = action.throttle(PT_ASSIGNED_TO_CURRENT_USER,"redirectURL")(implicitly, exampleRequestSession)
       await(res) shouldBe None
     }
     s"return result that redirects to users redirect URL of user if throttling service returns $ThrottleApplied" in {
@@ -156,7 +184,7 @@ class ThrottleActionSpec extends TestFixture {
         )
         .returning(createInboundResult(ThrottleApplied))
       mockDeleteDataFromCache
-      val res = action.throttle(PT_ASSIGNED_TO_CURRENT_USER,"redirectURL")(implicitly, implicitly, exampleRequestSession)
+      val res = action.throttle(PT_ASSIGNED_TO_CURRENT_USER,"redirectURL")(implicitly, exampleRequestSession)
 
       status(res.map(_.get)) shouldBe SEE_OTHER
       redirectLocation(res.map(_.get)).get shouldBe "redirectURL"
@@ -176,7 +204,7 @@ class ThrottleActionSpec extends TestFixture {
         )
         .returning(createInboundResultError(UnexpectedError))
 
-      val res = action.throttle(PT_ASSIGNED_TO_CURRENT_USER,"redirectURL")(implicitly, implicitly, exampleRequestSession)
+      val res = action.throttle(PT_ASSIGNED_TO_CURRENT_USER,"redirectURL")(implicitly, exampleRequestSession)
 
       status(res.map(_.get)) shouldBe INTERNAL_SERVER_ERROR
     }

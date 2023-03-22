@@ -20,13 +20,13 @@ import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.classic.{Level, Logger => LogbackLogger}
 import ch.qos.logback.core.read.ListAppender
 import play.api.{Logger, LoggerLike}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{BaseSpec, TestFixture}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 
 import scala.jdk.CollectionConverters._
 import scala.reflect.ClassTag
 
-class EventLoggerServiceSpec extends TestFixture {
+class EventLoggerServiceSpec extends BaseSpec {
 
   def withCaptureOfLoggingFrom(
     logger: LoggerLike
@@ -52,7 +52,7 @@ class EventLoggerServiceSpec extends TestFixture {
     body(appender.list.asScala.toList)
   }
 
-  val eventLogger: EventLoggerService = logger
+  val eventLogger: EventLoggerService = app.injector.instanceOf[EventLoggerService]
 
   implicit val testLogger: Logger = Logger("test-logger")
 

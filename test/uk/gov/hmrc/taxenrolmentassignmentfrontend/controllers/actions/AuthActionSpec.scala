@@ -16,7 +16,10 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions
 
+import org.scalamock.handlers.CallHandler1
 import org.scalatest.Assertion
+import play.api.Application
+import play.api.inject.bind
 import play.api.mvc.{Result, Results}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsString, redirectLocation, status, _}
@@ -25,14 +28,35 @@ import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{BaseSpec, TestFixture}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.ThrottlingService
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class AuthActionSpec extends TestFixture {
+class AuthActionSpec extends BaseSpec {
 
-  def authAction: AuthAction =
-    new AuthAction(mockAuthConnector, testBodyParser, logger, appConfig)
+  def mockDeleteDataFromCache: CallHandler1[RequestWithUserDetailsFromSession[_], Future[Boolean]] = {
+    (mockTeaSessionCache.removeRecord(_: RequestWithUserDetailsFromSession[_]))
+      .expects(*)
+      .returning(Future.successful(true))
+      .once()
+  }
+
+  lazy val mockTeaSessionCache = mock[TEASessionCache]
+  lazy val mockAuthConnector = mock[AuthConnector]
+
+  override lazy val overrides = Seq(
+    bind[TEASessionCache].toInstance(mockTeaSessionCache)
+  )
+
+  override implicit lazy val app: Application = localGuiceApplicationBuilder()
+    .overrides(
+      bind[AuthConnector].toInstance(mockAuthConnector),
+    )
+    .build()
+
+  lazy val authAction = app.injector.instanceOf[AuthAction]
 
   def defaultAsyncBody(
     requestTestCase: RequestWithUserDetailsFromSession[_] => Assertion

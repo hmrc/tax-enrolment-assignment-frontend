@@ -23,8 +23,8 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.Configuration
 import play.api.i18n._
+import play.api.inject.Injector
 import play.api.libs.json.{Format, JsString, JsValue, Json}
 import play.api.mvc._
 import play.api.test.CSRFTokenHelper._
@@ -34,7 +34,6 @@ import play.twirl.api.Html
 import uk.gov.hmrc.auth.core.{AuthConnector, Enrolment}
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
-import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
@@ -51,7 +50,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditHandler
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.{CascadeUpsert, TEASessionCache}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.UnderConstructionView
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
@@ -59,7 +58,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemp
 import scala.concurrent.{ExecutionContext, Future}
 
 trait TestFixture
-    extends AnyWordSpec
+  extends AnyWordSpec
     with MockFactory
     with GuiceOneAppPerSuite
     with Matchers
@@ -69,6 +68,7 @@ trait TestFixture
   val TIME_OUT = 5
   val INTERVAL = 5
 
+  lazy val injector: Injector = app.injector
   implicit val request: RequestWithUserDetailsFromSession[AnyContent] =
     new RequestWithUserDetailsFromSession[AnyContent](
       FakeRequest().asInstanceOf[Request[AnyContent]],
@@ -84,11 +84,11 @@ trait TestFixture
     )
 
   def requestWithAccountType(
-    accountType: AccountTypes.Value = SINGLE_ACCOUNT,
-    redirectUrl: String = UrlPaths.returnUrl,
-    additionalCacheData: Map[String, JsValue] = Map(),
-    langCode: String =  "en"
-  ): RequestWithUserDetailsFromSessionAndMongo[_] =
+                              accountType: AccountTypes.Value = SINGLE_ACCOUNT,
+                              redirectUrl: String = UrlPaths.returnUrl,
+                              additionalCacheData: Map[String, JsValue] = Map(),
+                              langCode: String =  "en"
+                            ): RequestWithUserDetailsFromSessionAndMongo[_] =
     RequestWithUserDetailsFromSessionAndMongo(
       request.request.withTransientLang(langCode),
       request.userDetails,
@@ -96,17 +96,16 @@ trait TestFixture
       AccountDetailsFromMongo(accountType, redirectUrl, generateBasicCacheData(accountType, redirectUrl) ++ additionalCacheData)(crypto.crypto)
     )
 
-  implicit lazy val ec: ExecutionContext = inject[ExecutionContext]
-  lazy val servicesConfig = inject[ServicesConfig]
+  implicit lazy val ec: ExecutionContext = injector.instanceOf[ExecutionContext]
+  lazy val servicesConfig = injector.instanceOf[ServicesConfig]
   implicit lazy val hc: HeaderCarrier = HeaderCarrier()
   lazy val mcc: MessagesControllerComponents =
     stubMessagesControllerComponents()
   lazy val errorHandler: ErrorHandler = new ErrorHandler(errorView, logger, mcc)
   lazy val logger: EventLoggerService = new EventLoggerService()
-  implicit lazy val appConfig: AppConfig = inject[AppConfig]
+  implicit lazy val appConfig: AppConfig = injector.instanceOf[AppConfig]
   lazy val messagesApi: MessagesApi = inject[MessagesApi]
   lazy val stubbedMessagesApi = stubMessagesApi()
-  implicit lazy val messages: Messages = messagesApi.preferred(fakeRequest)
   implicit lazy val crypto = inject[TENCrypto]
   lazy val UCView: UnderConstructionView = inject[UnderConstructionView]
   lazy val mockAuthConnector: AuthConnector = mock[AuthConnector]
@@ -120,8 +119,8 @@ trait TestFixture
     mock[UsersGroupsSearchService]
   lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
   lazy val requestPath = "Not Used"
-  lazy val mockTeaSessionCache: TEASessionCache = ???
-  lazy val mockAccountCheckOrchestrator: AccountCheckOrchestrator = ???
+  lazy val mockTeaSessionCache = mock[TEASessionCache]
+  lazy val mockAccountCheckOrchestrator = mock[AccountCheckOrchestrator]
   lazy val mockMultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
   lazy val mockSilentAssignmentService: SilentAssignmentService =
     mock[SilentAssignmentService]
@@ -139,17 +138,17 @@ trait TestFixture
   lazy val errorView: ErrorTemplate = app.injector.instanceOf[ErrorTemplate]
   lazy val mockAuthAction =
     new AuthAction(mockAuthConnector, testBodyParser, logger, appConfig)
-  lazy val mockAccountMongoDetailsAction = ???
-  /*  new AccountMongoDetailsAction(
+  lazy val mockAccountMongoDetailsAction =
+    new AccountMongoDetailsAction(
       mockTeaSessionCache,
       testBodyParser,
       errorHandler,
       appConfig,
       logger
-    )*/
+    )
 
-  lazy val mockThrottleAction = ???
-  //  new ThrottleAction(mockThrottlingService, testBodyParser, errorHandler, logger, mockTeaSessionCache)
+  lazy val mockThrottleAction =
+    new ThrottleAction(mockThrottlingService, testBodyParser, errorHandler, logger, mockTeaSessionCache)
   implicit lazy val testMessages: Messages =
     messagesApi.preferred(FakeRequest())
 
@@ -167,8 +166,8 @@ trait TestFixture
     EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(result))
 
   def createInboundResultError[T](
-    error: TaxEnrolmentAssignmentErrors
-  ): TEAFResult[T] = EitherT.left(Future.successful(error))
+                                   error: TaxEnrolmentAssignmentErrors
+                                 ): TEAFResult[T] = EitherT.left(Future.successful(error))
 
   lazy val testOnlyController = new TestOnlyController(mcc, mockAuthAction,  logger)
 
@@ -202,13 +201,12 @@ trait TestFixture
       .once()
   }
 
-  def mockDeleteDataFromCache = ??? /*{
+  def mockDeleteDataFromCache = {
     (mockTeaSessionCache.removeRecord(_: RequestWithUserDetailsFromSession[_]))
       .expects(*)
       .returning(Future.successful(true))
       .once()
-  }*/
-
+  }
   def mockErrorFromThrottlingService(accountTypes: AccountTypes.Value, nino: String, enrolments: Set[Enrolment]) = {
     (mockThrottlingService.throttle(_: AccountTypes.Value, _: String, _: Set[Enrolment])(_: ExecutionContext, _: HeaderCarrier))
       .expects(
@@ -220,7 +218,7 @@ trait TestFixture
       .once()
   }
 
-  def mockGetDataFromCacheForActionSuccess(accountType: AccountTypes.Value, redirectUrl: String = "foo", additionCacheData: Map[String, JsValue] = Map()) = ??? /*{
+  def mockGetDataFromCacheForActionSuccess(accountType: AccountTypes.Value, redirectUrl: String = "foo", additionCacheData: Map[String, JsValue] = Map()) = {
     val data = generateBasicCacheData(accountType, redirectUrl) ++ additionCacheData
     val cacheMap = CacheMap("id", data)
     (mockTeaSessionCache
@@ -229,9 +227,9 @@ trait TestFixture
       ))
       .expects(*)
       .returning(Future.successful(Some(cacheMap)))
-  }*/
+  }
 
-  def mockGetDataFromCacheForActionNoRedirectUrl = ??? /*{
+  def mockGetDataFromCacheForActionNoRedirectUrl = {
     val data = Map(ACCOUNT_TYPE -> Json.toJson(randomAccountType))
     val cacheMap = CacheMap("id", data)
     (mockTeaSessionCache
@@ -240,9 +238,9 @@ trait TestFixture
       ))
       .expects(*)
       .returning(Future.successful(Some(cacheMap)))
-  }*/
+  }
 
-  class TestTeaSessionCache(config: Configuration, mongo: MongoComponent, cascadeUpsert: CascadeUpsert) extends TEASessionCache(config, mongo, cascadeUpsert) {
+  class TestTeaSessionCache extends TEASessionCache {
     override def save[A](key: String, value: A)(
       implicit request: RequestWithUserDetailsFromSession[_],
       fmt: Format[A]
@@ -253,8 +251,8 @@ trait TestFixture
     ): Future[Boolean] = ???
 
     override def removeRecord(
-      implicit request: RequestWithUserDetailsFromSession[_]
-    ): Future[Boolean] = Future.successful(true)
+                               implicit request: RequestWithUserDetailsFromSession[_]
+                             ): Future[Boolean] = Future.successful(true)
 
     override def fetch()(
       implicit request: RequestWithUserDetailsFromSession[_]
@@ -264,5 +262,11 @@ trait TestFixture
     override def extendSession()(
       implicit request: RequestWithUserDetailsFromSession[_]
     ): Future[Boolean] = Future.successful(true)
+
+    def collectionDeleteOne(id: String) = ???
+    def get(id: String): scala.concurrent.Future[Option[uk.gov.hmrc.http.cache.client.CacheMap]] = ???
+    def updateLastUpdated(id: String): scala.concurrent.Future[Boolean] = ???
+    def upsert(cm: uk.gov.hmrc.http.cache.client.CacheMap): scala.concurrent.Future[Boolean] = ???
+
   }
 }

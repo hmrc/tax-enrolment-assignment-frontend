@@ -23,12 +23,12 @@ import play.api.mvc.{AnyContent, Request}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCacheImpl
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 
 class TEASessionCacheSpec extends IntegrationSpecBase {
 
   val teaSessionCache =
-    new TEASessionCacheImpl(sessionRepository, cascadeUpsert)
+    new TEASessionCache(sessionRepository, cascadeUpsert)
 
   implicit val request: RequestWithUserDetailsFromSession[AnyContent] =
     new RequestWithUserDetailsFromSession[AnyContent](

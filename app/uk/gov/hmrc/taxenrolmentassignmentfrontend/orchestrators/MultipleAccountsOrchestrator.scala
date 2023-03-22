@@ -40,11 +40,11 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class MultipleAccountsOrchestrator @Inject()(
-  sessionCache: TEASessionCache,
-  usersGroupSearchService: UsersGroupsSearchService,
-  silentAssignmentService: SilentAssignmentService,
-  eacdService: EACDService,
-  logger: EventLoggerService
+                                              sessionCache: TEASessionCache,
+                                              usersGroupSearchService: UsersGroupsSearchService,
+                                              silentAssignmentService: SilentAssignmentService,
+                                              eacdService: EACDService,
+                                              logger: EventLoggerService
 ) {
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)

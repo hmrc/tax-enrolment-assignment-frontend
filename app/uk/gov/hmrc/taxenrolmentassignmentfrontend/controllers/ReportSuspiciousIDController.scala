@@ -35,16 +35,16 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ReportSuspiciousIDController @Inject()(
-  authAction: AuthAction,
-  accountMongoDetailsAction: AccountMongoDetailsAction,
-  throttleAction: ThrottleAction,
-  sessionCache: TEASessionCache,
-  multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
-  mcc: MessagesControllerComponents,
-  reportSuspiciousID: ReportSuspiciousID,
-  val logger: EventLoggerService,
-  auditHandler: AuditHandler,
-  errorHandler: ErrorHandler
+                                              authAction: AuthAction,
+                                              accountMongoDetailsAction: AccountMongoDetailsAction,
+                                              throttleAction: ThrottleAction,
+                                              sessionCache: TEASessionCache,
+                                              multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
+                                              mcc: MessagesControllerComponents,
+                                              reportSuspiciousID: ReportSuspiciousID,
+                                              val logger: EventLoggerService,
+                                              auditHandler: AuditHandler,
+                                              errorHandler: ErrorHandler
 )(implicit ec: ExecutionContext)
     extends TEAFrontendController(mcc)  {
 
@@ -108,14 +108,18 @@ class ReportSuspiciousIDController @Inject()(
         .value
         .map {
           case Right(_) =>
+            println("AAAAA")
             logger.logEvent(
               logAssignedEnrolmentAfterReportingFraud(
                 request.userDetails.credId
               )
             )
+            println("BBBBB")
             auditHandler.audit(AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true))
+            println("CCCCC " + routes.EnrolledForPTController.view.url)
             Redirect(routes.EnrolledForPTController.view)
           case Left(error) =>
+            println("TTTT " + error.toString)
             errorHandler.handleErrors(
               error,
               "[ReportSuspiciousIdController][continue]"

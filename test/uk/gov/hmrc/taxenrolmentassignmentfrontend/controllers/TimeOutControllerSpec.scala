@@ -17,29 +17,39 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import org.jsoup.Jsoup
+import play.api.Application
+import play.api.inject.bind
 import play.api.mvc.{AnyContent, AnyContentAsEmpty}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
+import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, Enrolments}
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{
-  predicates,
-  retrievalResponse,
-  retrievals
-}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{predicates, retrievalResponse, retrievals}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{ControllersBaseSpec, TestFixture}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.TimedOutView
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class TimeOutControllerSpec extends TestFixture {
+class TimeOutControllerSpec extends ControllersBaseSpec {
+
+  override lazy val overrides = Seq(
+    bind[TEASessionCache].toInstance(mockTeaSessionCache)
+  )
+
+  override implicit lazy val app: Application = localGuiceApplicationBuilder()
+    .overrides(
+      bind[AuthConnector].toInstance(mockAuthConnector)
+    )
+    .build()
+
+  lazy val controller = app.injector.instanceOf[TimeOutController]
 
   val view: TimedOutView = app.injector.instanceOf[TimedOutView]
-  val controller =
-    new TimeOutController(mockAuthAction, mcc, mockTeaSessionCache, view)
 
   def fakeReq(method: String,
               url: String = "N/A"): FakeRequest[AnyContentAsEmpty.type] = {
@@ -82,7 +92,7 @@ class TimeOutControllerSpec extends TestFixture {
       status(result) shouldBe OK
       val page = Jsoup
         .parse(contentAsString(result))
-      page.body().text() should include("timedout.heading")
+      page.body().text() should include(messages("timedout.heading"))
     }
   }
 }

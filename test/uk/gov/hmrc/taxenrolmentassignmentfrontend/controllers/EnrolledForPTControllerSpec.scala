@@ -16,36 +16,62 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 import org.jsoup.Jsoup
+import org.scalamock.handlers.{CallHandler1, CallHandler5}
+import play.api.Application
 import play.api.http.Status.OK
-import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
+import play.api.inject.bind
+import play.api.libs.json.{JsValue, Json}
+import play.api.mvc.{Action, AnyContent, BodyParsers}
+import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, Enrolment, Enrolments}
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
+import uk.gov.hmrc.http.cache.client.CacheMap
+import uk.gov.hmrc.service.TEAFResult
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo, ThrottleAction}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{NINO, accountDetails, buildFakeRequestWithSessionId, noEnrolments, predicates, randomAccountType, retrievalResponse, retrievals}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, ThrottleHelperSpec}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{BaseSpec, ControllersBaseSpec, TestFixture, ThrottleHelperSpec}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditHandler
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.ACCOUNT_TYPE
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{SilentAssignmentService, ThrottleApplied, ThrottleDoesNotApply, ThrottleResult, ThrottlingService}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTPage
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class EnrolledForPTControllerSpec extends TestFixture with ThrottleHelperSpec {
+class EnrolledForPTControllerSpec extends ControllersBaseSpec {
 
-  val view: EnrolledForPTPage =
-    app.injector.instanceOf[EnrolledForPTPage]
+  lazy val mockSilentAssignmentService = mock[SilentAssignmentService]
+  lazy val mockAccountCheckOrchestrator = mock[AccountCheckOrchestrator]
+  lazy val mockAuditHandler = mock[AuditHandler]
 
-  val controller = new EnrolledForPTController(
-    mockAuthAction,
-    mockAccountMongoDetailsAction,
-    mockThrottleAction,
-    mcc,
-    mockMultipleAccountsOrchestrator,
-    logger,
-    view,
-    errorHandler,
-    mockTeaSessionCache
+  lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
+  lazy val mockMultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
+
+  override lazy val overrides = Seq(
+    bind[TEASessionCache].toInstance(mockTeaSessionCache)
   )
+
+  override implicit lazy val app: Application = localGuiceApplicationBuilder()
+    .overrides(
+      bind[SilentAssignmentService].toInstance(mockSilentAssignmentService),
+      bind[AccountCheckOrchestrator].toInstance(mockAccountCheckOrchestrator),
+      bind[AuditHandler].toInstance(mockAuditHandler),
+      bind[ThrottlingService].toInstance(mockThrottlingService),
+      bind[AuthConnector].toInstance(mockAuthConnector),
+      bind[BodyParsers.Default].toInstance(testBodyParser),
+      bind[MultipleAccountsOrchestrator].toInstance(mockMultipleAccountsOrchestrator)
+    )
+    .build()
+
+  lazy val controller = app.injector.instanceOf[EnrolledForPTController]
+
+  lazy val view: EnrolledForPTPage =
+    app.injector.instanceOf[EnrolledForPTPage]
 
   "view" when {
     specificThrottleTests(controller.view)
@@ -85,7 +111,7 @@ class EnrolledForPTControllerSpec extends TestFixture with ThrottleHelperSpec {
         status(result) shouldBe OK
         Jsoup
           .parse(contentAsString(result))
-          .body().text() should include("enrolledForPT.heading")
+          .body().text() should include(messages("enrolledForPT.heading"))
       }
     }
 
@@ -152,7 +178,7 @@ class EnrolledForPTControllerSpec extends TestFixture with ThrottleHelperSpec {
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(res) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(res) should include("enrolmentError.heading")
+        contentAsString(res) should include(messages("enrolmentError.heading"))
       }
     }
 
@@ -190,7 +216,7 @@ class EnrolledForPTControllerSpec extends TestFixture with ThrottleHelperSpec {
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(res) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(res) should include("enrolmentError.heading")
+        contentAsString(res) should include(messages("enrolmentError.heading"))
       }
     }
   }

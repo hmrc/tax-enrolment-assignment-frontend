@@ -34,8 +34,8 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class TEASessionCache @Inject()(config: Configuration, val mongo: MongoComponent, val cascadeUpsert: CascadeUpsert)(implicit ec: ExecutionContext)
-  extends PlayMongoRepository[DatedCacheMap](
+class DefaultTEASessionCache @Inject()(config: Configuration, val mongo: MongoComponent, val cascadeUpsert: CascadeUpsert)(implicit ec: ExecutionContext)
+  extends PlayMongoRepository[DatedCacheMap] (
     mongoComponent = mongo,
     collectionName = config.get[String]("appName"),
     domainFormat = DatedCacheMap.formats,
@@ -59,7 +59,7 @@ class TEASessionCache @Inject()(config: Configuration, val mongo: MongoComponent
       )
     ),
     replaceIndexes = false
-  ) {
+  ) with TEASessionCache {
 
   def upsert(cm: CacheMap): Future[Boolean] = {
     val cmUpdated = DatedCacheMap(cm.id, cm.data)
@@ -125,6 +125,7 @@ class TEASessionCache @Inject()(config: Configuration, val mongo: MongoComponent
   def removeRecord(
     implicit request: RequestWithUserDetailsFromSession[_]
   ): Future[Boolean] = {
+    println("PPPPP this should be mocked")
     collectionDeleteOne(request.sessionID)
   }
 
@@ -138,4 +139,35 @@ class TEASessionCache @Inject()(config: Configuration, val mongo: MongoComponent
   ): Future[Boolean] = {
     updateLastUpdated(request.sessionID)
   }
+}
+
+trait TEASessionCache {
+  def upsert(cm: CacheMap): Future[Boolean]
+
+  def collectionDeleteOne(id: String): Future[Boolean]
+
+  def get(id: String): Future[Option[CacheMap]]
+
+  def updateLastUpdated(id: String): Future[Boolean]
+
+  def save[A](key: String, value: A)(
+    implicit request: RequestWithUserDetailsFromSession[_],
+    fmt: Format[A]
+  ): Future[CacheMap]
+
+  def remove(
+              key: String
+            )(implicit request: RequestWithUserDetailsFromSession[_]): Future[Boolean]
+
+  def removeRecord(
+                    implicit request: RequestWithUserDetailsFromSession[_]
+                  ): Future[Boolean]
+
+  def fetch()(
+    implicit request: RequestWithUserDetailsFromSession[_]
+  ): Future[Option[CacheMap]]
+
+  def extendSession()(
+    implicit request: RequestWithUserDetailsFromSession[_]
+  ): Future[Boolean]
 }

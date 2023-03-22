@@ -16,39 +16,57 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
+import play.api.Application
 import play.api.http.Status.OK
-import play.api.mvc.AnyContent
+import play.api.inject.bind
+import play.api.mvc.{AnyContent, BodyParsers}
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
-import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
+import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, Enrolments}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.PT_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, ThrottleHelperSpec, UrlPaths}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{ControllersBaseSpec, TestFixture, ThrottleHelperSpec, UrlPaths}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{SilentAssignmentService, ThrottlingService}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnotherAccount
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleHelperSpec {
+class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
+
+  lazy val mockSilentAssignmentService = mock[SilentAssignmentService]
+  lazy val mockAccountCheckOrchestrator = mock[AccountCheckOrchestrator]
+  lazy val mockAuditHandler = mock[AuditHandler]
+
+  lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
+  lazy val mockMultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
+
+  override lazy val overrides = Seq(
+    bind[TEASessionCache].toInstance(mockTeaSessionCache)
+  )
+
+  override implicit lazy val app: Application = localGuiceApplicationBuilder()
+    .overrides(
+      bind[SilentAssignmentService].toInstance(mockSilentAssignmentService),
+      bind[AccountCheckOrchestrator].toInstance(mockAccountCheckOrchestrator),
+      bind[AuditHandler].toInstance(mockAuditHandler),
+      bind[ThrottlingService].toInstance(mockThrottlingService),
+      bind[AuthConnector].toInstance(mockAuthConnector),
+      bind[BodyParsers.Default].toInstance(testBodyParser),
+      bind[MultipleAccountsOrchestrator].toInstance(mockMultipleAccountsOrchestrator)
+    )
+    .build()
+
+  lazy val controller = app.injector.instanceOf[PTEnrolmentOnOtherAccountController]
 
   val view: PTEnrolmentOnAnotherAccount =
     app.injector.instanceOf[PTEnrolmentOnAnotherAccount]
-
-  val controller = new PTEnrolmentOnOtherAccountController(
-    mockAuthAction,
-    mockAccountMongoDetailsAction,
-    mockThrottleAction,
-    mcc,
-    mockMultipleAccountsOrchestrator,
-    view,
-    logger,
-    errorHandler,
-    mockAuditHandler
-  )
 
   "view" when {
     specificThrottleTests(controller.view())
@@ -80,8 +98,8 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-          accountDetailsWithPT.copy(lastLoginDate = "27 common.month2 2022 common.dateToTime 12:00 PM")
-        )(requestWithAccountType(randomAccountType), stubbedMessagesApi)
+          accountDetailsWithPT.copy(lastLoginDate = s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
+        )(requestWithAccountType(randomAccountType), messagesApi)
 
         (mockAuditHandler
           .audit(_: AuditEvent)(_: HeaderCarrier))
@@ -96,11 +114,11 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
         contentAsString(result) shouldBe view(
           ptEnrolmentDataModelNone
             .copy(
-              currentAccountDetails = ptEnrolmentDataModelNone.currentAccountDetails.copy(lastLoginDate = "27 common.month2 2022 common.dateToTime 12:00 PM"),
-              ptAccountDetails = ptEnrolmentDataModelNone.ptAccountDetails.copy(lastLoginDate = "27 common.month2 2022 common.dateToTime 12:00 PM")
+              currentAccountDetails = ptEnrolmentDataModelNone.currentAccountDetails.copy(lastLoginDate = s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"),
+              ptAccountDetails = ptEnrolmentDataModelNone.ptAccountDetails.copy(lastLoginDate = s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
             ))(
           fakeRequest,
-          stubMessages()
+          messages
         ).toString
       }
     }
@@ -136,8 +154,8 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-          accountDetailsWithPT.copy(lastLoginDate = "27 common.month2 2022 common.dateToTime 12:00 PM")
-        )(requestWithAccountType(randomAccountType), stubbedMessagesApi)
+          accountDetailsWithPT.copy(lastLoginDate = s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
+        )(requestWithAccountType(randomAccountType), messagesApi)
 
         (mockAuditHandler
           .audit(_: AuditEvent)(_: HeaderCarrier))
@@ -150,11 +168,11 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
 
         status(result) shouldBe OK
         contentAsString(result) shouldBe view(ptEnrolmentModel.copy(
-          currentAccountDetails = ptEnrolmentModel.currentAccountDetails.copy(lastLoginDate = "27 common.month2 2022 common.dateToTime 12:00 PM"),
-          ptAccountDetails = ptEnrolmentModel.ptAccountDetails.copy(lastLoginDate = "27 common.month2 2022 common.dateToTime 12:00 PM")
+          currentAccountDetails = ptEnrolmentModel.currentAccountDetails.copy(lastLoginDate = s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"),
+          ptAccountDetails = ptEnrolmentModel.ptAccountDetails.copy(lastLoginDate = s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
         ))(
           fakeRequest,
-          stubMessages()
+          messages
         ).toString
       }
     }
@@ -190,8 +208,8 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-          accountDetailsWithPT.copy(lastLoginDate = "27 common.month2 2022 common.dateToTime 12:00 PM")
-        )(requestWithAccountType(randomAccountType), stubbedMessagesApi)
+          accountDetailsWithPT.copy(lastLoginDate = s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
+        )(requestWithAccountType(randomAccountType), messagesApi)
 
         (mockAuditHandler
           .audit(_: AuditEvent)(_: HeaderCarrier))
@@ -204,11 +222,11 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
 
         status(result) shouldBe OK
         contentAsString(result) shouldBe view(ptEnrolmentModel.copy(
-          currentAccountDetails = ptEnrolmentModel.currentAccountDetails.copy(lastLoginDate = "27 common.month2 2022 common.dateToTime 12:00 PM"),
-          ptAccountDetails = ptEnrolmentModel.ptAccountDetails.copy(lastLoginDate = "27 common.month2 2022 common.dateToTime 12:00 PM")
+          currentAccountDetails = ptEnrolmentModel.currentAccountDetails.copy(lastLoginDate = s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"),
+          ptAccountDetails = ptEnrolmentModel.ptAccountDetails.copy(lastLoginDate = s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
         ))(
           fakeRequest,
-          stubMessages()
+          messages
         ).toString
       }
     }
@@ -244,8 +262,8 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-          accountDetailsWithPT.copy(lastLoginDate = "27 common.month2 2022 common.dateToTime 12:00 PM")
-        )(requestWithAccountType(randomAccountType), stubbedMessagesApi)
+          accountDetailsWithPT.copy(lastLoginDate = s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
+        )(requestWithAccountType(randomAccountType), messagesApi)
 
         (mockAuditHandler
           .audit(_: AuditEvent)(_: HeaderCarrier))
@@ -258,11 +276,11 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
 
         status(result) shouldBe OK
         contentAsString(result) shouldBe view(ptEnrolmentModel.copy(
-          currentAccountDetails = ptEnrolmentModel.currentAccountDetails.copy(lastLoginDate = "27 common.month2 2022 common.dateToTime 12:00 PM"),
-          ptAccountDetails = ptEnrolmentModel.ptAccountDetails.copy(lastLoginDate = "27 common.month2 2022 common.dateToTime 12:00 PM")
+          currentAccountDetails = ptEnrolmentModel.currentAccountDetails.copy(lastLoginDate = s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"),
+          ptAccountDetails = ptEnrolmentModel.ptAccountDetails.copy(lastLoginDate = s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
         ))(
           fakeRequest,
-          stubMessages()
+          messages
         ).toString
       }
     }
@@ -298,8 +316,8 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-          accountDetailsWithPT.copy(lastLoginDate = "27 common.month2 2022 common.dateToTime 12:00 PM")
-        )(requestWithAccountType(randomAccountType), stubbedMessagesApi)
+          accountDetailsWithPT.copy(lastLoginDate = s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
+        )(requestWithAccountType(randomAccountType), messagesApi)
 
         (mockAuditHandler
           .audit(_: AuditEvent)(_: HeaderCarrier))
@@ -312,11 +330,11 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
 
         status(result) shouldBe OK
         contentAsString(result) shouldBe view(ptEnrolmentModel.copy(
-          currentAccountDetails = ptEnrolmentModel.currentAccountDetails.copy(lastLoginDate = "27 common.month2 2022 common.dateToTime 12:00 PM"),
-          ptAccountDetails = ptEnrolmentModel.ptAccountDetails.copy(lastLoginDate = "27 common.month2 2022 common.dateToTime 12:00 PM")
+          currentAccountDetails = ptEnrolmentModel.currentAccountDetails.copy(lastLoginDate = s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"),
+          ptAccountDetails = ptEnrolmentModel.ptAccountDetails.copy(lastLoginDate = s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
         ))(
           fakeRequest,
-          stubMessages()
+          messages
         ).toString
       }
     }
@@ -388,7 +406,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(res) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(res) should include("enrolmentError.heading")
+        contentAsString(res) should include(messages("enrolmentError.heading"))
       }
     }
     "no redirect url in cache" should {
@@ -411,7 +429,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends TestFixture with ThrottleH
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(res) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(res) should include("enrolmentError.heading")
+        contentAsString(res) should include(messages("enrolmentError.heading"))
       }
     }
   }

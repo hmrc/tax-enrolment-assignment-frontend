@@ -14,23 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.config
 
-import play.api.test.FakeRequest
-import play.api.test.Helpers._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{BaseSpec, TestFixture}
+import play.api.inject.{Binding, Module}
+import play.api.{Configuration, Environment}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.{DefaultTEASessionCache, TEASessionCache}
 
-class AuthorisationControllerSpec extends BaseSpec {
-
-  val controller = app.injector.instanceOf[AuthorisationController]
-
-  "notAuthorised" should {
-    "display the error page" in {
-      val result = controller.notAuthorised()(FakeRequest())
-
-      status(result) shouldBe UNAUTHORIZED
-      contentAsString(result) should include(messages("enrolmentError.heading"))
-    }
-  }
-
+class HmrcModule extends Module {
+  override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] =
+    Seq(
+      bind[TEASessionCache].to[DefaultTEASessionCache].eagerly()
+    )
 }

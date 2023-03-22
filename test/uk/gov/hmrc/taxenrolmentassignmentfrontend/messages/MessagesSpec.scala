@@ -19,7 +19,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.messages
 import org.scalatest.OptionValues
 import play.api.i18n.Messages
 import play.api.i18n.Messages.MessageSource
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{BaseSpec, TestFixture}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 
 import scala.io.Source
 

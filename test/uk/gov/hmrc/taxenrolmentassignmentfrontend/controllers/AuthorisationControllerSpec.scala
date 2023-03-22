@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{BaseSpec, TestFixture}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 
 class AuthorisationControllerSpec extends BaseSpec {
 

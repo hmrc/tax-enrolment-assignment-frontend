@@ -79,4 +79,11 @@ class EACDService @Inject()(eacdConnector: EACDConnector,
     }
   }
 
+  def deallocateEnrolment(groupId: String, enrolmentKey: String)(
+    implicit hc: HeaderCarrier,
+    ec: ExecutionContext
+  ): Future[Boolean] = {
+    eacdConnector.deallocateEnrolment(groupId, enrolmentKey).fold(_ => false, _ => true)
+  }
+
 }

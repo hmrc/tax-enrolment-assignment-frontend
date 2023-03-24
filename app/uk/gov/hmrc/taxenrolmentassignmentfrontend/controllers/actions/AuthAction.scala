@@ -30,6 +30,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.{IRSAKey, hmrcPTKey}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.EACDService
 
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
@@ -61,6 +62,7 @@ trait AuthIdentifierAction
 @Singleton
 class AuthAction @Inject()(
   override val authConnector: AuthConnector,
+  eacdService: EACDService,
   val parser: BodyParsers.Default,
   logger: EventLoggerService,
   val appConfig: AppConfig
@@ -88,6 +90,13 @@ class AuthAction @Inject()(
           val hasSAEnrolment =
             enrolments.getEnrolment(s"$IRSAKey").fold(false)(_.isActivated)
           val hasPTEnrolment = enrolments.getEnrolment(s"$hmrcPTKey").isDefined
+
+          if (hasPTEnrolment) {
+            ptMismatchCheck(enrolments.getEnrolment(s"$hmrcPTKey").head, nino, groupId).map {
+              case true => ""
+              case _ => ""
+            }
+          }
 
           val userDetails = UserDetailsFromSession(
             credentials.providerId,
@@ -135,6 +144,16 @@ class AuthAction @Inject()(
           )
         )
         Redirect(routes.AuthorisationController.notAuthorised().url)
+    }
+  }
+
+  private def ptMismatchCheck(enrolment: Enrolment, nino: String, groupId: String)(implicit hc: HeaderCarrier): Future[Boolean] = {
+    val ptNino = enrolment.identifiers.find(_.key == "NINO").map(_.value)
+
+    if (ptNino.getOrElse("") != nino) {
+      eacdService.deallocateEnrolment(groupId, "NINO")
+    } else {
+      Future.successful(false)
     }
   }
 }

@@ -85,6 +85,15 @@ object WiremockHelper extends Eventually with IntegrationPatience {
         )
     )
 
+  def stubDelete(url: String,
+               status: Integer): StubMapping =
+    stubFor(
+      delete(urlMatching(url))
+        .willReturn(
+          aResponse()
+            .withStatus(status)
+        )
+    )
   def stubPostWithAuthorizeHeaders(url: String,
                                    authorizeHeaderValue: String,
                                    status: Integer): StubMapping =

@@ -30,7 +30,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{logES2Er
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.{IRSAKey, hmrcPTKey}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{KnownFactQueryForNINO, KnownFactResponseForNINO, UserEnrolmentsListResponse, UsersAssignedEnrolment}
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 class EACDConnector @Inject()(httpClient: HttpClient,
                               logger: EventLoggerService,
@@ -164,7 +164,7 @@ class EACDConnector @Inject()(httpClient: HttpClient,
   def deallocateEnrolment(groupId: String, enrolmentKey: String)(
     implicit hc: HeaderCarrier,
     ec: ExecutionContext
-  ) = {
+  ): EitherT[Future, UpstreamErrorResponse, HttpResponse] = {
     val url =
       s"${appConfig.EACD_BASE_URL}/enrolment-store/groups/$groupId/enrolments/$enrolmentKey"
     EitherT(

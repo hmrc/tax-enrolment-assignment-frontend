@@ -62,7 +62,7 @@ trait AuthIdentifierAction
 @Singleton
 class AuthAction @Inject()(
   override val authConnector: AuthConnector,
-  eacdService: EACDService,
+//  eacdService: EACDService,
   val parser: BodyParsers.Default,
   logger: EventLoggerService,
   val appConfig: AppConfig
@@ -91,12 +91,12 @@ class AuthAction @Inject()(
             enrolments.getEnrolment(s"$IRSAKey").fold(false)(_.isActivated)
           val hasPTEnrolment = enrolments.getEnrolment(s"$hmrcPTKey").isDefined
 
-          if (hasPTEnrolment) {
-            ptMismatchCheck(enrolments.getEnrolment(s"$hmrcPTKey").head, nino, groupId).map {
-              case true => ""
-              case _ => ""
-            }
-          }
+//          if (hasPTEnrolment) {
+//            ptMismatchCheck(enrolments.getEnrolment(s"$hmrcPTKey").head, nino, groupId).map {
+//              case true => ""
+//              case _ => ""
+//            }
+//          }
 
           val userDetails = UserDetailsFromSession(
             credentials.providerId,
@@ -147,13 +147,13 @@ class AuthAction @Inject()(
     }
   }
 
-  private def ptMismatchCheck(enrolment: Enrolment, nino: String, groupId: String)(implicit hc: HeaderCarrier): Future[Boolean] = {
-    val ptNino = enrolment.identifiers.find(_.key == "NINO").map(_.value)
-
-    if (ptNino.getOrElse("") != nino) {
-      eacdService.deallocateEnrolment(groupId, "NINO")
-    } else {
-      Future.successful(false)
-    }
-  }
+//  private def ptMismatchCheck(enrolment: Enrolment, nino: String, groupId: String)(implicit hc: HeaderCarrier): Future[Boolean] = {
+//    val ptNino = enrolment.identifiers.find(_.key == "NINO").map(_.value)
+//
+//    if (ptNino.getOrElse("") != nino) {
+//      eacdService.deallocateEnrolment(groupId, s"HMRC-PT~NINO~$ptNino")
+//    } else {
+//      Future.successful(false)
+//    }
+//  }
 }

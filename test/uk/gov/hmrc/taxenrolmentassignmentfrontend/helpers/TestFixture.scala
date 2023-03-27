@@ -264,4 +264,11 @@ trait TestFixture
       implicit request: RequestWithUserDetailsFromSession[_]
     ): Future[Boolean] = Future.successful(true)
   }
+// TODO - Delete
+//  (mockEacdService.deallocateEnrolment(_: String, _: String)(
+//    _: HeaderCarrier,
+//    _: ExecutionContext
+//  ))
+//  .expects("testId", s"HMRC-PT~NINO~$NINO", *, *)
+//    .returning(Future.successful(true))
 }

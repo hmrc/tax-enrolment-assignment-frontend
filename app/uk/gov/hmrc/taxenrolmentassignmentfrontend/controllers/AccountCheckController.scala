@@ -19,13 +19,13 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 import cats.data.EitherT
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl._
+import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl.idFunctor
 import uk.gov.hmrc.play.bootstrap.binders._
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AuthAction, RequestWithUserDetailsFromSession, ThrottleAction}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AuthAction, AuthJourney, RequestWithUserDetailsFromSession, ThrottleAction}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{InvalidRedirectUrl, TaxEnrolmentAssignmentErrors}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
@@ -44,7 +44,7 @@ import scala.util.{Failure, Success, Try}
 class AccountCheckController @Inject()(
                                         silentAssignmentService: SilentAssignmentService,
                                         throttleAction: ThrottleAction,
-                                        authAction: AuthAction,
+                                        authJourney: AuthJourney,
                                         accountCheckOrchestrator: AccountCheckOrchestrator,
                                         auditHandler: AuditHandler,
                                         mcc: MessagesControllerComponents,
@@ -55,7 +55,7 @@ class AccountCheckController @Inject()(
 )(implicit ec: ExecutionContext)
 extends TEAFrontendController(mcc) {
 
-  def accountCheck(redirectUrl: RedirectUrl): Action[AnyContent] = authAction.async {
+  def accountCheck(redirectUrl: RedirectUrl): Action[AnyContent] = authJourney.authWithPTMismatchCheck.async {
     implicit request =>
       Try {
         redirectUrl.get(OnlyRelative | AbsoluteWithHostnameFromAllowlist(appConfig.validRedirectHostNames)).url

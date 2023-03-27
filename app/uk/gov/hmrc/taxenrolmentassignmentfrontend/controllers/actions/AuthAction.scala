@@ -30,7 +30,6 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.{IRSAKey, hmrcPTKey}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.EACDService
 
 import java.util.UUID
 import javax.inject.{Inject, Singleton}

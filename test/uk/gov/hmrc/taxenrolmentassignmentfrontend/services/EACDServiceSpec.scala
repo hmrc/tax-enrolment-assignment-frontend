@@ -165,47 +165,46 @@ class EACDServiceSpec extends TestFixture with ScalaFutures {
     }
   }
 
-//
-//  "deallocateEnrolment" when {
-//    "there is an existing HMRC-PT enrolment to delete" should {
-//      "return true if the request was successful" in {
-//
-//        (mockEacdConnector
-//          .deallocateEnrolment(_: String, _: String)(
-//            _: HeaderCarrier,
-//            _: ExecutionContext
-//          ))
-//          .expects("testId", s"HMRC-PT~NINO~$NINO", *, *)
-//          .returning(EitherT[Future, UpstreamErrorResponse, HttpResponse](Future.successful(Right(HttpResponse(NO_CONTENT, "")))))
-//
-//        val result = service.deallocateEnrolment("testId", s"HMRC-PT~NINO~$NINO")
-//
-//        whenReady(result) { res =>
-//          res shouldBe true
-//        }
-//
-//      }
-//      List(
-//        Status.BAD_REQUEST,
-//        Status.NOT_FOUND,
-//        Status.INTERNAL_SERVER_ERROR,
-//        Status.BAD_GATEWAY,
-//        Status.SERVICE_UNAVAILABLE
-//      ).foreach { errorStatus =>
-//        s"return false if the request was unsuccessful due to a $errorStatus response" in {
-//
-//          (mockEacdConnector
-//            .deallocateEnrolment(_: String, _: String)(
-//              _: HeaderCarrier,
-//              _: ExecutionContext
-//            ))
-//            .expects("testId", s"HMRC-PT~NINO~$NINO", *, *)
-//            .returning(EitherT[Future, UpstreamErrorResponse, HttpResponse](Future.successful(Left(UpstreamErrorResponse("", errorStatus)))))
-//
-//          val result = service.deallocateEnrolment("testId", s"HMRC-PT~NINO~$NINO")
-//          result.futureValue shouldBe false
-//        }
-//      }
-//    }
-//  }
+  "deallocateEnrolment" when {
+    "there is an existing HMRC-PT enrolment to delete" should {
+      "return true if the request was successful" in {
+
+        (mockEacdConnector
+          .deallocateEnrolment(_: String, _: String)(
+            _: HeaderCarrier,
+            _: ExecutionContext
+          ))
+          .expects("testId", s"HMRC-PT~NINO~$NINO", *, *)
+          .returning(EitherT[Future, UpstreamErrorResponse, HttpResponse](Future.successful(Right(HttpResponse(NO_CONTENT, "")))))
+
+        val result = service.deallocateEnrolment("testId", s"HMRC-PT~NINO~$NINO")
+
+        whenReady(result) { res =>
+          res shouldBe true
+        }
+
+      }
+      List(
+        Status.BAD_REQUEST,
+        Status.NOT_FOUND,
+        Status.INTERNAL_SERVER_ERROR,
+        Status.BAD_GATEWAY,
+        Status.SERVICE_UNAVAILABLE
+      ).foreach { errorStatus =>
+        s"return false if the request was unsuccessful due to a $errorStatus response" in {
+
+          (mockEacdConnector
+            .deallocateEnrolment(_: String, _: String)(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            ))
+            .expects("testId", s"HMRC-PT~NINO~$NINO", *, *)
+            .returning(EitherT[Future, UpstreamErrorResponse, HttpResponse](Future.successful(Left(UpstreamErrorResponse("", errorStatus)))))
+
+          val result = service.deallocateEnrolment("testId", s"HMRC-PT~NINO~$NINO")
+          result.futureValue shouldBe false
+        }
+      }
+    }
+  }
 }

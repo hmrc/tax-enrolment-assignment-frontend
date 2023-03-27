@@ -62,7 +62,6 @@ trait AuthIdentifierAction
 @Singleton
 class AuthAction @Inject()(
   override val authConnector: AuthConnector,
-//  eacdService: EACDService,
   val parser: BodyParsers.Default,
   logger: EventLoggerService,
   val appConfig: AppConfig
@@ -146,14 +145,4 @@ class AuthAction @Inject()(
         Redirect(routes.AuthorisationController.notAuthorised().url)
     }
   }
-
-//  private def ptMismatchCheck(enrolment: Enrolment, nino: String, groupId: String)(implicit hc: HeaderCarrier): Future[Boolean] = {
-//    val ptNino = enrolment.identifiers.find(_.key == "NINO").map(_.value)
-//
-//    if (ptNino.getOrElse("") != nino) {
-//      eacdService.deallocateEnrolment(groupId, s"HMRC-PT~NINO~$ptNino")
-//    } else {
-//      Future.successful(false)
-//    }
-//  }
 }

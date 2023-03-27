@@ -138,7 +138,7 @@ trait TestFixture
 
   val errorView: ErrorTemplate = app.injector.instanceOf[ErrorTemplate]
   lazy val mockAuthAction =
-    new AuthAction(mockAuthConnector, testBodyParser, logger, appConfig)
+    new AuthAction(mockAuthConnector, mockEacdService, testBodyParser, logger, appConfig)
   lazy val mockAccountMongoDetailsAction =
     new AccountMongoDetailsAction(
       mockTeaSessionCache,

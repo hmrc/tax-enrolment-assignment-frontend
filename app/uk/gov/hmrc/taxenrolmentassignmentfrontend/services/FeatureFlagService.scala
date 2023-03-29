@@ -19,7 +19,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.services
 import play.api.Logging
 import play.api.cache.AsyncCacheApi
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.admin.{DeletedToggle, FeatureFlag, FeatureFlagName}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.admin.{FeatureFlag, FeatureFlagName}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.admin.FeatureFlagRepository
 
 import javax.inject.{Inject, Singleton}
@@ -53,42 +53,4 @@ class FeatureFlagService @Inject()(
         .getFeatureFlag(flagName)
         .map(_.getOrElse(FeatureFlag(flagName, false)))
     }
-
-  def getAll: Future[List[FeatureFlag]] =
-    cache.getOrElseUpdate(allFeatureFlagsCacheKey, cacheValidFor) {
-      featureFlagRepository.getAllFeatureFlags.map { mongoFlags =>
-        val (deletedFlags, validMongoFlags) = mongoFlags.partition(_.name.isInstanceOf[DeletedToggle])
-
-        Future(deletedFlags.foreach { flag =>
-          featureFlagRepository.deleteFeatureFlag(flag.name).map {
-            case true  => logger.warn(s"Flag `${flag.name}` has been deleted from Mongo")
-            case false => logger.error(s"Flag `${flag.name}` could not be deleted from Mongo")
-          }
-        })
-
-        FeatureFlagName.allFeatureFlags
-          .foldLeft(validMongoFlags.reverse) { (featureFlags, missingFlag) =>
-            if (featureFlags.map(_.name).contains(missingFlag)) {
-              featureFlags
-            } else {
-              FeatureFlag(missingFlag, false) :: featureFlags
-            }
-          }
-          .reverse
-      }
-    }
-
-  def setAll(flags: Map[FeatureFlagName, Boolean]): Future[Unit] =
-    Future
-      .sequence(flags.keys.map(flag => cache.remove(flag.toString)))
-      .flatMap { _ =>
-        cache.remove(allFeatureFlagsCacheKey)
-        featureFlagRepository.setFeatureFlags(flags)
-      }
-      .map { _ =>
-        //blocking thread to let time to other containers to update their cache
-        Thread.sleep(appConfig.ehCacheTtlInSeconds * 1000)
-        ()
-      }
-
 }

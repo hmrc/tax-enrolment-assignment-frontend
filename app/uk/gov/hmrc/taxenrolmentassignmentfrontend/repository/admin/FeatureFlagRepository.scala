@@ -50,26 +50,11 @@ class FeatureFlagRepository @Inject()(
 
   private implicit val tc: TransactionConfiguration = TransactionConfiguration.strict
 
-  def deleteFeatureFlag(name: FeatureFlagName): Future[Boolean] =
-    collection
-      .deleteOne(Filters.equal("name", name.toString))
-      .map(_.wasAcknowledged())
-      .toSingle()
-      .toFuture()
-
   def getFeatureFlag(name: FeatureFlagName): Future[Option[FeatureFlag]] =
     Mdc.preservingMdc(
       collection
         .find(Filters.equal("name", name.toString))
         .headOption()
-    )
-
-  def getAllFeatureFlags: Future[List[FeatureFlag]] =
-    Mdc.preservingMdc(
-      collection
-        .find()
-        .toFuture()
-        .map(_.toList)
     )
 
   def setFeatureFlag(name: FeatureFlagName, enabled: Boolean): Future[Boolean] =
@@ -84,18 +69,4 @@ class FeatureFlagRepository @Inject()(
         .toSingle()
         .toFuture()
     )
-
-  def setFeatureFlags(flags: Map[FeatureFlagName, Boolean]): Future[Unit] = {
-    val featureFlags = flags.map { case (flag, status) =>
-      FeatureFlag(flag, status, flag.description)
-    }.toList
-    Mdc.preservingMdc(
-      withSessionAndTransaction(session =>
-        for {
-          _ <- collection.deleteMany(session, filter = in("name", flags.keys.toSeq: _*)).toFuture()
-          _ <- collection.insertMany(session, featureFlags).toFuture()
-        } yield ()
-      )
-    )
-  }
 }

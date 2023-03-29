@@ -73,6 +73,5 @@ class PTMismatchCheckActionImpl @Inject() (
   override protected def executionContext: ExecutionContext = ec
 }
 
-
 @ImplementedBy(classOf[PTMismatchCheckActionImpl])
 trait PTMismatchCheckAction extends ActionFunction[RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSession]

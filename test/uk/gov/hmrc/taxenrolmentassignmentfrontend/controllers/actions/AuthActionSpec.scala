@@ -32,7 +32,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class AuthActionSpec extends TestFixture {
 
   def authAction: AuthAction =
-    new AuthAction(mockAuthConnector, mockEacdService, testBodyParser, logger, appConfig)
+    new AuthAction(mockAuthConnector, testBodyParser, logger, appConfig)
 
   def defaultAsyncBody(
     requestTestCase: RequestWithUserDetailsFromSession[_] => Assertion

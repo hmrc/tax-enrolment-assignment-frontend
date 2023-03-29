@@ -40,10 +40,10 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SINGLE_ACCOUNT
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{EACDConnector, IVConnector, LegacyAuthConnector, TaxEnrolmentsConnector}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignOutController
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.ErrorHandler
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{TaxEnrolmentAssignmentErrors, UnexpectedError}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{randomAccountType, userDetailsNoEnrolments}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
@@ -55,6 +55,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.services._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.UnderConstructionView
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
+import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 
 trait TestFixture
@@ -138,7 +139,15 @@ trait TestFixture
 
   val errorView: ErrorTemplate = app.injector.instanceOf[ErrorTemplate]
   lazy val mockAuthAction =
-    new AuthAction(mockAuthConnector, mockEacdService, testBodyParser, logger, appConfig)
+    new AuthAction(mockAuthConnector, testBodyParser, logger, appConfig)
+
+  def mockPTMismatchCheckAction(userDetails: UserDetailsFromSession): PTMismatchCheckAction = new PTMismatchCheckAction {
+    override def invokeBlock[A](request: RequestWithUserDetailsFromSession[A], block: RequestWithUserDetailsFromSession[A] => Future[Result]): Future[Result] =
+      block(RequestWithUserDetailsFromSession(request, userDetails, s"sessionId-${UUID.randomUUID().toString}"))
+
+    override protected def executionContext: ExecutionContext = ec
+  }
+
   lazy val mockAccountMongoDetailsAction =
     new AccountMongoDetailsAction(
       mockTeaSessionCache,

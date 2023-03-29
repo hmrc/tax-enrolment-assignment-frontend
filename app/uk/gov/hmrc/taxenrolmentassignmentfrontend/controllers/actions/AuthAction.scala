@@ -89,13 +89,6 @@ class AuthAction @Inject()(
             enrolments.getEnrolment(s"$IRSAKey").fold(false)(_.isActivated)
           val hasPTEnrolment = enrolments.getEnrolment(s"$hmrcPTKey").isDefined
 
-//          if (hasPTEnrolment) {
-//            ptMismatchCheck(enrolments.getEnrolment(s"$hmrcPTKey").head, nino, groupId).map {
-//              case true => ""
-//              case _ => ""
-//            }
-//          }
-
           val userDetails = UserDetailsFromSession(
             credentials.providerId,
             nino,

@@ -27,7 +27,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AuthJourney, RequestWithUserDetailsFromSession}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{TaxEnrolmentAssignmentErrors, UnexpectedResponseFromIV, UnexpectedResponseFromTaxEnrolments}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, UrlPaths}
@@ -39,10 +39,13 @@ class AccountCheckControllerSpec extends TestFixture {
 
   val teaSessionCache = new TestTeaSessionCache
 
+  lazy val mockAuthJourney =
+    new AuthJourney(mockAuthAction, mockPTMismatchCheckAction(userDetailsNoEnrolments))
+
   val controller = new AccountCheckController(
     mockSilentAssignmentService,
     mockThrottleAction,
-    mockAuthAction,
+    mockAuthJourney,
     mockAccountCheckOrchestrator,
     mockAuditHandler,
     mcc,

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.services
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.services.admin
 
 import play.api.Logging
 import play.api.cache.AsyncCacheApi

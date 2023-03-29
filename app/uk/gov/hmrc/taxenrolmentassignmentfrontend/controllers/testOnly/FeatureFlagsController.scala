@@ -20,7 +20,7 @@ import play.api.i18n.I18nSupport
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.admin.FeatureFlagName
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.FeatureFlagService
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.admin.FeatureFlagService
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext

@@ -23,7 +23,8 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter.fromRequestAndSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.admin.PtNinoMismatchCheckerToggle
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.hmrcPTKey
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, FeatureFlagService}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.EACDService
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.admin.FeatureFlagService
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}

@@ -34,7 +34,7 @@ class FeatureFlagService @Inject()(
 )(implicit
   ec: ExecutionContext
 ) extends Logging {
-  val cacheValidFor: FiniteDuration   =
+  lazy val cacheValidFor: FiniteDuration   =
     Duration(appConfig.ehCacheTtlInSeconds, Seconds)
   private val allFeatureFlagsCacheKey = "*$*$allFeatureFlags*$*$"
 

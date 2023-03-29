@@ -151,6 +151,17 @@ object TestData {
       hasSAEnrolment = true
     )
   }
+  val userDetailsWithMismatchNino: UserDetailsFromSession =
+    UserDetailsFromSession(
+      CREDENTIAL_ID,
+      "mismatch", // TODO - Add NINO generator
+      GROUP_ID,
+      Some(CURRENT_USER_EMAIL),
+      Individual,
+      enrolments = ptEnrolmentOnly,
+      hasPTEnrolment = false,
+      hasSAEnrolment = false,
+    )
 
   val ivNinoStoreEntryCurrent = IVNinoStoreEntry(CREDENTIAL_ID, Some(200))
   val ivNinoStoreEntry1 = IVNinoStoreEntry("6902202884164548", Some(50))

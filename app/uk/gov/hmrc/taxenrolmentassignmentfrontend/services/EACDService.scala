@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.services
 
 import cats.data.EitherT
 import cats.implicits._
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, UpstreamErrorResponse}
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.EACDConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
@@ -82,8 +82,6 @@ class EACDService @Inject()(eacdConnector: EACDConnector,
   def deallocateEnrolment(groupId: String, enrolmentKey: String)(
     implicit hc: HeaderCarrier,
     ec: ExecutionContext
-  ): Future[Boolean] = {
-    eacdConnector.deallocateEnrolment(groupId, enrolmentKey).fold(_ => false, _ => true)
-  }
-
+  ): EitherT[Future, UpstreamErrorResponse, HttpResponse] =
+    eacdConnector.deallocateEnrolment(groupId, enrolmentKey)
 }

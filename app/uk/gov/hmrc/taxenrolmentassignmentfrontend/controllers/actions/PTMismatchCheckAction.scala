@@ -48,7 +48,6 @@ class PTMismatchCheckActionImpl @Inject() (
         ptEnrolment.map(enrolment => {
           ptMismatchCheck(enrolment, userDetails.nino, userDetails.groupId).map {
             case true =>
-              eacdService.deallocateEnrolment(userDetails.groupId, s"$hmrcPTKey")
               block(request)
               /// TODO - Does this need to go back through Auth by way of `Future.successful(Redirect(routes.AccountCheckController.().url))`
             case _ => block(request)
@@ -64,7 +63,7 @@ class PTMismatchCheckActionImpl @Inject() (
     val ptNino = enrolment.identifiers.find(_.key == "NINO").map(_.value)
 
     if (ptNino.getOrElse("") != nino) {
-      eacdService.deallocateEnrolment(groupId, s"HMRC-PT~NINO~$ptNino")
+      eacdService.deallocateEnrolment(groupId, s"$hmrcPTKey~NINO~$ptNino").isRight
     } else {
       Future.successful(false)
     }

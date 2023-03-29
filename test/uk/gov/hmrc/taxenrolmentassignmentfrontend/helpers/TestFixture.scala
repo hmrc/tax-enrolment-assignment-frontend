@@ -128,6 +128,7 @@ trait TestFixture
     mock[SilentAssignmentService]
   val mockAuditHandler: AuditHandler = mock[AuditHandler]
   val mockThrottlingService = mock[ThrottlingService]
+  val mockFeatureFlagService = mock[FeatureFlagService]
   implicit lazy val fakeRequest: FakeRequest[AnyContentAsEmpty.type] =
     FakeRequest("", requestPath)
       .withSession(

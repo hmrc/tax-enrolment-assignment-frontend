@@ -179,11 +179,9 @@ class EACDServiceSpec extends TestFixture with ScalaFutures {
 
         val result = service.deallocateEnrolment("testId", s"HMRC-PT~NINO~$NINO")
 
-        whenReady(result) { res =>
-          res shouldBe true
-        }
-
+        result.value.futureValue shouldBe Right(HttpResponse(NO_CONTENT, ""))
       }
+
       List(
         Status.BAD_REQUEST,
         Status.NOT_FOUND,
@@ -202,7 +200,7 @@ class EACDServiceSpec extends TestFixture with ScalaFutures {
             .returning(EitherT[Future, UpstreamErrorResponse, HttpResponse](Future.successful(Left(UpstreamErrorResponse("", errorStatus)))))
 
           val result = service.deallocateEnrolment("testId", s"HMRC-PT~NINO~$NINO")
-          result.futureValue shouldBe false
+          result.value.futureValue shouldBe Left(UpstreamErrorResponse("", errorStatus))
         }
       }
     }

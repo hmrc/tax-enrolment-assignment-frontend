@@ -41,11 +41,6 @@ class AccountCheckControllerSpec extends TestFixture {
 
   lazy val returnUrl = RedirectUrl.apply(testOnly.routes.TestOnlyController.successfulCall.url)
 
-//  def harness[A](block: UserRequest[_] => Future[Result])(implicit request: UserRequest[A]): Future[Result] = {
-//    lazy val actionProvider = app.injector.instanceOf[GetPersonDetailsAction]
-//    actionProvider.invokeBlock(request, block)
-//  }
-
   "accountCheck" when {
     "a single credential exists for a given nino with no PT enrolment" should {
       s"silently assign the HMRC-PT Enrolment and redirect to users redirect url" when {
@@ -327,9 +322,9 @@ class AccountCheckControllerSpec extends TestFixture {
         .expects(predicates, retrievals, *, *)
         .returning(Future.successful(retrievalResponse(enrolments = saEnrolmentOnly)))
 
-    def mockControllerWithAuthJourney(userDetals: UserDetailsFromSession = userDetailsNoEnrolments) = {
+    def mockControllerWithAuthJourney(userDetails: UserDetailsFromSession = userDetailsNoEnrolments) = {
       lazy val mockAuthJourney =
-        new AuthJourney(mockAuthAction, mockPTMismatchCheckAction(userDetals))
+        new AuthJourney(mockAuthAction, mockPTMismatchCheckAction(userDetails))
 
       new AccountCheckController(
         mockSilentAssignmentService,

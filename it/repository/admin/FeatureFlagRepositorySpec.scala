@@ -14,21 +14,23 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.repositories.admin
+package repository.admin
 
+import helpers.IntegrationSpecBase
 import org.mongodb.scala.MongoWriteException
 import org.mongodb.scala.bson.BsonDocument
 import org.scalatest.concurrent.PatienceConfiguration
+import play.api.{Application, inject}
+import play.api.inject.Injector
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.test.Helpers.{await, defaultAwaitTimeout}
+import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.admin.{FeatureFlag, PtNinoMismatchCheckerToggle}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.admin.DefaultFeatureFlagRepository
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.admin.{DefaultFeatureFlagRepository, FeatureFlagRepository}
 
-class FeatureFlagRepositorySpec extends TestFixture with DefaultPlayMongoRepositorySupport[FeatureFlag] with PatienceConfiguration {
+class FeatureFlagRepositorySpec extends IntegrationSpecBase with DefaultPlayMongoRepositorySupport[FeatureFlag] {
 
-  override protected lazy val optSchema = Some(BsonDocument("""
+  override lazy val optSchema = Some(BsonDocument("""
       { bsonType: "object"
       , required: [ "_id", "name", "isEnabled" ]
       , properties:
@@ -54,7 +56,7 @@ class FeatureFlagRepositorySpec extends TestFixture with DefaultPlayMongoReposit
     .configure(Map("mongodb.uri" -> mongoUri) ++ configValues)
     .build()
 
-  lazy val repository = inject[DefaultFeatureFlagRepository]
+  lazy val repository = app.injector.instanceOf[DefaultFeatureFlagRepository]
 
   "getFlag" must {
     "return None if there is no record" in {

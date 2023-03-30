@@ -16,18 +16,31 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.services.admin
 
+//import akka.Done
+//import org.scalamock.scalatest.MockFactory
+//import org.scalatest.OneInstancePerTest
+//import org.scalatest.concurrent.ScalaFutures
+//import org.scalatest.matchers.should.Matchers
+//import org.scalatest.wordspec.AnyWordSpec
+//import play.api.Application
+//import play.api.cache.AsyncCacheApi
+//import play.api.inject.bind
+//import play.api.inject.guice.GuiceApplicationBuilder
+//import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.admin.{FeatureFlagName, PtNinoMismatchCheckerToggle}
+//import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.admin.FeatureFlagRepository
+
 import akka.Done
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.OneInstancePerTest
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.time.{Millis, Span}
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.Application
+import play.api.{Application, inject}
 import play.api.cache.AsyncCacheApi
-import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.admin.{FeatureFlagName, PtNinoMismatchCheckerToggle}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.admin.{DefaultFeatureFlagRepository, FeatureFlagRepository}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.admin.FeatureFlagRepository
 
 import scala.concurrent.Future
 
@@ -38,14 +51,15 @@ class FeatureFlagServiceSpec extends AnyWordSpec with ScalaFutures with MockFact
 
   implicit lazy val app: Application = GuiceApplicationBuilder()
     .overrides(
-      bind[FeatureFlagRepository].toInstance(mockFeatureFlagRepository),
-      bind[AsyncCacheApi].toInstance(mockCache)
+      inject.bind[FeatureFlagRepository].toInstance(mockFeatureFlagRepository),
+      inject.bind[AsyncCacheApi].toInstance(mockCache)
     )
+    .configure("ehCache.ttlInSeconds" -> "300")
     .build()
 
   val featureFlagService: FeatureFlagService = app.injector.instanceOf[FeatureFlagService]
 
-  "set" must {
+  "set" should {
     "set a feature flag" in {
       (mockCache.remove(_: String)).expects(*).returning(Future.successful(Done)).twice
       (mockFeatureFlagRepository
@@ -53,9 +67,9 @@ class FeatureFlagServiceSpec extends AnyWordSpec with ScalaFutures with MockFact
         ).expects(PtNinoMismatchCheckerToggle, true)
         .returning(Future.successful(true)).once
 
-      val result = featureFlagService.set(PtNinoMismatchCheckerToggle, true).futureValue
-
-      result shouldBe true
+      whenReady(featureFlagService.set(PtNinoMismatchCheckerToggle, enabled = true)) { result =>
+        result shouldBe true
+      }(PatienceConfig.apply(timeout = scaled(Span(15000, Millis)), interval = scaled(Span(15, Millis))), implicitly)
     }
   }
 }

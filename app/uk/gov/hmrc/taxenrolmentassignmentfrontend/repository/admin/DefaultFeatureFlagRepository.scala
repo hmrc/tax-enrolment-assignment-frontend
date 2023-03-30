@@ -45,10 +45,7 @@ class DefaultFeatureFlagRepository @Inject()(
         )
       ),
       extraCodecs = Codecs.playFormatSumCodecs(FeatureFlagName.formats)
-    )
-    with Transactions with FeatureFlagRepository {
-
-  private implicit val tc: TransactionConfiguration = TransactionConfiguration.strict
+    ) with FeatureFlagRepository {
 
   def deleteFeatureFlag(name: FeatureFlagName): Future[Boolean] =
     collection

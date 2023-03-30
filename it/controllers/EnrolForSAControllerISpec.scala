@@ -18,44 +18,41 @@ package controllers
 
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import helpers.TestITData._
-import helpers.WiremockHelper.{stubAuthorizePost}
-import helpers.{TestHelper, ThrottleHelperISpec}
-import play.api.http.Status
-import play.api.libs.ws.DefaultWSCookie
+import play.api.test.Helpers.{GET, defaultAwaitTimeout, redirectLocation, route, status, writeableOf_AnyContentAsEmpty}
+import helpers.{IntegrationSpecBase, ItUrlPaths, ThrottleHelperISpec}
+import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK, SEE_OTHER}
+import play.api.mvc.Cookie
+import play.api.test.FakeRequest
 
-class EnrolForSAControllerISpec extends TestHelper with Status with ThrottleHelperISpec {
+class EnrolForSAControllerISpec extends IntegrationSpecBase {
 
-  val urlPath: String = UrlPaths.enrolForSAPath
-
+  val urlPath: String = ItUrlPaths.enrolForSAPath
 
   s"GET to $urlPath" should {
 
     s"return $SEE_OTHER and redirect user to the business-tax-account when SA enrolment found" when {
       s"User hasSA == true" in {
         stubAuthoriseSuccess(hasSAEnrolment = true)
-        val res = buildRequest(urlPath)
-          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
-          .get()
 
-        whenReady(res) { resp =>
-          resp.status shouldBe SEE_OTHER
-          resp.header("Location").get should include(appConfig.btaUrl)
-        }
+        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+          .withSession(xAuthToken)
+        val result = route(app, request).get
+
+          status(result) shouldBe SEE_OTHER
+         redirectLocation(result).get should include(appConfig.btaUrl)
+
       }
     }
 
     s"return $INTERNAL_SERVER_ERROR and when No SA enrolment found" when {
       s"User hasSA == false" in {
         stubAuthoriseSuccess()
-        val res = buildRequest(urlPath)
-          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
-          .get()
 
-        whenReady(res) { resp =>
-          resp.status shouldBe INTERNAL_SERVER_ERROR
-        }
+        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+          .withSession(xSessionId, xAuthToken)
+        val result = route(app, request).get
+
+          status(result) shouldBe INTERNAL_SERVER_ERROR
       }
     }
   }

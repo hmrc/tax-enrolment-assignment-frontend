@@ -41,7 +41,8 @@ class UsersGroupsSearchService @Inject()(
     request: RequestWithUserDetailsFromSessionAndMongo[_]
   ): TEAFResult[AccountDetails] = EitherT {
     request.accountDetailsFromMongo.optAccountDetails(credId) match {
-      case Some(entry) => Future.successful(Right(entry))
+      case Some(entry) =>
+        Future.successful(Right(entry))
       case None =>
         getAccountDetailsFromUsersGroupSearch(credId, accountDetailsForCredential(credId)).value
     }

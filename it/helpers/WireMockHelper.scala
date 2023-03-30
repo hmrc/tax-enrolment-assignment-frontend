@@ -17,25 +17,44 @@
 package helpers
 
 import com.github.tomakehurst.wiremock.WireMockServer
-import com.github.tomakehurst.wiremock.client.WireMock
-import com.github.tomakehurst.wiremock.client.WireMock._
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration
+import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, containing, equalTo, equalToJson, get, post, postRequestedFor, put, stubFor, urlEqualTo, urlMatching, urlPathEqualTo, verify}
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
 import com.github.tomakehurst.wiremock.matching.StringValuePattern
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
-import org.scalatest.concurrent.{Eventually, IntegrationPatience}
-import org.scalatestplus.play.ServerProvider
-import org.scalatestplus.play.guice.GuiceOneServerPerSuite
+import org.scalatest.concurrent.Eventually
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 import play.api.libs.json.{JsString, Json}
-import play.api.libs.ws.{WSClient, WSRequest}
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core.{AuthProviders, ConfidenceLevel}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
 
-object WiremockHelper extends Eventually with IntegrationPatience {
-  val wiremockPort = 1111
-  val wiremockHost = "localhost"
-  val wiremockURL = s"http://$wiremockHost:$wiremockPort"
+trait WireMockHelper extends Eventually with BeforeAndAfterAll with BeforeAndAfterEach {
+  this: Suite =>
+
+  protected val server: WireMockServer = new WireMockServer(wireMockConfig().dynamicPort())
+
+  override def beforeAll(): Unit = {
+    super.beforeAll()
+    server.start()
+  }
+
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    server.resetAll()
+  }
+
+  override def afterAll(): Unit = {
+    super.afterAll()
+    server.stop()
+  }
+
+  def stubGetMatching(url: String,
+                      status: Integer,
+                      responseBody: String): StubMapping =
+    server.stubFor(
+      get(urlEqualTo(url))
+        .willReturn(aResponse().withStatus(status).withBody(responseBody))
+    )
 
   def stubAuthorizePost(status: Integer, responseBody: String): StubMapping = {
     val authorizePath = "/auth/authorise"
@@ -60,7 +79,7 @@ object WiremockHelper extends Eventually with IntegrationPatience {
 
   def stubAuthorizePostUnauthorised(failureReason: String): StubMapping = {
     val failureReasonMsg = s"""MDTP detail=\"$failureReason\""""
-    stubFor(
+    server.stubFor(
       post(urlMatching("/auth/authorise"))
         .willReturn(
           aResponse()
@@ -73,8 +92,8 @@ object WiremockHelper extends Eventually with IntegrationPatience {
   def stubPost(url: String,
                requestBody: StringValuePattern,
                status: Integer,
-               responseBody: String): StubMapping =
-    stubFor(
+               responseBody: String): StubMapping = {
+    server.stubFor(
       post(urlMatching(url))
         .withRequestBody(requestBody)
         .willReturn(
@@ -84,11 +103,12 @@ object WiremockHelper extends Eventually with IntegrationPatience {
             .withBody(responseBody)
         )
     )
+  }
 
   def stubPostWithAuthorizeHeaders(url: String,
                                    authorizeHeaderValue: String,
                                    status: Integer): StubMapping =
-    stubFor(
+    server.stubFor(
       post(urlMatching(url))
         .withHeader("Authorization", equalTo(authorizeHeaderValue))
         .willReturn(
@@ -100,7 +120,7 @@ object WiremockHelper extends Eventually with IntegrationPatience {
   def stubPutWithAuthorizeHeaders(url: String,
                                   authorizeHeaderValue: String,
                                   status: Integer): StubMapping =
-    stubFor(
+    server.stubFor(
       put(urlPathEqualTo(url))
         .withHeader("Authorization", equalTo(authorizeHeaderValue))
         .willReturn(
@@ -112,13 +132,13 @@ object WiremockHelper extends Eventually with IntegrationPatience {
   def stubPost(url: String,
                status: Integer,
                responseBody: String): StubMapping =
-    stubFor(
+    server.stubFor(
       post(urlMatching(url))
         .willReturn(aResponse().withStatus(status).withBody(responseBody))
     )
 
   def stubPut(url: String, status: Integer, responseBody: String): StubMapping =
-    stubFor(
+    server.stubFor(
       put(urlMatching(url))
         .willReturn(aResponse().withStatus(status).withBody(responseBody))
     )
@@ -126,7 +146,7 @@ object WiremockHelper extends Eventually with IntegrationPatience {
                              status: Integer,
                              requestBody: String,
                              responseBody: String): StubMapping =
-    stubFor(
+    server.stubFor(
       put(urlMatching(url))
         .withRequestBody(equalToJson(requestBody))
         .willReturn(aResponse().withStatus(status).withBody(responseBody))
@@ -136,35 +156,27 @@ object WiremockHelper extends Eventually with IntegrationPatience {
                             queryParamValue: String,
                             status: Integer,
                             responseBody: String): StubMapping =
-    stubFor(
+    server.stubFor(
       get(urlPathEqualTo(url))
         .withQueryParam(queryParamKey, equalTo(queryParamValue))
         .willReturn(aResponse().withStatus(status).withBody(responseBody))
     )
 
   def stubGet(url: String, status: Integer, responseBody: String): StubMapping =
-    stubFor(
+    server.stubFor(
       get(urlPathEqualTo(url))
-        .willReturn(aResponse().withStatus(status).withBody(responseBody))
-    )
-
-  def stubGetMatching(url: String,
-                      status: Integer,
-                      responseBody: String): StubMapping =
-    stubFor(
-      get(urlEqualTo(url))
         .willReturn(aResponse().withStatus(status).withBody(responseBody))
     )
 
   def verifyNoPOSTmade(url: String) = {
     eventually(
-      verify(0,
+      server.verify(0,
         postRequestedFor(urlMatching(url))
       ))
   }
   def verifyAuditEventSent(auditEvent: AuditEvent) = {
     eventually(
-      verify(
+      server.verify(
         postRequestedFor(urlMatching("/write/audit"))
           .withRequestBody(
             containing(s""""auditType":"${auditEvent.auditType}"""")
@@ -173,35 +185,6 @@ object WiremockHelper extends Eventually with IntegrationPatience {
       )
     )
   }
-}
 
-trait WiremockHelper extends ServerProvider {
-  self: GuiceOneServerPerSuite =>
 
-  import WiremockHelper._
-
-  lazy val ws: WSClient = app.injector.instanceOf[WSClient]
-
-  lazy val wmConfig: WireMockConfiguration = wireMockConfig().port(wiremockPort)
-  lazy val wireMockServer = new WireMockServer(wmConfig)
-
-  def startWiremock(): Unit = {
-    WireMock.configureFor(wiremockHost, wiremockPort)
-    wireMockServer.start()
-  }
-
-  def stopWiremock(): Unit = wireMockServer.stop()
-
-  def resetWiremock(): Unit = WireMock.reset()
-
-  def buildRequest(path: String,
-                   followRedirects: Boolean = false): WSRequest = {
-    ws.url(s"http://localhost:$port$path")
-      .withFollowRedirects(followRedirects)
-  }
-
-  def buildTestOnlyRequest(path: String,
-                           followRedirects: Boolean = false): WSRequest =
-    ws.url(s"http://localhost:$port$path")
-      .withFollowRedirects(followRedirects)
 }

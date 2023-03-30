@@ -27,7 +27,7 @@ import org.scalatest.{BeforeAndAfterEach, OneInstancePerTest, Suite}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.i18n.{Lang, Messages, MessagesApi, MessagesImpl}
 import play.api.{Application, Configuration}
-import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.inject.guice.{GuiceApplicationBuilder, GuiceableModule}
 import play.api.mvc.{AnyContent, AnyContentAsEmpty, Request}
 import play.api.test.{FakeRequest, Injecting}
 import uk.gov.hmrc.domain.{Nino, Generator => NinoGenerator}
@@ -47,6 +47,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUN
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{TENCrypto, ThrottleDoesNotApply}
 
 import scala.concurrent.{ExecutionContext, Future}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.HmrcModule
 
 trait BaseSpec
     extends AnyWordSpec with GuiceOneAppPerSuite with Matchers with PatienceConfiguration with BeforeAndAfterEach
@@ -64,11 +65,12 @@ trait BaseSpec
     )
 
   lazy val overrides = Seq(
-    bind[TEASessionCache].toInstance(new TestTeaSessionCache).eagerly()
+    bind[TEASessionCache].toInstance(new TestTeaSessionCache)
   )
 
   protected def localGuiceApplicationBuilder(): GuiceApplicationBuilder =
     GuiceApplicationBuilder()
+      .disable[HmrcModule]
       .overrides(overrides)
       .configure(configValues)
 
@@ -140,12 +142,7 @@ trait BaseSpec
 
     override def removeRecord(
                                implicit request: RequestWithUserDetailsFromSession[_]
-                             ): Future[Boolean] = {
-      println("PPP this is mock[removeRecord]")
-      val ex = new RuntimeException("But why!!!!")
-      ex.printStackTrace()
-      Future.successful(true)
-    }
+                             ): Future[Boolean] = ???
 
     override def fetch()(
       implicit request: RequestWithUserDetailsFromSession[_]

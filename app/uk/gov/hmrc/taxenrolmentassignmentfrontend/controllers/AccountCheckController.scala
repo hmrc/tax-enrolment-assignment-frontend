@@ -17,6 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import cats.data.EitherT
+import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl._
@@ -37,7 +38,8 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration.DurationInt
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
 @Singleton
@@ -57,7 +59,6 @@ extends TEAFrontendController(mcc) {
 
   def accountCheck(redirectUrl: RedirectUrl): Action[AnyContent] = authAction.async {
     implicit request =>
-      println("PPPPPPPP")
       Try {
         redirectUrl.get(OnlyRelative | AbsoluteWithHostnameFromAllowlist(appConfig.validRedirectHostNames)).url
       } match {
@@ -78,15 +79,8 @@ extends TEAFrontendController(mcc) {
 
   private def handleRequest(redirectUrl: String)(implicit request: RequestWithUserDetailsFromSession[_],
   hc: HeaderCarrier): TEAFResult[(AccountTypes.Value, Option[Result])] = {
-    println("PPP UUUUU")
     for {
-      _ <- {
-        val x = EitherT.right[TaxEnrolmentAssignmentErrors](sessionCache.save[String](REDIRECT_URL, redirectUrl)(request, implicitly))
-        x.map { y =>
-          println("XXXXXX " + y)
-        }
-        x
-      }
+      _ <- EitherT.right[TaxEnrolmentAssignmentErrors](sessionCache.save[String](REDIRECT_URL, redirectUrl)(request, implicitly))
       accountType <- accountCheckOrchestrator.getAccountType
       throttle <- EitherT.right[TaxEnrolmentAssignmentErrors](throttleAction.throttle(accountType, redirectUrl))
       _ <- enrolForPTIfRequired(accountType, throttle.isEmpty)
@@ -117,9 +111,7 @@ extends TEAFrontendController(mcc) {
   ): TEAFResult[Unit] = {
     val accountTypesToEnrolForPT = List(SINGLE_ACCOUNT, MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER)
     val hasPTEnrolmentAlready = request.userDetails.hasPTEnrolment
-    println(s"PPP $isThrottled && $hasPTEnrolmentAlready && ${accountTypesToEnrolForPT.contains(accountType)}")
     if (isThrottled && !hasPTEnrolmentAlready && accountTypesToEnrolForPT.contains(accountType)) {
-      println("PPP silentAssignmentService.enrolUser()")
       silentAssignmentService.enrolUser().flatMap { _ =>
           auditHandler.audit(AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(accountType))
           EitherT.right(
@@ -138,7 +130,6 @@ extends TEAFrontendController(mcc) {
         }
       }
     else if (hasPTEnrolmentAlready) {
-      println("EitherT.right(sessionCache.removeRecord.map(_ => (): Unit))")
       EitherT.right(sessionCache.removeRecord.map(_ => (): Unit))
     } else {
         EitherT.right(Future.successful((): Unit))

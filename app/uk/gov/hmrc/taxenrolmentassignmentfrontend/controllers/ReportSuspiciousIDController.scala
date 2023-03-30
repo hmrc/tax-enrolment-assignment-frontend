@@ -108,18 +108,14 @@ class ReportSuspiciousIDController @Inject()(
         .value
         .map {
           case Right(_) =>
-            println("AAAAA")
             logger.logEvent(
               logAssignedEnrolmentAfterReportingFraud(
                 request.userDetails.credId
               )
             )
-            println("BBBBB")
             auditHandler.audit(AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true))
-            println("CCCCC " + routes.EnrolledForPTController.view.url)
             Redirect(routes.EnrolledForPTController.view)
           case Left(error) =>
-            println("TTTT " + error.toString)
             errorHandler.handleErrors(
               error,
               "[ReportSuspiciousIdController][continue]"

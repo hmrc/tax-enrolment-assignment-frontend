@@ -16,18 +16,14 @@
 
 package connectors
 
-import helpers.IntegrationSpecBase
+import helpers.{IntegrationSpecBase}
 import helpers.TestITData._
-import helpers.WiremockHelper._
 import play.api.http.Status
 import play.api.http.Status.OK
 import play.api.libs.json.{JsString, Json}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.EACDConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromEACD
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
-  UserEnrolmentsListResponse,
-  UsersAssignedEnrolment
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{UserEnrolmentsListResponse, UsersAssignedEnrolment}
 
 class EACDConnectorISpec extends IntegrationSpecBase {
 

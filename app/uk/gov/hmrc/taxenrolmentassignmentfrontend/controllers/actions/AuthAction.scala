@@ -131,7 +131,7 @@ class AuthAction @Inject()(
       case er: AuthorisationException =>
         logger.logEvent(
           logAuthenticationFailure(
-            s"Auth exception: ${er.getMessage} for  uri ${request.uri}"
+              s"Auth exception: ${er.getMessage} for  uri ${request.uri}"
           )
         )
         Redirect(routes.AuthorisationController.notAuthorised.url)

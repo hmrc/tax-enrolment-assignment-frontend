@@ -42,25 +42,18 @@ class ThrottleAction @Inject()(throttlingService: ThrottlingService,
 
   def throttle(accountType: AccountTypes.Value, redirectUrl : String)(
     implicit hc: HeaderCarrier, requestWithUserDetailsFromSession: RequestWithUserDetailsFromSession[_]): Future[Option[Result]] = {
-    println("PPP111 actions.ThrottleAction.throttle")
 
     throttlingService.throttle(
       accountType,
       requestWithUserDetailsFromSession.userDetails.nino,
       requestWithUserDetailsFromSession.userDetails.enrolments.enrolments
-    ).value.map { x: Either[TaxEnrolmentAssignmentErrors, ThrottleResult] =>
-      println("PPPPP in here")
-      x
-    }.flatMap {
+    ).value.flatMap {
       case Right(ThrottleApplied) =>
-        println("PPPP Right(ThrottleApplied)")
         logger.logEvent(LoggingEvent.logUserThrottled(requestWithUserDetailsFromSession.userDetails.credId, accountType, requestWithUserDetailsFromSession.userDetails.nino))
         teaSessionCache.removeRecord.map(_ => Some(Redirect(redirectUrl)))
       case Right(ThrottleDoesNotApply) =>
-        println("PPPP Right(ThrottleDoesNotApply)")
         Future.successful(None)
       case Left(error) =>
-        println("PPPP Left(error)" )
       Future.successful(Some(errorHandler
         .handleErrors(error, "[ThrottleAction][filter]")(requestWithUserDetailsFromSession, baseLogger)))
     }

@@ -124,10 +124,8 @@ class DefaultTEASessionCache @Inject()(config: Configuration, val mongo: MongoCo
 
   def removeRecord(
     implicit request: RequestWithUserDetailsFromSession[_]
-  ): Future[Boolean] = {
-    println("PPPPP this should be mocked")
+  ): Future[Boolean] =
     collectionDeleteOne(request.sessionID)
-  }
 
   def fetch()(
     implicit request: RequestWithUserDetailsFromSession[_]

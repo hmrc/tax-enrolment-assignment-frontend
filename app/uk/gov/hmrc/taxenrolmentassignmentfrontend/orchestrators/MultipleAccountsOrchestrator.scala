@@ -56,12 +56,14 @@ class MultipleAccountsOrchestrator @Inject()(
   ): TEAFResult[AccountDetails] = {
     checkValidAccountType(List(MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER)) match {
       case Left(error) => EitherT.left(Future.successful(error))
-      case Right(_)    => usersGroupSearchService.getAccountDetails(
-        requestWithUserDetails.userDetails.credId
-      )(implicitly, implicitly, requestWithUserDetails).map(accountDetails =>
-      accountDetails.copy(
-        hasSA = Some(requestWithUserDetails.accountDetailsFromMongo.accountType == SA_ASSIGNED_TO_CURRENT_USER)
-      ))
+      case Right(_)    => {
+        usersGroupSearchService.getAccountDetails(
+          requestWithUserDetails.userDetails.credId
+        )(implicitly, implicitly, requestWithUserDetails).map(accountDetails =>
+          accountDetails.copy(
+            hasSA = Some(requestWithUserDetails.accountDetailsFromMongo.accountType == SA_ASSIGNED_TO_CURRENT_USER)
+          ))
+      }
     }
   }
 

@@ -16,10 +16,10 @@
 
 package connectors
 
-import helpers.IntegrationSpecBase
-import helpers.WiremockHelper.{stubPost, stubPutWithRequestBody}
+import helpers.{IntegrationSpecBase}
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, NO_CONTENT, OK}
 import play.api.libs.json.Json
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.auth.core.Enrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.LegacyAuthConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseAssigningTemporaryPTAEnrolment

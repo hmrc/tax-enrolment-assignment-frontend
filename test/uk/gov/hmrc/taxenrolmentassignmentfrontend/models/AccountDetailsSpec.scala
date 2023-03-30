@@ -37,7 +37,7 @@ import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.crypto.Crypted
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.crypto.json.JsonEncryption
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{BaseSpec}
 
 class AccountDetailsSpec extends BaseSpec {
 

@@ -16,7 +16,7 @@
 
 package services
 
-import helpers.TestHelper
+import helpers.IntegrationSpecBase
 import helpers.TestITData.{CREDENTIAL_ID, accountDetailsUnUserFriendly, usersGroupSearchResponse}
 import play.api.libs.json.JsObject
 import uk.gov.hmrc.crypto.Crypted
@@ -24,7 +24,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.PT_ASSIGNED_TO_OT
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.UsersGroupsSearchService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
 
-class UserGroupSearchServiceISpec extends TestHelper {
+class UserGroupSearchServiceISpec extends IntegrationSpecBase {
 
   lazy val service = app.injector.instanceOf[UsersGroupsSearchService]
 
@@ -41,7 +41,7 @@ class UserGroupSearchServiceISpec extends TestHelper {
 
       }
      val emailEncrypted: String = {
-       (await(mongoRepository.get(request.sessionID)).get.data.get("AccountDetailsFor6902202884164548").get.as[JsObject] \ "email").as[String]
+       ((sessionRepository.get(request.sessionID)).futureValue.get.data.get("AccountDetailsFor6902202884164548").get.as[JsObject] \ "email").as[String]
      }
 
       crypto.crypto.decrypt(Crypted(emailEncrypted)).value shouldBe """"email1@test.com""""

@@ -16,6 +16,7 @@
 
 package helpers
 
+import org.mongodb.scala.bson.BsonDocument
 import org.mongodb.scala.model.Filters
 import play.api.libs.json.{Format, JsString, JsValue}
 import uk.gov.hmrc.http.cache.client.CacheMap
@@ -23,11 +24,22 @@ import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.DatedCacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.{CascadeUpsert, DefaultTEASessionCache}
 
-import java.time.LocalDateTime
+import java.time.Instant
 import scala.concurrent.Future
 
 trait SessionCacheOperations extends DefaultPlayMongoRepositorySupport[DatedCacheMap] {
   _: IntegrationSpecBase =>
+
+  override protected lazy val optSchema = Some(BsonDocument("""
+      { bsonType: "object"
+      , required: [ "_id", "data", "lastUpdated" ]
+      , properties:
+        { _id       : { bsonType: "objectId" }
+        , data      : { bsonType: "object" }
+        , lastUpdated : { bsonType: "date" }
+        }
+      }
+    """))
 
   lazy val sessionRepository = app.injector.instanceOf[DefaultTEASessionCache]
   lazy val cascadeUpsert: CascadeUpsert = app.injector.instanceOf[CascadeUpsert]
@@ -72,7 +84,7 @@ trait SessionCacheOperations extends DefaultPlayMongoRepositorySupport[DatedCach
     }
   }
 
-  def getLastLoginDateTime(sessionID: String): LocalDateTime = {
+  def getLastLoginDateTime(sessionID: String): Instant = {
     sessionRepository.collection
       .find(Filters.equal("id", sessionID))
       .first()

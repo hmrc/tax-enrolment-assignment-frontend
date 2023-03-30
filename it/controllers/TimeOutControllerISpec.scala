@@ -17,17 +17,14 @@
 package controllers
 
 import helpers.{IntegrationSpecBase, ItUrlPaths}
-import helpers.TestITData.{authoriseResponseJson, csrfContent, sessionId, xAuthToken, xRequestId, xSessionId}
+import helpers.TestITData.{authoriseResponseJson, sessionId, xAuthToken, xSessionId}
 import play.api.test.Helpers.{GET, await, contentAsString, defaultAwaitTimeout, route, status, writeableOf_AnyContentAsEmpty}
 import helpers.messages.TimedOutMessages
 import org.jsoup.Jsoup
-import play.api.http.Status
 import play.api.http.Status.{NO_CONTENT, OK}
-import play.api.libs.ws.DefaultWSCookie
-import play.api.mvc.Cookie
 import play.api.test.FakeRequest
 
-import java.time.LocalDateTime
+import java.time.Instant
 import scala.concurrent.Future
 
 class TimeOutControllerISpec extends IntegrationSpecBase {
@@ -35,7 +32,7 @@ class TimeOutControllerISpec extends IntegrationSpecBase {
   val urlPathKeepAlive: String = ItUrlPaths.keepAlive
   val urlPathTimeout: String = ItUrlPaths.timeout
 
-  def saveToSessionAndGetLastLoginDate: Future[LocalDateTime] = {
+  def saveToSessionAndGetLastLoginDate: Future[Instant] = {
     save[String](sessionId, "redirectURL", returnUrl)
       .map(_ => getLastLoginDateTime(sessionId))
   }

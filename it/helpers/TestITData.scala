@@ -16,16 +16,17 @@
 
 package helpers
 
-import java.util.UUID
 import play.api.libs.json._
 import uk.gov.hmrc.auth.core.AffinityGroup.Individual
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core.retrieve.Credentials
-import uk.gov.hmrc.auth.core.{AffinityGroup, ConfidenceLevel, Enrolment, EnrolmentIdentifier, Enrolments}
+import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolment, EnrolmentIdentifier, Enrolments}
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.http.SessionKeys
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.UserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models._
+
+import java.util.UUID
 
 object TestITData {
 
@@ -73,17 +74,9 @@ object TestITData {
     )
   }
 
-  val randomId = UUID.randomUUID().toString
-  val randomSessionId = s"sessionId-$randomId"
   val sessionId = "sessionId-eb3158c2-0aff-4ce8-8d1b-f2208ace52fe"
   val xSessionId: (String, String) = SessionKeys.sessionId -> sessionId
-  val xRequestId: (String, String) = "X-Request-ID" -> sessionId
-  val csrfContent: (String, String) = "Csrf-Token" -> "nocheck"
-  val csrfValue: String =
-    "4ef32f22ffe4f4b8086d24d14551e61abb7a8d05-1513679039403-38e9493c515e868adc1b1e41"
   val xAuthToken: (String, String) = SessionKeys.authToken -> "Bearer 1"
-
-  val sessionData = Map("sessionId" -> sessionId)
 
   def authoriseResponseJson(optNino: Option[String] = Some(NINO),
                             optCreds: Option[Credentials] = Some(creds),

@@ -20,12 +20,12 @@ import play.api.libs.json.{Format, JsValue, Json, OFormat}
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.mongo.play.json.formats.{MongoFormats, MongoJavatimeFormats}
 
-import java.time.{LocalDateTime, ZoneId}
+import java.time.{Instant, LocalDateTime, ZoneId}
 
 case class DatedCacheMap(id: String,
                          data: Map[String, JsValue],
-                         lastUpdated: LocalDateTime =
-                         LocalDateTime.now(ZoneId.of("UTC")))
+                         lastUpdated: Instant =
+                         Instant.now())
   extends MongoFormats {
 
   def toCacheMap: CacheMap = {
@@ -38,7 +38,6 @@ object DatedCacheMap {
   def apply(cacheMap: CacheMap): DatedCacheMap =
     DatedCacheMap(cacheMap.id, cacheMap.data)
 
-  implicit val dateFormat: Format[LocalDateTime] =
-    MongoJavatimeFormats.localDateTimeFormat
+  implicit val dateFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
   implicit val formats: OFormat[DatedCacheMap] = Json.format[DatedCacheMap]
 }

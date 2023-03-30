@@ -17,13 +17,10 @@
 package controllers
 
 import helpers.{IntegrationSpecBase, ItUrlPaths}
-import helpers.TestITData.{authoriseResponseJson, csrfContent, sessionId, xAuthToken, xRequestId, xSessionId}
-import org.jsoup.Jsoup
-import play.api.test.Helpers.{GET, await, contentAsString, defaultAwaitTimeout, redirectLocation, route, status, writeableOf_AnyContentAsEmpty}
-import play.api.http.Status
+import helpers.TestITData.{authoriseResponseJson, sessionId, xAuthToken, xSessionId}
+import play.api.test.Helpers.{GET, await, defaultAwaitTimeout, redirectLocation, route, status, writeableOf_AnyContentAsEmpty}
 import play.api.http.Status.{OK, SEE_OTHER}
 import play.api.libs.json.JsString
-import play.api.mvc.Cookie
 import play.api.test.FakeRequest
 
 import java.net.URLEncoder

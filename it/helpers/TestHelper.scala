@@ -16,7 +16,7 @@
 
 package helpers
 
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{routes, testOnly}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 
   object ItUrlPaths {
     val enrolledPTNoSAOnAnyAccountPath    = routes.EnrolledForPTController.view.url

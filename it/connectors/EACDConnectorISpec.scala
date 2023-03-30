@@ -16,7 +16,7 @@
 
 package connectors
 
-import helpers.{IntegrationSpecBase}
+import helpers.IntegrationSpecBase
 import helpers.TestITData._
 import play.api.http.Status
 import play.api.http.Status.OK

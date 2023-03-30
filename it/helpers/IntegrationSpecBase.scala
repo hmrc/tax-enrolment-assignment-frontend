@@ -16,54 +16,30 @@
 
 package helpers
 
-import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, containing, equalTo, equalToJson, get, post, postRequestedFor, put, stubFor, urlEqualTo, urlMatching, urlPathEqualTo, verify}
-import com.github.tomakehurst.wiremock.matching.StringValuePattern
-import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import helpers.TestITData._
-import org.mockito.MockitoSugar
-import org.mongodb.scala.bson.BsonDocument
-import org.mongodb.scala.model.Filters
-import org.scalatest.concurrent.{Eventually, IntegrationPatience, PatienceConfiguration, ScalaFutures}
+import org.scalatest.concurrent.{IntegrationPatience, PatienceConfiguration, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, GivenWhenThen, OneInstancePerTest, Suite, TestSuite}
-import org.scalatestplus.play.PlaySpec
-import org.scalatestplus.play.guice.{GuiceOneAppPerSuite, GuiceOneServerPerSuite}
-import play.api.http.Status.{INTERNAL_SERVER_ERROR, NON_AUTHORITATIVE_INFORMATION}
+import org.scalatest.BeforeAndAfterEach
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.i18n.{Lang, Messages, MessagesApi}
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.{Format, JsString, JsValue, Json}
-import play.api.mvc.{AnyContent, CookieHeaderEncoding, Request, Session, SessionCookieBaker}
-import play.api.test.Helpers.await
-import play.api.test.{DefaultAwaitTimeout, FakeRequest, FutureAwaits, Injecting}
-import play.api.{Application, Environment, Mode}
-import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
-import uk.gov.hmrc.auth.core.{AuthProviders, ConfidenceLevel}
-import uk.gov.hmrc.crypto.PlainText
-import uk.gov.hmrc.http.cache.client.CacheMap
+import play.api.libs.json.{JsValue, Json, JsString}
+import play.api.mvc.{AnyContent, Request}
+import play.api.test.{FakeRequest, Injecting}
+import play.api.Application
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
-import uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.SessionCookieCrypto
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo, UserDetailsFromSession}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSessionAndMongo, UserDetailsFromSession}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{routes, testOnly}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{DatedCacheMap, UsersGroupResponse}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.{CascadeUpsert, DefaultTEASessionCache, TEASessionCache}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.TENCrypto
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
-import play.api.inject.bind
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.HmrcModule
-import uk.gov.hmrc.domain.{Nino, Generator => NinoGenerator}
+import uk.gov.hmrc.domain.{Generator => NinoGenerator}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL}
 
-import java.time.LocalDateTime
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 trait IntegrationSpecBase
   extends AnyWordSpec with GuiceOneAppPerSuite with Matchers with PatienceConfiguration with BeforeAndAfterEach
@@ -71,7 +47,7 @@ trait IntegrationSpecBase
 
   def generateNino: Nino = new NinoGenerator().nextNino
 
-  implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.global
+  implicit lazy val ec: ExecutionContext = app.injector.instanceOf[ExecutionContext]
   lazy implicit val hc: HeaderCarrier = HeaderCarrier(
     authorization = Some(Authorization(AUTHORIZE_HEADER_VALUE))
   )

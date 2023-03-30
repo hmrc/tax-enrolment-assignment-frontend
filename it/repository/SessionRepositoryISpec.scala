@@ -16,9 +16,9 @@
 
 package repository
 
-import java.time.{LocalDateTime, ZoneId}
+import java.time.{Duration, Instant}
 import java.util.UUID
-import helpers.{IntegrationSpecBase}
+import helpers.IntegrationSpecBase
 import org.mongodb.scala.model.Filters
 import play.api.libs.json.JsString
 import uk.gov.hmrc.http.cache.client.CacheMap
@@ -128,7 +128,7 @@ class SessionRepositoryISpec extends IntegrationSpecBase {
         val KEY = "testing"
         val data = "example"
 
-        val oldDatetime = LocalDateTime.now(ZoneId.of("UTC")).minusMinutes(1L)
+        val oldDatetime = Instant.now().minus(Duration.ofMinutes(1))
         val cacheMap = CacheMap(sessionId, Map(KEY -> JsString(data)))
         val datedCachedMap =
           DatedCacheMap(sessionId, cacheMap.data, oldDatetime)

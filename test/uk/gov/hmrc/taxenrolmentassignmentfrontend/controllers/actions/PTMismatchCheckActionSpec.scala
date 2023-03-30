@@ -17,11 +17,14 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions
 
 import cats.data.EitherT
-import play.api.http.Status.{NO_CONTENT, OK}
+import play.api.http.Status.{NO_CONTENT, OK, SEE_OTHER}
 import play.api.mvc.Results.Ok
 import play.api.mvc._
-import play.api.test.Helpers.{defaultAwaitTimeout, status}
+import play.api.test.FakeRequest
+import play.api.test.Helpers.{GET, defaultAwaitTimeout, redirectLocation, status}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, UpstreamErrorResponse}
+import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{NINO, userDetailsWithMismatchNino, userDetailsWithPTEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.admin.{FeatureFlag, FeatureFlagName, PtNinoMismatchCheckerToggle}
@@ -54,9 +57,29 @@ class PTMismatchCheckActionSpec extends TestFixture {
 
   "PTMismatchCheckAction" when {
     "a user has a HMRC-PT enrolment which does not match the request NINO" should {
-      val mismatchRequest = request.copy(userDetails = userDetailsWithMismatchNino)
+      val requestInnerWithRedirect = FakeRequest(GET, "testUrl?redirectUrl=/testRedirect").asInstanceOf[Request[AnyContent]]
+      val mismatchRequest = request.copy(userDetails = userDetailsWithMismatchNino, request = requestInnerWithRedirect)
 
-      "delete the mismatched HMRC-PT enrolment" in {
+      "delete the mismatched HMRC-PT enrolment and return SEE_OTHER" in {
+        (mockEacdService
+          .deallocateEnrolment(_: String, _: String)(
+            _: HeaderCarrier,
+            _: ExecutionContext
+          ))
+          .expects(mismatchRequest.userDetails.groupId, s"HMRC-PT~NINO~${Some(NINO)}", *, *)
+          .returning(EitherT[Future, UpstreamErrorResponse, HttpResponse](Future.successful(Right(HttpResponse(NO_CONTENT, "")))))
+
+        val block: RequestWithUserDetailsFromSession[_] => Future[Result] = userRequest =>
+          Future.successful(Ok(s"User Details: ${userRequest.userDetails}"))
+
+        val action = harnessToggleTrue(block)(mismatchRequest)
+        status(action) shouldBe SEE_OTHER
+        redirectLocation(action) shouldBe Some(routes.AccountCheckController.accountCheck(RedirectUrl("/testRedirect")).url)
+      }
+      "not delete the mismatched HMRC-PT enrolment and return OK if there was no redirectUrl in the query string" in {
+        val requestInnerWithoutRedirect = FakeRequest().asInstanceOf[Request[AnyContent]]
+        val mismatchRequest = request.copy(userDetails = userDetailsWithMismatchNino, request = requestInnerWithoutRedirect)
+
         (mockEacdService
           .deallocateEnrolment(_: String, _: String)(
             _: HeaderCarrier,
@@ -71,7 +94,7 @@ class PTMismatchCheckActionSpec extends TestFixture {
         val action = harnessToggleTrue(block)(mismatchRequest)
         status(action) shouldBe OK
       }
-      "not delete the mismatched HMRC-PT enrolment if the mongo toggle is set to false" in {
+      "not delete the mismatched HMRC-PT enrolment and return OK if the mongo toggle is set to false" in {
         (mockEacdService
           .deallocateEnrolment(_: String, _: String)(
             _: HeaderCarrier,
@@ -88,7 +111,7 @@ class PTMismatchCheckActionSpec extends TestFixture {
       }
     }
     "a user has a HMRC-PT enrolment which does match the request NINO" should {
-      "not make any changes to the existing enrolments" in {
+      "not make any changes to the existing enrolments and return OK" in {
         (mockEacdService
           .deallocateEnrolment(_: String, _: String)(
             _: HeaderCarrier,
@@ -105,7 +128,7 @@ class PTMismatchCheckActionSpec extends TestFixture {
       }
     }
     "a user does not have a HMRC-PT enrolment" should {
-      "not make any changes to the existing enrolments" in {
+      "not make any changes to the existing enrolments and return OK" in {
         (mockEacdService
           .deallocateEnrolment(_: String, _: String)(
             _: HeaderCarrier,

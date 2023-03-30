@@ -27,19 +27,18 @@ import play.api.cache.AsyncCacheApi
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.admin.{FeatureFlagName, PtNinoMismatchCheckerToggle}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.admin.DefaultFeatureFlagRepository
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.admin.{DefaultFeatureFlagRepository, FeatureFlagRepository}
 
 import scala.concurrent.Future
 
 class FeatureFlagServiceSpec extends AnyWordSpec with ScalaFutures with MockFactory with Matchers with OneInstancePerTest {
 
-  val mockFeatureFlagRepository = mock[DefaultFeatureFlagRepository]
+  val mockFeatureFlagRepository = mock[FeatureFlagRepository]
   val mockCache = mock[AsyncCacheApi]
-
 
   implicit lazy val app: Application = GuiceApplicationBuilder()
     .overrides(
-      bind[DefaultFeatureFlagRepository].toInstance(mockFeatureFlagRepository),
+      bind[FeatureFlagRepository].toInstance(mockFeatureFlagRepository),
       bind[AsyncCacheApi].toInstance(mockCache)
     )
     .build()

@@ -17,10 +17,14 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions
 
 import com.google.inject.ImplementedBy
+import play.api.Logging
+import play.api.mvc.Results.Redirect
 import play.api.mvc.{ActionFunction, Result}
 import uk.gov.hmrc.auth.core.Enrolment
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
 import uk.gov.hmrc.play.http.HeaderCarrierConverter.fromRequestAndSession
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.admin.PtNinoMismatchCheckerToggle
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.hmrcPTKey
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.EACDService
@@ -34,7 +38,7 @@ class PTMismatchCheckActionImpl @Inject() (
                                       featureFlagService: FeatureFlagService
                                    )(implicit
                                      ec: ExecutionContext
-                                   ) extends PTMismatchCheckAction {
+                                   ) extends PTMismatchCheckAction with Logging {
 
   def invokeBlock[A](
                       request: RequestWithUserDetailsFromSession[A],
@@ -49,8 +53,20 @@ class PTMismatchCheckActionImpl @Inject() (
         ptEnrolment.map(enrolment => {
           ptMismatchCheck(enrolment, userDetails.nino, userDetails.groupId).map {
             case true =>
-              block(request)
-              /// TODO - Does this need to go back through Auth by way of `Future.successful(Redirect(routes.AccountCheckController.().url))`
+              request.request.getQueryString("redirectUrl") match {
+                case Some(url) =>
+                  Future.successful(
+                    Redirect(
+                      routes.AccountCheckController.accountCheck(
+                        RedirectUrl(url)
+                      ).url
+                    )
+                  )
+                case None =>
+                  val ex = new RuntimeException(s"Redirect url is missing from the query string")
+                  logger.error(ex.getMessage, ex)
+                  block(request)
+              }
             case _ => block(request)
           }.flatten
         }).getOrElse(block(request))

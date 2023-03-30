@@ -20,9 +20,10 @@ import cats.data.EitherT
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.time.{Millis, Seconds, Span}
 import play.api.http.Status
-import play.api.http.Status.NO_CONTENT
+import play.api.http.Status.{BAD_REQUEST, NO_CONTENT}
 import play.api.libs.json.Format
 import play.api.mvc.AnyContent
+import play.api.test.Helpers.status
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, UpstreamErrorResponse}
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
@@ -178,8 +179,10 @@ class EACDServiceSpec extends TestFixture with ScalaFutures {
           .returning(EitherT[Future, UpstreamErrorResponse, HttpResponse](Future.successful(Right(HttpResponse(NO_CONTENT, "")))))
 
         val result = service.deallocateEnrolment("testId", s"HMRC-PT~NINO~$NINO")
-
-        result.value.futureValue shouldBe Right(HttpResponse(NO_CONTENT, ""))
+          .value
+          .futureValue
+          .getOrElse(HttpResponse(BAD_REQUEST, ""))
+        result.status shouldBe NO_CONTENT
       }
 
       List(

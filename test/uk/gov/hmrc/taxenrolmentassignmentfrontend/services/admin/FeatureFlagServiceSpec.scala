@@ -25,18 +25,16 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.admin.{FeatureFlagName, PtNinoMismatchCheckerToggle}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.admin.FeatureFlagRepository
+import org.scalamock.context._
+
 
 import scala.concurrent.Future
 
 class FeatureFlagServiceSpec extends TestFixture with ScalaFutures {
 
-  val mockAppConfig       = mock[AppConfig]
-  val mockFeatureFlagRepository = mock[FeatureFlagRepository]
-  val mockCache                 = mock[AsyncCacheApi]
-
   override implicit lazy val app = GuiceApplicationBuilder()
     .overrides(
-      bind[AppConfig].toInstance(mockAppConfig),
+      bind[AppConfig].toInstance(appConfig),
       bind[FeatureFlagRepository].toInstance(mockFeatureFlagRepository),
       bind[AsyncCacheApi].toInstance(mockCache)
     )

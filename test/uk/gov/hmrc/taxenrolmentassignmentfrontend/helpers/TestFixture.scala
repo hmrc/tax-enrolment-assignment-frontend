@@ -23,6 +23,7 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.cache.AsyncCacheApi
 import play.api.i18n._
 import play.api.inject.Injector
 import play.api.libs.json.{Format, JsString, JsValue, Json}
@@ -51,6 +52,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrc
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditHandler
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.admin.FeatureFlagRepository
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.admin.FeatureFlagService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.UnderConstructionView
@@ -111,25 +113,27 @@ trait TestFixture
   implicit lazy val messages: Messages = messagesApi.preferred(fakeRequest)
   implicit val crypto = inject[TENCrypto]
   lazy val UCView: UnderConstructionView = inject[UnderConstructionView]
-  val mockAuthConnector: AuthConnector = mock[AuthConnector]
-  val mockIVConnector: IVConnector = mock[IVConnector]
-  val mockTaxEnrolmentsConnector: TaxEnrolmentsConnector =
+  lazy val mockAuthConnector: AuthConnector = mock[AuthConnector]
+  lazy val mockIVConnector: IVConnector = mock[IVConnector]
+  lazy val mockTaxEnrolmentsConnector: TaxEnrolmentsConnector =
     mock[TaxEnrolmentsConnector]
-  val mockEacdConnector: EACDConnector = mock[EACDConnector]
-  val mockLegacyAuthConnector = mock[LegacyAuthConnector]
-  val mockEacdService: EACDService = mock[EACDService]
-  val mockUsersGroupService: UsersGroupsSearchService =
+  lazy val mockEacdConnector: EACDConnector = mock[EACDConnector]
+  lazy val mockLegacyAuthConnector = mock[LegacyAuthConnector]
+  lazy val mockEacdService: EACDService = mock[EACDService]
+  lazy val mockUsersGroupService: UsersGroupsSearchService =
     mock[UsersGroupsSearchService]
-  val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
+  lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
   lazy val requestPath = "Not Used"
   val mockTeaSessionCache = mock[TEASessionCache]
   val mockAccountCheckOrchestrator = mock[AccountCheckOrchestrator]
   val mockMultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
   val mockSilentAssignmentService: SilentAssignmentService =
     mock[SilentAssignmentService]
-  val mockAuditHandler: AuditHandler = mock[AuditHandler]
-  val mockThrottlingService = mock[ThrottlingService]
-  val mockFeatureFlagService = mock[FeatureFlagService]
+  lazy val mockAuditHandler: AuditHandler = mock[AuditHandler]
+  lazy val mockThrottlingService = mock[ThrottlingService]
+  lazy val mockFeatureFlagService = mock[FeatureFlagService]
+  lazy val mockFeatureFlagRepository = mock[FeatureFlagRepository]
+  lazy val mockCache = mock[AsyncCacheApi]
   implicit lazy val fakeRequest: FakeRequest[AnyContentAsEmpty.type] =
     FakeRequest("", requestPath)
       .withSession(

@@ -18,14 +18,15 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.repositories.admin
 
 import org.mongodb.scala.MongoWriteException
 import org.mongodb.scala.bson.BsonDocument
+import org.scalatest.concurrent.PatienceConfiguration
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.admin.{FeatureFlag, PtNinoMismatchCheckerToggle}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.admin.FeatureFlagRepository
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.admin.DefaultFeatureFlagRepository
 
-class FeatureFlagRepositorySpec extends TestFixture with DefaultPlayMongoRepositorySupport[FeatureFlag] {
+class FeatureFlagRepositorySpec extends TestFixture with DefaultPlayMongoRepositorySupport[FeatureFlag] with PatienceConfiguration {
 
   override protected lazy val optSchema = Some(BsonDocument("""
       { bsonType: "object"
@@ -53,7 +54,7 @@ class FeatureFlagRepositorySpec extends TestFixture with DefaultPlayMongoReposit
     .configure(Map("mongodb.uri" -> mongoUri) ++ configValues)
     .build()
 
-  lazy val repository = inject[FeatureFlagRepository]
+  lazy val repository = inject[DefaultFeatureFlagRepository]
 
   "getFlag" must {
     "return None if there is no record" in {

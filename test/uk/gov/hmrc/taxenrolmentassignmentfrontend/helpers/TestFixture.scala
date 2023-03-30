@@ -52,7 +52,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrc
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditHandler
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.admin.FeatureFlagRepository
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.admin.DefaultFeatureFlagRepository
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.admin.FeatureFlagService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.UnderConstructionView
@@ -107,7 +107,7 @@ trait TestFixture
     stubMessagesControllerComponents()
   lazy val errorHandler: ErrorHandler = new ErrorHandler(errorView, logger, mcc)
   lazy val logger: EventLoggerService = new EventLoggerService()
-  implicit val appConfig: AppConfig = injector.instanceOf[AppConfig]
+  implicit lazy val appConfig: AppConfig = injector.instanceOf[AppConfig]
   lazy val messagesApi: MessagesApi = inject[MessagesApi]
   lazy val stubbedMessagesApi = stubMessagesApi()
   implicit lazy val messages: Messages = messagesApi.preferred(fakeRequest)
@@ -124,15 +124,15 @@ trait TestFixture
     mock[UsersGroupsSearchService]
   lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
   lazy val requestPath = "Not Used"
-  val mockTeaSessionCache = mock[TEASessionCache]
-  val mockAccountCheckOrchestrator = mock[AccountCheckOrchestrator]
-  val mockMultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
-  val mockSilentAssignmentService: SilentAssignmentService =
+  lazy val mockTeaSessionCache = mock[TEASessionCache]
+  lazy val mockAccountCheckOrchestrator = mock[AccountCheckOrchestrator]
+  lazy val mockMultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
+  lazy val mockSilentAssignmentService: SilentAssignmentService =
     mock[SilentAssignmentService]
   lazy val mockAuditHandler: AuditHandler = mock[AuditHandler]
   lazy val mockThrottlingService = mock[ThrottlingService]
   lazy val mockFeatureFlagService = mock[FeatureFlagService]
-  lazy val mockFeatureFlagRepository = mock[FeatureFlagRepository]
+  lazy val mockFeatureFlagRepository = mock[DefaultFeatureFlagRepository]
   lazy val mockCache = mock[AsyncCacheApi]
   implicit lazy val fakeRequest: FakeRequest[AnyContentAsEmpty.type] =
     FakeRequest("", requestPath)
@@ -279,11 +279,4 @@ trait TestFixture
       implicit request: RequestWithUserDetailsFromSession[_]
     ): Future[Boolean] = Future.successful(true)
   }
-// TODO - Delete
-//  (mockEacdService.deallocateEnrolment(_: String, _: String)(
-//    _: HeaderCarrier,
-//    _: ExecutionContext
-//  ))
-//  .expects("testId", s"HMRC-PT~NINO~$NINO", *, *)
-//    .returning(Future.successful(true))
 }

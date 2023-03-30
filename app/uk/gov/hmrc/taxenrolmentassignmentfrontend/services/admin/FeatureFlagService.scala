@@ -20,7 +20,7 @@ import play.api.Logging
 import play.api.cache.AsyncCacheApi
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.admin.{FeatureFlag, FeatureFlagName}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.admin.FeatureFlagRepository
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.admin.DefaultFeatureFlagRepository
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.duration.{Duration, FiniteDuration, SECONDS => Seconds}
@@ -28,9 +28,9 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class FeatureFlagService @Inject()(
-  appConfig: AppConfig,
-  featureFlagRepository: FeatureFlagRepository,
-  cache: AsyncCacheApi
+                                    appConfig: AppConfig,
+                                    featureFlagRepository: DefaultFeatureFlagRepository,
+                                    cache: AsyncCacheApi
 )(implicit
   ec: ExecutionContext
 ) extends Logging {

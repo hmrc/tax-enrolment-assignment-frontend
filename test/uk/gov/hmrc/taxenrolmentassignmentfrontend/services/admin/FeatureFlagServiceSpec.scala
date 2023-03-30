@@ -17,30 +17,34 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.services.admin
 
 import akka.Done
+import org.scalamock.scalatest.MockFactory
+import org.scalatest.OneInstancePerTest
 import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import play.api.Application
 import play.api.cache.AsyncCacheApi
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.admin.{FeatureFlagName, PtNinoMismatchCheckerToggle}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.admin.FeatureFlagRepository
-import org.scalamock.context._
-
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.admin.DefaultFeatureFlagRepository
 
 import scala.concurrent.Future
 
-class FeatureFlagServiceSpec extends TestFixture with ScalaFutures {
+class FeatureFlagServiceSpec extends AnyWordSpec with ScalaFutures with MockFactory with Matchers with OneInstancePerTest {
 
-  override implicit lazy val app = GuiceApplicationBuilder()
+  val mockFeatureFlagRepository = mock[DefaultFeatureFlagRepository]
+  val mockCache = mock[AsyncCacheApi]
+
+
+  implicit lazy val app: Application = GuiceApplicationBuilder()
     .overrides(
-      bind[AppConfig].toInstance(appConfig),
-      bind[FeatureFlagRepository].toInstance(mockFeatureFlagRepository),
+      bind[DefaultFeatureFlagRepository].toInstance(mockFeatureFlagRepository),
       bind[AsyncCacheApi].toInstance(mockCache)
     )
     .build()
 
-  val featureFlagService = inject[FeatureFlagService]
+  val featureFlagService: FeatureFlagService = app.injector.instanceOf[FeatureFlagService]
 
   "set" must {
     "set a feature flag" in {

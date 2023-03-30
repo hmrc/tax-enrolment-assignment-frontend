@@ -21,9 +21,9 @@ import helpers.{IntegrationSpecBase, ItUrlPaths}
 import helpers.TestITData._
 import play.api.test.Helpers.{GET, await, contentAsString, defaultAwaitTimeout, redirectLocation, route, status, writeableOf_AnyContentAsEmpty}
 import helpers.messages._
-import play.api.mvc.Cookie
+import play.api.mvc.{AnyContent, Cookie, Request}
 import play.api.http.Status
-import play.api.http.Status.{NO_CONTENT, OK, SEE_OTHER, BAD_REQUEST}
+import play.api.http.Status.{BAD_REQUEST, NO_CONTENT, OK, SEE_OTHER}
 import play.api.libs.json.Json
 import play.api.libs.ws.DefaultWSCookie
 import play.api.test.FakeRequest
@@ -37,6 +37,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.formats.EnrolmentsForma
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{ThrottleApplied, ThrottleDoesNotApply}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession, UserDetailsFromSession}
 
 class AccountCheckControllerISpec extends IntegrationSpecBase {
 
@@ -45,8 +46,14 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
   val ninoSameAsThrottlePercentage = "QQ123402A"
   val ninoAboveThrottlePercentage = "QQ123403A"
   lazy val throttlePercentage = config.get("throttle.percentage")
-
   val newEnrolment = (nino: String) => Enrolment(s"$hmrcPTKey", Seq(EnrolmentIdentifier("NINO", nino)), "Activated", None)
+
+  def requestWithUserDetails(userDetails: UserDetailsFromSession = userDetailsNoEnrolments): RequestWithUserDetailsFromSession[_] =
+    RequestWithUserDetailsFromSession(
+      FakeRequest().asInstanceOf[Request[AnyContent]],
+      userDetails,
+      sessionId
+    )
 
   s"GET /protect-tax-info?redirectUrl" when {
     s"$ThrottleApplied" should {

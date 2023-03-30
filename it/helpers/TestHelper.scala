@@ -16,23 +16,7 @@
 
 package helpers
 
-import com.github.tomakehurst.wiremock.stubbing.StubMapping
-import helpers.TestITData._
-import org.scalatest.Suite
-import play.api.http.Status.{INTERNAL_SERVER_ERROR, NON_AUTHORITATIVE_INFORMATION}
-import play.api.i18n.{Lang, Messages, MessagesApi}
-import play.api.libs.json.{JsString, JsValue, Json}
-import play.api.mvc.{AnyContent, Request}
-import play.api.test.FakeRequest
-import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo, UserDetailsFromSession}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{routes, testOnly}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersGroupResponse
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
   object ItUrlPaths {
     val enrolledPTNoSAOnAnyAccountPath    = routes.EnrolledForPTController.view.url

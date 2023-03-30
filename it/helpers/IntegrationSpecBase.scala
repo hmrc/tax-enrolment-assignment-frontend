@@ -67,7 +67,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait IntegrationSpecBase
   extends AnyWordSpec with GuiceOneAppPerSuite with Matchers with PatienceConfiguration with BeforeAndAfterEach
-    with ScalaFutures with Injecting with IntegrationPatience with DefaultPlayMongoRepositorySupport[DatedCacheMap] with WireMockHelper {
+    with ScalaFutures with Injecting with IntegrationPatience with SessionCacheOperations with WireMockHelper {
 
   def generateNino: Nino = new NinoGenerator().nextNino
 
@@ -75,6 +75,7 @@ trait IntegrationSpecBase
   lazy implicit val hc: HeaderCarrier = HeaderCarrier(
     authorization = Some(Authorization(AUTHORIZE_HEADER_VALUE))
   )
+  lazy val crypto = app.injector.instanceOf[TENCrypto]
 
   lazy val config: Map[String, Any] = Map(
     "play.filters.csrf.header.bypassHeaders.Csrf-Token" -> "nocheck",
@@ -100,35 +101,6 @@ trait IntegrationSpecBase
     localGuiceApplicationBuilder
       .build()
 
-  implicit lazy val crypto = app.injector.instanceOf[TENCrypto]
-
-  lazy val sessionBaker: SessionCookieBaker = app.injector.instanceOf[SessionCookieBaker]
-  lazy val cookieHeaderEncoding: CookieHeaderEncoding = app.injector.instanceOf[CookieHeaderEncoding]
-  lazy val sessionCookieCrypto: SessionCookieCrypto = app.injector.instanceOf[SessionCookieCrypto]
-
-  def createSessionCookieAsString(sessionData: Map[String, String]): String = {
-    val sessionCookie = sessionBaker.encodeAsCookie(Session(sessionData))
-    val encryptedSessionCookieValue =
-      sessionCookieCrypto.crypto.encrypt(PlainText(sessionCookie.value)).value
-    val encryptedSessionCookie =
-      sessionCookie.copy(value = encryptedSessionCookieValue)
-    cookieHeaderEncoding.encodeCookieHeader(Seq(encryptedSessionCookie))
-  }
-  val authData = Map("authToken" -> AUTHORIZE_HEADER_VALUE)
-  val sessionAndAuth  = Map("authToken" -> AUTHORIZE_HEADER_VALUE, "sessionId" -> sessionId)
-
-  lazy val authCookie: String = createSessionCookieAsString(authData).substring(5)
-  lazy val authAndSessionCookie: String = createSessionCookieAsString(sessionAndAuth).substring(5)
-
-
-
-
-
-
-
-
-
-
   lazy val teaHost = s"localhost:${server.port()}"
 
   lazy val returnUrl: String = testOnly.routes.TestOnlyController.successfulCall
@@ -136,13 +108,6 @@ trait IntegrationSpecBase
 
   lazy val accountCheckPath =
     routes.AccountCheckController.accountCheck(RedirectUrl.apply(returnUrl)).url
-
-  lazy val appConfig = app.injector.instanceOf[AppConfig]
-
-  lazy val sessionCookie
-  : (String, String) = ("COOKIE" -> createSessionCookieAsString(sessionData))
-
-  lazy val errorView = app.injector.instanceOf[ErrorTemplate]
 
   val exampleMongoSessionData = Map(ACCOUNT_TYPE -> Json.toJson(SA_ASSIGNED_TO_OTHER_USER), REDIRECT_URL -> JsString("redirectURL"))
 
@@ -158,90 +123,9 @@ trait IntegrationSpecBase
       AccountDetailsFromMongo(accountType, redirectUrl, mongoCacheData)(crypto.crypto)
     )
 
-  def requestWithUserDetails(userDetails: UserDetailsFromSession = userDetailsNoEnrolments): RequestWithUserDetailsFromSession[_] =
-    RequestWithUserDetailsFromSession(
-      FakeRequest().asInstanceOf[Request[AnyContent]],
-      userDetails,
-      sessionId
-    )
-
   def messagesApi: MessagesApi = {
     app.injector.instanceOf[MessagesApi]
   }
 
   implicit lazy val messages: Messages = messagesApi.preferred(List(Lang("en")))
-
-  def stubUserGroupSearchSuccess(
-                                  credId: String,
-                                  usersGroupResponse: UsersGroupResponse
-                                ): StubMapping = stubGet(
-    s"/users-groups-search/users/$credId",
-    NON_AUTHORITATIVE_INFORMATION,
-    usergroupsResponseJson(usersGroupResponse).toString()
-  )
-
-  def stubUserGroupSearchFailure(credId: String): StubMapping =
-    stubGet(s"/users-groups-search/users/$credId", INTERNAL_SERVER_ERROR, "")
-
-
-
-
-
-
-
-
-
-
-
-  lazy val sessionRepository = app.injector.instanceOf[DefaultTEASessionCache]
-  lazy val cascadeUpsert: CascadeUpsert = app.injector.instanceOf[CascadeUpsert]
-  lazy val repository = inject[DefaultTEASessionCache]
-
-
-  def save[T](sessionID: String, key: String, value: T)(
-    implicit fmt: Format[T]
-  ): Future[CacheMap] = {
-    sessionRepository.get(sessionID).flatMap { optionalCacheMap =>
-      val updatedCacheMap = cascadeUpsert(
-        key,
-        value,
-        optionalCacheMap.getOrElse(CacheMap(sessionID, Map()))
-      )
-      sessionRepository.upsert(updatedCacheMap).map { _ =>
-        updatedCacheMap
-      }
-    }
-  }
-
-  def recordExistsInMongo = sessionRepository.collection.find(Filters.empty()).headOption().map(_.isDefined).futureValue
-
-  def save(sessionId: String,
-           dataMap: Map[String, JsValue]): Future[Boolean] = {
-    sessionRepository.upsert(CacheMap(sessionId, dataMap))
-  }
-
-  def removeAll(sessionID: String): Future[Boolean] = {
-    sessionRepository.upsert(CacheMap(sessionID, Map("" -> JsString(""))))
-  }
-
-  def fetch(sessionID: String): Future[Option[CacheMap]] =
-    sessionRepository.get(sessionID)
-
-  def getEntry[A](sessionID: String,
-                  key: String)(implicit fmt: Format[A]): Future[Option[A]] = {
-    fetch(sessionID).map { optionalCacheMap =>
-      optionalCacheMap.flatMap { cacheMap =>
-        cacheMap.getEntry(key)
-      }
-    }
-  }
-
-  def getLastLoginDateTime(sessionID: String): LocalDateTime = {
-      sessionRepository.collection
-        .find(Filters.equal("id", sessionID))
-        .first()
-        .toFuture()
-        .map(_.lastUpdated)
-        .futureValue
-  }
 }

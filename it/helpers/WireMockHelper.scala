@@ -21,11 +21,14 @@ import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, containing, e
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
 import com.github.tomakehurst.wiremock.matching.StringValuePattern
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
+import helpers.TestITData.usergroupsResponseJson
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
+import play.api.http.Status.{INTERNAL_SERVER_ERROR, NON_AUTHORITATIVE_INFORMATION}
 import play.api.libs.json.{JsString, Json}
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core.{AuthProviders, ConfidenceLevel}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersGroupResponse
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
 
 trait WireMockHelper extends Eventually with BeforeAndAfterAll with BeforeAndAfterEach {
@@ -186,5 +189,16 @@ trait WireMockHelper extends Eventually with BeforeAndAfterAll with BeforeAndAft
     )
   }
 
+  def stubUserGroupSearchSuccess(
+                                  credId: String,
+                                  usersGroupResponse: UsersGroupResponse
+                                ): StubMapping = stubGet(
+    s"/users-groups-search/users/$credId",
+    NON_AUTHORITATIVE_INFORMATION,
+    usergroupsResponseJson(usersGroupResponse).toString()
+  )
+
+  def stubUserGroupSearchFailure(credId: String): StubMapping =
+    stubGet(s"/users-groups-search/users/$credId", INTERNAL_SERVER_ERROR, "")
 
 }

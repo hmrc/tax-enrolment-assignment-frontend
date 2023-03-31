@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.views
 
+import org.jsoup.nodes.Document
 import play.api.test.FakeRequest
 import play.twirl.api.HtmlFormat
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
@@ -38,9 +39,9 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
     val links = "govuk-link"
   }
 
-  val mfaDetails = Seq(MFADetails("mfaDetails.text", "28923"))
+  val mfaDetails: Seq[MFADetails] = Seq(MFADetails("mfaDetails.text", "28923"))
 
-  val accountDetails =
+  val accountDetails: AccountDetails =
     AccountDetails(
       "credId",
       "4533",
@@ -53,10 +54,10 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
     reportSuspiciousIdView(accountDetails)(FakeRequest(), testMessages)
 
   val viewSA: HtmlFormat.Appendable =
-    reportSuspiciousIdView(accountDetails, true)(FakeRequest(), testMessages)
+    reportSuspiciousIdView(accountDetails, saOnOtherAccountJourney = true)(FakeRequest(), testMessages)
 
-  val document = doc(view)
-  val documentSA = doc(viewSA)
+  val document: Document = doc(view)
+  val documentSA: Document = doc(viewSA)
 
   "The Report suspicious ID Page" should {
     "have a back link" that {
@@ -140,7 +141,7 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
 
       telephoneBlock
         .get(0)
-        .text() shouldBe ReportSuspiciousIDMessages.telephone(0)
+        .text() shouldBe ReportSuspiciousIDMessages.telephone.head
 
       telephoneBlock
         .get(1)
@@ -152,7 +153,7 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
 
       outsideUKBlock
         .get(2)
-        .text() shouldBe ReportSuspiciousIDMessages.outsideUK(0)
+        .text() shouldBe ReportSuspiciousIDMessages.outsideUK.head
 
       outsideUKBlock
         .get(3)
@@ -166,7 +167,7 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
       "correct title" in {
         document
           .select(".govuk-details__summary")
-          .text() shouldBe ReportSuspiciousIDMessages.informationBlock(0)
+          .text() shouldBe ReportSuspiciousIDMessages.informationBlock.head
       }
       "correct information" in {
         detailsBlockParagraphs
@@ -209,7 +210,7 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
     "only display the continue button when SA identified" in {
       documentSA
         .select("p." + Selectors.body)
-        .get(4)
+        .get(5)
         .text() shouldBe ReportSuspiciousIDMessages.saPText
 
       documentSA
@@ -221,6 +222,12 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
       documentSA
         .select("form")
         .attr("action") shouldBe ReportSuspiciousIDMessages.action
+    }
+
+    "display the code and helpdesk timing" in {
+      documentSA
+        .text()
+        .contains(ReportSuspiciousIDMessages.referenceNumberAndHelpdeskTiming) shouldBe true
     }
   }
 }

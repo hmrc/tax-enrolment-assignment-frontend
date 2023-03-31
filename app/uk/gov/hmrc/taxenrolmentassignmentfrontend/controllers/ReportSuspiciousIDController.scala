@@ -34,29 +34,29 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.ReportSuspiciousID
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ReportSuspiciousIDController @Inject()(
-                                              authAction: AuthAction,
-                                              accountMongoDetailsAction: AccountMongoDetailsAction,
-                                              throttleAction: ThrottleAction,
-                                              sessionCache: TEASessionCache,
-                                              multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
-                                              mcc: MessagesControllerComponents,
-                                              reportSuspiciousID: ReportSuspiciousID,
-                                              val logger: EventLoggerService,
-                                              auditHandler: AuditHandler,
-                                              errorHandler: ErrorHandler
+class ReportSuspiciousIDController @Inject() (
+  authAction: AuthAction,
+  accountMongoDetailsAction: AccountMongoDetailsAction,
+  throttleAction: ThrottleAction,
+  sessionCache: TEASessionCache,
+  multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
+  mcc: MessagesControllerComponents,
+  reportSuspiciousID: ReportSuspiciousID,
+  val logger: EventLoggerService,
+  auditHandler: AuditHandler,
+  errorHandler: ErrorHandler
 )(implicit ec: ExecutionContext)
-    extends TEAFrontendController(mcc)  {
+    extends TEAFrontendController(mcc) {
 
   def viewNoSA: Action[AnyContent] =
     authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
       val res = for {
         _ <- EitherT {
-          Future.successful(
-            multipleAccountsOrchestrator
-              .checkValidAccountType(List(PT_ASSIGNED_TO_OTHER_USER))
-          )
-        }
+               Future.successful(
+                 multipleAccountsOrchestrator
+                   .checkValidAccountType(List(PT_ASSIGNED_TO_OTHER_USER))
+               )
+             }
         ptAccount <- multipleAccountsOrchestrator.getPTCredentialDetails
       } yield AccountDetails.userFriendlyAccountDetails(ptAccount)
 
@@ -77,17 +77,17 @@ class ReportSuspiciousIDController @Inject()(
     authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
       val res = for {
         _ <- EitherT {
-          Future.successful(
-            multipleAccountsOrchestrator
-              .checkValidAccountType(List(SA_ASSIGNED_TO_OTHER_USER))
-          )
-        }
+               Future.successful(
+                 multipleAccountsOrchestrator
+                   .checkValidAccountType(List(SA_ASSIGNED_TO_OTHER_USER))
+               )
+             }
         saAccount <- multipleAccountsOrchestrator.getSACredentialDetails
       } yield AccountDetails.userFriendlyAccountDetails(saAccount)
 
       res.value.map {
         case Right(saAccount) =>
-          if(!request.userDetails.hasPTEnrolment) {
+          if (!request.userDetails.hasPTEnrolment) {
             auditHandler
               .audit(AuditEvent.auditReportSuspiciousSAAccount(saAccount))
           }

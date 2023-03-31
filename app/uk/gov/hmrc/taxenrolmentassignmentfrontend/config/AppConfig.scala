@@ -21,18 +21,15 @@ import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import javax.inject.{Inject, Singleton}
 
 @Singleton
-class AppConfig @Inject()(val config: ServicesConfig) {
+class AppConfig @Inject() (val config: ServicesConfig) {
   lazy val welshLanguageSupportEnabled: Boolean = config
     .getConfBool("features.welsh-language-support", defBool = true)
 
   lazy val validRedirectHostNames: Set[String] = config.getConfString("validRedirectHostNames", "").split(",").toSet
 
-  lazy val IV_BASE_URL
-    : String = config.baseUrl("identity-verification") + "/identity-verification"
-  lazy val EACD_BASE_URL
-    : String = config.baseUrl("enrolment-store-proxy") + "/enrolment-store-proxy"
-  lazy val TAX_ENROLMENTS_BASE_URL
-    : String = {
+  lazy val IV_BASE_URL: String = config.baseUrl("identity-verification") + "/identity-verification"
+  lazy val EACD_BASE_URL: String = config.baseUrl("enrolment-store-proxy") + "/enrolment-store-proxy"
+  lazy val TAX_ENROLMENTS_BASE_URL: String = {
     if (config.getConfBool("tax-enrolments.isTest", defBool = false)) {
       s"$tenBaseUrl/tax-enrolments/test-only"
     } else {
@@ -47,13 +44,11 @@ class AppConfig @Inject()(val config: ServicesConfig) {
     }
   }
 
-
-  lazy val btaUrl : String =
+  lazy val btaUrl: String =
     config.getString("microservice.services.business-tax-account.url")
 
-  lazy val useTestOnlyUsersGroupSearch: Boolean = {
+  lazy val useTestOnlyUsersGroupSearch: Boolean =
     config.getConfBool("users-groups-search.isTest", defBool = false)
-  }
   lazy val tenBaseUrl: String =
     s"${config.baseUrl("tax-enrolment-assignment-frontend")}"
   lazy val usersGroupsSearchBaseURL: String =

@@ -26,17 +26,22 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class EnrolForSAController @Inject()(
-                                      authAction: AuthAction,
-                                      mcc: MessagesControllerComponents,
-                                      appConfig: AppConfig,
-                                      errorHandler: ErrorHandler,
-                                      teaSessionCache: TEASessionCache)(implicit ec: ExecutionContext)
-  extends TEAFrontendController(mcc) {
+class EnrolForSAController @Inject() (
+  authAction: AuthAction,
+  mcc: MessagesControllerComponents,
+  appConfig: AppConfig,
+  errorHandler: ErrorHandler,
+  teaSessionCache: TEASessionCache
+)(implicit ec: ExecutionContext)
+    extends TEAFrontendController(mcc) {
 
   def enrolForSA: Action[AnyContent] = authAction.async { implicit request =>
     request.userDetails.hasSAEnrolment match {
-      case false => Future.successful(errorHandler.handleErrors(NoSAEnrolmentWhenOneExpected, "[EnrolForSAController][enrolForSA]")(request, implicitly))
+      case false =>
+        Future.successful(
+          errorHandler
+            .handleErrors(NoSAEnrolmentWhenOneExpected, "[EnrolForSAController][enrolForSA]")(request, implicitly)
+        )
       case true =>
         teaSessionCache.removeRecord.map(_ => Redirect(appConfig.btaUrl))
     }

@@ -76,15 +76,20 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
     "a user has SA on another account" should {
       "render the SABlueInterrupt page" when {
         "the user has not already been assigned a PT enrolment" in {
-          (mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(_: HeaderCarrier, _: ExecutionContext))
+          (
+            mockAuthConnector
+              .authorise(
+                _: Predicate,
+                _: Retrieval[
+                  ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                    String
+                  ] ~ Option[AffinityGroup] ~ Option[String]
+                ]
+              )(
+                _: HeaderCarrier,
+                _: ExecutionContext
+              )
+            )
             .expects(predicates, retrievals, *, *)
             .returning(Future.successful(retrievalResponse()))
 
@@ -114,15 +119,20 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
 
       s"redirect to ${UrlPaths.enrolledPTSAOnOtherAccountPath}" when {
         "the user has already been assigned a PT enrolment already" in {
-          (mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(_: HeaderCarrier, _: ExecutionContext))
+          (
+            mockAuthConnector
+              .authorise(
+                _: Predicate,
+                _: Retrieval[
+                  ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                    String
+                  ] ~ Option[AffinityGroup] ~ Option[String]
+                ]
+              )(
+                _: HeaderCarrier,
+                _: ExecutionContext
+              )
+            )
             .expects(predicates, retrievals, *, *)
             .returning(Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly)))
 
@@ -146,15 +156,20 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
     }
     s"the cache no redirectUrl" should {
       "render the error page" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
         mockGetDataFromCacheForActionNoRedirectUrl
@@ -170,15 +185,20 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
 
     s"the user does not have an account type of $SA_ASSIGNED_TO_OTHER_USER" should {
       s"redirect to ${UrlPaths.accountCheckPath}" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
 
@@ -209,15 +229,20 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
 
     "a user has SA on another account" should {
       s"redirect to ${UrlPaths.saOnOtherAccountKeepAccessToSAPath}" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
 
@@ -242,15 +267,20 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
     }
     s"the cache no redirectUrl" should {
       "render the error page" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
         mockGetDataFromCacheForActionNoRedirectUrl
@@ -266,15 +296,20 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
 
     s"the user does not have an account type of $SA_ASSIGNED_TO_OTHER_USER" should {
       s"redirect to ${UrlPaths.accountCheckPath}" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
 

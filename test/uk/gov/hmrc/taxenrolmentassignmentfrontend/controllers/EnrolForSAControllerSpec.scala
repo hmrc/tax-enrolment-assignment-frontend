@@ -26,7 +26,7 @@ import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, Enrolments}
 import uk.gov.hmrc.http.HeaderCarrier
 import play.api.mvc.{AnyContent, BodyParsers}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AuthAction, RequestWithUserDetailsFromSession}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{buildFakeRequestWithSessionId, predicates, retrievalResponse, retrievals, saEnrolmentOnly}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.AccountCheckOrchestrator
@@ -68,15 +68,20 @@ class EnrolForSAControllerSpec extends BaseSpec {
 
   "navigate to bta" when {
     "users has SA enrolment and PT assigned to other cred that they logged in with and wants to access sa from ten's kick out page " in {
-      (mockAuthConnector
-        .authorise(
-          _: Predicate,
-          _: Retrieval[
-            ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-              String
-            ] ~ Option[AffinityGroup] ~ Option[String]
-          ]
-        )(_: HeaderCarrier, _: ExecutionContext))
+      (
+        mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup] ~ Option[String]
+            ]
+          )(
+            _: HeaderCarrier,
+            _: ExecutionContext
+          )
+        )
         .expects(predicates, retrievals, *, *)
         .returning(
           Future.successful(retrievalResponse(enrolments = saEnrolmentOnly))
@@ -97,15 +102,20 @@ class EnrolForSAControllerSpec extends BaseSpec {
 
   "throw error message" when {
     "users has does not have SA enrolment and PT assigned to other cred that they logged in with and wants to access sa from ten's kick out page " in {
-      (mockAuthConnector
-        .authorise(
-          _: Predicate,
-          _: Retrieval[
-            ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-              String
-            ] ~ Option[AffinityGroup] ~ Option[String]
-          ]
-        )(_: HeaderCarrier, _: ExecutionContext))
+      (
+        mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup] ~ Option[String]
+            ]
+          )(
+            _: HeaderCarrier,
+            _: ExecutionContext
+          )
+        )
         .expects(predicates, retrievals, *, *)
         .returning(
           Future.successful(retrievalResponse())

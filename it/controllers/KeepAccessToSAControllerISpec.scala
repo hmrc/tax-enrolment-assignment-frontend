@@ -24,8 +24,6 @@ import helpers.{IntegrationSpecBase, ItUrlPaths, ThrottleHelperISpec}
 import org.jsoup.Jsoup
 import play.api.http.Status
 import play.api.libs.json.{JsString, Json}
-import play.api.libs.ws.DefaultWSCookie
-import play.api.mvc.Cookie
 import play.api.test.FakeRequest
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
@@ -139,13 +137,13 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status with
         val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe OK
-          page.title should include(KeepAccessToSAMessages.title)
-          val radioInputs = page.getElementsByClass("govuk-radios__input")
-          radioInputs.size() shouldBe 2
-          radioInputs.get(0).attr("value") shouldBe "yes"
-          radioInputs.get(0).hasAttr("checked") shouldBe false
-          radioInputs.get(1).attr("value") shouldBe "no"
-          radioInputs.get(1).hasAttr("checked") shouldBe true
+        page.title should include(KeepAccessToSAMessages.title)
+        val radioInputs = page.getElementsByClass("govuk-radios__input")
+        radioInputs.size() shouldBe 2
+        radioInputs.get(0).attr("value") shouldBe "yes"
+        radioInputs.get(0).hasAttr("checked") shouldBe false
+        radioInputs.get(1).attr("value") shouldBe "no"
+        radioInputs.get(1).hasAttr("checked") shouldBe true
 
       }
     }
@@ -179,11 +177,9 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status with
         val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe SEE_OTHER
-        redirectLocation(result).get should include(
-            ItUrlPaths.enrolledPTSAOnOtherAccountPath)
+        redirectLocation(result).get should include(ItUrlPaths.enrolledPTSAOnOtherAccountPath)
 
       }
     }
@@ -208,11 +204,9 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status with
           val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
             .withSession(xAuthToken, xSessionId)
           val result = route(app, request).get
-          val page = Jsoup.parse(contentAsString(result))
 
           status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(
-            accountCheckPath)
+          redirectLocation(result).get should include(accountCheckPath)
         }
       }
     }
@@ -226,11 +220,9 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status with
         val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe SEE_OTHER
-        redirectLocation(result).get should include(
-          "/bas-gateway/sign-in")
+        redirectLocation(result).get should include("/bas-gateway/sign-in")
       }
     }
 
@@ -243,11 +235,9 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status with
         val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe SEE_OTHER
-        redirectLocation(result).get should include(
-          ItUrlPaths.unauthorizedPath)
+        redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
       }
     }
 
@@ -260,11 +250,9 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status with
         val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe SEE_OTHER
-        redirectLocation(result).get should include(
-          ItUrlPaths.unauthorizedPath)
+        redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
       }
     }
 
@@ -276,11 +264,9 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status with
         val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe SEE_OTHER
-        redirectLocation(result).get should include(
-          ItUrlPaths.unauthorizedPath)
+        redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
       }
     }
 
@@ -292,18 +278,16 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status with
         val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe SEE_OTHER
-        redirectLocation(result).get should include(
-          "/bas-gateway/sign-in")
+        redirectLocation(result).get should include("/bas-gateway/sign-in")
       }
     }
   }
 
   s"POST $urlPath" when {
 
-  import play.api.test.Helpers.status
+    import play.api.test.Helpers.status
 
     throttleSpecificTests { () =>
       val request = FakeRequest(POST, "/protect-tax-info" + urlPath)
@@ -332,7 +316,6 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status with
             .withSession(xAuthToken, xSessionId)
             .withBody(Map("select-continue" -> Seq("yes")))
           val result = route(app, request).get
-          val page = Jsoup.parse(contentAsString(result))
 
           status(result) shouldBe SEE_OTHER
           redirectLocation(result).get should include(
@@ -360,7 +343,6 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status with
             .withSession(xAuthToken, xSessionId)
             .withBody(Map("select-continue" -> Seq("yes")))
           val result = route(app, request).get
-          val page = Jsoup.parse(contentAsString(result))
 
           status(result) shouldBe SEE_OTHER
           redirectLocation(result).get should include(
@@ -372,9 +354,9 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status with
       s"enrol the user for PT and redirect to ${ItUrlPaths.enrolledPTSAOnOtherAccountPath} url" when {
         "the user selects no" in {
           val cacheData = Map(
-            ACCOUNT_TYPE -> Json.toJson(SA_ASSIGNED_TO_OTHER_USER),
-            REDIRECT_URL -> JsString(returnUrl),
-            USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(saUsers),
+            ACCOUNT_TYPE                                 -> Json.toJson(SA_ASSIGNED_TO_OTHER_USER),
+            REDIRECT_URL                                 -> JsString(returnUrl),
+            USER_ASSIGNED_SA_ENROLMENT                   -> Json.toJson(saUsers),
             accountDetailsForCredential(CREDENTIAL_ID_2) -> Json.toJson(accountDetails)
           )
           await(save(sessionId, cacheData))
@@ -392,25 +374,24 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status with
             .withSession(xAuthToken, xSessionId)
             .withBody(Map("select-continue" -> Seq("no")))
           val result = route(app, request).get
-          val page = Jsoup.parse(contentAsString(result))
 
           status(result) shouldBe SEE_OTHER
           redirectLocation(result).get should include(
             ItUrlPaths.enrolledPTSAOnOtherAccountPath
           )
 
-            val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(
-            )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, mongoCacheData = cacheData), messagesApi)
-            verifyAuditEventSent(expectedAuditEvent)
+          val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(
+          )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, mongoCacheData = cacheData), messagesApi)
+          verifyAuditEventSent(expectedAuditEvent)
         }
       }
 
       s"not enrol the user again for PT and redirect to ${ItUrlPaths.enrolledPTSAOnOtherAccountPath} url" when {
         "the user selects no and has already been assigned a PT enrolment" in {
           val cacheData = Map(
-            ACCOUNT_TYPE -> Json.toJson(SA_ASSIGNED_TO_OTHER_USER),
-            REDIRECT_URL -> JsString(returnUrl),
-            USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(saUsers),
+            ACCOUNT_TYPE                                 -> Json.toJson(SA_ASSIGNED_TO_OTHER_USER),
+            REDIRECT_URL                                 -> JsString(returnUrl),
+            USER_ASSIGNED_SA_ENROLMENT                   -> Json.toJson(saUsers),
             accountDetailsForCredential(CREDENTIAL_ID_2) -> Json.toJson(accountDetails)
           )
           await(save(sessionId, cacheData))
@@ -423,7 +404,6 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status with
             .withSession(xAuthToken, xSessionId)
             .withBody(Map("select-continue" -> Seq("no")))
           val result = route(app, request).get
-          val page = Jsoup.parse(contentAsString(result))
 
           status(result) shouldBe SEE_OTHER
           redirectLocation(result).get should include(
@@ -456,7 +436,6 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status with
             .withSession(xAuthToken, xSessionId)
             .withBody(Map("select-continue" -> Seq("no")))
           val result = route(app, request).get
-          val page = Jsoup.parse(contentAsString(result))
 
           status(result) shouldBe INTERNAL_SERVER_ERROR
           contentAsString(result) should include(ErrorTemplateMessages.title)
@@ -487,7 +466,6 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status with
               .withSession(xAuthToken, xSessionId)
               .withBody(Map("select-continue" -> Seq("yes")))
             val result = route(app, request).get
-            val page = Jsoup.parse(contentAsString(result))
 
             status(result) shouldBe SEE_OTHER
             redirectLocation(result).get should include(accountCheckPath)
@@ -505,7 +483,6 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status with
               .withSession(xAuthToken, xSessionId)
               .withBody(Map("select-continue" -> Seq("no")))
             val result = route(app, request).get
-            val page = Jsoup.parse(contentAsString(result))
 
             status(result) shouldBe SEE_OTHER
             redirectLocation(result).get should include(accountCheckPath)
@@ -528,7 +505,6 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status with
             .withSession(xAuthToken, xSessionId)
             .withBody(Map("select-continue" -> Seq("yes")))
           val result = route(app, request).get
-          val page = Jsoup.parse(contentAsString(result))
 
           status(result) shouldBe INTERNAL_SERVER_ERROR
           contentAsString(result) should include(ErrorTemplateMessages.title)
@@ -546,7 +522,6 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status with
             .withSession(xAuthToken, xSessionId)
             .withBody(Map("select-continue" -> Seq("no")))
           val result = route(app, request).get
-          val page = Jsoup.parse(contentAsString(result))
 
           status(result) shouldBe INTERNAL_SERVER_ERROR
           contentAsString(result) should include(ErrorTemplateMessages.title)

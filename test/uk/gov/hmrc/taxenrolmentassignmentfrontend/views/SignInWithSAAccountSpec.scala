@@ -141,18 +141,17 @@ class SignInWithSAAccountSpec extends ViewSpecHelper {
           .getElementsByClass(Selectors.summaryListValue)
           .text() shouldBe accountDetails.lastLoginDate
       }
-      elementsToMFADetails.foreach {
-        case (elementNumber, mfaDetails) =>
-          s"include the key - ${mfaDetails.factorNameKey}" in {
-            summaryListRows
-              .get(elementNumber)
-              .getElementsByClass(Selectors.summaryListKey)
-              .text() shouldBe mfaDetails.factorNameKey
-            summaryListRows
-              .get(elementNumber)
-              .getElementsByClass(Selectors.summaryListValue)
-              .text() shouldBe mfaDetails.factorValue
-          }
+      elementsToMFADetails.foreach { case (elementNumber, mfaDetails) =>
+        s"include the key - ${mfaDetails.factorNameKey}" in {
+          summaryListRows
+            .get(elementNumber)
+            .getElementsByClass(Selectors.summaryListKey)
+            .text() shouldBe mfaDetails.factorNameKey
+          summaryListRows
+            .get(elementNumber)
+            .getElementsByClass(Selectors.summaryListValue)
+            .text() shouldBe mfaDetails.factorValue
+        }
       }
     }
 

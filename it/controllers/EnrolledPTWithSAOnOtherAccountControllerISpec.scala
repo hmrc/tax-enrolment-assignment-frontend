@@ -22,18 +22,14 @@ import play.api.test.Helpers.{GET, POST, await, contentAsString, defaultAwaitTim
 import play.api.test.Helpers.{status, writeableOf_AnyContentAsEmpty, writeableOf_AnyContentAsJson}
 import helpers.messages._
 import org.jsoup.Jsoup
-import play.api.http.Status
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import play.api.mvc.Cookie
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.USER_ASSIGNED_SA_ENROLMENT
 
-class EnrolledPTWithSAOnOtherAccountControllerISpec
-    extends IntegrationSpecBase
-    with ThrottleHelperISpec {
+class EnrolledPTWithSAOnOtherAccountControllerISpec extends IntegrationSpecBase with ThrottleHelperISpec {
 
   val urlPath: String =
     ItUrlPaths.enrolledPTSAOnOtherAccountPath
@@ -111,12 +107,12 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
         val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe OK
-          page.title should include(
-            EnrolledPTWithSAOnOtherAccountMessages.title
-          )
-          page
-            .getElementsByClass("govuk-body")
-            .text() shouldBe EnrolledPTWithSAOnOtherAccountMessages.paragraphsSA
+        page.title should include(
+          EnrolledPTWithSAOnOtherAccountMessages.title
+        )
+        page
+          .getElementsByClass("govuk-body")
+          .text() shouldBe EnrolledPTWithSAOnOtherAccountMessages.paragraphsSA
 
       }
     }
@@ -175,8 +171,8 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
 
           status(result) shouldBe SEE_OTHER
           redirectLocation(result).get should include(
-              accountCheckPath
-            )
+            accountCheckPath
+          )
 
         }
       }
@@ -209,7 +205,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
         val result = route(app, request).get
 
         status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
+        redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
 
       }
     }
@@ -225,7 +221,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
         val result = route(app, request).get
 
         status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
+        redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
 
       }
     }
@@ -240,7 +236,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
         val result = route(app, request).get
 
         status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
+        redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
 
       }
     }
@@ -255,7 +251,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec
         val result = route(app, request).get
 
         status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include("/bas-gateway/sign-in")
+        redirectLocation(result).get should include("/bas-gateway/sign-in")
 
       }
     }

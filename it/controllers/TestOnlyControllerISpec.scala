@@ -21,7 +21,6 @@ import helpers.TestITData.{authoriseResponseJson, saEnrolmentAsCaseClass, saEnro
 import play.api.test.Helpers.{GET, PUT, contentAsJson, contentAsString, defaultAwaitTimeout, route, status, writeableOf_AnyContentAsEmpty, writeableOf_AnyContentAsJson}
 import play.api.http.Status.{NON_AUTHORITATIVE_INFORMATION, NO_CONTENT, OK}
 import play.api.libs.json.Json
-import play.api.mvc.Cookie
 import play.api.test.FakeRequest
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.formats.EnrolmentsFormats
 
@@ -56,8 +55,8 @@ class TestOnlyControllerISpec extends IntegrationSpecBase {
             .withSession(xAuthToken)
           val result = route(app, request).get
 
-            status(result) shouldBe NON_AUTHORITATIVE_INFORMATION
-            contentAsString(result) shouldBe expectedResponse
+          status(result) shouldBe NON_AUTHORITATIVE_INFORMATION
+          contentAsString(result) shouldBe expectedResponse
 
         }
       }
@@ -65,33 +64,32 @@ class TestOnlyControllerISpec extends IntegrationSpecBase {
   }
   "GET /protect-tax-info/test-only.auth/enrolments" should {
 
-  s"return enrolments and $OK" in {
+    s"return enrolments and $OK" in {
 
       val authResponse = authoriseResponseJson(enrolments = saEnrolmentOnly)
       stubAuthorizePost(OK, authResponse.toString())
 
-    val request = FakeRequest(GET, "/protect-tax-info/test-only/auth/enrolments")
-      .withSession(xAuthToken)
-    val result = route(app, request).get
+      val request = FakeRequest(GET, "/protect-tax-info/test-only/auth/enrolments")
+        .withSession(xAuthToken)
+      val result = route(app, request).get
 
-        status(result) shouldBe OK
-        contentAsJson(result) shouldBe Json.toJson(Set(saEnrolmentAsCaseClass))(EnrolmentsFormats.writes)
+      status(result) shouldBe OK
+      contentAsJson(result) shouldBe Json.toJson(Set(saEnrolmentAsCaseClass))(EnrolmentsFormats.writes)
 
     }
   }
 
   "GET /sa/test-only/start" should {
-  s"return $OK with success message" in {
-    val request = FakeRequest(GET, "/sa/test-only/start")
-      .withSession(xAuthToken)
-    val result = route(app, request).get
+    s"return $OK with success message" in {
+      val request = FakeRequest(GET, "/sa/test-only/start")
+        .withSession(xAuthToken)
+      val result = route(app, request).get
 
-        status(result) shouldBe OK
-        contentAsString(result) shouldBe "Successful Redirect to SA"
+      status(result) shouldBe OK
+      contentAsString(result) shouldBe "Successful Redirect to SA"
 
     }
   }
-
 
   "PUT /tax-enrolments/test-only/service/HMRC-PT/enrolment" should {
     s"return $OK" in {
@@ -100,7 +98,7 @@ class TestOnlyControllerISpec extends IntegrationSpecBase {
         .withJsonBody(Json.obj())
       val result = route(app, request).get
 
-        status(result) shouldBe NO_CONTENT
+      status(result) shouldBe NO_CONTENT
 
     }
   }
@@ -112,7 +110,7 @@ class TestOnlyControllerISpec extends IntegrationSpecBase {
         .withJsonBody(Json.obj())
       val result = route(app, request).get
 
-        status(result) shouldBe OK
+      status(result) shouldBe OK
 
     }
   }

@@ -32,10 +32,9 @@ class TimeOutControllerISpec extends IntegrationSpecBase {
   val urlPathKeepAlive: String = ItUrlPaths.keepAlive
   val urlPathTimeout: String = ItUrlPaths.timeout
 
-  def saveToSessionAndGetLastLoginDate: Future[Instant] = {
+  def saveToSessionAndGetLastLoginDate: Future[Instant] =
     save[String](sessionId, "redirectURL", returnUrl)
       .map(_ => getLastLoginDateTime(sessionId))
-  }
 
   s"GET $urlPathKeepAlive" should {
     "extend the session cache and return NoContent" in {
@@ -49,20 +48,20 @@ class TimeOutControllerISpec extends IntegrationSpecBase {
         .withSession(xAuthToken, xSessionId)
       val result = route(app, request).get
 
-        status(result) shouldBe NO_CONTENT
-        assert(getLastLoginDateTime(sessionId).isAfter(initialLastLoginDate))
+      status(result) shouldBe NO_CONTENT
+      assert(getLastLoginDateTime(sessionId).isAfter(initialLastLoginDate))
     }
   }
 
   s"GET $urlPathTimeout" should {
-  "return OK and render the timeout page" in {
-    val request = FakeRequest(GET, "/protect-tax-info" + urlPathTimeout)
-      .withSession(xAuthToken, xSessionId)
-    val result = route(app, request).get
+    "return OK and render the timeout page" in {
+      val request = FakeRequest(GET, "/protect-tax-info" + urlPathTimeout)
+        .withSession(xAuthToken, xSessionId)
+      val result = route(app, request).get
 
-        status(result) shouldBe OK
-        val page = Jsoup.parse(contentAsString(result))
-        page.title should include(TimedOutMessages.title)
+      status(result) shouldBe OK
+      val page = Jsoup.parse(contentAsString(result))
+      page.title should include(TimedOutMessages.title)
 
     }
   }

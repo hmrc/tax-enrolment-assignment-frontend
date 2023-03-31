@@ -16,18 +16,16 @@
 
 package controllers
 
-import helpers.{ItUrlPaths, ThrottleHelperISpec, IntegrationSpecBase}
+import helpers.{IntegrationSpecBase, ItUrlPaths, ThrottleHelperISpec}
 import helpers.TestITData._
 import play.api.test.Helpers.{GET, POST, await, contentAsString, defaultAwaitTimeout, redirectLocation}
-import play.api.test.Helpers.{writeableOf_AnyContentAsJson, route, status, writeableOf_AnyContentAsEmpty}
+import play.api.test.Helpers.{route, status, writeableOf_AnyContentAsEmpty, writeableOf_AnyContentAsJson}
 import helpers.messages._
 import org.jsoup.Jsoup
 import play.api.http.Status
 import play.api.libs.json.Json
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
-import play.api.libs.ws.DefaultWSCookie
-import play.api.mvc.Cookie
 import play.api.test.FakeRequest
 
 class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status with ThrottleHelperISpec {
@@ -62,7 +60,7 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status wit
           val page = Jsoup.parse(contentAsString(result))
 
           status(result) shouldBe OK
-            page.title should include(SABlueInterruptMessages.selfAssessTitle)
+          page.title should include(SABlueInterruptMessages.selfAssessTitle)
 
         }
       }
@@ -84,12 +82,11 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status wit
           val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
             .withSession(xAuthToken, xSessionId)
           val result = route(app, request).get
-          val page = Jsoup.parse(contentAsString(result))
 
           status(result) shouldBe SEE_OTHER
-            redirectLocation(result).get should include(
-              ItUrlPaths.enrolledPTSAOnOtherAccountPath
-            )
+          redirectLocation(result).get should include(
+            ItUrlPaths.enrolledPTSAOnOtherAccountPath
+          )
 
         }
       }
@@ -115,12 +112,11 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status wit
           val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
             .withSession(xAuthToken, xSessionId)
           val result = route(app, request).get
-          val page = Jsoup.parse(contentAsString(result))
 
           status(result) shouldBe SEE_OTHER
-            redirectLocation(result).get should include(
-              accountCheckPath
-            )
+          redirectLocation(result).get should include(
+            accountCheckPath
+          )
 
         }
       }
@@ -138,10 +134,9 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status wit
         val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
-          contentAsString(result) should include(ErrorTemplateMessages.title)
+        contentAsString(result) should include(ErrorTemplateMessages.title)
 
       }
     }
@@ -163,10 +158,9 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status wit
         val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
-          contentAsString(result) should include(ErrorTemplateMessages.title)
+        contentAsString(result) should include(ErrorTemplateMessages.title)
 
       }
     }
@@ -188,7 +182,6 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status wit
         val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) should include(ErrorTemplateMessages.title)
@@ -204,10 +197,9 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status wit
         val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
+        redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
 
       }
     }
@@ -221,10 +213,9 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status wit
         val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
+        redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
       }
     }
 
@@ -236,10 +227,9 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status wit
         val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
+        redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
       }
     }
 
@@ -251,10 +241,9 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status wit
         val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include("/bas-gateway/sign-in")
+        redirectLocation(result).get should include("/bas-gateway/sign-in")
 
       }
     }
@@ -288,12 +277,11 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status wit
             .withSession(xAuthToken, xSessionId)
             .withJsonBody(Json.obj())
           val result = route(app, request).get
-          val page = Jsoup.parse(contentAsString(result))
 
           status(result) shouldBe SEE_OTHER
-            redirectLocation(result).get should include(
-              ItUrlPaths.saOnOtherAccountKeepAccessToSAPath
-            )
+          redirectLocation(result).get should include(
+            ItUrlPaths.saOnOtherAccountKeepAccessToSAPath
+          )
         }
       }
 
@@ -315,12 +303,11 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status wit
             .withSession(xAuthToken, xSessionId)
             .withJsonBody(Json.obj())
           val result = route(app, request).get
-          val page = Jsoup.parse(contentAsString(result))
 
           status(result) shouldBe SEE_OTHER
-            redirectLocation(result).get should include(
-              ItUrlPaths.enrolledPTSAOnOtherAccountPath
-            )
+          redirectLocation(result).get should include(
+            ItUrlPaths.enrolledPTSAOnOtherAccountPath
+          )
 
         }
       }
@@ -347,12 +334,11 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status wit
             .withSession(xAuthToken, xSessionId)
             .withJsonBody(Json.obj())
           val result = route(app, request).get
-          val page = Jsoup.parse(contentAsString(result))
 
           status(result) shouldBe SEE_OTHER
-            redirectLocation(result).get should include(
-              accountCheckPath
-            )
+          redirectLocation(result).get should include(
+            accountCheckPath
+          )
         }
       }
     }
@@ -367,10 +353,9 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status wit
           .withSession(xAuthToken, xSessionId)
           .withJsonBody(Json.obj())
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include("/bas-gateway/sign-in")
+        redirectLocation(result).get should include("/bas-gateway/sign-in")
       }
     }
     "the user has a session missing required element NINO" should {
@@ -383,10 +368,9 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status wit
           .withSession(xAuthToken, xSessionId)
           .withJsonBody(Json.obj())
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
+        redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
 
       }
     }
@@ -401,10 +385,9 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status wit
           .withSession(xAuthToken, xSessionId)
           .withJsonBody(Json.obj())
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
+        redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
       }
     }
 
@@ -417,10 +400,9 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status wit
           .withSession(xAuthToken, xSessionId)
           .withJsonBody(Json.obj())
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
+        redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
 
       }
     }
@@ -434,10 +416,9 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status wit
           .withSession(xAuthToken, xSessionId)
           .withJsonBody(Json.obj())
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include("/bas-gateway/sign-in")
+        redirectLocation(result).get should include("/bas-gateway/sign-in")
 
       }
     }

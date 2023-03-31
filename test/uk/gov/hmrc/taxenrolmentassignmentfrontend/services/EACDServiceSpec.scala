@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.services
 
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.time.{Millis, Seconds, Span}
 import play.api.libs.json.Format
 import play.api.mvc.AnyContent
 import uk.gov.hmrc.http.HeaderCarrier

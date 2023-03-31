@@ -23,9 +23,11 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, UsersA
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM, REDIRECT_URL, REPORTED_FRAUD, USER_ASSIGNED_PT_ENROLMENT, USER_ASSIGNED_SA_ENROLMENT, accountDetailsForCredential}
 
-case class AccountDetailsFromMongo(accountType: AccountTypes.Value,
-                                   redirectUrl: String,
-                                   private val sessionData: Map[String, JsValue])(private val crypto: Encrypter with Decrypter) {
+case class AccountDetailsFromMongo(
+  accountType: AccountTypes.Value,
+  redirectUrl: String,
+  private val sessionData: Map[String, JsValue]
+)(private val crypto: Encrypter with Decrypter) {
 
   val optKeepAccessToSAFormData: Option[KeepAccessToSAThroughPTA] =
     sessionData.get(KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM).map(_.as[KeepAccessToSAThroughPTA])

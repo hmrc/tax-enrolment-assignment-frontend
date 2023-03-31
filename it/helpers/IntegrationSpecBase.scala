@@ -24,14 +24,14 @@ import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.i18n.{Lang, Messages, MessagesApi}
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.{JsValue, Json, JsString}
+import play.api.libs.json.{JsString, JsValue, Json}
 import play.api.mvc.{AnyContent, Request}
 import play.api.test.{FakeRequest, Injecting}
 import play.api.Application
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSessionAndMongo, UserDetailsFromSession}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSessionAndMongo}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{routes, testOnly}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.TENCrypto
 import uk.gov.hmrc.domain.Nino
@@ -42,7 +42,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUN
 import scala.concurrent.ExecutionContext
 
 trait IntegrationSpecBase
-  extends AnyWordSpec with GuiceOneAppPerSuite with Matchers with PatienceConfiguration with BeforeAndAfterEach
+    extends AnyWordSpec with GuiceOneAppPerSuite with Matchers with PatienceConfiguration with BeforeAndAfterEach
     with ScalaFutures with Injecting with IntegrationPatience with SessionCacheOperations with WireMockHelper {
 
   def generateNino: Nino = new NinoGenerator().nextNino
@@ -55,18 +55,18 @@ trait IntegrationSpecBase
 
   lazy val config: Map[String, Any] = Map(
     "play.filters.csrf.header.bypassHeaders.Csrf-Token" -> "nocheck",
-    "auditing.consumer.baseUri.port" -> server.port(),
-    "microservice.services.auth.port" -> server.port(),
-    "microservice.services.auth.isTest" -> "false",
-    "microservice.services.identity-verification.port" -> server.port(),
-    "microservice.services.enrolment-store-proxy.port" -> server.port(),
-    "microservice.services.tax-enrolments.port" -> server.port(),
-    "microservice.services.tax-enrolments.isTest" -> "false",
-    "microservice.services.users-groups-search.port" -> server.port(),
-    "microservice.services.users-groups-search.isTest" -> "false",
-    "play.http.router" -> "testOnlyDoNotUseInAppConf.Routes",
-    "throttle.percentage" -> "3",
-    "mongodb.uri" -> mongoUri
+    "auditing.consumer.baseUri.port"                    -> server.port(),
+    "microservice.services.auth.port"                   -> server.port(),
+    "microservice.services.auth.isTest"                 -> "false",
+    "microservice.services.identity-verification.port"  -> server.port(),
+    "microservice.services.enrolment-store-proxy.port"  -> server.port(),
+    "microservice.services.tax-enrolments.port"         -> server.port(),
+    "microservice.services.tax-enrolments.isTest"       -> "false",
+    "microservice.services.users-groups-search.port"    -> server.port(),
+    "microservice.services.users-groups-search.isTest"  -> "false",
+    "play.http.router"                                  -> "testOnlyDoNotUseInAppConf.Routes",
+    "throttle.percentage"                               -> "3",
+    "mongodb.uri"                                       -> mongoUri
   )
 
   protected def localGuiceApplicationBuilder =
@@ -85,13 +85,14 @@ trait IntegrationSpecBase
   lazy val accountCheckPath =
     routes.AccountCheckController.accountCheck(RedirectUrl.apply(returnUrl)).url
 
-  val exampleMongoSessionData = Map(ACCOUNT_TYPE -> Json.toJson(SA_ASSIGNED_TO_OTHER_USER), REDIRECT_URL -> JsString("redirectURL"))
+  val exampleMongoSessionData =
+    Map(ACCOUNT_TYPE -> Json.toJson(SA_ASSIGNED_TO_OTHER_USER), REDIRECT_URL -> JsString("redirectURL"))
 
   def requestWithAccountType(
-                              accountType: AccountTypes.Value,
-                              redirectUrl: String = returnUrl,
-                              mongoCacheData: Map[String, JsValue] = exampleMongoSessionData,
-                            ): RequestWithUserDetailsFromSessionAndMongo[_] =
+    accountType: AccountTypes.Value,
+    redirectUrl: String = returnUrl,
+    mongoCacheData: Map[String, JsValue] = exampleMongoSessionData
+  ): RequestWithUserDetailsFromSessionAndMongo[_] =
     RequestWithUserDetailsFromSessionAndMongo(
       FakeRequest().asInstanceOf[Request[AnyContent]],
       userDetailsNoEnrolments,
@@ -99,9 +100,8 @@ trait IntegrationSpecBase
       AccountDetailsFromMongo(accountType, redirectUrl, mongoCacheData)(crypto.crypto)
     )
 
-  def messagesApi: MessagesApi = {
+  def messagesApi: MessagesApi =
     app.injector.instanceOf[MessagesApi]
-  }
 
   implicit lazy val messages: Messages = messagesApi.preferred(List(Lang("en")))
 }

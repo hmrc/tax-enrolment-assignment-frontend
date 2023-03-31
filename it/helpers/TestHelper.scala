@@ -18,27 +18,27 @@ package helpers
 
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 
-  object ItUrlPaths {
-    val enrolledPTNoSAOnAnyAccountPath    = routes.EnrolledForPTController.view.url
-    val enrolledPTWithSAOnAnyAccountPath  = routes.EnrolledForPTWithSAController.view.url
-    val enrolledPTSAOnOtherAccountPath =
-      routes.EnrolledPTWithSAOnOtherAccountController.view.url
-    val reportFraudPTAccountPath =
-      routes.ReportSuspiciousIDController.viewNoSA.url
-    val reportFraudSAAccountPath =
-      routes.ReportSuspiciousIDController.viewSA.url
-    val saOnOtherAccountInterruptPath =
-      routes.SABlueInterruptController.view.url
-    val saOnOtherAccountKeepAccessToSAPath =
-      routes.KeepAccessToSAController.view.url
-    val saOnOtherAccountSigninAgainPath =
-      routes.SignInWithSAAccountController.view.url
-    val enrolForSAPath = routes.EnrolForSAController.enrolForSA.url
-    val ptOnOtherAccountPath =
-      routes.PTEnrolmentOnOtherAccountController.view.url
-    val logoutPath = routes.SignOutController.signOut.url
-    val unauthorizedPath = routes.AuthorisationController.notAuthorised.url
-    val keepAlive = routes.TimeOutController.keepAlive.url
-    val timeout = routes.TimeOutController.timeout.url
-    val signout = routes.SignOutController.signOut.url
-  }
+object ItUrlPaths {
+  val enrolledPTNoSAOnAnyAccountPath = routes.EnrolledForPTController.view.url
+  val enrolledPTWithSAOnAnyAccountPath = routes.EnrolledForPTWithSAController.view.url
+  val enrolledPTSAOnOtherAccountPath =
+    routes.EnrolledPTWithSAOnOtherAccountController.view.url
+  val reportFraudPTAccountPath =
+    routes.ReportSuspiciousIDController.viewNoSA.url
+  val reportFraudSAAccountPath =
+    routes.ReportSuspiciousIDController.viewSA.url
+  val saOnOtherAccountInterruptPath =
+    routes.SABlueInterruptController.view.url
+  val saOnOtherAccountKeepAccessToSAPath =
+    routes.KeepAccessToSAController.view.url
+  val saOnOtherAccountSigninAgainPath =
+    routes.SignInWithSAAccountController.view.url
+  val enrolForSAPath = routes.EnrolForSAController.enrolForSA.url
+  val ptOnOtherAccountPath =
+    routes.PTEnrolmentOnOtherAccountController.view.url
+  val logoutPath = routes.SignOutController.signOut.url
+  val unauthorizedPath = routes.AuthorisationController.notAuthorised.url
+  val keepAlive = routes.TimeOutController.keepAlive.url
+  val timeout = routes.TimeOutController.timeout.url
+  val signout = routes.SignOutController.signOut.url
+}

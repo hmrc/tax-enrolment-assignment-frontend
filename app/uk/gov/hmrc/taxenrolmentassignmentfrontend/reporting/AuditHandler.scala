@@ -25,7 +25,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class AuditHandler @Inject()(
+class AuditHandler @Inject() (
   auditConnector: AuditConnector,
   appConfig: AppConfig
 )(implicit ec: ExecutionContext) {

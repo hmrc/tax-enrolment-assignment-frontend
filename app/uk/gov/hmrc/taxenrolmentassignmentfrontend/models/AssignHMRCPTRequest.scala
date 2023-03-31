@@ -19,9 +19,9 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 import play.api.libs.json.{Json, OFormat}
 
 case class AssignHMRCPTRequest(
-                                identifiers: Seq[IdentifiersOrVerifiers],
-                                verifiers: Seq[IdentifiersOrVerifiers]
-                              )
+  identifiers: Seq[IdentifiersOrVerifiers],
+  verifiers: Seq[IdentifiersOrVerifiers]
+)
 
 object AssignHMRCPTRequest {
   implicit val format: OFormat[AssignHMRCPTRequest] = Json.format[AssignHMRCPTRequest]

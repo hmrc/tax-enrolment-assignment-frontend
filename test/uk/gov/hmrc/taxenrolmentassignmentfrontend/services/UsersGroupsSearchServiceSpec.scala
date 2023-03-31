@@ -16,14 +16,13 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.services
 
-import org.scalatest.concurrent.ScalaFutures
 import play.api.Application
 import play.api.inject.bind
 import play.api.libs.json.{Format, Json}
 import play.api.mvc.AnyContent
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.cache.client.CacheMap
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{LegacyAuthConnector, UsersGroupsSearchConnector}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.UsersGroupsSearchConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromUsersGroupsSearch
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
@@ -53,10 +52,14 @@ class UsersGroupsSearchServiceSpec extends BaseSpec {
   "getAccountDetails" when {
     "the account details are already in the cache" should {
       "not call the users-groups-search and return value from cache" in {
-        val additionCacheData = Map(s"AccountDetailsFor$CREDENTIAL_ID" -> Json.toJson(accountDetails)(AccountDetails.mongoFormats(crypto.crypto)))
+        val additionCacheData = Map(
+          s"AccountDetailsFor$CREDENTIAL_ID" -> Json.toJson(accountDetails)(AccountDetails.mongoFormats(crypto.crypto))
+        )
         val result = service.getAccountDetails(CREDENTIAL_ID)(
-          implicitly, implicitly,
-          requestWithAccountType(additionalCacheData = additionCacheData))
+          implicitly,
+          implicitly,
+          requestWithAccountType(additionalCacheData = additionCacheData)
+        )
         whenReady(result.value) { res =>
           res shouldBe Right(accountDetails)
         }
@@ -75,9 +78,7 @@ class UsersGroupsSearchServiceSpec extends BaseSpec {
           ))
           .expects(s"AccountDetailsFor$CREDENTIAL_ID", accountDetails.copy(userId = "********6037"), *, *)
           .returning(Future(CacheMap(request.sessionID, Map())))
-        val result = service.getAccountDetails(CREDENTIAL_ID)(
-          implicitly, implicitly,
-          requestWithAccountType())
+        val result = service.getAccountDetails(CREDENTIAL_ID)(implicitly, implicitly, requestWithAccountType())
         whenReady(result.value) { res =>
           res shouldBe Right(accountDetails.copy(userId = "********6037"))
         }
@@ -92,9 +93,7 @@ class UsersGroupsSearchServiceSpec extends BaseSpec {
           .returning(
             createInboundResultError(UnexpectedResponseFromUsersGroupsSearch)
           )
-        val result = service.getAccountDetails(CREDENTIAL_ID)(
-          implicitly, implicitly,
-          requestWithAccountType())
+        val result = service.getAccountDetails(CREDENTIAL_ID)(implicitly, implicitly, requestWithAccountType())
         whenReady(result.value) { res =>
           res shouldBe Left(UnexpectedResponseFromUsersGroupsSearch)
         }

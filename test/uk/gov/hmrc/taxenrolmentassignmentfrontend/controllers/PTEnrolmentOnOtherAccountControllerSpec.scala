@@ -74,31 +74,40 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
     "the user with no SA has another account with PT enrolment" should {
       "render the pt on another page with no Access SA text" in {
         val ptEnrolmentDataModelNone = ptEnrolmentDataModel(None)
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
 
-        (mockMultipleAccountsOrchestrator
-          .getCurrentAndPTAAndSAIfExistsForUser(
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
+        (
+          mockMultipleAccountsOrchestrator
+            .getCurrentAndPTAAndSAIfExistsForUser(
+              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(*, *, *)
           .returning(createInboundResult(ptEnrolmentDataModelNone))
         mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-          accountDetailsWithPT.copy(lastLoginDate = s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
+          accountDetailsWithPT.copy(lastLoginDate =
+            s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"
+          )
         )(requestWithAccountType(randomAccountType), messagesApi)
 
         (mockAuditHandler
@@ -114,9 +123,14 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
         contentAsString(result) shouldBe view(
           ptEnrolmentDataModelNone
             .copy(
-              currentAccountDetails = ptEnrolmentDataModelNone.currentAccountDetails.copy(lastLoginDate = s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"),
-              ptAccountDetails = ptEnrolmentDataModelNone.ptAccountDetails.copy(lastLoginDate = s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
-            ))(
+              currentAccountDetails = ptEnrolmentDataModelNone.currentAccountDetails.copy(lastLoginDate =
+                s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"
+              ),
+              ptAccountDetails = ptEnrolmentDataModelNone.ptAccountDetails.copy(lastLoginDate =
+                s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"
+              )
+            )
+        )(
           fakeRequest,
           messages
         ).toString
@@ -128,33 +142,42 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
         val ptEnrolmentModel = ptEnrolmentDataModel(Some(USER_ID))
 
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(predicates, retrievals, *, *)
           .returning(
             Future.successful(retrievalResponse(enrolments = saEnrolmentOnly))
           )
 
-        (mockMultipleAccountsOrchestrator
-          .getCurrentAndPTAAndSAIfExistsForUser(
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
+        (
+          mockMultipleAccountsOrchestrator
+            .getCurrentAndPTAAndSAIfExistsForUser(
+              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(*, *, *)
           .returning(createInboundResult(ptEnrolmentModel))
         mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-          accountDetailsWithPT.copy(lastLoginDate = s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
+          accountDetailsWithPT.copy(lastLoginDate =
+            s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"
+          )
         )(requestWithAccountType(randomAccountType), messagesApi)
 
         (mockAuditHandler
@@ -167,10 +190,16 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe OK
-        contentAsString(result) shouldBe view(ptEnrolmentModel.copy(
-          currentAccountDetails = ptEnrolmentModel.currentAccountDetails.copy(lastLoginDate = s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"),
-          ptAccountDetails = ptEnrolmentModel.ptAccountDetails.copy(lastLoginDate = s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
-        ))(
+        contentAsString(result) shouldBe view(
+          ptEnrolmentModel.copy(
+            currentAccountDetails = ptEnrolmentModel.currentAccountDetails.copy(lastLoginDate =
+              s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"
+            ),
+            ptAccountDetails = ptEnrolmentModel.ptAccountDetails.copy(lastLoginDate =
+              s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"
+            )
+          )
+        )(
           fakeRequest,
           messages
         ).toString
@@ -182,33 +211,42 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
         val ptEnrolmentModel = ptEnrolmentDataModel(Some(USER_ID))
 
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(predicates, retrievals, *, *)
           .returning(
             Future.successful(retrievalResponse(enrolments = saEnrolmentOnly))
           )
 
-        (mockMultipleAccountsOrchestrator
-          .getCurrentAndPTAAndSAIfExistsForUser(
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
+        (
+          mockMultipleAccountsOrchestrator
+            .getCurrentAndPTAAndSAIfExistsForUser(
+              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(*, *, *)
           .returning(createInboundResult(ptEnrolmentModel))
         mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-          accountDetailsWithPT.copy(lastLoginDate = s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
+          accountDetailsWithPT.copy(lastLoginDate =
+            s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"
+          )
         )(requestWithAccountType(randomAccountType), messagesApi)
 
         (mockAuditHandler
@@ -221,10 +259,16 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe OK
-        contentAsString(result) shouldBe view(ptEnrolmentModel.copy(
-          currentAccountDetails = ptEnrolmentModel.currentAccountDetails.copy(lastLoginDate = s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"),
-          ptAccountDetails = ptEnrolmentModel.ptAccountDetails.copy(lastLoginDate = s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
-        ))(
+        contentAsString(result) shouldBe view(
+          ptEnrolmentModel.copy(
+            currentAccountDetails = ptEnrolmentModel.currentAccountDetails.copy(lastLoginDate =
+              s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"
+            ),
+            ptAccountDetails = ptEnrolmentModel.ptAccountDetails.copy(lastLoginDate =
+              s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"
+            )
+          )
+        )(
           fakeRequest,
           messages
         ).toString
@@ -236,33 +280,42 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
         val ptEnrolmentModel = ptEnrolmentDataModel(Some(PT_USER_ID))
 
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(predicates, retrievals, *, *)
           .returning(
             Future.successful(retrievalResponse(enrolments = saEnrolmentOnly))
           )
 
-        (mockMultipleAccountsOrchestrator
-          .getCurrentAndPTAAndSAIfExistsForUser(
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
+        (
+          mockMultipleAccountsOrchestrator
+            .getCurrentAndPTAAndSAIfExistsForUser(
+              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(*, *, *)
           .returning(createInboundResult(ptEnrolmentModel))
         mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-          accountDetailsWithPT.copy(lastLoginDate = s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
+          accountDetailsWithPT.copy(lastLoginDate =
+            s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"
+          )
         )(requestWithAccountType(randomAccountType), messagesApi)
 
         (mockAuditHandler
@@ -275,10 +328,16 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe OK
-        contentAsString(result) shouldBe view(ptEnrolmentModel.copy(
-          currentAccountDetails = ptEnrolmentModel.currentAccountDetails.copy(lastLoginDate = s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"),
-          ptAccountDetails = ptEnrolmentModel.ptAccountDetails.copy(lastLoginDate = s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
-        ))(
+        contentAsString(result) shouldBe view(
+          ptEnrolmentModel.copy(
+            currentAccountDetails = ptEnrolmentModel.currentAccountDetails.copy(lastLoginDate =
+              s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"
+            ),
+            ptAccountDetails = ptEnrolmentModel.ptAccountDetails.copy(lastLoginDate =
+              s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"
+            )
+          )
+        )(
           fakeRequest,
           messages
         ).toString
@@ -290,33 +349,42 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
         val ptEnrolmentModel = ptEnrolmentDataModel(Some("8764"))
 
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(predicates, retrievals, *, *)
           .returning(
             Future.successful(retrievalResponse(enrolments = saEnrolmentOnly))
           )
 
-        (mockMultipleAccountsOrchestrator
-          .getCurrentAndPTAAndSAIfExistsForUser(
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
+        (
+          mockMultipleAccountsOrchestrator
+            .getCurrentAndPTAAndSAIfExistsForUser(
+              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(*, *, *)
           .returning(createInboundResult(ptEnrolmentModel))
         mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-          accountDetailsWithPT.copy(lastLoginDate = s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
+          accountDetailsWithPT.copy(lastLoginDate =
+            s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"
+          )
         )(requestWithAccountType(randomAccountType), messagesApi)
 
         (mockAuditHandler
@@ -329,10 +397,16 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe OK
-        contentAsString(result) shouldBe view(ptEnrolmentModel.copy(
-          currentAccountDetails = ptEnrolmentModel.currentAccountDetails.copy(lastLoginDate = s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"),
-          ptAccountDetails = ptEnrolmentModel.ptAccountDetails.copy(lastLoginDate = s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
-        ))(
+        contentAsString(result) shouldBe view(
+          ptEnrolmentModel.copy(
+            currentAccountDetails = ptEnrolmentModel.currentAccountDetails.copy(lastLoginDate =
+              s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"
+            ),
+            ptAccountDetails = ptEnrolmentModel.ptAccountDetails.copy(lastLoginDate =
+              s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"
+            )
+          )
+        )(
           fakeRequest,
           messages
         ).toString
@@ -341,24 +415,31 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
     s"the user does not have an account type of $PT_ASSIGNED_TO_OTHER_USER" should {
       s"redirect to ${UrlPaths.accountCheckPath}" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
 
-        (mockMultipleAccountsOrchestrator
-          .getCurrentAndPTAAndSAIfExistsForUser(
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
+        (
+          mockMultipleAccountsOrchestrator
+            .getCurrentAndPTAAndSAIfExistsForUser(
+              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(*, *, *)
           .returning(
             createInboundResultError(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
@@ -377,26 +458,33 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
     "the current user has a no PT enrolment on other account but session says it is other account" should {
       "render the error page" in {
 
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(predicates, retrievals, *, *)
           .returning(
             Future.successful(retrievalResponse(enrolments = saEnrolmentOnly))
           )
 
-        (mockMultipleAccountsOrchestrator
-          .getCurrentAndPTAAndSAIfExistsForUser(
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
+        (
+          mockMultipleAccountsOrchestrator
+            .getCurrentAndPTAAndSAIfExistsForUser(
+              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(*, *, *)
           .returning(createInboundResultError(NoPTEnrolmentWhenOneExpected))
         mockGetDataFromCacheForActionSuccess(randomAccountType)
@@ -411,15 +499,20 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
     }
     "no redirect url in cache" should {
       "render the error page" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
 

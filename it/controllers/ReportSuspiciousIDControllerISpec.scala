@@ -20,14 +20,12 @@ import helpers.{IntegrationSpecBase, ItUrlPaths, ThrottleHelperISpec}
 import helpers.TestITData._
 import play.api.test.Helpers.{GET, POST, await, contentAsString, defaultAwaitTimeout, redirectLocation}
 import play.api.test.Helpers.{route, status, writeableOf_AnyContentAsEmpty, writeableOf_AnyContentAsJson}
-import play.api.http.Status.{SEE_OTHER, OK, INTERNAL_SERVER_ERROR, NON_AUTHORITATIVE_INFORMATION}
+import play.api.http.Status.{INTERNAL_SERVER_ERROR, NON_AUTHORITATIVE_INFORMATION, OK, SEE_OTHER}
 import helpers.messages._
 import org.jsoup.Jsoup
 import org.mongodb.scala.bson.BsonDocument
 import play.api.http.Status
 import play.api.libs.json.{JsString, Json}
-import play.api.libs.ws.DefaultWSCookie
-import play.api.mvc.Cookie
 import play.api.test.FakeRequest
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
@@ -79,15 +77,15 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
         val result = route(app, request).get
         val page = Jsoup.parse(contentAsString(result))
 
-          status(result) shouldBe OK
-          page.title should include(ReportSuspiciousIDMessages.title)
-          page.getElementsByClass("govuk-button").size() shouldBe 1
+        status(result) shouldBe OK
+        page.title should include(ReportSuspiciousIDMessages.title)
+        page.getElementsByClass("govuk-button").size() shouldBe 1
 
-          val expectedAuditEvent = AuditEvent.auditReportSuspiciousSAAccount(
-            accountDetailsUserFriendly(CREDENTIAL_ID_2)
-          )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER), messagesApi)
+        val expectedAuditEvent = AuditEvent.auditReportSuspiciousSAAccount(
+          accountDetailsUserFriendly(CREDENTIAL_ID_2)
+        )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER), messagesApi)
 
-          verifyAuditEventSent(expectedAuditEvent)
+        verifyAuditEventSent(expectedAuditEvent)
       }
     }
 
@@ -124,8 +122,8 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
           val page = Jsoup.parse(contentAsString(result))
 
           status(result) shouldBe OK
-            page.title should include(ReportSuspiciousIDMessages.title)
-            page.getElementsByClass("govuk-button").size() shouldBe 1
+          page.title should include(ReportSuspiciousIDMessages.title)
+          page.getElementsByClass("govuk-button").size() shouldBe 1
         }
       }
     }
@@ -150,12 +148,11 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
           val request = FakeRequest(GET, "/protect-tax-info" + urlPathSa)
             .withSession(xAuthToken, xSessionId)
           val result = route(app, request).get
-          val page = Jsoup.parse(contentAsString(result))
 
           status(result) shouldBe SEE_OTHER
-            redirectLocation(result).get should include(
-              accountCheckPath
-            )
+          redirectLocation(result).get should include(
+            accountCheckPath
+          )
         }
       }
     }
@@ -184,10 +181,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
         val request = FakeRequest(GET, "/protect-tax-info" + urlPathSa)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
-          contentAsString(result) should include(ErrorTemplateMessages.title)
+        contentAsString(result) should include(ErrorTemplateMessages.title)
 
       }
     }
@@ -216,10 +212,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
         val request = FakeRequest(GET, "/protect-tax-info" + urlPathSa)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
-          contentAsString(result) should include(ErrorTemplateMessages.title)
+        contentAsString(result) should include(ErrorTemplateMessages.title)
 
       }
     }
@@ -233,10 +228,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
         val request = FakeRequest(GET, "/protect-tax-info" + urlPathSa)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include("/bas-gateway/sign-in")
+        redirectLocation(result).get should include("/bas-gateway/sign-in")
 
       }
     }
@@ -270,10 +264,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
         val request = FakeRequest(GET, "/protect-tax-info" + urlPathSa)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
-          contentAsString(result) should include(ErrorTemplateMessages.title)
+        contentAsString(result) should include(ErrorTemplateMessages.title)
 
       }
     }
@@ -302,10 +295,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
         val request = FakeRequest(GET, "/protect-tax-info" + urlPathSa)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
-          contentAsString(result) should include(ErrorTemplateMessages.title)
+        contentAsString(result) should include(ErrorTemplateMessages.title)
 
       }
     }
@@ -334,10 +326,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
         val request = FakeRequest(GET, "/protect-tax-info" + urlPathSa)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
-          contentAsString(result) should include(ErrorTemplateMessages.title)
+        contentAsString(result) should include(ErrorTemplateMessages.title)
 
       }
     }
@@ -351,10 +342,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
         val request = FakeRequest(GET, "/protect-tax-info" + urlPathSa)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
+        redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
 
       }
     }
@@ -368,10 +358,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
         val request = FakeRequest(GET, "/protect-tax-info" + urlPathSa)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
+        redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
 
       }
     }
@@ -384,10 +373,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
         val request = FakeRequest(GET, "/protect-tax-info" + urlPathSa)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
+        redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
 
       }
     }
@@ -400,7 +388,6 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
         val request = FakeRequest(GET, "/protect-tax-info" + urlPathSa)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result).get should include("/bas-gateway/sign-in")
@@ -449,13 +436,13 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
         val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe OK
-          page.title should include(ReportSuspiciousIDMessages.title)
-          page.getElementsByClass("govuk-button").size() shouldBe 0
+        page.title should include(ReportSuspiciousIDMessages.title)
+        page.getElementsByClass("govuk-button").size() shouldBe 0
 
-          val expectedAuditEvent = AuditEvent.auditReportSuspiciousPTAccount(
-            accountDetailsUserFriendly(CREDENTIAL_ID_2)
-          )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
-          verifyAuditEventSent(expectedAuditEvent)
+        val expectedAuditEvent = AuditEvent.auditReportSuspiciousPTAccount(
+          accountDetailsUserFriendly(CREDENTIAL_ID_2)
+        )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
+        verifyAuditEventSent(expectedAuditEvent)
 
       }
     }
@@ -480,12 +467,11 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
           val request = FakeRequest(GET, "/protect-tax-info" + urlPathPT)
             .withSession(xAuthToken, xSessionId)
           val result = route(app, request).get
-          val page = Jsoup.parse(contentAsString(result))
 
           status(result) shouldBe SEE_OTHER
-            redirectLocation(result).get should include(
-              accountCheckPath
-            )
+          redirectLocation(result).get should include(
+            accountCheckPath
+          )
 
         }
       }
@@ -515,10 +501,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
         val request = FakeRequest(GET, "/protect-tax-info" + urlPathPT)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
-          contentAsString(result) should include(ErrorTemplateMessages.title)
+        contentAsString(result) should include(ErrorTemplateMessages.title)
 
       }
     }
@@ -547,10 +532,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
         val request = FakeRequest(GET, "/protect-tax-info" + urlPathPT)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
-          contentAsString(result) should include(ErrorTemplateMessages.title)
+        contentAsString(result) should include(ErrorTemplateMessages.title)
 
       }
     }
@@ -571,10 +555,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
         val request = FakeRequest(GET, "/protect-tax-info" + urlPathPT)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
-          contentAsString(result) should include(ErrorTemplateMessages.title)
+        contentAsString(result) should include(ErrorTemplateMessages.title)
 
       }
     }
@@ -608,10 +591,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
         val request = FakeRequest(GET, "/protect-tax-info" + urlPathPT)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
-          contentAsString(result) should include(ErrorTemplateMessages.title)
+        contentAsString(result) should include(ErrorTemplateMessages.title)
 
       }
     }
@@ -640,10 +622,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
         val request = FakeRequest(GET, "/protect-tax-info" + urlPathPT)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
-          contentAsString(result) should include(ErrorTemplateMessages.title)
+        contentAsString(result) should include(ErrorTemplateMessages.title)
       }
     }
 
@@ -670,7 +651,6 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
         val request = FakeRequest(GET, "/protect-tax-info" + urlPathPT)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) should include(ErrorTemplateMessages.title)
@@ -687,11 +667,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
         val request = FakeRequest(GET, "/protect-tax-info" + urlPathPT)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe SEE_OTHER
-
-          redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
+        redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
 
       }
     }
@@ -705,10 +683,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
         val request = FakeRequest(GET, "/protect-tax-info" + urlPathPT)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
+        redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
 
       }
     }
@@ -721,10 +698,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
         val request = FakeRequest(GET, "/protect-tax-info" + urlPathPT)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
+        redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
 
       }
     }
@@ -737,10 +713,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
         val request = FakeRequest(GET, "/protect-tax-info" + urlPathPT)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include("/bas-gateway/sign-in")
+        redirectLocation(result).get should include("/bas-gateway/sign-in")
 
       }
     }
@@ -759,10 +734,12 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
       s"enrol the user for PT and redirect to the EnroledAfterReportingFraud" when {
         "the user hasn't already been assigned a PT enrolment" in {
           val cacheData = Map(
-            ACCOUNT_TYPE -> Json.toJson(SA_ASSIGNED_TO_OTHER_USER),
-            REDIRECT_URL -> JsString(returnUrl),
+            ACCOUNT_TYPE               -> Json.toJson(SA_ASSIGNED_TO_OTHER_USER),
+            REDIRECT_URL               -> JsString(returnUrl),
             USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(saUsers),
-            accountDetailsForCredential(CREDENTIAL_ID_2) -> Json.toJson(accountDetails) (AccountDetails.mongoFormats(crypto.crypto))
+            accountDetailsForCredential(CREDENTIAL_ID_2) -> Json.toJson(accountDetails)(
+              AccountDetails.mongoFormats(crypto.crypto)
+            )
           )
           await(save(sessionId, cacheData))
           val authResponse = authoriseResponseJson()
@@ -778,13 +755,14 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
             .withSession(xAuthToken, xSessionId)
             .withJsonBody(Json.obj())
           val result = route(app, request).get
-          val page = Jsoup.parse(contentAsString(result))
 
           status(result) shouldBe SEE_OTHER
-            redirectLocation(result).get should include("/protect-tax-info/enrol-pt/enrolment-success-no-sa")
-            val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(
-              true)(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, mongoCacheData = cacheData), messagesApi)
-            verifyAuditEventSent(expectedAuditEvent)
+          redirectLocation(result).get should include("/protect-tax-info/enrol-pt/enrolment-success-no-sa")
+          val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(
+            requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, mongoCacheData = cacheData),
+            messagesApi
+          )
+          verifyAuditEventSent(expectedAuditEvent)
 
         }
       }
@@ -792,9 +770,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
       s"not enrol the user for PT and redirect to the EnroledAfterReportingFraud" when {
         "the user has already been assigned a PT enrolment" in {
           val cacheData = Map(
-            ACCOUNT_TYPE -> Json.toJson(SA_ASSIGNED_TO_OTHER_USER),
-            REDIRECT_URL -> JsString(returnUrl),
-            USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(saUsers),
+            ACCOUNT_TYPE                                 -> Json.toJson(SA_ASSIGNED_TO_OTHER_USER),
+            REDIRECT_URL                                 -> JsString(returnUrl),
+            USER_ASSIGNED_SA_ENROLMENT                   -> Json.toJson(saUsers),
             accountDetailsForCredential(CREDENTIAL_ID_2) -> Json.toJson(accountDetails)
           )
           await(save(sessionId, cacheData))
@@ -806,12 +784,11 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
             .withSession(xAuthToken, xSessionId)
             .withJsonBody(Json.obj())
           val result = route(app, request).get
-          val page = Jsoup.parse(contentAsString(result))
 
           status(result) shouldBe SEE_OTHER
-            redirectLocation(result).get should include(
-              "/enrol-pt/enrolment-success-sa-access-not-wanted"
-            )
+          redirectLocation(result).get should include(
+            "/enrol-pt/enrolment-success-sa-access-not-wanted"
+          )
 
         }
       }
@@ -840,10 +817,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
           .withSession(xAuthToken, xSessionId)
           .withJsonBody(Json.obj())
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
-          contentAsString(result) should include(ErrorTemplateMessages.title)
+        contentAsString(result) should include(ErrorTemplateMessages.title)
 
       }
     }
@@ -869,12 +845,11 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
             .withSession(xAuthToken, xSessionId)
             .withJsonBody(Json.obj())
           val result = route(app, request).get
-          val page = Jsoup.parse(contentAsString(result))
 
           status(result) shouldBe SEE_OTHER
-           redirectLocation(result).get should include(
-              accountCheckPath
-            )
+          redirectLocation(result).get should include(
+            accountCheckPath
+          )
 
         }
       }
@@ -891,10 +866,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
           .withSession(xAuthToken, xSessionId)
           .withJsonBody(Json.obj())
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include("/bas-gateway/sign-in")
+        redirectLocation(result).get should include("/bas-gateway/sign-in")
 
       }
     }

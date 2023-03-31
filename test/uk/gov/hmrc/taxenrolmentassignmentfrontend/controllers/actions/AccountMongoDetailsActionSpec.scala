@@ -38,12 +38,12 @@ import scala.concurrent.Future
 
 class AccountMongoDetailsActionSpec extends BaseSpec {
 
-  def mockDeleteDataFromCache: CallHandler1[RequestWithUserDetailsFromSession[_], Future[Boolean]] = {
-    (mockTeaSessionCache.removeRecord(_: RequestWithUserDetailsFromSession[_]))
+  def mockDeleteDataFromCache: CallHandler1[RequestWithUserDetailsFromSession[_], Future[Boolean]] =
+    (mockTeaSessionCache
+      .removeRecord(_: RequestWithUserDetailsFromSession[_]))
       .expects(*)
       .returning(Future.successful(true))
       .once()
-  }
 
   lazy val mockTeaSessionCache = mock[TEASessionCache]
   lazy val mockThrottlingService = mock[ThrottlingService]
@@ -54,7 +54,7 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
 
   override implicit lazy val app: Application = localGuiceApplicationBuilder()
     .overrides(
-      bind[ThrottlingService].toInstance(mockThrottlingService),
+      bind[ThrottlingService].toInstance(mockThrottlingService)
     )
     .build()
 
@@ -62,7 +62,8 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
 
   "invoke" should {
     "return updated request when orchestrator returns success Some for both account type and redirect url" in {
-      val exampleMongoSessionData = Map(ACCOUNT_TYPE -> Json.toJson(PT_ASSIGNED_TO_CURRENT_USER), REDIRECT_URL -> JsString("foo"))
+      val exampleMongoSessionData =
+        Map(ACCOUNT_TYPE -> Json.toJson(PT_ASSIGNED_TO_CURRENT_USER), REDIRECT_URL -> JsString("foo"))
       val requestWithUserDetailsFromSession = RequestWithUserDetailsFromSession(
         FakeRequest(),
         UserDetailsFromSession(
@@ -91,11 +92,10 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
         ]) =>
           Future.successful(
             Ok(requestWithUserDetailsFromSessionAndMongo.toString())
-        )
+          )
 
       (mockTeaSessionCache
-        .fetch()(
-          _: RequestWithUserDetailsFromSession[_]))
+        .fetch()(_: RequestWithUserDetailsFromSession[_]))
         .expects(*)
         .returning(Future.successful(Some(CacheMap("id", exampleMongoSessionData))))
 
@@ -130,8 +130,7 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
             )
 
         (mockTeaSessionCache
-          .fetch()(
-            _: RequestWithUserDetailsFromSession[_]))
+          .fetch()(_: RequestWithUserDetailsFromSession[_]))
           .expects(*)
           .returning(Future.successful(None))
 
@@ -171,11 +170,10 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
           ]) =>
             Future.successful(
               Ok(requestWithUserDetailsFromSessionAndMongo.toString())
-          )
+            )
 
         (mockTeaSessionCache
-          .fetch()(
-            _: RequestWithUserDetailsFromSession[_]))
+          .fetch()(_: RequestWithUserDetailsFromSession[_]))
           .expects(*)
           .returning(Future.successful(Some(CacheMap("id", exampleMongoSessionData))))
 
@@ -210,11 +208,10 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
           ]) =>
             Future.successful(
               Ok(requestWithUserDetailsFromSessionAndMongo.toString())
-          )
+            )
 
         (mockTeaSessionCache
-          .fetch()(
-            _: RequestWithUserDetailsFromSession[_]))
+          .fetch()(_: RequestWithUserDetailsFromSession[_]))
           .expects(*)
           .returning(Future.successful(Some(CacheMap("id", exampleMongoSessionData))))
 
@@ -248,11 +245,10 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
         ]) =>
           Future.successful(
             Ok(requestWithUserDetailsFromSessionAndMongo.toString())
-        )
+          )
 
       (mockTeaSessionCache
-        .fetch()(
-          _: RequestWithUserDetailsFromSession[_]))
+        .fetch()(_: RequestWithUserDetailsFromSession[_]))
         .expects(*)
         .returning(Future.failed(exception = new Exception("uh oh")))
 

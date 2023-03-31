@@ -84,7 +84,9 @@ trait ViewSpecHelper extends BaseSpec {
   }
 
   def validateAccessibilityStatementLinkPresent(doc: Document): Unit = {
-    val accessibilityStatementElement = doc.getElementsByAttributeValueContaining("href", "/accessibility-statement/personal-tax-account-user-id-checks").get(0)
+    val accessibilityStatementElement = doc
+      .getElementsByAttributeValueContaining("href", "/accessibility-statement/personal-tax-account-user-id-checks")
+      .get(0)
 
     "accessibility statement exists, text and link are correct" in {
       accessibilityStatementElement.text() shouldBe "Accessibility statement"

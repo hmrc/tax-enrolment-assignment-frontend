@@ -18,7 +18,6 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import play.api.Application
 import play.api.http.Status.OK
-import play.api.i18n.MessagesApi
 import play.api.inject.bind
 import play.api.libs.json.{Format, Json}
 import play.api.mvc.{AnyContent, BodyParsers}
@@ -80,15 +79,20 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
     "a user has PT on another account" should {
       "render the ReportSuspiciousID page" in {
 
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
 
@@ -111,7 +115,9 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
         mockAccountShouldNotBeThrottled(PT_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
 
         val auditEvent = AuditEvent.auditReportSuspiciousPTAccount(
-          accountDetails.copy(lastLoginDate = s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
+          accountDetails.copy(lastLoginDate =
+            s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"
+          )
         )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
         (mockAuditHandler
           .audit(_: AuditEvent)(_: HeaderCarrier))
@@ -130,15 +136,20 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
     "the user does not have an account type of PT_ASSIGNED_TO_OTHER_USER" should {
       s"redirect to ${UrlPaths.accountCheckPath}" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
 
@@ -150,8 +161,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
           .returning(
             Left(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
           )
-        mockGetDataFromCacheForActionSuccess(PT_ASSIGNED_TO_OTHER_USER
-        )
+        mockGetDataFromCacheForActionSuccess(PT_ASSIGNED_TO_OTHER_USER)
         mockAccountShouldNotBeThrottled(PT_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
 
         val result = controller
@@ -165,15 +175,20 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
     "the current user has a no PT enrolment on other account but session says it is other account" should {
       "render the error page" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(predicates, retrievals, *, *)
           .returning(
             Future.successful(retrievalResponse(enrolments = saEnrolmentOnly))
@@ -215,15 +230,20 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
     "a user has SA on another account" should {
       "render the ReportSuspiciousID page" when {
         "the user hasn't already been assigned a PT enrolment" in {
-          (mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(_: HeaderCarrier, _: ExecutionContext))
+          (
+            mockAuthConnector
+              .authorise(
+                _: Predicate,
+                _: Retrieval[
+                  ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                    String
+                  ] ~ Option[AffinityGroup] ~ Option[String]
+                ]
+              )(
+                _: HeaderCarrier,
+                _: ExecutionContext
+              )
+            )
             .expects(predicates, retrievals, *, *)
             .returning(Future.successful(retrievalResponse()))
 
@@ -246,7 +266,9 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
           mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
 
           val auditEvent = AuditEvent.auditReportSuspiciousSAAccount(
-            accountDetails.copy(lastLoginDate = s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
+            accountDetails.copy(lastLoginDate =
+              s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"
+            )
           )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER), messagesApi)
           (mockAuditHandler
             .audit(_: AuditEvent)(_: HeaderCarrier))
@@ -263,15 +285,20 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
         }
 
         "the user has already been assigned a PT enrolment" in {
-          (mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(_: HeaderCarrier, _: ExecutionContext))
+          (
+            mockAuthConnector
+              .authorise(
+                _: Predicate,
+                _: Retrieval[
+                  ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                    String
+                  ] ~ Option[AffinityGroup] ~ Option[String]
+                ]
+              )(
+                _: HeaderCarrier,
+                _: ExecutionContext
+              )
+            )
             .expects(predicates, retrievals, *, *)
             .returning(Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly)))
 
@@ -304,15 +331,20 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
     }
     s"the cache no redirectUrl" should {
       "render the error page" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
         mockGetDataFromCacheForActionNoRedirectUrl
@@ -328,15 +360,20 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
     s"the user does not have an account type of $SA_ASSIGNED_TO_OTHER_USER" should {
       s"redirect to ${UrlPaths.accountCheckPath}" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
 
@@ -362,15 +399,20 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
     "the current user has a no SA enrolment on other account but session says it is other account" should {
       "render the error page" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
 
@@ -408,18 +450,27 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
     "the user has SA assigned to another user and not already enrolled for PT" should {
       s"enrol for PT and redirect to ${UrlPaths.enrolledPTSAOnOtherAccountPath}" in {
-        val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetails)(AccountDetails.mongoFormats(crypto.crypto)))
+        val additionalCacheData = Map(
+          USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetails)(
+            AccountDetails.mongoFormats(crypto.crypto)
+          )
+        )
         val sessionData = generateBasicCacheData(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl) ++ additionalCacheData
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
 
@@ -431,19 +482,26 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
           .expects(REPORTED_FRAUD, true, *, *)
           .returning(Future(CacheMap(request.sessionID, sessionData)))
 
-        (mockMultipleAccountsOrchestrator
-          .checkValidAccountTypeAndEnrolForPT(_: AccountTypes.Value)(
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
+        (
+          mockMultipleAccountsOrchestrator
+            .checkValidAccountTypeAndEnrolForPT(_: AccountTypes.Value)(
+              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(SA_ASSIGNED_TO_OTHER_USER, *, *, *)
           .returning(createInboundResult((): Unit))
         mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData)
         mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
-        val auditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true
-        )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData = additionalCacheData),
-          messagesApi)
+        val auditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(
+          requestWithAccountType(
+            SA_ASSIGNED_TO_OTHER_USER,
+            UrlPaths.returnUrl,
+            additionalCacheData = additionalCacheData
+          ),
+          messagesApi
+        )
         (mockAuditHandler
           .audit(_: AuditEvent)(_: HeaderCarrier))
           .expects(auditEvent, *)
@@ -462,18 +520,25 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
     "the user has SA assigned to another user and has already been enrolled for PT" should {
       s"not enrol for PT again and redirect to ${UrlPaths.enrolledPTSAOnOtherAccountPath}" in {
-        val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetails))
+        val additionalCacheData = Map(
+          USER_ASSIGNED_SA_ENROLMENT                   -> Json.toJson(UsersAssignedEnrolment1),
+          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetails)
+        )
         val sessionData = generateBasicCacheData(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl) ++ additionalCacheData
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly)))
 
@@ -485,12 +550,14 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
           .expects(REPORTED_FRAUD, true, *, *)
           .returning(Future(CacheMap(request.sessionID, sessionData)))
 
-        (mockMultipleAccountsOrchestrator
-          .checkValidAccountTypeAndEnrolForPT(_: AccountTypes.Value)(
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
+        (
+          mockMultipleAccountsOrchestrator
+            .checkValidAccountTypeAndEnrolForPT(_: AccountTypes.Value)(
+              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(SA_ASSIGNED_TO_OTHER_USER, *, *, *)
           .returning(createInboundResultError(UnexpectedPTEnrolment(SA_ASSIGNED_TO_OTHER_USER)))
         mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData)
@@ -509,15 +576,20 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
     s"the cache no redirectUrl" should {
       "render the error page" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
         mockGetDataFromCacheForActionNoRedirectUrl
@@ -533,15 +605,20 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
     "the user has not got SA assigned to another user" should {
       s"redirect to ${UrlPaths.accountCheckPath}" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
 
@@ -553,12 +630,14 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
           .expects(REPORTED_FRAUD, true, *, *)
           .returning(Future(CacheMap(request.sessionID, Map())))
 
-        (mockMultipleAccountsOrchestrator
-          .checkValidAccountTypeAndEnrolForPT(_: AccountTypes.Value)(
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
+        (
+          mockMultipleAccountsOrchestrator
+            .checkValidAccountTypeAndEnrolForPT(_: AccountTypes.Value)(
+              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(SA_ASSIGNED_TO_OTHER_USER, *, *, *)
           .returning(
             createInboundResultError(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
@@ -578,15 +657,20 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
     "the user has SA assigned to another user but enrolment to PT is unsuccessful" should {
       "render the error view" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
 
@@ -598,12 +682,14 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
           .expects(REPORTED_FRAUD, true, *, *)
           .returning(Future(CacheMap(request.sessionID, Map())))
 
-        (mockMultipleAccountsOrchestrator
-          .checkValidAccountTypeAndEnrolForPT(_: AccountTypes.Value)(
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
+        (
+          mockMultipleAccountsOrchestrator
+            .checkValidAccountTypeAndEnrolForPT(_: AccountTypes.Value)(
+              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(SA_ASSIGNED_TO_OTHER_USER, *, *, *)
           .returning(
             createInboundResultError(UnexpectedResponseFromTaxEnrolments)

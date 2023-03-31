@@ -181,18 +181,17 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
           .getElementsByClass(Selectors.summaryListValue)
           .text() shouldBe testAccountDetails.lastLoginDate
       }
-      elementsToMFADetails.foreach {
-        case (elementNumber, mfaDetails) =>
-          s"include the ${mfaDetails.factorNameKey}" in {
-            summaryListRows
-              .get(elementNumber)
-              .getElementsByClass(Selectors.summaryListKey)
-              .text() shouldBe mfaDetails.factorNameKey
-            summaryListRows
-              .get(elementNumber)
-              .getElementsByClass(Selectors.summaryListValue)
-              .text() shouldBe mfaDetails.factorValue
-          }
+      elementsToMFADetails.foreach { case (elementNumber, mfaDetails) =>
+        s"include the ${mfaDetails.factorNameKey}" in {
+          summaryListRows
+            .get(elementNumber)
+            .getElementsByClass(Selectors.summaryListKey)
+            .text() shouldBe mfaDetails.factorNameKey
+          summaryListRows
+            .get(elementNumber)
+            .getElementsByClass(Selectors.summaryListValue)
+            .text() shouldBe mfaDetails.factorValue
+        }
       }
     }
     "contains a link for if userId not recognised" that {

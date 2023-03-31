@@ -27,7 +27,7 @@ object UsersAssignedEnrolment {
 
   val reads: Reads[UsersAssignedEnrolment] = (json: JsValue) => {
     for {
-      jsObject <- json.validate[JsObject]
+      jsObject         <- json.validate[JsObject]
       principleUserIds <- (jsObject \ "principalUserIds").validate[List[String]]
     } yield UsersAssignedEnrolment(principleUserIds.headOption)
   }

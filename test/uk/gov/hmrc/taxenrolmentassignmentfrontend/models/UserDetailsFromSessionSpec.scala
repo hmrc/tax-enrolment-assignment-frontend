@@ -26,10 +26,28 @@ class UserDetailsFromSessionSpec extends BaseSpec {
 
   "utr" should {
     s"extract correctly if $IRSAKey exists" in {
-      UserDetailsFromSession("","", "",Some(CURRENT_USER_EMAIL), AffinityGroup.Agent, saEnrolmentOnly,true, true).utr.get shouldBe UTR
+      UserDetailsFromSession(
+        "",
+        "",
+        "",
+        Some(CURRENT_USER_EMAIL),
+        AffinityGroup.Agent,
+        saEnrolmentOnly,
+        true,
+        true
+      ).utr.get shouldBe UTR
     }
     s"return None if $IRSAKey doesnt exist" in {
-      UserDetailsFromSession("","", "",Some(CURRENT_USER_EMAIL), AffinityGroup.Agent, Enrolments(Set.empty),true, true).utr shouldBe None
+      UserDetailsFromSession(
+        "",
+        "",
+        "",
+        Some(CURRENT_USER_EMAIL),
+        AffinityGroup.Agent,
+        Enrolments(Set.empty),
+        true,
+        true
+      ).utr shouldBe None
     }
   }
 }

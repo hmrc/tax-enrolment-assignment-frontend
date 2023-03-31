@@ -39,66 +39,78 @@ object RequestWithUserDetailsFromSessionAndMongo {
   import scala.language.implicitConversions
   implicit def requestConversion(
     requestWithUserDetailsFromSessionAndMongo: RequestWithUserDetailsFromSessionAndMongo[_]
-  ): RequestWithUserDetailsFromSession[_] = {
+  ): RequestWithUserDetailsFromSession[_] =
     RequestWithUserDetailsFromSession(
       requestWithUserDetailsFromSessionAndMongo.request,
       requestWithUserDetailsFromSessionAndMongo.userDetails,
       requestWithUserDetailsFromSessionAndMongo.sessionID
     )
-  }
 }
 
 trait AccountMongoDetailsActionTrait
-  extends ActionRefiner[RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo]
+    extends ActionRefiner[RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo]
 
-class AccountMongoDetailsAction @Inject()(
-                                           teaSessionCache: TEASessionCache,
-                                           val parser: BodyParsers.Default,
-                                           errorHandler: ErrorHandler,
-                                           val appConfig: AppConfig,
-                                           logger: EventLoggerService
+class AccountMongoDetailsAction @Inject() (
+  teaSessionCache: TEASessionCache,
+  val parser: BodyParsers.Default,
+  errorHandler: ErrorHandler,
+  val appConfig: AppConfig,
+  logger: EventLoggerService
 )(implicit val executionContext: ExecutionContext, crypto: TENCrypto)
     extends AccountMongoDetailsActionTrait with RedirectHelper {
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
   override protected def refine[A](
     request: RequestWithUserDetailsFromSession[A]
-  ): Future[Either[Result, RequestWithUserDetailsFromSessionAndMongo[A]]] = {
-
-    getAccountDetailsFromMongoFromCache(request).map {
-      case Right(accountDetailsFromMongo) => Right(
-        RequestWithUserDetailsFromSessionAndMongo(
-          request.request, request.userDetails, request.sessionID, accountDetailsFromMongo
+  ): Future[Either[Result, RequestWithUserDetailsFromSessionAndMongo[A]]] =
+    getAccountDetailsFromMongoFromCache(request)
+      .map {
+        case Right(accountDetailsFromMongo) =>
+          Right(
+            RequestWithUserDetailsFromSessionAndMongo(
+              request.request,
+              request.userDetails,
+              request.sessionID,
+              accountDetailsFromMongo
+            )
+          )
+        case Left(CacheNotCompleteOrNotCorrect(None, None)) =>
+          logger.logEvent(LoggingEvent.logUserHasNoCacheInMongo(request.userDetails.credId, request.sessionID))
+          Left(toGGLogin)
+        case Left(error) =>
+          Left(
+            errorHandler
+              .handleErrors(error, "[AccountTypeAction][invokeBlock]")(request, baseLogger)
+          )
+      }
+      .recover { case _ =>
+        Left(
+          errorHandler
+            .handleErrors(UnexpectedError, "[AccountTypeAction][invokeBlock]")(request, baseLogger)
         )
-      )
-      case Left(CacheNotCompleteOrNotCorrect(None, None)) =>
-        logger.logEvent(LoggingEvent.logUserHasNoCacheInMongo(request.userDetails.credId, request.sessionID))
-        Left(toGGLogin)
-      case Left(error) =>
-        Left(errorHandler
-          .handleErrors(error, "[AccountTypeAction][invokeBlock]")(request, baseLogger))
-    }.recover {
-      case _ => Left(errorHandler
-        .handleErrors(UnexpectedError, "[AccountTypeAction][invokeBlock]")(request, baseLogger))
-    }
-  }
+      }
 
-  private def getAccountDetailsFromMongoFromCache
-  (implicit request: RequestWithUserDetailsFromSession[_]): Future[Either[TaxEnrolmentAssignmentErrors, AccountDetailsFromMongo]] = {
+  private def getAccountDetailsFromMongoFromCache(implicit
+    request: RequestWithUserDetailsFromSession[_]
+  ): Future[Either[TaxEnrolmentAssignmentErrors, AccountDetailsFromMongo]] =
     teaSessionCache.fetch().map { optCachedMap =>
       optCachedMap
         .fold[Either[TaxEnrolmentAssignmentErrors, AccountDetailsFromMongo]](
           Left(CacheNotCompleteOrNotCorrect(None, None))
         ) { cachedMap =>
-          (AccountDetailsFromMongo.optAccountType(cachedMap.data), AccountDetailsFromMongo.optRedirectUrl(cachedMap.data)) match {
-            case (Some(accountType), Some(redirectUrl)) => Right(
-              AccountDetailsFromMongo(accountType, redirectUrl, cachedMap.data)(crypto.crypto)
-            )
-            case (optAccountType, optRedirectUrl) => Left(
-              CacheNotCompleteOrNotCorrect(optRedirectUrl, optAccountType)
-            )
+          (
+            AccountDetailsFromMongo.optAccountType(cachedMap.data),
+            AccountDetailsFromMongo.optRedirectUrl(cachedMap.data)
+          ) match {
+            case (Some(accountType), Some(redirectUrl)) =>
+              Right(
+                AccountDetailsFromMongo(accountType, redirectUrl, cachedMap.data)(crypto.crypto)
+              )
+            case (optAccountType, optRedirectUrl) =>
+              Left(
+                CacheNotCompleteOrNotCorrect(optRedirectUrl, optAccountType)
+              )
           }
         }
     }
-  }
 
 }

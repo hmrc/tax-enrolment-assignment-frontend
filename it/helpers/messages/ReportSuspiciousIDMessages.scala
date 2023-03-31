@@ -20,8 +20,7 @@ object ReportSuspiciousIDMessages {
 
   val title = "You need to contact us"
   val heading = "You need to contact us"
-  val paragraph1
-    : String = "This is so we can give you access to your personal tax account. " +
+  val paragraph1: String = "This is so we can give you access to your personal tax account. " +
     "We recommend you take a note of the user ID and email address below as this screen will time out after 15 minutes."
   val button = "Continue"
   val telephone = Seq("Telephone:", "0300 200 3600")

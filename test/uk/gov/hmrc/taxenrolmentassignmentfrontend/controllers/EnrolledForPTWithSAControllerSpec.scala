@@ -22,7 +22,7 @@ import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{NINO, accountDetails, buildFakeRequestWithSessionId, predicates, randomAccountType, retrievalResponse, retrievals, saEnrolmentOnly}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{BaseSpec, ControllersBaseSpec, UrlPaths}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{ControllersBaseSpec, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTPage
 import play.api.http.Status.OK
 import play.api.inject.bind
@@ -71,15 +71,20 @@ class EnrolledForPTWithSAControllerSpec extends ControllersBaseSpec {
     specificThrottleTests(controller.view)
     "the user has multiple accounts, is signed in with one with SA then" should {
       "see the Enrolled to PT with SA page" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(predicates, retrievals, *, *)
           .returning(
             Future.successful(retrievalResponse(enrolments = saEnrolmentOnly))
@@ -98,7 +103,7 @@ class EnrolledForPTWithSAControllerSpec extends ControllersBaseSpec {
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
 
         val result = controller.view
-          .apply(buildFakeRequestWithSessionId("",""))
+          .apply(buildFakeRequestWithSessionId("", ""))
 
         status(result) shouldBe OK
 
@@ -115,15 +120,20 @@ class EnrolledForPTWithSAControllerSpec extends ControllersBaseSpec {
 
     "the user has multiple accounts, is signed in with one with SA then" should {
       s"redirect to ${UrlPaths.returnUrl}" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse(enrolments = saEnrolmentOnly)))
         mockDeleteDataFromCache
@@ -132,7 +142,7 @@ class EnrolledForPTWithSAControllerSpec extends ControllersBaseSpec {
 
         val result = controller
           .continue()
-          .apply(buildFakeRequestWithSessionId("",""))
+          .apply(buildFakeRequestWithSessionId("", ""))
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some(
@@ -141,6 +151,5 @@ class EnrolledForPTWithSAControllerSpec extends ControllersBaseSpec {
       }
     }
   }
-
 
 }

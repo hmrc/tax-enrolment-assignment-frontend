@@ -16,13 +16,10 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators
 
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.time.{Millis, Seconds, Span}
 import play.api.Application
 import play.api.inject.bind
 import play.api.libs.json.Format
 import play.api.mvc.{AnyContent, BodyParsers}
-import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
@@ -30,18 +27,16 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditHandler
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.ACCOUNT_TYPE
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, SilentAssignmentService, ThrottlingService}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, SilentAssignmentService}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class AccountCheckOrchestratorSpec extends BaseSpec {
 
-  def generateBasicCacheMap(accountType: AccountTypes.Value, redirectUrl: String = "foo") = {
+  def generateBasicCacheMap(accountType: AccountTypes.Value, redirectUrl: String = "foo") =
     CacheMap("id", generateBasicCacheData(accountType, redirectUrl))
-  }
 
   lazy val mockSilentAssignmentService = mock[SilentAssignmentService]
   lazy val mockEacdService = mock[EACDService]

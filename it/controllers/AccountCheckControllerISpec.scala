@@ -19,17 +19,13 @@ package controllers
 import java.net.URLEncoder
 import helpers.{IntegrationSpecBase, ItUrlPaths}
 import helpers.TestITData._
-import play.api.test.Helpers.{GET, await, contentAsString, defaultAwaitTimeout, redirectLocation, route, status, writeableOf_AnyContentAsEmpty}
+import play.api.test.Helpers.{GET, contentAsString, defaultAwaitTimeout, redirectLocation, route, status, writeableOf_AnyContentAsEmpty}
 import helpers.messages._
-import play.api.mvc.{AnyContent, Cookie, Request}
-import play.api.http.Status
+import play.api.mvc.{AnyContent, Request}
 import play.api.http.Status.{BAD_REQUEST, NO_CONTENT, OK, SEE_OTHER}
 import play.api.libs.json.Json
-import play.api.libs.ws.DefaultWSCookie
 import play.api.test.FakeRequest
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier}
-import uk.gov.hmrc.http.SessionKeys
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.hmrcPTKey
@@ -46,9 +42,12 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
   val ninoSameAsThrottlePercentage = "QQ123402A"
   val ninoAboveThrottlePercentage = "QQ123403A"
   lazy val throttlePercentage = config.get("throttle.percentage")
-  val newEnrolment = (nino: String) => Enrolment(s"$hmrcPTKey", Seq(EnrolmentIdentifier("NINO", nino)), "Activated", None)
+  val newEnrolment = (nino: String) =>
+    Enrolment(s"$hmrcPTKey", Seq(EnrolmentIdentifier("NINO", nino)), "Activated", None)
 
-  def requestWithUserDetails(userDetails: UserDetailsFromSession = userDetailsNoEnrolments): RequestWithUserDetailsFromSession[_] =
+  def requestWithUserDetails(
+    userDetails: UserDetailsFromSession = userDetailsNoEnrolments
+  ): RequestWithUserDetailsFromSession[_] =
     RequestWithUserDetailsFromSession(
       FakeRequest().asInstanceOf[Request[AnyContent]],
       userDetails,
@@ -100,8 +99,8 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
             url = "/auth/enrolments",
             status = OK,
             requestBody = Json.toJson(Set(newEnrolment(ninoBelowThreshold)))(EnrolmentsFormats.writes).toString,
-            responseBody = "")
-
+            responseBody = ""
+          )
 
           val request = FakeRequest(GET, urlPath)
             .withSession(xAuthToken)
@@ -282,9 +281,9 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
           recordExistsInMongo shouldBe false
         }
 
-
         s"the current user has $MULTIPLE_ACCOUNTS where Nino's last 2 digits are above throttle" in {
-          val authResponse = authoriseResponseJson(optNino = Some(ninoAboveThrottlePercentage), enrolments = noEnrolments)
+          val authResponse =
+            authoriseResponseJson(optNino = Some(ninoAboveThrottlePercentage), enrolments = noEnrolments)
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
           stubGet(
@@ -331,7 +330,8 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
         }
 
         s"the current user has $SA_ASSIGNED_TO_OTHER_USER where Nino's last 2 digits are above throttle" in {
-          val authResponse = authoriseResponseJson(optNino = Some(ninoAboveThrottlePercentage), enrolments = noEnrolments)
+          val authResponse =
+            authoriseResponseJson(optNino = Some(ninoAboveThrottlePercentage), enrolments = noEnrolments)
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
           stubGet(
@@ -378,7 +378,8 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
         }
 
         s"the current user has $SA_ASSIGNED_TO_CURRENT_USER where Nino's last 2 digits are above throttle" in {
-          val authResponse = authoriseResponseJson(optNino = Some(ninoAboveThrottlePercentage), enrolments = saEnrolmentOnly)
+          val authResponse =
+            authoriseResponseJson(optNino = Some(ninoAboveThrottlePercentage), enrolments = saEnrolmentOnly)
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
           stubGet(
@@ -815,7 +816,6 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
           recordExistsInMongo shouldBe false
         }
 
-
         "the redirectUrl is a valid encoded absolute url with hostname www.tax.service.gov.uk" in {
           val absoluteUrl = testOnly.routes.TestOnlyController.successfulCall
             .absoluteURL(true, "www.tax.service.gov.uk")
@@ -892,22 +892,29 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
     s"$ThrottleDoesNotApply and user has already been through account check and enrolled for PT" should {
       def accountTypeWithExpectedRedirectUrl(accountType: AccountTypes.Value): String =
         Map(
-          SINGLE_ACCOUNT -> returnUrl,
-          MULTIPLE_ACCOUNTS -> ItUrlPaths.enrolledPTNoSAOnAnyAccountPath,
+          SINGLE_ACCOUNT              -> returnUrl,
+          MULTIPLE_ACCOUNTS           -> ItUrlPaths.enrolledPTNoSAOnAnyAccountPath,
           SA_ASSIGNED_TO_CURRENT_USER -> ItUrlPaths.enrolledPTWithSAOnAnyAccountPath,
           PT_ASSIGNED_TO_CURRENT_USER -> returnUrl,
-          SA_ASSIGNED_TO_OTHER_USER -> ItUrlPaths.enrolledPTSAOnOtherAccountPath,
-          PT_ASSIGNED_TO_OTHER_USER -> ItUrlPaths.ptOnOtherAccountPath
+          SA_ASSIGNED_TO_OTHER_USER   -> ItUrlPaths.enrolledPTSAOnOtherAccountPath,
+          PT_ASSIGNED_TO_OTHER_USER   -> ItUrlPaths.ptOnOtherAccountPath
         )(accountType)
 
       val accountTypesThatSilentlyEnrol = List(SINGLE_ACCOUNT, MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER)
 
-      List(SINGLE_ACCOUNT, MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, PT_ASSIGNED_TO_OTHER_USER).foreach { case accountType =>
+      List(
+        SINGLE_ACCOUNT,
+        MULTIPLE_ACCOUNTS,
+        SA_ASSIGNED_TO_CURRENT_USER,
+        PT_ASSIGNED_TO_CURRENT_USER,
+        SA_ASSIGNED_TO_OTHER_USER,
+        PT_ASSIGNED_TO_OTHER_USER
+      ).foreach { case accountType =>
         if (accountTypesThatSilentlyEnrol.contains(accountType)) {
           s"not enrol for PT and redirect to redirectUrl" when {
             s"the session cache has accountType $accountType" in {
-              await(save[String](sessionId, "redirectURL", returnUrl))
-              await(save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", accountType))
+              save[String](sessionId, "redirectURL", returnUrl).futureValue
+              save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", accountType).futureValue
               stubAuthorizePost(OK, authoriseResponseWithPTEnrolment().toString())
               stubPost(s"/write/.*", OK, """{"x":2}""")
 
@@ -923,8 +930,8 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
         } else {
           s"redirect to redirectUrl" when {
             s"the session cache has accountType $accountType" in {
-              await(save[String](sessionId, "redirectURL", returnUrl))
-              await(save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", accountType))
+              save[String](sessionId, "redirectURL", returnUrl).futureValue
+              save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", accountType).futureValue
               stubAuthorizePost(OK, authoriseResponseWithPTEnrolment().toString())
               stubPost(s"/write/.*", OK, """{"x":2}""")
 

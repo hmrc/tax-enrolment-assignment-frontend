@@ -36,14 +36,13 @@ class SessionRepositoryISpec extends IntegrationSpecBase {
         val cacheMap = CacheMap(sessionId, Map(KEY -> JsString(data)))
 
         val res = for {
-          saved <- sessionRepository.upsert(cacheMap)
+          saved   <- sessionRepository.upsert(cacheMap)
           fetched <- fetch(sessionId)
         } yield (saved, fetched)
 
-        whenReady(res) {
-          case (saved, fetched) =>
-            saved shouldBe true
-            fetched shouldBe Some(cacheMap)
+        whenReady(res) { case (saved, fetched) =>
+          saved shouldBe true
+          fetched shouldBe Some(cacheMap)
         }
       }
     }
@@ -60,17 +59,16 @@ class SessionRepositoryISpec extends IntegrationSpecBase {
         val updatedCacheMap = CacheMap(sessionId, Map(KEY -> JsString(newData)))
 
         val res = for {
-          _ <- save[String](sessionId, KEY, currentData)
+          _              <- save[String](sessionId, KEY, currentData)
           fetchedCurrent <- fetch(sessionId)
-          updated <- sessionRepository.upsert(updatedCacheMap)
+          updated        <- sessionRepository.upsert(updatedCacheMap)
           fetchedUpdated <- fetch(sessionId)
         } yield (fetchedCurrent, updated, fetchedUpdated)
 
-        whenReady(res) {
-          case (fetchedInitial, updated, fetchedUpdated) =>
-            fetchedInitial shouldBe Some(initialCacheMap)
-            updated shouldBe true
-            fetchedUpdated shouldBe Some(updatedCacheMap)
+        whenReady(res) { case (fetchedInitial, updated, fetchedUpdated) =>
+          fetchedInitial shouldBe Some(initialCacheMap)
+          updated shouldBe true
+          fetchedUpdated shouldBe Some(updatedCacheMap)
         }
       }
     }
@@ -97,14 +95,13 @@ class SessionRepositoryISpec extends IntegrationSpecBase {
         val expectedCacheMap = CacheMap(sessionId, Map(KEY -> JsString(data)))
 
         val res = for {
-          saved <- save[String](sessionId, KEY, data)
+          saved   <- save[String](sessionId, KEY, data)
           fetched <- sessionRepository.get(sessionId)
         } yield (saved, fetched)
 
-        whenReady(res) {
-          case (saved, fetched) =>
-            saved shouldBe expectedCacheMap
-            fetched shouldBe Some(expectedCacheMap)
+        whenReady(res) { case (saved, fetched) =>
+          saved shouldBe expectedCacheMap
+          fetched shouldBe Some(expectedCacheMap)
         }
       }
     }
@@ -134,23 +131,22 @@ class SessionRepositoryISpec extends IntegrationSpecBase {
           DatedCacheMap(sessionId, cacheMap.data, oldDatetime)
         val res = for {
           _ <- sessionRepository.collection
-            .insertOne(datedCachedMap)
-            .toFuture()
+                 .insertOne(datedCachedMap)
+                 .toFuture()
           getOriginal <- sessionRepository.collection
-            .find(Filters.equal("id", sessionId))
-            .first()
-            .toFuture()
+                           .find(Filters.equal("id", sessionId))
+                           .first()
+                           .toFuture()
           updateLastUpdated <- sessionRepository.updateLastUpdated(sessionId)
           getUpdated <- sessionRepository.collection
-            .find(Filters.equal("id", sessionId))
-            .first()
-            .toFuture()
+                          .find(Filters.equal("id", sessionId))
+                          .first()
+                          .toFuture()
         } yield (getOriginal, updateLastUpdated, getUpdated)
 
-        whenReady(res) {
-          case (getOriginal, updateLastUpdated, getUpdated) =>
-            updateLastUpdated shouldBe true
-            getUpdated.lastUpdated shouldNot equal(getOriginal.lastUpdated)
+        whenReady(res) { case (getOriginal, updateLastUpdated, getUpdated) =>
+          updateLastUpdated shouldBe true
+          getUpdated.lastUpdated shouldNot equal(getOriginal.lastUpdated)
         }
       }
     }

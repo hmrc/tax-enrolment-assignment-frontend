@@ -53,18 +53,24 @@ trait ControllersBaseSpec extends BaseSpec {
       .returning(Future.successful(Some(cacheMap)))
   }
 
-  def mockErrorFromThrottlingService(accountTypes: AccountTypes.Value, nino: String, enrolments: Set[Enrolment]) = {
-    (mockThrottlingService.throttle(_: AccountTypes.Value, _: String, _: Set[Enrolment])(_: ExecutionContext, _: HeaderCarrier))
+  def mockErrorFromThrottlingService(accountTypes: AccountTypes.Value, nino: String, enrolments: Set[Enrolment]) =
+    (mockThrottlingService
+      .throttle(_: AccountTypes.Value, _: String, _: Set[Enrolment])(_: ExecutionContext, _: HeaderCarrier))
       .expects(
         accountTypes,
         nino,
-        enrolments, *, *
+        enrolments,
+        *,
+        *
       )
       .returning(createInboundResultError(UnexpectedError))
       .once()
-  }
 
-  def mockGetDataFromCacheForActionSuccess(accountType: AccountTypes.Value, redirectUrl: String = "foo", additionCacheData: Map[String, JsValue] = Map()) = {
+  def mockGetDataFromCacheForActionSuccess(
+    accountType: AccountTypes.Value,
+    redirectUrl: String = "foo",
+    additionCacheData: Map[String, JsValue] = Map()
+  ) = {
     val data = generateBasicCacheData(accountType, redirectUrl) ++ additionCacheData
     val cacheMap = CacheMap("id", data)
     (mockTeaSessionCache
@@ -75,51 +81,70 @@ trait ControllersBaseSpec extends BaseSpec {
       .returning(Future.successful(Some(cacheMap)))
   }
 
-  def mockAccountShouldBeThrottled(accountTypes: AccountTypes.Value, nino: String, enrolments: Set[Enrolment]): CallHandler5[AccountTypes.Value, String, Set[Enrolment], ExecutionContext, HeaderCarrier, TEAFResult[ThrottleResult]] = {
-    (mockThrottlingService.throttle(_: AccountTypes.Value, _: String, _: Set[Enrolment])(_: ExecutionContext, _: HeaderCarrier))
+  def mockAccountShouldBeThrottled(
+    accountTypes: AccountTypes.Value,
+    nino: String,
+    enrolments: Set[Enrolment]
+  ): CallHandler5[AccountTypes.Value, String, Set[Enrolment], ExecutionContext, HeaderCarrier, TEAFResult[
+    ThrottleResult
+  ]] =
+    (mockThrottlingService
+      .throttle(_: AccountTypes.Value, _: String, _: Set[Enrolment])(_: ExecutionContext, _: HeaderCarrier))
       .expects(
         accountTypes,
         nino,
-        enrolments, *, *
+        enrolments,
+        *,
+        *
       )
       .returning(createInboundResult(ThrottleApplied))
       .once()
-  }
 
-  def mockDeleteDataFromCache: CallHandler1[RequestWithUserDetailsFromSession[_], Future[Boolean]] = {
-    (mockTeaSessionCache.removeRecord(_: RequestWithUserDetailsFromSession[_]))
+  def mockDeleteDataFromCache: CallHandler1[RequestWithUserDetailsFromSession[_], Future[Boolean]] =
+    (mockTeaSessionCache
+      .removeRecord(_: RequestWithUserDetailsFromSession[_]))
       .expects(*)
       .returning(Future.successful(true))
       .once()
-  }
 
-  def mockAccountShouldNotBeThrottled(accountTypes: AccountTypes.Value, nino: String, enrolments: Set[Enrolment]): CallHandler5[AccountTypes.Value, String, Set[Enrolment], ExecutionContext, HeaderCarrier, TEAFResult[ThrottleResult]] = {
-    (mockThrottlingService.throttle(_: AccountTypes.Value, _: String, _: Set[Enrolment])(_: ExecutionContext, _: HeaderCarrier))
+  def mockAccountShouldNotBeThrottled(
+    accountTypes: AccountTypes.Value,
+    nino: String,
+    enrolments: Set[Enrolment]
+  ): CallHandler5[AccountTypes.Value, String, Set[Enrolment], ExecutionContext, HeaderCarrier, TEAFResult[
+    ThrottleResult
+  ]] =
+    (mockThrottlingService
+      .throttle(_: AccountTypes.Value, _: String, _: Set[Enrolment])(_: ExecutionContext, _: HeaderCarrier))
       .expects(
         accountTypes,
         nino,
-        enrolments, *, *
+        enrolments,
+        *,
+        *
       )
       .returning(createInboundResult(ThrottleDoesNotApply))
       .once()
-  }
 
   def specificThrottleTests(controllerFunction: Action[AnyContent]): Unit = {
     s"$ThrottleApplied" should {
       "redirect user to their RedirectURL" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(predicates, retrievals, *, *)
-          .returning(
-            Future.successful(retrievalResponse()
-            ))
+          .returning(Future.successful(retrievalResponse()))
 
         mockGetDataFromCacheForActionSuccess(accountType = randomAccountType, redirectUrl = "redirect")
         mockAccountShouldBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
@@ -132,19 +157,22 @@ trait ControllersBaseSpec extends BaseSpec {
     }
     s"Error from throttling service" should {
       s"return $INTERNAL_SERVER_ERROR" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(predicates, retrievals, *, *)
-          .returning(
-            Future.successful(retrievalResponse()
-            ))
+          .returning(Future.successful(retrievalResponse()))
 
         mockGetDataFromCacheForActionSuccess(accountType = randomAccountType, redirectUrl = "redirect")
         mockErrorFromThrottlingService(randomAccountType, NINO, noEnrolments.enrolments)

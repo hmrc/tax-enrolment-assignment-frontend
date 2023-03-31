@@ -30,12 +30,11 @@ class SignOutControllerISpec extends IntegrationSpecBase {
 
   val url: String = ItUrlPaths.signout
 
-  def saveRedirectUrlToSession(optRedirectUrl: Option[String]): Future[Boolean] = {
+  def saveRedirectUrlToSession(optRedirectUrl: Option[String]): Future[Boolean] =
     optRedirectUrl match {
       case Some(redirectUrl) => save(sessionId, Map("redirectURL" -> JsString(redirectUrl)))
-      case None => save(sessionId, Map())
+      case None              => save(sessionId, Map())
     }
-  }
 
   s"GET $url" when {
     "the session cache contains a redirectUrl" should {
@@ -49,11 +48,11 @@ class SignOutControllerISpec extends IntegrationSpecBase {
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
-          status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(
-            s"/bas-gateway/sign-out-without-state?continueUrl=${URLEncoder.encode(returnUrl, "UTF-8")}"
-          )
-          await(sessionRepository.get(sessionId)) shouldBe None
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result).get should include(
+          s"/bas-gateway/sign-out-without-state?continueUrl=${URLEncoder.encode(returnUrl, "UTF-8")}"
+        )
+        await(sessionRepository.get(sessionId)) shouldBe None
 
       }
     }
@@ -69,12 +68,11 @@ class SignOutControllerISpec extends IntegrationSpecBase {
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
-          status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(
-            s"/bas-gateway/sign-out-without-state"
-          )
-          sessionRepository.get(sessionId).map(session => assert(session.isEmpty))
-
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result).get should include(
+          s"/bas-gateway/sign-out-without-state"
+        )
+        sessionRepository.get(sessionId).map(session => assert(session.isEmpty))
 
       }
     }
@@ -90,10 +88,10 @@ class SignOutControllerISpec extends IntegrationSpecBase {
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
-          status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(
-            s"/bas-gateway/sign-out-without-state"
-          )
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result).get should include(
+          s"/bas-gateway/sign-out-without-state"
+        )
 
       }
     }

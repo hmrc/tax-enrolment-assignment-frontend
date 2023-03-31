@@ -25,9 +25,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemp
 import javax.inject.{Inject, Singleton}
 
 @Singleton
-class ErrorHandler @Inject()(errorTemplate: ErrorTemplate,
-                             val messagesApi: MessagesApi)
-    extends FrontendErrorHandler {
+class ErrorHandler @Inject() (errorTemplate: ErrorTemplate, val messagesApi: MessagesApi) extends FrontendErrorHandler {
 
   override def standardErrorTemplate(
     pageTitle: String,

@@ -19,7 +19,6 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 import play.api.Application
 import play.api.inject.bind
 import play.api.libs.json.{JsString, Json}
-import play.api.mvc.BodyParsers
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, Enrolments}
@@ -28,11 +27,8 @@ import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{predicates, retrievalResponse, retrievals, saEnrolmentOnly}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{BaseSpec, ControllersBaseSpec}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.ControllersBaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.formats.EnrolmentsFormats
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditHandler
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{SilentAssignmentService, ThrottlingService}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -53,7 +49,7 @@ class TestOnlyControllerSpec extends ControllersBaseSpec {
     "the credential is recognised" should {
       "return OK with the userdetails" in {
         val credId = "4684455594391511"
-        val expectedResponse = {
+        val expectedResponse =
           Json.obj(
             ("obfuscatedUserId", JsString("********3469")),
             ("email", JsString("email1@test.com")),
@@ -68,7 +64,6 @@ class TestOnlyControllerSpec extends ControllersBaseSpec {
               )
             )
           )
-        }
         val res = testOnlyController.usersGroupSearchCall(credId)(fakeReq)
         status(res) shouldBe NON_AUTHORITATIVE_INFORMATION
         contentAsJson(res) shouldBe expectedResponse
@@ -78,7 +73,7 @@ class TestOnlyControllerSpec extends ControllersBaseSpec {
     "the credential is not recognised" should {
       "return the default userdetails" in {
         val credId = "3568836745857979"
-        val expectedResponse = {
+        val expectedResponse =
           Json.obj(
             ("obfuscatedUserId", JsString("********6121")),
             ("email", JsString("email11@test.com")),
@@ -93,7 +88,6 @@ class TestOnlyControllerSpec extends ControllersBaseSpec {
               )
             )
           )
-        }
         val res = testOnlyController.usersGroupSearchCall(credId)(fakeReq)
         status(res) shouldBe NON_AUTHORITATIVE_INFORMATION
         contentAsJson(res) shouldBe expectedResponse
@@ -103,15 +97,20 @@ class TestOnlyControllerSpec extends ControllersBaseSpec {
 
   "enrolmentsFromAuth" should {
     "return the enrolments from auth for a user" in {
-      (mockAuthConnector
-        .authorise(
-          _: Predicate,
-          _: Retrieval[
-            ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-              String
-            ] ~ Option[AffinityGroup] ~ Option[String]
-          ]
-        )(_: HeaderCarrier, _: ExecutionContext))
+      (
+        mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup] ~ Option[String]
+            ]
+          )(
+            _: HeaderCarrier,
+            _: ExecutionContext
+          )
+        )
         .expects(predicates, retrievals, *, *)
         .returning(Future.successful(retrievalResponse(enrolments = saEnrolmentOnly)))
 

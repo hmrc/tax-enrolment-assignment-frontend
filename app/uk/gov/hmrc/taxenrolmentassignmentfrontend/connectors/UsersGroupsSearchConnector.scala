@@ -32,14 +32,12 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersGroupResponse
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class UsersGroupsSearchConnector @Inject()(httpClient: HttpClient,
-                                           logger: EventLoggerService,
-                                           appConfig: AppConfig) {
+class UsersGroupsSearchConnector @Inject() (httpClient: HttpClient, logger: EventLoggerService, appConfig: AppConfig) {
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
-  def getUserDetails(credId: String)(
-    implicit ec: ExecutionContext,
+  def getUserDetails(credId: String)(implicit
+    ec: ExecutionContext,
     hc: HeaderCarrier
   ): TEAFResult[UsersGroupResponse] = EitherT {
     val url = if (appConfig.useTestOnlyUsersGroupSearch) {
@@ -50,16 +48,15 @@ class UsersGroupsSearchConnector @Inject()(httpClient: HttpClient,
 
     httpClient
       .GET[HttpResponse](url)
-      .map(
-        httpResponse =>
-          httpResponse.status match {
-            case NON_AUTHORITATIVE_INFORMATION =>
-              Right(httpResponse.json.as[UsersGroupResponse])
-            case status =>
-              logger.logEvent(
-                logUnexpectedResponseFromUsersGroupsSearch(credId, status)
-              )
-              Left(UnexpectedResponseFromUsersGroupsSearch)
+      .map(httpResponse =>
+        httpResponse.status match {
+          case NON_AUTHORITATIVE_INFORMATION =>
+            Right(httpResponse.json.as[UsersGroupResponse])
+          case status =>
+            logger.logEvent(
+              logUnexpectedResponseFromUsersGroupsSearch(credId, status)
+            )
+            Left(UnexpectedResponseFromUsersGroupsSearch)
         }
       )
   }

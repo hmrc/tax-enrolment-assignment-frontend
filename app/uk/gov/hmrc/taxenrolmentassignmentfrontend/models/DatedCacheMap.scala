@@ -20,17 +20,13 @@ import play.api.libs.json.{Format, JsValue, Json, OFormat}
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.mongo.play.json.formats.{MongoFormats, MongoJavatimeFormats}
 
-import java.time.{Instant, LocalDateTime, ZoneId}
+import java.time.Instant
 
-case class DatedCacheMap(id: String,
-                         data: Map[String, JsValue],
-                         lastUpdated: Instant =
-                         Instant.now())
-  extends MongoFormats {
+case class DatedCacheMap(id: String, data: Map[String, JsValue], lastUpdated: Instant = Instant.now())
+    extends MongoFormats {
 
-  def toCacheMap: CacheMap = {
+  def toCacheMap: CacheMap =
     CacheMap(this.id, this.data)
-  }
 
 }
 

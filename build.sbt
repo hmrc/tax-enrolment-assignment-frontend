@@ -13,16 +13,13 @@ lazy val coverageSettings: Seq[Setting[_]] = {
   )
 }
 
-lazy val scalaStyleSettings = {
-  Seq(scalastyleFailOnError := true)
-}
-
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
   .disablePlugins(JUnitXmlReportPlugin) //Required to prevent https://github.com/scalatest/scalatest/issues/1427
   .settings(
     majorVersion := 0,
     scalaVersion := "2.13.8",
+    scalafmtOnCompile                := true,
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     RoutesKeys.routesImport ++= Seq("uk.gov.hmrc.play.bootstrap.binders.RedirectUrl"),
     PlayKeys.playDefaultPort := 7750,
@@ -35,7 +32,7 @@ lazy val microservice = Project(appName, file("."))
     scalacOptions ++= Seq(
       "-Ywarn-unused",
       "-feature",
-      //"-Werror",
+      "-Werror",
       "-Wconf:cat=unused-imports&site=.*views\\.html.*:s",
       "-Wconf:cat=unused-imports&site=<empty>:s",
       "-Wconf:cat=unused&src=.*RoutesPrefix\\.scala:s",

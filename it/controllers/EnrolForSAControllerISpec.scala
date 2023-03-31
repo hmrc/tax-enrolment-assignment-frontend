@@ -39,8 +39,8 @@ class EnrolForSAControllerISpec extends IntegrationSpecBase {
           .withSession(xAuthToken)
         val result = route(app, request).get
 
-          status(result) shouldBe SEE_OTHER
-         redirectLocation(result).get should include(appConfig.btaUrl)
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result).get should include(appConfig.btaUrl)
 
       }
     }
@@ -53,14 +53,15 @@ class EnrolForSAControllerISpec extends IntegrationSpecBase {
           .withSession(xSessionId, xAuthToken)
         val result = route(app, request).get
 
-          status(result) shouldBe INTERNAL_SERVER_ERROR
+        status(result) shouldBe INTERNAL_SERVER_ERROR
       }
     }
   }
 
   def stubAuthoriseSuccess(hasSAEnrolment: Boolean = false): StubMapping = {
     val authResponse = authoriseResponseJson(
-      enrolments = if (hasSAEnrolment) { saEnrolmentOnly } else noEnrolments
+      enrolments = if (hasSAEnrolment) { saEnrolmentOnly }
+      else noEnrolments
     )
     stubAuthorizePost(OK, authResponse.toString())
   }

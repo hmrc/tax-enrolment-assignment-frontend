@@ -27,7 +27,6 @@ import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{predicates, retrievalResponse, retrievals}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.ControllersBaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
@@ -51,26 +50,29 @@ class TimeOutControllerSpec extends ControllersBaseSpec {
 
   val view: TimedOutView = app.injector.instanceOf[TimedOutView]
 
-  def fakeReq(method: String,
-              url: String = "N/A"): FakeRequest[AnyContentAsEmpty.type] = {
+  def fakeReq(method: String, url: String = "N/A"): FakeRequest[AnyContentAsEmpty.type] =
     FakeRequest(method, url)
       .withSession(
-        "sessionId" -> "FAKE_SESSION_ID",
+        "sessionId"    -> "FAKE_SESSION_ID",
         "X-Request-ID" -> "FakeOtherID"
       )
-  }
 
   "keepAlive" should {
     "extend the session and return no content" in {
-      (mockAuthConnector
-        .authorise(
-          _: Predicate,
-          _: Retrieval[
-            ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-              String
-            ] ~ Option[AffinityGroup] ~ Option[String]
-          ]
-        )(_: HeaderCarrier, _: ExecutionContext))
+      (
+        mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup] ~ Option[String]
+            ]
+          )(
+            _: HeaderCarrier,
+            _: ExecutionContext
+          )
+        )
         .expects(predicates, retrievals, *, *)
         .returning(Future.successful(retrievalResponse()))
 

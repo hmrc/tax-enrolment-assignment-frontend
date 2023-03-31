@@ -17,7 +17,6 @@
 package helpers
 
 import helpers.TestITData.{authoriseResponseJson, saEnrolmentAsCaseClass, saEnrolmentOnly, sessionId}
-import org.scalatest.concurrent.IntegrationPatience
 import play.api.http.Status._
 import play.api.libs.json.Json
 import play.api.test.Helpers.{redirectLocation, status}
@@ -35,12 +34,13 @@ import scala.concurrent.Future
 import scala.language.postfixOps
 
 trait ThrottleHelperISpec {
-_: IntegrationSpecBase =>
+  _: IntegrationSpecBase =>
 
   val timeout = Timeout(5 seconds)
 
   def throttleSpecificTests(apiCall: () => Future[Result]) = {
-    val newEnrolment = (nino: String) => Enrolment(s"$hmrcPTKey", Seq(EnrolmentIdentifier("NINO", nino)), "Activated", None)
+    val newEnrolment = (nino: String) =>
+      Enrolment(s"$hmrcPTKey", Seq(EnrolmentIdentifier("NINO", nino)), "Activated", None)
     val ninoBelowThreshold = "QQ123400A"
     List(
       MULTIPLE_ACCOUNTS,
@@ -53,10 +53,13 @@ _: IntegrationSpecBase =>
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
           stubPutWithRequestBody(
-            url ="/auth/enrolments",
+            url = "/auth/enrolments",
             status = OK,
-            requestBody = Json.toJson(Set(saEnrolmentAsCaseClass, newEnrolment(ninoBelowThreshold)))(EnrolmentsFormats.writes).toString,
-            responseBody = "")
+            requestBody = Json
+              .toJson(Set(saEnrolmentAsCaseClass, newEnrolment(ninoBelowThreshold)))(EnrolmentsFormats.writes)
+              .toString,
+            responseBody = ""
+          )
 
           save[String](sessionId, SessionKeys.REDIRECT_URL, returnUrl).futureValue
           save[AccountTypes.Value](sessionId, SessionKeys.ACCOUNT_TYPE, accountTypeThatFallsIntoThrottle).futureValue
@@ -84,10 +87,13 @@ _: IntegrationSpecBase =>
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
           stubPutWithRequestBody(
-            url ="/auth/enrolments",
+            url = "/auth/enrolments",
             status = INTERNAL_SERVER_ERROR,
-            requestBody = Json.toJson(Set(saEnrolmentAsCaseClass, newEnrolment(ninoBelowThreshold)))(EnrolmentsFormats.writes).toString,
-            responseBody = "")
+            requestBody = Json
+              .toJson(Set(saEnrolmentAsCaseClass, newEnrolment(ninoBelowThreshold)))(EnrolmentsFormats.writes)
+              .toString,
+            responseBody = ""
+          )
 
           save[String](sessionId, SessionKeys.REDIRECT_URL, returnUrl).futureValue
           save[AccountTypes.Value](sessionId, SessionKeys.ACCOUNT_TYPE, accountTypeThatFallsIntoThrottle).futureValue

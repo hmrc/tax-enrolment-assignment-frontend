@@ -48,52 +48,71 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
 
-  def mockAccountShouldNotBeThrottled(accountTypes: AccountTypes.Value, nino: String, enrolments: Set[Enrolment]): CallHandler5[AccountTypes.Value, String, Set[Enrolment], ExecutionContext, HeaderCarrier, TEAFResult[ThrottleResult]] = {
-    (mockThrottlingService.throttle(_: AccountTypes.Value, _: String, _: Set[Enrolment])(_: ExecutionContext, _: HeaderCarrier))
+  def mockAccountShouldNotBeThrottled(
+    accountTypes: AccountTypes.Value,
+    nino: String,
+    enrolments: Set[Enrolment]
+  ): CallHandler5[AccountTypes.Value, String, Set[Enrolment], ExecutionContext, HeaderCarrier, TEAFResult[
+    ThrottleResult
+  ]] =
+    (mockThrottlingService
+      .throttle(_: AccountTypes.Value, _: String, _: Set[Enrolment])(_: ExecutionContext, _: HeaderCarrier))
       .expects(
         accountTypes,
         nino,
-        enrolments, *, *
+        enrolments,
+        *,
+        *
       )
       .returning(createInboundResult(ThrottleDoesNotApply))
       .once()
-  }
 
-  def mockAccountShouldBeThrottled(accountTypes: AccountTypes.Value, nino: String, enrolments: Set[Enrolment]): CallHandler5[AccountTypes.Value, String, Set[Enrolment], ExecutionContext, HeaderCarrier, TEAFResult[ThrottleResult]] = {
-    (mockThrottlingService.throttle(_: AccountTypes.Value, _: String, _: Set[Enrolment])(_: ExecutionContext, _: HeaderCarrier))
+  def mockAccountShouldBeThrottled(
+    accountTypes: AccountTypes.Value,
+    nino: String,
+    enrolments: Set[Enrolment]
+  ): CallHandler5[AccountTypes.Value, String, Set[Enrolment], ExecutionContext, HeaderCarrier, TEAFResult[
+    ThrottleResult
+  ]] =
+    (mockThrottlingService
+      .throttle(_: AccountTypes.Value, _: String, _: Set[Enrolment])(_: ExecutionContext, _: HeaderCarrier))
       .expects(
         accountTypes,
         nino,
-        enrolments, *, *
+        enrolments,
+        *,
+        *
       )
       .returning(createInboundResult(ThrottleApplied))
       .once()
-  }
 
-  def mockDeleteDataFromCache: CallHandler1[RequestWithUserDetailsFromSession[_], Future[Boolean]] = {
-    (mockTeaSessionCache.removeRecord(_: RequestWithUserDetailsFromSession[_]))
+  def mockDeleteDataFromCache: CallHandler1[RequestWithUserDetailsFromSession[_], Future[Boolean]] =
+    (mockTeaSessionCache
+      .removeRecord(_: RequestWithUserDetailsFromSession[_]))
       .expects(*)
       .returning(Future.successful(true))
       .once()
-  }
 
-  def mockSaveDataToCache: CallHandler4[String, String, RequestWithUserDetailsFromSession[_], Format[String], Future[CacheMap]] = {
-    (mockTeaSessionCache.save[String](_: String, _: String)(_: RequestWithUserDetailsFromSession[_], _: Format[String]))
+  def mockSaveDataToCache
+    : CallHandler4[String, String, RequestWithUserDetailsFromSession[_], Format[String], Future[CacheMap]] =
+    (mockTeaSessionCache
+      .save[String](_: String, _: String)(_: RequestWithUserDetailsFromSession[_], _: Format[String]))
       .expects(*, *, *, *)
       .returning(Future.successful(CacheMap("FAKE_SESSION_ID", Map.empty)))
       .once()
-  }
 
   def mockErrorFromThrottlingService(
-                                      accountTypes: AccountTypes.Value,
-                                      nino: String,
-                                      enrolments: Set[Enrolment]
-                                    ): CallHandler5[AccountTypes.Value, String, Set[Enrolment], ExecutionContext, HeaderCarrier, TEAFResult[ThrottleResult]] = {
-    (mockThrottlingService.throttle(_: AccountTypes.Value, _: String, _: Set[Enrolment])(_: ExecutionContext, _: HeaderCarrier))
+    accountTypes: AccountTypes.Value,
+    nino: String,
+    enrolments: Set[Enrolment]
+  ): CallHandler5[AccountTypes.Value, String, Set[Enrolment], ExecutionContext, HeaderCarrier, TEAFResult[
+    ThrottleResult
+  ]] =
+    (mockThrottlingService
+      .throttle(_: AccountTypes.Value, _: String, _: Set[Enrolment])(_: ExecutionContext, _: HeaderCarrier))
       .expects(accountTypes, nino, enrolments, *, *)
       .returning(createInboundResultError(UnexpectedError))
       .once()
-  }
 
   lazy val mockSilentAssignmentService = mock[SilentAssignmentService]
   lazy val mockAccountCheckOrchestrator = mock[AccountCheckOrchestrator]
@@ -138,7 +157,8 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
           // removeRecord is called twice.
           // - Once in enrolForPTIfRequired
           // - Once in handleNoneThrottledUsers
-          (mockTeaSessionCache.removeRecord(_: RequestWithUserDetailsFromSession[_]))
+          (mockTeaSessionCache
+            .removeRecord(_: RequestWithUserDetailsFromSession[_]))
             .expects(*)
             .returning(Future.successful(true))
             .twice()
@@ -162,7 +182,8 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
           // removeRecord is called twice.
           // - Once in enrolForPTIfRequired
           // - Once in handleNoneThrottledUsers
-          (mockTeaSessionCache.removeRecord(_: RequestWithUserDetailsFromSession[_]))
+          (mockTeaSessionCache
+            .removeRecord(_: RequestWithUserDetailsFromSession[_]))
             .expects(*)
             .returning(Future.successful(true))
             .twice()
@@ -275,7 +296,11 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
           mockAccountCheckSuccess(SA_ASSIGNED_TO_CURRENT_USER)
           mockSilentEnrolSuccess
           mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_CURRENT_USER, NINO, saEnrolmentOnly.enrolments)
-          mockAuditPTEnrolled(SA_ASSIGNED_TO_CURRENT_USER, requestWithUserDetails(userDetailsWithSAEnrolment), messagesApi)
+          mockAuditPTEnrolled(
+            SA_ASSIGNED_TO_CURRENT_USER,
+            requestWithUserDetails(userDetailsWithSAEnrolment),
+            messagesApi
+          )
 
           val result = controller
             .accountCheck(returnUrl)
@@ -316,7 +341,8 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
           mockAccountCheckSuccess(SA_ASSIGNED_TO_OTHER_USER)
           mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
 
-          (mockTeaSessionCache.removeRecord(_: RequestWithUserDetailsFromSession[_]))
+          (mockTeaSessionCache
+            .removeRecord(_: RequestWithUserDetailsFromSession[_]))
             .expects(*)
             .never()
 
@@ -403,48 +429,62 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
   class TestHelper {
 
     def mockAuthCall() =
-      (mockAuthConnector
-        .authorise(
-          _: Predicate,
-          _: Retrieval[
-            ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-              String
-            ] ~ Option[AffinityGroup] ~ Option[String]
-          ]
-        )(_: HeaderCarrier, _: ExecutionContext))
+      (
+        mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup] ~ Option[String]
+            ]
+          )(
+            _: HeaderCarrier,
+            _: ExecutionContext
+          )
+        )
         .expects(predicates, retrievals, *, *)
         .returning(Future.successful(retrievalResponse()))
 
     def mockAuthCallWithSA() =
-      (mockAuthConnector
-        .authorise(
-          _: Predicate,
-          _: Retrieval[
-            ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-              String
-            ] ~ Option[AffinityGroup] ~ Option[String]
-          ]
-        )(_: HeaderCarrier, _: ExecutionContext))
+      (
+        mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup] ~ Option[String]
+            ]
+          )(
+            _: HeaderCarrier,
+            _: ExecutionContext
+          )
+        )
         .expects(predicates, retrievals, *, *)
         .returning(Future.successful(retrievalResponse(enrolments = saEnrolmentOnly)))
 
-
     def mockAuthCallWithPT(hasSA: Boolean = false) = {
-      val enrolments = if(hasSA) saAndptEnrolments else ptEnrolmentOnly
-      (mockAuthConnector
-        .authorise(
-          _: Predicate,
-          _: Retrieval[
-            ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-              String
-            ] ~ Option[AffinityGroup] ~ Option[String]
-          ]
-        )(_: HeaderCarrier, _: ExecutionContext))
+      val enrolments = if (hasSA) saAndptEnrolments else ptEnrolmentOnly
+      (
+        mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup] ~ Option[String]
+            ]
+          )(
+            _: HeaderCarrier,
+            _: ExecutionContext
+          )
+        )
         .expects(predicates, retrievals, *, *)
         .returning(Future.successful(retrievalResponse(enrolments = enrolments)))
     }
 
-    def mockGetAccountTypeFailure(error: TaxEnrolmentAssignmentErrors) = {
+    def mockGetAccountTypeFailure(error: TaxEnrolmentAssignmentErrors) =
       (mockAccountCheckOrchestrator
         .getAccountType(
           _: ExecutionContext,
@@ -453,9 +493,8 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
         ))
         .expects(*, *, *)
         .returning(createInboundResultError(error))
-    }
 
-    def mockAccountCheckSuccess(accountType: AccountTypes.Value) = {
+    def mockAccountCheckSuccess(accountType: AccountTypes.Value) =
       (mockAccountCheckOrchestrator
         .getAccountType(
           _: ExecutionContext,
@@ -464,7 +503,6 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
         ))
         .expects(*, *, *)
         .returning(createInboundResult(accountType))
-    }
 
     def mockSilentEnrolSuccess =
       (mockSilentAssignmentService
@@ -490,11 +528,15 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
           createInboundResultError(UnexpectedResponseFromTaxEnrolments)
         )
 
-    def mockAuditPTEnrolled(accountType: AccountTypes.Value,
-                            requestWithUserDetailsFromSession: RequestWithUserDetailsFromSession[_],
-                            messagesApi: MessagesApi) = {
+    def mockAuditPTEnrolled(
+      accountType: AccountTypes.Value,
+      requestWithUserDetailsFromSession: RequestWithUserDetailsFromSession[_],
+      messagesApi: MessagesApi
+    ) = {
       val expectedAudit = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(accountType)(
-        requestWithUserDetailsFromSession, messagesApi)
+        requestWithUserDetailsFromSession,
+        messagesApi
+      )
       (mockAuditHandler
         .audit(_: AuditEvent)(_: HeaderCarrier))
         .expects(expectedAudit, *)

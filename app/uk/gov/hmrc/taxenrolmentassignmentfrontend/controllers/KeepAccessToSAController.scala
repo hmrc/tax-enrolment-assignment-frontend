@@ -30,18 +30,18 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.KeepAccessToSA
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class KeepAccessToSAController @Inject()(
-                                          authAction: AuthAction,
-                                          accountMongoDetailsAction: AccountMongoDetailsAction,
-                                          throttleAction: ThrottleAction,
-                                          multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
-                                          mcc: MessagesControllerComponents,
-                                          val logger: EventLoggerService,
-                                          keepAccessToSA: KeepAccessToSA,
-                                          auditHandler: AuditHandler,
-                                          errorHandler: ErrorHandler
+class KeepAccessToSAController @Inject() (
+  authAction: AuthAction,
+  accountMongoDetailsAction: AccountMongoDetailsAction,
+  throttleAction: ThrottleAction,
+  multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
+  mcc: MessagesControllerComponents,
+  val logger: EventLoggerService,
+  keepAccessToSA: KeepAccessToSA,
+  auditHandler: AuditHandler,
+  errorHandler: ErrorHandler
 )(implicit ec: ExecutionContext)
-    extends TEAFrontendController(mcc)  {
+    extends TEAFrontendController(mcc) {
 
   def view: Action[AnyContent] =
     authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
@@ -52,14 +52,13 @@ class KeepAccessToSAController @Inject()(
       }
     }
 
-  def continue: Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async {
-    implicit request =>
-      KeepAccessToSAThroughPTAForm.keepAccessToSAThroughPTAForm.bindFromRequest()
+  def continue: Action[AnyContent] =
+    authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
+      KeepAccessToSAThroughPTAForm.keepAccessToSAThroughPTAForm
+        .bindFromRequest()
         .fold(
-          formWithErrors => {
-            Future.successful(BadRequest(keepAccessToSA(formWithErrors)))
-          },
-          keepAccessToSA => {
+          formWithErrors => Future.successful(BadRequest(keepAccessToSA(formWithErrors))),
+          keepAccessToSA =>
             multipleAccountsOrchestrator
               .handleKeepAccessToSAChoice(keepAccessToSA)
               .value
@@ -72,7 +71,6 @@ class KeepAccessToSAController @Inject()(
                 case Left(error) =>
                   errorHandler.handleErrors(error, "[KeepAccessToSAController][continue]")(request, implicitly)
               }
-          }
         )
-  }
+    }
 }

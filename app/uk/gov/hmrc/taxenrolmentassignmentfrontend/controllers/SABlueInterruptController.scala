@@ -26,7 +26,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccounts
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SABlueInterrupt
 
 @Singleton
-class SABlueInterruptController @Inject()(
+class SABlueInterruptController @Inject() (
   authAction: AuthAction,
   accountMongoDetailsAction: AccountMongoDetailsAction,
   throttleAction: ThrottleAction,
@@ -35,27 +35,26 @@ class SABlueInterruptController @Inject()(
   val logger: EventLoggerService,
   saBlueInterrupt: SABlueInterrupt,
   errorHandler: ErrorHandler
-)
-    extends TEAFrontendController(mcc)   {
+) extends TEAFrontendController(mcc) {
 
   def view: Action[AnyContent] =
     authAction.andThen(accountMongoDetailsAction).andThen(throttleAction) { implicit request =>
       multipleAccountsOrchestrator
         .checkAccessAllowedForPage(List(SA_ASSIGNED_TO_OTHER_USER)) match {
-          case Right(_) =>
-            Ok(saBlueInterrupt())
-          case Left(error) =>
-            errorHandler.handleErrors(error, "[SABlueInterruptController][view]")(request, implicitly)
-        }
+        case Right(_) =>
+          Ok(saBlueInterrupt())
+        case Left(error) =>
+          errorHandler.handleErrors(error, "[SABlueInterruptController][view]")(request, implicitly)
+      }
     }
 
   def continue: Action[AnyContent] =
     authAction.andThen(accountMongoDetailsAction).andThen(throttleAction) { implicit request =>
       multipleAccountsOrchestrator
         .checkAccessAllowedForPage(List(SA_ASSIGNED_TO_OTHER_USER)) match {
-          case Right(_) => Redirect(routes.KeepAccessToSAController.view)
-          case Left(error) =>
-            errorHandler.handleErrors(error, "[SABlueInterruptController][continue]")(request, implicitly)
-        }
+        case Right(_) => Redirect(routes.KeepAccessToSAController.view)
+        case Left(error) =>
+          errorHandler.handleErrors(error, "[SABlueInterruptController][continue]")(request, implicitly)
+      }
     }
 }

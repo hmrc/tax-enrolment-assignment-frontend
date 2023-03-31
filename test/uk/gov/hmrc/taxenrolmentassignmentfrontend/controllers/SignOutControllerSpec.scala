@@ -66,38 +66,40 @@ class SignOutControllerSpec extends ControllersBaseSpec {
 
   lazy val controller = app.injector.instanceOf[SignOutController]
 
-  def fakeReq(method: String,
-              url: String = "N/A"): FakeRequest[AnyContentAsEmpty.type] = {
+  def fakeReq(method: String, url: String = "N/A"): FakeRequest[AnyContentAsEmpty.type] =
     FakeRequest(method, url)
       .withSession(
-        "sessionId" -> "FAKE_SESSION_ID",
+        "sessionId"    -> "FAKE_SESSION_ID",
         "X-Request-ID" -> "FakeOtherID"
       )
-  }
 
   "signOut" when {
     "the session contains a redirectUrl" should {
       "clear down the user's data and redirect to signout with continueUrl" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
 
         (mockTeaSessionCache
-          .fetch()(
-            _: RequestWithUserDetailsFromSession[_]))
+          .fetch()(_: RequestWithUserDetailsFromSession[_]))
           .expects(*)
           .returning(Future.successful(Some(CacheMap("id", Map(REDIRECT_URL -> JsString(UrlPaths.returnUrl))))))
 
-        (mockTeaSessionCache.removeRecord(
-          _: RequestWithUserDetailsFromSession[_]))
+        (mockTeaSessionCache
+          .removeRecord(_: RequestWithUserDetailsFromSession[_]))
           .expects(*)
           .returning(Future.successful(true))
 
@@ -113,26 +115,30 @@ class SignOutControllerSpec extends ControllersBaseSpec {
 
     "the session exists but does not contain the redirectUrl" should {
       "clear down the user's data and redirect to signout without continueUrl" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
 
         (mockTeaSessionCache
-          .fetch()(
-            _: RequestWithUserDetailsFromSession[_]))
+          .fetch()(_: RequestWithUserDetailsFromSession[_]))
           .expects(*)
           .returning(Future.successful(Some(CacheMap("id", Map()))))
 
-        (mockTeaSessionCache.removeRecord(
-          _: RequestWithUserDetailsFromSession[_]))
+        (mockTeaSessionCache
+          .removeRecord(_: RequestWithUserDetailsFromSession[_]))
           .expects(*)
           .returning(Future.successful(true))
 
@@ -148,26 +154,30 @@ class SignOutControllerSpec extends ControllersBaseSpec {
 
     "the session does not exists" should {
       "redirect to signout without continueUrl" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
 
         (mockTeaSessionCache
-          .fetch()(
-            _: RequestWithUserDetailsFromSession[_]))
+          .fetch()(_: RequestWithUserDetailsFromSession[_]))
           .expects(*)
           .returning(Future.successful(None))
 
-        (mockTeaSessionCache.removeRecord(
-          _: RequestWithUserDetailsFromSession[_]))
+        (mockTeaSessionCache
+          .removeRecord(_: RequestWithUserDetailsFromSession[_]))
           .expects(*)
           .returning(Future.successful(true))
 

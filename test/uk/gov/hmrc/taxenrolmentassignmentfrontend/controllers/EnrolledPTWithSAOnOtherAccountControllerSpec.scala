@@ -73,26 +73,33 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
     "the user has enrolled for PT after reporting fraud" should {
       "render the EnrolledForPTWithSAOnOtherAccount page without SA" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(predicates, retrievals, *, *)
           .returning(
             Future.successful(retrievalResponse(enrolments = saEnrolmentOnly))
           )
 
-        (mockMultipleAccountsOrchestrator
-          .getDetailsForEnrolledPTWithSAOnOtherAccount(
-            _: RequestWithUserDetailsFromSessionAndMongo[_],
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
+        (
+          mockMultipleAccountsOrchestrator
+            .getDetailsForEnrolledPTWithSAOnOtherAccount(
+              _: RequestWithUserDetailsFromSessionAndMongo[_],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(*, *, *)
           .returning(createInboundResult(accountDetails))
 
@@ -116,34 +123,44 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
           .parse(contentAsString(result))
 
         content.body().text() should include(messages("enrolledForPTWithSAOnOtherAccount.heading"))
-        content.body().text() shouldNot include(messages(
-          "enrolledForPTWithSAOnOtherAccount.h2.paragraph1", "1234"
-        ))
+        content.body().text() shouldNot include(
+          messages(
+            "enrolledForPTWithSAOnOtherAccount.h2.paragraph1",
+            "1234"
+          )
+        )
       }
     }
 
     "the user has enrolled for PT after choosing to have SA separate" should {
       "render the EnrolledForPTWithSAOnOtherAccount page with SA details" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(predicates, retrievals, *, *)
           .returning(
             Future.successful(retrievalResponse(enrolments = saEnrolmentOnly))
           )
 
-        (mockMultipleAccountsOrchestrator
-          .getDetailsForEnrolledPTWithSAOnOtherAccount(
-            _: RequestWithUserDetailsFromSessionAndMongo[_],
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
+        (
+          mockMultipleAccountsOrchestrator
+            .getDetailsForEnrolledPTWithSAOnOtherAccount(
+              _: RequestWithUserDetailsFromSessionAndMongo[_],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(*, *, *)
           .returning(createInboundResult(accountDetails))
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
@@ -169,34 +186,44 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
           .parse(contentAsString(result))
 
         content.body().text() should include(messages("enrolledForPTWithSAOnOtherAccount.heading"))
-        content.body().text() should include(messages(
-          "enrolledForPTWithSAOnOtherAccount.h2.paragraph1", "1234"
-        ))
+        content.body().text() should include(
+          messages(
+            "enrolledForPTWithSAOnOtherAccount.h2.paragraph1",
+            "1234"
+          )
+        )
       }
     }
 
     "the user is the wrong usertype" should {
       s"redirect to the ${UrlPaths.accountCheckPath} page" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
 
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
-        (mockMultipleAccountsOrchestrator
-          .getDetailsForEnrolledPTWithSAOnOtherAccount(
-            _: RequestWithUserDetailsFromSessionAndMongo[_],
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
+        (
+          mockMultipleAccountsOrchestrator
+            .getDetailsForEnrolledPTWithSAOnOtherAccount(
+              _: RequestWithUserDetailsFromSessionAndMongo[_],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(*, *, *)
           .returning(
             createInboundResultError(
@@ -213,15 +240,20 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
     }
     "no redirectUrl stored in session" should {
       "render the error view" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
         mockGetDataFromCacheForActionNoRedirectUrl
@@ -237,24 +269,31 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
     "the call to users-group-search fails" should {
       "render error view" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
-        (mockMultipleAccountsOrchestrator
-          .getDetailsForEnrolledPTWithSAOnOtherAccount(
-            _: RequestWithUserDetailsFromSessionAndMongo[_],
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
+        (
+          mockMultipleAccountsOrchestrator
+            .getDetailsForEnrolledPTWithSAOnOtherAccount(
+              _: RequestWithUserDetailsFromSessionAndMongo[_],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(*, *, *)
           .returning(
             createInboundResultError(UnexpectedResponseFromUsersGroupsSearch)
@@ -271,15 +310,20 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
   "continue" when {
     specificThrottleTests(controller.continue)
     "the call to continue deletes user data and redirects to their redirectURL" in {
-      (mockAuthConnector
-        .authorise(
-          _: Predicate,
-          _: Retrieval[
-            ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-              String
-            ] ~ Option[AffinityGroup] ~ Option[String]
-          ]
-        )(_: HeaderCarrier, _: ExecutionContext))
+      (
+        mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup] ~ Option[String]
+            ]
+          )(
+            _: HeaderCarrier,
+            _: ExecutionContext
+          )
+        )
         .expects(predicates, retrievals, *, *)
         .returning(Future.successful(retrievalResponse()))
       mockGetDataFromCacheForActionSuccess(accountType = randomAccountType, redirectUrl = "redirect")

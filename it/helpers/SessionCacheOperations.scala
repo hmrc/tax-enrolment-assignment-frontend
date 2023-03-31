@@ -45,10 +45,9 @@ trait SessionCacheOperations extends DefaultPlayMongoRepositorySupport[DatedCach
   lazy val cascadeUpsert: CascadeUpsert = app.injector.instanceOf[CascadeUpsert]
   lazy val repository = inject[DefaultTEASessionCache]
 
-
-  def save[T](sessionID: String, key: String, value: T)(
-    implicit fmt: Format[T]
-  ): Future[CacheMap] = {
+  def save[T](sessionID: String, key: String, value: T)(implicit
+    fmt: Format[T]
+  ): Future[CacheMap] =
     sessionRepository.get(sessionID).flatMap { optionalCacheMap =>
       val updatedCacheMap = cascadeUpsert(
         key,
@@ -59,39 +58,31 @@ trait SessionCacheOperations extends DefaultPlayMongoRepositorySupport[DatedCach
         updatedCacheMap
       }
     }
-  }
 
-  def recordExistsInMongo: Boolean = sessionRepository.collection.find(Filters.empty()).headOption().map(_.isDefined).futureValue
+  def recordExistsInMongo: Boolean =
+    sessionRepository.collection.find(Filters.empty()).headOption().map(_.isDefined).futureValue
 
-  def save(sessionId: String,
-           dataMap: Map[String, JsValue]): Future[Boolean] = {
+  def save(sessionId: String, dataMap: Map[String, JsValue]): Future[Boolean] =
     sessionRepository.upsert(CacheMap(sessionId, dataMap))
-  }
 
-  def removeAll(sessionID: String): Future[Boolean] = {
+  def removeAll(sessionID: String): Future[Boolean] =
     sessionRepository.upsert(CacheMap(sessionID, Map("" -> JsString(""))))
-  }
 
   def fetch(sessionID: String): Future[Option[CacheMap]] =
     sessionRepository.get(sessionID)
 
-  def getEntry[A](sessionID: String,
-                  key: String)(implicit fmt: Format[A]): Future[Option[A]] = {
+  def getEntry[A](sessionID: String, key: String)(implicit fmt: Format[A]): Future[Option[A]] =
     fetch(sessionID).map { optionalCacheMap =>
       optionalCacheMap.flatMap { cacheMap =>
         cacheMap.getEntry(key)
       }
     }
-  }
 
-  def getLastLoginDateTime(sessionID: String): Instant = {
+  def getLastLoginDateTime(sessionID: String): Instant =
     sessionRepository.collection
       .find(Filters.equal("id", sessionID))
       .first()
       .toFuture()
       .map(_.lastUpdated)
       .futureValue
-  }
 }
-
-

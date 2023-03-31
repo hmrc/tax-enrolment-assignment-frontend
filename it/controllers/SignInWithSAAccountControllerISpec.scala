@@ -16,10 +16,10 @@
 
 package controllers
 
-import helpers.{ItUrlPaths, ThrottleHelperISpec, IntegrationSpecBase}
+import helpers.{IntegrationSpecBase, ItUrlPaths, ThrottleHelperISpec}
 import helpers.TestITData._
 import play.api.test.Helpers.{GET, POST, await, contentAsString, defaultAwaitTimeout, redirectLocation}
-import play.api.test.Helpers.{writeableOf_AnyContentAsJson, writeableOf_AnyContentAsEmpty, route, status}
+import play.api.test.Helpers.{route, status, writeableOf_AnyContentAsEmpty, writeableOf_AnyContentAsJson}
 import helpers.messages._
 import org.jsoup.Jsoup
 import play.api.http.Status
@@ -28,8 +28,6 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, UsersAssignedEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL, USER_ASSIGNED_SA_ENROLMENT, accountDetailsForCredential}
-import play.api.libs.ws.DefaultWSCookie
-import play.api.mvc.Cookie
 import play.api.test.FakeRequest
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
 
@@ -77,8 +75,8 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
           val result = route(app, request).get
           val page = Jsoup.parse(contentAsString(result))
 
-            status(result) shouldBe OK
-            page.title should include(SignInAgainMessages.title)
+          status(result) shouldBe OK
+          page.title should include(SignInAgainMessages.title)
 
         }
       }
@@ -111,12 +109,11 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
           val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
             .withSession(xAuthToken, xSessionId)
           val result = route(app, request).get
-          val page = Jsoup.parse(contentAsString(result))
 
-            status(result) shouldBe SEE_OTHER
-            redirectLocation(result).get should include(
-              ItUrlPaths.enrolledPTSAOnOtherAccountPath
-            )
+          status(result) shouldBe SEE_OTHER
+          redirectLocation(result).get should include(
+            ItUrlPaths.enrolledPTSAOnOtherAccountPath
+          )
 
         }
       }
@@ -142,12 +139,11 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
           val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
             .withSession(xAuthToken, xSessionId)
           val result = route(app, request).get
-          val page = Jsoup.parse(contentAsString(result))
 
-            status(result) shouldBe SEE_OTHER
-            redirectLocation(result).get should include(
-              accountCheckPath
-            )
+          status(result) shouldBe SEE_OTHER
+          redirectLocation(result).get should include(
+            accountCheckPath
+          )
 
         }
       }
@@ -177,10 +173,9 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
         val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
-          contentAsString(result) should include(ErrorTemplateMessages.title)
+        contentAsString(result) should include(ErrorTemplateMessages.title)
 
       }
     }
@@ -209,10 +204,9 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
         val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
-          contentAsString(result) should include(ErrorTemplateMessages.title)
+        contentAsString(result) should include(ErrorTemplateMessages.title)
 
       }
     }
@@ -233,10 +227,9 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
         val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
-          contentAsString(result) should include(ErrorTemplateMessages.title)
+        contentAsString(result) should include(ErrorTemplateMessages.title)
 
       }
     }
@@ -270,10 +263,9 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
         val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
-          contentAsString(result) should include(ErrorTemplateMessages.title)
+        contentAsString(result) should include(ErrorTemplateMessages.title)
 
       }
     }
@@ -287,12 +279,11 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
         val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(
-            ItUrlPaths.unauthorizedPath
-          )
+        redirectLocation(result).get should include(
+          ItUrlPaths.unauthorizedPath
+        )
 
       }
     }
@@ -306,12 +297,11 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
         val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(
-            ItUrlPaths.unauthorizedPath
-          )
+        redirectLocation(result).get should include(
+          ItUrlPaths.unauthorizedPath
+        )
 
       }
     }
@@ -324,12 +314,11 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
         val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(
-            ItUrlPaths.unauthorizedPath
-          )
+        redirectLocation(result).get should include(
+          ItUrlPaths.unauthorizedPath
+        )
       }
     }
 
@@ -341,10 +330,9 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
         val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include("/bas-gateway/sign-in")
+        redirectLocation(result).get should include("/bas-gateway/sign-in")
 
       }
     }
@@ -352,22 +340,24 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
 
   s"POST $urlPath" when {
 
-  import play.api.test.Helpers.redirectLocation
+    import play.api.test.Helpers.redirectLocation
 
-  throttleSpecificTests { () =>
-  val request = FakeRequest(POST, "/protect-tax-info" + urlPath)
-    .withSession(xAuthToken, xSessionId)
-  .withJsonBody(Json.obj())
-  route(app, request).get
-}
+    throttleSpecificTests { () =>
+      val request = FakeRequest(POST, "/protect-tax-info" + urlPath)
+        .withSession(xAuthToken, xSessionId)
+        .withJsonBody(Json.obj())
+      route(app, request).get
+    }
 
     "the session cache has a credential for SA enrolment that is not the signed in account" should {
       s"redirect to ${ItUrlPaths.logoutPath}" in {
         val cacheData = Map(
-          ACCOUNT_TYPE -> Json.toJson(SA_ASSIGNED_TO_OTHER_USER),
-          REDIRECT_URL -> JsString(returnUrl),
+          ACCOUNT_TYPE               -> Json.toJson(SA_ASSIGNED_TO_OTHER_USER),
+          REDIRECT_URL               -> JsString(returnUrl),
           USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(saUsers),
-          accountDetailsForCredential(CREDENTIAL_ID_2) -> Json.toJson(accountDetails) (AccountDetails.mongoFormats(crypto.crypto))
+          accountDetailsForCredential(CREDENTIAL_ID_2) -> Json.toJson(accountDetails)(
+            AccountDetails.mongoFormats(crypto.crypto)
+          )
         )
         await(save(sessionId, cacheData))
         val authResponse = authoriseResponseJson()
@@ -379,15 +369,16 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
           .withJsonBody(Json.obj())
 
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(
-            ItUrlPaths.logoutPath
-          )
-          val expectedAuditEvent = AuditEvent.auditSigninAgainWithSACredential()(
-            requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, mongoCacheData = cacheData), messagesApi)
-          verifyAuditEventSent(expectedAuditEvent)
+        redirectLocation(result).get should include(
+          ItUrlPaths.logoutPath
+        )
+        val expectedAuditEvent = AuditEvent.auditSigninAgainWithSACredential()(
+          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, mongoCacheData = cacheData),
+          messagesApi
+        )
+        verifyAuditEventSent(expectedAuditEvent)
 
       }
     }
@@ -410,9 +401,8 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
           .withJsonBody(Json.obj())
 
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
-          status(result) shouldBe INTERNAL_SERVER_ERROR
-          contentAsString(result) should include(ErrorTemplateMessages.title)
+        status(result) shouldBe INTERNAL_SERVER_ERROR
+        contentAsString(result) should include(ErrorTemplateMessages.title)
 
       }
     }
@@ -427,10 +417,9 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
           .withJsonBody(Json.obj())
 
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
-          status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
 
       }
     }
@@ -446,10 +435,9 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
           .withJsonBody(Json.obj())
 
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
-          status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
 
       }
     }
@@ -464,10 +452,9 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
           .withJsonBody(Json.obj())
 
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
-          status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
 
       }
     }
@@ -482,10 +469,9 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
           .withJsonBody(Json.obj())
 
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
-          status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include("/bas-gateway/sign-in")
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result).get should include("/bas-gateway/sign-in")
 
       }
     }

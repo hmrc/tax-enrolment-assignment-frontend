@@ -22,14 +22,11 @@ import play.api.test.Helpers.{GET, POST, await, contentAsString, defaultAwaitTim
 import play.api.test.Helpers.{route, status, writeableOf_AnyContentAsEmpty, writeableOf_AnyContentAsJson}
 import helpers.messages._
 import org.jsoup.Jsoup
-import play.api.Application
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, NON_AUTHORITATIVE_INFORMATION, NOT_FOUND, OK, SEE_OTHER}
 import play.api.libs.json.Json
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
-import play.api.mvc.Cookie
 import play.api.test.FakeRequest
-import com.github.tomakehurst.wiremock.client.WireMock.{postRequestedFor, urlEqualTo}
 
 class EnrolledForPTWithSAISpec extends IntegrationSpecBase with ThrottleHelperISpec {
 
@@ -239,9 +236,9 @@ class EnrolledForPTWithSAISpec extends IntegrationSpecBase with ThrottleHelperIS
           .withJsonBody(Json.obj())
         val result = route(app, request).get
 
-          status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(returnUrl)
-          recordExistsInMongo shouldBe false
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result).get should include(returnUrl)
+        recordExistsInMongo shouldBe false
 
       }
     }
@@ -257,11 +254,10 @@ class EnrolledForPTWithSAISpec extends IntegrationSpecBase with ThrottleHelperIS
           .withJsonBody(Json.obj())
         val result = route(app, request).get
 
-          status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include("/bas-gateway/sign-in")
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result).get should include("/bas-gateway/sign-in")
 
       }
     }
   }
 }
-

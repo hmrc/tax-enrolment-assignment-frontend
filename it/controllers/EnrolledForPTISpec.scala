@@ -22,13 +22,10 @@ import play.api.test.Helpers.{GET, POST, await, contentAsString, defaultAwaitTim
 import play.api.test.Helpers.{writeableOf_AnyContentAsEmpty, writeableOf_AnyContentAsJson}
 import helpers.messages._
 import org.jsoup.Jsoup
-import play.api.http.Status
-import play.api.http.Status.{INTERNAL_SERVER_ERROR, NON_AUTHORITATIVE_INFORMATION, OK, SEE_OTHER}
+import play.api.http.Status.{INTERNAL_SERVER_ERROR, NON_AUTHORITATIVE_INFORMATION, NOT_FOUND, OK, SEE_OTHER}
 import play.api.libs.json.Json
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
-import play.api.libs.ws.DefaultWSCookie
-import play.api.mvc.Cookie
 import play.api.test.FakeRequest
 
 class EnrolledForPTISpec extends IntegrationSpecBase with ThrottleHelperISpec {
@@ -42,7 +39,7 @@ class EnrolledForPTISpec extends IntegrationSpecBase with ThrottleHelperISpec {
         .withSession(xSessionId, xAuthToken)
       route(app, request).get
     }
-    
+
     s"the session cache has Account type of $MULTIPLE_ACCOUNTS" should {
       s"render the EnrolledForPT page" in {
         await(save[String](sessionId, "redirectURL", returnUrl))
@@ -62,9 +59,9 @@ class EnrolledForPTISpec extends IntegrationSpecBase with ThrottleHelperISpec {
         val result = route(app, request).get
         val page = Jsoup.parse(contentAsString(result))
 
-          status(result) shouldBe OK
-          page.title should include(EnrolledForPTPageMessages.title)
-        
+        status(result) shouldBe OK
+        page.title should include(EnrolledForPTPageMessages.title)
+
       }
     }
 
@@ -82,13 +79,12 @@ class EnrolledForPTISpec extends IntegrationSpecBase with ThrottleHelperISpec {
             val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
               .withSession(xSessionId, xAuthToken)
             val result = route(app, request).get
-            val page = Jsoup.parse(contentAsString(result))
 
-              status(result) shouldBe SEE_OTHER
-              redirectLocation(result).get should include(
-                accountCheckPath
-              )
-            
+            status(result) shouldBe SEE_OTHER
+            redirectLocation(result).get should include(
+              accountCheckPath
+            )
+
           }
         }
       }
@@ -98,14 +94,13 @@ class EnrolledForPTISpec extends IntegrationSpecBase with ThrottleHelperISpec {
         stubAuthorizePost(OK, authoriseResponseWithPTEnrolment().toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-  val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
-    .withSession(xSessionId, xAuthToken)
-  val result = route(app, request).get
-  val page = Jsoup.parse(contentAsString(result))
+        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+          .withSession(xSessionId, xAuthToken)
+        val result = route(app, request).get
 
-          status(result) shouldBe SEE_OTHER
-         redirectLocation(result).get should include("/bas-gateway/sign-in")
-        
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result).get should include("/bas-gateway/sign-in")
+
       }
     }
 
@@ -119,17 +114,16 @@ class EnrolledForPTISpec extends IntegrationSpecBase with ThrottleHelperISpec {
           "/identity-verification/nino",
           "nino",
           NINO,
-          Status.NOT_FOUND,
+          NOT_FOUND,
           ""
         )
 
         val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xSessionId, xAuthToken)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
-          status(result) shouldBe INTERNAL_SERVER_ERROR
-          contentAsString(result) should include(ErrorTemplateMessages.title)
+        status(result) shouldBe INTERNAL_SERVER_ERROR
+        contentAsString(result) should include(ErrorTemplateMessages.title)
       }
     }
 
@@ -143,18 +137,17 @@ class EnrolledForPTISpec extends IntegrationSpecBase with ThrottleHelperISpec {
           "/identity-verification/nino",
           "nino",
           NINO,
-          Status.INTERNAL_SERVER_ERROR,
+          INTERNAL_SERVER_ERROR,
           ""
         )
 
         val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xSessionId, xAuthToken)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
-          status(result) shouldBe INTERNAL_SERVER_ERROR
-          contentAsString(result) should include(ErrorTemplateMessages.title)
-        
+        status(result) shouldBe INTERNAL_SERVER_ERROR
+        contentAsString(result) should include(ErrorTemplateMessages.title)
+
       }
     }
 
@@ -169,10 +162,9 @@ class EnrolledForPTISpec extends IntegrationSpecBase with ThrottleHelperISpec {
         val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xSessionId, xAuthToken)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
-          status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
 
       }
     }
@@ -186,10 +178,9 @@ class EnrolledForPTISpec extends IntegrationSpecBase with ThrottleHelperISpec {
         val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xSessionId, xAuthToken)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
-          status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
 
       }
     }
@@ -202,10 +193,9 @@ class EnrolledForPTISpec extends IntegrationSpecBase with ThrottleHelperISpec {
         val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xSessionId, xAuthToken)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
-          status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
 
       }
     }
@@ -218,10 +208,9 @@ class EnrolledForPTISpec extends IntegrationSpecBase with ThrottleHelperISpec {
         val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xSessionId, xAuthToken)
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
-          status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include("/bas-gateway/sign-in")
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result).get should include("/bas-gateway/sign-in")
 
       }
     }
@@ -236,7 +225,6 @@ class EnrolledForPTISpec extends IntegrationSpecBase with ThrottleHelperISpec {
       route(app, request).get
     }
 
-
     "the session cache contains the redirect url" should {
       s"redirect to the redirect url" in {
         await(save[String](sessionId, "redirectURL", returnUrl))
@@ -249,11 +237,10 @@ class EnrolledForPTISpec extends IntegrationSpecBase with ThrottleHelperISpec {
           .withSession(xSessionId, xAuthToken)
           .withJsonBody(Json.obj())
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
-          status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(returnUrl)
-          recordExistsInMongo shouldBe false
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result).get should include(returnUrl)
+        recordExistsInMongo shouldBe false
 
       }
     }
@@ -268,10 +255,9 @@ class EnrolledForPTISpec extends IntegrationSpecBase with ThrottleHelperISpec {
           .withSession(xSessionId, xAuthToken)
           .withJsonBody(Json.obj())
         val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
 
-          status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include("/bas-gateway/sign-in")
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result).get should include("/bas-gateway/sign-in")
       }
     }
   }

@@ -8,7 +8,7 @@ object AppDependencies {
 
   val compile = Seq(
     "uk.gov.hmrc"         %%  s"bootstrap-frontend-$playVersion"  % bootstrapVersion,
-    "uk.gov.hmrc"         %%  "play-frontend-hmrc"          % s"6.7.0-$playVersion",
+    "uk.gov.hmrc"         %%  "play-frontend-hmrc"          % s"7.3.0-$playVersion",
     "org.typelevel"       %%  "cats-core"                   % "2.9.0",
     "uk.gov.hmrc"         %%  "domain"                      % s"8.1.0-$playVersion",
     "uk.gov.hmrc"         %%  "http-caching-client"         % s"9.6.0-$playVersion",

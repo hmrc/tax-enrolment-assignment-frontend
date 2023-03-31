@@ -17,15 +17,12 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting
 
 import org.scalamock.matchers.ArgCapture.CaptureOne
-import org.scalatest.Inside
 import play.api.Application
 import play.api.inject.bind
 import play.api.libs.json.{JsObject, JsString}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.{AuditConnector, AuditResult}
 import uk.gov.hmrc.play.audit.model.ExtendedDataEvent
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{EACDConnector, IVConnector, TaxEnrolmentsConnector}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -61,7 +58,8 @@ class AuditHandlerSpec extends BaseSpec {
     "audit with the correct audit event" in {
 
       val eventCapture: CaptureOne[ExtendedDataEvent] = CaptureOne[ExtendedDataEvent]()
-      (mockAuditConnector.sendExtendedEvent(_: ExtendedDataEvent)(_: HeaderCarrier, _: ExecutionContext))
+      (mockAuditConnector
+        .sendExtendedEvent(_: ExtendedDataEvent)(_: HeaderCarrier, _: ExecutionContext))
         .expects(capture(eventCapture), hc, *)
         .returns(Future.successful(AuditResult.Success))
 

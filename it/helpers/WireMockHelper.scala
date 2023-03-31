@@ -51,9 +51,7 @@ trait WireMockHelper extends Eventually with BeforeAndAfterAll with BeforeAndAft
     server.stop()
   }
 
-  def stubGetMatching(url: String,
-                      status: Integer,
-                      responseBody: String): StubMapping =
+  def stubGetMatching(url: String, status: Integer, responseBody: String): StubMapping =
     server.stubFor(
       get(urlEqualTo(url))
         .willReturn(aResponse().withStatus(status).withBody(responseBody))
@@ -92,10 +90,7 @@ trait WireMockHelper extends Eventually with BeforeAndAfterAll with BeforeAndAft
     )
   }
 
-  def stubPost(url: String,
-               requestBody: StringValuePattern,
-               status: Integer,
-               responseBody: String): StubMapping = {
+  def stubPost(url: String, requestBody: StringValuePattern, status: Integer, responseBody: String): StubMapping =
     server.stubFor(
       post(urlMatching(url))
         .withRequestBody(requestBody)
@@ -106,11 +101,8 @@ trait WireMockHelper extends Eventually with BeforeAndAfterAll with BeforeAndAft
             .withBody(responseBody)
         )
     )
-  }
 
-  def stubPostWithAuthorizeHeaders(url: String,
-                                   authorizeHeaderValue: String,
-                                   status: Integer): StubMapping =
+  def stubPostWithAuthorizeHeaders(url: String, authorizeHeaderValue: String, status: Integer): StubMapping =
     server.stubFor(
       post(urlMatching(url))
         .withHeader("Authorization", equalTo(authorizeHeaderValue))
@@ -120,9 +112,7 @@ trait WireMockHelper extends Eventually with BeforeAndAfterAll with BeforeAndAft
         )
     )
 
-  def stubPutWithAuthorizeHeaders(url: String,
-                                  authorizeHeaderValue: String,
-                                  status: Integer): StubMapping =
+  def stubPutWithAuthorizeHeaders(url: String, authorizeHeaderValue: String, status: Integer): StubMapping =
     server.stubFor(
       put(urlPathEqualTo(url))
         .withHeader("Authorization", equalTo(authorizeHeaderValue))
@@ -132,9 +122,7 @@ trait WireMockHelper extends Eventually with BeforeAndAfterAll with BeforeAndAft
         )
     )
 
-  def stubPost(url: String,
-               status: Integer,
-               responseBody: String): StubMapping =
+  def stubPost(url: String, status: Integer, responseBody: String): StubMapping =
     server.stubFor(
       post(urlMatching(url))
         .willReturn(aResponse().withStatus(status).withBody(responseBody))
@@ -145,20 +133,19 @@ trait WireMockHelper extends Eventually with BeforeAndAfterAll with BeforeAndAft
       put(urlMatching(url))
         .willReturn(aResponse().withStatus(status).withBody(responseBody))
     )
-  def stubPutWithRequestBody(url: String,
-                             status: Integer,
-                             requestBody: String,
-                             responseBody: String): StubMapping =
+  def stubPutWithRequestBody(url: String, status: Integer, requestBody: String, responseBody: String): StubMapping =
     server.stubFor(
       put(urlMatching(url))
         .withRequestBody(equalToJson(requestBody))
         .willReturn(aResponse().withStatus(status).withBody(responseBody))
     )
-  def stubGetWithQueryParam(url: String,
-                            queryParamKey: String,
-                            queryParamValue: String,
-                            status: Integer,
-                            responseBody: String): StubMapping =
+  def stubGetWithQueryParam(
+    url: String,
+    queryParamKey: String,
+    queryParamValue: String,
+    status: Integer,
+    responseBody: String
+  ): StubMapping =
     server.stubFor(
       get(urlPathEqualTo(url))
         .withQueryParam(queryParamKey, equalTo(queryParamValue))
@@ -171,13 +158,9 @@ trait WireMockHelper extends Eventually with BeforeAndAfterAll with BeforeAndAft
         .willReturn(aResponse().withStatus(status).withBody(responseBody))
     )
 
-  def verifyNoPOSTmade(url: String) = {
-    eventually(
-      server.verify(0,
-        postRequestedFor(urlMatching(url))
-      ))
-  }
-  def verifyAuditEventSent(auditEvent: AuditEvent) = {
+  def verifyNoPOSTmade(url: String) =
+    eventually(server.verify(0, postRequestedFor(urlMatching(url))))
+  def verifyAuditEventSent(auditEvent: AuditEvent) =
     eventually(
       server.verify(
         postRequestedFor(urlMatching("/write/audit"))
@@ -187,12 +170,11 @@ trait WireMockHelper extends Eventually with BeforeAndAfterAll with BeforeAndAft
           .withRequestBody(containing(auditEvent.detail.toString()))
       )
     )
-  }
 
   def stubUserGroupSearchSuccess(
-                                  credId: String,
-                                  usersGroupResponse: UsersGroupResponse
-                                ): StubMapping = stubGet(
+    credId: String,
+    usersGroupResponse: UsersGroupResponse
+  ): StubMapping = stubGet(
     s"/users-groups-search/users/$credId",
     NON_AUTHORITATIVE_INFORMATION,
     usergroupsResponseJson(usersGroupResponse).toString()

@@ -30,15 +30,13 @@ class EventLoggerServiceSpec extends BaseSpec {
 
   def withCaptureOfLoggingFrom(
     logger: LoggerLike
-  )(body: (=> List[ILoggingEvent]) => Unit): Unit = {
+  )(body: (=> List[ILoggingEvent]) => Unit): Unit =
     withCaptureOfLoggingFrom(logger.logger.asInstanceOf[LogbackLogger])(body)
-  }
 
   def withCaptureOfLoggingFrom[T](
     body: (=> List[ILoggingEvent]) => Unit
-  )(implicit classTag: ClassTag[T]): Unit = {
+  )(implicit classTag: ClassTag[T]): Unit =
     withCaptureOfLoggingFrom(Logger(classTag.runtimeClass))(body)
-  }
 
   def withCaptureOfLoggingFrom(
     logger: LogbackLogger
@@ -66,11 +64,10 @@ class EventLoggerServiceSpec extends BaseSpec {
           val expected =
             """{"event":"test event","details":"level INFO"}"""
           events
-            .collectFirst {
-              case event =>
-                event.getLevel.levelStr shouldEqual "INFO"
-                event.getThrowableProxy shouldEqual null
-                event.getMessage shouldEqual expected
+            .collectFirst { case event =>
+              event.getLevel.levelStr shouldEqual "INFO"
+              event.getThrowableProxy shouldEqual null
+              event.getMessage shouldEqual expected
             }
             .getOrElse(fail("No logging captured"))
         }
@@ -87,11 +84,10 @@ class EventLoggerServiceSpec extends BaseSpec {
           val expected =
             """{"event":"test event","details":"level INFO"}"""
           events
-            .collectFirst {
-              case event =>
-                event.getLevel.levelStr shouldEqual "INFO"
-                event.getThrowableProxy.getMessage shouldEqual "info error"
-                event.getMessage shouldEqual expected
+            .collectFirst { case event =>
+              event.getLevel.levelStr shouldEqual "INFO"
+              event.getThrowableProxy.getMessage shouldEqual "info error"
+              event.getMessage shouldEqual expected
             }
             .getOrElse(fail("No logging captured"))
         }
@@ -107,11 +103,10 @@ class EventLoggerServiceSpec extends BaseSpec {
           val expected =
             """{"event":"test event","errorDetails":"level WARN"}"""
           events
-            .collectFirst {
-              case event =>
-                event.getLevel.levelStr shouldEqual "WARN"
-                event.getThrowableProxy shouldEqual null
-                event.getMessage shouldEqual expected
+            .collectFirst { case event =>
+              event.getLevel.levelStr shouldEqual "WARN"
+              event.getThrowableProxy shouldEqual null
+              event.getMessage shouldEqual expected
             }
             .getOrElse(fail("No logging captured"))
         }
@@ -128,11 +123,10 @@ class EventLoggerServiceSpec extends BaseSpec {
           val expected =
             """{"event":"test event","errorDetails":"level WARN"}"""
           events
-            .collectFirst {
-              case event =>
-                event.getLevel.levelStr shouldEqual "WARN"
-                event.getThrowableProxy.getMessage shouldEqual "warn error"
-                event.getMessage shouldEqual expected
+            .collectFirst { case event =>
+              event.getLevel.levelStr shouldEqual "WARN"
+              event.getThrowableProxy.getMessage shouldEqual "warn error"
+              event.getMessage shouldEqual expected
             }
             .getOrElse(fail("No logging captured"))
         }
@@ -148,11 +142,10 @@ class EventLoggerServiceSpec extends BaseSpec {
           val expected =
             """{"event":"test event","errorDetails":"level ERROR"}"""
           events
-            .collectFirst {
-              case event =>
-                event.getLevel.levelStr shouldEqual "ERROR"
-                event.getThrowableProxy shouldEqual null
-                event.getMessage shouldEqual expected
+            .collectFirst { case event =>
+              event.getLevel.levelStr shouldEqual "ERROR"
+              event.getThrowableProxy shouldEqual null
+              event.getMessage shouldEqual expected
             }
             .getOrElse(fail("No logging captured"))
         }
@@ -169,11 +162,10 @@ class EventLoggerServiceSpec extends BaseSpec {
           val expected =
             """{"event":"test event","errorDetails":"level ERROR"}"""
           events
-            .collectFirst {
-              case event =>
-                event.getLevel.levelStr shouldEqual "ERROR"
-                event.getThrowableProxy.getMessage shouldEqual "error"
-                event.getMessage shouldEqual expected
+            .collectFirst { case event =>
+              event.getLevel.levelStr shouldEqual "ERROR"
+              event.getThrowableProxy.getMessage shouldEqual "error"
+              event.getMessage shouldEqual expected
             }
             .getOrElse(fail("No logging captured"))
         }

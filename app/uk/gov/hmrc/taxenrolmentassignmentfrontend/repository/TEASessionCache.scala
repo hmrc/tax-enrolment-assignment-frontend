@@ -34,32 +34,36 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class DefaultTEASessionCache @Inject()(config: Configuration, val mongo: MongoComponent, val cascadeUpsert: CascadeUpsert)(implicit ec: ExecutionContext)
-  extends PlayMongoRepository[DatedCacheMap] (
-    mongoComponent = mongo,
-    collectionName = config.get[String]("appName"),
-    domainFormat = DatedCacheMap.formats,
-    indexes = Seq(
-      IndexModel(
-        ascending("lastUpdated"),
-        IndexOptions()
-          .name("userAnswersExpiry")
-          .expireAfter(
-            config.get[Int]("mongodb.timeToLiveInSeconds"),
-            TimeUnit.SECONDS
-          )
+class DefaultTEASessionCache @Inject() (
+  config: Configuration,
+  val mongo: MongoComponent,
+  val cascadeUpsert: CascadeUpsert
+)(implicit ec: ExecutionContext)
+    extends PlayMongoRepository[DatedCacheMap](
+      mongoComponent = mongo,
+      collectionName = config.get[String]("appName"),
+      domainFormat = DatedCacheMap.formats,
+      indexes = Seq(
+        IndexModel(
+          ascending("lastUpdated"),
+          IndexOptions()
+            .name("userAnswersExpiry")
+            .expireAfter(
+              config.get[Int]("mongodb.timeToLiveInSeconds"),
+              TimeUnit.SECONDS
+            )
+        ),
+        IndexModel(
+          Indexes.ascending("id"),
+          IndexOptions()
+            .name("teaIdentifierIndex")
+            .sparse(true)
+            .unique(true)
+            .background(true)
+        )
       ),
-      IndexModel(
-        Indexes.ascending("id"),
-        IndexOptions()
-          .name("teaIdentifierIndex")
-          .sparse(true)
-          .unique(true)
-          .background(true)
-      )
-    ),
-    replaceIndexes = false
-  ) with TEASessionCache {
+      replaceIndexes = false
+    ) with TEASessionCache {
 
   def upsert(cm: CacheMap): Future[Boolean] = {
     val cmUpdated = DatedCacheMap(cm.id, cm.data)
@@ -71,19 +75,17 @@ class DefaultTEASessionCache @Inject()(config: Configuration, val mongo: MongoCo
         result.wasAcknowledged()
       }
   }
-  def collectionDeleteOne(id: String): Future[Boolean] = {
+  def collectionDeleteOne(id: String): Future[Boolean] =
     collection.deleteOne(equal("id", id)).toFuture().map(_.getDeletedCount > 0)
-  }
 
-  def get(id: String): Future[Option[CacheMap]] = {
+  def get(id: String): Future[Option[CacheMap]] =
     collection.find(equal("id", id)).headOption().map { datedCacheMap =>
       datedCacheMap.map { value: DatedCacheMap =>
         value.toCacheMap
       }
     }
-  }
 
-  def updateLastUpdated(id: String): Future[Boolean] = {
+  def updateLastUpdated(id: String): Future[Boolean] =
     collection
       .updateOne(
         equal("id", id),
@@ -93,12 +95,11 @@ class DefaultTEASessionCache @Inject()(config: Configuration, val mongo: MongoCo
       .map { result =>
         result.wasAcknowledged()
       }
-  }
 
-  def save[A](key: String, value: A)(
-    implicit request: RequestWithUserDetailsFromSession[_],
+  def save[A](key: String, value: A)(implicit
+    request: RequestWithUserDetailsFromSession[_],
     fmt: Format[A]
-  ): Future[CacheMap] = {
+  ): Future[CacheMap] =
     get(request.sessionID).flatMap { optionalCacheMap =>
       val updatedCacheMap = cascadeUpsert(
         key,
@@ -109,34 +110,31 @@ class DefaultTEASessionCache @Inject()(config: Configuration, val mongo: MongoCo
         updatedCacheMap
       }
     }
-  }
 
   def remove(
     key: String
-  )(implicit request: RequestWithUserDetailsFromSession[_]): Future[Boolean] = {
+  )(implicit request: RequestWithUserDetailsFromSession[_]): Future[Boolean] =
     get(request.sessionID).flatMap { optionalCacheMap =>
       optionalCacheMap.fold(Future(false)) { cacheMap =>
         val newCacheMap = cacheMap copy (data = cacheMap.data - key)
         upsert(newCacheMap)
       }
     }
-  }
 
-  def removeRecord(
-    implicit request: RequestWithUserDetailsFromSession[_]
+  def removeRecord(implicit
+    request: RequestWithUserDetailsFromSession[_]
   ): Future[Boolean] =
     collectionDeleteOne(request.sessionID)
 
-  def fetch()(
-    implicit request: RequestWithUserDetailsFromSession[_]
+  def fetch()(implicit
+    request: RequestWithUserDetailsFromSession[_]
   ): Future[Option[CacheMap]] =
     get(request.sessionID)
 
-  def extendSession()(
-    implicit request: RequestWithUserDetailsFromSession[_]
-  ): Future[Boolean] = {
+  def extendSession()(implicit
+    request: RequestWithUserDetailsFromSession[_]
+  ): Future[Boolean] =
     updateLastUpdated(request.sessionID)
-  }
 }
 
 trait TEASessionCache {
@@ -148,24 +146,24 @@ trait TEASessionCache {
 
   def updateLastUpdated(id: String): Future[Boolean]
 
-  def save[A](key: String, value: A)(
-    implicit request: RequestWithUserDetailsFromSession[_],
+  def save[A](key: String, value: A)(implicit
+    request: RequestWithUserDetailsFromSession[_],
     fmt: Format[A]
   ): Future[CacheMap]
 
   def remove(
-              key: String
-            )(implicit request: RequestWithUserDetailsFromSession[_]): Future[Boolean]
+    key: String
+  )(implicit request: RequestWithUserDetailsFromSession[_]): Future[Boolean]
 
-  def removeRecord(
-                    implicit request: RequestWithUserDetailsFromSession[_]
-                  ): Future[Boolean]
+  def removeRecord(implicit
+    request: RequestWithUserDetailsFromSession[_]
+  ): Future[Boolean]
 
-  def fetch()(
-    implicit request: RequestWithUserDetailsFromSession[_]
+  def fetch()(implicit
+    request: RequestWithUserDetailsFromSession[_]
   ): Future[Option[CacheMap]]
 
-  def extendSession()(
-    implicit request: RequestWithUserDetailsFromSession[_]
+  def extendSession()(implicit
+    request: RequestWithUserDetailsFromSession[_]
   ): Future[Boolean]
 }

@@ -30,7 +30,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTWithSA
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class EnrolledPTWithSAOnOtherAccountController @Inject()(
+class EnrolledPTWithSAOnOtherAccountController @Inject() (
   authAction: AuthAction,
   accountMongoDetailsAction: AccountMongoDetailsAction,
   throttleAction: ThrottleAction,
@@ -43,29 +43,34 @@ class EnrolledPTWithSAOnOtherAccountController @Inject()(
 )(implicit ec: ExecutionContext)
     extends TEAFrontendController(mcc) {
 
-  def view: Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
-    val res = for {
-      currentAccount <- multipleAccountsOrchestrator.getDetailsForEnrolledPTWithSAOnOtherAccount
-      optSAAccount <- multipleAccountsOrchestrator.getSACredentialIfNotFraud
+  def view: Action[AnyContent] =
+    authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
+      val res = for {
+        currentAccount <- multipleAccountsOrchestrator.getDetailsForEnrolledPTWithSAOnOtherAccount
+        optSAAccount   <- multipleAccountsOrchestrator.getSACredentialIfNotFraud
 
-    } yield (AccountDetails.userFriendlyAccountDetails(currentAccount).userId, optSAAccount.map(AccountDetails.userFriendlyAccountDetails).map(_.userId))
+      } yield (
+        AccountDetails.userFriendlyAccountDetails(currentAccount).userId,
+        optSAAccount.map(AccountDetails.userFriendlyAccountDetails).map(_.userId)
+      )
 
-    res.value.map {
-      case Right((currentUserId, optSAUserId)) =>
-        Ok(enrolledForPTPage(currentUserId, optSAUserId))
-      case Left(error) =>
-        errorHandler.handleErrors(error, "[EnrolledPTWithSAOnOtherAccountController][view]")(request, implicitly)
+      res.value.map {
+        case Right((currentUserId, optSAUserId)) =>
+          Ok(enrolledForPTPage(currentUserId, optSAUserId))
+        case Left(error) =>
+          errorHandler.handleErrors(error, "[EnrolledPTWithSAOnOtherAccountController][view]")(request, implicitly)
+      }
     }
-  }
 
-  def continue: Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
-        logger.logEvent(
-          logRedirectingToReturnUrl(
-            request.userDetails.credId,
-            "[EnrolledWithSAOnOtherAccountController][continue]"
-          )
+  def continue: Action[AnyContent] =
+    authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
+      logger.logEvent(
+        logRedirectingToReturnUrl(
+          request.userDetails.credId,
+          "[EnrolledWithSAOnOtherAccountController][continue]"
         )
-    teaSessionCache.removeRecord(request).map(_ => Redirect(request.accountDetailsFromMongo.redirectUrl))
-  }
+      )
+      teaSessionCache.removeRecord(request).map(_ => Redirect(request.accountDetailsFromMongo.redirectUrl))
+    }
 
 }

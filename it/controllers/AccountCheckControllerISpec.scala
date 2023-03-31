@@ -111,7 +111,6 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
           recordExistsInMongo shouldBe false
         }
 
-        /*
         s"the current user has $SA_ASSIGNED_TO_OTHER_USER for a Nino within threshold" in {
           val authResponse = authoriseResponseJson(optNino = Some(ninoBelowThreshold), enrolments = noEnrolments)
           stubAuthorizePost(OK, authResponse.toString())
@@ -153,7 +152,8 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
             url = "/auth/enrolments",
             status = OK,
             requestBody = Json.toJson(Set(newEnrolment(ninoBelowThreshold)))(EnrolmentsFormats.writes).toString,
-            responseBody = "")
+            responseBody = ""
+          )
 
           val request = FakeRequest(GET, urlPath)
             .withSession(xAuthToken)
@@ -193,8 +193,11 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
           stubPutWithRequestBody(
             url = "/auth/enrolments",
             status = OK,
-            requestBody = Json.toJson(Set(saEnrolmentAsCaseClass, newEnrolment(ninoBelowThreshold)))(EnrolmentsFormats.writes).toString,
-            responseBody = "")
+            requestBody = Json
+              .toJson(Set(saEnrolmentAsCaseClass, newEnrolment(ninoBelowThreshold)))(EnrolmentsFormats.writes)
+              .toString,
+            responseBody = ""
+          )
 
           val request = FakeRequest(GET, urlPath)
             .withSession(xAuthToken)
@@ -204,7 +207,6 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
           redirectLocation(result).get should include(returnUrl)
           recordExistsInMongo shouldBe false
         }
-         */
       }
     }
 

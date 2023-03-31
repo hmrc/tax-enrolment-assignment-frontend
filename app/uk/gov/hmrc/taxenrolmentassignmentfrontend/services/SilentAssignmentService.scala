@@ -87,7 +87,7 @@ class SilentAssignmentService @Inject() (
     checkIfAnyOtherNoneBusinessAccounts(filteredCL200List)
   }
 
-  //TODO: check this. Why the limit to first 10 elements? Rewrite using fold.
+  //TODO: check this. Why the limit to first 10 elements? Rewrite using fold. See DDCNL-7275
   private def checkIfAnyOtherNoneBusinessAccounts(list: Seq[IVNinoStoreEntry], attemptsRemaining: Int = 10)(implicit
     hc: HeaderCarrier,
     ec: ExecutionContext

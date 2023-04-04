@@ -20,8 +20,7 @@ object ReportSuspiciousIDMessages {
 
   val title = "You need to contact us"
   val heading = "You need to contact us"
-  val paragraph1
-  : String = "This is so we can investigate this user ID. " +
+  val paragraph1: String = "This is so we can investigate this user ID. " +
     "We recommend you take a note of the user ID and email address below as this screen will time out after 15 minutes."
   val button = "Continue"
   val telephone: Seq[String] = Seq("Telephone:", "0300 200 3600")
@@ -44,6 +43,7 @@ object ReportSuspiciousIDMessages {
   val action =
     "/protect-tax-info/enrol-pt/contact-hmrc-sa"
 
-  val referenceNumberAndHelpdeskTiming = "Call the Online Service Helpdesk and quote reference PTA951. The helpdesk is available Monday to Friday 8am to 6pm."
+  val referenceNumberAndHelpdeskTiming =
+    "Call the Online Service Helpdesk and quote reference PTA951. The helpdesk is available Monday to Friday 8am to 6pm."
 
 }

@@ -17,17 +17,17 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting
 
 import org.scalamock.matchers.ArgCapture.CaptureOne
-import org.scalatest.Inside
+import play.api.Application
+import play.api.inject.bind
 import play.api.libs.json.{JsObject, JsString}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.{AuditConnector, AuditResult}
 import uk.gov.hmrc.play.audit.model.ExtendedDataEvent
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class AuditHandlerSpec extends TestFixture with Inside {
+class AuditHandlerSpec extends BaseSpec {
 
   val appname = "appname"
   val auditType = "type"
@@ -35,11 +35,16 @@ class AuditHandlerSpec extends TestFixture with Inside {
 
   val mockAuditConnector: AuditConnector = mock[AuditConnector]
 
-  val appConfAuditTest = new AppConfig(servicesConfig) {
-    override lazy val appName: String = appname
-  }
+  override implicit lazy val app: Application = localGuiceApplicationBuilder()
+    .overrides(
+      bind[AuditConnector].toInstance(mockAuditConnector)
+    )
+    .configure(
+      "appName" -> appname
+    )
+    .build()
 
-  val auditHandler = new AuditHandler(mockAuditConnector, appConfAuditTest)
+  val auditHandler = app.injector.instanceOf[AuditHandler]
 
   val detail = JsObject(Seq("detail1" -> JsString("detailValue1")))
 
@@ -52,14 +57,11 @@ class AuditHandlerSpec extends TestFixture with Inside {
   "AuditHandler" should {
     "audit with the correct audit event" in {
 
-      val eventCapture: CaptureOne[ExtendedDataEvent] =
-        CaptureOne[ExtendedDataEvent]()
-      (mockAuditConnector.sendExtendedEvent(_: ExtendedDataEvent)(
-        _: HeaderCarrier,
-        _: ExecutionContext
-      )) expects (capture(eventCapture), hc, *) returns Future.successful(
-        AuditResult.Success
-      )
+      val eventCapture: CaptureOne[ExtendedDataEvent] = CaptureOne[ExtendedDataEvent]()
+      (mockAuditConnector
+        .sendExtendedEvent(_: ExtendedDataEvent)(_: HeaderCarrier, _: ExecutionContext))
+        .expects(capture(eventCapture), hc, *)
+        .returns(Future.successful(AuditResult.Success))
 
       auditHandler.audit(event)
 

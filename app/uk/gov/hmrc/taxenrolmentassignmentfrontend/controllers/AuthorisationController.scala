@@ -24,13 +24,11 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
 
 @Singleton
-class AuthorisationController @Inject()(mcc: MessagesControllerComponents,
-                                        errorView: ErrorTemplate
-                                       ) extends TEAFrontendController(mcc)  {
+class AuthorisationController @Inject() (mcc: MessagesControllerComponents, errorView: ErrorTemplate)
+    extends TEAFrontendController(mcc) {
 
-  def notAuthorised: Action[AnyContent] = Action.async {
-    implicit request =>
-      Future.successful(Unauthorized(errorView()))
+  def notAuthorised: Action[AnyContent] = Action.async { implicit request =>
+    Future.successful(Unauthorized(errorView()))
   }
 
 }

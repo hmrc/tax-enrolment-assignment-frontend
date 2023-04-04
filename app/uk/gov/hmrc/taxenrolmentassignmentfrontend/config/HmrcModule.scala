@@ -14,10 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.messages
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.config
 
-trait BaseMessage {
+import play.api.inject.{Binding, Module}
+import play.api.{Configuration, Environment}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.{DefaultTEASessionCache, TEASessionCache}
 
-  val serviceName = "Protect your tax"
-  val defaultTitleSuffix: String = " - " + serviceName + " - GOV.UK"
+class HmrcModule extends Module {
+  override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] =
+    Seq(
+      bind[TEASessionCache].to[DefaultTEASessionCache].eagerly()
+    )
 }

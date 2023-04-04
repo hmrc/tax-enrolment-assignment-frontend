@@ -1,29 +1,28 @@
-import play.core.PlayVersion.current
-
 import sbt._
 
 object AppDependencies {
 
-  val bootstrapVersion = "7.14.0"
+  val bootstrapVersion = "7.15.0"
+  val hmrcMongoVersion = "1.1.0"
+  val playVersion = "play-28"
 
   val compile = Seq(
-    "uk.gov.hmrc"         %%  "bootstrap-frontend-play-28"  % bootstrapVersion,
-    "uk.gov.hmrc"         %%  "play-frontend-hmrc"          % "3.29.0-play-28",
-    "org.typelevel"       %%  "cats-core"                   % "2.8.0",
-    "uk.gov.hmrc"         %%  "domain"                      % "8.1.0-play-28",
-    "uk.gov.hmrc"         %%  "http-caching-client"         % "9.6.0-play-28",
-    "uk.gov.hmrc.mongo"   %%  "hmrc-mongo-play-28"          % "0.73.0",
-    "uk.gov.hmrc"         %%  "crypto-json-play-28"         % "7.2.0"
+    "uk.gov.hmrc"         %%  s"bootstrap-frontend-$playVersion"  % bootstrapVersion,
+    "uk.gov.hmrc"         %%  "play-frontend-hmrc"          % s"7.3.0-$playVersion",
+    "org.typelevel"       %%  "cats-core"                   % "2.9.0",
+    "uk.gov.hmrc"         %%  "domain"                      % s"8.1.0-$playVersion",
+    "uk.gov.hmrc"         %%  "http-caching-client"         % s"9.6.0-$playVersion",
+    "uk.gov.hmrc.mongo"   %%  s"hmrc-mongo-$playVersion"          % hmrcMongoVersion,
+    "uk.gov.hmrc"         %%  s"crypto-json-$playVersion"         % "7.2.0"
   )
 
   val test = Seq(
-    "uk.gov.hmrc"             %%  "bootstrap-test-play-28"    %  bootstrapVersion  % Test,
-    "org.scalatest"           %%  "scalatest"                 %  "3.2.12"  % "test, it",
-    "com.typesafe.play"       %%  "play-test"                 %  current   % Test,
-    "org.scalatestplus.play"  %%  "scalatestplus-play"        %  "5.1.0"   % "test, it",
-    "org.jsoup"               %   "jsoup"                     %  "1.15.2"  % "test, it",
-    "com.vladsch.flexmark"    %   "flexmark-profile-pegdown"  %  "0.62.2"  % "test, it",
-    "org.scalamock"           %%  "scalamock"                 %  "5.2.0"   % "test, it",
-    "com.github.tomakehurst"  %   "wiremock-jre8-standalone"  %  "2.33.2"  % "test, it"
-  )
+    "uk.gov.hmrc"             %%  "bootstrap-test-play-28"    %  bootstrapVersion,
+    "org.mockito"             %% "mockito-scala-scalatest"       % "1.17.14",
+    "org.scalatest"           %%  "scalatest"                 %  "3.2.15",
+    "org.jsoup"               %   "jsoup"                     %  "1.15.4",
+    "com.vladsch.flexmark"    %   "flexmark-profile-pegdown"  %  "0.64.0",
+    "org.scalamock"           %%  "scalamock"                 %  "5.2.0",
+    "uk.gov.hmrc.mongo"       %% s"hmrc-mongo-test-$playVersion" % hmrcMongoVersion
+  ).map(_  % "test, it")
 }

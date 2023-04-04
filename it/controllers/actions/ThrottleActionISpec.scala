@@ -16,9 +16,8 @@
 
 package controllers.actions
 
-import helpers.WiremockHelper.{stubPost, stubPutWithRequestBody}
 import helpers.messages.ErrorTemplateMessages
-import helpers.TestHelper
+import helpers.{IntegrationSpecBase, TestITData}
 import play.api.http.Status
 import play.api.libs.json.Json
 import play.api.mvc.Results.Ok
@@ -28,16 +27,15 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OT
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSessionAndMongo, ThrottleAction, UserDetailsFromSession}
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AffinityGroup.Individual
-import helpers.TestITData
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.hmrcPTKey
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.formats.EnrolmentsFormats
 
 import scala.concurrent.Future
 
-class ThrottleActionISpec extends TestHelper with Status {
+class ThrottleActionISpec extends IntegrationSpecBase with Status {
 
-  val throttleAction = app.injector.instanceOf[ThrottleAction]
-  val exampleRequestBelowThreshold = RequestWithUserDetailsFromSessionAndMongo(
+  lazy val throttleAction = app.injector.instanceOf[ThrottleAction]
+  lazy val exampleRequestBelowThreshold = RequestWithUserDetailsFromSessionAndMongo(
     FakeRequest(),
     UserDetailsFromSession(
       "123",
@@ -52,7 +50,7 @@ class ThrottleActionISpec extends TestHelper with Status {
     "sesh",
     AccountDetailsFromMongo(SA_ASSIGNED_TO_OTHER_USER, "redirectURL", exampleMongoSessionData)(crypto.crypto)
   )
-  val exampleRequestAboveThreshold = RequestWithUserDetailsFromSessionAndMongo(
+  lazy val exampleRequestAboveThreshold = RequestWithUserDetailsFromSessionAndMongo(
     FakeRequest(),
     UserDetailsFromSession(
       "123",
@@ -67,16 +65,15 @@ class ThrottleActionISpec extends TestHelper with Status {
     "sesh",
     AccountDetailsFromMongo(SA_ASSIGNED_TO_OTHER_USER, "redirectURL", exampleMongoSessionData)(crypto.crypto)
   )
-  val newEnrolment = (nino: String) =>
+  lazy val newEnrolment = (nino: String) =>
     Enrolment(
       s"$hmrcPTKey",
       Seq(EnrolmentIdentifier("NINO", nino)),
       "Activated",
       None
-  )
-  val exampleControllerFunction =
-    (r: RequestWithUserDetailsFromSessionAndMongo[_]) =>
-      Future.successful(Ok("no throttle"))
+    )
+  lazy val exampleControllerFunction =
+    (_: RequestWithUserDetailsFromSessionAndMongo[_]) => Future.successful(Ok("no throttle"))
 
   "invokeBlock" should {
     "call to auth for a valid throttle scenario and redirect the user to their redirect url" in {

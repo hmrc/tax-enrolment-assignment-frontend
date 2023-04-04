@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
-import com.google.inject.{Inject, Singleton}
+import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction, ThrottleAction}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
@@ -29,7 +29,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnothe
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class PTEnrolmentOnOtherAccountController @Inject()(
+class PTEnrolmentOnOtherAccountController @Inject() (
   authAction: AuthAction,
   accountMongoDetailsAction: AccountMongoDetailsAction,
   throttleAction: ThrottleAction,
@@ -39,28 +39,29 @@ class PTEnrolmentOnOtherAccountController @Inject()(
   val logger: EventLoggerService,
   errorHandler: ErrorHandler,
   auditHandler: AuditHandler
-                                                   )(implicit ec: ExecutionContext) extends TEAFrontendController(mcc) {
+)(implicit ec: ExecutionContext)
+    extends TEAFrontendController(mcc) {
 
-  def view(): Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
+  def view: Action[AnyContent] =
+    authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
+      val res = multipleAccountsOrchestrator.getCurrentAndPTAAndSAIfExistsForUser
 
-    val res = multipleAccountsOrchestrator.getCurrentAndPTAAndSAIfExistsForUser
-
-    res.value.map {
-      case Right(accountDetails) =>
-        val accountFriendlyDetails  = AccountDetails.userFriendlyAccountDetails(accountDetails.ptAccountDetails)
+      res.value.map {
+        case Right(accountDetails) =>
+          val accountFriendlyDetails = AccountDetails.userFriendlyAccountDetails(accountDetails.ptAccountDetails)
           auditHandler
-          .audit(AuditEvent.auditPTEnrolmentOnOtherAccount(accountFriendlyDetails))
-        Ok(
-          ptEnrolmentOnAnotherAccountView(
-            PTEnrolmentOnOtherAccount(
-              AccountDetails.userFriendlyAccountDetails(accountDetails.currentAccountDetails),
-              accountFriendlyDetails,
-              accountDetails.saUserCred.map(AccountDetails.trimmedUserId)
+            .audit(AuditEvent.auditPTEnrolmentOnOtherAccount(accountFriendlyDetails))
+          Ok(
+            ptEnrolmentOnAnotherAccountView(
+              PTEnrolmentOnOtherAccount(
+                AccountDetails.userFriendlyAccountDetails(accountDetails.currentAccountDetails),
+                accountFriendlyDetails,
+                accountDetails.saUserCred.map(AccountDetails.trimmedUserId)
+              )
             )
           )
-        )
-      case Left(error) =>
-        errorHandler.handleErrors(error, "[PTEnrolmentOnOtherAccountController][view]")(request, implicitly)
+        case Left(error) =>
+          errorHandler.handleErrors(error, "[PTEnrolmentOnOtherAccountController][view]")(request, implicitly)
+      }
     }
-  }
 }

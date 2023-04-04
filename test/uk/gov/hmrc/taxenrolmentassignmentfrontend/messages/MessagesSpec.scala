@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.messages
 
-import org.scalatest.OptionValues
 import play.api.i18n.Messages
 import play.api.i18n.Messages.MessageSource
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
+
 import scala.io.Source
 
-class MessagesSpec extends TestFixture with OptionValues {
+class MessagesSpec extends BaseSpec {
 
   private val MatchSingleQuoteOnly = """\w+'{1}\w+""".r
   private val MatchBacktickQuoteOnly = """`+""".r
@@ -53,48 +53,45 @@ class MessagesSpec extends TestFixture with OptionValues {
     }
   }
 
-  private def parseMessages(filename: String): Map[String, String] = {
-    Messages.parse(new MessageSource {
-      override def read: String = Source.fromFile(filename).mkString
-    }, filename) match {
+  private def parseMessages(filename: String): Map[String, String] =
+    Messages.parse(
+      new MessageSource {
+        override def read: String = Source.fromFile(filename).mkString
+      },
+      filename
+    ) match {
       case Right(messages) => messages
       case Left(e)         => throw e
     }
-  }
 
   private def countMessagesWithArgs(messages: Map[String, String]) =
     messages.values.filter(_.contains("{0}"))
 
   private def assertNonEmpty(label: String, messages: Map[String, String]) =
-    messages.foreach {
-      case (key: String, value: String) =>
-        withClue(
-          s"In $label, there is an empty value for the key:[$key][$value]"
-        ) {
-          value.trim.isEmpty shouldBe false
-        }
+    messages.foreach { case (key: String, value: String) =>
+      withClue(
+        s"In $label, there is an empty value for the key:[$key][$value]"
+      ) {
+        value.trim.isEmpty shouldBe false
+      }
     }
 
-  private def assertCorrectUseOfQuotes(label: String,
-                                       messages: Map[String, String]) =
-    messages.foreach {
-      case (key: String, value: String) =>
-        withClue(
-          s"In $label, there is an unescaped or invalid quote:[$key][$value]"
-        ) {
-          MatchSingleQuoteOnly.findFirstIn(value).isDefined shouldBe false
-          MatchBacktickQuoteOnly.findFirstIn(value).isDefined shouldBe false
-        }
+  private def assertCorrectUseOfQuotes(label: String, messages: Map[String, String]) =
+    messages.foreach { case (key: String, value: String) =>
+      withClue(
+        s"In $label, there is an unescaped or invalid quote:[$key][$value]"
+      ) {
+        MatchSingleQuoteOnly.findFirstIn(value).isDefined shouldBe false
+        MatchBacktickQuoteOnly.findFirstIn(value).isDefined shouldBe false
+      }
     }
 
-  private def listMissingMessageKeys(header: String,
-                                     missingKeys: Set[String]) = {
+  private def listMissingMessageKeys(header: String, missingKeys: Set[String]) = {
     val displayLine = "\n" + ("@" * 42) + "\n"
     missingKeys.toList.sorted.mkString(header + displayLine, "\n", displayLine)
   }
 
-  private def describeMismatch(englishKeySet: Set[String],
-                               welshKeySet: Set[String]) =
+  private def describeMismatch(englishKeySet: Set[String], welshKeySet: Set[String]) =
     if (englishKeySet.size > welshKeySet.size)
       listMissingMessageKeys(
         "The following message keys are missing from the Welsh Set:",

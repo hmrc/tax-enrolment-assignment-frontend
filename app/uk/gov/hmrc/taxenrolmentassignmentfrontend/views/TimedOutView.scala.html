@@ -25,8 +25,8 @@
 @layout(pageTitle = Some(messages("timedout.title")), None, displaySignout = false) {
     <h1 class="govuk-heading-xl">@messages("timedout.heading")</h1>
         @govukButton(Button(
-            preventDoubleClick = true,
+            preventDoubleClick = Some(true),
             content = Text(messages("timedout.signin")),
-            href =  Some(routes.SignOutController.signOut().url)
+            href =  Some(routes.SignOutController.signOut.url)
         ))
 }

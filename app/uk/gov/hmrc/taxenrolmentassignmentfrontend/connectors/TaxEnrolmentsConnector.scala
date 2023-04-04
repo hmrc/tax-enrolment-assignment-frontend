@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors
 
 import cats.data.EitherT
-import com.google.inject.{Inject, Singleton}
+import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.http.Status._
 import uk.gov.hmrc.http.HttpReads.Implicits._
@@ -33,38 +33,34 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AssignHMRCPTRequest, I
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class TaxEnrolmentsConnector @Inject()(httpClient: HttpClient,
-                                       logger: EventLoggerService,
-                                       appConfig: AppConfig) {
+class TaxEnrolmentsConnector @Inject() (httpClient: HttpClient, logger: EventLoggerService, appConfig: AppConfig) {
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
-  def assignPTEnrolmentWithKnownFacts(nino: String)(
-    implicit ec: ExecutionContext,
+  def assignPTEnrolmentWithKnownFacts(nino: String)(implicit
+    ec: ExecutionContext,
     hc: HeaderCarrier
   ): TEAFResult[Unit] = EitherT {
 
     val request = AssignHMRCPTRequest(
       identifiers = Seq(IdentifiersOrVerifiers("NINO", nino)),
-      verifiers = Seq(IdentifiersOrVerifiers("NINO1", nino)
-      )
+      verifiers = Seq(IdentifiersOrVerifiers("NINO1", nino))
     )
     val url = s"${appConfig.TAX_ENROLMENTS_BASE_URL}/service/$hmrcPTKey/enrolment"
 
     httpClient
       .PUT[AssignHMRCPTRequest, HttpResponse](url, request)
-      .map(
-        httpResponse =>
-          httpResponse.status match {
-            case NO_CONTENT => Right(())
-            case CONFLICT =>
-              logger.logEvent(logPTEnrolmentHasAlreadyBeenAssigned(nino))
-              Right(())
-            case status =>
-              logger
-                .logEvent(logUnexpectedResponseFromTaxEnrolmentsKnownFacts(nino, status))
-              Left(UnexpectedResponseFromTaxEnrolments)
-          }
+      .map(httpResponse =>
+        httpResponse.status match {
+          case NO_CONTENT => Right(())
+          case CONFLICT =>
+            logger.logEvent(logPTEnrolmentHasAlreadyBeenAssigned(nino))
+            Right(())
+          case status =>
+            logger
+              .logEvent(logUnexpectedResponseFromTaxEnrolmentsKnownFacts(nino, status))
+            Left(UnexpectedResponseFromTaxEnrolments)
+        }
       )
   }
 

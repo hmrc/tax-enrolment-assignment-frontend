@@ -19,12 +19,11 @@
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.helpers.CreateSummaryRow
 
 @this(
-        layout: Layout,
-        formHelper: FormWithCSRF,
-        govukSummaryList: GovukSummaryList,
-        govukDetails: GovukDetails,
-        govukButton: GovukButton,
-        summaryRow: CreateSummaryRow
+layout: Layout,
+formHelper: FormWithCSRF,
+govukDetails : GovukDetails,
+govukButton: GovukButton,
+summaryRow: CreateSummaryRow
 )
 
 @(ptAccountDetails: AccountDetails, saOnOtherAccountJourney: Boolean = false)(implicit request: Request[_], messages: Messages)
@@ -78,15 +77,15 @@
         content = HtmlContent(content)
     ))
 
-    @if(saOnOtherAccountJourney) {
-        @formHelper(action = routes.ReportSuspiciousIDController.continue) {
-            <p class="govuk-body">@messages("ReportSuspiciousID.sa.text1") </p>
-            <br>
-            @govukButton(Button(
-                preventDoubleClick = true,
-                content = Text(messages("common.continue")),
-            )
-            )
-        }
+@if(saOnOtherAccountJourney) {
+  @formHelper(action = routes.ReportSuspiciousIDController.continue) {
+    <p class="govuk-body">@messages("ReportSuspiciousID.sa.text1") </p>
+    <br>
+    @govukButton(Button(
+        preventDoubleClick = Some(true),
+        content = Text(messages("common.continue")),
+        )
+      )
     }
+  }
 }

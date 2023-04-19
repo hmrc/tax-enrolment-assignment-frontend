@@ -299,6 +299,20 @@ object LoggingEvent {
       )
     )
 
+  def logDetailedUnexpectedResponseFromTaxEnrolmentsKnownFacts(
+    input: String,
+    statusReturned: Int,
+    response: String
+  ): LoggingEvent =
+    Debug(
+      Event(
+        "[TaxEnrolmentsConnector][assignPTEnrolmentWithKnownFacts]",
+        errorDetails = Some(
+          s"Tax Enrolments return status of $statusReturned with response `$response` when allocating $hmrcPTKey enrolment with input `$input`"
+        )
+      )
+    )
+
   def logUnexpectedResponseFromLandingPage(
     error: TaxEnrolmentAssignmentErrors
   ): LoggingEvent =
@@ -366,6 +380,8 @@ object LoggingEvent {
   }
 
   sealed case class Event(event: String, details: Option[String] = None, errorDetails: Option[String] = None)
+
+  case class Debug(event: Event) extends LoggingEvent
 
   case class Info(event: Event) extends LoggingEvent
 

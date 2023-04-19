@@ -19,7 +19,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.logging
 import javax.inject.Singleton
 import play.api.Logger
 import play.api.libs.json.Json
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{Error, Event, Info, LoggingEvent, Warn}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{Debug, Error, Event, Info, LoggingEvent, Warn}
 
 import scala.language.implicitConversions
 
@@ -30,6 +30,7 @@ class EventLoggerService {
 
   def logEvent(event: LoggingEvent)(implicit logger: Logger): Unit =
     event match {
+      case Debug(e) => logger.debug(e)
       case Info(e)  => logger.info(e)
       case Warn(e)  => logger.warn(e)
       case Error(e) => logger.error(e)
@@ -38,6 +39,7 @@ class EventLoggerService {
   def logEvent(event: LoggingEvent, throwable: Throwable)(implicit
     logger: Logger
   ): Unit = event match {
+    case Debug(e) => logger.debug(e, throwable)
     case Info(e)  => logger.info(e, throwable)
     case Warn(e)  => logger.warn(e, throwable)
     case Error(e) => logger.error(e, throwable)

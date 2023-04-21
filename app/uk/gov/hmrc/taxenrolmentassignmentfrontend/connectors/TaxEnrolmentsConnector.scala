@@ -17,54 +17,70 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors
 
 import cats.data.EitherT
-import com.google.inject.{Inject, Singleton}
+
+import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.http.Status._
+import play.api.libs.json.Json
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromTaxEnrolments
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{logPTEnrolmentHasAlreadyBeenAssigned, logUnexpectedResponseFromTaxEnrolmentsKnownFacts}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{logDetailedUnexpectedResponseFromTaxEnrolmentsKnownFacts, logPTEnrolmentHasAlreadyBeenAssigned, logUnexpectedResponseFromTaxEnrolmentsKnownFacts}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.hmrcPTKey
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AssignHMRCPTRequest, IdentifiersOrVerifiers}
 
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class TaxEnrolmentsConnector @Inject()(httpClient: HttpClient,
-                                       logger: EventLoggerService,
-                                       appConfig: AppConfig) {
+class TaxEnrolmentsConnector @Inject() (httpClient: HttpClient, logger: EventLoggerService, appConfig: AppConfig) {
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
-  def assignPTEnrolmentWithKnownFacts(nino: String)(
-    implicit ec: ExecutionContext,
-    hc: HeaderCarrier
+  def assignPTEnrolmentWithKnownFacts(nino: String)(implicit
+                                                    ec: ExecutionContext,
+                                                    hc: HeaderCarrier
   ): TEAFResult[Unit] = EitherT {
 
     val request = AssignHMRCPTRequest(
       identifiers = Seq(IdentifiersOrVerifiers("NINO", nino)),
-      verifiers = Seq(IdentifiersOrVerifiers("NINO1", nino)
-      )
+      verifiers = Seq(IdentifiersOrVerifiers("NINO1", nino))
     )
     val url = s"${appConfig.TAX_ENROLMENTS_BASE_URL}/service/$hmrcPTKey/enrolment"
 
     httpClient
       .PUT[AssignHMRCPTRequest, HttpResponse](url, request)
-      .map(
-        httpResponse =>
-          httpResponse.status match {
-            case NO_CONTENT => Right(())
-            case CONFLICT =>
-              logger.logEvent(logPTEnrolmentHasAlreadyBeenAssigned(nino))
-              Right(())
-            case status =>
-              logger
-                .logEvent(logUnexpectedResponseFromTaxEnrolmentsKnownFacts(nino, status))
-              Left(UnexpectedResponseFromTaxEnrolments)
-          }
+      .map(httpResponse =>
+        httpResponse.status match {
+          case NO_CONTENT => Right(())
+          case CONFLICT =>
+            logger.logEvent(logPTEnrolmentHasAlreadyBeenAssigned(nino))
+            Right(())
+          case FORBIDDEN =>
+            logger
+              .logEvent(logUnexpectedResponseFromTaxEnrolmentsKnownFacts(nino, FORBIDDEN))
+            Left(UnexpectedResponseFromTaxEnrolments)
+          case status if status >= 499 =>
+            logger
+              .logEvent(logUnexpectedResponseFromTaxEnrolmentsKnownFacts(nino, status))
+            Left(UnexpectedResponseFromTaxEnrolments)
+          case status =>
+            val exception = new RuntimeException(
+              s"Tax Enrolments return status of $status when allocating $hmrcPTKey enrolment for users with $nino NINO"
+            )
+            logger
+              .logEvent(logUnexpectedResponseFromTaxEnrolmentsKnownFacts(nino, status), exception)
+            logger.logEvent(
+              logDetailedUnexpectedResponseFromTaxEnrolmentsKnownFacts(
+                Json.toJson(request).toString,
+                BAD_REQUEST,
+                httpResponse.body
+              )
+            )
+            Left(UnexpectedResponseFromTaxEnrolments)
+        }
       )
   }
 

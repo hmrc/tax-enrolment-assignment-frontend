@@ -24,9 +24,9 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.{IR
 object LoggingEvent {
 
   def logSingleAccountHolderAssignedEnrolment(
-    credentialId: String,
-    nino: String
-  ): LoggingEvent =
+                                               credentialId: String,
+                                               nino: String
+                                             ): LoggingEvent =
     Info(
       Event(
         "[AccountCheckController][silentEnrol]",
@@ -36,8 +36,7 @@ object LoggingEvent {
       )
     )
 
-  def logRedirectingToReturnUrl(credentialId: String,
-                                classAndMethod: String): LoggingEvent = Info(
+  def logRedirectingToReturnUrl(credentialId: String, classAndMethod: String): LoggingEvent = Info(
     Event(
       classAndMethod,
       details = Some(
@@ -47,9 +46,9 @@ object LoggingEvent {
   )
 
   def logMultipleAccountHolderAssignedEnrolment(
-    credentialId: String,
-    nino: String
-  ): LoggingEvent =
+                                                 credentialId: String,
+                                                 nino: String
+                                               ): LoggingEvent =
     Info(
       Event(
         "[AccountCheckController][silentEnrol]",
@@ -60,8 +59,8 @@ object LoggingEvent {
     )
 
   def logAssignedEnrolmentAfterReportingFraud(
-    credentialId: String
-  ): LoggingEvent =
+                                               credentialId: String
+                                             ): LoggingEvent =
     Info(
       Event(
         "[ReportSuspiciousIdController][continue]",
@@ -88,7 +87,7 @@ object LoggingEvent {
         details = Some(s"Add taxes frontend returned $status with ${body.toString()} when setting up journey")
       )
     )
-    def logUserThrottled(credentialId: String, accountType: AccountTypes.Value, nino: String): LoggingEvent =
+  def logUserThrottled(credentialId: String, accountType: AccountTypes.Value, nino: String): LoggingEvent =
     Info(
       Event(
         "[Throttling]",
@@ -117,9 +116,9 @@ object LoggingEvent {
     )
 
   def logAnotherAccountAlreadyHasPTEnrolment(
-    credentialId: String,
-    credentialWithPTEnrolment: String
-  ): LoggingEvent =
+                                              credentialId: String,
+                                              credentialWithPTEnrolment: String
+                                            ): LoggingEvent =
     Info(
       Event(
         "[AccountCheckOrchestrator][getAccountType]",
@@ -130,9 +129,9 @@ object LoggingEvent {
     )
 
   def logAnotherAccountHasSAEnrolment(
-    credentialId: String,
-    credentialWithSAEnrolment: String
-  ): LoggingEvent =
+                                       credentialId: String,
+                                       credentialWithSAEnrolment: String
+                                     ): LoggingEvent =
     Info(
       Event(
         "[AccountCheckOrchestrator][getAccountType]",
@@ -146,8 +145,7 @@ object LoggingEvent {
     Info(
       Event(
         "[AccountCheckOrchestrator][getAccountType]",
-        details =
-          Some(s"Signed in credential $credentialId has multiple accounts")
+        details = Some(s"Signed in credential $credentialId has multiple accounts")
       )
     )
 
@@ -160,17 +158,16 @@ object LoggingEvent {
     )
 
   def logIncorrectUserType(
-    credentialId: String,
-    expectedUserType: List[AccountTypes.Value],
-    actualUserType: AccountTypes.Value
-  ): LoggingEvent = {
-    val expectedUserTypeString = expectedUserType.foldLeft[String]("") {
-      (a, b) =>
-        if (a.isEmpty) {
-          b.toString
-        } else {
-          s"$a or ${b.toString}"
-        }
+                            credentialId: String,
+                            expectedUserType: List[AccountTypes.Value],
+                            actualUserType: AccountTypes.Value
+                          ): LoggingEvent = {
+    val expectedUserTypeString = expectedUserType.foldLeft[String]("") { (a, b) =>
+      if (a.isEmpty) {
+        b.toString
+      } else {
+        s"$a or ${b.toString}"
+      }
     }
 
     val errorMessage =
@@ -196,9 +193,13 @@ object LoggingEvent {
   def logAuthenticationFailure(errorDetails: String): LoggingEvent =
     Warn(Event("[AuthAction][invokeBlock]", errorDetails = Some(errorDetails)))
 
-  def logUserDidNotHaveSessionIdGeneratedSessionId(credId: String): LoggingEvent = {
-    Warn(Event("[AuthAction][invokeBlock]", errorDetails = Some(s"User did not have sessionId, generate sessionId for $credId")))
-  }
+  def logUserDidNotHaveSessionIdGeneratedSessionId(credId: String): LoggingEvent =
+    Warn(
+      Event(
+        "[AuthAction][invokeBlock]",
+        errorDetails = Some(s"User did not have sessionId, generate sessionId for $credId")
+      )
+    )
   val logSuccessfulRedirectToReturnUrl: LoggingEvent =
     Info(
       Event(
@@ -207,8 +208,7 @@ object LoggingEvent {
       )
     )
 
-  def logUnexpectedResponseFromIV(nino: String,
-                                  statusReturned: Int): LoggingEvent =
+  def logUnexpectedResponseFromIV(nino: String, statusReturned: Int): LoggingEvent =
     Error(
       Event(
         "[IVConnector][getCredentialsWithNino]",
@@ -219,10 +219,10 @@ object LoggingEvent {
     )
 
   def logUnexpectedResponseFromEACD(
-    enrolmentType: String,
-    statusReturned: Int,
-    eacdErrorMsg: String = "N/A"
-  ): LoggingEvent =
+                                     enrolmentType: String,
+                                     statusReturned: Int,
+                                     eacdErrorMsg: String = "N/A"
+                                   ): LoggingEvent =
     Error(
       Event(
         "[EACDConnector][getUsersWithAssignedEnrolment]",
@@ -234,10 +234,10 @@ object LoggingEvent {
     )
 
   def logUnexpectedResponseFromEACDQueryKnownFacts(
-    nino: String,
-    statusReturned: Int,
-    eacdErrorMsg: String = "N/A"
-  ): LoggingEvent =
+                                                    nino: String,
+                                                    statusReturned: Int,
+                                                    eacdErrorMsg: String = "N/A"
+                                                  ): LoggingEvent =
     Error(
       Event(
         "[EACDConnector][queryKnownFactsByNinoVerifier]",
@@ -249,10 +249,10 @@ object LoggingEvent {
     )
 
   def logUnexpectedResponseFromTaxEnrolments(
-    nino: String,
-    statusReturned: Int,
-    errorMsg: String = ""
-  ): LoggingEvent =
+                                              nino: String,
+                                              statusReturned: Int,
+                                              errorMsg: String = ""
+                                            ): LoggingEvent =
     Error(
       Event(
         "[TaxEnrolmentsConnector][assignPTEnrolment]",
@@ -264,10 +264,10 @@ object LoggingEvent {
     )
 
   def logUnexpectedResponseFromUsersGroupsSearch(
-    credId: String,
-    statusReturned: Int,
-    errorMsg: String = "N/A"
-  ): LoggingEvent =
+                                                  credId: String,
+                                                  statusReturned: Int,
+                                                  errorMsg: String = "N/A"
+                                                ): LoggingEvent =
     Error(
       Event(
         "[UsersGroupSearchConnector][getUsersDetails]",
@@ -278,15 +278,18 @@ object LoggingEvent {
       )
     )
 
-
   def logPTEnrolmentHasAlreadyBeenAssigned(nino: String): LoggingEvent =
-    Warn(Event("[TaxEnrolmentsConnector][assignPTEnrolmentWithKnownFacts]",
-      details = Some(s"Personal Tax enrolment has already been assigned for $nino")))
+    Warn(
+      Event(
+        "[TaxEnrolmentsConnector][assignPTEnrolmentWithKnownFacts]",
+        details = Some(s"Personal Tax enrolment has already been assigned for $nino")
+      )
+    )
 
   def logUnexpectedResponseFromTaxEnrolmentsKnownFacts(
-    nino: String,
-    statusReturned: Int
-  ): LoggingEvent =
+                                                        nino: String,
+                                                        statusReturned: Int
+                                                      ): LoggingEvent =
     Error(
       Event(
         "[TaxEnrolmentsConnector][assignPTEnrolmentWithKnownFacts]",
@@ -296,20 +299,31 @@ object LoggingEvent {
       )
     )
 
-  def logUnexpectedResponseFromLandingPage(
-    error: TaxEnrolmentAssignmentErrors
-  ): LoggingEvent =
-    Error(
+  def logDetailedUnexpectedResponseFromTaxEnrolmentsKnownFacts(
+                                                                input: String,
+                                                                statusReturned: Int,
+                                                                response: String
+                                                              ): LoggingEvent =
+    Debug(
       Event(
-        "[LandingPageController][showLandingPage]",
-        errorDetails =
-          Some(s"Landing Page Controller returned an error: $error")
+        "[TaxEnrolmentsConnector][assignPTEnrolmentWithKnownFacts]",
+        errorDetails = Some(
+          s"Tax Enrolments return status of $statusReturned with response `$response` when allocating $hmrcPTKey enrolment with input `$input`"
+        )
       )
     )
 
-  def logES2ErrorFromEACD(credId: String,
-                          statusReturned: Int,
-                          eacdErrorMsg: String = "N/A"): LoggingEvent = {
+  def logUnexpectedResponseFromLandingPage(
+                                            error: TaxEnrolmentAssignmentErrors
+                                          ): LoggingEvent =
+    Error(
+      Event(
+        "[LandingPageController][showLandingPage]",
+        errorDetails = Some(s"Landing Page Controller returned an error: $error")
+      )
+    )
+
+  def logES2ErrorFromEACD(credId: String, statusReturned: Int, eacdErrorMsg: String = "N/A"): LoggingEvent =
     Error(
       Event(
         "[EACDConnector][queryEnrolmentsAssignedToUser]",
@@ -319,46 +333,44 @@ object LoggingEvent {
         )
       )
     )
-  }
-    def logUnexpectedErrorFromAuthWhenUsingLegacyEndpoint(httpStatus: Int): LoggingEvent = {
-      Error(
-        Event(
-          "[LegacyAuthConnector][updateEnrolments]",
-          errorDetails = Some(
-            s"Auth Returned unexpected status $httpStatus when attemping to put enrolments"
-          )
+  def logUnexpectedErrorFromAuthWhenUsingLegacyEndpoint(httpStatus: Int): LoggingEvent =
+    Error(
+      Event(
+        "[LegacyAuthConnector][updateEnrolments]",
+        errorDetails = Some(
+          s"Auth Returned unexpected status $httpStatus when attemping to put enrolments"
         )
       )
-    }
+    )
 
-  def logInvalidRedirectUrl(error: String): LoggingEvent = {
+  def logInvalidRedirectUrl(error: String): LoggingEvent =
     Warn(
       Event(
-        "[AccountCheckController][accountCheck]", errorDetails = Some(error)
+        "[AccountCheckController][accountCheck]",
+        errorDetails = Some(error)
       )
     )
-  }
-  def logUserHasNoCacheInMongo(credId: String, sessionId: String): LoggingEvent = {
+  def logUserHasNoCacheInMongo(credId: String, sessionId: String): LoggingEvent =
     Warn(
       Event(
-        "[AccountMongoDetailsAction]", details = Some(s"User $credId has no record in mongo for $sessionId")
+        "[AccountMongoDetailsAction]",
+        details = Some(s"User $credId has no record in mongo for $sessionId")
       )
     )
-  }
 
-  def logUserSigninAgain(credId: String): LoggingEvent  = {
+  def logUserSigninAgain(credId: String): LoggingEvent =
     Info(
       Event(
-        "[SignOutController][signOut]", details = Some(s"User $credId has chosen to sign in with another account")
+        "[SignOutController][signOut]",
+        details = Some(s"User $credId has chosen to sign in with another account")
       )
     )
-  }
 
   def logUnexpectedErrorOccurred(
-    credentialId: String,
-    classAndMethod: String,
-    errorType: TaxEnrolmentAssignmentErrors
-  ): LoggingEvent =
+                                  credentialId: String,
+                                  classAndMethod: String,
+                                  errorType: TaxEnrolmentAssignmentErrors
+                                ): LoggingEvent =
     Error(Event(classAndMethod, details = Some(s"${errorType.toString} for $credentialId")))
 
   implicit val formats: Format[Event] = Json.format[Event]
@@ -367,9 +379,9 @@ object LoggingEvent {
     val event: Event
   }
 
-  sealed case class Event(event: String,
-                          details: Option[String] = None,
-                          errorDetails: Option[String] = None)
+  sealed case class Event(event: String, details: Option[String] = None, errorDetails: Option[String] = None)
+
+  case class Debug(event: Event) extends LoggingEvent
 
   case class Info(event: Event) extends LoggingEvent
 

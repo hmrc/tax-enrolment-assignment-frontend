@@ -17,18 +17,16 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors
 
 import cats.data.EitherT
-
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.http.Status._
-import play.api.libs.json.Json
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromTaxEnrolments
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{logDetailedUnexpectedResponseFromTaxEnrolmentsKnownFacts, logPTEnrolmentHasAlreadyBeenAssigned, logUnexpectedResponseFromTaxEnrolmentsKnownFacts}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{logPTEnrolmentHasAlreadyBeenAssigned, logUnexpectedResponseFromTaxEnrolmentsKnownFacts}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.hmrcPTKey
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AssignHMRCPTRequest, IdentifiersOrVerifiers}
 
@@ -58,27 +56,9 @@ class TaxEnrolmentsConnector @Inject() (httpClient: HttpClient, logger: EventLog
           case CONFLICT =>
             logger.logEvent(logPTEnrolmentHasAlreadyBeenAssigned(nino))
             Right(())
-          case FORBIDDEN =>
-            logger
-              .logEvent(logUnexpectedResponseFromTaxEnrolmentsKnownFacts(nino, FORBIDDEN))
-            Left(UnexpectedResponseFromTaxEnrolments)
-          case status if status >= 499 =>
+          case status =>
             logger
               .logEvent(logUnexpectedResponseFromTaxEnrolmentsKnownFacts(nino, status))
-            Left(UnexpectedResponseFromTaxEnrolments)
-          case status =>
-            val exception = new RuntimeException(
-              s"Tax Enrolments return status of $status when allocating $hmrcPTKey enrolment for users with $nino NINO"
-            )
-            logger
-              .logEvent(logUnexpectedResponseFromTaxEnrolmentsKnownFacts(nino, status), exception)
-            logger.logEvent(
-              logDetailedUnexpectedResponseFromTaxEnrolmentsKnownFacts(
-                Json.toJson(request).toString,
-                BAD_REQUEST,
-                httpResponse.body
-              )
-            )
             Left(UnexpectedResponseFromTaxEnrolments)
         }
       )

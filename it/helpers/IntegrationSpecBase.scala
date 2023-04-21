@@ -17,91 +17,118 @@
 package helpers
 
 import helpers.TestITData._
-import org.scalatest.concurrent.{IntegrationPatience, PatienceConfiguration, ScalaFutures}
+import helpers.WiremockHelper.wiremockURL
+import org.mongodb.scala.bson.BsonDocument
+import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
+import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.BeforeAndAfterEach
-import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.i18n.{Lang, Messages, MessagesApi}
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, GivenWhenThen, TestSuite}
+import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.{JsString, JsValue, Json}
-import play.api.mvc.{AnyContent, Request}
-import play.api.test.{FakeRequest, Injecting}
-import play.api.Application
+import play.api.mvc.{CookieHeaderEncoding, Session, SessionCookieBaker}
+import play.api.test.{DefaultAwaitTimeout, FutureAwaits}
+import play.api.{Application, Environment, Mode}
+import uk.gov.hmrc.crypto.PlainText
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
-import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSessionAndMongo}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{routes, testOnly}
+import uk.gov.hmrc.play.bootstrap.frontend.filters.crypto.SessionCookieCrypto
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.{CascadeUpsert, MongoRepository, SessionRepository}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.TENCrypto
-import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.domain.{Generator => NinoGenerator}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL}
 
 import scala.concurrent.ExecutionContext
 
 trait IntegrationSpecBase
-    extends AnyWordSpec with GuiceOneAppPerSuite with Matchers with PatienceConfiguration with BeforeAndAfterEach
-    with ScalaFutures with Injecting with IntegrationPatience with SessionCacheOperations with WireMockHelper {
+    extends AnyWordSpec
+    with GivenWhenThen
+    with TestSuite
+    with ScalaFutures
+    with IntegrationPatience
+    with Matchers
+    with WiremockHelper
+    with GuiceOneServerPerSuite
+    with BeforeAndAfterEach
+    with BeforeAndAfterAll
+    with Eventually
+    with FutureAwaits
+    with DefaultAwaitTimeout
+    with SessionCacheOperations {
 
-  def generateNino: Nino = new NinoGenerator().nextNino
-
-  implicit lazy val ec: ExecutionContext = app.injector.instanceOf[ExecutionContext]
+  implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.global
   lazy implicit val hc: HeaderCarrier = HeaderCarrier(
     authorization = Some(Authorization(AUTHORIZE_HEADER_VALUE))
   )
-  lazy val crypto = app.injector.instanceOf[TENCrypto]
 
-  lazy val config: Map[String, Any] = Map(
+  val mockHost: String = WiremockHelper.wiremockHost
+  val mockPort: Int = WiremockHelper.wiremockPort
+  val mockUrl = s"http://$mockHost:$mockPort"
+
+  def config: Map[String, String] = Map(
     "play.filters.csrf.header.bypassHeaders.Csrf-Token" -> "nocheck",
-    "auditing.consumer.baseUri.port"                    -> server.port(),
-    "microservice.services.auth.port"                   -> server.port(),
-    "microservice.services.auth.isTest"                 -> "false",
-    "microservice.services.identity-verification.port"  -> server.port(),
-    "microservice.services.enrolment-store-proxy.port"  -> server.port(),
-    "microservice.services.tax-enrolments.port"         -> server.port(),
-    "microservice.services.tax-enrolments.isTest"       -> "false",
-    "microservice.services.users-groups-search.port"    -> server.port(),
-    "microservice.services.users-groups-search.isTest"  -> "false",
-    "play.http.router"                                  -> "testOnlyDoNotUseInAppConf.Routes",
-    "throttle.percentage"                               -> "3",
-    "mongodb.uri"                                       -> mongoUri
+    "auditing.consumer.baseUri.host" -> s"$mockHost",
+    "auditing.consumer.baseUri.port" -> s"$mockPort",
+    "microservice.services.auth.host" -> s"$mockHost",
+    "microservice.services.auth.port" -> s"$mockPort",
+    "microservice.services.auth.isTest" -> "false",
+    "microservice.services.identity-verification.host" -> s"$mockHost",
+    "microservice.services.identity-verification.port" -> s"$mockPort",
+    "microservice.services.enrolment-store-proxy.host" -> s"$mockHost",
+    "microservice.services.enrolment-store-proxy.port" -> s"$mockPort",
+    "microservice.services.tax-enrolments.host" -> s"$mockHost",
+    "microservice.services.tax-enrolments.port" -> s"$mockPort",
+    "microservice.services.tax-enrolments.isTest" -> "false",
+    "microservice.services.bas-gateway-frontend.host" -> s"$wiremockURL",
+    "microservice.services.users-groups-search.host" -> s"$mockHost",
+    "microservice.services.users-groups-search.port" -> s"$mockPort",
+    "microservice.services.users-groups-search.isTest" -> "false",
+    "play.http.router" -> "testOnlyDoNotUseInAppConf.Routes",
+    "throttle.percentage" -> "3"
   )
 
-  protected def localGuiceApplicationBuilder =
-    GuiceApplicationBuilder()
-      .configure(config)
+  override implicit val patienceConfig: PatienceConfig = PatienceConfig(
+    timeout = scaled(Span(15, Seconds)),
+    interval = scaled(Span(200, Millis))
+  )
 
-  override implicit lazy val app: Application =
-    localGuiceApplicationBuilder
-      .build()
+  override implicit lazy val app: Application = new GuiceApplicationBuilder()
+    .in(Environment.simple(mode = Mode.Dev))
+    .configure(config)
+    .build
 
-  lazy val teaHost = s"localhost:${server.port()}"
+  implicit lazy val crypto = app.injector.instanceOf[TENCrypto]
 
-  lazy val returnUrl: String = testOnly.routes.TestOnlyController.successfulCall
-    .absoluteURL(false, teaHost)
+  val sessionBaker: SessionCookieBaker = app.injector.instanceOf[SessionCookieBaker]
+  val cookieHeaderEncoding: CookieHeaderEncoding = app.injector.instanceOf[CookieHeaderEncoding]
+  val sessionCookieCrypto: SessionCookieCrypto = app.injector.instanceOf[SessionCookieCrypto]
 
-  lazy val accountCheckPath =
-    routes.AccountCheckController.accountCheck(RedirectUrl.apply(returnUrl)).url
+  def createSessionCookieAsString(sessionData: Map[String, String]): String = {
+    val sessionCookie = sessionBaker.encodeAsCookie(Session(sessionData))
+    val encryptedSessionCookieValue =
+      sessionCookieCrypto.crypto.encrypt(PlainText(sessionCookie.value)).value
+    val encryptedSessionCookie =
+      sessionCookie.copy(value = encryptedSessionCookieValue)
+    cookieHeaderEncoding.encodeCookieHeader(Seq(encryptedSessionCookie))
+  }
+  lazy val sessionRepository: SessionRepository = app.injector.instanceOf[SessionRepository]
+  lazy val mongoRepository: MongoRepository = sessionRepository()
+  val cascadeUpsert: CascadeUpsert = app.injector.instanceOf[CascadeUpsert]
+  val authData = Map("authToken" -> AUTHORIZE_HEADER_VALUE)
+  val sessionAndAuth  = Map("authToken" -> AUTHORIZE_HEADER_VALUE, "sessionId" -> sessionId)
 
-  val exampleMongoSessionData =
-    Map(ACCOUNT_TYPE -> Json.toJson(SA_ASSIGNED_TO_OTHER_USER), REDIRECT_URL -> JsString("redirectURL"))
+  val authCookie: String = createSessionCookieAsString(authData).substring(5)
+  val authAndSessionCookie: String = createSessionCookieAsString(sessionAndAuth).substring(5)
 
-  def requestWithAccountType(
-    accountType: AccountTypes.Value,
-    redirectUrl: String = returnUrl,
-    mongoCacheData: Map[String, JsValue] = exampleMongoSessionData
-  ): RequestWithUserDetailsFromSessionAndMongo[_] =
-    RequestWithUserDetailsFromSessionAndMongo(
-      FakeRequest().asInstanceOf[Request[AnyContent]],
-      userDetailsNoEnrolments,
-      sessionId,
-      AccountDetailsFromMongo(accountType, redirectUrl, mongoCacheData)(crypto.crypto)
-    )
+  override def beforeEach(): Unit = {
+    resetWiremock()
+    await(mongoRepository.collection.deleteMany(BsonDocument()).toFuture())
+  }
 
-  def messagesApi: MessagesApi =
-    app.injector.instanceOf[MessagesApi]
+  override def beforeAll(): Unit = {
+    super.beforeAll()
+    startWiremock()
+  }
 
-  implicit lazy val messages: Messages = messagesApi.preferred(List(Lang("en")))
+  override def afterAll(): Unit = {
+    stopWiremock()
+    super.afterAll()
+  }
 }

@@ -17,14 +17,18 @@
 package controllers
 
 import helpers.IntegrationSpecBase
-import helpers.TestITData.{authoriseResponseJson, saEnrolmentAsCaseClass, saEnrolmentOnly, xAuthToken}
-import play.api.test.Helpers.{GET, PUT, contentAsJson, contentAsString, defaultAwaitTimeout, route, status, writeableOf_AnyContentAsEmpty, writeableOf_AnyContentAsJson}
-import play.api.http.Status.{NON_AUTHORITATIVE_INFORMATION, NO_CONTENT, OK}
+import helpers.TestITData.{authoriseResponseJson, csrfContent, saEnrolmentAsCaseClass, saEnrolmentOnly, xSessionId}
+import helpers.WiremockHelper.stubAuthorizePost
+import play.api.http.Status
 import play.api.libs.json.Json
-import play.api.test.FakeRequest
+import play.api.libs.ws.DefaultWSCookie
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.formats.EnrolmentsFormats
 
-class TestOnlyControllerISpec extends IntegrationSpecBase {
+class TestOnlyControllerISpec extends IntegrationSpecBase with Status {
+
+  override def afterAll(): Unit = {
+    super.afterAll()
+  }
 
   s"GET /users-groups-search/test-only/users/:credId" should {
     "retrieve the users details" when {
@@ -34,14 +38,16 @@ class TestOnlyControllerISpec extends IntegrationSpecBase {
         val url = s"/users-groups-search/test-only/users/$credId"
         val expectedResponse =
           """{"obfuscatedUserId":"********3469","email":"email1@test.com","lastAccessedTimestamp":"2022-01-16T14:40:25Z","additionalFactors":[{"factorType":"sms","phoneNumber":"07783924321"}]}"""
+        val res = buildTestOnlyRequest(url, followRedirects = true)
+          .addCookies(DefaultWSCookie("mdtp", authCookie))
+          .addHttpHeaders(xSessionId, csrfContent)
+          .withBody(Json.obj())
+          .get()
 
-        val request = FakeRequest(GET, url)
-          .withSession(xAuthToken)
-        val result = route(app, request).get
-
-        status(result) shouldBe NON_AUTHORITATIVE_INFORMATION
-        contentAsString(result) shouldBe expectedResponse
-
+        whenReady(res) { resp =>
+          resp.status shouldBe NON_AUTHORITATIVE_INFORMATION
+          resp.body shouldBe expectedResponse
+        }
       }
 
       "return default user details " when {
@@ -50,68 +56,76 @@ class TestOnlyControllerISpec extends IntegrationSpecBase {
           val url = s"/users-groups-search/test-only/users/$credId"
           val expectedResponse =
             """{"obfuscatedUserId":"********6121","email":"email11@test.com","lastAccessedTimestamp":"2022-09-16T14:40:25Z","additionalFactors":[{"factorType":"totp","name":"HMRC App"}]}"""
+          val res = buildTestOnlyRequest(url, followRedirects = true)
+            .addCookies(DefaultWSCookie("mdtp", authCookie))
+            .addHttpHeaders(xSessionId, csrfContent)
+            .withBody(Json.obj())
+            .get()
 
-          val request = FakeRequest(GET, url)
-            .withSession(xAuthToken)
-          val result = route(app, request).get
-
-          status(result) shouldBe NON_AUTHORITATIVE_INFORMATION
-          contentAsString(result) shouldBe expectedResponse
-
+          whenReady(res) { resp =>
+            resp.status shouldBe NON_AUTHORITATIVE_INFORMATION
+            resp.body shouldBe expectedResponse
+          }
         }
       }
     }
   }
   "GET /protect-tax-info/test-only.auth/enrolments" should {
-
     s"return enrolments and $OK" in {
 
       val authResponse = authoriseResponseJson(enrolments = saEnrolmentOnly)
       stubAuthorizePost(OK, authResponse.toString())
+      val res = buildTestOnlyRequest("/protect-tax-info/test-only/auth/enrolments")
+        .addCookies(DefaultWSCookie("mdtp", authCookie))
+        .addHttpHeaders(xSessionId, csrfContent)
+        .withBody(Json.obj())
+        .get()
 
-      val request = FakeRequest(GET, "/protect-tax-info/test-only/auth/enrolments")
-        .withSession(xAuthToken)
-      val result = route(app, request).get
-
-      status(result) shouldBe OK
-      contentAsJson(result) shouldBe Json.toJson(Set(saEnrolmentAsCaseClass))(EnrolmentsFormats.writes)
-
+      whenReady(res) { resp =>
+        resp.status shouldBe OK
+        resp.json shouldBe Json.toJson(Set(saEnrolmentAsCaseClass))(EnrolmentsFormats.writes)
+      }
     }
   }
 
   "GET /sa/test-only/start" should {
     s"return $OK with success message" in {
-      val request = FakeRequest(GET, "/sa/test-only/start")
-        .withSession(xAuthToken)
-      val result = route(app, request).get
+      val res = buildTestOnlyRequest("/sa/test-only/start")
+        .addCookies(DefaultWSCookie("mdtp", authCookie))
+        .addHttpHeaders(xSessionId, csrfContent)
+        .get()
 
-      status(result) shouldBe OK
-      contentAsString(result) shouldBe "Successful Redirect to SA"
-
+      whenReady(res) { resp =>
+        resp.status shouldBe OK
+        resp.body shouldBe "Successful Redirect to SA"
+      }
     }
   }
 
+
   "PUT /tax-enrolments/test-only/service/HMRC-PT/enrolment" should {
     s"return $OK" in {
-      val request = FakeRequest(PUT, "/tax-enrolments/test-only/service/HMRC-PT/enrolment")
-        .withSession(xAuthToken)
-        .withJsonBody(Json.obj())
-      val result = route(app, request).get
+      val res = buildTestOnlyRequest("/tax-enrolments/test-only/service/HMRC-PT/enrolment")
+        .addCookies(DefaultWSCookie("mdtp", authCookie))
+        .addHttpHeaders(xSessionId, csrfContent)
+        .put(Json.obj())
 
-      status(result) shouldBe NO_CONTENT
-
+      whenReady(res) { resp =>
+        resp.status shouldBe NO_CONTENT
+      }
     }
   }
 
   "PUT /auth/test-only/enrolments" should {
     s"return $NO_CONTENT" in {
-      val request = FakeRequest(PUT, "/auth/test-only/enrolments")
-        .withSession(xAuthToken)
-        .withJsonBody(Json.obj())
-      val result = route(app, request).get
+      val res = buildTestOnlyRequest("/auth/test-only/enrolments")
+        .addCookies(DefaultWSCookie("mdtp", authCookie))
+        .addHttpHeaders(xSessionId, csrfContent)
+        .put(Json.obj())
 
-      status(result) shouldBe OK
-
+      whenReady(res) { resp =>
+        resp.status shouldBe OK
+      }
     }
   }
 

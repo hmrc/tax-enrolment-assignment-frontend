@@ -16,13 +16,15 @@
 
 package helpers
 
+import play.api.i18n.Messages
+
+import java.util.UUID
 import play.api.libs.json._
 import uk.gov.hmrc.auth.core.AffinityGroup.Individual
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core.retrieve.Credentials
 import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolment, EnrolmentIdentifier, Enrolments}
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
-import uk.gov.hmrc.http.SessionKeys
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.UserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models._
 
@@ -54,43 +56,57 @@ object TestITData {
   val AUTHORIZE_HEADER_VALUE =
     "Bearer BXQ3/Treo4kQCZvVcCqKPhhpBYpRtQQKWTypn1WBfRHWUopu5V/IFWF5phY/fymAP1FMqQR27MmCJxb50Hi5GD6G3VMjMtSLu7TAAIuqDia6jByIpXJpqOgLQuadi7j0XkyDVkl0Zp/zbKtHiNrxpa0nVHm3+GUC4H2h4Ki8OjP9KwIkeIPK/mMlBESjue4V"
 
-  def createEnrolmentJson(key: String, identifierKey: String, identifierValue: String): JsValue =
+  def createEnrolmentJson(key: String,
+                          identifierKey: String,
+                          identifierValue: String): JsValue = {
     Json.obj(
-      fields = "key" -> JsString(key),
+      fields =
+        "key" -> JsString(key),
       "identifiers" -> Json
         .arr(
           Json.obj(
-            "key"   -> JsString(identifierKey),
+            "key" -> JsString(identifierKey),
             "value" -> JsString(identifierValue)
           )
         ),
-      "state"           -> JsString("Activated"),
+      "state" -> JsString("Activated"),
       "confidenceLevel" -> JsNumber(CL200)
     )
+  }
 
+  val randomId = UUID.randomUUID().toString
+  val randomSessionId = s"sessionId-$randomId"
   val sessionId = "sessionId-eb3158c2-0aff-4ce8-8d1b-f2208ace52fe"
-  val xSessionId: (String, String) = SessionKeys.sessionId -> sessionId
-  val xAuthToken: (String, String) = SessionKeys.authToken -> "Bearer 1"
+  val xSessionId: (String, String) = "X-Session-ID" -> sessionId
+  val xRequestId: (String, String) = "X-Request-ID" -> sessionId
+  val csrfContent: (String, String) = "Csrf-Token" -> "nocheck"
+  val csrfValue: String =
+    "4ef32f22ffe4f4b8086d24d14551e61abb7a8d05-1513679039403-38e9493c515e868adc1b1e41"
 
-  def authoriseResponseJson(
-    optNino: Option[String] = Some(NINO),
-    optCreds: Option[Credentials] = Some(creds),
-    optGroupId: Option[String] = Some(GROUP_ID),
-    affinityGroup: AffinityGroup = Individual,
-    enrolments: JsValue = noEnrolments
-  ): JsValue = {
+  val sessionData = Map("sessionId" -> sessionId)
+
+  def authoriseResponseJson(optNino: Option[String] = Some(NINO),
+                            optCreds: Option[Credentials] = Some(creds),
+                            optGroupId: Option[String] = Some(GROUP_ID),
+                            affinityGroup: AffinityGroup = Individual,
+                            enrolments: JsValue = noEnrolments): JsValue = {
 
     val enrolmentsJson = Json.obj("allEnrolments" -> enrolments)
-    val ninoJson = optNino.fold[JsObject](Json.obj())(nino => Json.obj("nino" -> JsString(nino)))
-    val credentialsJson = optCreds.fold[JsObject](Json.obj())(creds =>
-      Json.obj(
-        "optionalCredentials" -> Json.obj(
-          "providerId"   -> JsString(creds.providerId),
-          "providerType" -> JsString("GovernmentGateway")
-        )
-      )
+    val ninoJson = optNino.fold[JsObject](Json.obj())(
+      nino => Json.obj("nino" -> JsString(nino))
     )
-    val groupIdJson = optGroupId.fold[JsObject](Json.obj())(groupId => Json.obj("groupIdentifier" -> JsString(groupId)))
+    val credentialsJson = optCreds.fold[JsObject](Json.obj())(
+      creds =>
+        Json.obj(
+          "optionalCredentials" -> Json.obj(
+            "providerId" -> JsString(creds.providerId),
+            "providerType" -> JsString("GovernmentGateway")
+          )
+        )
+    )
+    val groupIdJson = optGroupId.fold[JsObject](Json.obj())(
+      groupId => Json.obj("groupIdentifier" -> JsString(groupId))
+    )
 
     val affinityGroupJson = affinityGroup.toJson.as[JsObject]
 
@@ -99,13 +115,11 @@ object TestITData {
     ninoJson ++ credentialsJson ++ enrolmentsJson ++ groupIdJson ++ affinityGroupJson ++ email
   }
 
-  def authoriseResponseWithPTEnrolment(
-    optNino: Option[String] = Some(NINO),
-    optCreds: Option[Credentials] = Some(creds),
-    optGroupId: Option[String] = Some(GROUP_ID),
-    affinityGroup: AffinityGroup = Individual,
-    hasSA: Boolean = false
-  ) = {
+  def authoriseResponseWithPTEnrolment(optNino: Option[String] = Some(NINO),
+                                       optCreds: Option[Credentials] = Some(creds),
+                                       optGroupId: Option[String] = Some(GROUP_ID),
+                                       affinityGroup: AffinityGroup = Individual,
+                                       hasSA: Boolean = false) = {
     val enrolments = if (hasSA) saAndptEnrolments else ptEnrolmentOnly
     authoriseResponseJson(optNino, optCreds, optGroupId, affinityGroup, enrolments)
   }
@@ -177,22 +191,23 @@ object TestITData {
   )
 
   def accountDetailsUserFriendly(
-    credId: String,
-    userId: String = USER_ID
-  ): AccountDetails =
+                                  credId: String,
+                                  userId: String = USER_ID
+                                )(implicit messages: Messages): AccountDetails =
     AccountDetails(
       credId,
       userId,
       Some(SensitiveString("email1@test.com")),
-      "16 January 2022 at 2:40 PM",
+     "16 January 2022 at 2:40 PM",
       List(MFADetails("mfaDetails.text", "24321")),
       None
     )
 
+
   def usersGroupSearchResponsePTEnrolment(userId: String = "********1234"): UsersGroupResponse =
     usersGroupSearchResponse.copy(userId)
 
-  def accountDetailsUnUserFriendly(credId: String) =
+  def accountDetailsUnUserFriendly(credId: String)(implicit messages: Messages) =
     AccountDetails(
       credId,
       "********6037",
@@ -203,7 +218,7 @@ object TestITData {
     )
 
   val usersGroupSearchResponseSAEnrolment: UsersGroupResponse =
-    usersGroupSearchResponse.copy(obfuscatedUserId = "********1243")
+  usersGroupSearchResponse.copy(obfuscatedUserId = "********1243")
 
   def additionalFactorsJson(additionalFactors: List[AdditonalFactors]) =
     additionalFactors.foldLeft[JsArray](Json.arr()) { (a, b) =>
@@ -222,8 +237,8 @@ object TestITData {
     }
 
   def usergroupsResponseJson(
-    usersGroupResponse: UsersGroupResponse = usersGroupSearchResponse
-  ): JsObject = {
+                              usersGroupResponse: UsersGroupResponse = usersGroupSearchResponse
+                            ): JsObject = {
     val compulsaryJson = Json.obj(
       ("obfuscatedUserId", JsString(usersGroupResponse.obfuscatedUserId)),
       ("email", JsString(usersGroupResponse.email.get)),
@@ -232,10 +247,11 @@ object TestITData {
         JsString(usersGroupResponse.lastAccessedTimestamp)
       )
     )
-    usersGroupResponse.additionalFactors.fold(compulsaryJson) { additionFactors =>
-      compulsaryJson ++ Json.obj(
-        ("additionalFactors", additionalFactorsJson(additionFactors))
-      )
+    usersGroupResponse.additionalFactors.fold(compulsaryJson) {
+      additionFactors =>
+        compulsaryJson ++ Json.obj(
+          ("additionalFactors", additionalFactorsJson(additionFactors))
+        )
     }
   }
 

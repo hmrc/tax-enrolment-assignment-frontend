@@ -16,8 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.services
 
-import play.api.Application
-import play.api.inject.bind
+import org.scalatest.concurrent.ScalaFutures
 import play.api.libs.json.{Format, Json}
 import play.api.mvc.AnyContent
 import uk.gov.hmrc.http.HeaderCarrier
@@ -26,40 +25,27 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.UsersGroupsSearchCo
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromUsersGroupsSearch
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class UsersGroupsSearchServiceSpec extends BaseSpec {
+class UsersGroupsSearchServiceSpec extends TestFixture with ScalaFutures {
 
-  lazy val mockUsersGroupsSearchConnector = mock[UsersGroupsSearchConnector]
-  lazy val mockTeaSessionCache = mock[TEASessionCache]
+  val mockUsersGroupsSearchConnector = mock[UsersGroupsSearchConnector]
 
-  override lazy val overrides = Seq(
-    bind[TEASessionCache].toInstance(mockTeaSessionCache)
+  val service = new UsersGroupsSearchService(
+    mockUsersGroupsSearchConnector,
+    mockTeaSessionCache
   )
-
-  override implicit lazy val app: Application = localGuiceApplicationBuilder()
-    .overrides(
-      bind[UsersGroupsSearchConnector].toInstance(mockUsersGroupsSearchConnector)
-    )
-    .build()
-
-  lazy val service = app.injector.instanceOf[UsersGroupsSearchService]
 
   "getAccountDetails" when {
     "the account details are already in the cache" should {
       "not call the users-groups-search and return value from cache" in {
-        val additionCacheData = Map(
-          s"AccountDetailsFor$CREDENTIAL_ID" -> Json.toJson(accountDetails)(AccountDetails.mongoFormats(crypto.crypto))
-        )
+        val additionCacheData = Map(s"AccountDetailsFor$CREDENTIAL_ID" -> Json.toJson(accountDetails)(AccountDetails.mongoFormats(crypto.crypto)))
         val result = service.getAccountDetails(CREDENTIAL_ID)(
-          implicitly,
-          implicitly,
-          requestWithAccountType(additionalCacheData = additionCacheData)
-        )
+          implicitly, implicitly,
+          requestWithAccountType(additionalCacheData = additionCacheData))
         whenReady(result.value) { res =>
           res shouldBe Right(accountDetails)
         }
@@ -78,7 +64,9 @@ class UsersGroupsSearchServiceSpec extends BaseSpec {
           ))
           .expects(s"AccountDetailsFor$CREDENTIAL_ID", accountDetails.copy(userId = "********6037"), *, *)
           .returning(Future(CacheMap(request.sessionID, Map())))
-        val result = service.getAccountDetails(CREDENTIAL_ID)(implicitly, implicitly, requestWithAccountType())
+        val result = service.getAccountDetails(CREDENTIAL_ID)(
+          implicitly, implicitly,
+          requestWithAccountType())
         whenReady(result.value) { res =>
           res shouldBe Right(accountDetails.copy(userId = "********6037"))
         }
@@ -93,7 +81,9 @@ class UsersGroupsSearchServiceSpec extends BaseSpec {
           .returning(
             createInboundResultError(UnexpectedResponseFromUsersGroupsSearch)
           )
-        val result = service.getAccountDetails(CREDENTIAL_ID)(implicitly, implicitly, requestWithAccountType())
+        val result = service.getAccountDetails(CREDENTIAL_ID)(
+          implicitly, implicitly,
+          requestWithAccountType())
         whenReady(result.value) { res =>
           res shouldBe Left(UnexpectedResponseFromUsersGroupsSearch)
         }

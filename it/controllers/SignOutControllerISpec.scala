@@ -16,44 +16,46 @@
 
 package controllers
 
-import helpers.{IntegrationSpecBase, ItUrlPaths}
-import helpers.TestITData.{authoriseResponseJson, sessionId, xAuthToken, xSessionId}
-import play.api.test.Helpers.{GET, await, defaultAwaitTimeout, redirectLocation, route, status, writeableOf_AnyContentAsEmpty}
-import play.api.http.Status.{OK, SEE_OTHER}
+import helpers.TestHelper
+import helpers.TestITData.{authoriseResponseJson, sessionId, xRequestId, xSessionId}
+import helpers.WiremockHelper.{stubAuthorizePost, stubPost}
+import play.api.http.Status
 import play.api.libs.json.JsString
-import play.api.test.FakeRequest
+import play.api.libs.ws.DefaultWSCookie
 
 import java.net.URLEncoder
 import scala.concurrent.Future
 
-class SignOutControllerISpec extends IntegrationSpecBase {
+class SignOutControllerISpec extends TestHelper with Status {
 
-  val url: String = ItUrlPaths.signout
+  val url: String = UrlPaths.signout
 
-  def saveRedirectUrlToSession(optRedirectUrl: Option[String]): Future[Boolean] =
+  def saveRedirectUrlToSession(optRedirectUrl: Option[String]): Future[Boolean] = {
     optRedirectUrl match {
       case Some(redirectUrl) => save(sessionId, Map("redirectURL" -> JsString(redirectUrl)))
-      case None              => save(sessionId, Map())
+      case None => save(sessionId, Map())
     }
+  }
 
   s"GET $url" when {
     "the session cache contains a redirectUrl" should {
       "remove the session and redirect to gg signout with continue url" in {
-        await(saveRedirectUrlToSession(Some(returnUrl)))
+        await(saveRedirectUrlToSession(Some(UrlPaths.returnUrl)))
         stubPost(s"/write/.*", OK, """{"x":2}""")
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
+        val res = buildRequest(url)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId)
+          .get()
 
-        val request = FakeRequest(GET, "/protect-tax-info" + url)
-          .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
-
-        status(result) shouldBe SEE_OTHER
-        redirectLocation(result).get should include(
-          s"/bas-gateway/sign-out-without-state?continueUrl=${URLEncoder.encode(returnUrl, "UTF-8")}"
-        )
-        await(sessionRepository.get(sessionId)) shouldBe None
-
+        whenReady(res) { resp =>
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include(
+            s"/bas-gateway/sign-out-without-state?continueUrl=${URLEncoder.encode(UrlPaths.returnUrl, "UTF-8")}"
+          )
+          await(sessionRepository().get(sessionId)) shouldBe None
+        }
       }
     }
 
@@ -63,17 +65,19 @@ class SignOutControllerISpec extends IntegrationSpecBase {
         stubPost(s"/write/.*", OK, """{"x":2}""")
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
+        val res = buildRequest(url)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId)
+          .get()
 
-        val request = FakeRequest(GET, "/protect-tax-info" + url)
-          .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        whenReady(res) { resp =>
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include(
+            s"/bas-gateway/sign-out-without-state"
+          )
+          sessionRepository().get(sessionId).map(session => assert(session.isEmpty))
 
-        status(result) shouldBe SEE_OTHER
-        redirectLocation(result).get should include(
-          s"/bas-gateway/sign-out-without-state"
-        )
-        sessionRepository.get(sessionId).map(session => assert(session.isEmpty))
-
+        }
       }
     }
 
@@ -83,16 +87,17 @@ class SignOutControllerISpec extends IntegrationSpecBase {
         stubPost(s"/write/.*", OK, """{"x":2}""")
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
+        val res = buildRequest(url)
+          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
+          .addHttpHeaders(xSessionId, xRequestId)
+          .get()
 
-        val request = FakeRequest(GET, "/protect-tax-info" + url)
-          .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
-
-        status(result) shouldBe SEE_OTHER
-        redirectLocation(result).get should include(
-          s"/bas-gateway/sign-out-without-state"
-        )
-
+        whenReady(res) { resp =>
+          resp.status shouldBe SEE_OTHER
+          resp.header("Location").get should include(
+            s"/bas-gateway/sign-out-without-state"
+          )
+        }
       }
     }
   }

@@ -32,26 +32,23 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class LegacyAuthConnector @Inject() (httpClient: HttpClient, logger: EventLoggerService, appConfig: AppConfig) {
+class LegacyAuthConnector @Inject()(httpClient: HttpClient,
+                                     logger: EventLoggerService,
+                                     appConfig: AppConfig) {
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
-  def updateEnrolments(enrolments: Set[Enrolment])(implicit ec: ExecutionContext, hc: HeaderCarrier): TEAFResult[Unit] =
-    EitherT {
-      httpClient
-        .PUT[Set[Enrolment], HttpResponse](s"${appConfig.AUTH_BASE_URL}/enrolments", enrolments)(
-          wts = EnrolmentsFormats.writes,
-          implicitly,
-          implicitly,
-          implicitly
-        )
-        .map(httpResponse =>
-          httpResponse.status match {
-            case OK => Right(())
-            case _ =>
-              logger.logEvent(LoggingEvent.logUnexpectedErrorFromAuthWhenUsingLegacyEndpoint(httpResponse.status))
-              Left(UnexpectedResponseAssigningTemporaryPTAEnrolment)
-          }
-        )
-    }
+  def updateEnrolments(enrolments: Set[Enrolment])(
+                        implicit ec: ExecutionContext,
+                        hc: HeaderCarrier): TEAFResult[Unit] = EitherT {
+    httpClient
+      .PUT[Set[Enrolment], HttpResponse](s"${appConfig.AUTH_BASE_URL}/enrolments", enrolments)(wts = EnrolmentsFormats.writes, implicitly, implicitly, implicitly)
+      .map(httpResponse =>
+        httpResponse.status match {
+        case OK => Right(())
+        case _ =>
+          logger.logEvent(LoggingEvent.logUnexpectedErrorFromAuthWhenUsingLegacyEndpoint(httpResponse.status))
+          Left(UnexpectedResponseAssigningTemporaryPTAEnrolment)
+      })
+  }
 }

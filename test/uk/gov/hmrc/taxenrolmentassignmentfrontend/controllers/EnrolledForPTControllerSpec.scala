@@ -16,11 +16,8 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 import org.jsoup.Jsoup
-import play.api.Application
 import play.api.http.Status.OK
-import play.api.inject.bind
-import play.api.mvc.BodyParsers
-import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, Enrolments}
+import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
 import play.api.test.Helpers._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.auth.core.authorise.Predicate
@@ -28,64 +25,42 @@ import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{NINO, accountDetails, buildFakeRequestWithSessionId, noEnrolments, predicates, randomAccountType, retrievalResponse, retrievals}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.ControllersBaseSpec
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditHandler
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{SilentAssignmentService, ThrottlingService}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, ThrottleHelperSpec}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTPage
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class EnrolledForPTControllerSpec extends ControllersBaseSpec {
+class EnrolledForPTControllerSpec extends TestFixture with ThrottleHelperSpec {
 
-  lazy val mockSilentAssignmentService = mock[SilentAssignmentService]
-  lazy val mockAccountCheckOrchestrator = mock[AccountCheckOrchestrator]
-  lazy val mockAuditHandler = mock[AuditHandler]
-
-  lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
-  lazy val mockMultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
-
-  override lazy val overrides = Seq(
-    bind[TEASessionCache].toInstance(mockTeaSessionCache)
-  )
-
-  override implicit lazy val app: Application = localGuiceApplicationBuilder()
-    .overrides(
-      bind[SilentAssignmentService].toInstance(mockSilentAssignmentService),
-      bind[AccountCheckOrchestrator].toInstance(mockAccountCheckOrchestrator),
-      bind[AuditHandler].toInstance(mockAuditHandler),
-      bind[ThrottlingService].toInstance(mockThrottlingService),
-      bind[AuthConnector].toInstance(mockAuthConnector),
-      bind[BodyParsers.Default].toInstance(testBodyParser),
-      bind[MultipleAccountsOrchestrator].toInstance(mockMultipleAccountsOrchestrator)
-    )
-    .build()
-
-  lazy val controller = app.injector.instanceOf[EnrolledForPTController]
-
-  lazy val view: EnrolledForPTPage =
+  val view: EnrolledForPTPage =
     app.injector.instanceOf[EnrolledForPTPage]
+
+  val controller = new EnrolledForPTController(
+    mockAuthAction,
+    mockAccountMongoDetailsAction,
+    mockThrottleAction,
+    mcc,
+    mockMultipleAccountsOrchestrator,
+    logger,
+    view,
+    errorHandler,
+    mockTeaSessionCache
+  )
 
   "view" when {
     specificThrottleTests(controller.view)
 
     "the user has multiple accounts and none have SA" should {
       "render the landing page" in {
-        (
-          mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup] ~ Option[String]
+            ]
+          )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(
             Future.successful(retrievalResponse())
@@ -110,27 +85,21 @@ class EnrolledForPTControllerSpec extends ControllersBaseSpec {
         status(result) shouldBe OK
         Jsoup
           .parse(contentAsString(result))
-          .body()
-          .text() should include(messages("enrolledForPT.heading"))
+          .body().text() should include("enrolledForPT.heading")
       }
     }
 
     "the user is not a  multiple accounts usertype and has redirectUrl stored in session" should {
       "redirect to accountCheck" in {
-        (
-          mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup] ~ Option[String]
+            ]
+          )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
 
@@ -144,14 +113,14 @@ class EnrolledForPTControllerSpec extends ControllersBaseSpec {
           .returning(
             createInboundResultError(
               IncorrectUserType(
-                testOnly.routes.TestOnlyController.successfulCall.url,
-                randomAccountType
+                testOnly.routes.TestOnlyController.successfulCall.url,randomAccountType
               )
             )
           )
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
+
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -165,20 +134,15 @@ class EnrolledForPTControllerSpec extends ControllersBaseSpec {
 
     "the user is not a  multiple accounts usertype and has no redirectUrl stored in session" should {
       "render the error page" in {
-        (
-          mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup] ~ Option[String]
+            ]
+          )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
 
@@ -188,26 +152,21 @@ class EnrolledForPTControllerSpec extends ControllersBaseSpec {
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(res) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(res) should include(messages("enrolmentError.heading"))
+        contentAsString(res) should include("enrolmentError.heading")
       }
     }
 
     "the call to users-group-search fails" should {
       "render the error view" in {
-        (
-          mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup] ~ Option[String]
+            ]
+          )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
 
@@ -226,11 +185,12 @@ class EnrolledForPTControllerSpec extends ControllersBaseSpec {
 
         mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
+
         val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(res) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(res) should include(messages("enrolmentError.heading"))
+        contentAsString(res) should include("enrolmentError.heading")
       }
     }
   }

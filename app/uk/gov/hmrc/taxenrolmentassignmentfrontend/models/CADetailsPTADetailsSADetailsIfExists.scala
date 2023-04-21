@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 
 case class CADetailsPTADetailsSADetailsIfExists(
-  currentAccountDetails: AccountDetails,
-  ptAccountDetails: AccountDetails,
-  saAccountDetails: Option[AccountDetails]
-)
+                                                                          currentAccountDetails: AccountDetails,
+                                                                          ptAccountDetails: AccountDetails,
+                                                                          saAccountDetails: Option[AccountDetails]
+                                                                        )

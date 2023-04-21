@@ -16,43 +16,34 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.services
 
-import play.api.Application
+import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.time.{Millis, Seconds, Span}
 import play.api.libs.json.Format
 import play.api.mvc.AnyContent
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.cache.client.CacheMap
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{EACDConnector, IVConnector, TaxEnrolmentsConnector}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromEACD
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{IVNinoStoreEntry, UserEnrolmentsListResponse}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.HAS_OTHER_VALID_PTA_ACCOUNTS
 
 import scala.concurrent.{ExecutionContext, Future}
-import play.api.inject.bind
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 
-class SilentAssignmentServiceSpec extends BaseSpec {
+class SilentAssignmentServiceSpec extends TestFixture with ScalaFutures {
 
-  lazy val mockIVConnector = mock[IVConnector]
-  lazy val mockTaxEnrolmentsConnector = mock[TaxEnrolmentsConnector]
-  lazy val mockEacdConnector = mock[EACDConnector]
-  lazy val mockTeaSessionCache = mock[TEASessionCache]
-
-  override lazy val overrides = Seq(
-    bind[TEASessionCache].toInstance(mockTeaSessionCache)
+  implicit val defaultPatience = PatienceConfig(
+    timeout = Span(TIME_OUT, Seconds),
+    interval = Span(INTERVAL, Millis)
   )
 
-  override implicit lazy val app: Application = localGuiceApplicationBuilder()
-    .overrides(
-      bind[IVConnector].toInstance(mockIVConnector),
-      bind[TaxEnrolmentsConnector].toInstance(mockTaxEnrolmentsConnector),
-      bind[EACDConnector].toInstance(mockEacdConnector)
-    )
-    .build()
-
-  val service = app.injector.instanceOf[SilentAssignmentService]
+  val service = new SilentAssignmentService(
+    mockIVConnector,
+    mockTaxEnrolmentsConnector,
+    mockEacdConnector,
+    mockTeaSessionCache
+  )
 
   val businessEnrolmentResponse: UserEnrolmentsListResponse =
     UserEnrolmentsListResponse(Seq(userEnrolmentIRPAYE))
@@ -88,14 +79,12 @@ class SilentAssignmentServiceSpec extends BaseSpec {
 
       "there are more than 10 CL200 accounts that are all business accounts" in new TestHelper {
         mockIVCall(multiCL200IVCreds)
-        multiCL200IVCreds
-          .take(10)
-          .map(ivEntry =>
-            mockEACDGetEnrolments(
-              ivEntry.credId,
-              Some(businessEnrolmentResponse)
-            )
+        multiCL200IVCreds.take(10).map(ivEntry =>
+          mockEACDGetEnrolments(
+            ivEntry.credId,
+            Some(businessEnrolmentResponse)
           )
+        )
 
         mockSaveCacheOtherValidPTAAccounts(false)
 
@@ -133,6 +122,8 @@ class SilentAssignmentServiceSpec extends BaseSpec {
     }
 
     "save to cache and return true" when {
+      val validPtaList =
+        Seq(ivNinoStoreEntry2, ivNinoStoreEntry3, ivNinoStoreEntry4)
 
       "the accounts have no enrolments" in new TestHelper {
         mockIVCall(multiIVCreds)
@@ -160,13 +151,14 @@ class SilentAssignmentServiceSpec extends BaseSpec {
 
       "there is more than 10 accounts and the 10th has no enrolments" in new TestHelper {
         mockIVCall(multiCL200IVCreds)
-        def createMocksForEACD(ivCreds: List[IVNinoStoreEntry], count: Int = 10): Unit =
-          if (count == 1) {
+        def createMocksForEACD(ivCreds: List[IVNinoStoreEntry], count: Int = 10): Unit = {
+          if(count == 1) {
             mockEACDGetEnrolments(ivCreds.head.credId, None)
           } else {
             mockEACDGetEnrolments(ivCreds.head.credId, Some(businessEnrolmentResponse))
             createMocksForEACD(ivCreds.tail, count - 1)
           }
+        }
         createMocksForEACD(multiCL200IVCreds)
         mockSaveCacheOtherValidPTAAccounts(true)
 
@@ -179,13 +171,14 @@ class SilentAssignmentServiceSpec extends BaseSpec {
 
       "there is more than 10 accounts and the 10th has no business enrolments" in new TestHelper {
         mockIVCall(multiCL200IVCreds)
-        def createMocksForEACD(ivCreds: List[IVNinoStoreEntry], count: Int = 10): Unit =
-          if (count == 1) {
+        def createMocksForEACD(ivCreds: List[IVNinoStoreEntry], count: Int = 10): Unit = {
+          if(count == 1) {
             mockEACDGetEnrolments(ivCreds.head.credId, Some(irsaResponse))
           } else {
             mockEACDGetEnrolments(ivCreds.head.credId, Some(businessEnrolmentResponse))
             createMocksForEACD(ivCreds.tail, count - 1)
           }
+        }
         createMocksForEACD(multiCL200IVCreds)
         mockSaveCacheOtherValidPTAAccounts(true)
 
@@ -210,7 +203,8 @@ class SilentAssignmentServiceSpec extends BaseSpec {
         .returning(createInboundResult(resp))
         .once()
 
-    def mockEACDGetEnrolments(credId: String, resp: Option[UserEnrolmentsListResponse]) =
+    def mockEACDGetEnrolments(credId: String,
+                              resp: Option[UserEnrolmentsListResponse]) =
       (mockEacdConnector
         .queryEnrolmentsAssignedToUser(_: String)(
           _: HeaderCarrier,

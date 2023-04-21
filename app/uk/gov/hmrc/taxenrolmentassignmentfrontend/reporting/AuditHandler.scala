@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting
 
-import javax.inject.Inject
+import com.google.inject.Inject
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.AuditExtensions
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
@@ -25,7 +25,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class AuditHandler @Inject() (
+class AuditHandler @Inject()(
   auditConnector: AuditConnector,
   appConfig: AppConfig
 )(implicit ec: ExecutionContext) {

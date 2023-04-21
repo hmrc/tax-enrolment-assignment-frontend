@@ -16,8 +16,9 @@
 
 package connectors
 
-import helpers.{IntegrationSpecBase}
+import helpers.IntegrationSpecBase
 import helpers.TestITData._
+import helpers.WiremockHelper._
 import play.api.http.Status._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.UsersGroupsSearchConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromUsersGroupsSearch

@@ -99,16 +99,12 @@ object TestData {
     optGroupId: Option[String] = Some(GROUP_ID),
     optAffinityGroup: Option[AffinityGroup] = Some(Individual),
     email: Option[String] = Some(CURRENT_USER_EMAIL)
-  ): (((((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[String]) ~ Option[AffinityGroup]) ~ Option[
-    String
-  ]) =
-    new ~(
-      new ~(
-        new ~(new ~(new ~(optNino, optCredentials), enrolments), optGroupId),
-        optAffinityGroup
-      ),
-      email
-    )
+  ): (((((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[String]) ~ Option[
+    AffinityGroup]) ~ Option[String]) =
+    new ~( new ~(
+      new ~(new ~(new ~(optNino, optCredentials), enrolments), optGroupId),
+      optAffinityGroup
+    ), email )
 
   val userDetailsNoEnrolments =
     UserDetailsFromSession(
@@ -119,7 +115,7 @@ object TestData {
       Individual,
       enrolments = Enrolments(Set.empty[Enrolment]),
       hasPTEnrolment = false,
-      hasSAEnrolment = false
+      hasSAEnrolment = false,
     )
   val userDetailsWithPTEnrolment =
     UserDetailsFromSession(
@@ -143,7 +139,7 @@ object TestData {
       hasPTEnrolment = false,
       hasSAEnrolment = true
     )
-  val userDetailsWithPTAndSAEnrolment =
+  val userDetailsWithPTAndSAEnrolment = {
     UserDetailsFromSession(
       CREDENTIAL_ID,
       NINO,
@@ -154,6 +150,7 @@ object TestData {
       hasPTEnrolment = true,
       hasSAEnrolment = true
     )
+  }
 
   val ivNinoStoreEntryCurrent = IVNinoStoreEntry(CREDENTIAL_ID, Some(200))
   val ivNinoStoreEntry1 = IVNinoStoreEntry("6902202884164548", Some(50))

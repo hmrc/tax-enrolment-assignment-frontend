@@ -36,7 +36,8 @@ object LoggingEvent {
       )
     )
 
-  def logRedirectingToReturnUrl(credentialId: String, classAndMethod: String): LoggingEvent = Info(
+  def logRedirectingToReturnUrl(credentialId: String,
+                                classAndMethod: String): LoggingEvent = Info(
     Event(
       classAndMethod,
       details = Some(
@@ -87,7 +88,7 @@ object LoggingEvent {
         details = Some(s"Add taxes frontend returned $status with ${body.toString()} when setting up journey")
       )
     )
-  def logUserThrottled(credentialId: String, accountType: AccountTypes.Value, nino: String): LoggingEvent =
+    def logUserThrottled(credentialId: String, accountType: AccountTypes.Value, nino: String): LoggingEvent =
     Info(
       Event(
         "[Throttling]",
@@ -145,7 +146,8 @@ object LoggingEvent {
     Info(
       Event(
         "[AccountCheckOrchestrator][getAccountType]",
-        details = Some(s"Signed in credential $credentialId has multiple accounts")
+        details =
+          Some(s"Signed in credential $credentialId has multiple accounts")
       )
     )
 
@@ -162,12 +164,13 @@ object LoggingEvent {
     expectedUserType: List[AccountTypes.Value],
     actualUserType: AccountTypes.Value
   ): LoggingEvent = {
-    val expectedUserTypeString = expectedUserType.foldLeft[String]("") { (a, b) =>
-      if (a.isEmpty) {
-        b.toString
-      } else {
-        s"$a or ${b.toString}"
-      }
+    val expectedUserTypeString = expectedUserType.foldLeft[String]("") {
+      (a, b) =>
+        if (a.isEmpty) {
+          b.toString
+        } else {
+          s"$a or ${b.toString}"
+        }
     }
 
     val errorMessage =
@@ -193,13 +196,9 @@ object LoggingEvent {
   def logAuthenticationFailure(errorDetails: String): LoggingEvent =
     Warn(Event("[AuthAction][invokeBlock]", errorDetails = Some(errorDetails)))
 
-  def logUserDidNotHaveSessionIdGeneratedSessionId(credId: String): LoggingEvent =
-    Warn(
-      Event(
-        "[AuthAction][invokeBlock]",
-        errorDetails = Some(s"User did not have sessionId, generate sessionId for $credId")
-      )
-    )
+  def logUserDidNotHaveSessionIdGeneratedSessionId(credId: String): LoggingEvent = {
+    Warn(Event("[AuthAction][invokeBlock]", errorDetails = Some(s"User did not have sessionId, generate sessionId for $credId")))
+  }
   val logSuccessfulRedirectToReturnUrl: LoggingEvent =
     Info(
       Event(
@@ -208,7 +207,8 @@ object LoggingEvent {
       )
     )
 
-  def logUnexpectedResponseFromIV(nino: String, statusReturned: Int): LoggingEvent =
+  def logUnexpectedResponseFromIV(nino: String,
+                                  statusReturned: Int): LoggingEvent =
     Error(
       Event(
         "[IVConnector][getCredentialsWithNino]",
@@ -278,13 +278,10 @@ object LoggingEvent {
       )
     )
 
+
   def logPTEnrolmentHasAlreadyBeenAssigned(nino: String): LoggingEvent =
-    Warn(
-      Event(
-        "[TaxEnrolmentsConnector][assignPTEnrolmentWithKnownFacts]",
-        details = Some(s"Personal Tax enrolment has already been assigned for $nino")
-      )
-    )
+    Warn(Event("[TaxEnrolmentsConnector][assignPTEnrolmentWithKnownFacts]",
+      details = Some(s"Personal Tax enrolment has already been assigned for $nino")))
 
   def logUnexpectedResponseFromTaxEnrolmentsKnownFacts(
     nino: String,
@@ -305,11 +302,14 @@ object LoggingEvent {
     Error(
       Event(
         "[LandingPageController][showLandingPage]",
-        errorDetails = Some(s"Landing Page Controller returned an error: $error")
+        errorDetails =
+          Some(s"Landing Page Controller returned an error: $error")
       )
     )
 
-  def logES2ErrorFromEACD(credId: String, statusReturned: Int, eacdErrorMsg: String = "N/A"): LoggingEvent =
+  def logES2ErrorFromEACD(credId: String,
+                          statusReturned: Int,
+                          eacdErrorMsg: String = "N/A"): LoggingEvent = {
     Error(
       Event(
         "[EACDConnector][queryEnrolmentsAssignedToUser]",
@@ -319,38 +319,40 @@ object LoggingEvent {
         )
       )
     )
-  def logUnexpectedErrorFromAuthWhenUsingLegacyEndpoint(httpStatus: Int): LoggingEvent =
-    Error(
-      Event(
-        "[LegacyAuthConnector][updateEnrolments]",
-        errorDetails = Some(
-          s"Auth Returned unexpected status $httpStatus when attemping to put enrolments"
+  }
+    def logUnexpectedErrorFromAuthWhenUsingLegacyEndpoint(httpStatus: Int): LoggingEvent = {
+      Error(
+        Event(
+          "[LegacyAuthConnector][updateEnrolments]",
+          errorDetails = Some(
+            s"Auth Returned unexpected status $httpStatus when attemping to put enrolments"
+          )
         )
       )
-    )
+    }
 
-  def logInvalidRedirectUrl(error: String): LoggingEvent =
+  def logInvalidRedirectUrl(error: String): LoggingEvent = {
     Warn(
       Event(
-        "[AccountCheckController][accountCheck]",
-        errorDetails = Some(error)
+        "[AccountCheckController][accountCheck]", errorDetails = Some(error)
       )
     )
-  def logUserHasNoCacheInMongo(credId: String, sessionId: String): LoggingEvent =
+  }
+  def logUserHasNoCacheInMongo(credId: String, sessionId: String): LoggingEvent = {
     Warn(
       Event(
-        "[AccountMongoDetailsAction]",
-        details = Some(s"User $credId has no record in mongo for $sessionId")
+        "[AccountMongoDetailsAction]", details = Some(s"User $credId has no record in mongo for $sessionId")
       )
     )
+  }
 
-  def logUserSigninAgain(credId: String): LoggingEvent =
+  def logUserSigninAgain(credId: String): LoggingEvent  = {
     Info(
       Event(
-        "[SignOutController][signOut]",
-        details = Some(s"User $credId has chosen to sign in with another account")
+        "[SignOutController][signOut]", details = Some(s"User $credId has chosen to sign in with another account")
       )
     )
+  }
 
   def logUnexpectedErrorOccurred(
     credentialId: String,
@@ -365,7 +367,9 @@ object LoggingEvent {
     val event: Event
   }
 
-  sealed case class Event(event: String, details: Option[String] = None, errorDetails: Option[String] = None)
+  sealed case class Event(event: String,
+                          details: Option[String] = None,
+                          errorDetails: Option[String] = None)
 
   case class Info(event: Event) extends LoggingEvent
 

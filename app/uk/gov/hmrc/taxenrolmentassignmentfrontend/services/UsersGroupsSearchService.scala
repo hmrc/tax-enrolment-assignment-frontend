@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.services
 
 import cats.data.EitherT
-import javax.inject.{Inject, Singleton}
+import com.google.inject.{Inject, Singleton}
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.service.TEAFResult
@@ -30,26 +30,26 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class UsersGroupsSearchService @Inject() (
+class UsersGroupsSearchService @Inject()(
   usersGroupsSearchConnector: UsersGroupsSearchConnector,
   sessionCache: TEASessionCache
 )(implicit crypto: TENCrypto) {
 
-  def getAccountDetails(credId: String)(implicit
-    ec: ExecutionContext,
+  def getAccountDetails(credId: String)(
+    implicit ec: ExecutionContext,
     hc: HeaderCarrier,
     request: RequestWithUserDetailsFromSessionAndMongo[_]
   ): TEAFResult[AccountDetails] = EitherT {
     request.accountDetailsFromMongo.optAccountDetails(credId) match {
-      case Some(entry) =>
-        Future.successful(Right(entry))
+      case Some(entry) => Future.successful(Right(entry))
       case None =>
         getAccountDetailsFromUsersGroupSearch(credId, accountDetailsForCredential(credId)).value
     }
   }
 
-  private def getAccountDetailsFromUsersGroupSearch(credId: String, key: String)(implicit
-    ec: ExecutionContext,
+  private def getAccountDetailsFromUsersGroupSearch(credId: String,
+                                                    key: String)(
+    implicit ec: ExecutionContext,
     hc: HeaderCarrier,
     request: RequestWithUserDetailsFromSessionAndMongo[_]
   ): TEAFResult[AccountDetails] = EitherT {
@@ -66,8 +66,7 @@ class UsersGroupsSearchService @Inject() (
             AccountDetails.additionalFactorsToMFADetails(userDetails.additionalFactors),
             None
           )
-          sessionCache
-            .save[AccountDetails](key, accountDetails)(request, AccountDetails.mongoFormats(crypto.crypto))
+          sessionCache.save[AccountDetails](key, accountDetails)(request, AccountDetails.mongoFormats(crypto.crypto))
             .map(_ => Right(accountDetails))
         case Left(error) => Future.successful(Left(error))
       }

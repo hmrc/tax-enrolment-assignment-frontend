@@ -16,46 +16,23 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions
 
-import org.scalamock.handlers.CallHandler1
 import org.scalatest.Assertion
-import play.api.Application
-import play.api.inject.bind
 import play.api.mvc.{Result, Results}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsString, redirectLocation, status, _}
-import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
+import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class AuthActionSpec extends BaseSpec {
+class AuthActionSpec extends TestFixture {
 
-  def mockDeleteDataFromCache: CallHandler1[RequestWithUserDetailsFromSession[_], Future[Boolean]] =
-    (mockTeaSessionCache
-      .removeRecord(_: RequestWithUserDetailsFromSession[_]))
-      .expects(*)
-      .returning(Future.successful(true))
-      .once()
-
-  lazy val mockTeaSessionCache = mock[TEASessionCache]
-  lazy val mockAuthConnector = mock[AuthConnector]
-
-  override lazy val overrides = Seq(
-    bind[TEASessionCache].toInstance(mockTeaSessionCache)
-  )
-
-  override implicit lazy val app: Application = localGuiceApplicationBuilder()
-    .overrides(
-      bind[AuthConnector].toInstance(mockAuthConnector)
-    )
-    .build()
-
-  lazy val authAction = app.injector.instanceOf[AuthAction]
+  def authAction: AuthAction =
+    new AuthAction(mockAuthConnector, testBodyParser, logger, appConfig)
 
   def defaultAsyncBody(
     requestTestCase: RequestWithUserDetailsFromSession[_] => Assertion
@@ -67,20 +44,15 @@ class AuthActionSpec extends BaseSpec {
   "AuthAction" when {
     "the session contains nino, credential and no enrolments" should {
       "return OK and the userDetails" in {
-        (
-          mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup] ~ Option[String]
+            ]
+          )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
 
@@ -95,20 +67,15 @@ class AuthActionSpec extends BaseSpec {
 
     "the session contains nino, credential and IR-SA enrolments" should {
       "return OK and the userDetails" in {
-        (
-          mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup] ~ Option[String]
+            ]
+          )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(
             Future.successful(retrievalResponse(enrolments = saEnrolmentOnly))
@@ -125,20 +92,15 @@ class AuthActionSpec extends BaseSpec {
 
     "the session contains nino, credential and PT enrolments" should {
       "return OK and the userDetails" in {
-        (
-          mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup] ~ Option[String]
+            ]
+          )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(
             Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly))
@@ -155,20 +117,15 @@ class AuthActionSpec extends BaseSpec {
 
     "the session contains nino, credential and IR-SA and PT enrolments" should {
       "return OK and the userDetails" in {
-        (
-          mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup] ~ Option[String]
+            ]
+          )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(
             Future.successful(retrievalResponse(enrolments = saAndptEnrolments))
@@ -187,20 +144,15 @@ class AuthActionSpec extends BaseSpec {
 
     "the session contains nino, but no credential" should {
       "return Unauthorised" in {
-        (
-          mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup] ~ Option[String]
+            ]
+          )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(
             Future.successful(retrievalResponse(optCredentials = None))
@@ -217,20 +169,15 @@ class AuthActionSpec extends BaseSpec {
 
     "the session contains no nino, but credential" should {
       "return Unauthorised" in {
-        (
-          mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup] ~ Option[String]
+            ]
+          )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse(optNino = None)))
 
@@ -245,20 +192,15 @@ class AuthActionSpec extends BaseSpec {
 
     "the session contains no nino or credential" should {
       "return Unauthorised" in {
-        (
-          mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup] ~ Option[String]
+            ]
+          )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(
             Future.successful(
@@ -277,20 +219,15 @@ class AuthActionSpec extends BaseSpec {
 
     "the session cannot be found" should {
       "redirect to the login page" in {
-        (
-          mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup] ~ Option[String]
+            ]
+          )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(Future.failed(SessionRecordNotFound("FAILED")))
 
@@ -308,20 +245,15 @@ class AuthActionSpec extends BaseSpec {
 
     "the session is from an unsupported auth provider" should {
       "return Unauthorised" in {
-        (
-          mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup] ~ Option[String]
+            ]
+          )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(Future.failed(UnsupportedAuthProvider("FAILED")))
 
@@ -336,20 +268,15 @@ class AuthActionSpec extends BaseSpec {
 
     "the session is at an insufficient confidence level" should {
       "return Unauthorised" in {
-        (
-          mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
+        (mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup] ~ Option[String]
+            ]
+          )(_: HeaderCarrier, _: ExecutionContext))
           .expects(predicates, retrievals, *, *)
           .returning(Future.failed(InsufficientConfidenceLevel("FAILED")))
 

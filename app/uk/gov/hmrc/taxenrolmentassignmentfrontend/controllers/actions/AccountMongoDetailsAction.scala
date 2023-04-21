@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions
 
-import javax.inject.Inject
+import com.google.inject.Inject
 import play.api.Logger
 import play.api.mvc._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
@@ -39,18 +39,19 @@ object RequestWithUserDetailsFromSessionAndMongo {
   import scala.language.implicitConversions
   implicit def requestConversion(
     requestWithUserDetailsFromSessionAndMongo: RequestWithUserDetailsFromSessionAndMongo[_]
-  ): RequestWithUserDetailsFromSession[_] =
+  ): RequestWithUserDetailsFromSession[_] = {
     RequestWithUserDetailsFromSession(
       requestWithUserDetailsFromSessionAndMongo.request,
       requestWithUserDetailsFromSessionAndMongo.userDetails,
       requestWithUserDetailsFromSessionAndMongo.sessionID
     )
+  }
 }
 
 trait AccountMongoDetailsActionTrait
-    extends ActionRefiner[RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo]
+  extends ActionRefiner[RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo]
 
-class AccountMongoDetailsAction @Inject() (
+class AccountMongoDetailsAction @Inject()(
   teaSessionCache: TEASessionCache,
   val parser: BodyParsers.Default,
   errorHandler: ErrorHandler,
@@ -61,56 +62,43 @@ class AccountMongoDetailsAction @Inject() (
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
   override protected def refine[A](
     request: RequestWithUserDetailsFromSession[A]
-  ): Future[Either[Result, RequestWithUserDetailsFromSessionAndMongo[A]]] =
-    getAccountDetailsFromMongoFromCache(request)
-      .map {
-        case Right(accountDetailsFromMongo) =>
-          Right(
-            RequestWithUserDetailsFromSessionAndMongo(
-              request.request,
-              request.userDetails,
-              request.sessionID,
-              accountDetailsFromMongo
-            )
-          )
-        case Left(CacheNotCompleteOrNotCorrect(None, None)) =>
-          logger.logEvent(LoggingEvent.logUserHasNoCacheInMongo(request.userDetails.credId, request.sessionID))
-          Left(toGGLogin)
-        case Left(error) =>
-          Left(
-            errorHandler
-              .handleErrors(error, "[AccountTypeAction][invokeBlock]")(request, baseLogger)
-          )
-      }
-      .recover { case _ =>
-        Left(
-          errorHandler
-            .handleErrors(UnexpectedError, "[AccountTypeAction][invokeBlock]")(request, baseLogger)
-        )
-      }
+  ): Future[Either[Result, RequestWithUserDetailsFromSessionAndMongo[A]]] = {
 
-  private def getAccountDetailsFromMongoFromCache(implicit
-    request: RequestWithUserDetailsFromSession[_]
-  ): Future[Either[TaxEnrolmentAssignmentErrors, AccountDetailsFromMongo]] =
+    getAccountDetailsFromMongoFromCache(request).map {
+      case Right(accountDetailsFromMongo) => Right(
+        RequestWithUserDetailsFromSessionAndMongo(
+          request.request, request.userDetails, request.sessionID, accountDetailsFromMongo
+        )
+      )
+      case Left(CacheNotCompleteOrNotCorrect(None, None)) =>
+        logger.logEvent(LoggingEvent.logUserHasNoCacheInMongo(request.userDetails.credId, request.sessionID))
+        Left(toGGLogin)
+      case Left(error) =>
+        Left(errorHandler
+          .handleErrors(error, "[AccountTypeAction][invokeBlock]")(request, baseLogger))
+    }.recover {
+      case _ => Left(errorHandler
+        .handleErrors(UnexpectedError, "[AccountTypeAction][invokeBlock]")(request, baseLogger))
+    }
+  }
+
+  private def getAccountDetailsFromMongoFromCache
+  (implicit request: RequestWithUserDetailsFromSession[_]): Future[Either[TaxEnrolmentAssignmentErrors, AccountDetailsFromMongo]] = {
     teaSessionCache.fetch().map { optCachedMap =>
       optCachedMap
         .fold[Either[TaxEnrolmentAssignmentErrors, AccountDetailsFromMongo]](
           Left(CacheNotCompleteOrNotCorrect(None, None))
         ) { cachedMap =>
-          (
-            AccountDetailsFromMongo.optAccountType(cachedMap.data),
-            AccountDetailsFromMongo.optRedirectUrl(cachedMap.data)
-          ) match {
-            case (Some(accountType), Some(redirectUrl)) =>
-              Right(
-                AccountDetailsFromMongo(accountType, redirectUrl, cachedMap.data)(crypto.crypto)
-              )
-            case (optAccountType, optRedirectUrl) =>
-              Left(
-                CacheNotCompleteOrNotCorrect(optRedirectUrl, optAccountType)
-              )
+          (AccountDetailsFromMongo.optAccountType(cachedMap.data), AccountDetailsFromMongo.optRedirectUrl(cachedMap.data)) match {
+            case (Some(accountType), Some(redirectUrl)) => Right(
+              AccountDetailsFromMongo(accountType, redirectUrl, cachedMap.data)(crypto.crypto)
+            )
+            case (optAccountType, optRedirectUrl) => Left(
+              CacheNotCompleteOrNotCorrect(optRedirectUrl, optAccountType)
+            )
           }
         }
     }
+  }
 
 }

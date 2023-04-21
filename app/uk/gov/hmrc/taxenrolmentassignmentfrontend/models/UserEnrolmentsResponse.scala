@@ -24,13 +24,12 @@ object UserEnrolmentsListResponse {
   implicit val format: OFormat[UserEnrolmentsListResponse] = Json.format[UserEnrolmentsListResponse]
 }
 
-case class UserEnrolment(
-  service: String,
-  state: String,
-  friendlyName: String,
-  failedActivationCount: Int,
-  identifiers: Seq[IdentifiersOrVerifiers]
-)
+case class UserEnrolment(service: String,
+                         state: String,
+                         friendlyName: String,
+                         failedActivationCount: Int,
+                         identifiers: Seq[IdentifiersOrVerifiers]
+                        )
 
 object UserEnrolment {
   implicit val format: OFormat[UserEnrolment] = Json.format[UserEnrolment]

@@ -16,15 +16,14 @@
 
 package services
 
-import helpers.IntegrationSpecBase
-import helpers.TestITData.{CREDENTIAL_ID, accountDetailsUnUserFriendly, usersGroupSearchResponse}
+import helpers.TestHelper
+import helpers.TestITData.{CREDENTIAL_ID, accountDetailsUnUserFriendly, sessionId, usersGroupSearchResponse}
 import play.api.libs.json.JsObject
-import uk.gov.hmrc.crypto.Crypted
+import uk.gov.hmrc.crypto.{Crypted, PlainText}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.PT_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.UsersGroupsSearchService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
 
-class UserGroupSearchServiceISpec extends IntegrationSpecBase {
+class UserGroupSearchServiceISpec extends TestHelper {
 
   lazy val service = app.injector.instanceOf[UsersGroupsSearchService]
 
@@ -33,27 +32,25 @@ class UserGroupSearchServiceISpec extends IntegrationSpecBase {
 
       stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
       val request = requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER)
-      val res = service.getAccountDetails(CREDENTIAL_ID)(implicitly, implicitly, request)
+      val res = service.getAccountDetails(CREDENTIAL_ID)(implicitly,implicitly,request)
 
       whenReady(res.value) { response =>
         response shouldBe Right(accountDetailsUnUserFriendly(CREDENTIAL_ID))
-        response.getOrElse(AccountDetails("", "", None, "", Seq.empty, None)).emailDecrypted shouldBe Some(
-          "email1@test.com"
-        )
+        response.right.get.emailDecrypted shouldBe Some("email1@test.com")
 
       }
-      val emailEncrypted: String =
-        ((sessionRepository
-          .get(request.sessionID))
-          .futureValue
-          .get
-          .data
-          .get("AccountDetailsFor6902202884164548")
-          .get
-          .as[JsObject] \ "email").as[String]
+     val emailEncrypted: String = {
+       (await(mongoRepository.get(request.sessionID)).get.data.get("AccountDetailsFor6902202884164548").get.as[JsObject] \ "email").as[String]
+     }
 
       crypto.crypto.decrypt(Crypted(emailEncrypted)).value shouldBe """"email1@test.com""""
     }
   }
+
+
+
+
+
+
 
 }

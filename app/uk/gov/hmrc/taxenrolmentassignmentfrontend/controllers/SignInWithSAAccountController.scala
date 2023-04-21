@@ -18,6 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import cats.data.EitherT
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import uk.gov.hmrc.crypto.AesGCMCrypto
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction, ThrottleAction}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
@@ -31,47 +32,42 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SignInWithSAAccount
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
+
 @Singleton
-class SignInWithSAAccountController @Inject() (
-  authAction: AuthAction,
-  accountMongoDetailsAction: AccountMongoDetailsAction,
-  throttleAction: ThrottleAction,
-  mcc: MessagesControllerComponents,
-  multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
-  signInWithSAAccount: SignInWithSAAccount,
-  val logger: EventLoggerService,
-  auditHandler: AuditHandler,
-  errorHandler: ErrorHandler
+class SignInWithSAAccountController @Inject()(
+                                               authAction: AuthAction,
+                                               accountMongoDetailsAction: AccountMongoDetailsAction,
+                                               throttleAction: ThrottleAction,
+                                               mcc: MessagesControllerComponents,
+                                               multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
+                                               signInWithSAAccount: SignInWithSAAccount,
+                                               val logger: EventLoggerService,
+                                               auditHandler: AuditHandler,
+                                               errorHandler: ErrorHandler
 )(implicit ec: ExecutionContext)
     extends TEAFrontendController(mcc) {
 
-  def view: Action[AnyContent] =
-    authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
-      val res = for {
-        _ <- EitherT {
-               Future.successful(
-                 multipleAccountsOrchestrator.checkAccessAllowedForPage(
-                   List(SA_ASSIGNED_TO_OTHER_USER)
-                 )
-               )
-             }
-        saAccount <- multipleAccountsOrchestrator.getSACredentialDetails
-      } yield saAccount
+  def view(): Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
+    val res = for {
+      _ <- EitherT{Future.successful(multipleAccountsOrchestrator.checkAccessAllowedForPage(
+        List(SA_ASSIGNED_TO_OTHER_USER)
+      ))}
+      saAccount <- multipleAccountsOrchestrator.getSACredentialDetails
+    } yield saAccount
 
-      res.value.map {
-        case Right(saAccount) =>
-          Ok(signInWithSAAccount(AccountDetails.userFriendlyAccountDetails(saAccount)))
-        case Left(error) =>
-          errorHandler.handleErrors(error, "[SignInWithSAAccountController][view]")(request, implicitly)
-      }
+    res.value.map {
+      case Right(saAccount) =>
+        Ok(signInWithSAAccount(AccountDetails.userFriendlyAccountDetails(saAccount)))
+      case Left(error) =>
+        errorHandler.handleErrors(error, "[SignInWithSAAccountController][view]")(request, implicitly)
     }
+  }
 
-  def continue: Action[AnyContent] =
-    authAction.andThen(accountMongoDetailsAction).andThen(throttleAction) { implicit request =>
-      logger.logEvent(
-        logUserSignsInAgainWithSAAccount(request.userDetails.credId)
-      )
-      auditHandler.audit(AuditEvent.auditSigninAgainWithSACredential())
-      Redirect(routes.SignOutController.signOut)
-    }
+  def continue: Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).andThen(throttleAction) { implicit request =>
+    logger.logEvent(
+      logUserSignsInAgainWithSAAccount(request.userDetails.credId)
+    )
+    auditHandler.audit(AuditEvent.auditSigninAgainWithSACredential())
+    Redirect(routes.SignOutController.signOut())
+  }
 }

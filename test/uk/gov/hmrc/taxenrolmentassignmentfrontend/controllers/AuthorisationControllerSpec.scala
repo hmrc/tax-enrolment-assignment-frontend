@@ -18,18 +18,18 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 
-class AuthorisationControllerSpec extends BaseSpec {
+class AuthorisationControllerSpec extends TestFixture {
 
-  val controller = app.injector.instanceOf[AuthorisationController]
+  val controller = new AuthorisationController(mcc, errorView)
 
   "notAuthorised" should {
     "display the error page" in {
       val result = controller.notAuthorised()(FakeRequest())
 
       status(result) shouldBe UNAUTHORIZED
-      contentAsString(result) should include(messages("enrolmentError.heading"))
+      contentAsString(result) should include("enrolmentError.heading")
     }
   }
 

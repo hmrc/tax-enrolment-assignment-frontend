@@ -23,13 +23,14 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 trait RedirectHelper {
   val appConfig: AppConfig
 
-  def toGGLogin: Result =
+  def toGGLogin: Result = {
     Redirect(
       appConfig.loginURL,
       Map(
         "continue_url" -> Seq(appConfig.loginCallback),
-        "origin"       -> Seq("tax-enrolment-assignment-frontend")
+        "origin" -> Seq("tax-enrolment-assignment-frontend")
       )
     )
+  }
 
 }

@@ -22,8 +22,9 @@ import uk.gov.hmrc.crypto.{Decrypter, Encrypter, SymmetricCryptoFactory}
 import javax.inject.{Inject, Singleton}
 
 @Singleton
-class TENCrypto @Inject() (config: Configuration) {
+class TENCrypto @Inject()(config: Configuration) {
 
-  val crypto: Encrypter with Decrypter =
+  val crypto: Encrypter with Decrypter = {
     SymmetricCryptoFactory.aesGcmCryptoFromConfig("crypto", config.underlying)
+  }
 }

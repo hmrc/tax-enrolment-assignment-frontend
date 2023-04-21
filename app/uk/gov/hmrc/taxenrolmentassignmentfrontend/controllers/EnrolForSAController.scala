@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthAction
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction, ThrottleAction}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.NoSAEnrolmentWhenOneExpected
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
@@ -26,22 +26,19 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class EnrolForSAController @Inject() (
-  authAction: AuthAction,
-  mcc: MessagesControllerComponents,
-  appConfig: AppConfig,
-  errorHandler: ErrorHandler,
-  teaSessionCache: TEASessionCache
-)(implicit ec: ExecutionContext)
-    extends TEAFrontendController(mcc) {
+class EnrolForSAController @Inject()(
+                                      authAction: AuthAction,
+                                      accountMongoDetailsAction: AccountMongoDetailsAction,
+                                      throttleAction: ThrottleAction,
+                                      mcc: MessagesControllerComponents,
+                                      appConfig: AppConfig,
+                                      errorHandler: ErrorHandler,
+                                      teaSessionCache: TEASessionCache)(implicit ec: ExecutionContext)
+  extends TEAFrontendController(mcc) {
 
   def enrolForSA: Action[AnyContent] = authAction.async { implicit request =>
     request.userDetails.hasSAEnrolment match {
-      case false =>
-        Future.successful(
-          errorHandler
-            .handleErrors(NoSAEnrolmentWhenOneExpected, "[EnrolForSAController][enrolForSA]")(request, implicitly)
-        )
+      case false => Future.successful(errorHandler.handleErrors(NoSAEnrolmentWhenOneExpected, "[EnrolForSAController][enrolForSA]")(request, implicitly))
       case true =>
         teaSessionCache.removeRecord.map(_ => Redirect(appConfig.btaUrl))
     }

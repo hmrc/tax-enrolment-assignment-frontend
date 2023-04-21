@@ -17,45 +17,25 @@
 package helpers
 
 import com.github.tomakehurst.wiremock.WireMockServer
+import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock._
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
 import com.github.tomakehurst.wiremock.matching.StringValuePattern
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
-import helpers.TestITData.usergroupsResponseJson
-import org.scalatest.concurrent.Eventually
-import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
-import play.api.http.Status.{INTERNAL_SERVER_ERROR, NON_AUTHORITATIVE_INFORMATION}
+import org.scalatest.concurrent.{Eventually, IntegrationPatience}
+import org.scalatestplus.play.ServerProvider
+import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.libs.json.{JsString, Json}
+import play.api.libs.ws.{WSClient, WSRequest}
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core.{AuthProviders, ConfidenceLevel}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersGroupResponse
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
 
-trait WireMockHelper extends Eventually with BeforeAndAfterAll with BeforeAndAfterEach {
-  this: Suite =>
-
-  protected val server: WireMockServer = new WireMockServer(wireMockConfig().dynamicPort())
-
-  override def beforeAll(): Unit = {
-    super.beforeAll()
-    server.start()
-  }
-
-  override def beforeEach(): Unit = {
-    super.beforeEach()
-    server.resetAll()
-  }
-
-  override def afterAll(): Unit = {
-    super.afterAll()
-    server.stop()
-  }
-
-  def stubGetMatching(url: String, status: Integer, responseBody: String): StubMapping =
-    server.stubFor(
-      get(urlEqualTo(url))
-        .willReturn(aResponse().withStatus(status).withBody(responseBody))
-    )
+object WiremockHelper extends Eventually with IntegrationPatience {
+  val wiremockPort = 1111
+  val wiremockHost = "localhost"
+  val wiremockURL = s"http://$wiremockHost:$wiremockPort"
 
   def stubAuthorizePost(status: Integer, responseBody: String): StubMapping = {
     val authorizePath = "/auth/authorise"
@@ -80,7 +60,7 @@ trait WireMockHelper extends Eventually with BeforeAndAfterAll with BeforeAndAft
 
   def stubAuthorizePostUnauthorised(failureReason: String): StubMapping = {
     val failureReasonMsg = s"""MDTP detail=\"$failureReason\""""
-    server.stubFor(
+    stubFor(
       post(urlMatching("/auth/authorise"))
         .willReturn(
           aResponse()
@@ -90,8 +70,11 @@ trait WireMockHelper extends Eventually with BeforeAndAfterAll with BeforeAndAft
     )
   }
 
-  def stubPost(url: String, requestBody: StringValuePattern, status: Integer, responseBody: String): StubMapping =
-    server.stubFor(
+  def stubPost(url: String,
+               requestBody: StringValuePattern,
+               status: Integer,
+               responseBody: String): StubMapping =
+    stubFor(
       post(urlMatching(url))
         .withRequestBody(requestBody)
         .willReturn(
@@ -102,8 +85,10 @@ trait WireMockHelper extends Eventually with BeforeAndAfterAll with BeforeAndAft
         )
     )
 
-  def stubPostWithAuthorizeHeaders(url: String, authorizeHeaderValue: String, status: Integer): StubMapping =
-    server.stubFor(
+  def stubPostWithAuthorizeHeaders(url: String,
+                                   authorizeHeaderValue: String,
+                                   status: Integer): StubMapping =
+    stubFor(
       post(urlMatching(url))
         .withHeader("Authorization", equalTo(authorizeHeaderValue))
         .willReturn(
@@ -112,8 +97,10 @@ trait WireMockHelper extends Eventually with BeforeAndAfterAll with BeforeAndAft
         )
     )
 
-  def stubPutWithAuthorizeHeaders(url: String, authorizeHeaderValue: String, status: Integer): StubMapping =
-    server.stubFor(
+  def stubPutWithAuthorizeHeaders(url: String,
+                                  authorizeHeaderValue: String,
+                                  status: Integer): StubMapping =
+    stubFor(
       put(urlPathEqualTo(url))
         .withHeader("Authorization", equalTo(authorizeHeaderValue))
         .willReturn(
@@ -122,47 +109,62 @@ trait WireMockHelper extends Eventually with BeforeAndAfterAll with BeforeAndAft
         )
     )
 
-  def stubPost(url: String, status: Integer, responseBody: String): StubMapping =
-    server.stubFor(
+  def stubPost(url: String,
+               status: Integer,
+               responseBody: String): StubMapping =
+    stubFor(
       post(urlMatching(url))
         .willReturn(aResponse().withStatus(status).withBody(responseBody))
     )
 
   def stubPut(url: String, status: Integer, responseBody: String): StubMapping =
-    server.stubFor(
+    stubFor(
       put(urlMatching(url))
         .willReturn(aResponse().withStatus(status).withBody(responseBody))
     )
-  def stubPutWithRequestBody(url: String, status: Integer, requestBody: String, responseBody: String): StubMapping =
-    server.stubFor(
+  def stubPutWithRequestBody(url: String,
+                             status: Integer,
+                             requestBody: String,
+                             responseBody: String): StubMapping =
+    stubFor(
       put(urlMatching(url))
         .withRequestBody(equalToJson(requestBody))
         .willReturn(aResponse().withStatus(status).withBody(responseBody))
     )
-  def stubGetWithQueryParam(
-    url: String,
-    queryParamKey: String,
-    queryParamValue: String,
-    status: Integer,
-    responseBody: String
-  ): StubMapping =
-    server.stubFor(
+  def stubGetWithQueryParam(url: String,
+                            queryParamKey: String,
+                            queryParamValue: String,
+                            status: Integer,
+                            responseBody: String): StubMapping =
+    stubFor(
       get(urlPathEqualTo(url))
         .withQueryParam(queryParamKey, equalTo(queryParamValue))
         .willReturn(aResponse().withStatus(status).withBody(responseBody))
     )
 
   def stubGet(url: String, status: Integer, responseBody: String): StubMapping =
-    server.stubFor(
+    stubFor(
       get(urlPathEqualTo(url))
         .willReturn(aResponse().withStatus(status).withBody(responseBody))
     )
 
-  def verifyNoPOSTmade(url: String) =
-    eventually(server.verify(0, postRequestedFor(urlMatching(url))))
-  def verifyAuditEventSent(auditEvent: AuditEvent) =
+  def stubGetMatching(url: String,
+                      status: Integer,
+                      responseBody: String): StubMapping =
+    stubFor(
+      get(urlEqualTo(url))
+        .willReturn(aResponse().withStatus(status).withBody(responseBody))
+    )
+
+  def verifyNoPOSTmade(url: String) = {
     eventually(
-      server.verify(
+      verify(0,
+        postRequestedFor(urlMatching(url))
+      ))
+  }
+  def verifyAuditEventSent(auditEvent: AuditEvent) = {
+    eventually(
+      verify(
         postRequestedFor(urlMatching("/write/audit"))
           .withRequestBody(
             containing(s""""auditType":"${auditEvent.auditType}"""")
@@ -170,17 +172,36 @@ trait WireMockHelper extends Eventually with BeforeAndAfterAll with BeforeAndAft
           .withRequestBody(containing(auditEvent.detail.toString()))
       )
     )
+  }
+}
 
-  def stubUserGroupSearchSuccess(
-    credId: String,
-    usersGroupResponse: UsersGroupResponse
-  ): StubMapping = stubGet(
-    s"/users-groups-search/users/$credId",
-    NON_AUTHORITATIVE_INFORMATION,
-    usergroupsResponseJson(usersGroupResponse).toString()
-  )
+trait WiremockHelper extends ServerProvider {
+  self: GuiceOneServerPerSuite =>
 
-  def stubUserGroupSearchFailure(credId: String): StubMapping =
-    stubGet(s"/users-groups-search/users/$credId", INTERNAL_SERVER_ERROR, "")
+  import WiremockHelper._
 
+  lazy val ws: WSClient = app.injector.instanceOf[WSClient]
+
+  lazy val wmConfig: WireMockConfiguration = wireMockConfig().port(wiremockPort)
+  lazy val wireMockServer = new WireMockServer(wmConfig)
+
+  def startWiremock(): Unit = {
+    WireMock.configureFor(wiremockHost, wiremockPort)
+    wireMockServer.start()
+  }
+
+  def stopWiremock(): Unit = wireMockServer.stop()
+
+  def resetWiremock(): Unit = WireMock.reset()
+
+  def buildRequest(path: String,
+                   followRedirects: Boolean = false): WSRequest = {
+    ws.url(s"http://localhost:$port$path")
+      .withFollowRedirects(followRedirects)
+  }
+
+  def buildTestOnlyRequest(path: String,
+                           followRedirects: Boolean = false): WSRequest =
+    ws.url(s"http://localhost:$port$path")
+      .withFollowRedirects(followRedirects)
 }

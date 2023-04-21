@@ -16,73 +16,66 @@
 
 package helpers
 
-import org.mongodb.scala.bson.BsonDocument
+import java.time.LocalDateTime
 import org.mongodb.scala.model.Filters
 import play.api.libs.json.{Format, JsString, JsValue}
 import uk.gov.hmrc.http.cache.client.CacheMap
-import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.DatedCacheMap
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.{CascadeUpsert, DefaultTEASessionCache}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.{CascadeUpsert, SessionRepository}
 
-import java.time.Instant
 import scala.concurrent.Future
 
-trait SessionCacheOperations extends DefaultPlayMongoRepositorySupport[DatedCacheMap] {
-  _: IntegrationSpecBase =>
+trait SessionCacheOperations {
 
-  override protected lazy val optSchema = Some(BsonDocument("""
-      { bsonType: "object"
-      , required: [ "_id", "data", "lastUpdated" ]
-      , properties:
-        { _id       : { bsonType: "objectId" }
-        , data      : { bsonType: "object" }
-        , lastUpdated : { bsonType: "date" }
-        }
-      }
-    """))
+  self: IntegrationSpecBase =>
 
-  lazy val sessionRepository = app.injector.instanceOf[DefaultTEASessionCache]
-  lazy val cascadeUpsert: CascadeUpsert = app.injector.instanceOf[CascadeUpsert]
-  lazy val repository = inject[DefaultTEASessionCache]
+  val sessionRepository: SessionRepository
+  val cascadeUpsert: CascadeUpsert
 
-  def save[T](sessionID: String, key: String, value: T)(implicit
-    fmt: Format[T]
-  ): Future[CacheMap] =
-    sessionRepository.get(sessionID).flatMap { optionalCacheMap =>
+  def save[T](sessionID: String, key: String, value: T)(
+    implicit fmt: Format[T]
+  ): Future[CacheMap] = {
+    sessionRepository().get(sessionID).flatMap { optionalCacheMap =>
       val updatedCacheMap = cascadeUpsert(
         key,
         value,
         optionalCacheMap.getOrElse(CacheMap(sessionID, Map()))
       )
-      sessionRepository.upsert(updatedCacheMap).map { _ =>
+      sessionRepository().upsert(updatedCacheMap).map { _ =>
         updatedCacheMap
       }
     }
+  }
 
-  def recordExistsInMongo: Boolean =
-    sessionRepository.collection.find(Filters.empty()).headOption().map(_.isDefined).futureValue
+  def recordExistsInMongo = await(sessionRepository().collection.find(Filters.empty()).headOption().map(_.isDefined))
 
-  def save(sessionId: String, dataMap: Map[String, JsValue]): Future[Boolean] =
-    sessionRepository.upsert(CacheMap(sessionId, dataMap))
+  def save(sessionId: String,
+           dataMap: Map[String, JsValue]): Future[Boolean] = {
+    sessionRepository().upsert(CacheMap(sessionId, dataMap))
+  }
 
-  def removeAll(sessionID: String): Future[Boolean] =
-    sessionRepository.upsert(CacheMap(sessionID, Map("" -> JsString(""))))
+  def removeAll(sessionID: String): Future[Boolean] = {
+    sessionRepository().upsert(CacheMap(sessionID, Map("" -> JsString(""))))
+  }
 
   def fetch(sessionID: String): Future[Option[CacheMap]] =
-    sessionRepository.get(sessionID)
+    sessionRepository().get(sessionID)
 
-  def getEntry[A](sessionID: String, key: String)(implicit fmt: Format[A]): Future[Option[A]] =
+  def getEntry[A](sessionID: String,
+                  key: String)(implicit fmt: Format[A]): Future[Option[A]] = {
     fetch(sessionID).map { optionalCacheMap =>
       optionalCacheMap.flatMap { cacheMap =>
         cacheMap.getEntry(key)
       }
     }
+  }
 
-  def getLastLoginDateTime(sessionID: String): Instant =
-    sessionRepository.collection
-      .find(Filters.equal("id", sessionID))
-      .first()
-      .toFuture()
-      .map(_.lastUpdated)
-      .futureValue
+  def getLastLoginDateTime(sessionID: String): LocalDateTime = {
+    await(
+      sessionRepository().collection
+        .find(Filters.equal("id", sessionID))
+        .first()
+        .toFuture()
+        .map(_.lastUpdated)
+    )
+  }
 }

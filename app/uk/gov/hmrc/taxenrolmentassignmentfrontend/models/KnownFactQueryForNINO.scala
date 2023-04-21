@@ -19,7 +19,8 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.IRSAKey
 
-case class KnownFactQueryForNINO(service: String, knownFacts: List[IdentifiersOrVerifiers]) {
+case class KnownFactQueryForNINO(service: String,
+                                 knownFacts: List[IdentifiersOrVerifiers]) {
   def this(nino: String) =
     this(
       service = s"$IRSAKey",

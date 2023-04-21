@@ -40,7 +40,7 @@
 
 @formHelper(action = routes.EnrolledPTWithSAOnOtherAccountController.continue) {
   @govukButton(Button(
-   preventDoubleClick = Some(true),
+   preventDoubleClick = true,
    content = Text(messages("common.continue"))
   ))
  }

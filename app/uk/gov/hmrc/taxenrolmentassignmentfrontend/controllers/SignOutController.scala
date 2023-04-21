@@ -29,7 +29,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class SignOutController @Inject() (
+class SignOutController @Inject()(
   authAction: AuthAction,
   mcc: MessagesControllerComponents,
   appConfig: AppConfig,
@@ -38,24 +38,18 @@ class SignOutController @Inject() (
 )(implicit ec: ExecutionContext)
     extends TEAFrontendController(mcc) {
 
-  def signOut: Action[AnyContent] = authAction.async { implicit request =>
-    sessionCache.fetch().map { cacheData =>
-      val optRedirectUrl = cacheData.fold[Option[String]](None)(
-        _.data
-          .get(
-            REDIRECT_URL
-          )
-          .map(_.as[String])
-      )
+  def signOut(): Action[AnyContent] = authAction.async { implicit request =>
+    sessionCache.fetch().map{cacheData =>
+      val optRedirectUrl = cacheData.fold[Option[String]](None)(_.data.get(
+        REDIRECT_URL
+      ).map(_.as[String]))
       sessionCache.removeRecord
       logger.logEvent(logUserSigninAgain(request.userDetails.credId))
       optRedirectUrl match {
-        case Some(redirectUrl) =>
-          Redirect(appConfig.signOutUrl, Map("continueUrl" -> Seq(redirectUrl)))
-            .removingFromSession("X-Request-ID", "Session-Id")
-        case None =>
-          Redirect(appConfig.signOutUrl)
-            .removingFromSession("X-Request-ID", "Session-Id")
+        case Some(redirectUrl) => Redirect(appConfig.signOutUrl, Map("continueUrl"-> Seq(redirectUrl)))
+          .removingFromSession("X-Request-ID", "Session-Id")
+        case None => Redirect(appConfig.signOutUrl)
+          .removingFromSession("X-Request-ID", "Session-Id")
       }
     }
   }

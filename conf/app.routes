@@ -44,6 +44,6 @@ GET        /no-pt-enrolment/contact-hmrc-pta                    uk.gov.hmrc.taxe
 
 GET        /enrol-for-sa                                        uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.EnrolForSAController.enrolForSA
 
-GET        /logout                                              uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignOutController.signOut
+GET        /logout                                              uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignOutController.signOut()
 
-GET        /unauthorised                                        uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.AuthorisationController.notAuthorised
+GET        /unauthorised                                        uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.AuthorisationController.notAuthorised()

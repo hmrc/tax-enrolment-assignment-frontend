@@ -28,29 +28,29 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
 
 @Singleton
-class TestOnlyController @Inject() (
-  mcc: MessagesControllerComponents,
-  authAction: AuthAction,
-  logger: EventLoggerService
-) extends TEAFrontendController(mcc) {
+class TestOnlyController @Inject()(mcc: MessagesControllerComponents,
+                                   authAction: AuthAction,
+                                   logger: EventLoggerService)
+    extends TEAFrontendController(mcc)  {
 
   def successfulCall: Action[AnyContent] = Action.async { _ =>
     logger.logEvent(logSuccessfulRedirectToReturnUrl)
     Future.successful(Ok("Successful"))
   }
 
-  def usersGroupSearchCall(credId: String): Action[AnyContent] = Action.async { _ =>
-    val userDetails =
-      UsersGroupsFixedData.usersGroupSearchCreds.getOrElse(credId, UsersGroupsFixedData.defaultUserResponse)
-    Future.successful(
-      NonAuthoritativeInformation(
-        UsersGroupsFixedData.toJson(userDetails)
-      )
-    )
+  def usersGroupSearchCall(credId: String): Action[AnyContent] = Action.async {
+    _ =>
+      val userDetails = UsersGroupsFixedData.usersGroupSearchCreds.getOrElse(credId, UsersGroupsFixedData.defaultUserResponse)
+        Future.successful(
+          NonAuthoritativeInformation(
+            UsersGroupsFixedData.toJson(userDetails)
+          )
+        )
   }
 
-  def enrolmentsFromAuth(): Action[AnyContent] = authAction { implicit request =>
-    Ok(Json.toJson(request.userDetails.enrolments.enrolments)(EnrolmentsFormats.writes).toString())
+  def enrolmentsFromAuth(): Action[AnyContent] = authAction {
+    implicit request =>
+      Ok(Json.toJson(request.userDetails.enrolments.enrolments)(EnrolmentsFormats.writes).toString())
   }
 
   val successfulSACall: Action[AnyContent] = Action.async { _ =>

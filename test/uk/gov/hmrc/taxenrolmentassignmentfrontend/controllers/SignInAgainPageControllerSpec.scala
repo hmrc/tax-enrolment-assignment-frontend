@@ -16,40 +16,59 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
+import play.api.Application
+import play.api.inject.bind
 import play.api.libs.json.Json
-import play.api.mvc.AnyContent
+import play.api.mvc.{AnyContent, BodyParsers}
 import play.api.test.Helpers.{status, _}
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
-import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
+import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, Enrolments}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, NoSAEnrolmentWhenOneExpected, UnexpectedPTEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{TestFixture, ThrottleHelperSpec, UrlPaths}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{ControllersBaseSpec, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_ASSIGNED_SA_ENROLMENT, accountDetailsForCredential}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{SilentAssignmentService, ThrottlingService}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SignInWithSAAccount
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class SignInAgainPageControllerSpec extends TestFixture with ThrottleHelperSpec {
-  val view: SignInWithSAAccount = app.injector.instanceOf[SignInWithSAAccount]
-  val controller =
-    new SignInWithSAAccountController(
-      mockAuthAction,
-      mockAccountMongoDetailsAction,
-      mockThrottleAction,
-      mcc,
-      mockMultipleAccountsOrchestrator,
-      view,
-      logger,
-      mockAuditHandler,
-      errorHandler
+class SignInAgainPageControllerSpec extends ControllersBaseSpec {
+
+  lazy val mockSilentAssignmentService = mock[SilentAssignmentService]
+  lazy val mockAccountCheckOrchestrator = mock[AccountCheckOrchestrator]
+  lazy val mockAuditHandler = mock[AuditHandler]
+
+  lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
+  lazy val mockMultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
+
+  override lazy val overrides = Seq(
+    bind[TEASessionCache].toInstance(mockTeaSessionCache)
+  )
+
+  override implicit lazy val app: Application = localGuiceApplicationBuilder()
+    .overrides(
+      bind[SilentAssignmentService].toInstance(mockSilentAssignmentService),
+      bind[AccountCheckOrchestrator].toInstance(mockAccountCheckOrchestrator),
+      bind[AuditHandler].toInstance(mockAuditHandler),
+      bind[ThrottlingService].toInstance(mockThrottlingService),
+      bind[AuthConnector].toInstance(mockAuthConnector),
+      bind[BodyParsers.Default].toInstance(testBodyParser),
+      bind[MultipleAccountsOrchestrator].toInstance(mockMultipleAccountsOrchestrator)
     )
+    .build()
+
+  lazy val controller = app.injector.instanceOf[SignInWithSAAccountController]
+
+  val view: SignInWithSAAccount = app.injector.instanceOf[SignInWithSAAccount]
 
   "view" when {
 
@@ -58,15 +77,20 @@ class SignInAgainPageControllerSpec extends TestFixture with ThrottleHelperSpec 
     "a user has SA on another account" should {
       "render the signInWithSAAccount page" when {
         "the user has not already been assigned the PT enrolment" in {
-          (mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(_: HeaderCarrier, _: ExecutionContext))
+          (
+            mockAuthConnector
+              .authorise(
+                _: Predicate,
+                _: Retrieval[
+                  ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                    String
+                  ] ~ Option[AffinityGroup] ~ Option[String]
+                ]
+              )(
+                _: HeaderCarrier,
+                _: ExecutionContext
+              )
+            )
             .expects(predicates, retrievals, *, *)
             .returning(Future.successful(retrievalResponse()))
 
@@ -93,20 +117,25 @@ class SignInAgainPageControllerSpec extends TestFixture with ThrottleHelperSpec 
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
           status(result) shouldBe OK
-          contentAsString(result) should include("signInAgain.heading")
+          contentAsString(result) should include(messages("signInAgain.heading1"))
         }
       }
       s"redirect to ${UrlPaths.enrolledPTSAOnOtherAccountPath}" when {
         "the user has already been assigned the PT enrolment" in {
-          (mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(_: HeaderCarrier, _: ExecutionContext))
+          (
+            mockAuthConnector
+              .authorise(
+                _: Predicate,
+                _: Retrieval[
+                  ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                    String
+                  ] ~ Option[AffinityGroup] ~ Option[String]
+                ]
+              )(
+                _: HeaderCarrier,
+                _: ExecutionContext
+              )
+            )
             .expects(predicates, retrievals, *, *)
             .returning(Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly)))
 
@@ -131,15 +160,20 @@ class SignInAgainPageControllerSpec extends TestFixture with ThrottleHelperSpec 
     }
     s"the cache no redirectUrl" should {
       "render the error page" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
         mockGetDataFromCacheForActionNoRedirectUrl
@@ -149,21 +183,26 @@ class SignInAgainPageControllerSpec extends TestFixture with ThrottleHelperSpec 
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(result) should include("enrolmentError.heading")
+        contentAsString(result) should include(messages("enrolmentError.heading"))
       }
     }
 
     s"the user does not have an account type of $SA_ASSIGNED_TO_OTHER_USER" should {
       s"redirect to ${UrlPaths.accountCheckPath}" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
 
@@ -188,15 +227,20 @@ class SignInAgainPageControllerSpec extends TestFixture with ThrottleHelperSpec 
 
     "the current user has a no SA enrolment on other account but session says it is other account" should {
       "render the error page" in {
-        (mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(_: HeaderCarrier, _: ExecutionContext))
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
 
@@ -223,7 +267,7 @@ class SignInAgainPageControllerSpec extends TestFixture with ThrottleHelperSpec 
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(res) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(res) should include("enrolmentError.heading")
+        contentAsString(res) should include(messages("enrolmentError.heading"))
       }
     }
   }
@@ -231,11 +275,15 @@ class SignInAgainPageControllerSpec extends TestFixture with ThrottleHelperSpec 
 
     specificThrottleTests(controller.continue())
 
-      s"redirect to ${UrlPaths.logoutPath}" in {
-        val additionalCacheData = Map(
-          USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetails)(AccountDetails.mongoFormats(crypto.crypto)))
-        (mockAuthConnector
+    s"redirect to ${UrlPaths.logoutPath}" in {
+      val additionalCacheData = Map(
+        USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+        accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetails)(
+          AccountDetails.mongoFormats(crypto.crypto)
+        )
+      )
+      (
+        mockAuthConnector
           .authorise(
             _: Predicate,
             _: Retrieval[
@@ -243,20 +291,29 @@ class SignInAgainPageControllerSpec extends TestFixture with ThrottleHelperSpec 
                 String
               ] ~ Option[AffinityGroup] ~ Option[String]
             ]
-          )(_: HeaderCarrier, _: ExecutionContext))
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.successful(retrievalResponse()))
+          )(
+            _: HeaderCarrier,
+            _: ExecutionContext
+          )
+        )
+        .expects(predicates, retrievals, *, *)
+        .returning(Future.successful(retrievalResponse()))
 
-        mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData)
-        mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
-        val auditEvent = AuditEvent.auditSigninAgainWithSACredential()(
-          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData = additionalCacheData),
-          stubbedMessagesApi)
-        (mockAuditHandler
-          .audit(_: AuditEvent)(_: HeaderCarrier))
-          .expects(auditEvent, *)
-          .returning(Future.successful((): Unit))
-          .once()
+      mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData)
+      mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
+      val auditEvent = AuditEvent.auditSigninAgainWithSACredential()(
+        requestWithAccountType(
+          SA_ASSIGNED_TO_OTHER_USER,
+          UrlPaths.returnUrl,
+          additionalCacheData = additionalCacheData
+        ),
+        messagesApi
+      )
+      (mockAuditHandler
+        .audit(_: AuditEvent)(_: HeaderCarrier))
+        .expects(auditEvent, *)
+        .returning(Future.successful((): Unit))
+        .once()
 
       val res = controller
         .continue()
@@ -268,25 +325,30 @@ class SignInAgainPageControllerSpec extends TestFixture with ThrottleHelperSpec 
     }
 
     "render the error page when redirect url not in cache" in {
-      (mockAuthConnector
-        .authorise(
-          _: Predicate,
-          _: Retrieval[
-            ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-              String
-            ] ~ Option[AffinityGroup] ~ Option[String]
-          ]
-        )(_: HeaderCarrier, _: ExecutionContext))
+      (
+        mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup] ~ Option[String]
+            ]
+          )(
+            _: HeaderCarrier,
+            _: ExecutionContext
+          )
+        )
         .expects(predicates, retrievals, *, *)
         .returning(Future.successful(retrievalResponse()))
       mockGetDataFromCacheForActionNoRedirectUrl
 
-        val result = controller
-          .view()
-          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+      val result = controller
+        .view()
+        .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(result) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(result) should include("enrolmentError.h")
+      status(result) shouldBe INTERNAL_SERVER_ERROR
+      contentAsString(result) should include(messages("enrolmentError.heading"))
     }
-    }
+  }
 }

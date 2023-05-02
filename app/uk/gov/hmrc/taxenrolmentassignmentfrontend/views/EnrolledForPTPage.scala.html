@@ -37,7 +37,7 @@
 
  @formHelper(action = postAction) {
   @govukButton(Button(
-   preventDoubleClick = true,
+   preventDoubleClick = Some(true),
    content = Text(messages("enrolledForPT.continue"))
   ))
  }

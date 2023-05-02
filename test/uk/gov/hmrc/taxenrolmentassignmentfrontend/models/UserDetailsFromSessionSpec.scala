@@ -18,18 +18,36 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 
 import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.UserDetailsFromSession
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{CURRENT_USER_EMAIL, UTR, saEnrolmentOnly}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.IRSAKey
 
-class UserDetailsFromSessionSpec extends TestFixture {
+class UserDetailsFromSessionSpec extends BaseSpec {
 
   "utr" should {
     s"extract correctly if $IRSAKey exists" in {
-      UserDetailsFromSession("","", "",Some(CURRENT_USER_EMAIL), AffinityGroup.Agent, saEnrolmentOnly,true, true).utr.get shouldBe UTR
+      UserDetailsFromSession(
+        "",
+        "",
+        "",
+        Some(CURRENT_USER_EMAIL),
+        AffinityGroup.Agent,
+        saEnrolmentOnly,
+        true,
+        true
+      ).utr.get shouldBe UTR
     }
     s"return None if $IRSAKey doesnt exist" in {
-      UserDetailsFromSession("","", "",Some(CURRENT_USER_EMAIL), AffinityGroup.Agent, Enrolments(Set.empty),true, true).utr shouldBe None
+      UserDetailsFromSession(
+        "",
+        "",
+        "",
+        Some(CURRENT_USER_EMAIL),
+        AffinityGroup.Agent,
+        Enrolments(Set.empty),
+        true,
+        true
+      ).utr shouldBe None
     }
   }
 }

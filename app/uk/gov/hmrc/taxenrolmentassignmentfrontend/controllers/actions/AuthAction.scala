@@ -35,14 +35,16 @@ import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
-case class UserDetailsFromSession(credId: String,
-                                  nino: String,
-                                  groupId: String,
-                                  email: Option[String],
-                                  affinityGroup: AffinityGroup,
-                                  enrolments: Enrolments,
-                                  hasPTEnrolment: Boolean,
-                                  hasSAEnrolment: Boolean) {
+case class UserDetailsFromSession(
+  credId: String,
+  nino: String,
+  groupId: String,
+  email: Option[String],
+  affinityGroup: AffinityGroup,
+  enrolments: Enrolments,
+  hasPTEnrolment: Boolean,
+  hasSAEnrolment: Boolean
+) {
 
   val utr: Option[String] = enrolments.getEnrolment(s"$IRSAKey").flatMap(_.getIdentifier("UTR").map(_.value))
 
@@ -59,15 +61,13 @@ trait AuthIdentifierAction
     with ActionFunction[Request, RequestWithUserDetailsFromSession]
 
 @Singleton
-class AuthAction @Inject()(
+class AuthAction @Inject() (
   override val authConnector: AuthConnector,
   val parser: BodyParsers.Default,
   logger: EventLoggerService,
   val appConfig: AppConfig
 )(implicit val executionContext: ExecutionContext)
-    extends AuthorisedFunctions
-    with AuthIdentifierAction
-    with RedirectHelper {
+    extends AuthorisedFunctions with AuthIdentifierAction with RedirectHelper {
 
   val origin: String = "tax-enrolment-assignment-frontend"
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
@@ -83,8 +83,7 @@ class AuthAction @Inject()(
       .retrieve(
         nino and credentials and allEnrolments and groupIdentifier and affinityGroup and email
       ) {
-        case Some(nino) ~ Some(credentials) ~ enrolments ~ Some(groupId) ~ Some(
-              affinityGroup) ~ email =>
+        case Some(nino) ~ Some(credentials) ~ enrolments ~ Some(groupId) ~ Some(affinityGroup) ~ email =>
           val hasSAEnrolment =
             enrolments.getEnrolment(s"$IRSAKey").fold(false)(_.isActivated)
           val hasPTEnrolment = enrolments.getEnrolment(s"$hmrcPTKey").isDefined
@@ -117,7 +116,7 @@ class AuthAction @Inject()(
             )
           )
           Future.successful(
-            Redirect(routes.AuthorisationController.notAuthorised().url)
+            Redirect(routes.AuthorisationController.notAuthorised.url)
           )
       } recover {
       case er: NoActiveSession =>
@@ -134,7 +133,7 @@ class AuthAction @Inject()(
             s"Auth exception: ${er.getMessage} for  uri ${request.uri}"
           )
         )
-        Redirect(routes.AuthorisationController.notAuthorised().url)
+        Redirect(routes.AuthorisationController.notAuthorised.url)
     }
   }
 }

@@ -22,11 +22,11 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSessionAndMongo}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_ASSIGNED_SA_ENROLMENT, accountDetailsForCredential}
 
-class AuditEventSpec extends TestFixture {
+class AuditEventSpec extends BaseSpec {
 
   val accountDetailsWithOneMFADetails = AccountDetails(
     credId = CREDENTIAL_ID_1,
@@ -71,20 +71,25 @@ class AuditEventSpec extends TestFixture {
     )
   }
 
-  def getExpectedAuditEvent(reportedAccountDetails: AccountDetails,
-                            isSA: Boolean,
-                            isWelsh: Boolean = false): AuditEvent = {
+  def getExpectedAuditEvent(
+    reportedAccountDetails: AccountDetails,
+    isSA: Boolean,
+    isWelsh: Boolean = false
+  ): AuditEvent = {
     val currentAccountDetails = Json.obj(
       ("credentialId", JsString(CREDENTIAL_ID)),
-      ("type", JsString(if (isSA) {
-        SA_ASSIGNED_TO_OTHER_USER.toString
-      } else {
-        PT_ASSIGNED_TO_OTHER_USER.toString
-      })),
+      (
+        "type",
+        JsString(if (isSA) {
+          SA_ASSIGNED_TO_OTHER_USER.toString
+        } else {
+          PT_ASSIGNED_TO_OTHER_USER.toString
+        })
+      ),
       ("affinityGroup", JsString("Individual"))
     )
 
-    val translatedAccountJson = if(isWelsh) {
+    val translatedAccountJson = if (isWelsh) {
       Json.obj(
         ("reportedAccountEN", getReportedAccountJson(reportedAccountDetails))
       )
@@ -107,21 +112,27 @@ class AuditEventSpec extends TestFixture {
     )
   }
 
-  def getExpectedAuditForPTEnrolled(accountType: AccountTypes.Value, optReportedAccountDetails: Option[JsObject],
-                                    optSACred: Option[String],
-                                    withEmail: Option[String] = Some(CURRENT_USER_EMAIL)): AuditEvent = {
-    val email = if(withEmail.isDefined) Json.obj("email" -> withEmail.get) else Json.obj()
-    val currentAccountDetails = Json.obj(
-      ("credentialId", JsString(CREDENTIAL_ID)),
-      ("type", JsString(accountType.toString)),
-      ("affinityGroup", JsString("Individual"))
-    ).deepMerge(email)
+  def getExpectedAuditForPTEnrolled(
+    accountType: AccountTypes.Value,
+    optReportedAccountDetails: Option[JsObject],
+    optSACred: Option[String],
+    withEmail: Option[String] = Some(CURRENT_USER_EMAIL)
+  ): AuditEvent = {
+    val email = if (withEmail.isDefined) Json.obj("email" -> withEmail.get) else Json.obj()
+    val currentAccountDetails = Json
+      .obj(
+        ("credentialId", JsString(CREDENTIAL_ID)),
+        ("type", JsString(accountType.toString)),
+        ("affinityGroup", JsString("Individual"))
+      )
+      .deepMerge(email)
 
     val details = Json.obj(
       ("NINO", JsString(NINO)),
       ("currentAccount", currentAccountDetails)
     ) ++ optSACred.fold(Json.obj())(credId =>
-      Json.obj(("saAccountCredentialId", JsString(credId)))) ++ optReportedAccountDetails.getOrElse(Json.obj())
+      Json.obj(("saAccountCredentialId", JsString(credId)))
+    ) ++ optReportedAccountDetails.getOrElse(Json.obj())
 
     AuditEvent(
       auditType = "SuccessfullyEnrolledPersonalTax",
@@ -148,21 +159,25 @@ class AuditEventSpec extends TestFixture {
     )
   }
 
-  private def getFactorType(fType: String, isWelsh: Boolean): String = {
+  private def getFactorType(fType: String, isWelsh: Boolean): String =
     fType match {
-      case "text" => if(isWelsh) {"Neges destun"} else {"Text message"}
-      case "voice" => if(isWelsh) {"Rhif ffôn"} else {"Phone number"}
-      case _ => if(isWelsh) {"Ap dilysu"} else {"Authenticator app"}
+      case "text" =>
+        if (isWelsh) { "Neges destun" }
+        else { "Text message" }
+      case "voice" =>
+        if (isWelsh) { "Rhif ffôn" }
+        else { "Phone number" }
+      case _ =>
+        if (isWelsh) { "Ap dilysu" }
+        else { "Authenticator app" }
     }
-  }
 
-  private def getEndingWith(value: String, isWelsh: Boolean) = {
-    if(isWelsh) {
+  private def getEndingWith(value: String, isWelsh: Boolean) =
+    if (isWelsh) {
       s"yn gorffen gyda $value"
     } else {
       s"Ending with $value"
     }
-  }
 
   "auditReportSuspiciousSAAccount" should {
     val requestWithMongoAndAccountType =
@@ -180,40 +195,43 @@ class AuditEventSpec extends TestFixture {
         )(requestWithMongoAndAccountType, messagesApi) shouldEqual expectedAuditEvent
       }
 
-    "the reported account has no email or mfaDetails" in {
+      "the reported account has no email or mfaDetails" in {
         val accountDetailsNoEmailOrMFA = accountDetailsWithOneMFADetails
           .copy(email = None, mfaDetails = Seq.empty)
         val expectedAuditEvent =
           getExpectedAuditEvent(accountDetailsNoEmailOrMFA, true)
 
         AuditEvent.auditReportSuspiciousSAAccount(accountDetailsNoEmailOrMFA)(
-          requestWithMongoAndAccountType, messagesApi
+          requestWithMongoAndAccountType,
+          messagesApi
         ) shouldEqual expectedAuditEvent
       }
 
-    "the reported account has no email" in {
+      "the reported account has no email" in {
         val accountDetailsNoEmail = accountDetailsWithOneMFADetails
           .copy(email = None)
         val expectedAuditEvent =
           getExpectedAuditEvent(accountDetailsNoEmail, true)
 
         AuditEvent.auditReportSuspiciousSAAccount(accountDetailsNoEmail)(
-          requestWithMongoAndAccountType, messagesApi
+          requestWithMongoAndAccountType,
+          messagesApi
         ) shouldEqual expectedAuditEvent
       }
 
-    "the reported account has no mfaDetails" in {
+      "the reported account has no mfaDetails" in {
         val accountDetailsNoMFA = accountDetailsWithOneMFADetails
           .copy(mfaDetails = Seq.empty)
         val expectedAuditEvent =
           getExpectedAuditEvent(accountDetailsNoMFA, true)
 
         AuditEvent.auditReportSuspiciousSAAccount(accountDetailsNoMFA)(
-          requestWithMongoAndAccountType, messagesApi
+          requestWithMongoAndAccountType,
+          messagesApi
         ) shouldEqual expectedAuditEvent
       }
 
-    "the reported account has email and three mfaDetails" in {
+      "the reported account has email and three mfaDetails" in {
         val accountDetailsWithThreeMFADetails = accountDetailsWithOneMFADetails
           .copy(
             mfaDetails = Seq(
@@ -234,7 +252,7 @@ class AuditEventSpec extends TestFixture {
     "return an audit event with the expected details and transalation" when {
       "the reported account has email and one mfaDetails and lang is welsh" in {
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsWithOneMFADetails, true,true)
+          getExpectedAuditEvent(accountDetailsWithOneMFADetails, true, true)
 
         AuditEvent.auditReportSuspiciousSAAccount(
           accountDetailsWithOneMFADetails
@@ -245,10 +263,11 @@ class AuditEventSpec extends TestFixture {
         val accountDetailsNoEmailOrMFA = accountDetailsWithOneMFADetails
           .copy(email = None, mfaDetails = Seq.empty)
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsNoEmailOrMFA, true,true)
+          getExpectedAuditEvent(accountDetailsNoEmailOrMFA, true, true)
 
         AuditEvent.auditReportSuspiciousSAAccount(accountDetailsNoEmailOrMFA)(
-          requestWithMongoAndAccountTypeLangCY, messagesApi
+          requestWithMongoAndAccountTypeLangCY,
+          messagesApi
         ) shouldEqual expectedAuditEvent
       }
 
@@ -256,10 +275,11 @@ class AuditEventSpec extends TestFixture {
         val accountDetailsNoEmail = accountDetailsWithOneMFADetails
           .copy(email = None)
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsNoEmail, true,true)
+          getExpectedAuditEvent(accountDetailsNoEmail, true, true)
 
         AuditEvent.auditReportSuspiciousSAAccount(accountDetailsNoEmail)(
-          requestWithMongoAndAccountTypeLangCY, messagesApi
+          requestWithMongoAndAccountTypeLangCY,
+          messagesApi
         ) shouldEqual expectedAuditEvent
       }
 
@@ -267,10 +287,11 @@ class AuditEventSpec extends TestFixture {
         val accountDetailsNoMFA = accountDetailsWithOneMFADetails
           .copy(mfaDetails = Seq.empty)
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsNoMFA, true,true)
+          getExpectedAuditEvent(accountDetailsNoMFA, true, true)
 
         AuditEvent.auditReportSuspiciousSAAccount(accountDetailsNoMFA)(
-          requestWithMongoAndAccountTypeLangCY, messagesApi
+          requestWithMongoAndAccountTypeLangCY,
+          messagesApi
         ) shouldEqual expectedAuditEvent
       }
 
@@ -284,7 +305,7 @@ class AuditEventSpec extends TestFixture {
             )
           )
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsWithThreeMFADetails, true,true)
+          getExpectedAuditEvent(accountDetailsWithThreeMFADetails, true, true)
 
         AuditEvent.auditReportSuspiciousSAAccount(
           accountDetailsWithThreeMFADetails
@@ -316,7 +337,8 @@ class AuditEventSpec extends TestFixture {
           getExpectedAuditEvent(accountDetailsNoEmailOrMFA, false)
 
         AuditEvent.auditReportSuspiciousPTAccount(accountDetailsNoEmailOrMFA)(
-          requestWithMongoAndAccountType, messagesApi
+          requestWithMongoAndAccountType,
+          messagesApi
         ) shouldEqual expectedAuditEvent
       }
 
@@ -327,10 +349,10 @@ class AuditEventSpec extends TestFixture {
           getExpectedAuditEvent(accountDetailsNoEmail, false)
 
         AuditEvent.auditReportSuspiciousPTAccount(accountDetailsNoEmail)(
-          requestWithMongoAndAccountType, messagesApi
+          requestWithMongoAndAccountType,
+          messagesApi
         ) shouldEqual expectedAuditEvent
       }
-
 
       "the reported account has no mfaDetails" in {
         val accountDetailsNoMFA = accountDetailsWithOneMFADetails
@@ -339,10 +361,10 @@ class AuditEventSpec extends TestFixture {
           getExpectedAuditEvent(accountDetailsNoMFA, false)
 
         AuditEvent.auditReportSuspiciousPTAccount(accountDetailsNoMFA)(
-          requestWithMongoAndAccountType, messagesApi
+          requestWithMongoAndAccountType,
+          messagesApi
         ) shouldEqual expectedAuditEvent
       }
-
 
       "the reported account has email and three mfaDetails" in {
         val accountDetailsWithThreeMFADetails = accountDetailsWithOneMFADetails
@@ -379,7 +401,8 @@ class AuditEventSpec extends TestFixture {
           getExpectedAuditEvent(accountDetailsNoEmailOrMFA, false, true)
 
         AuditEvent.auditReportSuspiciousPTAccount(accountDetailsNoEmailOrMFA)(
-          requestWithMongoAndAccountTypeLangCY, messagesApi
+          requestWithMongoAndAccountTypeLangCY,
+          messagesApi
         ) shouldEqual expectedAuditEvent
       }
 
@@ -390,10 +413,10 @@ class AuditEventSpec extends TestFixture {
           getExpectedAuditEvent(accountDetailsNoEmail, false, true)
 
         AuditEvent.auditReportSuspiciousPTAccount(accountDetailsNoEmail)(
-          requestWithMongoAndAccountTypeLangCY, messagesApi
+          requestWithMongoAndAccountTypeLangCY,
+          messagesApi
         ) shouldEqual expectedAuditEvent
       }
-
 
       "the reported account has no mfaDetails and language set to welsh" in {
         val accountDetailsNoMFA = accountDetailsWithOneMFADetails
@@ -402,10 +425,10 @@ class AuditEventSpec extends TestFixture {
           getExpectedAuditEvent(accountDetailsNoMFA, false, true)
 
         AuditEvent.auditReportSuspiciousPTAccount(accountDetailsNoMFA)(
-          requestWithMongoAndAccountTypeLangCY, messagesApi
+          requestWithMongoAndAccountTypeLangCY,
+          messagesApi
         ) shouldEqual expectedAuditEvent
       }
-
 
       "the reported account has email and three mfaDetails and language set to welsh" in {
         val accountDetailsWithThreeMFADetails = accountDetailsWithOneMFADetails
@@ -492,8 +515,7 @@ class AuditEventSpec extends TestFixture {
           requestWithUserDetails(userDetailsWithSAEnrolment)
 
         val expectedAuditEvent =
-          getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_CURRENT_USER, None, Some(CREDENTIAL_ID
-          ))
+          getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_CURRENT_USER, None, Some(CREDENTIAL_ID))
 
         AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
           SA_ASSIGNED_TO_CURRENT_USER
@@ -505,14 +527,22 @@ class AuditEventSpec extends TestFixture {
   "auditSuccessfullyEnrolledPTWhenSAOnOtherAccount" when {
     "email does not exist in user details session" should {
       "return an audit that does not contain the email" in {
-        val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsSA)(AccountDetails.mongoFormats(crypto.crypto)))
+        val additionalCacheData = Map(
+          USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsSA)(
+            AccountDetails.mongoFormats(crypto.crypto)
+          )
+        )
         val requestForAudit =
           RequestWithUserDetailsFromSessionAndMongo(
             request.request.withTransientLang("en"),
             request.userDetails.copy(email = None),
             request.sessionID,
-            AccountDetailsFromMongo(SA_ASSIGNED_TO_OTHER_USER, "foo", generateBasicCacheData(SA_ASSIGNED_TO_OTHER_USER, "foo") ++ additionalCacheData)(crypto.crypto)
+            AccountDetailsFromMongo(
+              SA_ASSIGNED_TO_OTHER_USER,
+              "foo",
+              generateBasicCacheData(SA_ASSIGNED_TO_OTHER_USER, "foo") ++ additionalCacheData
+            )(crypto.crypto)
           )
         val expectedAuditEvent =
           getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_OTHER_USER, None, Some(CREDENTIAL_ID_1), withEmail = Some("-"))
@@ -520,12 +550,16 @@ class AuditEventSpec extends TestFixture {
         AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(
           false
         )(requestForAudit, messagesApi) shouldEqual expectedAuditEvent
-        }
       }
+    }
     "the user has enrolled after choosing to keep PT and SA separate" should {
       "return an audit event with the expected details" in {
-        val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsSA)(AccountDetails.mongoFormats(crypto.crypto)))
+        val additionalCacheData = Map(
+          USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsSA)(
+            AccountDetails.mongoFormats(crypto.crypto)
+          )
+        )
         val requestForAudit =
           requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
         val expectedAuditEvent =
@@ -545,15 +579,24 @@ class AuditEventSpec extends TestFixture {
           val reportedAccountDetails =
             Json.obj(("reportedAccount", getReportedAccountJson(accountDetailsNoEmailOrMFA)))
           val expectedAuditEvent =
-            getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_OTHER_USER, Some(reportedAccountDetails), Some(CREDENTIAL_ID_1))
+            getExpectedAuditForPTEnrolled(
+              SA_ASSIGNED_TO_OTHER_USER,
+              Some(reportedAccountDetails),
+              Some(CREDENTIAL_ID_1)
+            )
 
-          val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmailOrMFA)(AccountDetails.mongoFormats(crypto.crypto)))
+          val additionalCacheData = Map(
+            USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmailOrMFA)(
+              AccountDetails.mongoFormats(crypto.crypto)
+            )
+          )
           val requestForAudit =
             requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
           AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(
-            requestForAudit, messagesApi
+            requestForAudit,
+            messagesApi
           ) shouldEqual expectedAuditEvent
         }
 
@@ -563,15 +606,24 @@ class AuditEventSpec extends TestFixture {
           val reportedAccountDetails =
             Json.obj(("reportedAccount", getReportedAccountJson(accountDetailsNoEmail)))
           val expectedAuditEvent =
-            getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_OTHER_USER, Some(reportedAccountDetails), Some(CREDENTIAL_ID_1))
+            getExpectedAuditForPTEnrolled(
+              SA_ASSIGNED_TO_OTHER_USER,
+              Some(reportedAccountDetails),
+              Some(CREDENTIAL_ID_1)
+            )
 
-          val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmail)(AccountDetails.mongoFormats(crypto.crypto)))
+          val additionalCacheData = Map(
+            USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmail)(
+              AccountDetails.mongoFormats(crypto.crypto)
+            )
+          )
           val requestForAudit =
             requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
           AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(
-            requestForAudit, messagesApi
+            requestForAudit,
+            messagesApi
           ) shouldEqual expectedAuditEvent
         }
 
@@ -581,14 +633,23 @@ class AuditEventSpec extends TestFixture {
 
           val reportedAccountDetails = Json.obj(("reportedAccount", getReportedAccountJson(accountDetailsNoMFA)))
           val expectedAuditEvent =
-            getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_OTHER_USER, Some(reportedAccountDetails), Some(CREDENTIAL_ID_1))
-          val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoMFA)(AccountDetails.mongoFormats(crypto.crypto)))
+            getExpectedAuditForPTEnrolled(
+              SA_ASSIGNED_TO_OTHER_USER,
+              Some(reportedAccountDetails),
+              Some(CREDENTIAL_ID_1)
+            )
+          val additionalCacheData = Map(
+            USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoMFA)(
+              AccountDetails.mongoFormats(crypto.crypto)
+            )
+          )
           val requestForAudit =
             requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
           AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(
-            requestForAudit, messagesApi
+            requestForAudit,
+            messagesApi
           ) shouldEqual expectedAuditEvent
         }
 
@@ -604,15 +665,24 @@ class AuditEventSpec extends TestFixture {
           val reportedAccountDetails =
             Json.obj(("reportedAccount", getReportedAccountJson(accountDetailsWithThreeMFADetails)))
           val expectedAuditEvent =
-            getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_OTHER_USER, Some(reportedAccountDetails), Some(CREDENTIAL_ID_1))
+            getExpectedAuditForPTEnrolled(
+              SA_ASSIGNED_TO_OTHER_USER,
+              Some(reportedAccountDetails),
+              Some(CREDENTIAL_ID_1)
+            )
 
-          val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsWithThreeMFADetails)(AccountDetails.mongoFormats(crypto.crypto)))
+          val additionalCacheData = Map(
+            USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsWithThreeMFADetails)(
+              AccountDetails.mongoFormats(crypto.crypto)
+            )
+          )
           val requestForAudit =
             requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
           AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(
-            requestForAudit, messagesApi
+            requestForAudit,
+            messagesApi
           ) shouldEqual expectedAuditEvent
         }
       }
@@ -624,20 +694,33 @@ class AuditEventSpec extends TestFixture {
           val accountDetailsNoEmailOrMFA = accountDetailsWithOneMFADetails
             .copy(email = None, mfaDetails = Seq.empty)
           val reportedAccountDetails =
-            Json.obj(("reportedAccount", getReportedAccountJson(accountDetailsNoEmailOrMFA, true)),
-              (("reportedAccountEN", getReportedAccountJson(accountDetailsNoEmailOrMFA))))
+            Json.obj(
+              ("reportedAccount", getReportedAccountJson(accountDetailsNoEmailOrMFA, true)),
+              (("reportedAccountEN", getReportedAccountJson(accountDetailsNoEmailOrMFA)))
+            )
           val expectedAuditEvent =
-            getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_OTHER_USER, Some(reportedAccountDetails), Some(CREDENTIAL_ID_1))
+            getExpectedAuditForPTEnrolled(
+              SA_ASSIGNED_TO_OTHER_USER,
+              Some(reportedAccountDetails),
+              Some(CREDENTIAL_ID_1)
+            )
 
-          val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmailOrMFA)(AccountDetails.mongoFormats(crypto.crypto)))
+          val additionalCacheData = Map(
+            USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmailOrMFA)(
+              AccountDetails.mongoFormats(crypto.crypto)
+            )
+          )
           val requestForAudit =
-            requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER,
+            requestWithAccountType(
+              SA_ASSIGNED_TO_OTHER_USER,
               additionalCacheData = additionalCacheData,
-              langCode ="cy")
+              langCode = "cy"
+            )
 
           AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(
-            requestForAudit, messagesApi
+            requestForAudit,
+            messagesApi
           ) shouldEqual expectedAuditEvent
         }
 
@@ -645,39 +728,65 @@ class AuditEventSpec extends TestFixture {
           val accountDetailsNoEmail = accountDetailsWithOneMFADetails
             .copy(email = None)
           val reportedAccountDetails =
-            Json.obj(("reportedAccount", getReportedAccountJson(accountDetailsNoEmail, true)),
-              (("reportedAccountEN", getReportedAccountJson(accountDetailsNoEmail))))
+            Json.obj(
+              ("reportedAccount", getReportedAccountJson(accountDetailsNoEmail, true)),
+              (("reportedAccountEN", getReportedAccountJson(accountDetailsNoEmail)))
+            )
           val expectedAuditEvent =
-            getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_OTHER_USER, Some(reportedAccountDetails), Some(CREDENTIAL_ID_1))
+            getExpectedAuditForPTEnrolled(
+              SA_ASSIGNED_TO_OTHER_USER,
+              Some(reportedAccountDetails),
+              Some(CREDENTIAL_ID_1)
+            )
 
-          val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmail)(AccountDetails.mongoFormats(crypto.crypto)))
+          val additionalCacheData = Map(
+            USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmail)(
+              AccountDetails.mongoFormats(crypto.crypto)
+            )
+          )
           val requestForAudit =
-            requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER,
+            requestWithAccountType(
+              SA_ASSIGNED_TO_OTHER_USER,
               additionalCacheData = additionalCacheData,
-              langCode = "cy")
+              langCode = "cy"
+            )
 
           AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(
-            requestForAudit, messagesApi
+            requestForAudit,
+            messagesApi
           ) shouldEqual expectedAuditEvent
         }
 
         "the reported account has no mfaDetails" in {
           val accountDetailsNoMFA = accountDetailsWithOneMFADetails
             .copy(mfaDetails = Seq.empty)
-          val reportedAccountDetails = Json.obj(("reportedAccount", getReportedAccountJson(accountDetailsNoMFA, true)),
-            (("reportedAccountEN", getReportedAccountJson(accountDetailsNoMFA))))
+          val reportedAccountDetails = Json.obj(
+            ("reportedAccount", getReportedAccountJson(accountDetailsNoMFA, true)),
+            (("reportedAccountEN", getReportedAccountJson(accountDetailsNoMFA)))
+          )
           val expectedAuditEvent =
-            getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_OTHER_USER, Some(reportedAccountDetails), Some(CREDENTIAL_ID_1))
-          val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoMFA)(AccountDetails.mongoFormats(crypto.crypto)))
+            getExpectedAuditForPTEnrolled(
+              SA_ASSIGNED_TO_OTHER_USER,
+              Some(reportedAccountDetails),
+              Some(CREDENTIAL_ID_1)
+            )
+          val additionalCacheData = Map(
+            USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoMFA)(
+              AccountDetails.mongoFormats(crypto.crypto)
+            )
+          )
           val requestForAudit =
-            requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER,
+            requestWithAccountType(
+              SA_ASSIGNED_TO_OTHER_USER,
               additionalCacheData = additionalCacheData,
-              langCode = "cy")
+              langCode = "cy"
+            )
 
           AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(
-            requestForAudit, messagesApi
+            requestForAudit,
+            messagesApi
           ) shouldEqual expectedAuditEvent
         }
 
@@ -691,20 +800,33 @@ class AuditEventSpec extends TestFixture {
               )
             )
           val reportedAccountDetails =
-            Json.obj(("reportedAccount", getReportedAccountJson(accountDetailsWithThreeMFADetails, true)),
-              (("reportedAccountEN", getReportedAccountJson(accountDetailsWithThreeMFADetails))))
+            Json.obj(
+              ("reportedAccount", getReportedAccountJson(accountDetailsWithThreeMFADetails, true)),
+              (("reportedAccountEN", getReportedAccountJson(accountDetailsWithThreeMFADetails)))
+            )
           val expectedAuditEvent =
-            getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_OTHER_USER, Some(reportedAccountDetails), Some(CREDENTIAL_ID_1))
+            getExpectedAuditForPTEnrolled(
+              SA_ASSIGNED_TO_OTHER_USER,
+              Some(reportedAccountDetails),
+              Some(CREDENTIAL_ID_1)
+            )
 
-          val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsWithThreeMFADetails)(AccountDetails.mongoFormats(crypto.crypto)))
+          val additionalCacheData = Map(
+            USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsWithThreeMFADetails)(
+              AccountDetails.mongoFormats(crypto.crypto)
+            )
+          )
           val requestForAudit =
-            requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER,
+            requestWithAccountType(
+              SA_ASSIGNED_TO_OTHER_USER,
               additionalCacheData = additionalCacheData,
-              langCode = "cy")
+              langCode = "cy"
+            )
 
           AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(
-            requestForAudit, messagesApi
+            requestForAudit,
+            messagesApi
           ) shouldEqual expectedAuditEvent
         }
       }
@@ -721,13 +843,18 @@ class AuditEventSpec extends TestFixture {
         val expectedAuditEvent =
           getExpectedAuditForSigninWithSA(Some(saAccountDetails))
 
-        val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmailOrMFA)(AccountDetails.mongoFormats(crypto.crypto)))
+        val additionalCacheData = Map(
+          USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmailOrMFA)(
+            AccountDetails.mongoFormats(crypto.crypto)
+          )
+        )
         val requestForAudit =
           requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
         AuditEvent.auditSigninAgainWithSACredential()(
-          requestForAudit, messagesApi
+          requestForAudit,
+          messagesApi
         ) shouldEqual expectedAuditEvent
       }
 
@@ -739,13 +866,18 @@ class AuditEventSpec extends TestFixture {
         val expectedAuditEvent =
           getExpectedAuditForSigninWithSA(Some(saAccountDetails))
 
-        val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmail)(AccountDetails.mongoFormats(crypto.crypto)))
+        val additionalCacheData = Map(
+          USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmail)(
+            AccountDetails.mongoFormats(crypto.crypto)
+          )
+        )
         val requestForAudit =
           requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
         AuditEvent.auditSigninAgainWithSACredential()(
-          requestForAudit, messagesApi
+          requestForAudit,
+          messagesApi
         ) shouldEqual expectedAuditEvent
       }
 
@@ -755,13 +887,18 @@ class AuditEventSpec extends TestFixture {
         val saAccountDetails = Json.obj(("saAccount", getReportedAccountJson(accountDetailsNoMFA)))
         val expectedAuditEvent =
           getExpectedAuditForSigninWithSA(Some(saAccountDetails))
-        val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoMFA)(AccountDetails.mongoFormats(crypto.crypto)))
+        val additionalCacheData = Map(
+          USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoMFA)(
+            AccountDetails.mongoFormats(crypto.crypto)
+          )
+        )
         val requestForAudit =
           requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
         AuditEvent.auditSigninAgainWithSACredential()(
-          requestForAudit, messagesApi
+          requestForAudit,
+          messagesApi
         ) shouldEqual expectedAuditEvent
       }
 
@@ -779,13 +916,18 @@ class AuditEventSpec extends TestFixture {
         val expectedAuditEvent =
           getExpectedAuditForSigninWithSA(Some(saAccountDetails))
 
-        val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsWithThreeMFADetails)(AccountDetails.mongoFormats(crypto.crypto)))
+        val additionalCacheData = Map(
+          USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsWithThreeMFADetails)(
+            AccountDetails.mongoFormats(crypto.crypto)
+          )
+        )
         val requestForAudit =
           requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
         AuditEvent.auditSigninAgainWithSACredential()(
-          requestForAudit, messagesApi
+          requestForAudit,
+          messagesApi
         ) shouldEqual expectedAuditEvent
       }
 
@@ -797,7 +939,8 @@ class AuditEventSpec extends TestFixture {
           requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER)
 
         AuditEvent.auditSigninAgainWithSACredential()(
-          requestForAudit, messagesApi
+          requestForAudit,
+          messagesApi
         ) shouldEqual expectedAuditEvent
       }
     }
@@ -807,20 +950,25 @@ class AuditEventSpec extends TestFixture {
         val accountDetailsNoEmailOrMFA = accountDetailsWithOneMFADetails
           .copy(email = None, mfaDetails = Seq.empty)
         val saAccountDetails =
-          Json.obj(("saAccount", getReportedAccountJson(accountDetailsNoEmailOrMFA, true)),
-            ("saAccountEN", getReportedAccountJson(accountDetailsNoEmailOrMFA)))
+          Json.obj(
+            ("saAccount", getReportedAccountJson(accountDetailsNoEmailOrMFA, true)),
+            ("saAccountEN", getReportedAccountJson(accountDetailsNoEmailOrMFA))
+          )
         val expectedAuditEvent =
           getExpectedAuditForSigninWithSA(Some(saAccountDetails))
 
-        val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmailOrMFA)(AccountDetails.mongoFormats(crypto.crypto)))
+        val additionalCacheData = Map(
+          USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmailOrMFA)(
+            AccountDetails.mongoFormats(crypto.crypto)
+          )
+        )
         val requestForAudit =
-          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER,
-            additionalCacheData = additionalCacheData,
-            langCode = "cy")
+          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData, langCode = "cy")
 
         AuditEvent.auditSigninAgainWithSACredential()(
-          requestForAudit, messagesApi
+          requestForAudit,
+          messagesApi
         ) shouldEqual expectedAuditEvent
       }
 
@@ -828,20 +976,25 @@ class AuditEventSpec extends TestFixture {
         val accountDetailsNoEmail = accountDetailsWithOneMFADetails
           .copy(email = None)
         val saAccountDetails =
-          Json.obj(("saAccount", getReportedAccountJson(accountDetailsNoEmail, true)),
-            ("saAccountEN", getReportedAccountJson(accountDetailsNoEmail)))
+          Json.obj(
+            ("saAccount", getReportedAccountJson(accountDetailsNoEmail, true)),
+            ("saAccountEN", getReportedAccountJson(accountDetailsNoEmail))
+          )
         val expectedAuditEvent =
           getExpectedAuditForSigninWithSA(Some(saAccountDetails))
 
-        val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmail)(AccountDetails.mongoFormats(crypto.crypto)))
+        val additionalCacheData = Map(
+          USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmail)(
+            AccountDetails.mongoFormats(crypto.crypto)
+          )
+        )
         val requestForAudit =
-          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER,
-            additionalCacheData = additionalCacheData,
-            langCode = "cy")
+          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData, langCode = "cy")
 
         AuditEvent.auditSigninAgainWithSACredential()(
-          requestForAudit, messagesApi
+          requestForAudit,
+          messagesApi
         ) shouldEqual expectedAuditEvent
       }
 
@@ -849,19 +1002,24 @@ class AuditEventSpec extends TestFixture {
         val accountDetailsNoMFA = accountDetailsWithOneMFADetails
           .copy(mfaDetails = Seq.empty)
         val saAccountDetails =
-          Json.obj(("saAccount", getReportedAccountJson(accountDetailsNoMFA, true)),
-            ("saAccountEN", getReportedAccountJson(accountDetailsNoMFA)))
+          Json.obj(
+            ("saAccount", getReportedAccountJson(accountDetailsNoMFA, true)),
+            ("saAccountEN", getReportedAccountJson(accountDetailsNoMFA))
+          )
         val expectedAuditEvent =
           getExpectedAuditForSigninWithSA(Some(saAccountDetails))
-        val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoMFA)(AccountDetails.mongoFormats(crypto.crypto)))
+        val additionalCacheData = Map(
+          USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoMFA)(
+            AccountDetails.mongoFormats(crypto.crypto)
+          )
+        )
         val requestForAudit =
-          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER,
-            additionalCacheData = additionalCacheData,
-            langCode = "cy")
+          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData, langCode = "cy")
 
         AuditEvent.auditSigninAgainWithSACredential()(
-          requestForAudit, messagesApi
+          requestForAudit,
+          messagesApi
         ) shouldEqual expectedAuditEvent
       }
 
@@ -877,19 +1035,23 @@ class AuditEventSpec extends TestFixture {
         val saAccountDetails =
           Json.obj(
             ("saAccount", getReportedAccountJson(accountDetailsWithThreeMFADetails, true)),
-            ("saAccountEN", getReportedAccountJson(accountDetailsWithThreeMFADetails)))
+            ("saAccountEN", getReportedAccountJson(accountDetailsWithThreeMFADetails))
+          )
         val expectedAuditEvent =
           getExpectedAuditForSigninWithSA(Some(saAccountDetails))
 
-        val additionalCacheData = Map(USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsWithThreeMFADetails)(AccountDetails.mongoFormats(crypto.crypto)))
+        val additionalCacheData = Map(
+          USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsWithThreeMFADetails)(
+            AccountDetails.mongoFormats(crypto.crypto)
+          )
+        )
         val requestForAudit =
-          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER,
-            additionalCacheData = additionalCacheData,
-            langCode = "cy")
+          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData, langCode = "cy")
 
         AuditEvent.auditSigninAgainWithSACredential()(
-          requestForAudit, messagesApi
+          requestForAudit,
+          messagesApi
         ) shouldEqual expectedAuditEvent
       }
 
@@ -901,7 +1063,8 @@ class AuditEventSpec extends TestFixture {
           requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, langCode = "cy")
 
         AuditEvent.auditSigninAgainWithSACredential()(
-          requestForAudit, messagesApi
+          requestForAudit,
+          messagesApi
         ) shouldEqual expectedAuditEvent
       }
     }

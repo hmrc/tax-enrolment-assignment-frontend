@@ -17,33 +17,34 @@
 package controllers
 
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
-import helpers.{TestHelper, ThrottleHelperISpec}
+import helpers.{IntegrationSpecBase, ItUrlPaths, ThrottleHelperISpec}
 import helpers.TestITData._
-import helpers.WiremockHelper._
+import play.api.test.Helpers.{GET, await, contentAsString, defaultAwaitTimeout, redirectLocation, route}
+import play.api.test.Helpers.{status, writeableOf_AnyContentAsEmpty}
 import helpers.messages._
 import org.jsoup.Jsoup
-import play.api.http.Status
+import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK, SEE_OTHER}
 import play.api.libs.json.{JsString, Json}
-import play.api.libs.ws.DefaultWSCookie
+import play.api.test.FakeRequest
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{UsersAssignedEnrolment, UsersGroupResponse}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_ASSIGNED_PT_ENROLMENT, USER_ASSIGNED_SA_ENROLMENT}
 
-import java.util.UUID
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
-class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status with ThrottleHelperISpec {
+class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase with ThrottleHelperISpec {
 
-  val urlPath: String = UrlPaths.ptOnOtherAccountPath
+  val urlPath: String = ItUrlPaths.ptOnOtherAccountPath
 
   s"GET $urlPath" when {
 
-    throttleSpecificTests(() => buildRequest(urlPath)
-      .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-      .withHttpHeaders(xSessionId, xRequestId, sessionCookie)
-      .get())
+    throttleSpecificTests { () =>
+      val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        .withSession(xAuthToken, xSessionId)
+      route(app, request).get
+    }
 
     "the signed in user has SA enrolment in session and PT enrolment on another account" should {
       s"render the pt on another account page" in new DataAndMockSetup {
@@ -55,34 +56,29 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status wi
           usersGroupSearchResponsePTEnrolment(USER_ID)
         )
 
-        val res = buildRequest(urlPath, followRedirects = true)
-          .addCookies(DefaultWSCookie("mdtp", sessionAndAuthForTestForTest))
-          .withHttpHeaders(xSessionID, xRequestId, sessionCookie)
-          .get()
+        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+          .withSession(xAuthToken, xSessionId)
+        val result = route(app, request).get
+        val page = Jsoup.parse(contentAsString(result))
 
-        whenReady(res) { resp =>
-          val page = Jsoup.parse(resp.body)
+        status(result) shouldBe OK
+        page.title should include(PTEnrolmentOtherAccountMesages.title)
+        page
+          .getElementsByClass("govuk-heading-m")
+          .text() shouldBe PTEnrolmentOtherAccountMesages.saHeading
+        page
+          .getElementsByClass("govuk-body")
+          .asScala
+          .toList
+          .map(_.text()) should contain(
+          PTEnrolmentOtherAccountMesages.saText3
+        )
 
-          resp.status shouldBe OK
-          page.title should include(PTEnrolmentOtherAccountMesages.title)
-          page
-            .getElementsByClass("govuk-heading-m")
-            .text() shouldBe PTEnrolmentOtherAccountMesages.saHeading
-          page
-            .getElementsByClass("govuk-body")
-            .asScala
-            .toList
-            .map(_.text()) should contain(
-            PTEnrolmentOtherAccountMesages.saText3
-          )
+        val expectedAuditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
+          accountDetailsUserFriendly(CREDENTIAL_ID_2)
+        )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
 
-          val expectedAuditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-            accountDetailsUserFriendly(CREDENTIAL_ID_2)
-          )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
-
-          verifyAuditEventSent(expectedAuditEvent)
-
-        }
+        verifyAuditEventSent(expectedAuditEvent)
       }
     }
 
@@ -96,35 +92,31 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status wi
           usersGroupSearchResponsePTEnrolment()
         )
 
-        val res = buildRequest(urlPath, followRedirects = true)
-          .addCookies(DefaultWSCookie("mdtp", sessionAndAuthForTestForTest))
-          .withHttpHeaders(xSessionID, xRequestId, sessionCookie)
-          .get()
+        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+          .withSession(xAuthToken, xSessionId)
+        val result = route(app, request).get
+        val page = Jsoup.parse(contentAsString(result))
 
-        whenReady(res) { resp =>
-          val page = Jsoup.parse(resp.body)
+        status(result) shouldBe OK
+        page.title should include(PTEnrolmentOtherAccountMesages.title)
+        page
+          .getElementsByClass("govuk-heading-m")
+          .text() shouldBe PTEnrolmentOtherAccountMesages.saHeading
 
-          resp.status shouldBe OK
-          page.title should include(PTEnrolmentOtherAccountMesages.title)
-          page
-            .getElementsByClass("govuk-heading-m")
-            .text() shouldBe PTEnrolmentOtherAccountMesages.saHeading
+        page
+          .getElementsByClass("govuk-body")
+          .asScala
+          .toList
+          .map(_.text()) should contain(
+          PTEnrolmentOtherAccountMesages.saText2
+        )
 
-          page
-            .getElementsByClass("govuk-body")
-            .asScala
-            .toList
-            .map(_.text()) should contain(
-            PTEnrolmentOtherAccountMesages.saText2
-          )
+        val expectedAuditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
+          accountDetailsUserFriendly(CREDENTIAL_ID_2, "1234")
+        )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
 
-          val expectedAuditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-            accountDetailsUserFriendly(CREDENTIAL_ID_2, "1234")
-          )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
+        verifyAuditEventSent(expectedAuditEvent)
 
-          verifyAuditEventSent(expectedAuditEvent)
-
-        }
       }
     }
 
@@ -142,32 +134,28 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status wi
           usersGroupSearchResponseSAEnrolment
         )
 
-        val res = buildRequest(urlPath, followRedirects = true)
-          .addCookies(DefaultWSCookie("mdtp", sessionAndAuthForTestForTest))
-          .withHttpHeaders(xSessionID, xRequestId, sessionCookie)
-          .get()
+        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+          .withSession(xAuthToken, xSessionId)
+        val result = route(app, request).get
+        val page = Jsoup.parse(contentAsString(result))
 
-        whenReady(res) { resp =>
-          val page = Jsoup.parse(resp.body)
+        status(result) shouldBe OK
+        page.title should include(PTEnrolmentOtherAccountMesages.title)
+        page
+          .getElementsByClass("govuk-heading-m")
+          .text() shouldBe PTEnrolmentOtherAccountMesages.saHeading
+        page
+          .getElementsByClass("govuk-body")
+          .asScala
+          .toList
+          .map(_.text()) should contain(PTEnrolmentOtherAccountMesages.saText)
 
-          resp.status shouldBe OK
-          page.title should include(PTEnrolmentOtherAccountMesages.title)
-          page
-            .getElementsByClass("govuk-heading-m")
-            .text() shouldBe PTEnrolmentOtherAccountMesages.saHeading
-          page
-            .getElementsByClass("govuk-body")
-            .asScala
-            .toList
-            .map(_.text()) should contain(PTEnrolmentOtherAccountMesages.saText)
+        val expectedAuditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
+          accountDetailsUserFriendly(CREDENTIAL_ID_2)
+        )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
 
-          val expectedAuditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-            accountDetailsUserFriendly(CREDENTIAL_ID_2)
-          )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
+        verifyAuditEventSent(expectedAuditEvent)
 
-          verifyAuditEventSent(expectedAuditEvent)
-
-        }
       }
     }
 
@@ -181,25 +169,21 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status wi
           usersGroupSearchResponsePTEnrolment(USER_ID)
         )
 
-        val res = buildRequest(urlPath, followRedirects = true)
-          .addCookies(DefaultWSCookie("mdtp", sessionAndAuthForTestForTest))
-          .addHttpHeaders(xSessionID, xRequestId, sessionCookie)
-          .get()
+        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+          .withSession(xAuthToken, xSessionId)
+        val result = route(app, request).get
+        val page = Jsoup.parse(contentAsString(result))
 
-        whenReady(res) { resp =>
-          val page = Jsoup.parse(resp.body)
+        status(result) shouldBe OK
+        page.title should include(PTEnrolmentOtherAccountMesages.title)
+        page.getElementsByClass("govuk-heading-m").text().isEmpty
 
-          resp.status shouldBe OK
-          page.title should include(PTEnrolmentOtherAccountMesages.title)
-          page.getElementsByClass("govuk-heading-m").text().isEmpty
+        val expectedAuditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
+          accountDetailsUserFriendly(CREDENTIAL_ID_2)
+        )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
 
-          val expectedAuditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-            accountDetailsUserFriendly(CREDENTIAL_ID_2)
-          )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
+        verifyAuditEventSent(expectedAuditEvent)
 
-          verifyAuditEventSent(expectedAuditEvent)
-
-        }
       }
     }
 
@@ -211,21 +195,19 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status wi
       SA_ASSIGNED_TO_CURRENT_USER
     ).foreach { accountType =>
       s"the session cache has a credential with account type ${accountType.toString}" should {
-        s"redirect to ${UrlPaths.accountCheckPath}" in new DataAndMockSetup {
+        s"redirect to /protect-tax-info" in new DataAndMockSetup {
           saveDataToCache(accountType = accountType, optSAEnrolledCredential = Some(CREDENTIAL_ID_3))
           stubAuthoriseSuccess()
 
-          val res = buildRequest(urlPath, followRedirects = false)
-            .addCookies(DefaultWSCookie("mdtp", sessionAndAuthForTestForTest))
-            .addHttpHeaders(xSessionID, xRequestId, sessionCookie)
-            .get()
+          val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+            .withSession(xAuthToken, xSessionId)
+          val result = route(app, request).get
 
-          whenReady(res) { resp =>
-            resp.status shouldBe SEE_OTHER
-            resp.header("Location").get should include(
-              UrlPaths.accountCheckPath
-            )
-          }
+          status(result) shouldBe SEE_OTHER
+          redirectLocation(result).get should include(
+            accountCheckPath
+          )
+
         }
       }
     }
@@ -236,67 +218,56 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status wi
         stubAuthoriseSuccess()
         stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
 
-        val res = buildRequest(urlPath, followRedirects = false)
-          .addCookies(DefaultWSCookie("mdtp", sessionAndAuthForTestForTest))
-          .addHttpHeaders(xSessionID, xRequestId, sessionCookie)
-          .get()
+        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+          .withSession(xAuthToken, xSessionId)
+        val result = route(app, request).get
 
-        whenReady(res) { resp =>
-          resp.status shouldBe INTERNAL_SERVER_ERROR
-          resp.body should include(ErrorTemplateMessages.title)
-        }
+        status(result) shouldBe INTERNAL_SERVER_ERROR
+        contentAsString(result) should include(ErrorTemplateMessages.title)
       }
     }
 
     s"the session cache has found $USER_ASSIGNED_PT_ENROLMENT" should {
       s"render the error page" in new DataAndMockSetup {
-        saveDataToCache(optPTEnrolledCredential = None,optSAEnrolledCredential = None)
+        saveDataToCache(optPTEnrolledCredential = None, optSAEnrolledCredential = None)
         stubAuthoriseSuccess()
         stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
 
-        val res = buildRequest(urlPath, followRedirects = false)
-          .addCookies(DefaultWSCookie("mdtp", sessionAndAuthForTestForTest))
-          .addHttpHeaders(xSessionID, xRequestId, sessionCookie)
-          .get()
+        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+          .withSession(xAuthToken, xSessionId)
+        val result = route(app, request).get
 
-        whenReady(res) { resp =>
-          resp.status shouldBe INTERNAL_SERVER_ERROR
-          resp.body should include(ErrorTemplateMessages.title)
-        }
+        status(result) shouldBe INTERNAL_SERVER_ERROR
+        contentAsString(result) should include(ErrorTemplateMessages.title)
       }
     }
 
     s"the session cache has a PT enrolment but $USER_ASSIGNED_SA_ENROLMENT does not exist" should {
       s"render the error page" in new DataAndMockSetup {
-        saveDataToCache(optPTEnrolledCredential = Some(CREDENTIAL_ID),optSAEnrolledCredential = None)
+        saveDataToCache(optPTEnrolledCredential = Some(CREDENTIAL_ID), optSAEnrolledCredential = None)
         stubAuthoriseSuccess()
         stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
 
-        val res = buildRequest(urlPath, followRedirects = false)
-          .addCookies(DefaultWSCookie("mdtp", sessionAndAuthForTestForTest))
-          .addHttpHeaders(xSessionID, xRequestId, sessionCookie)
-          .get()
+        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+          .withSession(xAuthToken, xSessionId)
+        val result = route(app, request).get
 
-        whenReady(res) { resp =>
-          resp.status shouldBe INTERNAL_SERVER_ERROR
-          resp.body should include(ErrorTemplateMessages.title)
-        }
+        status(result) shouldBe INTERNAL_SERVER_ERROR
+        contentAsString(result) should include(ErrorTemplateMessages.title)
       }
     }
 
     "the session cache has no redirectUrl" should {
       "render the error page" in new DataAndMockSetup {
-        await(save[AccountTypes.Value](sessionID, "ACCOUNT_TYPE", PT_ASSIGNED_TO_CURRENT_USER))
+        await(save[AccountTypes.Value](xSessionId._2, "ACCOUNT_TYPE", PT_ASSIGNED_TO_CURRENT_USER))
         stubAuthoriseSuccess()
-        val res = buildRequest(urlPath, followRedirects = false)
-          .addCookies(DefaultWSCookie("mdtp", sessionAndAuthForTestForTest))
-          .addHttpHeaders(xSessionID, xRequestId, sessionCookie)
-          .get()
 
-        whenReady(res) { resp =>
-          resp.status shouldBe INTERNAL_SERVER_ERROR
-          resp.body should include(ErrorTemplateMessages.title)
-        }
+        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+          .withSession(xAuthToken, xSessionId)
+        val result = route(app, request).get
+
+        status(result) shouldBe INTERNAL_SERVER_ERROR
+        contentAsString(result) should include(ErrorTemplateMessages.title)
       }
     }
 
@@ -306,15 +277,12 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status wi
         stubAuthoriseSuccess()
         stubUserGroupSearchFailure(CREDENTIAL_ID)
 
-        val res = buildRequest(urlPath, followRedirects = true)
-          .addCookies(DefaultWSCookie("mdtp", sessionAndAuthForTestForTest))
-          .addHttpHeaders(xSessionID, xRequestId, sessionCookie)
-          .get()
+        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+          .withSession(xAuthToken, xSessionId)
+        val result = route(app, request).get
 
-        whenReady(res) { resp =>
-          resp.status shouldBe INTERNAL_SERVER_ERROR
-          resp.body should include(ErrorTemplateMessages.title)
-        }
+        status(result) shouldBe INTERNAL_SERVER_ERROR
+        contentAsString(result) should include(ErrorTemplateMessages.title)
       }
     }
 
@@ -325,15 +293,12 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status wi
         stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
         stubUserGroupSearchFailure(CREDENTIAL_ID_2)
 
-        val res = buildRequest(urlPath, followRedirects = true)
-          .addCookies(DefaultWSCookie("mdtp", sessionAndAuthForTestForTest))
-          .addHttpHeaders(xSessionID, xRequestId, sessionCookie)
-          .get()
+        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+          .withSession(xAuthToken, xSessionId)
+        val result = route(app, request).get
 
-        whenReady(res) { resp =>
-          resp.status shouldBe INTERNAL_SERVER_ERROR
-          resp.body should include(ErrorTemplateMessages.title)
-        }
+        status(result) shouldBe INTERNAL_SERVER_ERROR
+        contentAsString(result) should include(ErrorTemplateMessages.title)
       }
     }
 
@@ -348,66 +313,51 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status wi
         )
         stubUserGroupSearchFailure(CREDENTIAL_ID)
 
-        val res = buildRequest(urlPath, followRedirects = true)
-          .addCookies(DefaultWSCookie("mdtp", sessionAndAuthForTestForTest))
-          .addHttpHeaders(xSessionID, xRequestId, sessionCookie)
-          .get()
+        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+          .withSession(xAuthToken, xSessionId)
+        val result = route(app, request).get
 
-        whenReady(res) { resp =>
-          resp.status shouldBe INTERNAL_SERVER_ERROR
-          resp.body should include(ErrorTemplateMessages.title)
-        }
+        status(result) shouldBe INTERNAL_SERVER_ERROR
+        contentAsString(result) should include(ErrorTemplateMessages.title)
       }
     }
 
     "the user has a session missing required element NINO" should {
-      s"redirect to ${UrlPaths.unauthorizedPath}" in new DataAndMockSetup {
+      s"redirect to ${ItUrlPaths.unauthorizedPath}" in new DataAndMockSetup {
         stubUnAuthorised(hasNino = false)
 
-        val res =
-          buildRequest(urlPath)
-            .addCookies(DefaultWSCookie("mdtp", sessionAndAuthForTestForTest))
-            .addHttpHeaders(xSessionID, xRequestId, csrfContent, sessionCookie)
-            .get()
+        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+          .withSession(xAuthToken, xSessionId)
+        val result = route(app, request).get
 
-        whenReady(res) { resp =>
-          resp.status shouldBe SEE_OTHER
-          resp.header("Location").get should include(UrlPaths.unauthorizedPath)
-        }
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
       }
     }
 
     "the user has a session missing required element Credentials" should {
-      s"redirect to ${UrlPaths.unauthorizedPath}" in new DataAndMockSetup {
+      s"redirect to ${ItUrlPaths.unauthorizedPath}" in new DataAndMockSetup {
         stubUnAuthorised(hasCred = false)
 
-        val res =
-          buildRequest(urlPath)
-            .addCookies(DefaultWSCookie("mdtp", sessionAndAuthForTestForTest))
-            .addHttpHeaders(xSessionID, xRequestId, csrfContent, sessionCookie)
-            .get()
+        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+          .withSession(xAuthToken, xSessionId)
+        val result = route(app, request).get
 
-        whenReady(res) { resp =>
-          resp.status shouldBe SEE_OTHER
-          resp.header("Location").get should include(UrlPaths.unauthorizedPath)
-        }
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
       }
     }
 
     "the user has a insufficient confidence level" should {
-      s"redirect to ${UrlPaths.unauthorizedPath}" in new DataAndMockSetup {
+      s"redirect to ${ItUrlPaths.unauthorizedPath}" in new DataAndMockSetup {
         stubUnAuthorised(unauthorisedError = Some(insufficientConfidenceLevel))
 
-        val res =
-          buildRequest(urlPath)
-            .addCookies(DefaultWSCookie("mdtp", sessionAndAuthForTestForTest))
-            .addHttpHeaders(xSessionID, xRequestId, csrfContent, sessionCookie)
-            .get()
+        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+          .withSession(xAuthToken, xSessionId)
+        val result = route(app, request).get
 
-        whenReady(res) { resp =>
-          resp.status shouldBe SEE_OTHER
-          resp.header("Location").get should include(UrlPaths.unauthorizedPath)
-        }
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
       }
     }
 
@@ -415,45 +365,26 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status wi
       s"redirect to login" in new DataAndMockSetup {
         stubUnAuthorised(unauthorisedError = Some(sessionNotFound))
 
-        val res = buildRequest(urlPath)
-          .addCookies(DefaultWSCookie("mdtp", sessionAndAuthForTestForTest))
-          .addHttpHeaders(xSessionID, xRequestId, csrfContent)
-          .get()
+        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+          .withSession(xAuthToken, xSessionId)
+        val result = route(app, request).get
 
-        whenReady(res) { resp =>
-          resp.status shouldBe SEE_OTHER
-          resp.header("Location").get should include("/bas-gateway/sign-in")
-        }
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result).get should include("/bas-gateway/sign-in")
       }
     }
   }
 
-
   class DataAndMockSetup {
-
-    val sessionID = UUID.randomUUID().toString
-    val xSessionID: (String, String) = "X-Session-ID" -> sessionID
-    val xRequestID: (String, String) = "X-Request-ID" -> sessionID
-    val sessionDataForTest = Map("sessionId" -> sessionID)
-    val newSessionCookie
-    : (String, String) = ("COOKIE" -> createSessionCookieAsString(
-      sessionDataForTest
-    ))
-    val sessionAndAuthForTest =
-      Map("authToken" -> AUTHORIZE_HEADER_VALUE, "sessionId" -> sessionID)
-
-    val sessionAndAuthForTestForTest: String =
-      createSessionCookieAsString(sessionAndAuthForTest).substring(5)
-
     stubPost(s"/write/.*", OK, """{"x":2}""")
 
     def saveDataToCache(
-                         accountType: AccountTypes.Value = PT_ASSIGNED_TO_OTHER_USER,
-                         optPTEnrolledCredential: Option[String] = Some(CREDENTIAL_ID_2),
-                         optSAEnrolledCredential: Option[String]
-                       ): Boolean = {
+      accountType: AccountTypes.Value = PT_ASSIGNED_TO_OTHER_USER,
+      optPTEnrolledCredential: Option[String] = Some(CREDENTIAL_ID_2),
+      optSAEnrolledCredential: Option[String]
+    ): Boolean = {
       val dataMap = Map(
-        "redirectURL" -> JsString(UrlPaths.returnUrl),
+        "redirectURL"  -> JsString(returnUrl),
         "ACCOUNT_TYPE" -> JsString(accountType.toString),
         USER_ASSIGNED_PT_ENROLMENT -> Json.toJson(
           UsersAssignedEnrolment(optPTEnrolledCredential)
@@ -462,30 +393,35 @@ class PTEnrolmentOnOtherAccountControllerISpec extends TestHelper with Status wi
           UsersAssignedEnrolment(optSAEnrolledCredential)
         )
       )
-      await(save(sessionID, dataMap))
+      await(save(xSessionId._2, dataMap))
     }
 
     def stubAuthoriseSuccess(hasSAEnrolment: Boolean = false): StubMapping = {
       val authResponse = authoriseResponseJson(
-        enrolments = if (hasSAEnrolment) { saEnrolmentOnly } else noEnrolments
+        enrolments = if (hasSAEnrolment) { saEnrolmentOnly }
+        else noEnrolments
       )
       stubAuthorizePost(OK, authResponse.toString())
     }
 
     def stubUnAuthorised(
-                          hasNino: Boolean = true,
-                          hasCred: Boolean = true,
-                          unauthorisedError: Option[String] = None
-                        ): StubMapping = {
+      hasNino: Boolean = true,
+      hasCred: Boolean = true,
+      unauthorisedError: Option[String] = None
+    ): StubMapping =
       unauthorisedError match {
         case Some(error) => stubAuthorizePostUnauthorised(error)
         case None =>
           val authResponse =
-            authoriseResponseJson(optNino = if (hasNino) { Some(NINO) } else {
-              None
-            }, optCreds = if (hasCred) { Some(creds) } else None)
+            authoriseResponseJson(
+              optNino = if (hasNino) { Some(NINO) }
+              else {
+                None
+              },
+              optCreds = if (hasCred) { Some(creds) }
+              else None
+            )
           stubAuthorizePost(OK, authResponse.toString())
       }
-    }
   }
 }

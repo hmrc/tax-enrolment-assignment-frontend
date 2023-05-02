@@ -32,7 +32,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class SilentAssignmentService @Inject()(
+class SilentAssignmentService @Inject() (
   ivConnector: IVConnector,
   taxEnrolmentsConnector: TaxEnrolmentsConnector,
   eacdConnector: EACDConnector,
@@ -44,42 +44,40 @@ class SilentAssignmentService @Inject()(
   ): Seq[IVNinoStoreEntry] =
     list.filter(_.confidenceLevel.exists(_ >= 200))
 
-  def enrolUser()(implicit request: RequestWithUserDetailsFromSession[_],
-                  hc: HeaderCarrier,
-                  ec: ExecutionContext): TEAFResult[Unit] = {
+  def enrolUser()(implicit
+    request: RequestWithUserDetailsFromSession[_],
+    hc: HeaderCarrier,
+    ec: ExecutionContext
+  ): TEAFResult[Unit] = {
     val details = request.userDetails
     taxEnrolmentsConnector.assignPTEnrolmentWithKnownFacts(details.nino)
   }
 
-  def hasOtherAccountsWithPTAAccess(
-    implicit requestWithUserDetails: RequestWithUserDetailsFromSession[_],
+  def hasOtherAccountsWithPTAAccess(implicit
+    requestWithUserDetails: RequestWithUserDetailsFromSession[_],
     hc: HeaderCarrier,
     ec: ExecutionContext
-  ): TEAFResult[Boolean] = {
+  ): TEAFResult[Boolean] =
     for {
       allCreds <- ivConnector.getCredentialsWithNino(
-        requestWithUserDetails.userDetails.nino
-      )
+                    requestWithUserDetails.userDetails.nino
+                  )
       hasOtherValidPTACreds <- EitherT.right[TaxEnrolmentAssignmentErrors](
-        hasOtherNoneBusinessAccounts(
-          allCreds,
-          requestWithUserDetails.userDetails.credId
-        )
-      )
+                                 hasOtherNoneBusinessAccounts(
+                                   allCreds,
+                                   requestWithUserDetails.userDetails.credId
+                                 )
+                               )
       _ <- EitherT.right[TaxEnrolmentAssignmentErrors](
-        sessionCache.save[Boolean](
-          HAS_OTHER_VALID_PTA_ACCOUNTS,
-          hasOtherValidPTACreds
-        )
-      )
-    } yield {
-      hasOtherValidPTACreds
-    }
-  }
+             sessionCache.save[Boolean](
+               HAS_OTHER_VALID_PTA_ACCOUNTS,
+               hasOtherValidPTACreds
+             )
+           )
+    } yield hasOtherValidPTACreds
 
-  private def hasOtherNoneBusinessAccounts(list: Seq[IVNinoStoreEntry],
-                                           currentCredId: String)(
-    implicit hc: HeaderCarrier,
+  private def hasOtherNoneBusinessAccounts(list: Seq[IVNinoStoreEntry], currentCredId: String)(implicit
+    hc: HeaderCarrier,
     ec: ExecutionContext
   ): Future[Boolean] = {
     val otherCreds = list.filterNot(_.credId == currentCredId)
@@ -89,24 +87,27 @@ class SilentAssignmentService @Inject()(
     checkIfAnyOtherNoneBusinessAccounts(filteredCL200List)
   }
 
-  private def checkIfAnyOtherNoneBusinessAccounts(list: Seq[IVNinoStoreEntry], attemptsRemaining: Int = 10)
-                                                 (implicit hc: HeaderCarrier,
-                                                  ec: ExecutionContext): Future[Boolean] = {
-    if(attemptsRemaining == 0) {
+  //TODO: check this. Why the limit to first 10 elements? Rewrite using fold. See DDCNL-7275
+  private def checkIfAnyOtherNoneBusinessAccounts(list: Seq[IVNinoStoreEntry], attemptsRemaining: Int = 10)(implicit
+    hc: HeaderCarrier,
+    ec: ExecutionContext
+  ): Future[Boolean] =
+    if (attemptsRemaining == 0) {
       Future.successful(false)
-    } else list match {
-      case ivStoreEntry :: tail if tail.isEmpty => isNotBusinessAccount(ivStoreEntry)
-      case ivStoreEntry :: tail => isNotBusinessAccount(ivStoreEntry).flatMap{
-        case true => Future.successful(true)
-        case false => checkIfAnyOtherNoneBusinessAccounts(tail, attemptsRemaining - 1)
+    } else
+      list match {
+        case ivStoreEntry :: tail if tail.isEmpty => isNotBusinessAccount(ivStoreEntry)
+        case ivStoreEntry :: tail =>
+          isNotBusinessAccount(ivStoreEntry).flatMap {
+            case true  => Future.successful(true)
+            case false => checkIfAnyOtherNoneBusinessAccounts(tail, attemptsRemaining - 1)
+          }
+        case _ => Future.successful(false)
       }
-      case Nil =>  Future.successful(false)
-    }
-  }
 
   private def isNotBusinessAccount(
     ninoEntry: IVNinoStoreEntry
-  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Boolean] = {
+  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Boolean] =
     eacdConnector
       .queryEnrolmentsAssignedToUser(ninoEntry.credId)
       .value
@@ -118,6 +119,5 @@ class SilentAssignmentService @Inject()(
         case Right(_) => true
         case _        => false
       }
-  }
 
 }

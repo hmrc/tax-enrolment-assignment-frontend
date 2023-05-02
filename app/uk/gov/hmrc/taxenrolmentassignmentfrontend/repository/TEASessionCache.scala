@@ -16,88 +16,154 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.repository
 
-import com.google.inject.{ImplementedBy, Inject}
-import play.api.libs.json.{Format, JsString}
+import org.mongodb.scala.model.Filters.equal
+import org.mongodb.scala.model.Indexes.ascending
+import org.mongodb.scala.model.Updates.set
+import org.mongodb.scala.model.{IndexModel, IndexOptions, Indexes, ReplaceOptions}
+import play.api.Configuration
+import play.api.libs.json.Format
 import uk.gov.hmrc.http.cache.client.CacheMap
+import uk.gov.hmrc.mongo.MongoComponent
+import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.DatedCacheMap
 
+import java.time.{LocalDateTime, ZoneId}
+import java.util.concurrent.TimeUnit
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
-class TEASessionCacheImpl @Inject()(
-  val sessionRepository: SessionRepository,
+@Singleton
+class DefaultTEASessionCache @Inject() (
+  config: Configuration,
+  val mongo: MongoComponent,
   val cascadeUpsert: CascadeUpsert
-)(implicit val ec: ExecutionContext)
-    extends TEASessionCache {
+)(implicit ec: ExecutionContext)
+    extends PlayMongoRepository[DatedCacheMap](
+      mongoComponent = mongo,
+      collectionName = config.get[String]("appName"),
+      domainFormat = DatedCacheMap.formats,
+      indexes = Seq(
+        IndexModel(
+          ascending("lastUpdated"),
+          IndexOptions()
+            .name("userAnswersExpiry")
+            .expireAfter(
+              config.get[Int]("mongodb.timeToLiveInSeconds"),
+              TimeUnit.SECONDS
+            )
+        ),
+        IndexModel(
+          Indexes.ascending("id"),
+          IndexOptions()
+            .name("teaIdentifierIndex")
+            .sparse(true)
+            .unique(true)
+            .background(true)
+        )
+      ),
+      replaceIndexes = false
+    ) with TEASessionCache {
 
-  val sessionRepo: MongoRepository = sessionRepository()
+  def upsert(cm: CacheMap): Future[Boolean] = {
+    val cmUpdated = DatedCacheMap(cm.id, cm.data)
+    val options = ReplaceOptions().upsert(true)
+    collection
+      .replaceOne(equal("id", cm.id), cmUpdated, options)
+      .toFuture()
+      .map { result =>
+        result.wasAcknowledged()
+      }
+  }
+  def collectionDeleteOne(id: String): Future[Boolean] =
+    collection.deleteOne(equal("id", id)).toFuture().map(_.getDeletedCount > 0)
 
+  def get(id: String): Future[Option[CacheMap]] =
+    collection.find(equal("id", id)).headOption().map { datedCacheMap =>
+      datedCacheMap.map { value: DatedCacheMap =>
+        value.toCacheMap
+      }
+    }
 
+  def updateLastUpdated(id: String): Future[Boolean] =
+    collection
+      .updateOne(
+        equal("id", id),
+        set("lastUpdated", LocalDateTime.now(ZoneId.of("UTC")))
+      )
+      .toFuture()
+      .map { result =>
+        result.wasAcknowledged()
+      }
 
-  def save[A](key: String, value: A)(
-    implicit request: RequestWithUserDetailsFromSession[_],
+  def save[A](key: String, value: A)(implicit
+    request: RequestWithUserDetailsFromSession[_],
     fmt: Format[A]
-  ): Future[CacheMap] = {
-    sessionRepo.get(request.sessionID).flatMap { optionalCacheMap =>
+  ): Future[CacheMap] =
+    get(request.sessionID).flatMap { optionalCacheMap =>
       val updatedCacheMap = cascadeUpsert(
         key,
         value,
         optionalCacheMap.getOrElse(CacheMap(request.sessionID, Map()))
       )
-      sessionRepository().upsert(updatedCacheMap).map { _ =>
+      upsert(updatedCacheMap).map { _ =>
         updatedCacheMap
       }
     }
-  }
 
   def remove(
     key: String
-  )(implicit request: RequestWithUserDetailsFromSession[_]): Future[Boolean] = {
-    sessionRepo.get(request.sessionID).flatMap { optionalCacheMap =>
+  )(implicit request: RequestWithUserDetailsFromSession[_]): Future[Boolean] =
+    get(request.sessionID).flatMap { optionalCacheMap =>
       optionalCacheMap.fold(Future(false)) { cacheMap =>
         val newCacheMap = cacheMap copy (data = cacheMap.data - key)
-        sessionRepo.upsert(newCacheMap)
+        upsert(newCacheMap)
       }
     }
-  }
 
-  def removeRecord(
-    implicit request: RequestWithUserDetailsFromSession[_]
-  ): Future[Boolean] = {
-    sessionRepo.removeRecord(request.sessionID)
-  }
+  def removeRecord(implicit
+    request: RequestWithUserDetailsFromSession[_]
+  ): Future[Boolean] =
+    collectionDeleteOne(request.sessionID)
 
-  def fetch()(
-    implicit request: RequestWithUserDetailsFromSession[_]
+  def fetch()(implicit
+    request: RequestWithUserDetailsFromSession[_]
   ): Future[Option[CacheMap]] =
-    sessionRepo.get(request.sessionID)
+    get(request.sessionID)
 
-  def extendSession()(
-    implicit request: RequestWithUserDetailsFromSession[_]
-  ): Future[Boolean] = {
-    sessionRepo.updateLastUpdated(request.sessionID)
-  }
+  def extendSession()(implicit
+    request: RequestWithUserDetailsFromSession[_]
+  ): Future[Boolean] =
+    updateLastUpdated(request.sessionID)
 }
 
-@ImplementedBy(classOf[TEASessionCacheImpl])
 trait TEASessionCache {
-  def save[A](key: String, value: A)(
-    implicit request: RequestWithUserDetailsFromSession[_],
+  def upsert(cm: CacheMap): Future[Boolean]
+
+  def collectionDeleteOne(id: String): Future[Boolean]
+
+  def get(id: String): Future[Option[CacheMap]]
+
+  def updateLastUpdated(id: String): Future[Boolean]
+
+  def save[A](key: String, value: A)(implicit
+    request: RequestWithUserDetailsFromSession[_],
     fmt: Format[A]
   ): Future[CacheMap]
 
-  def remove(key: String)(
-    implicit request: RequestWithUserDetailsFromSession[_]
+  def remove(
+    key: String
+  )(implicit request: RequestWithUserDetailsFromSession[_]): Future[Boolean]
+
+  def removeRecord(implicit
+    request: RequestWithUserDetailsFromSession[_]
   ): Future[Boolean]
 
-  def removeRecord(
-    implicit request: RequestWithUserDetailsFromSession[_]
-  ): Future[Boolean]
-
-  def fetch()(
-    implicit request: RequestWithUserDetailsFromSession[_]
+  def fetch()(implicit
+    request: RequestWithUserDetailsFromSession[_]
   ): Future[Option[CacheMap]]
 
-  def extendSession()(
-    implicit request: RequestWithUserDetailsFromSession[_]
+  def extendSession()(implicit
+    request: RequestWithUserDetailsFromSession[_]
   ): Future[Boolean]
 }

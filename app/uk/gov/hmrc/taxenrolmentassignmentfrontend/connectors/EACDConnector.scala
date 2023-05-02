@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors
 
 import cats.data.EitherT
-import com.google.inject.Inject
+import javax.inject.Inject
 import play.api.Logger
 import play.api.http.Status._
 import uk.gov.hmrc.http.HttpReads.Implicits._
@@ -32,14 +32,12 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{KnownFactQueryForNINO,
 
 import scala.concurrent.ExecutionContext
 
-class EACDConnector @Inject()(httpClient: HttpClient,
-                              logger: EventLoggerService,
-                              appConfig: AppConfig) {
+class EACDConnector @Inject() (httpClient: HttpClient, logger: EventLoggerService, appConfig: AppConfig) {
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
-  def assignPTEnrolmentToUser(userId: String, nino: String)(
-    implicit ec: ExecutionContext,
+  def assignPTEnrolmentToUser(userId: String, nino: String)(implicit
+    ec: ExecutionContext,
     hc: HeaderCarrier
   ): TEAFResult[String] = EitherT {
     val enrolmentKey = s"$hmrcPTKey~NINO~$nino"
@@ -65,80 +63,78 @@ class EACDConnector @Inject()(httpClient: HttpClient,
       }
   }
 
-  def getUsersWithPTEnrolment(nino: String)(
-    implicit ec: ExecutionContext,
+  def getUsersWithPTEnrolment(nino: String)(implicit
+    ec: ExecutionContext,
     hc: HeaderCarrier
   ): TEAFResult[UsersAssignedEnrolment] = {
     val enrolmentKey = s"$hmrcPTKey~NINO~$nino"
     getUsersWithAssignedEnrolment(enrolmentKey)
   }
 
-  def getUsersWithSAEnrolment(utr: String)(
-    implicit ec: ExecutionContext,
+  def getUsersWithSAEnrolment(utr: String)(implicit
+    ec: ExecutionContext,
     hc: HeaderCarrier
   ): TEAFResult[UsersAssignedEnrolment] = {
     val enrolmentKey = s"$IRSAKey~UTR~$utr"
     getUsersWithAssignedEnrolment(enrolmentKey)
   }
 
-  def getUsersWithAssignedEnrolment(enrolmentKey: String)(
-    implicit ec: ExecutionContext,
+  def getUsersWithAssignedEnrolment(enrolmentKey: String)(implicit
+    ec: ExecutionContext,
     hc: HeaderCarrier
   ): TEAFResult[UsersAssignedEnrolment] = EitherT {
     val url =
       s"${appConfig.EACD_BASE_URL}/enrolment-store/enrolments/$enrolmentKey/users"
     httpClient
       .GET[HttpResponse](url)
-      .map(
-        httpResponse =>
-          httpResponse.status match {
-            case OK =>
-              Right(
-                httpResponse.json
-                  .as[UsersAssignedEnrolment](UsersAssignedEnrolment.reads)
+      .map(httpResponse =>
+        httpResponse.status match {
+          case OK =>
+            Right(
+              httpResponse.json
+                .as[UsersAssignedEnrolment](UsersAssignedEnrolment.reads)
+            )
+          case NO_CONTENT => Right(UsersAssignedEnrolment(None))
+          case status =>
+            logger.logEvent(
+              logUnexpectedResponseFromEACD(
+                enrolmentKey.split("~").head,
+                status
               )
-            case NO_CONTENT => Right(UsersAssignedEnrolment(None))
-            case status =>
-              logger.logEvent(
-                logUnexpectedResponseFromEACD(
-                  enrolmentKey.split("~").head,
-                  status
-                )
-              )
-              Left(UnexpectedResponseFromEACD)
+            )
+            Left(UnexpectedResponseFromEACD)
         }
       )
   }
 
-  def queryKnownFactsByNinoVerifier(nino: String)(
-    implicit ec: ExecutionContext,
+  def queryKnownFactsByNinoVerifier(nino: String)(implicit
+    ec: ExecutionContext,
     hc: HeaderCarrier
   ): TEAFResult[Option[String]] = EitherT {
     val url = s"${appConfig.EACD_BASE_URL}/enrolment-store/enrolments"
     val request = new KnownFactQueryForNINO(nino)
     httpClient
       .POST[KnownFactQueryForNINO, HttpResponse](url, request)
-      .map(
-        httpResponse =>
-          httpResponse.status match {
-            case OK =>
-              Right(Some(httpResponse.json.as[KnownFactResponseForNINO].getUTR))
-            case NO_CONTENT => Right(None)
-            case status =>
-              logger.logEvent(
-                logUnexpectedResponseFromEACDQueryKnownFacts(
-                  nino,
-                  status,
-                  httpResponse.body
-                )
+      .map(httpResponse =>
+        httpResponse.status match {
+          case OK =>
+            Right(Some(httpResponse.json.as[KnownFactResponseForNINO].getUTR))
+          case NO_CONTENT => Right(None)
+          case status =>
+            logger.logEvent(
+              logUnexpectedResponseFromEACDQueryKnownFacts(
+                nino,
+                status,
+                httpResponse.body
               )
-              Left(UnexpectedResponseFromEACD)
+            )
+            Left(UnexpectedResponseFromEACD)
         }
       )
   }
 
-  def queryEnrolmentsAssignedToUser(userId: String)(
-    implicit hc: HeaderCarrier,
+  def queryEnrolmentsAssignedToUser(userId: String)(implicit
+    hc: HeaderCarrier,
     ec: ExecutionContext
   ): TEAFResult[Option[UserEnrolmentsListResponse]] = EitherT {
     val url =
@@ -146,17 +142,16 @@ class EACDConnector @Inject()(httpClient: HttpClient,
 
     httpClient
       .GET[HttpResponse](url)
-      .map(
-        httpResponse =>
-          httpResponse.status match {
-            case OK =>
-              Right(Some(httpResponse.json.as[UserEnrolmentsListResponse]))
-            case NO_CONTENT => Right(None)
-            case status =>
-              logger.logEvent(
-                logES2ErrorFromEACD(userId, status, httpResponse.body)
-              )
-              Left(UnexpectedResponseFromEACD)
+      .map(httpResponse =>
+        httpResponse.status match {
+          case OK =>
+            Right(Some(httpResponse.json.as[UserEnrolmentsListResponse]))
+          case NO_CONTENT => Right(None)
+          case status =>
+            logger.logEvent(
+              logES2ErrorFromEACD(userId, status, httpResponse.body)
+            )
+            Left(UnexpectedResponseFromEACD)
         }
       )
   }

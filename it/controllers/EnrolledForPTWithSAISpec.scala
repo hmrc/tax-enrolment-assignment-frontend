@@ -16,31 +16,33 @@
 
 package controllers
 
-import helpers.{TestHelper, ThrottleHelperISpec}
+import helpers.{IntegrationSpecBase, ItUrlPaths, ThrottleHelperISpec}
 import helpers.TestITData._
-import helpers.WiremockHelper._
+import play.api.test.Helpers.{GET, POST, await, contentAsString, defaultAwaitTimeout, redirectLocation}
+import play.api.test.Helpers.{route, status, writeableOf_AnyContentAsEmpty, writeableOf_AnyContentAsJson}
 import helpers.messages._
 import org.jsoup.Jsoup
-import play.api.http.Status
+import play.api.http.Status.{INTERNAL_SERVER_ERROR, NON_AUTHORITATIVE_INFORMATION, NOT_FOUND, OK, SEE_OTHER}
 import play.api.libs.json.Json
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
-import play.api.libs.ws.DefaultWSCookie
+import play.api.test.FakeRequest
 
-class EnrolledForPTWithSAISpec extends TestHelper with Status with ThrottleHelperISpec {
+class EnrolledForPTWithSAISpec extends IntegrationSpecBase with ThrottleHelperISpec {
 
-  val urlPath: String = UrlPaths.enrolledPTWithSAOnAnyAccountPath
+  val urlPath: String = ItUrlPaths.enrolledPTWithSAOnAnyAccountPath
 
   s"GET $urlPath" when {
 
-    throttleSpecificTests(() => buildRequest(urlPath)
-      .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-      .addHttpHeaders(xSessionId, xRequestId)
-      .get())
+    throttleSpecificTests { () =>
+      val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        .withSession(xSessionId, xAuthToken)
+      route(app, request).get
+    }
 
     s"the session cache has Account type of $SA_ASSIGNED_TO_CURRENT_USER" should {
-      s"render the EnrolledForPTWithSA page" in {
-        await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
+      s"render the EnrolledForPTWithSA page ($urlPath)" in {
+        await(save[String](sessionId, "redirectURL", returnUrl))
         await(
           save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", SA_ASSIGNED_TO_CURRENT_USER)
         )
@@ -52,25 +54,23 @@ class EnrolledForPTWithSAISpec extends TestHelper with Status with ThrottleHelpe
           NON_AUTHORITATIVE_INFORMATION,
           usergroupsResponseJson().toString()
         )
-        val res = buildRequest(urlPath, followRedirects = true)
-          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-          .addHttpHeaders(xSessionId, xRequestId)
-          .get()
 
-        whenReady(res) { resp =>
-          val page = Jsoup.parse(resp.body)
+        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+          .withSession(xSessionId, xAuthToken)
+        val result = route(app, request).get
+        val page = Jsoup.parse(contentAsString(result))
 
-          resp.status shouldBe OK
-          page.title should include(EnrolledForPTPageMessages.title)
-        }
+        redirectLocation(result) shouldBe None
+        status(result) shouldBe OK
+        page.title should include(EnrolledForPTPageMessages.title)
       }
     }
 
     List(PT_ASSIGNED_TO_OTHER_USER, PT_ASSIGNED_TO_CURRENT_USER, SINGLE_ACCOUNT)
       .foreach { accountType =>
         s"the session cache has Account type of $accountType" should {
-          s"redirect to ${UrlPaths.accountCheckPath}" in {
-            await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
+          s"redirect to /protect-tax-info?redirectUrl=" in {
+            await(save[String](sessionId, "redirectURL", returnUrl))
             await(
               save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", accountType)
             )
@@ -78,17 +78,14 @@ class EnrolledForPTWithSAISpec extends TestHelper with Status with ThrottleHelpe
             stubAuthorizePost(OK, authResponse.toString())
             stubPost(s"/write/.*", OK, """{"x":2}""")
 
-            val res = buildRequest(urlPath)
-              .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-              .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
-              .get()
+            val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+              .withSession(xSessionId, xAuthToken)
+            val result = route(app, request).get
 
-            whenReady(res) { resp =>
-              resp.status shouldBe SEE_OTHER
-              resp.header("Location").get should include(
-                UrlPaths.accountCheckPath
-              )
-            }
+            status(result) shouldBe SEE_OTHER
+            redirectLocation(result).get should include(
+              accountCheckPath
+            )
           }
         }
       }
@@ -98,15 +95,14 @@ class EnrolledForPTWithSAISpec extends TestHelper with Status with ThrottleHelpe
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        val res = buildRequest(urlPath)
-          .addCookies(DefaultWSCookie("mdtp", authCookie))
-          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
-          .get()
 
-        whenReady(res) { resp =>
-          resp.status shouldBe SEE_OTHER
-          resp.header("Location").get should include("/bas-gateway/sign-in")
-        }
+        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+          .withSession(xAuthToken)
+        val result = route(app, request).get
+
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result).get should include("/bas-gateway/sign-in")
+
       }
     }
 
@@ -114,109 +110,92 @@ class EnrolledForPTWithSAISpec extends TestHelper with Status with ThrottleHelpe
       s"render the error page" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
-        await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
+        await(save[String](sessionId, "redirectURL", returnUrl))
         await(save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", SA_ASSIGNED_TO_CURRENT_USER))
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGetWithQueryParam(
           "/identity-verification/nino",
           "nino",
           NINO,
-          Status.NOT_FOUND,
+          NOT_FOUND,
           ""
         )
-        val res = buildRequest(urlPath)
-          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
-          .get()
 
-        whenReady(res) { resp =>
-          resp.status shouldBe INTERNAL_SERVER_ERROR
-          resp.body should include(ErrorTemplateMessages.title)
-        }
+        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+          .withSession(xSessionId, xAuthToken)
+        val result = route(app, request).get
+
+        redirectLocation(result) shouldBe None
+        status(result) shouldBe INTERNAL_SERVER_ERROR
+        contentAsString(result) should include(ErrorTemplateMessages.title)
+
       }
     }
 
     "an authorised user but IV returns internal error" should {
       s"return $INTERNAL_SERVER_ERROR" in {
         val authResponse = authoriseResponseJson()
-        await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
+        await(save[String](sessionId, "redirectURL", returnUrl))
         await(save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", SA_ASSIGNED_TO_CURRENT_USER))
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        stubGetWithQueryParam(
-          "/identity-verification/nino",
-          "nino",
-          NINO,
-          Status.INTERNAL_SERVER_ERROR,
-          ""
-        )
-        val res = buildRequest(urlPath)
-          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-          .addHttpHeaders(xSessionId, xRequestId, sessionCookie)
-          .get()
 
-        whenReady(res) { resp =>
-          resp.status shouldBe INTERNAL_SERVER_ERROR
-          resp.body should include(ErrorTemplateMessages.title)
-        }
+        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+          .withSession(xSessionId, xAuthToken)
+        val result = route(app, request).get
+
+        status(result) shouldBe INTERNAL_SERVER_ERROR
+        contentAsString(result) should include(ErrorTemplateMessages.title)
+
       }
     }
 
     "the user has a session missing required element NINO" should {
-      s"redirect to ${UrlPaths.unauthorizedPath}" in {
+      s"redirect to ${ItUrlPaths.unauthorizedPath}" in {
         val authResponse = authoriseResponseJson(optNino = None)
-        await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
+        await(save[String](sessionId, "redirectURL", returnUrl))
         await(save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", SA_ASSIGNED_TO_CURRENT_USER))
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val res =
-          buildRequest(urlPath)
-            .addCookies(DefaultWSCookie("mdtp", authCookie))
-            .addHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
-            .get()
+        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+          .withSession(xSessionId, xAuthToken)
+        val result = route(app, request).get
 
-        whenReady(res) { resp =>
-          resp.status shouldBe SEE_OTHER
-          resp.header("Location").get should include(UrlPaths.unauthorizedPath)
-        }
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
+
       }
     }
 
     "the user has a session missing required element Credentials" should {
-      s"redirect to ${UrlPaths.unauthorizedPath}" in {
+      s"redirect to ${ItUrlPaths.unauthorizedPath}" in {
         val authResponse = authoriseResponseJson(optCreds = None)
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val res =
-          buildRequest(urlPath)
-            .addCookies(DefaultWSCookie("mdtp", authCookie))
-            .addHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
-            .get()
+        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+          .withSession(xSessionId, xAuthToken)
+        val result = route(app, request).get
 
-        whenReady(res) { resp =>
-          resp.status shouldBe SEE_OTHER
-          resp.header("Location").get should include(UrlPaths.unauthorizedPath)
-        }
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
+
       }
     }
 
     "the user has a insufficient confidence level" should {
-      s"redirect to ${UrlPaths.unauthorizedPath}" in {
+      s"redirect to ${ItUrlPaths.unauthorizedPath}" in {
         stubAuthorizePostUnauthorised(insufficientConfidenceLevel)
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val res =
-          buildRequest(urlPath)
-            .addCookies(DefaultWSCookie("mdtp", authCookie))
-            .addHttpHeaders(xSessionId, xRequestId, csrfContent, sessionCookie)
-            .get()
+        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+          .withSession(xSessionId, xAuthToken)
+        val result = route(app, request).get
 
-        whenReady(res) { resp =>
-          resp.status shouldBe SEE_OTHER
-          resp.header("Location").get should include(UrlPaths.unauthorizedPath)
-        }
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
+
       }
     }
 
@@ -225,44 +204,42 @@ class EnrolledForPTWithSAISpec extends TestHelper with Status with ThrottleHelpe
         stubAuthorizePostUnauthorised(sessionNotFound)
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val res = buildRequest(urlPath)
-          .addCookies(DefaultWSCookie("mdtp", authCookie))
-          .addHttpHeaders(xSessionId, xRequestId, csrfContent)
-          .get()
+        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+          .withSession(xSessionId, xAuthToken)
+        val result = route(app, request).get
 
-        whenReady(res) { resp =>
-          resp.status shouldBe SEE_OTHER
-          resp.header("Location").get should include("/bas-gateway/sign-in")
-        }
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result).get should include("/bas-gateway/sign-in")
       }
     }
   }
 
   s"POST $urlPath" when {
 
-    throttleSpecificTests(() => buildRequest(urlPath)
-      .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-      .addHttpHeaders(csrfContent, xSessionId, xRequestId, sessionCookie)
-      .post(Json.obj()))
+    throttleSpecificTests { () =>
+      val request = FakeRequest(POST, "/protect-tax-info" + urlPath)
+        .withSession(xSessionId, xAuthToken)
+        .withJsonBody(Json.obj())
+      route(app, request).get
+    }
 
     "the session cache contains the redirect url" should {
       s"redirect to the redirect url" in {
-        await(save[String](sessionId, "redirectURL", UrlPaths.returnUrl))
+        await(save[String](sessionId, "redirectURL", returnUrl))
         await(save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", PT_ASSIGNED_TO_CURRENT_USER))
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val res = buildRequest(urlPath)
-          .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-          .addHttpHeaders(csrfContent, xSessionId, xRequestId, sessionCookie)
-          .post(Json.obj())
+        val request = FakeRequest(POST, "/protect-tax-info" + urlPath)
+          .withSession(xSessionId, xAuthToken)
+          .withJsonBody(Json.obj())
+        val result = route(app, request).get
 
-        whenReady(res) { resp =>
-          resp.status shouldBe SEE_OTHER
-          resp.header("Location").get should include(UrlPaths.returnUrl)
-          recordExistsInMongo shouldBe false
-        }
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result).get should include(returnUrl)
+        recordExistsInMongo shouldBe false
+
       }
     }
 
@@ -272,17 +249,15 @@ class EnrolledForPTWithSAISpec extends TestHelper with Status with ThrottleHelpe
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val res = buildRequest(urlPath)
-          .addCookies(DefaultWSCookie("mdtp", authCookie))
-          .addHttpHeaders(xSessionId, xRequestId, sessionCookie, csrfContent)
-          .post(Json.obj())
+        val request = FakeRequest(POST, "/protect-tax-info" + urlPath)
+          .withSession(xSessionId, xAuthToken)
+          .withJsonBody(Json.obj())
+        val result = route(app, request).get
 
-        whenReady(res) { resp =>
-          resp.status shouldBe SEE_OTHER
-          resp.header("Location").get should include("/bas-gateway/sign-in")
-        }
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result).get should include("/bas-gateway/sign-in")
+
       }
     }
   }
 }
-

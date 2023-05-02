@@ -37,7 +37,7 @@ class EventLoggerService {
     }
 
   def logEvent(event: LoggingEvent, throwable: Throwable)(implicit
-                                                          logger: Logger
+    logger: Logger
   ): Unit = event match {
     case Debug(e) => logger.debug(e, throwable)
     case Info(e)  => logger.info(e, throwable)

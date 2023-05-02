@@ -16,35 +16,47 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators
 
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.time.{Millis, Seconds, Span}
+import play.api.Application
+import play.api.inject.bind
 import play.api.libs.json.Format
-import play.api.mvc.AnyContent
+import play.api.mvc.{AnyContent, BodyParsers}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IVNinoStoreEntry
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.ACCOUNT_TYPE
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, SilentAssignmentService}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class AccountCheckOrchestratorSpec extends TestFixture with ScalaFutures {
+class AccountCheckOrchestratorSpec extends BaseSpec {
 
-  implicit val defaultPatience = PatienceConfig(
-    timeout = Span(TIME_OUT, Seconds),
-    interval = Span(INTERVAL, Millis)
+  def generateBasicCacheMap(accountType: AccountTypes.Value, redirectUrl: String = "foo") =
+    CacheMap("id", generateBasicCacheData(accountType, redirectUrl))
+
+  lazy val mockSilentAssignmentService = mock[SilentAssignmentService]
+  lazy val mockEacdService = mock[EACDService]
+  lazy val mockTeaSessionCache = mock[TEASessionCache]
+
+  lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
+  lazy val mockMultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
+
+  override lazy val overrides = Seq(
+    bind[TEASessionCache].toInstance(mockTeaSessionCache)
   )
 
-  val orchestrator = new AccountCheckOrchestrator(
-    mockEacdService,
-    mockSilentAssignmentService,
-    logger,
-    mockTeaSessionCache
-  )
+  override implicit lazy val app: Application = localGuiceApplicationBuilder()
+    .overrides(
+      bind[SilentAssignmentService].toInstance(mockSilentAssignmentService),
+      bind[EACDService].toInstance(mockEacdService)
+    )
+    .build()
+
+  val orchestrator = app.injector.instanceOf[AccountCheckOrchestrator]
 
   s"getAccountType" when {
     "the accountType is available in the cache" should {

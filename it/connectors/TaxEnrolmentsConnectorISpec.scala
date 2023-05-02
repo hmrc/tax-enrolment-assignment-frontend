@@ -18,7 +18,6 @@ package connectors
 
 import helpers.IntegrationSpecBase
 import helpers.TestITData._
-import helpers.WiremockHelper._
 import play.api.http.Status
 import play.api.http.Status.OK
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.TaxEnrolmentsConnector
@@ -41,9 +40,8 @@ class TaxEnrolmentsConnectorISpec extends IntegrationSpecBase {
           Status.NO_CONTENT
         )
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        whenReady(connector.assignPTEnrolmentWithKnownFacts(NINO).value) {
-          response =>
-            response shouldBe Right((): Unit)
+        whenReady(connector.assignPTEnrolmentWithKnownFacts(NINO).value) { response =>
+          response shouldBe Right((): Unit)
         }
       }
     }
@@ -56,9 +54,8 @@ class TaxEnrolmentsConnectorISpec extends IntegrationSpecBase {
           Status.CONFLICT
         )
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        whenReady(connector.assignPTEnrolmentWithKnownFacts(NINO).value) {
-          response =>
-            response shouldBe Right((): Unit)
+        whenReady(connector.assignPTEnrolmentWithKnownFacts(NINO).value) { response =>
+          response shouldBe Right((): Unit)
         }
       }
     }
@@ -71,9 +68,8 @@ class TaxEnrolmentsConnectorISpec extends IntegrationSpecBase {
           Status.UNAUTHORIZED
         )
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        whenReady(connector.assignPTEnrolmentWithKnownFacts(NINO).value) {
-          response =>
-            response shouldBe Left(UnexpectedResponseFromTaxEnrolments)
+        whenReady(connector.assignPTEnrolmentWithKnownFacts(NINO).value) { response =>
+          response shouldBe Left(UnexpectedResponseFromTaxEnrolments)
         }
       }
     }
@@ -86,9 +82,8 @@ class TaxEnrolmentsConnectorISpec extends IntegrationSpecBase {
           Status.BAD_REQUEST
         )
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        whenReady(connector.assignPTEnrolmentWithKnownFacts(NINO).value) {
-          response =>
-            response shouldBe Left(UnexpectedResponseFromTaxEnrolments)
+        whenReady(connector.assignPTEnrolmentWithKnownFacts(NINO).value) { response =>
+          response shouldBe Left(UnexpectedResponseFromTaxEnrolments)
         }
       }
     }
@@ -101,9 +96,8 @@ class TaxEnrolmentsConnectorISpec extends IntegrationSpecBase {
           Status.NOT_FOUND
         )
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        whenReady(connector.assignPTEnrolmentWithKnownFacts(NINO).value) {
-          response =>
-            response shouldBe Left(UnexpectedResponseFromTaxEnrolments)
+        whenReady(connector.assignPTEnrolmentWithKnownFacts(NINO).value) { response =>
+          response shouldBe Left(UnexpectedResponseFromTaxEnrolments)
         }
       }
     }
@@ -116,9 +110,8 @@ class TaxEnrolmentsConnectorISpec extends IntegrationSpecBase {
           Status.INTERNAL_SERVER_ERROR
         )
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        whenReady(connector.assignPTEnrolmentWithKnownFacts(NINO).value) {
-          response =>
-            response shouldBe Left(UnexpectedResponseFromTaxEnrolments)
+        whenReady(connector.assignPTEnrolmentWithKnownFacts(NINO).value) { response =>
+          response shouldBe Left(UnexpectedResponseFromTaxEnrolments)
         }
       }
     }

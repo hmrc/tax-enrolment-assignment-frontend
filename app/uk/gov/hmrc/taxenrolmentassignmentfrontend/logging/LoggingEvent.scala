@@ -19,6 +19,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.logging
 import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IVNinoStoreEntry
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.{IRSAKey, hmrcPTKey}
 
 object LoggingEvent {
@@ -146,6 +147,14 @@ object LoggingEvent {
       Event(
         "[AccountCheckOrchestrator][getAccountType]",
         details = Some(s"Signed in credential $credentialId has multiple accounts")
+      )
+    )
+
+  def logCurrentUserhasMultipleAccountsDebug(credentialId: String, allCreds: List[IVNinoStoreEntry]): LoggingEvent =
+    Debug(
+      Event(
+        "[AccountCheckOrchestrator][getAccountType]",
+        details = Some(s"Signed in credential $credentialId has multiple accounts: " + allCreds.mkString(", "))
       )
     )
 

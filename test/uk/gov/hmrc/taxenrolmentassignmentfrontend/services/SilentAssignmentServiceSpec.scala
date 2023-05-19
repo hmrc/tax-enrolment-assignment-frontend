@@ -42,7 +42,8 @@ class SilentAssignmentServiceSpec extends TestFixture with ScalaFutures {
     mockIVConnector,
     mockTaxEnrolmentsConnector,
     mockEacdConnector,
-    mockTeaSessionCache
+    mockTeaSessionCache,
+    logger
   )
 
   val businessEnrolmentResponse: UserEnrolmentsListResponse =

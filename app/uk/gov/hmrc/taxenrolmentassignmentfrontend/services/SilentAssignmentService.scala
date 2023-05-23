@@ -19,12 +19,14 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.services
 import cats.data.EitherT
 import cats.implicits._
 import uk.gov.hmrc.http.HeaderCarrier
+import play.api.Logger
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{EACDConnector, IVConnector, TaxEnrolmentsConnector}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logCurrentUserhasMultipleAccountsDebug
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IVNinoStoreEntry
-
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.saEnrolmentSet
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.HAS_OTHER_VALID_PTA_ACCOUNTS
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
@@ -36,8 +38,11 @@ class SilentAssignmentService @Inject() (
   ivConnector: IVConnector,
   taxEnrolmentsConnector: TaxEnrolmentsConnector,
   eacdConnector: EACDConnector,
-  sessionCache: TEASessionCache
+  sessionCache: TEASessionCache,
+  logger: EventLoggerService,
 ) {
+
+  implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
   private def filterCL200Accounts(
     list: Seq[IVNinoStoreEntry]
@@ -57,7 +62,7 @@ class SilentAssignmentService @Inject() (
     requestWithUserDetails: RequestWithUserDetailsFromSession[_],
     hc: HeaderCarrier,
     ec: ExecutionContext
-  ): TEAFResult[Boolean] =
+  ): TEAFResult[Boolean] = {
     for {
       allCreds <- ivConnector.getCredentialsWithNino(
                     requestWithUserDetails.userDetails.nino
@@ -69,12 +74,16 @@ class SilentAssignmentService @Inject() (
                                  )
                                )
       _ <- EitherT.right[TaxEnrolmentAssignmentErrors](
-             sessionCache.save[Boolean](
-               HAS_OTHER_VALID_PTA_ACCOUNTS,
-               hasOtherValidPTACreds
-             )
-           )
-    } yield hasOtherValidPTACreds
+        sessionCache.save[Boolean](
+          HAS_OTHER_VALID_PTA_ACCOUNTS,
+          hasOtherValidPTACreds
+        )
+      )
+    } yield {
+      logger.logEvent(logCurrentUserhasMultipleAccountsDebug(requestWithUserDetails.userDetails.credId, allCreds))
+      hasOtherValidPTACreds
+    }
+  }
 
   private def hasOtherNoneBusinessAccounts(list: Seq[IVNinoStoreEntry], currentCredId: String)(implicit
     hc: HeaderCarrier,

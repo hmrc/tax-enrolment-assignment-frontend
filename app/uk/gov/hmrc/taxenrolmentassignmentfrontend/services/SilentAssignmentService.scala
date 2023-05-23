@@ -39,7 +39,7 @@ class SilentAssignmentService @Inject() (
   taxEnrolmentsConnector: TaxEnrolmentsConnector,
   eacdConnector: EACDConnector,
   sessionCache: TEASessionCache,
-  logger: EventLoggerService,
+  logger: EventLoggerService
 ) {
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
@@ -62,7 +62,7 @@ class SilentAssignmentService @Inject() (
     requestWithUserDetails: RequestWithUserDetailsFromSession[_],
     hc: HeaderCarrier,
     ec: ExecutionContext
-  ): TEAFResult[Boolean] = {
+  ): TEAFResult[Boolean] =
     for {
       allCreds <- ivConnector.getCredentialsWithNino(
                     requestWithUserDetails.userDetails.nino
@@ -74,16 +74,15 @@ class SilentAssignmentService @Inject() (
                                  )
                                )
       _ <- EitherT.right[TaxEnrolmentAssignmentErrors](
-        sessionCache.save[Boolean](
-          HAS_OTHER_VALID_PTA_ACCOUNTS,
-          hasOtherValidPTACreds
-        )
-      )
+             sessionCache.save[Boolean](
+               HAS_OTHER_VALID_PTA_ACCOUNTS,
+               hasOtherValidPTACreds
+             )
+           )
     } yield {
       logger.logEvent(logCurrentUserhasMultipleAccountsDebug(requestWithUserDetails.userDetails.credId, allCreds))
       hasOtherValidPTACreds
     }
-  }
 
   private def hasOtherNoneBusinessAccounts(list: Seq[IVNinoStoreEntry], currentCredId: String)(implicit
     hc: HeaderCarrier,

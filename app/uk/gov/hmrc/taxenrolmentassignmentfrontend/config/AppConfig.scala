@@ -45,7 +45,11 @@ class AppConfig @Inject() (val config: ServicesConfig) {
   }
 
   lazy val btaUrl: String =
-    config.getString("microservice.services.business-tax-account.url")
+    config.getString("external-url.business-tax-account.host")
+  lazy val basAuthHost: String =
+    config.getString("external-url.bas-gateway-frontend.host")
+  lazy val loginCallback: String =
+    config.getString("external-url.bas-gateway-frontend.continue-callback.url")
 
   lazy val useTestOnlyUsersGroupSearch: Boolean =
     config.getConfBool("users-groups-search.isTest", defBool = false)
@@ -53,10 +57,6 @@ class AppConfig @Inject() (val config: ServicesConfig) {
     s"${config.baseUrl("tax-enrolment-assignment-frontend")}"
   lazy val usersGroupsSearchBaseURL: String =
     s"${config.baseUrl("users-groups-search")}/users-groups-search"
-  lazy val basAuthHost: String =
-    s"${config.baseUrl("bas-gateway-frontend")}"
-  lazy val loginCallback: String =
-    config.getConfString("bas-gateway-frontend.continue-callback.url", "")
   lazy val loginURL: String = s"$basAuthHost/bas-gateway/sign-in"
   lazy val signOutUrl: String =
     s"$basAuthHost/bas-gateway/sign-out-without-state"

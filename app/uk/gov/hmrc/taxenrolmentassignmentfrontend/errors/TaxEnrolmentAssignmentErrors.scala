@@ -24,19 +24,17 @@ object UnexpectedResponseFromIV extends TaxEnrolmentAssignmentErrors
 object UnexpectedResponseFromEACD extends TaxEnrolmentAssignmentErrors
 object NoAccountsHaveSA extends TaxEnrolmentAssignmentErrors
 object UnexpectedResponseFromTaxEnrolments extends TaxEnrolmentAssignmentErrors
-object UnexpectedResponseFromUsersGroupsSearch
-    extends TaxEnrolmentAssignmentErrors
+object UnexpectedResponseFromUsersGroupsSearch extends TaxEnrolmentAssignmentErrors
 object NoPTEnrolmentWhenOneExpected extends TaxEnrolmentAssignmentErrors
 object NoSAEnrolmentWhenOneExpected extends TaxEnrolmentAssignmentErrors
 object NoRedirectUrlInCache extends TaxEnrolmentAssignmentErrors
 object UnexpectedError extends TaxEnrolmentAssignmentErrors
 object UnexpectedResponseAssigningTemporaryPTAEnrolment extends TaxEnrolmentAssignmentErrors
-case class CacheNotCompleteOrNotCorrect(redirectUrl: Option[String],
-                                        accountType: Option[AccountTypes.Value]) extends TaxEnrolmentAssignmentErrors
+case class CacheNotCompleteOrNotCorrect(redirectUrl: Option[String], accountType: Option[AccountTypes.Value])
+    extends TaxEnrolmentAssignmentErrors
 case class IncorrectUserType(redirectUrl: String, accountType: AccountTypes.Value) extends TaxEnrolmentAssignmentErrors
 
 case class UnexpectedPTEnrolment(accountTypes: AccountTypes.Value) extends TaxEnrolmentAssignmentErrors
-
 
 object InvalidRedirectUrl extends TaxEnrolmentAssignmentErrors
 object UserDoesNotHaveSAOnCurrentToEnrol extends TaxEnrolmentAssignmentErrors

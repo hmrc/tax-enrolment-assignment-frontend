@@ -16,12 +16,24 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.views
 
+import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
+import play.api.i18n.Messages
+import play.api.test.FakeRequest
+import play.api.test.Helpers.{contentAsString, defaultAwaitTimeout}
+import play.twirl.api.Html
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
-import scala.collection.JavaConverters.asScalaBufferConverter
+import scala.jdk.CollectionConverters._
 
-trait ViewSpecHelper extends TestFixture {
+trait ViewSpecHelper extends BaseSpec {
+  implicit lazy val testMessages: Messages =
+    messagesApi.preferred(FakeRequest())
+
+  def doc(result: Html): Document = Jsoup.parse(contentAsString(result))
+
+  lazy val errorView: ErrorTemplate = app.injector.instanceOf[ErrorTemplate]
 
   def validateTimeoutDialog(doc: Document): Unit = {
     val timeoutDialog = doc
@@ -72,7 +84,9 @@ trait ViewSpecHelper extends TestFixture {
   }
 
   def validateAccessibilityStatementLinkPresent(doc: Document): Unit = {
-    val accessibilityStatementElement = doc.getElementsByAttributeValueContaining("href", "/accessibility-statement/personal-tax-account-user-id-checks").get(0)
+    val accessibilityStatementElement = doc
+      .getElementsByAttributeValueContaining("href", "/accessibility-statement/personal-tax-account-user-id-checks")
+      .get(0)
 
     "accessibility statement exists, text and link are correct" in {
       accessibilityStatementElement.text() shouldBe "Accessibility statement"

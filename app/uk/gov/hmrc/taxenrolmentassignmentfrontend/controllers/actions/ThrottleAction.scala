@@ -32,33 +32,54 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait ThrottleActionTrait extends ActionFilter[RequestWithUserDetailsFromSessionAndMongo]
 
-class ThrottleAction @Inject()(throttlingService: ThrottlingService,
-                               val parser: BodyParsers.Default,
-                               errorHandler: ErrorHandler,
-                               val logger: EventLoggerService,
-                               teaSessionCache: TEASessionCache)(implicit val executionContext: ExecutionContext) extends ThrottleActionTrait {
+class ThrottleAction @Inject() (
+  throttlingService: ThrottlingService,
+  val parser: BodyParsers.Default,
+  errorHandler: ErrorHandler,
+  val logger: EventLoggerService,
+  teaSessionCache: TEASessionCache
+)(implicit val executionContext: ExecutionContext)
+    extends ThrottleActionTrait {
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
-  def throttle(accountType: AccountTypes.Value, redirectUrl : String)(
-    implicit ec: ExecutionContext, hc: HeaderCarrier, requestWithUserDetailsFromSession: RequestWithUserDetailsFromSession[_]): Future[Option[Result]] = {
-
-    throttlingService.throttle(
-      accountType,
-      requestWithUserDetailsFromSession.userDetails.nino,
-      requestWithUserDetailsFromSession.userDetails.enrolments.enrolments
-    )(ec, hc).value.flatMap {
-      case Right(ThrottleApplied) =>
-        logger.logEvent(LoggingEvent.logUserThrottled(requestWithUserDetailsFromSession.userDetails.credId, accountType, requestWithUserDetailsFromSession.userDetails.nino))
-        teaSessionCache.removeRecord.map(_ => Some(Redirect(redirectUrl)))(ec)
-      case Right(ThrottleDoesNotApply) => Future.successful(None)
-      case Left(error) => Future.successful(Some(errorHandler
-        .handleErrors(error, "[ThrottleAction][filter]")(requestWithUserDetailsFromSession, baseLogger)))
-    }(ec)
-  }
+  def throttle(accountType: AccountTypes.Value, redirectUrl: String)(implicit
+    hc: HeaderCarrier,
+    requestWithUserDetailsFromSession: RequestWithUserDetailsFromSession[_]
+  ): Future[Option[Result]] =
+    throttlingService
+      .throttle(
+        accountType,
+        requestWithUserDetailsFromSession.userDetails.nino,
+        requestWithUserDetailsFromSession.userDetails.enrolments.enrolments
+      )
+      .value
+      .flatMap {
+        case Right(ThrottleApplied) =>
+          logger.logEvent(
+            LoggingEvent.logUserThrottled(
+              requestWithUserDetailsFromSession.userDetails.credId,
+              accountType,
+              requestWithUserDetailsFromSession.userDetails.nino
+            )
+          )
+          teaSessionCache.removeRecord.map(_ => Some(Redirect(redirectUrl)))
+        case Right(ThrottleDoesNotApply) =>
+          Future.successful(None)
+        case Left(error) =>
+          Future.successful(
+            Some(
+              errorHandler
+                .handleErrors(error, "[ThrottleAction][filter]")(requestWithUserDetailsFromSession, baseLogger)
+            )
+          )
+      }
 
   override protected def filter[A](request: RequestWithUserDetailsFromSessionAndMongo[A]): Future[Option[Result]] = {
     implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequestAndSession(request, request.session)
-    throttle(request.accountDetailsFromMongo.accountType, request.accountDetailsFromMongo.redirectUrl)(implicitly, implicitly, request)
+    throttle(request.accountDetailsFromMongo.accountType, request.accountDetailsFromMongo.redirectUrl)(
+      implicitly,
+      request
+    )
 
   }
 }

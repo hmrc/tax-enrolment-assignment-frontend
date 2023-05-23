@@ -40,8 +40,8 @@ class TaxEnrolmentsConnector @Inject() (httpClient: HttpClient, logger: EventLog
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
   def assignPTEnrolmentWithKnownFacts(nino: String)(implicit
-                                                    ec: ExecutionContext,
-                                                    hc: HeaderCarrier
+    ec: ExecutionContext,
+    hc: HeaderCarrier
   ): TEAFResult[Unit] = EitherT {
 
     val request = AssignHMRCPTRequest(

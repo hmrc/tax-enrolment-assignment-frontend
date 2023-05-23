@@ -18,16 +18,12 @@ package connectors
 
 import helpers.IntegrationSpecBase
 import helpers.TestITData._
-import helpers.WiremockHelper._
 import play.api.http.Status
 import play.api.http.Status.OK
 import play.api.libs.json.{JsString, Json}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.EACDConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromEACD
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{
-  UserEnrolmentsListResponse,
-  UsersAssignedEnrolment
-}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{UserEnrolmentsListResponse, UsersAssignedEnrolment}
 
 class EACDConnectorISpec extends IntegrationSpecBase {
 
@@ -42,27 +38,24 @@ class EACDConnectorISpec extends IntegrationSpecBase {
     "successfully assign the HMRC-PT Enrolment" in {
       stubPost("/write/audit/merged", Status.NO_CONTENT, "")
       stubPost(url, Status.CREATED, "")
-      whenReady(connector.assignPTEnrolmentToUser(userId, NINO).value) {
-        response =>
-          response shouldBe Right("Success")
+      whenReady(connector.assignPTEnrolmentToUser(userId, NINO).value) { response =>
+        response shouldBe Right("Success")
       }
     }
 
     "return a success when the user already has the enrolment" in {
       stubPost("/write/audit/merged", Status.NO_CONTENT, "")
       stubPost(url, Status.CONFLICT, eacdExampleError)
-      whenReady(connector.assignPTEnrolmentToUser(userId, NINO).value) {
-        response =>
-          response shouldBe Right("Duplicate Enrolment Request")
+      whenReady(connector.assignPTEnrolmentToUser(userId, NINO).value) { response =>
+        response shouldBe Right("Duplicate Enrolment Request")
       }
     }
 
     "return an UnexpectedResponseFromEACD when receiving any 4XX/5XX response" in {
       stubPost("/write/audit/merged", Status.NO_CONTENT, "")
       stubPost(url, Status.BAD_REQUEST, eacdExampleError)
-      whenReady(connector.assignPTEnrolmentToUser(userId, NINO).value) {
-        response =>
-          response shouldBe Left(UnexpectedResponseFromEACD)
+      whenReady(connector.assignPTEnrolmentToUser(userId, NINO).value) { response =>
+        response shouldBe Left(UnexpectedResponseFromEACD)
       }
     }
   }
@@ -76,9 +69,8 @@ class EACDConnectorISpec extends IntegrationSpecBase {
       "return None" in {
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGet(PATH, Status.NO_CONTENT, "")
-        whenReady(connector.getUsersWithAssignedEnrolment(ENROLMENT_KEY).value) {
-          response =>
-            response shouldBe Right(UsersAssignedEnrolment(None))
+        whenReady(connector.getUsersWithAssignedEnrolment(ENROLMENT_KEY).value) { response =>
+          response shouldBe Right(UsersAssignedEnrolment(None))
         }
       }
     }
@@ -91,9 +83,8 @@ class EACDConnectorISpec extends IntegrationSpecBase {
         )
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGet(PATH, Status.OK, eacdResponse.toString())
-        whenReady(connector.getUsersWithAssignedEnrolment(ENROLMENT_KEY).value) {
-          response =>
-            response shouldBe Right(UsersAssignedEnrolment(Some(CREDENTIAL_ID)))
+        whenReady(connector.getUsersWithAssignedEnrolment(ENROLMENT_KEY).value) { response =>
+          response shouldBe Right(UsersAssignedEnrolment(Some(CREDENTIAL_ID)))
         }
       }
     }
@@ -102,9 +93,8 @@ class EACDConnectorISpec extends IntegrationSpecBase {
       "return an UnexpectedResponseFromIV error" in {
         stubGet(PATH, Status.BAD_REQUEST, "")
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        whenReady(connector.getUsersWithAssignedEnrolment(ENROLMENT_KEY).value) {
-          response =>
-            response shouldBe Left(UnexpectedResponseFromEACD)
+        whenReady(connector.getUsersWithAssignedEnrolment(ENROLMENT_KEY).value) { response =>
+          response shouldBe Left(UnexpectedResponseFromEACD)
         }
       }
     }
@@ -113,9 +103,8 @@ class EACDConnectorISpec extends IntegrationSpecBase {
       "return an UnexpectedResponseFromIV error" in {
         stubGet(PATH, Status.INTERNAL_SERVER_ERROR, "")
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        whenReady(connector.getUsersWithAssignedEnrolment(ENROLMENT_KEY).value) {
-          response =>
-            response shouldBe Left(UnexpectedResponseFromEACD)
+        whenReady(connector.getUsersWithAssignedEnrolment(ENROLMENT_KEY).value) { response =>
+          response shouldBe Left(UnexpectedResponseFromEACD)
         }
       }
     }
@@ -130,9 +119,8 @@ class EACDConnectorISpec extends IntegrationSpecBase {
       "return None" in {
         stubGet(PATH, Status.NO_CONTENT, "")
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        whenReady(connector.getUsersWithAssignedEnrolment(ENROLMENT_KEY).value) {
-          response =>
-            response shouldBe Right(UsersAssignedEnrolment(None))
+        whenReady(connector.getUsersWithAssignedEnrolment(ENROLMENT_KEY).value) { response =>
+          response shouldBe Right(UsersAssignedEnrolment(None))
         }
       }
     }
@@ -145,9 +133,8 @@ class EACDConnectorISpec extends IntegrationSpecBase {
         )
         stubGet(PATH, Status.OK, eacdResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        whenReady(connector.getUsersWithAssignedEnrolment(ENROLMENT_KEY).value) {
-          response =>
-            response shouldBe Right(UsersAssignedEnrolment(Some(CREDENTIAL_ID)))
+        whenReady(connector.getUsersWithAssignedEnrolment(ENROLMENT_KEY).value) { response =>
+          response shouldBe Right(UsersAssignedEnrolment(Some(CREDENTIAL_ID)))
         }
       }
     }
@@ -162,9 +149,8 @@ class EACDConnectorISpec extends IntegrationSpecBase {
       "return None" in {
         stubGet(PATH, Status.NO_CONTENT, "")
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        whenReady(connector.getUsersWithAssignedEnrolment(ENROLMENT_KEY).value) {
-          response =>
-            response shouldBe Right(UsersAssignedEnrolment(None))
+        whenReady(connector.getUsersWithAssignedEnrolment(ENROLMENT_KEY).value) { response =>
+          response shouldBe Right(UsersAssignedEnrolment(None))
         }
       }
     }
@@ -177,9 +163,8 @@ class EACDConnectorISpec extends IntegrationSpecBase {
         )
         stubGet(PATH, Status.OK, eacdResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        whenReady(connector.getUsersWithAssignedEnrolment(ENROLMENT_KEY).value) {
-          response =>
-            response shouldBe Right(UsersAssignedEnrolment(Some(CREDENTIAL_ID)))
+        whenReady(connector.getUsersWithAssignedEnrolment(ENROLMENT_KEY).value) { response =>
+          response shouldBe Right(UsersAssignedEnrolment(Some(CREDENTIAL_ID)))
         }
       }
     }
@@ -193,9 +178,8 @@ class EACDConnectorISpec extends IntegrationSpecBase {
       "return None" in {
         stubPost(PATH, Status.NO_CONTENT, "")
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        whenReady(connector.queryKnownFactsByNinoVerifier(NINO).value) {
-          response =>
-            response shouldBe Right(None)
+        whenReady(connector.queryKnownFactsByNinoVerifier(NINO).value) { response =>
+          response shouldBe Right(None)
         }
       }
     }
@@ -203,27 +187,26 @@ class EACDConnectorISpec extends IntegrationSpecBase {
     s"a user exists with the IR-SA enrolment" should {
       "return the users credentialId" in {
         val eacdResponse = s"""{
-                             |    "service": "IR-SA",
-                             |    "enrolments": [{
-                             |        "identifiers": [{
-                             |            "key": "UTR",
-                             |            "value": "1234567890"
-                             |        }],
-                             |        "verifiers": [{
-                             |            "key": "NINO",
-                             |            "value": "AB112233D"
-                             |        },
-                             |        {
-                             |            "key": "Postcode",
-                             |            "value": "SW1A 2AA"
-                             |        }]
-                             |    }]
-                             |}""".stripMargin
+                              |    "service": "IR-SA",
+                              |    "enrolments": [{
+                              |        "identifiers": [{
+                              |            "key": "UTR",
+                              |            "value": "1234567890"
+                              |        }],
+                              |        "verifiers": [{
+                              |            "key": "NINO",
+                              |            "value": "AB112233D"
+                              |        },
+                              |        {
+                              |            "key": "Postcode",
+                              |            "value": "SW1A 2AA"
+                              |        }]
+                              |    }]
+                              |}""".stripMargin
         stubPost(PATH, Status.OK, eacdResponse)
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        whenReady(connector.queryKnownFactsByNinoVerifier(NINO).value) {
-          response =>
-            response shouldBe Right(Some("1234567890"))
+        whenReady(connector.queryKnownFactsByNinoVerifier(NINO).value) { response =>
+          response shouldBe Right(Some("1234567890"))
         }
       }
     }
@@ -232,9 +215,8 @@ class EACDConnectorISpec extends IntegrationSpecBase {
       "return an UnexpectedResponseFromIV error" in {
         stubPost(PATH, Status.NOT_FOUND, "")
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        whenReady(connector.queryKnownFactsByNinoVerifier(NINO).value) {
-          response =>
-            response shouldBe Left(UnexpectedResponseFromEACD)
+        whenReady(connector.queryKnownFactsByNinoVerifier(NINO).value) { response =>
+          response shouldBe Left(UnexpectedResponseFromEACD)
         }
       }
     }
@@ -243,9 +225,8 @@ class EACDConnectorISpec extends IntegrationSpecBase {
       "return an UnexpectedResponseFromIV error" in {
         stubPost(PATH, Status.BAD_REQUEST, "")
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        whenReady(connector.queryKnownFactsByNinoVerifier(NINO).value) {
-          response =>
-            response shouldBe Left(UnexpectedResponseFromEACD)
+        whenReady(connector.queryKnownFactsByNinoVerifier(NINO).value) { response =>
+          response shouldBe Left(UnexpectedResponseFromEACD)
         }
       }
     }
@@ -254,9 +235,8 @@ class EACDConnectorISpec extends IntegrationSpecBase {
       "return an UnexpectedResponseFromIV error" in {
         stubPost(PATH, Status.INTERNAL_SERVER_ERROR, "")
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        whenReady(connector.queryKnownFactsByNinoVerifier(NINO).value) {
-          response =>
-            response shouldBe Left(UnexpectedResponseFromEACD)
+        whenReady(connector.queryKnownFactsByNinoVerifier(NINO).value) { response =>
+          response shouldBe Left(UnexpectedResponseFromEACD)
         }
       }
     }
@@ -271,9 +251,8 @@ class EACDConnectorISpec extends IntegrationSpecBase {
       "return None" in {
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGetMatching(PATH, Status.NO_CONTENT, "")
-        whenReady(connector.queryEnrolmentsAssignedToUser(USER_ID).value) {
-          response =>
-            response shouldBe Right(None)
+        whenReady(connector.queryEnrolmentsAssignedToUser(USER_ID).value) { response =>
+          response shouldBe Right(None)
         }
       }
     }
@@ -286,9 +265,8 @@ class EACDConnectorISpec extends IntegrationSpecBase {
 
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGetMatching(PATH, Status.OK, Json.toJson(eacdResponse).toString())
-        whenReady(connector.queryEnrolmentsAssignedToUser(USER_ID).value) {
-          response =>
-            response shouldBe Right(Some(eacdResponse))
+        whenReady(connector.queryEnrolmentsAssignedToUser(USER_ID).value) { response =>
+          response shouldBe Right(Some(eacdResponse))
         }
       }
     }
@@ -297,9 +275,8 @@ class EACDConnectorISpec extends IntegrationSpecBase {
       "return an UnexpectedResponseFromEACD error" in {
         stubGet(PATH, Status.BAD_REQUEST, "")
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        whenReady(connector.queryEnrolmentsAssignedToUser(USER_ID).value) {
-          response =>
-            response shouldBe Left(UnexpectedResponseFromEACD)
+        whenReady(connector.queryEnrolmentsAssignedToUser(USER_ID).value) { response =>
+          response shouldBe Left(UnexpectedResponseFromEACD)
         }
       }
     }
@@ -308,9 +285,8 @@ class EACDConnectorISpec extends IntegrationSpecBase {
       "return an UnexpectedResponseFromEACD error" in {
         stubGet(PATH, Status.INTERNAL_SERVER_ERROR, "")
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        whenReady(connector.queryEnrolmentsAssignedToUser(USER_ID).value) {
-          response =>
-            response shouldBe Left(UnexpectedResponseFromEACD)
+        whenReady(connector.queryEnrolmentsAssignedToUser(USER_ID).value) { response =>
+          response shouldBe Left(UnexpectedResponseFromEACD)
         }
       }
     }

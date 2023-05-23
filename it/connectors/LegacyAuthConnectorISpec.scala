@@ -17,41 +17,47 @@
 package connectors
 
 import helpers.IntegrationSpecBase
-import helpers.WiremockHelper.{stubPost, stubPutWithRequestBody}
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, NO_CONTENT, OK}
 import play.api.libs.json.Json
+import play.api.test.Helpers.{await, defaultAwaitTimeout}
 import uk.gov.hmrc.auth.core.Enrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.LegacyAuthConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseAssigningTemporaryPTAEnrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.formats.EnrolmentsFormats
 
-class LegacyAuthConnectorISpec  extends IntegrationSpecBase {
+class LegacyAuthConnectorISpec extends IntegrationSpecBase {
 
   lazy val connector: LegacyAuthConnector = app.injector.instanceOf[LegacyAuthConnector]
 
   "updateEnrolments" should {
     "return Right Unit" when {
       s"auth returns $OK" in {
-        val enrolments = Set(Enrolment("foo"),Enrolment("bar"))
+        val enrolments = Set(Enrolment("foo"), Enrolment("bar"))
         stubPost(url = s"/write/.*", status = NO_CONTENT, responseBody = """{"x":2}""")
         stubPutWithRequestBody(
-          url ="/auth/enrolments",
+          url = "/auth/enrolments",
           status = OK,
-          requestBody = Json.toJson(enrolments)(EnrolmentsFormats.writes).toString,  responseBody = "")
+          requestBody = Json.toJson(enrolments)(EnrolmentsFormats.writes).toString,
+          responseBody = ""
+        )
 
         await(connector.updateEnrolments(enrolments).value) shouldBe Right(())
       }
     }
     s"return Left $UnexpectedResponseAssigningTemporaryPTAEnrolment" when {
       s"auth returns another status code" in {
-        val enrolments = Set(Enrolment("foo"),Enrolment("bar"))
+        val enrolments = Set(Enrolment("foo"), Enrolment("bar"))
         stubPost(url = s"/write/.*", status = NO_CONTENT, responseBody = """{"x":2}""")
         stubPutWithRequestBody(
-          url ="/auth/enrolments",
+          url = "/auth/enrolments",
           status = INTERNAL_SERVER_ERROR,
-          requestBody = Json.toJson(enrolments)(EnrolmentsFormats.writes).toString,  responseBody = "")
+          requestBody = Json.toJson(enrolments)(EnrolmentsFormats.writes).toString,
+          responseBody = ""
+        )
 
-        await(connector.updateEnrolments(enrolments).value) shouldBe Left(UnexpectedResponseAssigningTemporaryPTAEnrolment)
+        await(connector.updateEnrolments(enrolments).value) shouldBe Left(
+          UnexpectedResponseAssigningTemporaryPTAEnrolment
+        )
       }
     }
   }

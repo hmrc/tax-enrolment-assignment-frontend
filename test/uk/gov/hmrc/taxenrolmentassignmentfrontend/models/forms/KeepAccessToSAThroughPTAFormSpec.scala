@@ -17,9 +17,9 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms
 
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 
-class KeepAccessToSAThroughPTAFormSpec extends TestFixture {
+class KeepAccessToSAThroughPTAFormSpec extends BaseSpec {
 
   "KeepAccessToSAThroughPTAForm" should {
     lazy val form = KeepAccessToSAThroughPTAForm.keepAccessToSAThroughPTAForm

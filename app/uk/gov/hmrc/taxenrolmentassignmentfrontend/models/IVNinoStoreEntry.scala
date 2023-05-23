@@ -23,8 +23,7 @@ case class IVNinoStoreEntry(credId: String, confidenceLevel: Option[Int])
 object IVNinoStoreEntry {
   implicit val format: Format[IVNinoStoreEntry] = Json.format[IVNinoStoreEntry]
 
-  implicit val formatList: Format[Seq[IVNinoStoreEntry]] = {
+  implicit val formatList: Format[Seq[IVNinoStoreEntry]] =
     Format(Reads.seq[IVNinoStoreEntry], Writes.seq[IVNinoStoreEntry])
-  }
 
 }

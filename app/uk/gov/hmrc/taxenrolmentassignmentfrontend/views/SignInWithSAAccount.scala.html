@@ -21,7 +21,6 @@
 
 @this(
   layout: Layout,
-  govukSummaryList : GovukSummaryList,
   govukButton: GovukButton,
   formHelper: FormWithCSRF,
   summaryRow: CreateSummaryRow
@@ -53,7 +52,7 @@
 
  @formHelper(action = routes.SignInWithSAAccountController.continue) {
   @govukButton(Button(
-   preventDoubleClick = true,
+   preventDoubleClick = Some(true),
    content = Text(messages("common.continue"))
   ))
  }

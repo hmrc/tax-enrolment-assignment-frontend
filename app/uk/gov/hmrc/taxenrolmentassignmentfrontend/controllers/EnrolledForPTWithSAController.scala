@@ -31,42 +31,44 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class EnrolledForPTWithSAController @Inject()(
-                                         authAction: AuthAction,
-                                         accountMongoDetailsAction: AccountMongoDetailsAction,
-                                         throttleAction: ThrottleAction,
-                                         mcc: MessagesControllerComponents,
-                                         multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
-                                         val logger: EventLoggerService,
-                                         enrolledForPTPage: EnrolledForPTPage,
-                                         errorHandler: ErrorHandler,
-                                         teaSessionCache: TEASessionCache
+class EnrolledForPTWithSAController @Inject() (
+  authAction: AuthAction,
+  accountMongoDetailsAction: AccountMongoDetailsAction,
+  throttleAction: ThrottleAction,
+  mcc: MessagesControllerComponents,
+  multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
+  val logger: EventLoggerService,
+  enrolledForPTPage: EnrolledForPTPage,
+  errorHandler: ErrorHandler,
+  teaSessionCache: TEASessionCache
 )(implicit ec: ExecutionContext)
-    extends TEAFrontendController(mcc)  {
+    extends TEAFrontendController(mcc) {
 
-  def view: Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
-    multipleAccountsOrchestrator.getDetailsForEnrolledPT(request, implicitly, implicitly).value.map {
-      case Right(accountDetails) =>
-        Ok(
-          enrolledForPTPage(
-            AccountDetails.userFriendlyAccountDetails(accountDetails).userId,
-            true,
-            routes.EnrolledForPTWithSAController.continue
+  def view: Action[AnyContent] =
+    authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
+      multipleAccountsOrchestrator.getDetailsForEnrolledPT(request, implicitly, implicitly).value.map {
+        case Right(accountDetails) =>
+          Ok(
+            enrolledForPTPage(
+              AccountDetails.userFriendlyAccountDetails(accountDetails).userId,
+              true,
+              routes.EnrolledForPTWithSAController.continue
+            )
           )
-        )
-      case Left(error) =>
-        errorHandler.handleErrors(error, "[EnrolledForPTWithSAController][view]")(request, implicitly)
+        case Left(error) =>
+          errorHandler.handleErrors(error, "[EnrolledForPTWithSAController][view]")(request, implicitly)
+      }
     }
-  }
 
-  def continue: Action[AnyContent] = authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
-    logger.logEvent(
-          logRedirectingToReturnUrl(
-            request.userDetails.credId,
-            "[EnrolledForPTWithSAController][continue]"
-          )
+  def continue: Action[AnyContent] =
+    authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
+      logger.logEvent(
+        logRedirectingToReturnUrl(
+          request.userDetails.credId,
+          "[EnrolledForPTWithSAController][continue]"
         )
-    teaSessionCache.removeRecord(request).map(_ => Redirect(request.accountDetailsFromMongo.redirectUrl))
+      )
+      teaSessionCache.removeRecord(request).map(_ => Redirect(request.accountDetailsFromMongo.redirectUrl))
 
-  }
+    }
 }

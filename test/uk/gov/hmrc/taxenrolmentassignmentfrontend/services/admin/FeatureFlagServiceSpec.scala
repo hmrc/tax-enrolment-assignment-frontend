@@ -16,19 +16,6 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.services.admin
 
-//import akka.Done
-//import org.scalamock.scalatest.MockFactory
-//import org.scalatest.OneInstancePerTest
-//import org.scalatest.concurrent.ScalaFutures
-//import org.scalatest.matchers.should.Matchers
-//import org.scalatest.wordspec.AnyWordSpec
-//import play.api.Application
-//import play.api.cache.AsyncCacheApi
-//import play.api.inject.bind
-//import play.api.inject.guice.GuiceApplicationBuilder
-//import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.admin.{FeatureFlagName, PtNinoMismatchCheckerToggle}
-//import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.admin.FeatureFlagRepository
-
 import akka.Done
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.OneInstancePerTest
@@ -36,6 +23,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Millis, Span}
 import org.scalatest.wordspec.AnyWordSpec
+import play.api.cache.AsyncCacheApi
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.{Application, inject}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.admin.{FeatureFlagName, PtNinoMismatchCheckerToggle}
@@ -61,12 +49,12 @@ class FeatureFlagServiceSpec
 
   "set" should {
     "set a feature flag" in {
-      (mockCache.remove(_: String)).expects(*).returning(Future.successful(Done)).twice
+      (mockCache.remove(_: String)).expects(*).returning(Future.successful(Done)).twice()
       (mockFeatureFlagRepository
         .setFeatureFlag(_: FeatureFlagName, _: Boolean))
         .expects(PtNinoMismatchCheckerToggle, true)
         .returning(Future.successful(true))
-        .once
+        .once()
 
       whenReady(featureFlagService.set(PtNinoMismatchCheckerToggle, enabled = true)) { result =>
         result shouldBe true

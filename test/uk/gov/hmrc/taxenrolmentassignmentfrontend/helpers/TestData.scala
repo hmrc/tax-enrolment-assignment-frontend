@@ -276,6 +276,18 @@ object TestData {
       .withSession("sessionId" -> "FAKE_SESSION_ID")
       .withFormUrlEncodedBody(data.toSeq: _*)
 
+  val userDetailsWithMismatchNino: UserDetailsFromSession =
+    UserDetailsFromSession(
+      CREDENTIAL_ID,
+      NINO, // TODO - Add NINO generator
+      GROUP_ID,
+      Some(CURRENT_USER_EMAIL),
+      Individual,
+      enrolments = ptEnrolmentOnly,
+      hasPTEnrolment = false,
+      hasSAEnrolment = false
+    )
+
   val all_account_types = List(
     SINGLE_ACCOUNT,
     PT_ASSIGNED_TO_OTHER_USER,

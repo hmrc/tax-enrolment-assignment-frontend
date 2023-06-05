@@ -25,12 +25,18 @@ import play.api.test.Helpers.{GET, defaultAwaitTimeout, redirectLocation, status
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, UpstreamErrorResponse}
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{NINO, userDetailsWithPTEnrolment}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{NINO, userDetailsWithMismatchNino, userDetailsWithPTEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.admin.{FeatureFlag, FeatureFlagName, PtNinoMismatchCheckerToggle}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.EACDService
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.admin.FeatureFlagService
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class PTMismatchCheckActionSpec extends TestFixture {
+class PTMismatchCheckActionSpec extends BaseSpec {
+
+  val mockEacdService: EACDService = mock[EACDService]
+  val mockFeatureFlagService: FeatureFlagService = mock[FeatureFlagService]
 
   def harnessToggleTrue[A](
     block: RequestWithUserDetailsFromSession[_] => Future[Result]

@@ -375,9 +375,7 @@ object LoggingEvent {
       )
     )
 
-  def logES2ErrorFromEACDDelete(groupId: String,
-                                statusReturned: Int,
-                                message: String): LoggingEvent = {
+  def logES2ErrorFromEACDDelete(groupId: String, statusReturned: Int, message: String): LoggingEvent =
     Error(
       Event(
         "[EACDConnector][queryEnrolmentsAssignedToUser]",
@@ -387,7 +385,6 @@ object LoggingEvent {
         )
       )
     )
-  }
 
   def logUnexpectedErrorOccurred(
     credentialId: String,

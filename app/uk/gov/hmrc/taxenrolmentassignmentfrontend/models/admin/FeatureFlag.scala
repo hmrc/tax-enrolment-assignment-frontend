@@ -61,7 +61,7 @@ object FeatureFlagName {
       JsString(value).validate[FeatureFlagName] match {
         case JsSuccess(name, _) =>
           Right(name)
-        case _                  =>
+        case _ =>
           Left(s"The feature flag `$value` does not exist")
       }
 

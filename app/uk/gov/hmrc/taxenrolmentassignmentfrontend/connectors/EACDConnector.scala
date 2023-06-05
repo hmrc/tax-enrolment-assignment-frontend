@@ -17,7 +17,6 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors
 
 import cats.data.EitherT
-import javax.inject.Inject
 import play.api.Logger
 import play.api.http.Status._
 import uk.gov.hmrc.http.HttpReads.Implicits._
@@ -26,10 +25,11 @@ import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromEACD
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{logES2ErrorFromEACD, logES2ErrorFromEACDDelete, logUnexpectedResponseFromEACD, logUnexpectedResponseFromEACDQueryKnownFacts}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{logES2ErrorFromEACD, logUnexpectedResponseFromEACD, logUnexpectedResponseFromEACDQueryKnownFacts}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.{IRSAKey, hmrcPTKey}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{KnownFactQueryForNINO, KnownFactResponseForNINO, UserEnrolmentsListResponse, UsersAssignedEnrolment}
 
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class EACDConnector @Inject() (httpClient: HttpClient, logger: EventLoggerService, appConfig: AppConfig) {
@@ -156,8 +156,8 @@ class EACDConnector @Inject() (httpClient: HttpClient, logger: EventLoggerServic
       )
   }
 
-  def deallocateEnrolment(groupId: String, enrolmentKey: String)(
-    implicit hc: HeaderCarrier,
+  def deallocateEnrolment(groupId: String, enrolmentKey: String)(implicit
+    hc: HeaderCarrier,
     ec: ExecutionContext
   ): EitherT[Future, UpstreamErrorResponse, HttpResponse] = {
     val url =

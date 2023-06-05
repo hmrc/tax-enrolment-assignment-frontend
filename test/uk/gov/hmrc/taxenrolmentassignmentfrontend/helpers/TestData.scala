@@ -28,7 +28,6 @@ import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.UserDetailsFromSession
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{CREDENTIAL_ID, CREDENTIAL_ID_1, PT_USER_ID, USER_ID}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{IVNinoStoreEntry, IdentifiersOrVerifiers, UserEnrolment, UsersAssignedEnrolment, EACDEnrolment => _, _}
 
 object TestData {
@@ -155,7 +154,6 @@ object TestData {
       hasPTEnrolment = true,
       hasSAEnrolment = true
     )
-  }
 
   val ivNinoStoreEntryCurrent = IVNinoStoreEntry(CREDENTIAL_ID, Some(200))
   val ivNinoStoreEntry1 = IVNinoStoreEntry("6902202884164548", Some(50))
@@ -273,9 +271,17 @@ object TestData {
 
   def buildFakePOSTRequestWithSessionId(
     data: Map[String, String]
-  ): FakeRequest[AnyContentAsFormUrlEncoded] = {
+  ): FakeRequest[AnyContentAsFormUrlEncoded] =
     FakeRequest("POST", "Not Used")
       .withSession("sessionId" -> "FAKE_SESSION_ID")
       .withFormUrlEncodedBody(data.toSeq: _*)
-  }
 
+  val all_account_types = List(
+    SINGLE_ACCOUNT,
+    PT_ASSIGNED_TO_OTHER_USER,
+    PT_ASSIGNED_TO_CURRENT_USER,
+    MULTIPLE_ACCOUNTS,
+    SA_ASSIGNED_TO_CURRENT_USER,
+    SA_ASSIGNED_TO_OTHER_USER
+  )
+}

@@ -26,11 +26,11 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton()
-class FeatureFlagsController @Inject()(
+class FeatureFlagsController @Inject() (
   cc: MessagesControllerComponents,
   featureFlagService: FeatureFlagService
 )(implicit ec: ExecutionContext)
-  extends FrontendController(cc) with I18nSupport {
+    extends FrontendController(cc) with I18nSupport {
 
   def setFlag(featureFlagName: FeatureFlagName, isEnabled: Boolean): Action[AnyContent] = Action.async {
     featureFlagService.set(featureFlagName, isEnabled).map {

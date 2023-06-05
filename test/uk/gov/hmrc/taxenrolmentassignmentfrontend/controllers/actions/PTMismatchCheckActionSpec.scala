@@ -25,7 +25,7 @@ import play.api.test.Helpers.{GET, defaultAwaitTimeout, redirectLocation, status
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, UpstreamErrorResponse}
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{NINO, userDetailsWithMismatchNino, userDetailsWithPTEnrolment}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{NINO, userDetailsWithPTEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.admin.{FeatureFlag, FeatureFlagName, PtNinoMismatchCheckerToggle}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -33,30 +33,31 @@ import scala.concurrent.{ExecutionContext, Future}
 class PTMismatchCheckActionSpec extends TestFixture {
 
   def harnessToggleTrue[A](
-                            block: RequestWithUserDetailsFromSession[_] => Future[Result]
-                          )(implicit request: RequestWithUserDetailsFromSession[A]): Future[Result] = {
+    block: RequestWithUserDetailsFromSession[_] => Future[Result]
+  )(implicit request: RequestWithUserDetailsFromSession[A]): Future[Result] = {
     lazy val actionProvider = new PTMismatchCheckActionImpl(mockEacdService, mockFeatureFlagService)
     (mockFeatureFlagService
-      .get(_: FeatureFlagName)
-      ).expects(PtNinoMismatchCheckerToggle)
+      .get(_: FeatureFlagName))
+      .expects(PtNinoMismatchCheckerToggle)
       .returning(Future.successful(FeatureFlag(PtNinoMismatchCheckerToggle, isEnabled = true, None)))
     actionProvider.invokeBlock(request, block)
   }
 
   def harnessToggleFalse[A](
-                             block: RequestWithUserDetailsFromSession[_] => Future[Result]
-                           )(implicit request: RequestWithUserDetailsFromSession[A]): Future[Result] = {
+    block: RequestWithUserDetailsFromSession[_] => Future[Result]
+  )(implicit request: RequestWithUserDetailsFromSession[A]): Future[Result] = {
     lazy val actionProvider = new PTMismatchCheckActionImpl(mockEacdService, mockFeatureFlagService)
     (mockFeatureFlagService
-      .get(_: FeatureFlagName)
-      ).expects(PtNinoMismatchCheckerToggle)
+      .get(_: FeatureFlagName))
+      .expects(PtNinoMismatchCheckerToggle)
       .returning(Future.successful(FeatureFlag(PtNinoMismatchCheckerToggle, isEnabled = false, None)))
     actionProvider.invokeBlock(request, block)
   }
 
   "PTMismatchCheckAction" when {
     "a user has a HMRC-PT enrolment which does not match the request NINO" should {
-      val requestInnerWithRedirect = FakeRequest(GET, "testUrl?redirectUrl=/testRedirect").asInstanceOf[Request[AnyContent]]
+      val requestInnerWithRedirect =
+        FakeRequest(GET, "testUrl?redirectUrl=/testRedirect").asInstanceOf[Request[AnyContent]]
       val mismatchRequest = request.copy(userDetails = userDetailsWithMismatchNino, request = requestInnerWithRedirect)
 
       "delete the mismatched HMRC-PT enrolment and return SEE_OTHER" in {
@@ -66,18 +67,23 @@ class PTMismatchCheckActionSpec extends TestFixture {
             _: ExecutionContext
           ))
           .expects(mismatchRequest.userDetails.groupId, s"HMRC-PT~NINO~${Some(NINO)}", *, *)
-          .returning(EitherT[Future, UpstreamErrorResponse, HttpResponse](Future.successful(Right(HttpResponse(NO_CONTENT, "")))))
+          .returning(
+            EitherT[Future, UpstreamErrorResponse, HttpResponse](Future.successful(Right(HttpResponse(NO_CONTENT, ""))))
+          )
 
-        val block: RequestWithUserDetailsFromSession[_] => Future[Result] = userRequest =>
-          Future.successful(Ok(s"User Details: ${userRequest.userDetails}"))
+        val block: RequestWithUserDetailsFromSession[_] => Future[Result] =
+          userRequest => Future.successful(Ok(s"User Details: ${userRequest.userDetails}"))
 
         val action = harnessToggleTrue(block)(mismatchRequest)
         status(action) shouldBe SEE_OTHER
-        redirectLocation(action) shouldBe Some(routes.AccountCheckController.accountCheck(RedirectUrl("/testRedirect")).url)
+        redirectLocation(action) shouldBe Some(
+          routes.AccountCheckController.accountCheck(RedirectUrl("/testRedirect")).url
+        )
       }
       "not delete the mismatched HMRC-PT enrolment and return OK if there was no redirectUrl in the query string" in {
         val requestInnerWithoutRedirect = FakeRequest().asInstanceOf[Request[AnyContent]]
-        val mismatchRequest = request.copy(userDetails = userDetailsWithMismatchNino, request = requestInnerWithoutRedirect)
+        val mismatchRequest =
+          request.copy(userDetails = userDetailsWithMismatchNino, request = requestInnerWithoutRedirect)
 
         (mockEacdService
           .deallocateEnrolment(_: String, _: String)(
@@ -85,10 +91,12 @@ class PTMismatchCheckActionSpec extends TestFixture {
             _: ExecutionContext
           ))
           .expects(mismatchRequest.userDetails.groupId, s"HMRC-PT~NINO~${Some(NINO)}", *, *)
-          .returning(EitherT[Future, UpstreamErrorResponse, HttpResponse](Future.successful(Right(HttpResponse(NO_CONTENT, "")))))
+          .returning(
+            EitherT[Future, UpstreamErrorResponse, HttpResponse](Future.successful(Right(HttpResponse(NO_CONTENT, ""))))
+          )
 
-        val block: RequestWithUserDetailsFromSession[_] => Future[Result] = userRequest =>
-          Future.successful(Ok(s"User Details: ${userRequest.userDetails}"))
+        val block: RequestWithUserDetailsFromSession[_] => Future[Result] =
+          userRequest => Future.successful(Ok(s"User Details: ${userRequest.userDetails}"))
 
         val action = harnessToggleTrue(block)(mismatchRequest)
         status(action) shouldBe OK
@@ -102,8 +110,8 @@ class PTMismatchCheckActionSpec extends TestFixture {
           .expects(*, *, *, *)
           .never()
 
-        val block: RequestWithUserDetailsFromSession[_] => Future[Result] = userRequest =>
-          Future.successful(Ok(s"User Details: ${userRequest.userDetails}"))
+        val block: RequestWithUserDetailsFromSession[_] => Future[Result] =
+          userRequest => Future.successful(Ok(s"User Details: ${userRequest.userDetails}"))
 
         val action = harnessToggleFalse(block)(mismatchRequest)
         status(action) shouldBe OK
@@ -119,8 +127,8 @@ class PTMismatchCheckActionSpec extends TestFixture {
           .expects(*, *, *, *)
           .never()
 
-        val block: RequestWithUserDetailsFromSession[_] => Future[Result] = userRequest =>
-          Future.successful(Ok(s"User Details: ${userRequest.userDetails}"))
+        val block: RequestWithUserDetailsFromSession[_] => Future[Result] =
+          userRequest => Future.successful(Ok(s"User Details: ${userRequest.userDetails}"))
 
         val action = harnessToggleTrue(block)(request.copy(userDetails = userDetailsWithPTEnrolment))
         status(action) shouldBe OK
@@ -136,8 +144,8 @@ class PTMismatchCheckActionSpec extends TestFixture {
           .expects(*, *, *, *)
           .never()
 
-        val block: RequestWithUserDetailsFromSession[_] => Future[Result] = userRequest =>
-          Future.successful(Ok(s"User Details: ${userRequest.userDetails}"))
+        val block: RequestWithUserDetailsFromSession[_] => Future[Result] =
+          userRequest => Future.successful(Ok(s"User Details: ${userRequest.userDetails}"))
 
         val action = harnessToggleTrue(block)(request)
         status(action) shouldBe OK

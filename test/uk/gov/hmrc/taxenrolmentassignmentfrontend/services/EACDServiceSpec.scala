@@ -16,24 +16,18 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.services
 
-<<<<<<< HEAD
 import cats.data.EitherT
-import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
-import org.scalatest.time.{Millis, Seconds, Span}
 import play.api.http.Status
 import play.api.http.Status.{BAD_REQUEST, NO_CONTENT}
-=======
->>>>>>> main
 import play.api.libs.json.Format
 import play.api.mvc.AnyContent
-import play.api.test.Helpers.status
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, UpstreamErrorResponse}
 import uk.gov.hmrc.http.cache.client.CacheMap
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, UpstreamErrorResponse}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.EACDConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromEACD
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_ASSIGNED_PT_ENROLMENT, USER_ASSIGNED_SA_ENROLMENT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
@@ -179,9 +173,12 @@ class EACDServiceSpec extends BaseSpec {
             _: ExecutionContext
           ))
           .expects("testId", s"HMRC-PT~NINO~$NINO", *, *)
-          .returning(EitherT[Future, UpstreamErrorResponse, HttpResponse](Future.successful(Right(HttpResponse(NO_CONTENT, "")))))
+          .returning(
+            EitherT[Future, UpstreamErrorResponse, HttpResponse](Future.successful(Right(HttpResponse(NO_CONTENT, ""))))
+          )
 
-        val result = service.deallocateEnrolment("testId", s"HMRC-PT~NINO~$NINO")
+        val result = service
+          .deallocateEnrolment("testId", s"HMRC-PT~NINO~$NINO")
           .value
           .futureValue
           .getOrElse(HttpResponse(BAD_REQUEST, ""))
@@ -203,7 +200,11 @@ class EACDServiceSpec extends BaseSpec {
               _: ExecutionContext
             ))
             .expects("testId", s"HMRC-PT~NINO~$NINO", *, *)
-            .returning(EitherT[Future, UpstreamErrorResponse, HttpResponse](Future.successful(Left(UpstreamErrorResponse("", errorStatus)))))
+            .returning(
+              EitherT[Future, UpstreamErrorResponse, HttpResponse](
+                Future.successful(Left(UpstreamErrorResponse("", errorStatus)))
+              )
+            )
 
           val result = service.deallocateEnrolment("testId", s"HMRC-PT~NINO~$NINO")
           result.value.futureValue shouldBe Left(UpstreamErrorResponse("", errorStatus))

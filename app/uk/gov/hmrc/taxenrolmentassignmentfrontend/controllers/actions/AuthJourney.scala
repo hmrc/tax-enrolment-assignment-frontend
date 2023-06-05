@@ -21,5 +21,6 @@ import play.api.mvc.{ActionBuilder, AnyContent}
 import javax.inject.Inject
 
 class AuthJourney @Inject() (authAction: AuthAction, ptMismatchCheckAction: PTMismatchCheckAction) {
-  val authWithPTMismatchCheck: ActionBuilder[RequestWithUserDetailsFromSession, AnyContent] = authAction andThen ptMismatchCheckAction
+  val authWithPTMismatchCheck: ActionBuilder[RequestWithUserDetailsFromSession, AnyContent] =
+    authAction andThen ptMismatchCheckAction
 }

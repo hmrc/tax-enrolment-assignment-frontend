@@ -27,14 +27,14 @@ import scala.concurrent.duration.{Duration, FiniteDuration, SECONDS => Seconds}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class FeatureFlagService @Inject()(
-                                    appConfig: AppConfig,
-                                    featureFlagRepository: DefaultFeatureFlagRepository,
-                                    cache: AsyncCacheApi
+class FeatureFlagService @Inject() (
+  appConfig: AppConfig,
+  featureFlagRepository: DefaultFeatureFlagRepository,
+  cache: AsyncCacheApi
 )(implicit
   ec: ExecutionContext
 ) extends Logging {
-  lazy val cacheValidFor: FiniteDuration   =
+  lazy val cacheValidFor: FiniteDuration =
     Duration(appConfig.ehCacheTtlInSeconds, Seconds)
   private val allFeatureFlagsCacheKey = "*$*$allFeatureFlags*$*$"
 
@@ -44,7 +44,7 @@ class FeatureFlagService @Inject()(
       _      <- cache.remove(allFeatureFlagsCacheKey)
       result <- featureFlagRepository.setFeatureFlag(flagName, enabled)
       //blocking thread to let time to other containers to update their cache
-      _      <- Future.successful(Thread.sleep(appConfig.ehCacheTtlInSeconds * 1000))
+      _ <- Future.successful(Thread.sleep(appConfig.ehCacheTtlInSeconds * 1000))
     } yield result
 
   def get(flagName: FeatureFlagName): Future[FeatureFlag] =

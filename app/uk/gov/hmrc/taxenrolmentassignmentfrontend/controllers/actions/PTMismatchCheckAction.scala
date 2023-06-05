@@ -34,49 +34,54 @@ import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class PTMismatchCheckActionImpl @Inject() (
-                                      eacdService: EACDService,
-                                      featureFlagService: FeatureFlagService
-                                   )(implicit
-                                     ec: ExecutionContext
-                                   ) extends PTMismatchCheckAction with Logging {
+  eacdService: EACDService,
+  featureFlagService: FeatureFlagService
+)(implicit
+  ec: ExecutionContext
+) extends PTMismatchCheckAction with Logging {
 
   def invokeBlock[A](
-                      request: RequestWithUserDetailsFromSession[A],
-                      block: RequestWithUserDetailsFromSession[A] => Future[Result]
-                    ): Future[Result] = {
+    request: RequestWithUserDetailsFromSession[A],
+    block: RequestWithUserDetailsFromSession[A] => Future[Result]
+  ): Future[Result] =
     featureFlagService.get(PtNinoMismatchCheckerToggle).flatMap { toggle =>
       if (toggle.isEnabled) {
         implicit val hc: HeaderCarrier = fromRequestAndSession(request, request.session)
         implicit val userDetails: UserDetailsFromSession = request.userDetails
         val ptEnrolment = userDetails.enrolments.getEnrolment(s"$hmrcPTKey")
 
-        ptEnrolment.map(enrolment => {
-          ptMismatchCheck(enrolment, userDetails.nino, userDetails.groupId).map {
-            case true =>
-              request.request.getQueryString("redirectUrl") match {
-                case Some(url) =>
-                  Future.successful(
-                    Redirect(
-                      routes.AccountCheckController.accountCheck(
-                        RedirectUrl(url)
-                      ).url
+        ptEnrolment
+          .map { enrolment =>
+            ptMismatchCheck(enrolment, userDetails.nino, userDetails.groupId).map {
+              case true =>
+                request.request.getQueryString("redirectUrl") match {
+                  case Some(url) =>
+                    Future.successful(
+                      Redirect(
+                        routes.AccountCheckController
+                          .accountCheck(
+                            RedirectUrl(url)
+                          )
+                          .url
+                      )
                     )
-                  )
-                case None =>
-                  val ex = new RuntimeException(s"Redirect url is missing from the query string")
-                  logger.error(ex.getMessage, ex)
-                  block(request)
-              }
-            case _ => block(request)
-          }.flatten
-        }).getOrElse(block(request))
+                  case None =>
+                    val ex = new RuntimeException(s"Redirect url is missing from the query string")
+                    logger.error(ex.getMessage, ex)
+                    block(request)
+                }
+              case _ => block(request)
+            }.flatten
+          }
+          .getOrElse(block(request))
       } else {
         block(request)
       }
     }
-  }
 
-  private def ptMismatchCheck(enrolment: Enrolment, nino: String, groupId: String)(implicit hc: HeaderCarrier): Future[Boolean] = {
+  private def ptMismatchCheck(enrolment: Enrolment, nino: String, groupId: String)(implicit
+    hc: HeaderCarrier
+  ): Future[Boolean] = {
     val ptNino = enrolment.identifiers.find(_.key == "NINO").map(_.value)
 
     if (ptNino.getOrElse("") != nino) {

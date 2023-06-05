@@ -60,18 +60,19 @@ class AccountCheckController @Inject() (
       Try {
         redirectUrl.get(OnlyRelative | AbsoluteWithHostnameFromAllowlist(appConfig.validRedirectHostNames)).url
       } match {
-        case Success(redirectUrlString) => handleRequest(redirectUrlString).value.flatMap {
-          case Right((_, Some(redirectResult))) => Future.successful(redirectResult)
-          case Right((accountType, _))          => handleNoneThrottledUsers(accountType, redirectUrlString)
-          case Left(error) =>
-            Future.successful(errorHandler.handleErrors(error, "[AccountCheckController][accountCheck]"))
-        }
-      case Failure(error) =>
-        logger.logEvent(logInvalidRedirectUrl(error.getMessage), error)
-        Future.successful(
-          errorHandler.handleErrors(InvalidRedirectUrl, "[AccountCheckController][accountCheck]")
-        )
-    }
+        case Success(redirectUrlString) =>
+          handleRequest(redirectUrlString).value.flatMap {
+            case Right((_, Some(redirectResult))) => Future.successful(redirectResult)
+            case Right((accountType, _))          => handleNoneThrottledUsers(accountType, redirectUrlString)
+            case Left(error) =>
+              Future.successful(errorHandler.handleErrors(error, "[AccountCheckController][accountCheck]"))
+          }
+        case Failure(error) =>
+          logger.logEvent(logInvalidRedirectUrl(error.getMessage), error)
+          Future.successful(
+            errorHandler.handleErrors(InvalidRedirectUrl, "[AccountCheckController][accountCheck]")
+          )
+      }
 
   }
 

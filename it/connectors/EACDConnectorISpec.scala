@@ -301,9 +301,8 @@ class EACDConnectorISpec extends IntegrationSpecBase {
     "return Right if the delete request is successful" in {
       stubPost("/write/audit/merged", Status.NO_CONTENT, "")
       stubDelete(url, Status.CREATED)
-      whenReady(connector.deallocateEnrolment(groupId, enrolmentKey).value) {
-        response =>
-          response shouldBe a[Right[_, _]]
+      whenReady(connector.deallocateEnrolment(groupId, enrolmentKey).value) { response =>
+        response shouldBe a[Right[_, _]]
       }
     }
     List(
@@ -316,9 +315,8 @@ class EACDConnectorISpec extends IntegrationSpecBase {
       s"return Left if the delete request fails with $errorStatus" in {
         stubPost("/write/audit/merged", Status.NO_CONTENT, "")
         stubDelete(url, errorStatus)
-        whenReady(connector.deallocateEnrolment(groupId, enrolmentKey).value) {
-          response =>
-            response shouldBe a[Left[_, _]]
+        whenReady(connector.deallocateEnrolment(groupId, enrolmentKey).value) { response =>
+          response shouldBe a[Left[_, _]]
         }
       }
     }

@@ -73,8 +73,8 @@ class EACDService @Inject() (eacdConnector: EACDConnector, sessionCache: TEASess
            )
     } yield usersWithSAEnrolment
 
-  def deallocateEnrolment(groupId: String, enrolmentKey: String)(
-    implicit hc: HeaderCarrier,
+  def deallocateEnrolment(groupId: String, enrolmentKey: String)(implicit
+    hc: HeaderCarrier,
     ec: ExecutionContext
   ): EitherT[Future, UpstreamErrorResponse, HttpResponse] =
     eacdConnector.deallocateEnrolment(groupId, enrolmentKey)

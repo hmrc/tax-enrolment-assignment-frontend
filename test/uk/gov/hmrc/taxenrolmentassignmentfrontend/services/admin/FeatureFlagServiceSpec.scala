@@ -36,15 +36,15 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.time.{Millis, Span}
 import org.scalatest.wordspec.AnyWordSpec
-import play.api.{Application, inject}
-import play.api.cache.AsyncCacheApi
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.{Application, inject}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.admin.{FeatureFlagName, PtNinoMismatchCheckerToggle}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.admin.FeatureFlagRepository
 
 import scala.concurrent.Future
 
-class FeatureFlagServiceSpec extends AnyWordSpec with ScalaFutures with MockFactory with Matchers with OneInstancePerTest {
+class FeatureFlagServiceSpec
+    extends AnyWordSpec with ScalaFutures with MockFactory with Matchers with OneInstancePerTest {
 
   val mockFeatureFlagRepository = mock[FeatureFlagRepository]
   val mockCache = mock[AsyncCacheApi]
@@ -63,9 +63,10 @@ class FeatureFlagServiceSpec extends AnyWordSpec with ScalaFutures with MockFact
     "set a feature flag" in {
       (mockCache.remove(_: String)).expects(*).returning(Future.successful(Done)).twice
       (mockFeatureFlagRepository
-        .setFeatureFlag(_: FeatureFlagName, _: Boolean)
-        ).expects(PtNinoMismatchCheckerToggle, true)
-        .returning(Future.successful(true)).once
+        .setFeatureFlag(_: FeatureFlagName, _: Boolean))
+        .expects(PtNinoMismatchCheckerToggle, true)
+        .returning(Future.successful(true))
+        .once
 
       whenReady(featureFlagService.set(PtNinoMismatchCheckerToggle, enabled = true)) { result =>
         result shouldBe true

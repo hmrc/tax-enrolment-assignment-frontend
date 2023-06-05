@@ -44,12 +44,12 @@ class FeatureFlagRepositorySpec extends IntegrationSpecBase with DefaultPlayMong
 
   val configValues: Map[String, Any] =
     Map(
-      "cookie.encryption.key" -> "gvBoGdgzqG1AarzF1LY0zQ==",
-      "sso.encryption.key" -> "gvBoGdgzqG1AarzF1LY0zQ==",
+      "cookie.encryption.key"         -> "gvBoGdgzqG1AarzF1LY0zQ==",
+      "sso.encryption.key"            -> "gvBoGdgzqG1AarzF1LY0zQ==",
       "queryParameter.encryption.key" -> "gvBoGdgzqG1AarzF1LY0zQ==",
-      "json.encryption.key" -> "gvBoGdgzqG1AarzF1LY0zQ==",
-      "metrics.enabled" -> false,
-      "auditing.enabled" -> false
+      "json.encryption.key"           -> "gvBoGdgzqG1AarzF1LY0zQ==",
+      "metrics.enabled"               -> false,
+      "auditing.enabled"              -> false
     )
 
   override implicit lazy val app = GuiceApplicationBuilder()

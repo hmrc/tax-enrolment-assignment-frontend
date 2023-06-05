@@ -25,9 +25,9 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.{IR
 object LoggingEvent {
 
   def logSingleAccountHolderAssignedEnrolment(
-                                               credentialId: String,
-                                               nino: String
-                                             ): LoggingEvent =
+    credentialId: String,
+    nino: String
+  ): LoggingEvent =
     Info(
       Event(
         "[AccountCheckController][silentEnrol]",
@@ -47,9 +47,9 @@ object LoggingEvent {
   )
 
   def logMultipleAccountHolderAssignedEnrolment(
-                                                 credentialId: String,
-                                                 nino: String
-                                               ): LoggingEvent =
+    credentialId: String,
+    nino: String
+  ): LoggingEvent =
     Info(
       Event(
         "[AccountCheckController][silentEnrol]",
@@ -60,8 +60,8 @@ object LoggingEvent {
     )
 
   def logAssignedEnrolmentAfterReportingFraud(
-                                               credentialId: String
-                                             ): LoggingEvent =
+    credentialId: String
+  ): LoggingEvent =
     Info(
       Event(
         "[ReportSuspiciousIdController][continue]",
@@ -117,9 +117,9 @@ object LoggingEvent {
     )
 
   def logAnotherAccountAlreadyHasPTEnrolment(
-                                              credentialId: String,
-                                              credentialWithPTEnrolment: String
-                                            ): LoggingEvent =
+    credentialId: String,
+    credentialWithPTEnrolment: String
+  ): LoggingEvent =
     Info(
       Event(
         "[AccountCheckOrchestrator][getAccountType]",
@@ -130,9 +130,9 @@ object LoggingEvent {
     )
 
   def logAnotherAccountHasSAEnrolment(
-                                       credentialId: String,
-                                       credentialWithSAEnrolment: String
-                                     ): LoggingEvent =
+    credentialId: String,
+    credentialWithSAEnrolment: String
+  ): LoggingEvent =
     Info(
       Event(
         "[AccountCheckOrchestrator][getAccountType]",
@@ -167,10 +167,10 @@ object LoggingEvent {
     )
 
   def logIncorrectUserType(
-                            credentialId: String,
-                            expectedUserType: List[AccountTypes.Value],
-                            actualUserType: AccountTypes.Value
-                          ): LoggingEvent = {
+    credentialId: String,
+    expectedUserType: List[AccountTypes.Value],
+    actualUserType: AccountTypes.Value
+  ): LoggingEvent = {
     val expectedUserTypeString = expectedUserType.foldLeft[String]("") { (a, b) =>
       if (a.isEmpty) {
         b.toString
@@ -228,10 +228,10 @@ object LoggingEvent {
     )
 
   def logUnexpectedResponseFromEACD(
-                                     enrolmentType: String,
-                                     statusReturned: Int,
-                                     eacdErrorMsg: String = "N/A"
-                                   ): LoggingEvent =
+    enrolmentType: String,
+    statusReturned: Int,
+    eacdErrorMsg: String = "N/A"
+  ): LoggingEvent =
     Error(
       Event(
         "[EACDConnector][getUsersWithAssignedEnrolment]",
@@ -243,10 +243,10 @@ object LoggingEvent {
     )
 
   def logUnexpectedResponseFromEACDQueryKnownFacts(
-                                                    nino: String,
-                                                    statusReturned: Int,
-                                                    eacdErrorMsg: String = "N/A"
-                                                  ): LoggingEvent =
+    nino: String,
+    statusReturned: Int,
+    eacdErrorMsg: String = "N/A"
+  ): LoggingEvent =
     Error(
       Event(
         "[EACDConnector][queryKnownFactsByNinoVerifier]",
@@ -258,10 +258,10 @@ object LoggingEvent {
     )
 
   def logUnexpectedResponseFromTaxEnrolments(
-                                              nino: String,
-                                              statusReturned: Int,
-                                              errorMsg: String = ""
-                                            ): LoggingEvent =
+    nino: String,
+    statusReturned: Int,
+    errorMsg: String = ""
+  ): LoggingEvent =
     Error(
       Event(
         "[TaxEnrolmentsConnector][assignPTEnrolment]",
@@ -273,10 +273,10 @@ object LoggingEvent {
     )
 
   def logUnexpectedResponseFromUsersGroupsSearch(
-                                                  credId: String,
-                                                  statusReturned: Int,
-                                                  errorMsg: String = "N/A"
-                                                ): LoggingEvent =
+    credId: String,
+    statusReturned: Int,
+    errorMsg: String = "N/A"
+  ): LoggingEvent =
     Error(
       Event(
         "[UsersGroupSearchConnector][getUsersDetails]",
@@ -296,9 +296,9 @@ object LoggingEvent {
     )
 
   def logUnexpectedResponseFromTaxEnrolmentsKnownFacts(
-                                                        nino: String,
-                                                        statusReturned: Int
-                                                      ): LoggingEvent =
+    nino: String,
+    statusReturned: Int
+  ): LoggingEvent =
     Error(
       Event(
         "[TaxEnrolmentsConnector][assignPTEnrolmentWithKnownFacts]",
@@ -309,10 +309,10 @@ object LoggingEvent {
     )
 
   def logDetailedUnexpectedResponseFromTaxEnrolmentsKnownFacts(
-                                                                input: String,
-                                                                statusReturned: Int,
-                                                                response: String
-                                                              ): LoggingEvent =
+    input: String,
+    statusReturned: Int,
+    response: String
+  ): LoggingEvent =
     Debug(
       Event(
         "[TaxEnrolmentsConnector][assignPTEnrolmentWithKnownFacts]",
@@ -323,8 +323,8 @@ object LoggingEvent {
     )
 
   def logUnexpectedResponseFromLandingPage(
-                                            error: TaxEnrolmentAssignmentErrors
-                                          ): LoggingEvent =
+    error: TaxEnrolmentAssignmentErrors
+  ): LoggingEvent =
     Error(
       Event(
         "[LandingPageController][showLandingPage]",
@@ -375,11 +375,25 @@ object LoggingEvent {
       )
     )
 
+  def logES2ErrorFromEACDDelete(groupId: String,
+                                statusReturned: Int,
+                                message: String): LoggingEvent = {
+    Error(
+      Event(
+        "[EACDConnector][queryEnrolmentsAssignedToUser]",
+        errorDetails = Some(
+          s"EACD returned status of $statusReturned when attempting to delete the HMRC-PT enrolment for groupId: $groupId, " +
+            s"with the error response providing the following message: $message"
+        )
+      )
+    )
+  }
+
   def logUnexpectedErrorOccurred(
-                                  credentialId: String,
-                                  classAndMethod: String,
-                                  errorType: TaxEnrolmentAssignmentErrors
-                                ): LoggingEvent =
+    credentialId: String,
+    classAndMethod: String,
+    errorType: TaxEnrolmentAssignmentErrors
+  ): LoggingEvent =
     Error(Event(classAndMethod, details = Some(s"${errorType.toString} for $credentialId")))
 
   implicit val formats: Format[Event] = Json.format[Event]

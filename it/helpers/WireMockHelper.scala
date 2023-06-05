@@ -102,8 +102,7 @@ trait WireMockHelper extends Eventually with BeforeAndAfterAll with BeforeAndAft
         )
     )
 
-  def stubDelete(url: String,
-               status: Integer): StubMapping =
+  def stubDelete(url: String, status: Integer): StubMapping =
     stubFor(
       delete(urlMatching(url))
         .willReturn(

@@ -36,10 +36,10 @@ import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.{AppConfig, ErrorHandler}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AuthAction, AuthJourney, PTMismatchCheckAction, RequestWithUserDetailsFromSession, ThrottleAction, UserDetailsFromSession}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{TaxEnrolmentAssignmentErrors, UnexpectedError, UnexpectedResponseFromIV, UnexpectedResponseFromTaxEnrolments}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{BaseSpec, UrlPaths, buildFakeRequestWithSessionId}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{BaseSpec, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.AccountCheckOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
@@ -51,12 +51,16 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
 
-  def mockPTMismatchCheckAction(userDetails: UserDetailsFromSession): PTMismatchCheckAction = new PTMismatchCheckAction {
-    override def invokeBlock[A](request: RequestWithUserDetailsFromSession[A], block: RequestWithUserDetailsFromSession[A] => Future[Result]): Future[Result] =
-      block(RequestWithUserDetailsFromSession(request, userDetails, s"sessionId-${UUID.randomUUID().toString}"))
+  def mockPTMismatchCheckAction(userDetails: UserDetailsFromSession): PTMismatchCheckAction =
+    new PTMismatchCheckAction {
+      override def invokeBlock[A](
+        request: RequestWithUserDetailsFromSession[A],
+        block: RequestWithUserDetailsFromSession[A] => Future[Result]
+      ): Future[Result] =
+        block(RequestWithUserDetailsFromSession(request, userDetails, s"sessionId-${UUID.randomUUID().toString}"))
 
-    override protected def executionContext: ExecutionContext = ec
-  }
+      override protected def executionContext: ExecutionContext = ec
+    }
 
   def mockAccountShouldNotBeThrottled(
     accountTypes: AccountTypes.Value,

@@ -28,6 +28,7 @@ import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.UserDetailsFromSession
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{CREDENTIAL_ID, CREDENTIAL_ID_1, PT_USER_ID, USER_ID}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{IVNinoStoreEntry, IdentifiersOrVerifiers, UserEnrolment, UsersAssignedEnrolment, EACDEnrolment => _, _}
 
 object TestData {
@@ -99,12 +100,16 @@ object TestData {
     optGroupId: Option[String] = Some(GROUP_ID),
     optAffinityGroup: Option[AffinityGroup] = Some(Individual),
     email: Option[String] = Some(CURRENT_USER_EMAIL)
-  ): (((((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[String]) ~ Option[
-    AffinityGroup]) ~ Option[String]) =
-    new ~( new ~(
-      new ~(new ~(new ~(optNino, optCredentials), enrolments), optGroupId),
-      optAffinityGroup
-    ), email )
+  ): (((((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[String]) ~ Option[AffinityGroup]) ~ Option[
+    String
+  ]) =
+    new ~(
+      new ~(
+        new ~(new ~(new ~(optNino, optCredentials), enrolments), optGroupId),
+        optAffinityGroup
+      ),
+      email
+    )
 
   val userDetailsNoEnrolments =
     UserDetailsFromSession(
@@ -115,7 +120,7 @@ object TestData {
       Individual,
       enrolments = Enrolments(Set.empty[Enrolment]),
       hasPTEnrolment = false,
-      hasSAEnrolment = false,
+      hasSAEnrolment = false
     )
   val userDetailsWithPTEnrolment =
     UserDetailsFromSession(
@@ -139,7 +144,7 @@ object TestData {
       hasPTEnrolment = false,
       hasSAEnrolment = true
     )
-  val userDetailsWithPTAndSAEnrolment = {
+  val userDetailsWithPTAndSAEnrolment =
     UserDetailsFromSession(
       CREDENTIAL_ID,
       NINO,
@@ -151,17 +156,6 @@ object TestData {
       hasSAEnrolment = true
     )
   }
-  val userDetailsWithMismatchNino: UserDetailsFromSession =
-    UserDetailsFromSession(
-      CREDENTIAL_ID,
-      "mismatch", // TODO - Add NINO generator
-      GROUP_ID,
-      Some(CURRENT_USER_EMAIL),
-      Individual,
-      enrolments = ptEnrolmentOnly,
-      hasPTEnrolment = false,
-      hasSAEnrolment = false,
-    )
 
   val ivNinoStoreEntryCurrent = IVNinoStoreEntry(CREDENTIAL_ID, Some(200))
   val ivNinoStoreEntry1 = IVNinoStoreEntry("6902202884164548", Some(50))
@@ -279,17 +273,9 @@ object TestData {
 
   def buildFakePOSTRequestWithSessionId(
     data: Map[String, String]
-  ): FakeRequest[AnyContentAsFormUrlEncoded] =
+  ): FakeRequest[AnyContentAsFormUrlEncoded] = {
     FakeRequest("POST", "Not Used")
       .withSession("sessionId" -> "FAKE_SESSION_ID")
       .withFormUrlEncodedBody(data.toSeq: _*)
+  }
 
-  val all_account_types = List(
-    SINGLE_ACCOUNT,
-    PT_ASSIGNED_TO_OTHER_USER,
-    PT_ASSIGNED_TO_CURRENT_USER,
-    MULTIPLE_ACCOUNTS,
-    SA_ASSIGNED_TO_CURRENT_USER,
-    SA_ASSIGNED_TO_OTHER_USER
-  )
-}

@@ -17,7 +17,6 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.models.admin
 
 import play.api.libs.json.JsString
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
 
 class FeatureFlagNameSpec extends TestFixture {
   FeatureFlagName.allFeatureFlags.foreach { toggle: FeatureFlagName =>

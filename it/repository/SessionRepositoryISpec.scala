@@ -16,14 +16,13 @@
 
 package repository
 
-import java.time.{LocalDateTime, ZoneId}
+import java.time.{Duration, Instant}
 import java.util.UUID
-
 import helpers.IntegrationSpecBase
 import org.mongodb.scala.model.Filters
 import play.api.libs.json.JsString
 import uk.gov.hmrc.http.cache.client.CacheMap
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.DatedCacheMap
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.DatedCacheMap
 
 class SessionRepositoryISpec extends IntegrationSpecBase {
 
@@ -37,14 +36,13 @@ class SessionRepositoryISpec extends IntegrationSpecBase {
         val cacheMap = CacheMap(sessionId, Map(KEY -> JsString(data)))
 
         val res = for {
-          saved <- sessionRepository().upsert(cacheMap)
+          saved   <- sessionRepository.upsert(cacheMap)
           fetched <- fetch(sessionId)
         } yield (saved, fetched)
 
-        whenReady(res) {
-          case (saved, fetched) =>
-            saved shouldBe true
-            fetched shouldBe Some(cacheMap)
+        whenReady(res) { case (saved, fetched) =>
+          saved shouldBe true
+          fetched shouldBe Some(cacheMap)
         }
       }
     }
@@ -61,17 +59,16 @@ class SessionRepositoryISpec extends IntegrationSpecBase {
         val updatedCacheMap = CacheMap(sessionId, Map(KEY -> JsString(newData)))
 
         val res = for {
-          _ <- save[String](sessionId, KEY, currentData)
+          _              <- save[String](sessionId, KEY, currentData)
           fetchedCurrent <- fetch(sessionId)
-          updated <- sessionRepository().upsert(updatedCacheMap)
+          updated        <- sessionRepository.upsert(updatedCacheMap)
           fetchedUpdated <- fetch(sessionId)
         } yield (fetchedCurrent, updated, fetchedUpdated)
 
-        whenReady(res) {
-          case (fetchedInitial, updated, fetchedUpdated) =>
-            fetchedInitial shouldBe Some(initialCacheMap)
-            updated shouldBe true
-            fetchedUpdated shouldBe Some(updatedCacheMap)
+        whenReady(res) { case (fetchedInitial, updated, fetchedUpdated) =>
+          fetchedInitial shouldBe Some(initialCacheMap)
+          updated shouldBe true
+          fetchedUpdated shouldBe Some(updatedCacheMap)
         }
       }
     }
@@ -81,7 +78,7 @@ class SessionRepositoryISpec extends IntegrationSpecBase {
     "there is no record" should {
       "return None" in {
         val sessionId = UUID.randomUUID().toString
-        val res = sessionRepository().get(sessionId)
+        val res = sessionRepository.get(sessionId)
 
         whenReady(res) { result =>
           result shouldBe None
@@ -98,14 +95,13 @@ class SessionRepositoryISpec extends IntegrationSpecBase {
         val expectedCacheMap = CacheMap(sessionId, Map(KEY -> JsString(data)))
 
         val res = for {
-          saved <- save[String](sessionId, KEY, data)
-          fetched <- sessionRepository().get(sessionId)
+          saved   <- save[String](sessionId, KEY, data)
+          fetched <- sessionRepository.get(sessionId)
         } yield (saved, fetched)
 
-        whenReady(res) {
-          case (saved, fetched) =>
-            saved shouldBe expectedCacheMap
-            fetched shouldBe Some(expectedCacheMap)
+        whenReady(res) { case (saved, fetched) =>
+          saved shouldBe expectedCacheMap
+          fetched shouldBe Some(expectedCacheMap)
         }
       }
     }
@@ -115,7 +111,7 @@ class SessionRepositoryISpec extends IntegrationSpecBase {
     "there is no record" should {
       "create a new record with no data" in {
         val sessionId = UUID.randomUUID().toString
-        val res = sessionRepository().updateLastUpdated(sessionId)
+        val res = sessionRepository.updateLastUpdated(sessionId)
 
         whenReady(res) { result =>
           result shouldBe true
@@ -129,29 +125,28 @@ class SessionRepositoryISpec extends IntegrationSpecBase {
         val KEY = "testing"
         val data = "example"
 
-        val oldDatetime = LocalDateTime.now(ZoneId.of("UTC")).minusMinutes(1L)
+        val oldDatetime = Instant.now().minus(Duration.ofMinutes(1))
         val cacheMap = CacheMap(sessionId, Map(KEY -> JsString(data)))
         val datedCachedMap =
           DatedCacheMap(sessionId, cacheMap.data, oldDatetime)
         val res = for {
-          _ <- sessionRepository().collection
-            .insertOne(datedCachedMap)
-            .toFuture()
-          getOriginal <- sessionRepository().collection
-            .find(Filters.equal("id", sessionId))
-            .first()
-            .toFuture()
-          updateLastUpdated <- sessionRepository().updateLastUpdated(sessionId)
-          getUpdated <- sessionRepository().collection
-            .find(Filters.equal("id", sessionId))
-            .first()
-            .toFuture()
+          _ <- sessionRepository.collection
+                 .insertOne(datedCachedMap)
+                 .toFuture()
+          getOriginal <- sessionRepository.collection
+                           .find(Filters.equal("id", sessionId))
+                           .first()
+                           .toFuture()
+          updateLastUpdated <- sessionRepository.updateLastUpdated(sessionId)
+          getUpdated <- sessionRepository.collection
+                          .find(Filters.equal("id", sessionId))
+                          .first()
+                          .toFuture()
         } yield (getOriginal, updateLastUpdated, getUpdated)
 
-        whenReady(res) {
-          case (getOriginal, updateLastUpdated, getUpdated) =>
-            updateLastUpdated shouldBe true
-            getUpdated.lastUpdated shouldNot equal(getOriginal.lastUpdated)
+        whenReady(res) { case (getOriginal, updateLastUpdated, getUpdated) =>
+          updateLastUpdated shouldBe true
+          getUpdated.lastUpdated shouldNot equal(getOriginal.lastUpdated)
         }
       }
     }

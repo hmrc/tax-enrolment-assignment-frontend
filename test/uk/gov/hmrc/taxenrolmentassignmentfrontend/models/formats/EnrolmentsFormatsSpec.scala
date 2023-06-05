@@ -18,21 +18,29 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.models.formats
 
 import play.api.libs.json.Json
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 
-class EnrolmentsFormatsSpec extends TestFixture {
+class EnrolmentsFormatsSpec extends BaseSpec {
 
   "writes" should {
     "write to json correctly" in {
       val enrolments: Set[Enrolment] =
         Set(
-          Enrolment("foo", Seq(EnrolmentIdentifier("wizzle", "bizzle")),"oof", None),
-          Enrolment("woo", Seq(EnrolmentIdentifier("hizzle", "dizzle")),"boof", None)
-      )
+          Enrolment("foo", Seq(EnrolmentIdentifier("wizzle", "bizzle")), "oof", None),
+          Enrolment("woo", Seq(EnrolmentIdentifier("hizzle", "dizzle")), "boof", None)
+        )
 
       val expectedJson = Json.arr(
-        Json.obj("key" -> "foo", "identifiers" -> Json.arr(Json.obj("key" -> "wizzle", "value" -> "bizzle")), "state" -> "oof"),
-        Json.obj("key" -> "woo", "identifiers" -> Json.arr(Json.obj("key" -> "hizzle", "value" -> "dizzle")), "state" -> "boof")
+        Json.obj(
+          "key"         -> "foo",
+          "identifiers" -> Json.arr(Json.obj("key" -> "wizzle", "value" -> "bizzle")),
+          "state"       -> "oof"
+        ),
+        Json.obj(
+          "key"         -> "woo",
+          "identifiers" -> Json.arr(Json.obj("key" -> "hizzle", "value" -> "dizzle")),
+          "state"       -> "boof"
+        )
       )
 
       Json.toJson(enrolments)(EnrolmentsFormats.writes) shouldBe expectedJson

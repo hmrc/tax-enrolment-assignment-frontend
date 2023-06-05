@@ -16,31 +16,34 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.services
 
+<<<<<<< HEAD
 import cats.data.EitherT
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.time.{Millis, Seconds, Span}
 import play.api.http.Status
 import play.api.http.Status.{BAD_REQUEST, NO_CONTENT}
+=======
+>>>>>>> main
 import play.api.libs.json.Format
 import play.api.mvc.AnyContent
 import play.api.test.Helpers.status
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, UpstreamErrorResponse}
 import uk.gov.hmrc.http.cache.client.CacheMap
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.EACDConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromEACD
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestFixture
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_ASSIGNED_PT_ENROLMENT, USER_ASSIGNED_SA_ENROLMENT}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class EACDServiceSpec extends TestFixture with ScalaFutures {
+class EACDServiceSpec extends BaseSpec {
 
-  implicit val defaultPatience = PatienceConfig(
-    timeout = Span(TIME_OUT, Seconds),
-    interval = Span(INTERVAL, Millis)
-  )
+  lazy val mockEacdConnector: EACDConnector = mock[EACDConnector]
+  lazy val mockTeaSessionCache = mock[TEASessionCache]
 
   val service = new EACDService(mockEacdConnector, mockTeaSessionCache)
 

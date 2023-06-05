@@ -30,54 +30,48 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class EACDService @Inject()(eacdConnector: EACDConnector,
-                            sessionCache: TEASessionCache) {
+class EACDService @Inject() (eacdConnector: EACDConnector, sessionCache: TEASessionCache) {
 
-  def getUsersAssignedPTEnrolment(
-    implicit requestWithUserDetails: RequestWithUserDetailsFromSession[_],
+  def getUsersAssignedPTEnrolment(implicit
+    requestWithUserDetails: RequestWithUserDetailsFromSession[_],
     hc: HeaderCarrier,
     ec: ExecutionContext
-  ): TEAFResult[UsersAssignedEnrolment] = {
+  ): TEAFResult[UsersAssignedEnrolment] =
     for {
       userWithPTEnrolment <- eacdConnector
-        .getUsersWithPTEnrolment(requestWithUserDetails.userDetails.nino)
+                               .getUsersWithPTEnrolment(requestWithUserDetails.userDetails.nino)
       _ <- EitherT.right[TaxEnrolmentAssignmentErrors](
-        sessionCache
-          .save[UsersAssignedEnrolment](
-            USER_ASSIGNED_PT_ENROLMENT,
-            userWithPTEnrolment
-          )
-      )
+             sessionCache
+               .save[UsersAssignedEnrolment](
+                 USER_ASSIGNED_PT_ENROLMENT,
+                 userWithPTEnrolment
+               )
+           )
     } yield userWithPTEnrolment
-  }
 
-  def getUsersAssignedSAEnrolment(
-    implicit requestWithUserDetails: RequestWithUserDetailsFromSession[_],
+  def getUsersAssignedSAEnrolment(implicit
+    requestWithUserDetails: RequestWithUserDetailsFromSession[_],
     hc: HeaderCarrier,
     ec: ExecutionContext
-  ): TEAFResult[UsersAssignedEnrolment] = {
-
+  ): TEAFResult[UsersAssignedEnrolment] =
     for {
       optUTR <- eacdConnector.queryKnownFactsByNinoVerifier(
-        requestWithUserDetails.userDetails.nino
-      )
+                  requestWithUserDetails.userDetails.nino
+                )
       usersWithSAEnrolment <- optUTR match {
-        case Some(utr) => eacdConnector.getUsersWithSAEnrolment(utr)
-        case None =>
-          EitherT.right[TaxEnrolmentAssignmentErrors](
-            Future.successful(UsersAssignedEnrolment(None))
-          )
-      }
+                                case Some(utr) => eacdConnector.getUsersWithSAEnrolment(utr)
+                                case None =>
+                                  EitherT.right[TaxEnrolmentAssignmentErrors](
+                                    Future.successful(UsersAssignedEnrolment(None))
+                                  )
+                              }
       _ <- EitherT.right[TaxEnrolmentAssignmentErrors](
-        sessionCache.save[UsersAssignedEnrolment](
-          USER_ASSIGNED_SA_ENROLMENT,
-          usersWithSAEnrolment
-        )
-      )
-    } yield {
-      usersWithSAEnrolment
-    }
-  }
+             sessionCache.save[UsersAssignedEnrolment](
+               USER_ASSIGNED_SA_ENROLMENT,
+               usersWithSAEnrolment
+             )
+           )
+    } yield usersWithSAEnrolment
 
   def deallocateEnrolment(groupId: String, enrolmentKey: String)(
     implicit hc: HeaderCarrier,

@@ -16,26 +16,25 @@
 
 package controllers
 
-import helpers.TestHelper
-import helpers.TestITData.{authoriseResponseJson, sessionId, xRequestId, xSessionId}
-import helpers.WiremockHelper.{stubAuthorizePost, stubPost}
+import helpers.{IntegrationSpecBase, ItUrlPaths}
+import helpers.TestITData.{authoriseResponseJson, sessionId, xAuthToken, xSessionId}
+import play.api.test.Helpers.{GET, await, contentAsString, defaultAwaitTimeout, route, status, writeableOf_AnyContentAsEmpty}
 import helpers.messages.TimedOutMessages
 import org.jsoup.Jsoup
-import play.api.http.Status
-import play.api.libs.ws.DefaultWSCookie
+import play.api.http.Status.{NO_CONTENT, OK}
+import play.api.test.FakeRequest
 
-import java.time.LocalDateTime
+import java.time.Instant
 import scala.concurrent.Future
 
-class TimeOutControllerISpec extends TestHelper with Status {
+class TimeOutControllerISpec extends IntegrationSpecBase {
 
-  val urlPathKeepAlive: String = UrlPaths.keepAlive
-  val urlPathTimeout: String = UrlPaths.timeout
+  val urlPathKeepAlive: String = ItUrlPaths.keepAlive
+  val urlPathTimeout: String = ItUrlPaths.timeout
 
-  def saveToSessionAndGetLastLoginDate: Future[LocalDateTime] = {
-    save[String](sessionId, "redirectURL", UrlPaths.returnUrl)
+  def saveToSessionAndGetLastLoginDate: Future[Instant] =
+    save[String](sessionId, "redirectURL", returnUrl)
       .map(_ => getLastLoginDateTime(sessionId))
-  }
 
   s"GET $urlPathKeepAlive" should {
     "extend the session cache and return NoContent" in {
@@ -44,30 +43,26 @@ class TimeOutControllerISpec extends TestHelper with Status {
       val authResponse = authoriseResponseJson()
       stubAuthorizePost(OK, authResponse.toString())
       Thread.sleep(2000)
-      val res = buildRequest(urlPathKeepAlive)
-        .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-        .addHttpHeaders(xSessionId, xRequestId)
-        .get()
 
-      whenReady(res) { resp =>
-        resp.status shouldBe NO_CONTENT
-        assert(getLastLoginDateTime(sessionId).isAfter(initialLastLoginDate))
-      }
+      val request = FakeRequest(GET, "/protect-tax-info" + urlPathKeepAlive)
+        .withSession(xAuthToken, xSessionId)
+      val result = route(app, request).get
+
+      status(result) shouldBe NO_CONTENT
+      assert(getLastLoginDateTime(sessionId).isAfter(initialLastLoginDate))
     }
   }
 
   s"GET $urlPathTimeout" should {
     "return OK and render the timeout page" in {
-      val res = buildRequest(urlPathTimeout)
-        .addCookies(DefaultWSCookie("mdtp", authAndSessionCookie))
-        .addHttpHeaders(xSessionId, xRequestId)
-        .get()
+      val request = FakeRequest(GET, "/protect-tax-info" + urlPathTimeout)
+        .withSession(xAuthToken, xSessionId)
+      val result = route(app, request).get
 
-      whenReady(res) { resp =>
-        resp.status shouldBe OK
-        val page = Jsoup.parse(resp.body)
-        page.title should include(TimedOutMessages.title)
-      }
+      status(result) shouldBe OK
+      val page = Jsoup.parse(contentAsString(result))
+      page.title should include(TimedOutMessages.title)
+
     }
   }
 }

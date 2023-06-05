@@ -41,5 +41,6 @@ object AccountTypes extends Enumeration {
     case PT_ASSIGNED_TO_CURRENT_USER => "PT_ASSIGNED_TO_CURRENT_USER"
     case PT_ASSIGNED_TO_OTHER_USER   => "PT_ASSIGNED_TO_OTHER_USER"
     case MULTIPLE_ACCOUNTS           => "MULTIPLE_ACCOUNTS"
+    case _                           => throw new RuntimeException(s"AccountTypes declaration `$fileStatus` is missing")
   }
 }

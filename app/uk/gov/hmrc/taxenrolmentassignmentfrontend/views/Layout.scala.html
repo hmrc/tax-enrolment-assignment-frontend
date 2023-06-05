@@ -50,7 +50,6 @@
 @hmrcLayout(
  additionalHeadBlock = Some(headBlock),
  pageTitle = Some(messages(if(hasError) {"common.pageTitle.error"} else {"common.pageTitle"}, pageTitle.getOrElse(""), messages("service.name"))),
- nonce = CSPNonce.get,
  serviceName = Some(messages("service.name")),
  isWelshTranslationAvailable = appConfig.welshLanguageSupportEnabled,
  backLink = if(backLinkEnabled) Some(BackLink.mimicsBrowserBackButtonViaJavaScript) else None,

@@ -26,13 +26,12 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
 
 @Singleton
-class TimeOutController @Inject()(
+class TimeOutController @Inject() (
   authAction: AuthAction,
   mcc: MessagesControllerComponents,
   sessionCache: TEASessionCache,
   timedoutView: TimedOutView
-)
-    extends TEAFrontendController(mcc) {
+) extends TEAFrontendController(mcc) {
 
   def keepAlive: Action[AnyContent] = authAction.async { implicit request =>
     sessionCache.extendSession()

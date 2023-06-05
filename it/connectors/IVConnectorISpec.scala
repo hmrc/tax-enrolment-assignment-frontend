@@ -18,7 +18,6 @@ package connectors
 
 import helpers.IntegrationSpecBase
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.IVConnector
-import helpers.WiremockHelper._
 import helpers.TestITData._
 import play.api.http.Status
 import play.api.http.Status.OK

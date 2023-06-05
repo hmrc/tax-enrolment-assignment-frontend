@@ -17,72 +17,75 @@
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.helpers.CreateSummaryRow
-@import uk.gov.hmrc.govukfrontend.views.viewmodels.backlink.BackLink
 
 @this(
-layout: Layout,
-formHelper: FormWithCSRF,
-govukSummaryList : GovukSummaryList,
-govukDetails : GovukDetails,
-govukButton: GovukButton,
-summaryRow: CreateSummaryRow
+        layout: Layout,
+        formHelper: FormWithCSRF,
+        govukDetails: GovukDetails,
+        govukButton: GovukButton,
+        summaryRow: CreateSummaryRow
 )
 
 @(ptAccountDetails: AccountDetails, saOnOtherAccountJourney: Boolean = false)(implicit request: Request[_], messages: Messages)
 
 @content = {
-<p class="govuk-body">@messages("ReportSuspiciousID.detailsComponent.text1")</p>
-<p class="govuk-body">@messages("ReportSuspiciousID.detailsComponent.text2")
-<a class = "govuk-link" target="_blank" href=@messages("ReportSuspiciousID.detailsComponent.link.href")>@messages("ReportSuspiciousID.detailsComponent.link")</a>
-@messages("ReportSuspiciousID.detailsComponent.text3")</p>
-<p class="govuk-body">@messages("ReportSuspiciousID.detailsComponent.text4")</p>
+    <p class="govuk-body">@messages("ReportSuspiciousID.detailsComponent.text1")</p>
+    <p class="govuk-body">@messages("ReportSuspiciousID.detailsComponent.text2")
+        <a class = "govuk-link" target="_blank" href=@messages("ReportSuspiciousID.detailsComponent.link.href")>@messages("ReportSuspiciousID.detailsComponent.link")</a>
+        @messages("ReportSuspiciousID.detailsComponent.text3")</p>
+    <p class="govuk-body">@messages("ReportSuspiciousID.detailsComponent.text4")</p>
 }
 
 
 @layout(
-pageTitle = Some(messages("ReportSuspiciousID.title")), backLinkEnabled = true) {
+    pageTitle = Some(messages("ReportSuspiciousID.title")), backLinkEnabled = true) {
 
-<h1 class="govuk-heading-xl">@{messages(s"ReportSuspiciousID.heading")}</h1>
+    <h1 class="govuk-heading-xl">@{
+        messages(s"ReportSuspiciousID.heading")
+    }</h1>
 
-<p class="govuk-body">
-    @messages("ReportSuspiciousID.text1")
-    @messages("ReportSuspiciousID.text2")
-</p>
+    <p class="govuk-body">
+        @messages("ReportSuspiciousID.text1")
+        @messages("ReportSuspiciousID.text2")
+    </p>
 
-<dl class="govuk-summary-list">
+    <dl class="govuk-summary-list">
 
-    @summaryRow("common.userId", ptAccountDetails.userId)
-    @summaryRow("ReportSuspiciousID.email", ptAccountDetails.emailDecrypted.get)
-    @summaryRow("ReportSuspiciousID.lastLoginDate", ptAccountDetails.lastLoginDate)
-    @for(mfaDetail <- ptAccountDetails.mfaDetails) {
-    @summaryRow(mfaDetail.factorNameKey, mfaDetail.factorValue)
+        @summaryRow("common.userId", ptAccountDetails.userId)
+        @summaryRow("ReportSuspiciousID.email", ptAccountDetails.emailDecrypted.get)
+        @summaryRow("ReportSuspiciousID.lastLoginDate", ptAccountDetails.lastLoginDate)
+        @for(mfaDetail <- ptAccountDetails.mfaDetails) {
+            @summaryRow(mfaDetail.factorNameKey, mfaDetail.factorValue)
+        }
+
+
+    </dl>
+    @if(saOnOtherAccountJourney) {
+        <p class="govuk-body">@messages("ReportSuspiciousID.referenceNumberAndHelpdeskTiming")
+        </p>
     }
+    <ul class="govuk-list" id="telephone-numbers">
+        <li>@messages("ReportSuspiciousID.telephone.title")</li>
+        <li class="govuk-body govuk-!-font-weight-bold" >@messages("ReportSuspiciousID.telephone.number")</li>
+        <li>@messages("ReportSuspiciousID.outsideUK.title")</li>
+        <li class="govuk-body govuk-!-font-weight-bold" >@messages("ReportSuspiciousID.outsideUK.number")</li>
+    </ul>
 
 
-</dl>
+    @govukDetails(Details(
+        summary = Text(messages("ReportSuspiciousID.detailsComponent.title")),
+        content = HtmlContent(content)
+    ))
 
-<ul class="govuk-list" id="telephone-numbers">
-    <li>@messages("ReportSuspiciousID.telephone.title")</li>
-    <li class="govuk-body govuk-!-font-weight-bold" >@messages("ReportSuspiciousID.telephone.number")</li>
-    <li>@messages("ReportSuspiciousID.outsideUK.title")</li>
-    <li class="govuk-body govuk-!-font-weight-bold" >@messages("ReportSuspiciousID.outsideUK.number")</li>
-</ul>
-
-
-@govukDetails(Details(
-summary = Text(messages("ReportSuspiciousID.detailsComponent.title")),
-content = HtmlContent(content)
-))
-
-@if(saOnOtherAccountJourney) {
-  @formHelper(action = routes.ReportSuspiciousIDController.continue) {
-    <p class="govuk-body">@messages("ReportSuspiciousID.sa.text1") </p>
-    <br>
-    @govukButton(Button(
-        preventDoubleClick = true,
-        content = Text(messages("common.continue")),
-        )
-      )
+    @if(saOnOtherAccountJourney) {
+        @formHelper(action = routes.ReportSuspiciousIDController.continue) {
+            <p class="govuk-body">@messages("ReportSuspiciousID.sa.text1") </p>
+            <br>
+            @govukButton(Button(
+                preventDoubleClick = Some(true),
+                content = Text(messages("common.continue")),
+            )
+            )
+        }
     }
-  }
 }

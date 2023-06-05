@@ -19,10 +19,12 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.config
 import play.api.inject.{Binding, Module}
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.admin.{DefaultFeatureFlagRepository, FeatureFlagRepository}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.{DefaultTEASessionCache, TEASessionCache}
 
 class HmrcModule extends Module {
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] =
     Seq(
-      bind[FeatureFlagRepository].to[DefaultFeatureFlagRepository].eagerly()
+      bind[FeatureFlagRepository].to[DefaultFeatureFlagRepository].eagerly(),
+      bind[TEASessionCache].to[DefaultTEASessionCache].eagerly()
     )
 }

@@ -1,11 +1,8 @@
 import play.sbt.routes.RoutesKeys
 import scoverage.ScoverageKeys
 import uk.gov.hmrc.DefaultBuildSettings.integrationTestSettings
-import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.publishingSettings
 
 val appName = "tax-enrolment-assignment-frontend"
-
-val silencerVersion = "1.7.8"
 
 lazy val coverageSettings: Seq[Setting[_]] = {
   Seq(
@@ -16,16 +13,13 @@ lazy val coverageSettings: Seq[Setting[_]] = {
   )
 }
 
-lazy val scalaStyleSettings = {
-  Seq(scalastyleFailOnError := true)
-}
-
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
   .disablePlugins(JUnitXmlReportPlugin) //Required to prevent https://github.com/scalatest/scalatest/issues/1427
   .settings(
     majorVersion := 0,
     scalaVersion := "2.13.8",
+    scalafmtOnCompile                := true,
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     RoutesKeys.routesImport ++= Seq("uk.gov.hmrc.play.bootstrap.binders.RedirectUrl", "uk.gov.hmrc.taxenrolmentassignmentfrontend.models.admin._"),
     PlayKeys.playDefaultPort := 7750,
@@ -34,21 +28,19 @@ lazy val microservice = Project(appName, file("."))
       "uk.gov.hmrc.govukfrontend.views.html.components._",
       "uk.gov.hmrc.hmrcfrontend.views.html.components._"
     ),
-    pipelineStages in Assets := Seq(gzip),
-    // ***************
-    // Use the silencer plugin to suppress warnings
-    scalacOptions += "-P:silencer:pathFilters=routes",
-    libraryDependencies ++= Seq(
-      caffeine,
-      compilerPlugin(
-        "com.github.ghik" % "silencer-plugin" % silencerVersion cross CrossVersion.full
-      ),
-      "com.github.ghik" % "silencer-lib" % silencerVersion % Provided cross CrossVersion.full
+    Assets / pipelineStages := Seq(gzip),
+    scalacOptions ++= Seq(
+      "-Ywarn-unused",
+      "-feature",
+      "-Werror",
+      "-Wconf:cat=unused-imports&site=.*views\\.html.*:s",
+      "-Wconf:cat=unused-imports&site=<empty>:s",
+      "-Wconf:cat=unused&src=.*RoutesPrefix\\.scala:s",
+      "-Wconf:cat=unused&src=.*Routes\\.scala:s",
+      "-Wconf:cat=unused&src=.*ReverseRoutes\\.scala:s"
     )
-    // ***************
   )
   .settings(coverageSettings: _*)
-  .settings(publishingSettings: _*)
   .configs(IntegrationTest)
   .settings(integrationTestSettings(): _*)
   .settings(resolvers += Resolver.jcenterRepo)

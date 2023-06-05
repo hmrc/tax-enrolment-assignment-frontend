@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers
 
-import com.google.inject.Inject
+import javax.inject.Inject
 import play.api.Logger
 import play.api.mvc.{MessagesControllerComponents, Result}
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
@@ -28,13 +28,13 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logUnexpectedErrorOccurred
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
-class ErrorHandler @Inject()(errorView: ErrorTemplate, logger: EventLoggerService, mcc: MessagesControllerComponents)
-  extends TEAFrontendController(mcc)  {
+class ErrorHandler @Inject() (errorView: ErrorTemplate, logger: EventLoggerService, mcc: MessagesControllerComponents)
+    extends TEAFrontendController(mcc) {
 
-  def handleErrors(error: TaxEnrolmentAssignmentErrors, classAndMethod: String)(
-    implicit request: RequestWithUserDetailsFromSession[_],
+  def handleErrors(error: TaxEnrolmentAssignmentErrors, classAndMethod: String)(implicit
+    request: RequestWithUserDetailsFromSession[_],
     baseLogger: Logger
-  ): Result = {
+  ): Result =
     error match {
       case IncorrectUserType(redirectUrl, _) =>
         Redirect(routes.AccountCheckController.accountCheck(RedirectUrl.apply(redirectUrl)))
@@ -51,5 +51,4 @@ class ErrorHandler @Inject()(errorView: ErrorTemplate, logger: EventLoggerServic
         )
         InternalServerError(errorView())
     }
-  }
 }

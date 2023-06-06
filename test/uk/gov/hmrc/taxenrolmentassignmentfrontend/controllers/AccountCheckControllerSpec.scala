@@ -24,7 +24,7 @@ import play.api.http.Status.SEE_OTHER
 import play.api.i18n.MessagesApi
 import play.api.inject.bind
 import play.api.libs.json.Format
-import play.api.mvc.{BodyParsers, MessagesControllerComponents, Result}
+import play.api.mvc.{BodyParsers, Result}
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
@@ -35,13 +35,10 @@ import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{PTMismatchCheckAction, RequestWithUserDetailsFromSession, UserDetailsFromSession}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{TaxEnrolmentAssignmentErrors, UnexpectedError, UnexpectedResponseFromIV, UnexpectedResponseFromTaxEnrolments}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{BaseSpec, UrlPaths}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.ErrorHandler
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.AccountCheckOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
@@ -151,6 +148,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
       bind[AuthConnector].toInstance(mockAuthConnector),
       bind[BodyParsers.Default].toInstance(testBodyParser)
     )
+    .configure("feature.pt-nino-mismatch" -> false)
     .build()
 
   lazy val controller = app.injector.instanceOf[AccountCheckController]
@@ -162,7 +160,6 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
     "a single credential exists for a given nino with no PT enrolment" should {
       s"silently assign the HMRC-PT Enrolment and redirect to users redirect url" when {
         "the user has not been assigned the enrolment already" in new TestHelper {
-          val controller: AccountCheckController = mockControllerWithAuthJourney()
           mockAuthCall()
           mockSaveDataToCache
           mockAccountCheckSuccess(SINGLE_ACCOUNT)
@@ -190,8 +187,6 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
 
       s"not silently assign the HMRC-PT Enrolment and redirect to users redirect url" when {
         "the user has been assigned the enrolment already" in new TestHelper {
-          val controller: AccountCheckController = mockControllerWithAuthJourney(userDetailsWithPTEnrolment)
-
           mockAuthCallWithPT()
           mockSaveDataToCache
           mockAccountCheckSuccess(SINGLE_ACCOUNT)
@@ -216,7 +211,6 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
       }
 
       "return an error page if there was an error assigning the enrolment" in new TestHelper {
-        val controller: AccountCheckController = mockControllerWithAuthJourney()
         mockAuthCall()
         mockSaveDataToCache
         mockAccountCheckSuccess(SINGLE_ACCOUNT)
@@ -235,7 +229,6 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
 
     "a single credential exists for a given nino that is already enrolled for PT" should {
       s"redirect to ${UrlPaths.returnUrl}" in new TestHelper {
-        val controller: AccountCheckController = mockControllerWithAuthJourney()
         mockAuthCall()
         mockSaveDataToCache
         mockAccountCheckSuccess(PT_ASSIGNED_TO_CURRENT_USER)
@@ -253,7 +246,6 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
 
     "a PT enrolment exists on another users account" should {
       s"redirect to ${UrlPaths.ptOnOtherAccountPath}" in new TestHelper {
-        val controller: AccountCheckController = mockControllerWithAuthJourney()
         mockAuthCall()
         mockSaveDataToCache
         mockAccountCheckSuccess(PT_ASSIGNED_TO_OTHER_USER)
@@ -271,7 +263,6 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
     "multiple credential exists for a given nino and no enrolments exists" should {
       s"enrol for PT and redirect to ${UrlPaths.enrolledPTNoSAOnAnyAccountPath}" when {
         "the user has not already been assigned the PT enrolment" in new TestHelper {
-          val controller: AccountCheckController = mockControllerWithAuthJourney()
           mockAuthCall()
           mockSaveDataToCache
           mockAccountCheckSuccess(MULTIPLE_ACCOUNTS)
@@ -292,7 +283,6 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
 
       s"not enrol for PT and redirect to ${UrlPaths.enrolledPTNoSAOnAnyAccountPath}" when {
         "the user has already been assigned the PT enrolment" in new TestHelper {
-          val controller: AccountCheckController = mockControllerWithAuthJourney(userDetailsWithPTEnrolment)
           mockAuthCallWithPT()
           mockSaveDataToCache
           mockAccountCheckSuccess(MULTIPLE_ACCOUNTS)
@@ -314,7 +304,6 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
     "multiple credential exists for a given nino and current credential has SA enrolment" should {
       s"enrol for PT and redirect to ${UrlPaths.enrolledPTWithSAAccountPath}" when {
         "the current user hasn't already been assigned a PT enrolment" in new TestHelper {
-          val controller: AccountCheckController = mockControllerWithAuthJourney(userDetailsWithSAEnrolment)
           mockAuthCallWithSA()
           mockSaveDataToCache
           mockAccountCheckSuccess(SA_ASSIGNED_TO_CURRENT_USER)
@@ -339,7 +328,6 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
 
       s"not enrol for PT and redirect to ${UrlPaths.enrolledPTWithSAAccountPath}" when {
         "the current user has already been assigned a PT enrolment" in new TestHelper {
-          val controller: AccountCheckController = mockControllerWithAuthJourney(userDetailsWithPTAndSAEnrolment)
           mockAuthCallWithPT(true)
           mockSaveDataToCache
           mockAccountCheckSuccess(SA_ASSIGNED_TO_CURRENT_USER)
@@ -361,7 +349,6 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
     "multiple credential exists for a given nino and a non signed in account has SA enrolment" should {
       s"redirect ${UrlPaths.saOnOtherAccountInterruptPath}" when {
         "the PT enrolment has not already been assigned" in new TestHelper {
-          val controller: AccountCheckController = mockControllerWithAuthJourney()
           mockAuthCall()
           mockSaveDataToCache
           mockAccountCheckSuccess(SA_ASSIGNED_TO_OTHER_USER)
@@ -385,8 +372,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
 
       s"redirect ${UrlPaths.enrolledPTSAOnOtherAccountPath}" when {
         "the PT enrolment has not already been assigned" in new TestHelper {
-          val controller: AccountCheckController = mockControllerWithAuthJourney(userDetailsWithPTEnrolment)
-
+          mockPTMismatchCheckAction(userDetailsWithMismatchNino)
           mockAuthCallWithPT()
           mockSaveDataToCache
           mockAccountCheckSuccess(SA_ASSIGNED_TO_OTHER_USER)
@@ -407,7 +393,6 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
 
     "a no credentials exists in IV for a given nino" should {
       "render the error page" in new TestHelper {
-        val controller: AccountCheckController = mockControllerWithAuthJourney()
         mockAuthCall()
         mockSaveDataToCache
         mockGetAccountTypeFailure(UnexpectedResponseFromIV)
@@ -423,7 +408,6 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
 
     "throttled" should {
       "redirect user to their redirect url" in new TestHelper {
-        val controller: AccountCheckController = mockControllerWithAuthJourney()
         mockAuthCall()
         mockSaveDataToCache
         mockAccountShouldBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
@@ -441,7 +425,6 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
     }
     "throttle returns error" should {
       s"return $INTERNAL_SERVER_ERROR" in new TestHelper {
-        val controller: AccountCheckController = mockControllerWithAuthJourney()
         mockAuthCall()
         mockSaveDataToCache
         mockErrorFromThrottlingService(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
@@ -494,26 +477,6 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
         )
         .expects(predicates, retrievals, *, *)
         .returning(Future.successful(retrievalResponse(enrolments = saEnrolmentOnly)))
-
-    def mockControllerWithAuthJourney(userDetails: UserDetailsFromSession = userDetailsNoEnrolments) = {
-      lazy val mockAuthAction = mock[AuthAction]
-
-      lazy val mockAuthJourney =
-        new AuthJourney(mockAuthAction, mockPTMismatchCheckAction(userDetails))
-
-      new AccountCheckController(
-        mockSilentAssignmentService,
-        inject[ThrottleAction],
-        mockAuthJourney,
-        mockAccountCheckOrchestrator,
-        mockAuditHandler,
-        inject[MessagesControllerComponents],
-        mockTeaSessionCache,
-        inject[AppConfig],
-        inject[EventLoggerService],
-        inject[ErrorHandler]
-      )
-    }
 
     def mockAuthCallWithPT(hasSA: Boolean = false) = {
       val enrolments = if (hasSA) saAndptEnrolments else ptEnrolmentOnly

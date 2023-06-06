@@ -44,18 +44,20 @@ class PTMismatchCheckActionImpl @Inject() (
     block: RequestWithUserDetailsFromSession[A] => Future[Result]
   ): Future[Result] =
     if (appConfig.ptNinoMismatchToggle()) {
+      println("1" * 100)
+
       implicit val hc: HeaderCarrier = fromRequestAndSession(request, request.session)
       implicit val userDetails: UserDetailsFromSession = request.userDetails
       val ptEnrolment = userDetails.enrolments.getEnrolment(s"$hmrcPTKey")
-
+      println("2" * 100)
       ptEnrolment
         .map { enrolment =>
           ptMismatchCheck(enrolment, userDetails.nino, userDetails.groupId).map {
             case true =>
-              println("1" * 100)
-
               request.request.getQueryString("redirectUrl") match {
                 case Some(url) =>
+                  println("3" * 100)
+
                   Future.successful(
                     Redirect(
                       routes.AccountCheckController
@@ -66,23 +68,22 @@ class PTMismatchCheckActionImpl @Inject() (
                     )
                   )
                 case None =>
-                  println("2" * 100)
+                  println("4" * 100)
                   val ex = new RuntimeException(s"Redirect url is missing from the query string")
                   logger.error(ex.getMessage, ex)
                   block(request)
               }
             case _ =>
-              println("3" * 100)
+              println("5" * 100)
               block(request)
           }.flatten
         }
         .getOrElse {
-          println("4" * 100)
+          println("6" * 100)
           block(request)
         }
     } else {
-      println("5" * 100)
-
+      println("7" * 100)
       block(request)
     }
 

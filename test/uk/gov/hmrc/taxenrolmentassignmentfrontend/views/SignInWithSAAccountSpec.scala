@@ -18,12 +18,9 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.views
 
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import play.api.Application
-import play.api.inject.bind
 import play.api.test.FakeRequest
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignOutController
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthAction
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.CREDENTIAL_ID
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.SignInAgainMessages
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails}
@@ -31,16 +28,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{ReportSuspiciousID
 
 class SignInWithSAAccountSpec extends ViewSpecHelper {
 
-  lazy val mockAuthAction = mock[AuthAction]
-
-  override implicit lazy val app: Application = localGuiceApplicationBuilder()
-    .overrides(
-      bind[AuthAction].toInstance(mockAuthAction)
-    )
-    .build()
-
-  lazy val service = app.injector.instanceOf[SignOutController]
-
+  lazy val service: SignOutController = inject[SignOutController]
   lazy val signInAgainPage: SignInWithSAAccount = inject[SignInWithSAAccount]
   lazy val reportSuspiciousIDPage: ReportSuspiciousID =
     inject[ReportSuspiciousID]
@@ -175,6 +163,5 @@ class SignInWithSAAccountSpec extends ViewSpecHelper {
     validateTimeoutDialog(document)
     validateTechnicalHelpLinkPresent(document)
     validateAccessibilityStatementLinkPresent(document)
-
   }
 }

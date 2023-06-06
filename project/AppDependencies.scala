@@ -14,8 +14,7 @@ object AppDependencies {
     "uk.gov.hmrc"         %%  "domain"                      % s"8.1.0-$playVersion",
     "uk.gov.hmrc"         %%  "http-caching-client"         % s"9.6.0-$playVersion",
     "uk.gov.hmrc.mongo"   %%  s"hmrc-mongo-$playVersion"          % hmrcMongoVersion,
-    "uk.gov.hmrc"         %%  s"crypto-json-$playVersion"         % "7.2.0",
-    ehcache
+    "uk.gov.hmrc"         %%  s"crypto-json-$playVersion"         % "7.2.0"
   )
 
   val test = Seq(

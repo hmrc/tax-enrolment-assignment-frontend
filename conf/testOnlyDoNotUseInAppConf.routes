@@ -20,4 +20,3 @@ GET        /sa/test-only/start                                                  
 PUT       /auth/test-only/enrolments                                                                          uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController.authStub
 +nocsrf
 PUT       /tax-enrolments/test-only/service/HMRC-PT/enrolment                                                 uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController.taxEnrolmentsStub
-PUT       /protect-tax-info/test-only/setFlag/:flagName/:isEnabled                                            uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.FeatureFlagsController.setFlag(flagName: FeatureFlagName, isEnabled: Boolean)

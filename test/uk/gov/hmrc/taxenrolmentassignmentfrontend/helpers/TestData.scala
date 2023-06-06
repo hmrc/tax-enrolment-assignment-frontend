@@ -279,12 +279,12 @@ object TestData {
   val userDetailsWithMismatchNino: UserDetailsFromSession =
     UserDetailsFromSession(
       CREDENTIAL_ID,
-      NINO, // TODO - Add NINO generator
+      "testFakeNino", // TODO - Add NINO generator
       GROUP_ID,
       Some(CURRENT_USER_EMAIL),
       Individual,
       enrolments = ptEnrolmentOnly,
-      hasPTEnrolment = false,
+      hasPTEnrolment = true,
       hasSAEnrolment = false
     )
 

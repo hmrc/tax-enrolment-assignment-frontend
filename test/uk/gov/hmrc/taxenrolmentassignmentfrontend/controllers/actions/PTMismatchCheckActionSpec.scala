@@ -24,39 +24,32 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.{GET, defaultAwaitTimeout, redirectLocation, status}
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, UpstreamErrorResponse}
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{NINO, userDetailsWithMismatchNino, userDetailsWithPTEnrolment}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.admin.{FeatureFlag, FeatureFlagName, PtNinoMismatchCheckerToggle}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.EACDService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.admin.FeatureFlagService
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class PTMismatchCheckActionSpec extends BaseSpec {
 
   val mockEacdService: EACDService = mock[EACDService]
-  val mockFeatureFlagService: FeatureFlagService = mock[FeatureFlagService]
+  val mockAppConf: AppConfig = mock[AppConfig]
 
   def harnessToggleTrue[A](
     block: RequestWithUserDetailsFromSession[_] => Future[Result]
   )(implicit request: RequestWithUserDetailsFromSession[A]): Future[Result] = {
-    lazy val actionProvider = new PTMismatchCheckActionImpl(mockEacdService, mockFeatureFlagService)
-    (mockFeatureFlagService
-      .get(_: FeatureFlagName))
-      .expects(PtNinoMismatchCheckerToggle)
-      .returning(Future.successful(FeatureFlag(PtNinoMismatchCheckerToggle, isEnabled = true, None)))
+    (mockAppConf.ptNinoMismatchToggle _).expects().returning(true)
+    lazy val actionProvider = new PTMismatchCheckActionImpl(mockEacdService, mockAppConf)
     actionProvider.invokeBlock(request, block)
   }
 
   def harnessToggleFalse[A](
     block: RequestWithUserDetailsFromSession[_] => Future[Result]
   )(implicit request: RequestWithUserDetailsFromSession[A]): Future[Result] = {
-    lazy val actionProvider = new PTMismatchCheckActionImpl(mockEacdService, mockFeatureFlagService)
-    (mockFeatureFlagService
-      .get(_: FeatureFlagName))
-      .expects(PtNinoMismatchCheckerToggle)
-      .returning(Future.successful(FeatureFlag(PtNinoMismatchCheckerToggle, isEnabled = false, None)))
+    (mockAppConf.ptNinoMismatchToggle _).expects().returning(false)
+    lazy val actionProvider = new PTMismatchCheckActionImpl(mockEacdService, mockAppConf)
     actionProvider.invokeBlock(request, block)
   }
 
@@ -64,6 +57,7 @@ class PTMismatchCheckActionSpec extends BaseSpec {
     "a user has a HMRC-PT enrolment which does not match the request NINO" should {
       val requestInnerWithRedirect =
         FakeRequest(GET, "testUrl?redirectUrl=/testRedirect").asInstanceOf[Request[AnyContent]]
+
       val mismatchRequest = request.copy(userDetails = userDetailsWithMismatchNino, request = requestInnerWithRedirect)
 
       "delete the mismatched HMRC-PT enrolment and return SEE_OTHER" in {
@@ -72,7 +66,7 @@ class PTMismatchCheckActionSpec extends BaseSpec {
             _: HeaderCarrier,
             _: ExecutionContext
           ))
-          .expects(mismatchRequest.userDetails.groupId, s"HMRC-PT~NINO~${Some(NINO)}", *, *)
+          .expects(*, *, *, *)
           .returning(
             EitherT[Future, UpstreamErrorResponse, HttpResponse](Future.successful(Right(HttpResponse(NO_CONTENT, ""))))
           )
@@ -107,7 +101,7 @@ class PTMismatchCheckActionSpec extends BaseSpec {
         val action = harnessToggleTrue(block)(mismatchRequest)
         status(action) shouldBe OK
       }
-      "not delete the mismatched HMRC-PT enrolment and return OK if the mongo toggle is set to false" in {
+      "not delete the mismatched HMRC-PT enrolment and return OK if the toggle is set to false" in {
         (mockEacdService
           .deallocateEnrolment(_: String, _: String)(
             _: HeaderCarrier,

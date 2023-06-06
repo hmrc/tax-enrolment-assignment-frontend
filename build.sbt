@@ -21,7 +21,7 @@ lazy val microservice = Project(appName, file("."))
     scalaVersion := "2.13.8",
     scalafmtOnCompile                := true,
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
-    RoutesKeys.routesImport ++= Seq("uk.gov.hmrc.play.bootstrap.binders.RedirectUrl", "uk.gov.hmrc.taxenrolmentassignmentfrontend.models.admin._"),
+    RoutesKeys.routesImport ++= Seq("uk.gov.hmrc.play.bootstrap.binders.RedirectUrl"),
     PlayKeys.playDefaultPort := 7750,
     TwirlKeys.templateImports ++= Seq(
       "uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig",

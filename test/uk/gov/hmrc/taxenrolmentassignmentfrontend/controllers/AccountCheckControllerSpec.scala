@@ -148,7 +148,6 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
       bind[AuthConnector].toInstance(mockAuthConnector),
       bind[BodyParsers.Default].toInstance(testBodyParser)
     )
-    .configure("feature.pt-nino-mismatch" -> false)
     .build()
 
   lazy val controller = app.injector.instanceOf[AccountCheckController]

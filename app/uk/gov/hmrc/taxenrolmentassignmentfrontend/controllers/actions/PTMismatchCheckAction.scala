@@ -44,20 +44,15 @@ class PTMismatchCheckActionImpl @Inject() (
     block: RequestWithUserDetailsFromSession[A] => Future[Result]
   ): Future[Result] =
     if (appConfig.ptNinoMismatchToggle()) {
-      println("1" * 100)
-
       implicit val hc: HeaderCarrier = fromRequestAndSession(request, request.session)
       implicit val userDetails: UserDetailsFromSession = request.userDetails
       val ptEnrolment = userDetails.enrolments.getEnrolment(s"$hmrcPTKey")
-      println("2" * 100)
       ptEnrolment
         .map { enrolment =>
           ptMismatchCheck(enrolment, userDetails.nino, userDetails.groupId).map {
             case true =>
               request.request.getQueryString("redirectUrl") match {
                 case Some(url) =>
-                  println("3" * 100)
-
                   Future.successful(
                     Redirect(
                       routes.AccountCheckController
@@ -68,22 +63,15 @@ class PTMismatchCheckActionImpl @Inject() (
                     )
                   )
                 case None =>
-                  println("4" * 100)
                   val ex = new RuntimeException(s"Redirect url is missing from the query string")
                   logger.error(ex.getMessage, ex)
                   block(request)
               }
-            case _ =>
-              println("5" * 100)
-              block(request)
+            case _ => block(request)
           }.flatten
         }
-        .getOrElse {
-          println("6" * 100)
-          block(request)
-        }
+        .getOrElse(block(request))
     } else {
-      println("7" * 100)
       block(request)
     }
 
@@ -92,10 +80,8 @@ class PTMismatchCheckActionImpl @Inject() (
   ): Future[Boolean] = {
     val ptNino = enrolment.identifiers.find(_.key == "NINO").map(_.value)
     if (ptNino.getOrElse("") != nino) {
-      println("a" * 100)
       eacdService.deallocateEnrolment(groupId, s"$hmrcPTKey~NINO~$ptNino").isRight
     } else {
-      println("b" * 100)
       Future.successful(false)
     }
   }

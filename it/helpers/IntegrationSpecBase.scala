@@ -46,6 +46,7 @@ trait IntegrationSpecBase
     with ScalaFutures with Injecting with IntegrationPatience with SessionCacheOperations with WireMockHelper {
 
   def generateNino: Nino = new NinoGenerator().nextNino
+  def secondGenerateNino: Nino = new NinoGenerator().nextNino
 
   implicit lazy val ec: ExecutionContext = app.injector.instanceOf[ExecutionContext]
   lazy implicit val hc: HeaderCarrier = HeaderCarrier(

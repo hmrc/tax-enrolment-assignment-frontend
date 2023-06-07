@@ -46,11 +46,14 @@ class PTMismatchCheckActionImpl @Inject() (
     if (appConfig.ptNinoMismatchToggle()) {
       implicit val hc: HeaderCarrier = fromRequestAndSession(request, request.session)
       implicit val userDetails: UserDetailsFromSession = request.userDetails
+      println("0" * 100)
+
       val ptEnrolment = userDetails.enrolments.getEnrolment(s"$hmrcPTKey")
       ptEnrolment
         .map { enrolment =>
           ptMismatchCheck(enrolment, userDetails.nino, userDetails.groupId).map {
             case true =>
+              println("1" * 100)
               request.request.getQueryString("redirectUrl") match {
                 case Some(url) =>
                   Future.successful(
@@ -67,7 +70,9 @@ class PTMismatchCheckActionImpl @Inject() (
                   logger.error(ex.getMessage, ex)
                   block(request)
               }
-            case _ => block(request)
+            case _ =>
+              println("2" * 100)
+              block(request)
           }.flatten
         }
         .getOrElse(block(request))

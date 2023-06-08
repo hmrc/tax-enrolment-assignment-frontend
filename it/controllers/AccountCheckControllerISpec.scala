@@ -21,7 +21,7 @@ import helpers.messages._
 import helpers.{IntegrationSpecBase, ItUrlPaths}
 import play.api.http.Status
 import play.api.http.Status.{BAD_REQUEST, NO_CONTENT, OK, SEE_OTHER}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{AnyContent, Request}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{GET, contentAsString, defaultAwaitTimeout, redirectLocation, route, status, writeableOf_AnyContentAsEmpty}
@@ -215,6 +215,8 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
     s"$ThrottleDoesNotApply" should {
       "not redirect user to their redirect url and follow standard logic" when {
         s"the current user has $PT_ASSIGNED_TO_CURRENT_USER for a Nino within threshold" in {
+          val ptEnrolmentOnly: JsValue =
+            Json.arr(createEnrolmentJson("HMRC-PT", "NINO", ninoBelowThreshold))
           val authResponse = authoriseResponseJson(optNino = Some(ninoBelowThreshold), enrolments = ptEnrolmentOnly)
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")

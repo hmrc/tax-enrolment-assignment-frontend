@@ -90,7 +90,10 @@ class PTMismatchCheckActionImpl @Inject() (
   ): Future[Option[Boolean]] = {
     val ptNino = enrolment.identifiers.find(_.key == "NINO").map(_.value)
     if (ptNino.getOrElse("") != nino) {
-      eacdService.deallocateEnrolment(groupId, s"$hmrcPTKey~NINO~$ptNino").isRight.map(result => Some(result))
+      eacdService
+        .deallocateEnrolment(groupId, s"$hmrcPTKey~NINO~$ptNino")
+        .isRight
+        .map(result => Some(result))
     } else {
       Future.successful(None)
     }

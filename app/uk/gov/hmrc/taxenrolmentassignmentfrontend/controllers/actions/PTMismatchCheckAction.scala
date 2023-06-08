@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions
 
 import cats.data.OptionT
 import com.google.inject.ImplementedBy
-import play.api.{Logger, Logging}
+import play.api.Logger
 import play.api.mvc.Results.Redirect
 import play.api.mvc.{ActionFunction, MessagesControllerComponents, Result}
 import uk.gov.hmrc.auth.core.Enrolment
@@ -26,7 +26,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
 import uk.gov.hmrc.play.http.HeaderCarrierConverter.fromRequestAndSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.ErrorHandler
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{EnrolmentStoreServiceUnavailable, InvalidRedirectUrl}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
@@ -40,7 +40,6 @@ import scala.concurrent.{ExecutionContext, Future}
 class PTMismatchCheckActionImpl @Inject() (
   eacdService: EACDService,
   appConfig: AppConfig,
-  mcc: MessagesControllerComponents,
   val logger: EventLoggerService,
   errorHandler: ErrorHandler
 )(implicit
@@ -59,7 +58,10 @@ class PTMismatchCheckActionImpl @Inject() (
       val ptEnrolment = userDetails.enrolments.getEnrolment(s"$hmrcPTKey")
       ptEnrolment
         .map { enrolment =>
-          ptMismatchCheckAndDelete(enrolment, userDetails.nino, userDetails.groupId).map { result =>
+          ptMismatchCheckAndDelete(enrolment, userDetails.nino, userDetails.groupId).foldF(
+           block(request)
+          )(
+          result =>
             if (result) {
               request.request.getQueryString("redirectUrl") match {
                 case Some(url) =>
@@ -86,7 +88,7 @@ class PTMismatchCheckActionImpl @Inject() (
                 )
               )
             }
-          }.getOrElse(block(request)).flatten
+          )
         }.getOrElse(block(request))
     } else {
       block(request)

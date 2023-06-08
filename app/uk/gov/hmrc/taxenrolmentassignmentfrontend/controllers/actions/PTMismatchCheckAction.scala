@@ -16,18 +16,21 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions
 
+import cats.data.OptionT
 import com.google.inject.ImplementedBy
-import play.api.Logging
+import play.api.{Logger, Logging}
 import play.api.mvc.Results.Redirect
-import play.api.mvc.{ActionFunction, Result}
+import play.api.mvc.{ActionFunction, MessagesControllerComponents, Result}
 import uk.gov.hmrc.auth.core.Enrolment
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
 import uk.gov.hmrc.play.http.HeaderCarrierConverter.fromRequestAndSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.ErrorHandler
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.EnrolmentStoreServiceUnavailable
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{EnrolmentStoreServiceUnavailable, InvalidRedirectUrl}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logInvalidRedirectUrl
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.hmrcPTKey
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.EACDService
 
@@ -37,10 +40,14 @@ import scala.concurrent.{ExecutionContext, Future}
 class PTMismatchCheckActionImpl @Inject() (
   eacdService: EACDService,
   appConfig: AppConfig,
+  mcc: MessagesControllerComponents,
+  val logger: EventLoggerService,
   errorHandler: ErrorHandler
 )(implicit
   ec: ExecutionContext
-) extends PTMismatchCheckAction with Logging {
+) extends PTMismatchCheckAction  {
+
+  implicit lazy val baseLogger: Logger = Logger(this.getClass.getName)
 
   def invokeBlock[A](
     request: RequestWithUserDetailsFromSession[A],
@@ -52,8 +59,8 @@ class PTMismatchCheckActionImpl @Inject() (
       val ptEnrolment = userDetails.enrolments.getEnrolment(s"$hmrcPTKey")
       ptEnrolment
         .map { enrolment =>
-          ptMismatchCheck(enrolment, userDetails.nino, userDetails.groupId).map {
-            case Some(result) if result =>
+          ptMismatchCheckAndDelete(enrolment, userDetails.nino, userDetails.groupId).map { result =>
+            if (result) {
               request.request.getQueryString("redirectUrl") match {
                 case Some(url) =>
                   Future.successful(
@@ -66,36 +73,31 @@ class PTMismatchCheckActionImpl @Inject() (
                     )
                   )
                 case None =>
-                  val ex = new RuntimeException(s"Redirect url is missing from the query string")
-                  logger.error(ex.getMessage, ex)
-                  block(request)
+                  logger.logEvent(logInvalidRedirectUrl("Redirect url is missing from the query string"))
+                  Future.successful(
+                    errorHandler.handleErrors(InvalidRedirectUrl, "[AccountCheckController][accountCheck]")(request, implicitly)
+                  )
               }
-            case Some(_) =>
+            } else {
               Future.successful(
                 errorHandler.handleErrors(EnrolmentStoreServiceUnavailable, "[PTMismatchCheckAction][invokeBlock]")(
                   request,
-                  logger
+                  implicitly
                 )
               )
-            case None => block(request)
-          }.flatten
-        }
-        .getOrElse(block(request))
+            }
+          }.getOrElse(block(request)).flatten
+        }.getOrElse(block(request))
     } else {
       block(request)
     }
 
-  private def ptMismatchCheck(enrolment: Enrolment, nino: String, groupId: String)(implicit
-    hc: HeaderCarrier
-  ): Future[Option[Boolean]] = {
+  private def ptMismatchCheckAndDelete(enrolment: Enrolment, nino: String, groupId: String)(implicit hc: HeaderCarrier): OptionT[Future, Boolean] = {
     val ptNino = enrolment.identifiers.find(_.key == "NINO").map(_.value)
     if (ptNino.getOrElse("") != nino) {
-      eacdService
-        .deallocateEnrolment(groupId, s"$hmrcPTKey~NINO~$ptNino")
-        .isRight
-        .map(result => Some(result))
+      eacdService.deallocateEnrolment(groupId, s"$hmrcPTKey~NINO~$ptNino").map(_ => true).toOption
     } else {
-      Future.successful(None)
+      OptionT.fromOption(None)
     }
   }
 

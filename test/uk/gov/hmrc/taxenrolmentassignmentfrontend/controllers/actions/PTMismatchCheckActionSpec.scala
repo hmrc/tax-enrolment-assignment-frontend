@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions
 
 import cats.data.EitherT
-import play.api.http.Status.{BAD_GATEWAY, BAD_REQUEST, INTERNAL_SERVER_ERROR, NOT_FOUND, NO_CONTENT, OK, SEE_OTHER, SERVICE_UNAVAILABLE}
+import play.api.http.Status._
 import play.api.mvc.Results.Ok
 import play.api.mvc._
 import play.api.test.FakeRequest
@@ -29,6 +29,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.ErrorHandl
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{NINO, userDetailsWithMismatchNino, userDetailsWithPTEnrolment}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.EACDService
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -42,7 +43,8 @@ class PTMismatchCheckActionSpec extends BaseSpec {
     block: RequestWithUserDetailsFromSession[_] => Future[Result]
   )(implicit request: RequestWithUserDetailsFromSession[A]): Future[Result] = {
     (mockAppConf.ptNinoMismatchToggle _).expects().returning(true)
-    lazy val actionProvider = new PTMismatchCheckActionImpl(mockEacdService, mockAppConf, inject[ErrorHandler])
+    lazy val actionProvider =
+      new PTMismatchCheckActionImpl(mockEacdService, mockAppConf, inject[EventLoggerService], inject[ErrorHandler])
     actionProvider.invokeBlock(request, block)
   }
 
@@ -50,7 +52,8 @@ class PTMismatchCheckActionSpec extends BaseSpec {
     block: RequestWithUserDetailsFromSession[_] => Future[Result]
   )(implicit request: RequestWithUserDetailsFromSession[A]): Future[Result] = {
     (mockAppConf.ptNinoMismatchToggle _).expects().returning(false)
-    lazy val actionProvider = new PTMismatchCheckActionImpl(mockEacdService, mockAppConf, inject[ErrorHandler])
+    lazy val actionProvider =
+      new PTMismatchCheckActionImpl(mockEacdService, mockAppConf, inject[EventLoggerService], inject[ErrorHandler])
     actionProvider.invokeBlock(request, block)
   }
 
@@ -108,7 +111,7 @@ class PTMismatchCheckActionSpec extends BaseSpec {
           status(action) shouldBe SERVICE_UNAVAILABLE
         }
       }
-      "not delete the mismatched HMRC-PT enrolment and return OK if there was no redirectUrl in the query string" in {
+      "not delete the mismatched HMRC-PT enrolment and return BAD_REQUEST if there was no redirectUrl in the query string" in {
         val requestInnerWithoutRedirect = FakeRequest().asInstanceOf[Request[AnyContent]]
         val mismatchRequest =
           request.copy(userDetails = userDetailsWithMismatchNino, request = requestInnerWithoutRedirect)
@@ -127,7 +130,7 @@ class PTMismatchCheckActionSpec extends BaseSpec {
           userRequest => Future.successful(Ok(s"User Details: ${userRequest.userDetails}"))
 
         val action = harnessToggleTrue(block)(mismatchRequest)
-        status(action) shouldBe OK
+        status(action) shouldBe BAD_REQUEST
       }
       "not delete the mismatched HMRC-PT enrolment and return OK if the toggle is set to false" in {
         (mockEacdService

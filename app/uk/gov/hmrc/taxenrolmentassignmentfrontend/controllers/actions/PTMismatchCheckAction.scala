@@ -20,7 +20,7 @@ import cats.data.OptionT
 import com.google.inject.ImplementedBy
 import play.api.Logger
 import play.api.mvc.Results.Redirect
-import play.api.mvc.{ActionFunction, MessagesControllerComponents, Result}
+import play.api.mvc.{ActionFunction, Result}
 import uk.gov.hmrc.auth.core.Enrolment
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
@@ -44,7 +44,7 @@ class PTMismatchCheckActionImpl @Inject() (
   errorHandler: ErrorHandler
 )(implicit
   ec: ExecutionContext
-) extends PTMismatchCheckAction  {
+) extends PTMismatchCheckAction {
 
   implicit lazy val baseLogger: Logger = Logger(this.getClass.getName)
 
@@ -58,10 +58,10 @@ class PTMismatchCheckActionImpl @Inject() (
       val ptEnrolment = userDetails.enrolments.getEnrolment(s"$hmrcPTKey")
       ptEnrolment
         .map { enrolment =>
-          ptMismatchCheckAndDelete(enrolment, userDetails.nino, userDetails.groupId).foldF(
-           block(request)
-          )(
-          result =>
+          ptMismatchCheckAndDelete(enrolment, userDetails.nino, userDetails.groupId).foldF {
+            println("1" * 100)
+            block(request)
+          }(result =>
             if (result) {
               request.request.getQueryString("redirectUrl") match {
                 case Some(url) =>
@@ -77,7 +77,8 @@ class PTMismatchCheckActionImpl @Inject() (
                 case None =>
                   logger.logEvent(logInvalidRedirectUrl("Redirect url is missing from the query string"))
                   Future.successful(
-                    errorHandler.handleErrors(InvalidRedirectUrl, "[AccountCheckController][accountCheck]")(request, implicitly)
+                    errorHandler
+                      .handleErrors(InvalidRedirectUrl, "[AccountCheckController][accountCheck]")(request, implicitly)
                   )
               }
             } else {
@@ -89,12 +90,20 @@ class PTMismatchCheckActionImpl @Inject() (
               )
             }
           )
-        }.getOrElse(block(request))
+        }
+        .getOrElse {
+          println("2" * 100)
+          block(request)
+        }
     } else {
+      println("3" * 100)
+
       block(request)
     }
 
-  private def ptMismatchCheckAndDelete(enrolment: Enrolment, nino: String, groupId: String)(implicit hc: HeaderCarrier): OptionT[Future, Boolean] = {
+  private def ptMismatchCheckAndDelete(enrolment: Enrolment, nino: String, groupId: String)(implicit
+    hc: HeaderCarrier
+  ): OptionT[Future, Boolean] = {
     val ptNino = enrolment.identifiers.find(_.key == "NINO").map(_.value)
     if (ptNino.getOrElse("") != nino) {
       eacdService.deallocateEnrolment(groupId, s"$hmrcPTKey~NINO~$ptNino").map(_ => true).toOption

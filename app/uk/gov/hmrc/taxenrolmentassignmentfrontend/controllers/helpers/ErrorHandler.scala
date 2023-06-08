@@ -23,7 +23,7 @@ import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, InvalidRedirectUrl, TaxEnrolmentAssignmentErrors, UnexpectedPTEnrolment}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{EnrolmentStoreServiceUnavailable, IncorrectUserType, InvalidRedirectUrl, TaxEnrolmentAssignmentErrors, UnexpectedPTEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logUnexpectedErrorOccurred
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
@@ -40,7 +40,8 @@ class ErrorHandler @Inject() (errorView: ErrorTemplate, logger: EventLoggerServi
         Redirect(routes.AccountCheckController.accountCheck(RedirectUrl.apply(redirectUrl)))
       case UnexpectedPTEnrolment(accountType) if accountType == SA_ASSIGNED_TO_OTHER_USER =>
         Redirect(routes.EnrolledPTWithSAOnOtherAccountController.view)
-      case InvalidRedirectUrl => BadRequest(errorView())
+      case InvalidRedirectUrl               => BadRequest(errorView())
+      case EnrolmentStoreServiceUnavailable => ServiceUnavailable(errorView())
       case _ =>
         logger.logEvent(
           logUnexpectedErrorOccurred(

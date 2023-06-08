@@ -25,7 +25,9 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
 import uk.gov.hmrc.play.http.HeaderCarrierConverter.fromRequestAndSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.ErrorHandler
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.EnrolmentStoreServiceUnavailable
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.hmrcPTKey
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.EACDService
 
@@ -34,7 +36,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class PTMismatchCheckActionImpl @Inject() (
   eacdService: EACDService,
-  appConfig: AppConfig
+  appConfig: AppConfig,
+  errorHandler: ErrorHandler
 )(implicit
   ec: ExecutionContext
 ) extends PTMismatchCheckAction with Logging {
@@ -50,7 +53,7 @@ class PTMismatchCheckActionImpl @Inject() (
       ptEnrolment
         .map { enrolment =>
           ptMismatchCheck(enrolment, userDetails.nino, userDetails.groupId).map {
-            case true =>
+            case Some(result) if result =>
               request.request.getQueryString("redirectUrl") match {
                 case Some(url) =>
                   Future.successful(
@@ -67,8 +70,14 @@ class PTMismatchCheckActionImpl @Inject() (
                   logger.error(ex.getMessage, ex)
                   block(request)
               }
-            case _ =>
-              block(request)
+            case Some(_) =>
+              Future.successful(
+                errorHandler.handleErrors(EnrolmentStoreServiceUnavailable, "[PTMismatchCheckAction][invokeBlock]")(
+                  request,
+                  logger
+                )
+              )
+            case None => block(request)
           }.flatten
         }
         .getOrElse(block(request))
@@ -78,12 +87,12 @@ class PTMismatchCheckActionImpl @Inject() (
 
   private def ptMismatchCheck(enrolment: Enrolment, nino: String, groupId: String)(implicit
     hc: HeaderCarrier
-  ): Future[Boolean] = {
+  ): Future[Option[Boolean]] = {
     val ptNino = enrolment.identifiers.find(_.key == "NINO").map(_.value)
     if (ptNino.getOrElse("") != nino) {
-      eacdService.deallocateEnrolment(groupId, s"$hmrcPTKey~NINO~$ptNino").isRight
+      eacdService.deallocateEnrolment(groupId, s"$hmrcPTKey~NINO~$ptNino").isRight.map(result => Some(result))
     } else {
-      Future.successful(false)
+      Future.successful(None)
     }
   }
 

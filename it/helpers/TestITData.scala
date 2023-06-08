@@ -22,14 +22,15 @@ import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core.retrieve.Credentials
 import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolment, EnrolmentIdentifier, Enrolments}
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
+import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.http.SessionKeys
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.UserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models._
 
 object TestITData {
 
-  val NINO: String = "JT872173A"
-  val mismatchNino: String = "testFakeNino" // TODO - Add NINO generator
+  val NINO: String = new Generator().nextNino.nino
+  val mismatchNino: String = new Generator().nextNino.nino
   val CURRENT_USER_EMAIL = "foobarwizz"
   val CREDENTIAL_ID: String = "6902202884164548"
   val CREDENTIAL_ID_2: String = "8316291481001919"
@@ -394,7 +395,7 @@ object TestITData {
   val userDetailsWithMismatchNino: UserDetailsFromSession =
     UserDetailsFromSession(
       CREDENTIAL_ID,
-      mismatchNino, // TODO - Add NINO generator
+      mismatchNino,
       GROUP_ID,
       Some(CURRENT_USER_EMAIL),
       Individual,

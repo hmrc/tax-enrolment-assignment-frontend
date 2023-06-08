@@ -38,3 +38,5 @@ case class UnexpectedPTEnrolment(accountTypes: AccountTypes.Value) extends TaxEn
 
 object InvalidRedirectUrl extends TaxEnrolmentAssignmentErrors
 object UserDoesNotHaveSAOnCurrentToEnrol extends TaxEnrolmentAssignmentErrors
+
+object EnrolmentStoreServiceUnavailable extends TaxEnrolmentAssignmentErrors

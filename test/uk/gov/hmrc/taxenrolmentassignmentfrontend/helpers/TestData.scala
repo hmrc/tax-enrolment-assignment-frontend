@@ -25,6 +25,7 @@ import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals._
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
+import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.UserDetailsFromSession
@@ -32,7 +33,8 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{IVNinoStoreEntry, Iden
 
 object TestData {
 
-  val NINO = "testNino"
+  val NINO: String = new Generator().nextNino.nino
+  val secondNino: String = new Generator().nextNino.nino
   val GROUP_ID = "D37DB2E1-CF03-42E8-B151-E17300FFCF78"
   val CREDENTIAL_ID = "credId123"
   val USER_ID = "6037"
@@ -279,7 +281,7 @@ object TestData {
   val userDetailsWithMismatchNino: UserDetailsFromSession =
     UserDetailsFromSession(
       CREDENTIAL_ID,
-      "testFakeNino", // TODO - Add NINO generator
+      secondNino,
       GROUP_ID,
       Some(CURRENT_USER_EMAIL),
       Individual,

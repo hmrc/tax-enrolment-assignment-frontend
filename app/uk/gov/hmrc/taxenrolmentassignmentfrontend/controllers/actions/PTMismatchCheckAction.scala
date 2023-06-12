@@ -33,9 +33,9 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logInvalidRedirectUrl
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.hmrcPTKey
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.EACDService
+import scala.concurrent.{ExecutionContext, Future}
 
 import javax.inject.Inject
-import scala.concurrent.{ExecutionContext, Future}
 
 class PTMismatchCheckActionImpl @Inject() (
   eacdService: EACDService,
@@ -59,8 +59,12 @@ class PTMismatchCheckActionImpl @Inject() (
       ptEnrolment
         .map { enrolment =>
           ptMismatchCheckAndDelete(enrolment, userDetails.nino, userDetails.groupId).foldF {
-            println("1" * 100)
-            block(request)
+            Future.successful(
+              errorHandler.handleErrors(EnrolmentStoreServiceUnavailable, "[PTMismatchCheckAction][invokeBlock]")(
+                request,
+                implicitly
+              )
+            )
           }(result =>
             if (result) {
               request.request.getQueryString("redirectUrl") match {
@@ -82,22 +86,14 @@ class PTMismatchCheckActionImpl @Inject() (
                   )
               }
             } else {
-              Future.successful(
-                errorHandler.handleErrors(EnrolmentStoreServiceUnavailable, "[PTMismatchCheckAction][invokeBlock]")(
-                  request,
-                  implicitly
-                )
-              )
+              block(request)
             }
           )
         }
         .getOrElse {
-          println("2" * 100)
           block(request)
         }
     } else {
-      println("3" * 100)
-
       block(request)
     }
 
@@ -108,7 +104,7 @@ class PTMismatchCheckActionImpl @Inject() (
     if (ptNino.getOrElse("") != nino) {
       eacdService.deallocateEnrolment(groupId, s"$hmrcPTKey~NINO~$ptNino").map(_ => true).toOption
     } else {
-      OptionT.fromOption(None)
+      OptionT.fromOption(Some(false))
     }
   }
 

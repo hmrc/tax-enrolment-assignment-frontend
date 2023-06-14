@@ -140,6 +140,7 @@ enrolledForPTWithSAOnOtherAccountNew.email =  Email
 enrolledForPTWithSAOnOtherAccountNew.lastLoginDate = Last signed in
 enrolledForPTWithSAOnOtherAccountNew.linktext = The above user ID does not belong to me
 enrolledForPTWithSAOnOtherAccountNew.exclamation = If you have any other Goverment Gateway user IDs, you will not be able to use them to access your personal tax information or Self Assessment
+enrolledForPTWithSAOnOtherAccountNew.continue = Continue to personal tax
 
 
 

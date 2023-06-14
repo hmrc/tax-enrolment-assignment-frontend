@@ -15,33 +15,50 @@
  *@
 
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.helpers.CreateSummaryRow
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
 
 @this(
         layout: Layout,
         formHelper: FormWithCSRF,
-        govukButton: GovukButton
+        govukButton: GovukButton,
+        summaryRow: CreateSummaryRow
 )
 
-@(userId: String, saCredential: Option[String] = None)(implicit request: Request[AnyRef], messages: Messages)
+@(userId: String, saAccountDetails: AccountDetails)(implicit request: Request[AnyRef], messages: Messages)
 
 @layout(pageTitle = Some(messages("enrolledForPTWithSAOnOtherAccount.title"))) {
 
  <h1 class="govuk-heading-xl">@messages("enrolledForPTWithSAOnOtherAccount.heading")</h1>
  <p class="govuk-body">@messages("enrolledForPTWithSAOnOtherAccount.paragraph1", userId)</p>
- <p class="govuk-body">@messages("enrolledForPTWithSAOnOtherAccount.paragraph2")</p>
+ <h2 class="govuk-heading-m">@messages("enrolledForPTWithSAOnOtherAccount.heading2")</h2>
+ <p class="govuk-body">@messages("enrolledForPTWithSAOnOtherAccount.paragraph2", userId)</p>
+ <p class="govuk-body">@messages("enrolledForPTWithSAOnOtherAccount.paragraph3", userId)</p>
+ <h2 class="govuk-heading-s">@messages("enrolledForPTWithSAOnOtherAccount.subheading")</h2>
+ <dl class="govuk-summary-list">
+  @summaryRow("common.userId", saAccountDetails.userId)
+  @if(saAccountDetails.emailDecrypted.isDefined) {
+   @summaryRow("enrolledForPTWithSAOnOtherAccount.email", saAccountDetails.emailDecrypted.get)
+  }
+  @summaryRow("enrolledForPTWithSAOnOtherAccount.lastLoginDate", saAccountDetails.lastLoginDate)
+  @for(mfaDetail <- saAccountDetails.mfaDetails) {
+   @summaryRow(mfaDetail.factorNameKey, mfaDetail.factorValue)
+  }
+ </dl>
+ <p class="govuk-body">
+  <a class="govuk-link" id="reportId" href="@routes.ReportSuspiciousIDController.viewSA">
+  @messages("enrolledForPTWithSAOnOtherAccount.linkText")
+  </a>
+ </p>
+ <p class="govuk-body">@messages("enrolledForPTWithSAOnOtherAccount.exclamation")</p>
+
 
  <br>
 
- <h2 class="govuk-heading-m">@messages("enrolledForPTWithSAOnOtherAccount.heading2")</h2>
- @if(saCredential.isDefined) {
- <p class="govuk-body">@messages("enrolledForPTWithSAOnOtherAccount.h2.paragraph1", saCredential.get)</p>
- }
- <p class="govuk-body">@messages("enrolledForPTWithSAOnOtherAccount.h2.paragraph2")</p>
-
-@formHelper(action = routes.EnrolledPTWithSAOnOtherAccountController.continue) {
+ @formHelper(action = routes.EnrolledPTWithSAOnOtherAccountController.continue) {
   @govukButton(Button(
    preventDoubleClick = Some(true),
-   content = Text(messages("common.continue"))
+   content = Text(messages("enrolledForPTWithSAOnOtherAccount.continue"))
   ))
  }
 }

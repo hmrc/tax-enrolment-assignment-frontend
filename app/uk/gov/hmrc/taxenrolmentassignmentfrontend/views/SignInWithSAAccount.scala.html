@@ -20,10 +20,10 @@
 
 
 @this(
-  layout: Layout,
-  govukButton: GovukButton,
-  formHelper: FormWithCSRF,
-  summaryRow: CreateSummaryRow
+        layout: Layout,
+        govukButton: GovukButton,
+        formHelper: FormWithCSRF,
+        summaryRow: CreateSummaryRow
 )
 
 @(saAccountDetails: AccountDetails)(implicit request: Request[_], messages: Messages)
@@ -32,28 +32,38 @@
 
  <h1 class="govuk-heading-xl">@messages("signInAgain.heading1")</h1>
  <p class="govuk-body">@messages("signInAgain.paragraph")</p>
- <h2 class="govuk-heading-m">@messages("signInAgain.heading2")</h2>
+ <h2 class="govuk-heading-s">@messages("signInAgain.subheading")</h2>
  <dl class="govuk-summary-list">
   @summaryRow("common.userId", saAccountDetails.userId)
   @if(saAccountDetails.emailDecrypted.isDefined) {
-  @summaryRow("signInAgain.email", saAccountDetails.emailDecrypted.get)
+   @summaryRow("signInAgain.email", saAccountDetails.emailDecrypted.get)
   }
   @summaryRow("signInAgain.lastLoginDate", saAccountDetails.lastLoginDate)
   @for(mfaDetail <- saAccountDetails.mfaDetails) {
-  @summaryRow(mfaDetail.factorNameKey, mfaDetail.factorValue)
+   @summaryRow(mfaDetail.factorNameKey, mfaDetail.factorValue)
   }
  </dl>
 
  <p class="govuk-body">
-   <a class="govuk-link" id="reportId" href="@routes.ReportSuspiciousIDController.viewSA">
-    @messages("signInAgain.linkText")
-   </a>
+  <a class="govuk-link" id="reportId" href="@routes.ReportSuspiciousIDController.viewSA">
+  @messages("signInAgain.linkText")
+  </a>
  </p>
+
+ <h2 class="govuk-heading-m">@messages("signInAgain.heading2")</h2>
+ <p class="govuk-body">@messages("signInAgain.paragraph2")</p>
+ <p class="govuk-body">@messages("signInAgain.paragraph3")</p>
+ <ul class="govuk-list govuk-list--bullet">
+  <li>@messages("signInAgain.listItem1")</li>
+  <li>@messages("signInAgain.listItem2")</li>
+ </ul>
+ @* Below line needs to be changed*@
+ <p class="govuk-body">@messages("signInAgain.exclamation")</p>
 
  @formHelper(action = routes.SignInWithSAAccountController.continue) {
   @govukButton(Button(
    preventDoubleClick = Some(true),
-   content = Text(messages("common.continue"))
+   content = Text(messages("signInAgain.continue"))
   ))
  }
 }

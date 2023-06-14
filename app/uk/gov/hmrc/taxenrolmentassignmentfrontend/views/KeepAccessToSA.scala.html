@@ -16,61 +16,61 @@
 
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 @import uk.gov.hmrc.govukfrontend.views.html.components._
-@import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.keepAccessToSAThroughPTA
 
 @this(
-    layout: Layout,
-    formHelper: FormWithCSRF,
-    govukRadios : GovukRadios,
-    govukErrorSummary: GovukErrorSummary,
-    govukButton: GovukButton
+        layout: Layout,
+        formHelper: FormWithCSRF,
+        govukRadios : GovukRadios,
+        govukErrorSummary: GovukErrorSummary,
+        govukButton: GovukButton
 )
 
-@(form: Form[KeepAccessToSAThroughPTA])(implicit request: Request[AnyRef], messages: Messages)
+@(form: Form[keepAccessToSAThroughPTA])(implicit request: Request[AnyRef], messages: Messages)
 
 @formError = @{form.errors.map(_.message).headOption}
 
 @layout(
     pageTitle = Some(messages("keepAccessToSA.title")), hasError = formError.isDefined) {
 
-    @formHelper(action = routes.KeepAccessToSAController.continue) {
+    @formHelper(action = routes.keepAccessToSAController.continue) {
         @if(formError.isDefined) {
             @govukErrorSummary(ErrorSummary(
-              errorList = Seq(
-              ErrorLink(
-                href = Some("#select-continue"),
-                content = Text(messages(formError.get))
-              )
-            ),
-            title = Text(messages("validation.summary.heading")),
-            attributes = Map("id" -> "errors")
+                errorList = Seq(
+                    ErrorLink(
+                        href = Some("#select-continue"),
+                        content = Text(messages(formError.get))
+                    )
+                ),
+                title = Text(messages("validation.summary.heading")),
+                attributes = Map("id" -> "errors")
             ))
         }
 
         @govukRadios(Radios(
             fieldset = Some(Fieldset(
-              legend = Some(Legend(
-                content = Text(messages("keepAccessToSA.heading")),
-                classes = "govuk-fieldset__legend--l",
-                isPageHeading = true
-              ))
+                legend = Some(Legend(
+                    content = Text(messages("keepAccessToSA.heading")),
+                    classes = "govuk-fieldset__legend--l",
+                    isPageHeading = true
+                ))
             )),
             errorMessage = formError.map(error => ErrorMessage(
-              content = Text(messages(error))
+                content = Text(messages(error))
             )),
             idPrefix = Some("select-continue"),
             name = "select-continue",
             items = Seq(
-              RadioItem(
-                content = Text(messages("keepAccessToSA.radio.yes")),
-                value = Some("yes"),
-                checked = form("select-continue").value.contains("yes")
-              ),
-              RadioItem(
-                content = Text(messages("keepAccessToSA.radio.no")),
-                value = Some("no"),
-                checked = form("select-continue").value.contains("no")
-              )
+                RadioItem(
+                    content = Text(messages("keepAccessToSA.radio.yes")),
+                    value = Some("yes"),
+                    checked = form("select-continue").value.contains("yes")
+                ),
+                RadioItem(
+                    content = Text(messages("keepAccessToSA.radio.no")),
+                    value = Some("no"),
+                    checked = form("select-continue").value.contains("no")
+                )
             ),
             classes = "govuk-radios--inline"
         ))
@@ -79,7 +79,7 @@
             <a class="govuk-link" href="@routes.ReportSuspiciousIDController.viewSA">@messages("keepAccessToSA.noSA")</a>
         </p>
         @govukButton(Button(
-          content = Text(messages("common.continue"))
+            content = Text(messages("common.continue"))
         ))
     }
 }

@@ -47,16 +47,16 @@ class EnrolledPTWithSAOnOtherAccountController @Inject() (
     authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
       val res = for {
         currentAccount <- multipleAccountsOrchestrator.getDetailsForEnrolledPTWithSAOnOtherAccount
-        optSAAccount   <- multipleAccountsOrchestrator.getSACredentialIfNotFraud
+        saAccount      <- multipleAccountsOrchestrator.getSACredentialDetails
 
       } yield (
         AccountDetails.userFriendlyAccountDetails(currentAccount).userId,
-        optSAAccount.map(AccountDetails.userFriendlyAccountDetails).map(_.userId)
+        saAccount
       )
 
       res.value.map {
-        case Right((currentUserId, optSAUserId)) =>
-          Ok(enrolledForPTPage(currentUserId, optSAUserId))
+        case Right((currentUserId, saAccount)) =>
+          Ok(enrolledForPTPage(currentUserId, saAccount))
         case Left(error) =>
           errorHandler.handleErrors(error, "[EnrolledPTWithSAOnOtherAccountController][view]")(request, implicitly)
       }

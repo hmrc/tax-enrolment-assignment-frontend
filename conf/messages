@@ -58,89 +58,51 @@ multiplePTE.true.title = Tax Enrolment Assignment Frontend - Enrolment Present
 multiplePTE.true.heading = This user has no PT enrolment
 multiplePTE.true.text =  The current user does not have an assigned PT enrolment
 
-
-
-
-selfAssessmentInterrupt.title = We are changing the way you access your personal tax account
-selfAssessmentInterrupt.heading = We are changing the way you access your personal tax account
-selfAssessmentInterrupt.paragraph1 = You currently have more than one Government Gateway user ID with access to your personal tax account. To protect your information, we are limiting access to one user ID from now on.
+selfAssessmentInterrupt.title = You currently have more than one Government Gateway user ID
+selfAssessmentInterrupt.heading = You currently have more than one Government Gateway user ID
+selfAssessmentInterrupt.paragraph1 = We recommend that you use only one Government Gateway user ID to access your personal tax information.
+selfAssessmentInterrupt.paragraph2 = If you complete Self Assessment, you can choose to:
+selfAssessmentInterrupt.listItem1 = use a single user ID for both personal tax and Self Assessment
+selfAssessmentInterrupt.listItem2 = use a separate user ID for Self Assessment only
+selfAssessmentInterrupt.paragraph3 = On the next screens we will ask you which option you want to choose.
 selfAssessmentInterrupt.continue = Continue
 
-selfAssessmentInterruptNew.title = You currently have more than one Government Gateway user ID
-selfAssessmentInterruptNew.heading = You currently have more than one Government Gateway user ID
-selfAssessmentInterruptNew.paragraph1 = We recommend that you use only one Government Gateway user ID to access your personal tax information.
-selfAssessmentInterruptNew.paragraph2 = If you complete Self Assessment, you can choose to:
-selfAssessmentInterruptNew.listItem1 = use a single user ID for both personal tax and Self Assessment
-selfAssessmentInterruptNew.listItem2 = use a separate user ID for Self Assessment only
-selfAssessmentInterruptNew.paragraph3 = On the next screens we will ask you which option you want to choose.
-selfAssessmentInterruptNew.continue = Continue
-
-
-
-keepAccessToSA.title = Do you want to keep access to Self Assessment from your personal tax account?
-keepAccessToSA.heading = Do you want to keep access to Self Assessment from your personal tax account?
+keepAccessToSA.title = Do you want a single Government Gateway user ID for personal tax information and Self Assessment?
+keepAccessToSA.heading = Do you want a single Government Gateway user ID for personal tax information and Self Assessment?
 keepAccessToSA.radio.yes = Yes
-keepAccessToSA.radio.no = No
+keepAccessToSA.radio.no = No, I want to keep them separate
 keepAccessToSA.noSA = I do not complete Self Assessment Online
-keepAccessToSA.error.required = Select yes if you want to keep access to Self Assessment from your personal tax account
+keepAccessToSA.error.required = Select yes if you want a single Government Gateway user ID for personal tax information and Self Assessment
 
-keepAccessToSANew.title = Do you want a single Government Gateway user ID for personal tax information and Self Assessment?
-keepAccessToSANew.heading = Do you want a single Government Gateway user ID for personal tax information and Self Assessment?
-keepAccessToSANew.radio.yes = Yes
-keepAccessToSANew.radio.no = No, I want to keep them separate
-keepAccessToSANew.noSA = I do not complete Self Assessment Online
-keepAccessToSANew.error.required = Select yes if you want a single Government Gateway user ID for personal tax information and Self Assessment
-
-
-signInAgain.title = You need to sign in again with your Self Assessment user ID
-signInAgain.heading1 = You need to sign in again with your Self Assessment user ID
-signInAgain.paragraph = This is so that you can keep access to Self Assessment from your personal tax account.
-signInAgain.heading2 = User ID with Self Assessment access
+signInAgain.title = You have chosen to have a single Government Gateway user ID
+signInAgain.heading1 = You have chosen to have a single Government Gateway user ID
+signInAgain.subheading = User ID for personal tax information and Self Assessment
 signInAgain.userId = User ID
 signInAgain.email =  Email
 signInAgain.lastLoginDate = Last signed in
 signInAgain.phoneNumber = Phone number
-signInAgain.linkText = The above user ID does not belong to me
+signInAgain.linktext = The above user ID does not belong to me
+signInAgain.heading2 = What to do next
+signInAgain.paragraph2 = You are currently signed in with a user ID ending with {0}
+signInAgain.paragraph3 = To access personal tax and Self Assessment:
+signInAgain.listItem1 = sign out now
+signInAgain.listItem2 = sign in again using your other user ID ending with {0}
+signInAgain.exclamation = Your user ID ending with {0} is the only user ID you can use for personal tax informaiton and Self Assessment
+signInAgain.continue = Confirm and sign out
 
-signInAgainNew.title = You have chosen to have a single Government Gateway user ID
-signInAgainNew.heading1 = You have chosen to have a single Government Gateway user ID
-signInAgainNew.subheading = User ID for personal tax information and Self Assessment
-signInAgainNew.userId = User ID
-signInAgainNew.email =  Email
-signInAgainNew.lastLoginDate = Last signed in
-signInAgainNew.phoneNumber = Phone number
-signInAgainNew.linktext = The above user ID does not belong to me
-signInAgainNew.heading2 = What to do next
-signInAgainNew.paragraph2 = You are currently signed in with a user ID ending with {0}
-signInAgainNew.paragraph3 = To access personal tax and Self Assessment:
-signInAgainNew.listItem1 = sign out now
-signInAgainNew.listItem2 = sign in again using your other user ID ending with {0}
-signInAgainNew.exclamation = Your user ID ending with {0} is the only user ID you can use for personal tax informaiton and Self Assessment
-signInAgainNew.continue = Confirm and sign out
-
-
-
-enrolledForPTWithSAOnOtherAccount.title = Only your current user ID can access your personal tax account from now on
-enrolledForPTWithSAOnOtherAccount.heading = Only your current user ID can access your personal tax account from now on
-enrolledForPTWithSAOnOtherAccount.paragraph1 = You are currently signed in with the Government Gateway user ID ending with {0}.
-enrolledForPTWithSAOnOtherAccount.paragraph2 = This is now the only user ID that can access your personal tax account. Please keep the details of this user ID safe.
-enrolledForPTWithSAOnOtherAccount.heading2 = What has happened to my other Government Gateway user IDs?
-enrolledForPTWithSAOnOtherAccount.h2.paragraph1 = To access Self Assessment you will need to log in with the user ID ending with {0}.
-enrolledForPTWithSAOnOtherAccount.h2.paragraph2 = If you have any other Government Gateway user IDs, they will lose access to your personal tax account.
-
-enrolledForPTWithSAOnOtherAccountNew.title = You are choosing to have two Goverment Gateway user IDs
-enrolledForPTWithSAOnOtherAccountNew.heading = You are choosing to have two Goverment Gateway user IDs
-enrolledForPTWithSAOnOtherAccountNew.paragraph1 = The user ID you are signed in with now ends in {0}. This will be the only ID you can use to access you personal tax information.
-enrolledForPTWithSAOnOtherAccountNew.heading2 = User ID for Self Assessment in business tax account
-enrolledForPTWithSAOnOtherAccountNew.paragraph2 = In the future, to manage your Self Assessment, you will need to go to your business tax account. To do this now, you must sign out and sign in with your other user ID ending in {0}.
-enrolledForPTWithSAOnOtherAccountNew.paragraph3 = If you do not want to go to your Self Assessment now, please make a note of the details here. This will be the only user ID you can use to access Self Assessment
-enrolledForPTWithSAOnOtherAccountNew.subheading = User ID for Self Assessment
-enrolledForPTWithSAOnOtherAccountNew.userId = User ID
-enrolledForPTWithSAOnOtherAccountNew.email =  Email
-enrolledForPTWithSAOnOtherAccountNew.lastLoginDate = Last signed in
-enrolledForPTWithSAOnOtherAccountNew.linktext = The above user ID does not belong to me
-enrolledForPTWithSAOnOtherAccountNew.exclamation = If you have any other Goverment Gateway user IDs, you will not be able to use them to access your personal tax information or Self Assessment
-enrolledForPTWithSAOnOtherAccountNew.continue = Continue to personal tax
+enrolledForPTWithSAOnOtherAccount.title = You are choosing to have two Goverment Gateway user IDs
+enrolledForPTWithSAOnOtherAccount.heading = You are choosing to have two Goverment Gateway user IDs
+enrolledForPTWithSAOnOtherAccount.paragraph1 = The user ID you are signed in with now ends in {0}. This will be the only ID you can use to access you personal tax information.
+enrolledForPTWithSAOnOtherAccount.heading2 = User ID for Self Assessment in business tax account
+enrolledForPTWithSAOnOtherAccount.paragraph2 = In the future, to manage your Self Assessment, you will need to go to your business tax account. To do this now, you must sign out and sign in with your other user ID ending in {0}.
+enrolledForPTWithSAOnOtherAccount.paragraph3 = If you do not want to go to your Self Assessment now, please make a note of the details here. This will be the only user ID you can use to access Self Assessment
+enrolledForPTWithSAOnOtherAccount.subheading = User ID for Self Assessment
+enrolledForPTWithSAOnOtherAccount.userId = User ID
+enrolledForPTWithSAOnOtherAccount.email =  Email
+enrolledForPTWithSAOnOtherAccount.lastLoginDate = Last signed in
+enrolledForPTWithSAOnOtherAccount.linktext = The above user ID does not belong to me
+enrolledForPTWithSAOnOtherAccount.exclamation = If you have any other Goverment Gateway user IDs, you will not be able to use them to access your personal tax information or Self Assessment
+enrolledForPTWithSAOnOtherAccount.continue = Continue to personal tax
 
 
 

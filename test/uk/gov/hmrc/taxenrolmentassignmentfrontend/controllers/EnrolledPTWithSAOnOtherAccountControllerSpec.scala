@@ -188,7 +188,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
         content.body().text() should include(messages("enrolledForPTWithSAOnOtherAccount.heading"))
         content.body().text() should include(
           messages(
-            "enrolledForPTWithSAOnOtherAccount.h2.paragraph1",
+            "enrolledForPTWithSAOnOtherAccount.paragraph1",
             "1234"
           )
         )

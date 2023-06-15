@@ -20,6 +20,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction, ThrottleAction}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.GetSACredentialIfNotFraudReturnedNone
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logRedirectingToReturnUrl
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
@@ -47,7 +48,7 @@ class EnrolledPTWithSAOnOtherAccountController @Inject() (
     authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
       val res = for {
         currentAccount <- multipleAccountsOrchestrator.getDetailsForEnrolledPTWithSAOnOtherAccount
-        saAccount      <- multipleAccountsOrchestrator.getSACredentialDetails
+        saAccount      <- multipleAccountsOrchestrator.getSACredentialIfNotFraud
 
       } yield (
         AccountDetails.userFriendlyAccountDetails(currentAccount).userId,
@@ -55,8 +56,13 @@ class EnrolledPTWithSAOnOtherAccountController @Inject() (
       )
 
       res.value.map {
-        case Right((currentUserId, saAccount)) =>
+        case Right((currentUserId, Some(saAccount))) =>
           Ok(enrolledForPTPage(currentUserId, saAccount))
+        case Right((_, None)) =>
+          errorHandler.handleErrors(
+            GetSACredentialIfNotFraudReturnedNone,
+            "[EnrolledPTWithSAOnOtherAccountController][view]"
+          )(request, implicitly)
         case Left(error) =>
           errorHandler.handleErrors(error, "[EnrolledPTWithSAOnOtherAccountController][view]")(request, implicitly)
       }

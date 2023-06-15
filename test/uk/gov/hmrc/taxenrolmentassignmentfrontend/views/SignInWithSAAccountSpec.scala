@@ -26,6 +26,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignOutController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthAction
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.CREDENTIAL_ID
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.SignInAgainMessages
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.SignInAgainMessages.{listItem1, listItem2}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{ReportSuspiciousID, SignInWithSAAccount}
 
@@ -44,14 +45,16 @@ class SignInWithSAAccountSpec extends ViewSpecHelper {
   lazy val signInAgainPage: SignInWithSAAccount = inject[SignInWithSAAccount]
   lazy val reportSuspiciousIDPage: ReportSuspiciousID =
     inject[ReportSuspiciousID]
+  lazy val userId = "3214"
   lazy val view =
-    signInAgainPage(accountDetails)(FakeRequest(), testMessages)
+    signInAgainPage(userId, accountDetails)(FakeRequest(), testMessages)
   lazy val document: Document =
     Jsoup.parse(view.toString())
 
   object Selectors {
     val headingXL = "govuk-heading-xl"
     val headingM = "govuk-heading-m"
+    val headingS = "govuk-heading-s"
     val body = "govuk-body"
     val backLink = "govuk-back-link"
     val button = "govuk-button"
@@ -59,6 +62,7 @@ class SignInWithSAAccountSpec extends ViewSpecHelper {
     val summaryListKey = "govuk-summary-list__key"
     val summaryListValue = "govuk-summary-list__value"
     val link = "govuk-link"
+    val bulletPointList = "govuk-list govuk-list--bullet"
   }
 
   val mfaDetails = Seq(
@@ -92,12 +96,23 @@ class SignInWithSAAccountSpec extends ViewSpecHelper {
         .text shouldBe SignInAgainMessages.heading
     }
 
+    "contain the correct subheader" in {
+      document
+        .getElementsByClass(Selectors.headingS)
+        .text shouldBe SignInAgainMessages.subheading
+    }
+
     "contain the correct paragraph" in {
       val paragraph = document.select("p." + Selectors.body)
       paragraph
-        .get(0)
+        .get(1)
         .getElementsByClass(Selectors.body)
-        .text() shouldBe SignInAgainMessages.paragraph
+        .text() shouldBe SignInAgainMessages.paragraph1 + s"$userId"
+
+      paragraph
+        .get(2)
+        .getElementsByClass(Selectors.body)
+        .text() shouldBe SignInAgainMessages.paragraph2
     }
 
     "contain the correct second heading" in {
@@ -160,6 +175,10 @@ class SignInWithSAAccountSpec extends ViewSpecHelper {
         .getElementById("reportId")
         .text() shouldBe SignInAgainMessages.linkText
     }
+    "correct govuk-list govuk-list--bullet text" in { // TODO - Change to getElementById if necessary
+      document.text() should include(listItem1)
+      document.text() should include(listItem2)
+    }
     "contain the correct back link" in {
       val backLink = document
         .getElementsByClass(Selectors.backLink)
@@ -169,7 +188,7 @@ class SignInWithSAAccountSpec extends ViewSpecHelper {
     "contain the correct button" in {
       document
         .getElementsByClass(Selectors.button)
-        .text shouldBe SignInAgainMessages.continue
+        .text shouldBe SignInAgainMessages.confirmAndSignOut
     }
 
     validateTimeoutDialog(document)

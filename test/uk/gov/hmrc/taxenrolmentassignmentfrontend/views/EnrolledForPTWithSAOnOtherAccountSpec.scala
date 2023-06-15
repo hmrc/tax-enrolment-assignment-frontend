@@ -19,20 +19,34 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.views
 import org.jsoup.nodes.Document
 import play.api.test.FakeRequest
 import play.twirl.api.HtmlFormat
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.CREDENTIAL_ID
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.EnrolledPTWithSAOnOtherAccountMessages
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTWithSAOnOtherAccount
+import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 
 class EnrolledForPTWithSAOnOtherAccountSpec extends ViewSpecHelper {
 
   val view: EnrolledForPTWithSAOnOtherAccount =
     app.injector.instanceOf[EnrolledForPTWithSAOnOtherAccount]
   val userId = "3214"
-  val saUserId = "3215"
+  val mfaDetails: Seq[MFADetails] = Seq(
+    MFADetails("Text message", "07390328923"),
+    MFADetails("Voice call", "0193453839"),
+    MFADetails("Authenticator App", "HRMC APP")
+  )
+  val accountDetails: AccountDetails = AccountDetails(
+    credId = CREDENTIAL_ID,
+    userId,
+    Some(SensitiveString("email1@test.com")),
+    "Yesterday",
+    mfaDetails
+  )
   val html: HtmlFormat.Appendable =
-    view(userId)(FakeRequest(), testMessages)
+    view(userId, accountDetails)(FakeRequest(), testMessages)
   val document: Document = doc(html)
   val htmlSA: HtmlFormat.Appendable =
-    view(userId, Some(saUserId))(FakeRequest(), testMessages)
+    view(userId, accountDetails)(FakeRequest(), testMessages)
   val documentSA: Document = doc(htmlSA)
 
   object Selectors {
@@ -63,11 +77,6 @@ class EnrolledForPTWithSAOnOtherAccountSpec extends ViewSpecHelper {
           subHeadings
             .get(0)
             .text() shouldBe EnrolledPTWithSAOnOtherAccountMessages.heading2
-        }
-        "have expected paragraphs that includes SA" in {
-          documentSA
-            .getElementsByClass("govuk-body")
-            .text shouldBe EnrolledPTWithSAOnOtherAccountMessages.paragraphsSA
         }
       }
       "contain the correct button" in {
@@ -106,7 +115,18 @@ class EnrolledForPTWithSAOnOtherAccountSpec extends ViewSpecHelper {
         "have expected paragraphs that don't include SA" in {
           document
             .getElementsByClass("govuk-body")
-            .text shouldBe EnrolledPTWithSAOnOtherAccountMessages.paragraphs
+            .get(0)
+            .text shouldBe EnrolledPTWithSAOnOtherAccountMessages.paragraph1(userId)
+
+          document
+            .getElementsByClass("govuk-body")
+            .get(1)
+            .text shouldBe EnrolledPTWithSAOnOtherAccountMessages.paragraph2(userId)
+
+          document
+            .getElementsByClass("govuk-body")
+            .get(2)
+            .text shouldBe EnrolledPTWithSAOnOtherAccountMessages.paragraph3
         }
       }
       "contain the correct button" in {

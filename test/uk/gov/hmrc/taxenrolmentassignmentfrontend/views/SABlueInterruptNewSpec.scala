@@ -48,7 +48,18 @@ class SABlueInterruptSpec extends ViewSpecHelper {
       "contain the correct paragraph" in {
         document
           .getElementsByClass("govuk-body")
-          .text shouldBe SABlueInterruptMessages.selfAssessParagraph
+          .get(0)
+          .text shouldBe SABlueInterruptMessages.selfAssessParagraph1
+
+        document
+          .getElementsByClass("govuk-body")
+          .get(1)
+          .text shouldBe SABlueInterruptMessages.selfAssessParagraph2
+
+        document
+          .getElementsByClass("govuk-body")
+          .get(2)
+          .text shouldBe SABlueInterruptMessages.selfAssessParagraph3
       }
 
       "contain the correct button" in {

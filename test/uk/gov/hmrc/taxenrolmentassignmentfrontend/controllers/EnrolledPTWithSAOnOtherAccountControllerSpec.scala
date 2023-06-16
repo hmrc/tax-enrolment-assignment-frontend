@@ -128,7 +128,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
         content.body().text() should include(
           messages(
             "enrolledForPTWithSAOnOtherAccount.paragraph1",
-            "1234"
+            USER_ID
           )
         )
       }

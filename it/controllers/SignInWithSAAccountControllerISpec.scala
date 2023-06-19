@@ -64,6 +64,11 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
           stubGet(
+            s"/users-groups-search/users/$CREDENTIAL_ID",
+            NON_AUTHORITATIVE_INFORMATION,
+            usergroupsResponseJson().toString()
+          )
+          stubGet(
             s"/users-groups-search/users/$CREDENTIAL_ID_2",
             NON_AUTHORITATIVE_INFORMATION,
             usergroupsResponseJson().toString()
@@ -76,7 +81,14 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
 
           status(result) shouldBe OK
           page.title should include(SignInAgainMessages.title)
-
+          page
+            .getElementsByClass("govuk-body")
+            .get(0)
+            .text shouldBe SignInAgainMessages.paragraph1
+          page
+            .getElementsByClass("govuk-body")
+            .get(1)
+            .text shouldBe SignInAgainMessages.paragraph1
         }
       }
       s"redirect to ${ItUrlPaths.enrolledPTSAOnOtherAccountPath}" when {
@@ -99,6 +111,11 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
           val authResponse = authoriseResponseWithPTEnrolment()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
+          stubGet( // TODO - Investigate why the double call now
+            s"/users-groups-search/users/$CREDENTIAL_ID",
+            NON_AUTHORITATIVE_INFORMATION,
+            usergroupsResponseJson().toString()
+          )
           stubGet(
             s"/users-groups-search/users/$CREDENTIAL_ID_2",
             NON_AUTHORITATIVE_INFORMATION,

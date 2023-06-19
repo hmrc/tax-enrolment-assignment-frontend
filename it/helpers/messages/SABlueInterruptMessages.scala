@@ -19,7 +19,8 @@ package helpers.messages
 object SABlueInterruptMessages { // TODO - Add messages?
   val selfAssessTitle = "You currently have more than one Government Gateway user ID"
   val selfAssessHeading = "You currently have more than one Government Gateway user ID"
-  val selfAssessParagraph1 = "We recommend that you use only one Government Gateway user ID to access your personal tax information."
+  val selfAssessParagraph1 =
+    "We recommend that you use only one Government Gateway user ID to access your personal tax information."
   val selfAssessParagraph2 = "If you complete Self Assessment, you can choose to:"
   val selfAssessParagraph3 = "On the next screens we will ask you which option you want to choose."
   val selfAssessList1 = "use a single user ID for both personal tax and Self Assessment"

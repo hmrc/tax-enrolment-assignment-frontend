@@ -61,17 +61,14 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status wit
 
           status(result) shouldBe OK
           page.title should include(SABlueInterruptMessages.selfAssessTitle)
-
           page
             .getElementsByClass("govuk-body")
             .get(0)
             .text shouldBe SABlueInterruptMessages.selfAssessParagraph1
-
           page
             .getElementsByClass("govuk-body")
             .get(1)
             .text shouldBe SABlueInterruptMessages.selfAssessParagraph2
-
           page
             .getElementsByClass("govuk-body")
             .get(2)

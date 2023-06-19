@@ -84,11 +84,15 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
           page
             .getElementsByClass("govuk-body")
             .get(0)
-            .text shouldBe SignInAgainMessages.paragraph1
+            .text shouldBe SignInAgainMessages.paragraphLinkText
           page
             .getElementsByClass("govuk-body")
             .get(1)
-            .text shouldBe SignInAgainMessages.paragraph1
+            .text shouldBe SignInAgainMessages.paragraph1(USER_ID)
+          page
+            .getElementsByClass("govuk-body")
+            .get(2)
+            .text shouldBe SignInAgainMessages.paragraph2
         }
       }
       s"redirect to ${ItUrlPaths.enrolledPTSAOnOtherAccountPath}" when {

@@ -104,8 +104,6 @@ enrolledForPTWithSAOnOtherAccount.linkText = The above user ID does not belong t
 enrolledForPTWithSAOnOtherAccount.exclamation = If you have any other Goverment Gateway user IDs, you will not be able to use them to access your personal tax information or Self Assessment
 enrolledForPTWithSAOnOtherAccount.continue = Continue to personal tax
 
-
-
 timedout.title = For your security, we signed you out
 timedout.heading = For your security, we signed you out
 timedout.signin = Sign in

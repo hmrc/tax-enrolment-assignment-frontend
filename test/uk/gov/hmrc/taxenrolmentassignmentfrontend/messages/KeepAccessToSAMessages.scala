@@ -33,6 +33,6 @@ object KeepAccessToSAMessages extends BaseMessage {
     "Select yes if you want a single Government Gateway user ID for personal tax information and Self Assessment"
   val button = "Continue"
   val action =
-    "/protect-tax-info/enrol-pt/other-user-id-has-sa/keep-access-to-sa-from-pta" // TODO - Url will be changed later
+    uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes.KeepAccessToSAController.continue.url
 
 }

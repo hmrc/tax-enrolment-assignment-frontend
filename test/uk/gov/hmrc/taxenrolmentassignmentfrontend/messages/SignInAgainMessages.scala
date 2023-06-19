@@ -24,8 +24,10 @@ object SignInAgainMessages extends BaseMessage {
   val paragraph2 = "To access personal tax and Self Assessment:"
   val heading2 = "What to do next"
   val backLink = "Back"
-  val confirmAndSignOut = "Confirm and sign out"
   val linkText = "The above user ID does not belong to me"
   val listItem1 = "sign out now"
   val listItem2 = "sign in again using your other user ID ending with "
+  val exclamation =
+    "If you have any other Goverment Gateway user IDs, you will not be able to use them to access your personal tax information or Self Assessment" // TODO - Add once class is figured out
+  val confirmAndSignOut = "Confirm and sign out"
 }

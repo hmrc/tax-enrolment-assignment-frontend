@@ -169,15 +169,18 @@ class SignInWithSAAccountSpec extends ViewSpecHelper {
         }
       }
     }
-
     "correct gov-uk link target and link text" in {
       document
         .getElementById("reportId")
         .text() shouldBe SignInAgainMessages.linkText
     }
-    "correct govuk-list govuk-list--bullet text" in { // TODO - Change to getElementById if necessary
-      document.text() should include(listItem1)
-      document.text() should include(listItem2)
+    "correct govuk-list govuk-list--bullet text" in {
+      document
+        .getElementsByClass("govuk-list govuk-list--bullet")
+        .text() should include(listItem1)
+      document
+        .getElementsByClass("govuk-list govuk-list--bullet")
+        .text() should include(listItem2)
     }
     "contain the correct back link" in {
       val backLink = document

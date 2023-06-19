@@ -53,6 +53,7 @@ class EnrolledForPTWithSAOnOtherAccountSpec extends ViewSpecHelper {
     val heading = "govuk-heading-xl"
     val body = "govuk-body"
     val subHeading = "govuk-heading-m"
+    val smallSubHeading = "govuk-heading-s"
     val button = "govuk-button"
     val form = "form"
   }
@@ -72,11 +73,17 @@ class EnrolledForPTWithSAOnOtherAccountSpec extends ViewSpecHelper {
       validateAccessibilityStatementLinkPresent(documentSA)
 
       "contain the correct body" which {
-        val subHeadings = documentSA.getElementsByClass(Selectors.subHeading)
-        "has a sub heading for other IDs" in {
+        "has a sub heading for BTA ID" in {
+          val subHeadings = documentSA.getElementsByClass(Selectors.subHeading)
           subHeadings
             .get(0)
-            .text() shouldBe EnrolledPTWithSAOnOtherAccountMessages.heading2
+            .text() shouldBe EnrolledPTWithSAOnOtherAccountMessages.subheading1
+        }
+        "has a sub heading for SA ID" in {
+          val subHeadings = documentSA.getElementsByClass(Selectors.smallSubHeading)
+          subHeadings
+            .get(0)
+            .text() shouldBe EnrolledPTWithSAOnOtherAccountMessages.subheading2
         }
       }
       "contain the correct button" in {
@@ -110,7 +117,7 @@ class EnrolledForPTWithSAOnOtherAccountSpec extends ViewSpecHelper {
         "has a sub heading for other IDs" in {
           subHeadings
             .get(0)
-            .text() shouldBe EnrolledPTWithSAOnOtherAccountMessages.heading2
+            .text() shouldBe EnrolledPTWithSAOnOtherAccountMessages.subheading1
         }
         "have expected paragraphs that don't include SA" in {
           document

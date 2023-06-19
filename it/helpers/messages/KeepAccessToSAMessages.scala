@@ -16,8 +16,7 @@
 
 package helpers.messages
 
-object KeepAccessToSAMessages { // TODO - Add missing messages?
-
+object KeepAccessToSAMessages {
   val continue = "Continue"
   val title =
     "Do you want a single Government Gateway user ID for personal tax information and Self Assessment?"
@@ -34,5 +33,4 @@ object KeepAccessToSAMessages { // TODO - Add missing messages?
   val button = "Continue"
   val action =
     "/protect-tax-info/enrol-pt/other-user-id-has-sa/keep-access-to-sa-from-pta"
-
 }

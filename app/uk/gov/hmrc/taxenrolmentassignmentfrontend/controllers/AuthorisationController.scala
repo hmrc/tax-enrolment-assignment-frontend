@@ -27,7 +27,7 @@ import scala.concurrent.Future
 class AuthorisationController @Inject() (mcc: MessagesControllerComponents, errorView: ErrorTemplate)
     extends TEAFrontendController(mcc) {
 
-  def notAuthorised: Action[AnyContent] = Action.async { implicit request =>
+  def notAuthorised: Action[AnyContent] = Action.async { implicit request => // TODO - Missing IT coverage
     Future.successful(Unauthorized(errorView()))
   }
 

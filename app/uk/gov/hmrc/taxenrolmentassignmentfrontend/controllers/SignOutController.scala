@@ -40,7 +40,7 @@ class SignOutController @Inject() (
 
   def signOut: Action[AnyContent] = authAction.async { implicit request =>
     sessionCache.fetch().map { cacheData =>
-      val optRedirectUrl = cacheData.fold[Option[String]](None)(
+      val optRedirectUrl = cacheData.fold[Option[String]](None)( // TODO - Missing IT coverage
         _.data
           .get(
             REDIRECT_URL

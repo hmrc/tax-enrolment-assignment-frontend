@@ -85,7 +85,10 @@ class AccountMongoDetailsAction @Inject() (
       .recover { case _ =>
         Left(
           errorHandler
-            .handleErrors(UnexpectedError, "[AccountTypeAction][invokeBlock]")(request, baseLogger)
+            .handleErrors(UnexpectedError, "[AccountTypeAction][invokeBlock]")(
+              request,
+              baseLogger
+            ) // TODO - Missing IT coverage
         )
       }
 

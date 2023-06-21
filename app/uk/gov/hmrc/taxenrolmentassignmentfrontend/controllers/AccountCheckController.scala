@@ -66,7 +66,7 @@ class AccountCheckController @Inject() (
           case Left(error) =>
             Future.successful(
               errorHandler.handleErrors(error, "[AccountCheckController][accountCheck]")
-            ) // TODO - Missing IT coverage
+            )
         }
       case Failure(error) =>
         logger.logEvent(logInvalidRedirectUrl(error.getMessage), error)

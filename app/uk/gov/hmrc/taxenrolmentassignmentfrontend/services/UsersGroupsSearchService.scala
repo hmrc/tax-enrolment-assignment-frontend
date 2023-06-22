@@ -42,7 +42,7 @@ class UsersGroupsSearchService @Inject() (
   ): TEAFResult[AccountDetails] = EitherT {
     request.accountDetailsFromMongo.optAccountDetails(credId) match {
       case Some(entry) =>
-        Future.successful(Right(entry)) // TODO - Missing IT coverage
+        Future.successful(Right(entry))
       case None =>
         getAccountDetailsFromUsersGroupSearch(credId, accountDetailsForCredential(credId)).value
     }

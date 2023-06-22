@@ -103,7 +103,7 @@ class AuthAction @Inject() (
             .get("sessionId")
             .getOrElse {
               logger.logEvent(logUserDidNotHaveSessionIdGeneratedSessionId(credentials.providerId))
-              UUID.randomUUID().toString // TODO - Missing IT coverage
+              UUID.randomUUID().toString
             }
           block(
             RequestWithUserDetailsFromSession(request, userDetails, sessionID)

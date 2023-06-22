@@ -56,14 +56,14 @@ class ThrottlingService @Inject() (legacyAuthConnector: LegacyAuthConnector, app
     Enrolment(s"$hmrcPTKey", Seq(EnrolmentIdentifier("NINO", nino)), "Activated", None)
   private[services] def isNinoWithinThrottleThreshold(nino: String, percentageToThrottle: Int): Boolean =
     percentageToThrottle match {
-      case n if n >= 100 || n < 0 => false // TODO - Missing IT coverage
+      case n if n >= 100 || n < 0 => false
       case _ if nino.length != 9  => throw new IllegalArgumentException(s"nino is incorrect length ${nino.length}")
       case n =>
         Try(nino.substring(6, 8).toInt)
           .map(ninoNumber => ninoNumber <= n)
           .getOrElse(
             throw new IllegalArgumentException(s"nino was not valid format for throttle")
-          ) // TODO - Missing IT coverage
+          )
     }
 
   private[services] def shouldAccountTypeBeThrottled(

@@ -88,7 +88,7 @@ class AccountMongoDetailsAction @Inject() (
             .handleErrors(UnexpectedError, "[AccountTypeAction][invokeBlock]")(
               request,
               baseLogger
-            ) // TODO - Missing IT coverage
+            )
         )
       }
 

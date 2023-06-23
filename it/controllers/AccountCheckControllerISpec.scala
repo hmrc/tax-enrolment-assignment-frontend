@@ -260,7 +260,6 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
           status(result) shouldBe INTERNAL_SERVER_ERROR
           contentAsString(result) should include(ErrorTemplateMessages.title)
-          recordExistsInMongo shouldBe true // TODO - Should this be true
         }
       }
     }

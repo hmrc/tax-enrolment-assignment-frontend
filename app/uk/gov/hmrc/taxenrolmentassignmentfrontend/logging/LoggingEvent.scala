@@ -81,13 +81,6 @@ object LoggingEvent {
       )
     )
 
-  def logBadResponseFromSASetupJourney(body: String, status: Int): LoggingEvent =
-    Error(
-      Event(
-        "SaSetupJourney",
-        details = Some(s"Add taxes frontend returned $status with ${body.toString()} when setting up journey")
-      )
-    )
   def logUserThrottled(credentialId: String, accountType: AccountTypes.Value, nino: String): LoggingEvent =
     Info(
       Event(
@@ -166,29 +159,6 @@ object LoggingEvent {
       )
     )
 
-  def logIncorrectUserType(
-    credentialId: String,
-    expectedUserType: List[AccountTypes.Value],
-    actualUserType: AccountTypes.Value
-  ): LoggingEvent = {
-    val expectedUserTypeString = expectedUserType.foldLeft[String]("") { (a, b) =>
-      if (a.isEmpty) {
-        b.toString
-      } else {
-        s"$a or ${b.toString}"
-      }
-    }
-
-    val errorMessage =
-      s"User type of $expectedUserTypeString required but ${actualUserType.toString} found for $credentialId"
-    Warn(
-      Event(
-        "[MultipleAccountsOrchestrator][checkValidAccountTypeRedirectUrlInCache]",
-        details = Some(errorMessage)
-      )
-    )
-  }
-
   def logNoUserFoundWithPTEnrolment(credentialId: String): LoggingEvent =
     Error(
       Event(
@@ -257,21 +227,6 @@ object LoggingEvent {
       )
     )
 
-  def logUnexpectedResponseFromTaxEnrolments(
-    nino: String,
-    statusReturned: Int,
-    errorMsg: String = ""
-  ): LoggingEvent =
-    Error(
-      Event(
-        "[TaxEnrolmentsConnector][assignPTEnrolment]",
-        errorDetails = Some(
-          s"Tax Enrolments return status of $statusReturned when allocating $hmrcPTKey enrolment for users with $nino NINO," +
-            s"Error message - $errorMsg"
-        )
-      )
-    )
-
   def logUnexpectedResponseFromUsersGroupsSearch(
     credId: String,
     statusReturned: Int,
@@ -319,16 +274,6 @@ object LoggingEvent {
         errorDetails = Some(
           s"Tax Enrolments return status of $statusReturned with response `$response` when allocating $hmrcPTKey enrolment with input `$input`"
         )
-      )
-    )
-
-  def logUnexpectedResponseFromLandingPage(
-    error: TaxEnrolmentAssignmentErrors
-  ): LoggingEvent =
-    Error(
-      Event(
-        "[LandingPageController][showLandingPage]",
-        errorDetails = Some(s"Landing Page Controller returned an error: $error")
       )
     )
 

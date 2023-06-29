@@ -26,6 +26,8 @@ object ReportSuspiciousIDMessages {
   val telephone: Seq[String] = Seq("Telephone:", "0300 200 3600")
   val outsideUK: Seq[String] = Seq("Outside UK:", "+44 161 930 8445")
 
+  val titleWelsh = "Diogelu’ch treth"
+
   val informationBlock: Seq[String] = Seq(
     "Information about opening hours, Relay UK and call charges",
     "Opening hours are Monday to Friday: 8am to 6pm (closed weekends and bank holidays).",

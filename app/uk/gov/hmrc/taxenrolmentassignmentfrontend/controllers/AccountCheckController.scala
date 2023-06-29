@@ -64,7 +64,9 @@ class AccountCheckController @Inject() (
           case Right((_, Some(redirectResult))) => Future.successful(redirectResult)
           case Right((accountType, _))          => handleNoneThrottledUsers(accountType, redirectUrlString)
           case Left(error) =>
-            Future.successful(errorHandler.handleErrors(error, "[AccountCheckController][accountCheck]"))
+            Future.successful(
+              errorHandler.handleErrors(error, "[AccountCheckController][accountCheck]")
+            )
         }
       case Failure(error) =>
         logger.logEvent(logInvalidRedirectUrl(error.getMessage), error)

@@ -24,6 +24,8 @@ import play.api.http.Status
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NO_CONTENT, OK, SEE_OTHER}
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{AnyContent, Request}
+import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NO_CONTENT, OK, SEE_OTHER}
+import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{GET, contentAsString, defaultAwaitTimeout, redirectLocation, route, status, writeableOf_AnyContentAsEmpty}
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier}
@@ -209,6 +211,60 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
           status(result) shouldBe SEE_OTHER
           redirectLocation(result).get should include(returnUrl)
           recordExistsInMongo shouldBe false
+        }
+      }
+
+      "return INTERNAL_SERVER_ERROR and take user to errorView" when {
+        s"/identity-verification/nino fails" in {
+          val authResponse = authoriseResponseJson(optNino = Some(ninoBelowThreshold), enrolments = noEnrolments)
+          stubAuthorizePost(OK, authResponse.toString())
+          stubPost(s"/write/.*", OK, """{"x":2}""")
+          stubGet(
+            s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$ninoBelowThreshold/users",
+            OK,
+            es0ResponseNoRecordCred
+          )
+          stubGetWithQueryParam(
+            "/identity-verification/nino",
+            "nino",
+            ninoBelowThreshold,
+            INTERNAL_SERVER_ERROR,
+            ""
+          )
+          stubGetMatching(
+            s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_3/enrolments?type=principal",
+            NO_CONTENT,
+            ""
+          )
+          stubGetMatching(
+            s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_4/enrolments?type=principal",
+            NO_CONTENT,
+            ""
+          )
+
+          stubPost(
+            s"/enrolment-store-proxy/enrolment-store/enrolments",
+            NO_CONTENT,
+            ""
+          )
+          stubPut(
+            s"/tax-enrolments/service/HMRC-PT/enrolment",
+            NO_CONTENT,
+            ""
+          )
+          stubPutWithRequestBody(
+            url = "/auth/enrolments",
+            status = OK,
+            requestBody = Json.toJson(Set(newEnrolment(ninoBelowThreshold)))(EnrolmentsFormats.writes).toString,
+            responseBody = ""
+          )
+
+          val request = FakeRequest(GET, urlPath)
+            .withSession(xAuthToken)
+          val result = route(app, request).get
+
+          status(result) shouldBe INTERNAL_SERVER_ERROR
+          contentAsString(result) should include(ErrorTemplateMessages.title)
         }
       }
     }

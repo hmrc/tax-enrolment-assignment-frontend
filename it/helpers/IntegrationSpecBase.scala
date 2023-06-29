@@ -86,6 +86,8 @@ trait IntegrationSpecBase
   lazy val accountCheckPath =
     routes.AccountCheckController.accountCheck(RedirectUrl.apply(returnUrl)).url
 
+  lazy val unauthorizedPath: String = routes.AuthorisationController.notAuthorised.url
+
   val exampleMongoSessionData =
     Map(ACCOUNT_TYPE -> Json.toJson(SA_ASSIGNED_TO_OTHER_USER), REDIRECT_URL -> JsString("redirectURL"))
 

@@ -165,11 +165,18 @@ class EACDConnector @Inject() (httpClient: HttpClient, logger: EventLoggerServic
     EitherT(
       httpClient
         .DELETE[Either[UpstreamErrorResponse, HttpResponse]](url)
-    ).leftMap { error =>
-      logger.logEvent(
-        logES2ErrorFromEACDDelete(groupId, error.statusCode, error.message)
-      )
-      error
+    ).leftMap {
+      case error if error.statusCode >= 499 =>
+        logger.logEvent(
+          logES2ErrorFromEACDDelete(groupId, error.statusCode, error.message)
+        )
+        error
+      case error =>
+        logger.logEvent(
+          logES2ErrorFromEACDDelete(groupId, error.statusCode, error.message),
+          error
+        )
+        error
     }
   }
 }

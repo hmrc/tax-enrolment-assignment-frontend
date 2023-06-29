@@ -41,7 +41,7 @@ class ErrorHandler @Inject() (errorView: ErrorTemplate, logger: EventLoggerServi
       case UnexpectedPTEnrolment(accountType) if accountType == SA_ASSIGNED_TO_OTHER_USER =>
         Redirect(routes.EnrolledPTWithSAOnOtherAccountController.view)
       case InvalidRedirectUrl               => BadRequest(errorView())
-      case EnrolmentStoreServiceUnavailable => ServiceUnavailable(errorView())
+      case EnrolmentStoreServiceUnavailable => InternalServerError(errorView())
       case _ =>
         logger.logEvent(
           logUnexpectedErrorOccurred(

@@ -91,7 +91,7 @@ class PTMismatchCheckActionSpec extends BaseSpec {
         BAD_GATEWAY,
         SERVICE_UNAVAILABLE
       ).foreach { errorResponse =>
-        s"return SERVICE_UNAVAILABLE if the delete request fails with status $errorResponse" in {
+        s"return INTERNAL_SERVER_ERROR if the delete request fails with status $errorResponse" in {
           (mockEacdService
             .deallocateEnrolment(_: String, _: String)(
               _: HeaderCarrier,
@@ -108,7 +108,7 @@ class PTMismatchCheckActionSpec extends BaseSpec {
             userRequest => Future.successful(Ok(s"User Details: ${userRequest.userDetails}"))
 
           val action = harnessToggleTrue(block)(mismatchRequest)
-          status(action) shouldBe SERVICE_UNAVAILABLE
+          status(action) shouldBe INTERNAL_SERVER_ERROR
         }
       }
       "not delete the mismatched HMRC-PT enrolment and return BAD_REQUEST if there was no redirectUrl in the query string" in {

@@ -16,11 +16,12 @@
 
 package controllers
 
+import com.github.tomakehurst.wiremock.client.WireMock.{deleteRequestedFor, urlMatching}
 import helpers.TestITData._
 import helpers.messages._
 import helpers.{IntegrationSpecBase, ItUrlPaths}
 import play.api.http.Status
-import play.api.http.Status.{BAD_REQUEST, NO_CONTENT, OK, SEE_OTHER}
+import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NO_CONTENT, OK, SEE_OTHER}
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{AnyContent, Request}
 import play.api.test.FakeRequest
@@ -1031,6 +1032,25 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result).get should include("/protect-tax-info?redirectUrl=")
+        server.verify(1, deleteRequestedFor(urlMatching(url)))
+      }
+    }
+
+    "the user has a nino which mismatches their enrolment nino" should {
+      val url =
+        s"/enrolment-store-proxy/enrolment-store/groups/.*/enrolments/.*"
+      "return technical difficulty when enrolment deletion is failing" in {
+        val authResponse = authoriseResponseJson(enrolments = mismatchPtEnrolmentOnly)
+        stubAuthorizePost(OK, authResponse.toString())
+        //stubPost(s"/write/.*", OK, """{"x":2}""")
+        stubDelete(url, Status.INTERNAL_SERVER_ERROR)
+
+        val request = FakeRequest(GET, urlPath)
+          .withSession(xAuthToken)
+        val result = route(app, request).get
+
+        status(result) shouldBe INTERNAL_SERVER_ERROR
+        server.verify(1, deleteRequestedFor(urlMatching(url)))
       }
     }
   }

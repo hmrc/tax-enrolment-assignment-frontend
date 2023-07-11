@@ -67,7 +67,7 @@ selfAssessmentInterrupt.listItem2 = use a separate user ID for Self Assessment o
 selfAssessmentInterrupt.paragraph3 = On the next screens we will ask you which option you want to choose.
 selfAssessmentInterrupt.continue = Continue
 
-keepAccessToSA.title = Do you want a single Government Gateway user ID for personal tax information and Self Assessment?
+keepAccessToSA.title = Do you want to keep access to Self Assessment from your personal tax account?
 keepAccessToSA.heading = Do you want a single Government Gateway user ID for personal tax information and Self Assessment?
 keepAccessToSA.radio.yes = Yes
 keepAccessToSA.radio.no = No, I want to keep them separate
@@ -87,11 +87,11 @@ signInAgain.paragraph1 = You are currently signed in with a user ID ending with 
 signInAgain.paragraph2 = To access personal tax and Self Assessment:
 signInAgain.listItem1 = sign out now
 signInAgain.listItem2 = sign in again using your other user ID ending with {0}
-signInAgain.exclamation = Your user ID ending with {0} is the only user ID you can use for personal tax informaiton and Self Assessment
+signInAgain.exclamation = Your user ID ending with {0} is the only user ID you can use for personal tax information and Self Assessment
 signInAgain.continue = Confirm and sign out
 
-enrolledForPTWithSAOnOtherAccount.title = You are choosing to have two Goverment Gateway user IDs
-enrolledForPTWithSAOnOtherAccount.heading = You are choosing to have two Goverment Gateway user IDs
+enrolledForPTWithSAOnOtherAccount.title = You are choosing to have two Government Gateway user IDs
+enrolledForPTWithSAOnOtherAccount.heading = You are choosing to have two Government Gateway user IDs
 enrolledForPTWithSAOnOtherAccount.paragraph1 = The user ID you are signed in with now ends in {0}. This will be the only ID you can use to access you personal tax information.
 enrolledForPTWithSAOnOtherAccount.heading2 = User ID for Self Assessment in business tax account
 enrolledForPTWithSAOnOtherAccount.paragraph2 = In the future, to manage your Self Assessment, you will need to go to your business tax account. To do this now, you must sign out and sign in with your other user ID ending in {0}.
@@ -101,7 +101,7 @@ enrolledForPTWithSAOnOtherAccount.userId = User ID
 enrolledForPTWithSAOnOtherAccount.email =  Email
 enrolledForPTWithSAOnOtherAccount.lastLoginDate = Last signed in
 enrolledForPTWithSAOnOtherAccount.linkText = The above user ID does not belong to me
-enrolledForPTWithSAOnOtherAccount.exclamation = If you have any other Goverment Gateway user IDs, you will not be able to use them to access your personal tax information or Self Assessment
+enrolledForPTWithSAOnOtherAccount.exclamation = If you have any other Government Gateway user IDs, you will not be able to use them to access your personal tax information or Self Assessment
 enrolledForPTWithSAOnOtherAccount.continue = Continue to personal tax
 
 timedout.title = For your security, we signed you out

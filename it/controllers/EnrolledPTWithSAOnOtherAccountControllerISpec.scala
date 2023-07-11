@@ -76,15 +76,15 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec extends IntegrationSpecBase 
           EnrolledPTWithSAOnOtherAccountMessages.title
         )
         page
-          .getElementsByClass("govuk-body")
+          .getElementsByTag("p")
           .get(0)
           .text() shouldBe EnrolledPTWithSAOnOtherAccountMessages.paragraph1(USER_ID)
         page
-          .getElementsByClass("govuk-body")
+          .getElementsByTag("p")
           .get(1)
           .text() shouldBe EnrolledPTWithSAOnOtherAccountMessages.paragraph2("********6037")
         page
-          .getElementsByClass("govuk-body")
+          .getElementsByTag("p")
           .get(2)
           .text() shouldBe EnrolledPTWithSAOnOtherAccountMessages.paragraph3
       }

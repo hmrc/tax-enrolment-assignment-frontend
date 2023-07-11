@@ -16,6 +16,8 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.views
 
+import org.jsoup.nodes.Document
+import play.api.data.Form
 import play.api.test.FakeRequest
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.KeepAccessToSAMessages
@@ -26,9 +28,9 @@ class KeepAccessToSASpec extends ViewSpecHelper {
 
   lazy val view: KeepAccessToSA = inject[KeepAccessToSA]
 
-  val form = KeepAccessToSAThroughPTAForm.keepAccessToSAThroughPTAForm
+  val form: Form[KeepAccessToSAThroughPTA] = KeepAccessToSAThroughPTAForm.keepAccessToSAThroughPTAForm
 
-  def documentPopForm(isYes: Boolean = true) = {
+  def documentPopForm(isYes: Boolean = true): Document = {
     val popForm = KeepAccessToSAThroughPTAForm.keepAccessToSAThroughPTAForm
       .fill(KeepAccessToSAThroughPTA(isYes))
     val popView = view(popForm)(FakeRequest(), testMessages)
@@ -39,7 +41,7 @@ class KeepAccessToSASpec extends ViewSpecHelper {
     val heading = "govuk-fieldset__heading"
     val radios = "govuk-radios__item"
     val radioInput = "govuk-radios__input"
-    val radioLables = "govuk-label govuk-radios__label"
+    val radioLabels = "govuk-label govuk-radios__label"
     val body = "govuk-body"
     val errorSummaryTitle = "govuk-error-summary__title"
     val errorSummaryList = "govuk-list govuk-error-summary__list"
@@ -69,10 +71,11 @@ class KeepAccessToSASpec extends ViewSpecHelper {
       "have radio buttons" that {
         val radioButtons = document.getElementsByClass(Selectors.radios)
         "have the option to select Yes and is unchecked" in {
+          print(document.outerHtml())
           val radioButton1 = radioButtons
             .get(0)
           radioButton1
-            .getElementsByClass(Selectors.radioLables)
+            .getElementsByClass(Selectors.radioLabels)
             .text() shouldBe KeepAccessToSAMessages.radioYes
           radioButton1
             .getElementsByClass(Selectors.radioInput)
@@ -85,7 +88,7 @@ class KeepAccessToSASpec extends ViewSpecHelper {
           val radioButton2 = radioButtons
             .get(1)
           radioButton2
-            .getElementsByClass(Selectors.radioLables)
+            .getElementsByClass(Selectors.radioLabels)
             .text() shouldBe KeepAccessToSAMessages.radioNo
           radioButton2
             .getElementsByClass(Selectors.radioInput)
@@ -124,7 +127,7 @@ class KeepAccessToSASpec extends ViewSpecHelper {
     }
 
     "the form is prepopulated and has no error" should {
-      val documentYes = documentPopForm(true)
+      val documentYes = documentPopForm()
       val documentNo = documentPopForm(false)
       "have the expected title" in {
         documentYes.title() shouldBe KeepAccessToSAMessages.title
@@ -148,7 +151,7 @@ class KeepAccessToSASpec extends ViewSpecHelper {
             val radioButton1 = radioButtonsYes
               .get(0)
             radioButton1
-              .getElementsByClass(Selectors.radioLables)
+              .getElementsByClass(Selectors.radioLabels)
               .text() shouldBe KeepAccessToSAMessages.radioYes
             radioButton1
               .getElementsByClass(Selectors.radioInput)
@@ -163,7 +166,7 @@ class KeepAccessToSASpec extends ViewSpecHelper {
             val radioButton2 = radioButtonsYes
               .get(1)
             radioButton2
-              .getElementsByClass(Selectors.radioLables)
+              .getElementsByClass(Selectors.radioLabels)
               .text() shouldBe KeepAccessToSAMessages.radioNo
             radioButton2
               .getElementsByClass(Selectors.radioInput)
@@ -178,7 +181,7 @@ class KeepAccessToSASpec extends ViewSpecHelper {
             val radioButton1 = radioButtonsNo
               .get(0)
             radioButton1
-              .getElementsByClass(Selectors.radioLables)
+              .getElementsByClass(Selectors.radioLabels)
               .text() shouldBe KeepAccessToSAMessages.radioYes
             radioButton1
               .getElementsByClass(Selectors.radioInput)
@@ -193,7 +196,7 @@ class KeepAccessToSASpec extends ViewSpecHelper {
             val radioButton2 = radioButtonsNo
               .get(1)
             radioButton2
-              .getElementsByClass(Selectors.radioLables)
+              .getElementsByClass(Selectors.radioLabels)
               .text() shouldBe KeepAccessToSAMessages.radioNo
             radioButton2
               .getElementsByClass(Selectors.radioInput)

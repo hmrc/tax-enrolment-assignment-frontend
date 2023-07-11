@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.messages
 
 object SABlueInterruptMessages extends BaseMessage {
-  val title = "You currently have more than one Government Gateway user ID" + defaultTitleSuffix
+  val title: String = "You currently have more than one Government Gateway user ID" + defaultTitleSuffix
   val heading = "You currently have more than one Government Gateway user ID"
   val paragraph1: String =
     "We recommend that you use only one Government Gateway user ID to access your personal tax information."

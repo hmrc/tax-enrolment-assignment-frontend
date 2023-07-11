@@ -19,8 +19,8 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.messages
 object KeepAccessToSAMessages extends BaseMessage {
 
   val continue = "Continue"
-  val title =
-    "Do you want a single Government Gateway user ID for personal tax information and Self Assessment?" + defaultTitleSuffix
+  val title: String =
+    "Do you want to keep access to Self Assessment from your personal tax account?" + defaultTitleSuffix
   val heading =
     "Do you want a single Government Gateway user ID for personal tax information and Self Assessment?"
   val radioYes = "Yes"
@@ -32,7 +32,7 @@ object KeepAccessToSAMessages extends BaseMessage {
   val errorMessage =
     "Select yes if you want a single Government Gateway user ID for personal tax information and Self Assessment"
   val button = "Continue"
-  val action =
+  val action: String =
     uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes.KeepAccessToSAController.continue.url
 
 }

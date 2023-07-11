@@ -17,7 +17,7 @@
 package helpers.messages
 
 object KeepAccessToSAMessages {
-  val title = "Do you want a single Government Gateway user ID for personal tax information and Self Assessment?"
+  val title = "Do you want to keep access to Self Assessment from your personal tax account?"
   val errorTitle = "There is a problem"
   val errorMessage =
     "Select yes if you want a single Government Gateway user ID for personal tax information and Self Assessment"

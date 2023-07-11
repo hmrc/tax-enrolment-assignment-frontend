@@ -64,7 +64,7 @@ class EnrolledForPTWithSAOnOtherAccountSpec extends ViewSpecHelper {
       }
       "contain the correct header" in {
         documentSA
-          .getElementsByClass("govuk-heading-xl")
+          .getElementsByClass("govuk-heading-l")
           .text shouldBe EnrolledPTWithSAOnOtherAccountMessages.heading
       }
 
@@ -105,7 +105,7 @@ class EnrolledForPTWithSAOnOtherAccountSpec extends ViewSpecHelper {
       }
       "contain the correct header" in {
         document
-          .getElementsByClass("govuk-heading-xl")
+          .getElementsByClass("govuk-heading-l")
           .text shouldBe EnrolledPTWithSAOnOtherAccountMessages.heading
       }
 
@@ -121,17 +121,17 @@ class EnrolledForPTWithSAOnOtherAccountSpec extends ViewSpecHelper {
         }
         "have expected paragraphs that don't include SA" in {
           document
-            .getElementsByClass("govuk-body")
+            .getElementsByTag("p")
             .get(0)
             .text shouldBe EnrolledPTWithSAOnOtherAccountMessages.paragraph1(userId)
 
           document
-            .getElementsByClass("govuk-body")
+            .getElementsByTag("p")
             .get(1)
             .text shouldBe EnrolledPTWithSAOnOtherAccountMessages.paragraph2(userId)
 
           document
-            .getElementsByClass("govuk-body")
+            .getElementsByTag("p")
             .get(2)
             .text shouldBe EnrolledPTWithSAOnOtherAccountMessages.paragraph3
         }

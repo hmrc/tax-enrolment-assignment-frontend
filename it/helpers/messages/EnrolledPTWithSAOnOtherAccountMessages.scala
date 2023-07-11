@@ -18,7 +18,7 @@ package helpers.messages
 
 object EnrolledPTWithSAOnOtherAccountMessages {
   val title =
-    "You are choosing to have two Goverment Gateway user IDs"
+    "You are choosing to have two Government Gateway user IDs"
   def paragraph1(userId: String): String =
     s"The user ID you are signed in with now ends in $userId. This will be the only ID you can use to access you personal tax information."
   def paragraph2(userId: String): String =

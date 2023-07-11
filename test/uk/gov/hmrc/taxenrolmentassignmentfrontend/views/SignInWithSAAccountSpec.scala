@@ -21,6 +21,7 @@ import org.jsoup.nodes.Document
 import play.api.Application
 import play.api.inject.bind
 import play.api.test.FakeRequest
+import play.twirl.api.HtmlFormat
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignOutController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthAction
@@ -32,7 +33,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{ReportSuspiciousID
 
 class SignInWithSAAccountSpec extends ViewSpecHelper {
 
-  lazy val mockAuthAction = mock[AuthAction]
+  lazy val mockAuthAction: AuthAction = mock[AuthAction]
 
   override implicit lazy val app: Application = localGuiceApplicationBuilder()
     .overrides(
@@ -40,19 +41,19 @@ class SignInWithSAAccountSpec extends ViewSpecHelper {
     )
     .build()
 
-  lazy val service = app.injector.instanceOf[SignOutController]
+  lazy val service: SignOutController = app.injector.instanceOf[SignOutController]
 
   lazy val signInAgainPage: SignInWithSAAccount = inject[SignInWithSAAccount]
   lazy val reportSuspiciousIDPage: ReportSuspiciousID =
     inject[ReportSuspiciousID]
   lazy val userId = "3214"
-  lazy val view =
+  lazy val view: HtmlFormat.Appendable =
     signInAgainPage(userId, accountDetails)(FakeRequest(), testMessages)
   lazy val document: Document =
     Jsoup.parse(view.toString())
 
   object Selectors {
-    val headingXL = "govuk-heading-xl"
+    val headingL = "govuk-heading-l"
     val headingM = "govuk-heading-m"
     val headingS = "govuk-heading-s"
     val body = "govuk-body"
@@ -65,19 +66,19 @@ class SignInWithSAAccountSpec extends ViewSpecHelper {
     val bulletPointList = "govuk-list govuk-list--bullet"
   }
 
-  val mfaDetails = Seq(
+  val mfaDetails: Seq[MFADetails] = Seq(
     MFADetails("Text message", "07390328923"),
     MFADetails("Voice call", "0193453839"),
-    MFADetails("Authenticator App", "HRMC APP")
+    MFADetails("Authenticator App", "HMRC APP")
   )
 
   val elementsToMFADetails: Map[Int, MFADetails] = Map(
     3 -> MFADetails("Text message", "07390328923"),
     4 -> MFADetails("Voice call", "0193453839"),
-    5 -> MFADetails("Authenticator App", "HRMC APP")
+    5 -> MFADetails("Authenticator App", "HMRC APP")
   )
 
-  val accountDetails = AccountDetails(
+  val accountDetails: AccountDetails = AccountDetails(
     credId = CREDENTIAL_ID,
     "********3214",
     Some(SensitiveString("email1@test.com")),
@@ -92,7 +93,7 @@ class SignInWithSAAccountSpec extends ViewSpecHelper {
 
     "contain the correct main header" in {
       document
-        .getElementsByClass(Selectors.headingXL)
+        .getElementsByClass(Selectors.headingL)
         .text shouldBe SignInAgainMessages.heading
     }
 
@@ -103,15 +104,13 @@ class SignInWithSAAccountSpec extends ViewSpecHelper {
     }
 
     "contain the correct paragraph" in {
-      val paragraph = document.select("p." + Selectors.body)
+      val paragraph = document.getElementsByTag("p")
       paragraph
         .get(1)
-        .getElementsByClass(Selectors.body)
         .text() shouldBe SignInAgainMessages.paragraph1 + s"$userId"
 
       paragraph
         .get(2)
-        .getElementsByClass(Selectors.body)
         .text() shouldBe SignInAgainMessages.paragraph2
     }
 

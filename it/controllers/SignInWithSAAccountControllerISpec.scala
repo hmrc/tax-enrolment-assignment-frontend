@@ -86,11 +86,11 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
             .get(0)
             .text shouldBe SignInAgainMessages.paragraphLinkText
           page
-            .getElementsByClass("govuk-body")
+            .getElementsByTag("p")
             .get(1)
             .text shouldBe SignInAgainMessages.paragraph1(USER_ID)
           page
-            .getElementsByClass("govuk-body")
+            .getElementsByTag("p")
             .get(2)
             .text shouldBe SignInAgainMessages.paragraph2
         }

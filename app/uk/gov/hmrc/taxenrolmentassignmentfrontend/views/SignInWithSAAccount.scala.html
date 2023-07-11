@@ -14,8 +14,8 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.helpers.CreateSummaryRow
 
 
@@ -23,46 +23,51 @@
         layout: Layout,
         govukButton: GovukButton,
         formHelper: FormWithCSRF,
-        summaryRow: CreateSummaryRow
+        summaryRow: CreateSummaryRow,
+        govukWarningText: GovukWarningText
 )
 
 @(userId: String, saAccountDetails: AccountDetails)(implicit request: Request[_], messages: Messages)
 
 @layout(pageTitle = Some(messages("signInAgain.title")), backLinkEnabled = true) {
 
- <h1 class="govuk-heading-xl">@messages("signInAgain.heading1")</h1>
- <h2 class="govuk-heading-s">@messages("signInAgain.subheading")</h2>
- <dl class="govuk-summary-list">
-  @summaryRow("common.userId", saAccountDetails.userId)
-  @if(saAccountDetails.emailDecrypted.isDefined) {
-   @summaryRow("signInAgain.email", saAccountDetails.emailDecrypted.get)
-  }
-  @summaryRow("signInAgain.lastLoginDate", saAccountDetails.lastLoginDate)
-  @for(mfaDetail <- saAccountDetails.mfaDetails) {
-   @summaryRow(mfaDetail.factorNameKey, mfaDetail.factorValue)
-  }
- </dl>
+    <h1 class="govuk-heading-l">@messages("signInAgain.heading1")</h1>
+    <h3 class="govuk-heading-s">@messages("signInAgain.subheading")</h3>
+    <dl class="govuk-summary-list">
+        @summaryRow("common.userId", saAccountDetails.userId)
+        @if(saAccountDetails.emailDecrypted.isDefined) {
+            @summaryRow("signInAgain.email", saAccountDetails.emailDecrypted.get)
+        }
+        @summaryRow("signInAgain.lastLoginDate", saAccountDetails.lastLoginDate)
+        @for(mfaDetail <- saAccountDetails.mfaDetails) {
+            @summaryRow(mfaDetail.factorNameKey, mfaDetail.factorValue)
+        }
+    </dl>
 
- <p class="govuk-body">
-  <a class="govuk-link" id="reportId" href="@routes.ReportSuspiciousIDController.viewSA">
-  @messages("signInAgain.linkText")
-  </a>
- </p>
+    <p class="govuk-body govuk-!-margin-bottom-6">
+        <a class="govuk-link" id="reportId" href="@routes.ReportSuspiciousIDController.viewSA">
+        @messages("signInAgain.linkText")
+        </a>
+    </p>
 
- <h2 class="govuk-heading-m">@messages("signInAgain.heading2")</h2>
- <p class="govuk-body">@messages("signInAgain.paragraph1", userId)</p>
- <p class="govuk-body">@messages("signInAgain.paragraph2")</p>
- <ul class="govuk-list govuk-list--bullet">
-  <li>@messages("signInAgain.listItem1")</li>
-  <li>@messages("signInAgain.listItem2", userId)</li>
- </ul>
- @* Below line needs to be changed*@
- <p class="govuk-body">@messages("signInAgain.exclamation")</p>
+    <h3 class="govuk-heading-m">@messages("signInAgain.heading2")</h3>
+    <p>@messages("signInAgain.paragraph1", userId)</p>
+    <p>@messages("signInAgain.paragraph2")</p>
+    <ul class="govuk-list govuk-list--bullet">
+        <li>@messages("signInAgain.listItem1")</li>
+        <li>@messages("signInAgain.listItem2", userId)</li>
+    </ul>
 
- @formHelper(action = routes.SignInWithSAAccountController.continue) {
-  @govukButton(Button(
-   preventDoubleClick = Some(true),
-   content = Text(messages("signInAgain.continue"))
-  ))
- }
+    @govukWarningText(
+        WarningText(
+            content = Text(messages("signInAgain.exclamation"))
+        )
+    )
+
+    @formHelper(action = routes.SignInWithSAAccountController.continue) {
+        @govukButton(Button(
+            preventDoubleClick = Some(true),
+            content = Text(messages("signInAgain.continue"))
+        ))
+    }
 }

@@ -61,7 +61,9 @@ class ThrottlingService @Inject() (legacyAuthConnector: LegacyAuthConnector, app
       case n =>
         Try(nino.substring(6, 8).toInt)
           .map(ninoNumber => ninoNumber <= n)
-          .getOrElse(throw new IllegalArgumentException(s"nino was not valid format for throttle"))
+          .getOrElse(
+            throw new IllegalArgumentException(s"nino was not valid format for throttle")
+          )
     }
 
   private[services] def shouldAccountTypeBeThrottled(

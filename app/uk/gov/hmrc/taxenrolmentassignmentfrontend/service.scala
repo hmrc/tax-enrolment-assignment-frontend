@@ -16,11 +16,6 @@
 
 package uk.gov.hmrc
 
-/*
- * Copyright 2021 HM Revenue & Customs
- *
- */
-
 import cats.data.EitherT
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 

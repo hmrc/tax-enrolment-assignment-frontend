@@ -25,6 +25,7 @@ import helpers.messages._
 import org.jsoup.Jsoup
 import org.mongodb.scala.bson.BsonDocument
 import play.api.http.Status
+import play.api.i18n.Lang
 import play.api.libs.json.{JsString, Json}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
@@ -86,6 +87,42 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
         )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER), messagesApi)
 
         verifyAuditEventSent(expectedAuditEvent)
+      }
+
+      s"render the report suspiciousId page with a continue button, and translate if the user is Welsh" in {
+        await(save[String](sessionId, "redirectURL", returnUrl))
+        await(
+          save[AccountTypes.Value](
+            sessionId,
+            "ACCOUNT_TYPE",
+            SA_ASSIGNED_TO_OTHER_USER
+          )
+        )
+        await(
+          save[UsersAssignedEnrolment](
+            sessionId,
+            USER_ASSIGNED_SA_ENROLMENT,
+            UsersAssignedEnrolment(Some(CREDENTIAL_ID_2))
+          )
+        )
+        val authResponse = authoriseResponseJson()
+        stubAuthorizePost(OK, authResponse.toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        stubGet(
+          s"/users-groups-search/users/$CREDENTIAL_ID_2",
+          NON_AUTHORITATIVE_INFORMATION,
+          usergroupsResponseJson().toString()
+        )
+
+        val request = FakeRequest(GET, "/protect-tax-info" + urlPathSa)
+          .withSession(xAuthToken, xSessionId)
+          .withTransientLang(Lang.get("CY").get)
+        val result = route(app, request).get
+        val page = Jsoup.parse(contentAsString(result))
+
+        status(result) shouldBe OK
+        page.title should include(ReportSuspiciousIDMessages.titleWelsh)
+        page.getElementsByClass("govuk-button").size() shouldBe 1
       }
     }
 

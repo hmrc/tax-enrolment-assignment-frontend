@@ -55,5 +55,4 @@ class UserGroupSearchServiceISpec extends IntegrationSpecBase {
       crypto.crypto.decrypt(Crypted(emailEncrypted)).value shouldBe """"email1@test.com""""
     }
   }
-
 }

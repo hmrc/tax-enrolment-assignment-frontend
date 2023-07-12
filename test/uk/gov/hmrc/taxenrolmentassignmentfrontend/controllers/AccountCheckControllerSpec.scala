@@ -24,7 +24,7 @@ import play.api.http.Status.SEE_OTHER
 import play.api.i18n.MessagesApi
 import play.api.inject.bind
 import play.api.libs.json.Format
-import play.api.mvc.BodyParsers
+import play.api.mvc.{BodyParsers, Result}
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
@@ -35,7 +35,7 @@ import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{PTMismatchCheckAction, RequestWithUserDetailsFromSession, UserDetailsFromSession}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{TaxEnrolmentAssignmentErrors, UnexpectedError, UnexpectedResponseFromIV, UnexpectedResponseFromTaxEnrolments}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{BaseSpec, UrlPaths}
@@ -44,9 +44,21 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHa
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services._
 
+import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 
 class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
+
+  def mockPTMismatchCheckAction(userDetails: UserDetailsFromSession): PTMismatchCheckAction =
+    new PTMismatchCheckAction {
+      override def invokeBlock[A](
+        request: RequestWithUserDetailsFromSession[A],
+        block: RequestWithUserDetailsFromSession[A] => Future[Result]
+      ): Future[Result] =
+        block(RequestWithUserDetailsFromSession(request, userDetails, s"sessionId-${UUID.randomUUID().toString}"))
+
+      override protected def executionContext: ExecutionContext = ec
+    }
 
   def mockAccountShouldNotBeThrottled(
     accountTypes: AccountTypes.Value,
@@ -359,6 +371,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
 
       s"redirect ${UrlPaths.enrolledPTSAOnOtherAccountPath}" when {
         "the PT enrolment has not already been assigned" in new TestHelper {
+          mockPTMismatchCheckAction(userDetailsWithMismatchNino)
           mockAuthCallWithPT()
           mockSaveDataToCache
           mockAccountCheckSuccess(SA_ASSIGNED_TO_OTHER_USER)

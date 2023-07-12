@@ -320,6 +320,17 @@ object LoggingEvent {
       )
     )
 
+  def logES2ErrorFromEACDDelete(groupId: String, statusReturned: Int, message: String): LoggingEvent =
+    Error(
+      Event(
+        "[EACDConnector][queryEnrolmentsAssignedToUser]",
+        errorDetails = Some(
+          s"EACD returned status of $statusReturned when attempting to delete the HMRC-PT enrolment for groupId: $groupId, " +
+            s"with the error response providing the following message: $message"
+        )
+      )
+    )
+
   def logUnexpectedErrorOccurred(
     credentialId: String,
     classAndMethod: String,

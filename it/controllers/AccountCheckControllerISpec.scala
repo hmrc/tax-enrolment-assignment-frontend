@@ -16,24 +16,27 @@
 
 package controllers
 
-import java.net.URLEncoder
-import helpers.{IntegrationSpecBase, ItUrlPaths}
+import com.github.tomakehurst.wiremock.client.WireMock.{deleteRequestedFor, urlMatching}
 import helpers.TestITData._
-import play.api.test.Helpers.{GET, contentAsString, defaultAwaitTimeout, redirectLocation, route, status, writeableOf_AnyContentAsEmpty}
 import helpers.messages._
-import play.api.mvc.{AnyContent, Request}
+import helpers.{IntegrationSpecBase, ItUrlPaths}
+import play.api.http.Status
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NO_CONTENT, OK, SEE_OTHER}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
+import play.api.mvc.{AnyContent, Request}
 import play.api.test.FakeRequest
+import play.api.test.Helpers.{GET, contentAsString, defaultAwaitTimeout, redirectLocation, route, status, writeableOf_AnyContentAsEmpty}
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession, UserDetailsFromSession}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.hmrcPTKey
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.formats.EnrolmentsFormats
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{ThrottleApplied, ThrottleDoesNotApply}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession, UserDetailsFromSession}
+
+import java.net.URLEncoder
 
 class AccountCheckControllerISpec extends IntegrationSpecBase {
 
@@ -42,7 +45,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
   val ninoSameAsThrottlePercentage = "QQ123402A"
   val ninoAboveThrottlePercentage = "QQ123403A"
   lazy val throttlePercentage = config.get("throttle.percentage")
-  val newEnrolment = (nino: String) =>
+  val newEnrolment: String => Enrolment = (nino: String) =>
     Enrolment(s"$hmrcPTKey", Seq(EnrolmentIdentifier("NINO", nino)), "Activated", None)
 
   def requestWithUserDetails(
@@ -267,6 +270,8 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
     s"$ThrottleDoesNotApply" should {
       "not redirect user to their redirect url and follow standard logic" when {
         s"the current user has $PT_ASSIGNED_TO_CURRENT_USER for a Nino within threshold" in {
+          val ptEnrolmentOnly: JsValue =
+            Json.arr(createEnrolmentJson("HMRC-PT", "NINO", ninoBelowThreshold))
           val authResponse = authoriseResponseJson(optNino = Some(ninoBelowThreshold), enrolments = ptEnrolmentOnly)
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -1066,5 +1071,41 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
       }
     }
 
+    "the user has a nino which mismatches their enrolment nino" should {
+      val url =
+        s"/enrolment-store-proxy/enrolment-store/groups/.*/enrolments/.*"
+      "return SEE_OTHER, redirect to protect-tax-info after deleting mismatched enrolment with the redirect url as a query parameter" in {
+        val authResponse = authoriseResponseJson(enrolments = mismatchPtEnrolmentOnly)
+        stubAuthorizePost(OK, authResponse.toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        stubDelete(url, Status.CREATED)
+
+        val request = FakeRequest(GET, urlPath)
+          .withSession(xAuthToken)
+        val result = route(app, request).get
+
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result).get should include("/protect-tax-info?redirectUrl=")
+        server.verify(1, deleteRequestedFor(urlMatching(url)))
+      }
+    }
+
+    "the user has a nino which mismatches their enrolment nino" should {
+      val url =
+        s"/enrolment-store-proxy/enrolment-store/groups/.*/enrolments/.*"
+      "return technical difficulty when enrolment deletion is failing" in {
+        val authResponse = authoriseResponseJson(enrolments = mismatchPtEnrolmentOnly)
+        stubAuthorizePost(OK, authResponse.toString())
+        //stubPost(s"/write/.*", OK, """{"x":2}""")
+        stubDelete(url, Status.INTERNAL_SERVER_ERROR)
+
+        val request = FakeRequest(GET, urlPath)
+          .withSession(xAuthToken)
+        val result = route(app, request).get
+
+        status(result) shouldBe INTERNAL_SERVER_ERROR
+        server.verify(1, deleteRequestedFor(urlMatching(url)))
+      }
+    }
   }
 }

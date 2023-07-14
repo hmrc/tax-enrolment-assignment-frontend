@@ -31,10 +31,10 @@
 @layout(pageTitle = Some(messages("enrolledForPTWithSAOnOtherAccount.title"))) {
 
     <h1 class="govuk-heading-l">@messages("enrolledForPTWithSAOnOtherAccount.heading")</h1>
-    <p>@messages("enrolledForPTWithSAOnOtherAccount.paragraph1", userId)</p>
+    <p class="govuk-body">@messages("enrolledForPTWithSAOnOtherAccount.paragraph1", userId)</p>
     <h2 class="govuk-heading-m">@messages("enrolledForPTWithSAOnOtherAccount.heading2")</h2>
-    <p>@messages("enrolledForPTWithSAOnOtherAccount.paragraph2", saAccountDetails.userId)</p>
-    <p>@messages("enrolledForPTWithSAOnOtherAccount.paragraph3")</p>
+    <p class="govuk-body">@messages("enrolledForPTWithSAOnOtherAccount.paragraph2", saAccountDetails.userId)</p>
+    <p class="govuk-body">@messages("enrolledForPTWithSAOnOtherAccount.paragraph3")</p>
     <h3 class="govuk-heading-s">@messages("enrolledForPTWithSAOnOtherAccount.subheading")</h3>
     <dl class="govuk-summary-list">
         @summaryRow("common.userId", saAccountDetails.userId)

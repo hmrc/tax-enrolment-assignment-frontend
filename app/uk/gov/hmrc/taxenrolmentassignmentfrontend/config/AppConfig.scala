@@ -68,4 +68,5 @@ class AppConfig @Inject() (val config: ServicesConfig) {
   lazy val percentageOfUsersThrottledToGetFakeEnrolment: Int =
     config.getInt("throttle.percentage") - 1
 
+  def ptNinoMismatchToggle(): Boolean = config.getConfBool("feature.pt-nino-mismatch", defBool = true)
 }

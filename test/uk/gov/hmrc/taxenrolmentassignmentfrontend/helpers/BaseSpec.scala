@@ -17,7 +17,6 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers
 
 import cats.data.EitherT
-import play.api.test.CSRFTokenHelper._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.{IntegrationPatience, PatienceConfiguration, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
@@ -25,27 +24,28 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.{BeforeAndAfterEach, OneInstancePerTest, Suite}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.i18n.{Lang, Messages, MessagesApi, MessagesImpl}
-import play.api.{Application, Configuration}
+import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.libs.json.{Format, JsString, JsValue, Json}
 import play.api.mvc.{AnyContent, AnyContentAsEmpty, Request}
+import play.api.test.CSRFTokenHelper._
 import play.api.test.{FakeRequest, Injecting}
+import play.api.{Application, Configuration}
 import uk.gov.hmrc.domain.{Nino, Generator => NinoGenerator}
+import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.service.TEAFResult
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SINGLE_ACCOUNT
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.HmrcModule
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo, UserDetailsFromSession}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.userDetailsNoEnrolments
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import play.api.inject.bind
-import play.api.libs.json.{Format, JsString, JsValue, Json}
-import uk.gov.hmrc.http.cache.client.CacheMap
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SINGLE_ACCOUNT
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.TENCrypto
 
 import scala.concurrent.{ExecutionContext, Future}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.HmrcModule
 
 trait BaseSpec
     extends AnyWordSpec with GuiceOneAppPerSuite with Matchers with PatienceConfiguration with BeforeAndAfterEach

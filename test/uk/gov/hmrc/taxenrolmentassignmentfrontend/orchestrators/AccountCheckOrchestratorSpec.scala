@@ -25,8 +25,8 @@ import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.ACCOUNT_TYPE
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, SilentAssignmentService}

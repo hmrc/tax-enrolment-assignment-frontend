@@ -19,16 +19,16 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 import play.api.Application
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, SEE_OTHER}
 import play.api.inject.bind
+import play.api.mvc.{AnyContent, BodyParsers}
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, Enrolments}
 import uk.gov.hmrc.http.HeaderCarrier
-import play.api.mvc.{AnyContent, BodyParsers}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{buildFakeRequestWithSessionId, predicates, retrievalResponse, retrievals, saEnrolmentOnly}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.AccountCheckOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditHandler
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache

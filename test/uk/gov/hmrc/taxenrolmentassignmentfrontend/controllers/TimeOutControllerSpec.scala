@@ -22,13 +22,13 @@ import play.api.inject.bind
 import play.api.mvc.{AnyContent, AnyContentAsEmpty}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, Enrolments}
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
+import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, Enrolments}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{predicates, retrievalResponse, retrievals}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.ControllersBaseSpec
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{predicates, retrievalResponse, retrievals}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.TimedOutView
 

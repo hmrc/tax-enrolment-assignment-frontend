@@ -1,57 +1,58 @@
 @*
- * Copyright 2023 HM Revenue & Customs
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *@
-
+* Copyright 2023 HM Revenue & Customs
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*@
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.helpers.InterruptCard
+@import components.FullWidthMainContent
 
 @this(layout: Layout,
         govukButton: GovukButton,
         card: InterruptCard,
-        formHelper: FormWithCSRF)
+        formHelper: FormWithCSRF,
+        fullWidthMainContent: FullWidthMainContent)
 
 @()(implicit request: Request[_], messages: Messages)
 
-@layout(pageTitle = Some(messages("selfAssessmentInterrupt.title")), mainLayout = None) {
+@layout(pageTitle = Some(messages("selfAssessmentInterrupt.title")), mainLayout = Some(fullWidthMainContent(_))) {
 
     @card {
 
         <h1 class="govuk-heading-xl">@messages("selfAssessmentInterrupt.heading")</h1>
-            <div class="govuk-grid-row">
-                <div class="govuk-grid-column-two-thirds">
+        <div class="govuk-grid-row">
+            <div class="govuk-grid-column-two-thirds">
 
-        <p class="govuk-body">@messages("selfAssessmentInterrupt.paragraph1")</p>
+                <p class="govuk-body">@messages("selfAssessmentInterrupt.paragraph1")</p>
 
-        <p class="govuk-body">@messages("selfAssessmentInterrupt.paragraph2")</p>
+                <p class="govuk-body">@messages("selfAssessmentInterrupt.paragraph2")</p>
 
-        <ul class="govuk-list govuk-list--bullet">
-            <li>@messages("selfAssessmentInterrupt.listItem1")</li>
-            <li>@messages("selfAssessmentInterrupt.listItem2")</li>
-        </ul>
+                <ul class="govuk-list govuk-list--bullet">
+                    <li>@messages("selfAssessmentInterrupt.listItem1")</li>
+                    <li>@messages("selfAssessmentInterrupt.listItem2")</li>
+                </ul>
 
-        <p class="govuk-body">@messages("selfAssessmentInterrupt.paragraph3")</p>
+                <p class="govuk-body">@messages("selfAssessmentInterrupt.paragraph3")</p>
 
-        @formHelper(action = routes.SABlueInterruptController.continue) {
-            <div class="actions">
-            @govukButton(Button(
-                content = Text(messages("selfAssessmentInterrupt.continue"))
-            ))
+                @formHelper(action = routes.SABlueInterruptController.continue) {
+                    <div class="actions">
+                    @govukButton(Button(
+                        content = Text(messages("selfAssessmentInterrupt.continue"))
+                    ))
+                    </div>
+                }
             </div>
-        }
-                </div>
-            </div>
+        </div>
     }
 
 }

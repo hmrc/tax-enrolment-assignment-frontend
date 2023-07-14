@@ -55,12 +55,12 @@
     <p class="govuk-body">@messages("signInAgain.paragraph2")</p>
     <ul class="govuk-list govuk-list--bullet">
         <li>@messages("signInAgain.listItem1")</li>
-        <li>@messages("signInAgain.listItem2", userId)</li>
+        <li>@messages("signInAgain.listItem2", saAccountDetails.userId)</li>
     </ul>
 
     @govukWarningText(
         WarningText(
-            content = Text(messages("signInAgain.exclamation"))
+            content = Text(messages("signInAgain.exclamation", saAccountDetails.userId))
         )
     )
 

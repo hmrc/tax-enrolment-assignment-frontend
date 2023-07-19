@@ -59,21 +59,21 @@ multiplePTE.true.heading = This user has no PT enrolment
 multiplePTE.true.text =  The current user does not have an assigned PT enrolment
 
 
-selfAssessmentInterrupt.title = You currently have more than one Government Gateway user ID
-selfAssessmentInterrupt.heading = You currently have more than one Government Gateway user ID
-selfAssessmentInterrupt.paragraph1 = We recommend that you use only one Government Gateway user ID to access your personal tax information.
-selfAssessmentInterrupt.paragraph2 = If you complete Self Assessment, you can choose to:
-selfAssessmentInterrupt.listItem1 = use a single user ID for both personal tax and Self Assessment
-selfAssessmentInterrupt.listItem2 = use a separate user ID for Self Assessment only
-selfAssessmentInterrupt.paragraph3 = On the next screens we will ask you which option you want to choose.
-selfAssessmentInterrupt.continue = Continue
+selfAssessmentInterrupt.title = Mae gennych fwy nag un Dynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth ar hyn o bryd
+selfAssessmentInterrupt.heading = Mae gennych fwy nag un Dynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth ar hyn o bryd
+selfAssessmentInterrupt.paragraph1 = Dim ond un Dynodydd Defnyddiwr ar gyfer Porth y Llywodraeth rydym yn argymell eich bod yn defnyddio er mwyn cael mynediad at eich gwybodaeth treth bersonol.
+selfAssessmentInterrupt.paragraph2 = Os ydych yn llenwi Ffurflen Dreth Hunanasesiad, gallwch ddewis i wneud y canlynol:
+selfAssessmentInterrupt.listItem1 = defnyddio Dynodydd Defnyddiwr (ID) sengl ar gyfer Treth Bersonol a Hunanasesiad
+selfAssessmentInterrupt.listItem2 = defnyddio Dynodydd Defnyddiwr (ID) ar wah�n ond ar gyfer Hunanasesiad
+selfAssessmentInterrupt.paragraph3 = Ar y sgriniau nesaf, byddwn yn gofyn i chi pa opsiynau rydych am eu dewis
+selfAssessmentInterrupt.continue = Yn eich blaen
 
-keepAccessToSA.title = Do you want to keep access to Self Assessment from your personal tax account?
-keepAccessToSA.heading = Do you want a single Government Gateway user ID for personal tax information and Self Assessment?
-keepAccessToSA.radio.yes = Yes
-keepAccessToSA.radio.no = No, I want to keep them separate
-keepAccessToSA.noSA = I do not complete Self Assessment Online
-keepAccessToSA.error.required = Select yes if you want a single Government Gateway user ID for personal tax information and Self Assessment
+keepAccessToSA.title = A ydych am gadw mynediad at Hunanasesiad o’ch cyfrif treth personol?
+keepAccessToSA.heading = A ydych am gael un Dynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth ar gyfer gwybodaeth treth bersonol a Hunanasesiad?
+keepAccessToSA.radio.yes = Iawn
+keepAccessToSA.radio.no = Na, rwyf am gadw’r Dynodyddion Defnyddiwr (ID) ar wah�n
+keepAccessToSA.noSA = Nid wyf yn llenwi Ffurflenni Treth Hunanasesiad ar-lein
+keepAccessToSA.error.required = Dewiswch ’Iawn’ os ydych am gael un Dynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth ar gyfer gwybodaeth treth bersonol a Hunanasesiad
 
 signInAgain.title = Rydych wedi dewis cael Dynodydd Defnyddiwr (ID) unigol ar gyfer Porth y Llywodraeth
 signInAgain.heading1 = Rydych wedi dewis cael Dynodydd Defnyddiwr (ID) unigol ar gyfer Porth y Llywodraeth
@@ -89,7 +89,7 @@ signInAgain.paragraph2 = I gael mynediad at dreth bersonol a Hunanasesiad:
 signInAgain.listItem1 = allgofnodwch nawr
 signInAgain.listItem2 = mewngofnodwch eto gan ddefnyddio’ch Dynodydd Defnyddiwr (ID) arall sy’n gorffen {0}
 signInAgain.exclamation = Eich Dynodydd Defnyddiwr (ID) sy’n gorffen {0} yw’r unig Ddynodydd Defnyddiwr (ID) y gallwch ei ddefnyddio ar gyfer gwybodaeth treth bersonol a Hunanasesiad
-signInAgain.continue = Confirm and sign out
+signInAgain.continue = Cadarnhau ac allgofnodi
 
 enrolledForPTWithSAOnOtherAccount.title = Rydych yn dewis cael dau Ddynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth
 enrolledForPTWithSAOnOtherAccount.heading = Rydych yn dewis cael dau Ddynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth
@@ -103,7 +103,7 @@ enrolledForPTWithSAOnOtherAccount.email =  E-bost
 enrolledForPTWithSAOnOtherAccount.lastLoginDate = Mewngofnodwyd ddiwethaf
 enrolledForPTWithSAOnOtherAccount.linkText = Nid yw’r Dynodydd Defnyddiwr (ID) uchod yn perthyn i mi
 enrolledForPTWithSAOnOtherAccount.exclamation = Os oes gennych unrhyw Ddynodyddion Defnyddiwr (IDs) eraill ar gyfer Porth y Llywodraeth, ni fyddwch yn gallu eu defnyddio i gael mynediad at eich gwybodaeth treth bersonol na Hunanasesiad.
-enrolledForPTWithSAOnOtherAccount.continue = Continue to personal tax
+enrolledForPTWithSAOnOtherAccount.continue = Parhau i dreth bersonol
 
 
 timedout.title = Er eich diogelwch, gwnaethom eich allgofnodi

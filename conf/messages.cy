@@ -64,14 +64,14 @@ selfAssessmentInterrupt.heading = Mae gennych fwy nag un Dynodydd Defnyddiwr (ID
 selfAssessmentInterrupt.paragraph1 = Dim ond un Dynodydd Defnyddiwr ar gyfer Porth y Llywodraeth rydym yn argymell eich bod yn defnyddio er mwyn cael mynediad at eich gwybodaeth treth bersonol.
 selfAssessmentInterrupt.paragraph2 = Os ydych yn llenwi Ffurflen Dreth Hunanasesiad, gallwch ddewis i wneud y canlynol:
 selfAssessmentInterrupt.listItem1 = defnyddio Dynodydd Defnyddiwr (ID) sengl ar gyfer Treth Bersonol a Hunanasesiad
-selfAssessmentInterrupt.listItem2 = defnyddio Dynodydd Defnyddiwr (ID) ar wah�n ond ar gyfer Hunanasesiad
+selfAssessmentInterrupt.listItem2 = defnyddio Dynodydd Defnyddiwr (ID) ar wahn ond ar gyfer Hunanasesiad
 selfAssessmentInterrupt.paragraph3 = Ar y sgriniau nesaf, byddwn yn gofyn i chi pa opsiynau rydych am eu dewis
 selfAssessmentInterrupt.continue = Yn eich blaen
 
 keepAccessToSA.title = A ydych am gadw mynediad at Hunanasesiad o’ch cyfrif treth personol?
 keepAccessToSA.heading = A ydych am gael un Dynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth ar gyfer gwybodaeth treth bersonol a Hunanasesiad?
 keepAccessToSA.radio.yes = Iawn
-keepAccessToSA.radio.no = Na, rwyf am gadw’r Dynodyddion Defnyddiwr (ID) ar wah�n
+keepAccessToSA.radio.no = Na, rwyf am gadw’r Dynodyddion Defnyddiwr (ID) ar wahn
 keepAccessToSA.noSA = Nid wyf yn llenwi Ffurflenni Treth Hunanasesiad ar-lein
 keepAccessToSA.error.required = Dewiswch ’Iawn’ os ydych am gael un Dynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth ar gyfer gwybodaeth treth bersonol a Hunanasesiad
 

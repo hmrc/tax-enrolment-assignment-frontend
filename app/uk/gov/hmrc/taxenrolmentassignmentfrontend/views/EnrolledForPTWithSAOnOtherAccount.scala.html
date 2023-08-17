@@ -28,7 +28,7 @@
 
 @(userId: String, saAccountDetails: AccountDetails)(implicit request: Request[AnyRef], messages: Messages)
 
-@layout(pageTitle = Some(messages("enrolledForPTWithSAOnOtherAccount.title"))) {
+@layout(pageTitle = Some(messages("enrolledForPTWithSAOnOtherAccount.title")), backLinkEnabled = true) {
 
     <h1 class="govuk-heading-l">@messages("enrolledForPTWithSAOnOtherAccount.heading")</h1>
     <p class="govuk-body">@messages("enrolledForPTWithSAOnOtherAccount.paragraph1", userId)</p>

@@ -33,7 +33,7 @@
 }
 
 @layout(
-    pageTitle = Some(messages("keepAccessToSA.title")), hasError = formError.isDefined) {
+    pageTitle = Some(messages("keepAccessToSA.title")), hasError = formError.isDefined, backLinkEnabled = true) {
 
     @formHelper(action = routes.KeepAccessToSAController.continue) {
         @if(formError.isDefined) {

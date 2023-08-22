@@ -34,5 +34,5 @@ object EnrolledPTWithSAOnOtherAccountMessages extends BaseMessage {
     "If you have any other Government Gateway user IDs, you will not be able to use them to access your personal tax information or Self Assessment" // TODO - Add once class is figured out
   val button = "Continue to personal tax"
   val action =
-    "/protect-tax-info/enrol-pt/enrolment-success-sa-access-not-wanted"
+    "/protect-tax-info/enrol-pt/choose-two-user-ids"
 }

@@ -10,17 +10,17 @@ GET        /keep-alive              uk.gov.hmrc.taxenrolmentassignmentfrontend.c
 
 GET        /                                                    uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.AccountCheckController.accountCheck(redirectUrl: RedirectUrl)
 
-GET        /enrol-pt/choose-two-user-ids                        uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.EnrolledForPTController.view
+GET        /enrol-pt/enrolment-success-no-sa                    uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.EnrolledForPTController.view
 
-POST       /enrol-pt/choose-two-user-ids                        uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.EnrolledForPTController.continue
+POST       /enrol-pt/enrolment-success-no-sa                    uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.EnrolledForPTController.continue
 
 GET        /enrol-pt/enrolment-success-sa-user-id               uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.EnrolledForPTWithSAController.view
 
 POST       /enrol-pt/enrolment-success-sa-user-id               uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.EnrolledForPTWithSAController.continue
 
-GET        /enrol-pt/enrolment-success-sa-access-not-wanted     uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.EnrolledPTWithSAOnOtherAccountController.view
+GET        /enrol-pt/choose-two-user-ids                        uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.EnrolledPTWithSAOnOtherAccountController.view
 
-POST       /enrol-pt/enrolment-success-sa-access-not-wanted     uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.EnrolledPTWithSAOnOtherAccountController.continue
+POST       /enrol-pt/choose-two-user-ids                        uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.EnrolledPTWithSAOnOtherAccountController.continue
 
 GET        /enrol-pt/contact-hmrc-sa                            uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.ReportSuspiciousIDController.viewSA
 

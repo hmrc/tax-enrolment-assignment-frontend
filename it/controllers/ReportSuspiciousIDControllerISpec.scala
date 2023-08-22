@@ -826,7 +826,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
 
           status(result) shouldBe SEE_OTHER
           redirectLocation(result).get should include(
-            "/enrol-pt/enrolment-success-sa-access-not-wanted"
+            "/enrol-pt/choose-two-user-ids"
           )
 
         }

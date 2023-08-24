@@ -183,5 +183,4 @@ trait ControllersBaseSpec extends BaseSpec {
       }
     }
   }
-
 }

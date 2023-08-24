@@ -17,26 +17,22 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.messages
 
 object EnrolledPTWithSAOnOtherAccountMessages extends BaseMessage {
-  val title =
-    "Only your current user ID can access your personal tax account from now on" + defaultTitleSuffix
+  val title: String =
+    "You are choosing to have two Government Gateway user IDs" + defaultTitleSuffix
   val heading =
-    "Only your current user ID can access your personal tax account from now on"
-  val paragraphs: String =
-    "You are currently signed in with the Government Gateway user ID ending with 3214." +
-      " This is now the only user ID that can access your personal tax account." +
-      " Please keep the details of this user ID safe." +
-      " If you have any other Government Gateway user IDs," +
-      " they will lose access to your personal tax account."
-  val paragraphsSA: String =
-    "You are currently signed in with the Government Gateway user ID ending with 3214." +
-      " This is now the only user ID that can access your personal tax account." +
-      " Please keep the details of this user ID safe. " +
-      "To access Self Assessment you will need to log in with the user ID ending with 3215." +
-      " If you have any other Government Gateway user IDs," +
-      " they will lose access to your personal tax account."
-  val heading2: String =
-    "What has happened to my other Government Gateway user IDs?"
-  val button = "Continue"
+    "You are choosing to have two Government Gateway user IDs"
+  val subheading1: String = "User ID for Self Assessment in business tax account"
+  def paragraph1(userId: String): String =
+    s"The user ID you are signed in with now ends in $userId. This will be the only ID you can use to access you personal tax information."
+  def paragraph2(userId: String): String =
+    s"In the future, to manage your Self Assessment, you will need to go to your business tax account. To do this now, you must sign out and sign in with your other user ID ending in $userId."
+  val paragraph3: String =
+    "If you do not want to go to your Self Assessment now, please make a note of the details here. This will be the only user ID you can use to access Self Assessment"
+  val subheading2 = "User ID for Self Assessment"
+  val linkText = "The above user ID does not belong to me"
+  val exclamation =
+    "If you have any other Government Gateway user IDs, you will not be able to use them to access your personal tax information or Self Assessment" // TODO - Add once class is figured out
+  val button = "Continue to personal tax"
   val action =
-    "/protect-tax-info/enrol-pt/enrolment-success-sa-access-not-wanted"
+    "/protect-tax-info/enrol-pt/choose-two-user-ids"
 }

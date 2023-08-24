@@ -17,10 +17,13 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.messages
 
 object SABlueInterruptMessages extends BaseMessage {
-  val title = "We are changing the way you access your personal tax account" + defaultTitleSuffix
-  val heading = "We are changing the way you access your personal tax account"
-  val selfAssessParagraph: String =
-    "You currently have more than one Government Gateway user ID with access to your personal tax account." +
-      " To protect your information, we are limiting access to one user ID from now on."
+  val title: String = "You currently have more than one Government Gateway user ID" + defaultTitleSuffix
+  val heading = "You currently have more than one Government Gateway user ID"
+  val paragraph1: String =
+    "We recommend that you use only one Government Gateway user ID to access your personal tax information."
+  val paragraph2: String = "If you complete Self Assessment, you can choose to:"
+  val paragraph3: String = "On the next screens we will ask you which option you want to choose."
+  val listItem1: String = "use a single user ID for both personal tax and Self Assessment"
+  val listItem2: String = "use a separate user ID for Self Assessment only"
   val selfAssessButton = "Continue"
 }

@@ -19,10 +19,12 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.views
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import play.api.test.FakeRequest
+import play.twirl.api.HtmlFormat
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignOutController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.CREDENTIAL_ID
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.SignInAgainMessages
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.SignInAgainMessages.{listItem1, listItem2}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{ReportSuspiciousID, SignInWithSAAccount}
 
@@ -32,14 +34,16 @@ class SignInWithSAAccountSpec extends ViewSpecHelper {
   lazy val signInAgainPage: SignInWithSAAccount = inject[SignInWithSAAccount]
   lazy val reportSuspiciousIDPage: ReportSuspiciousID =
     inject[ReportSuspiciousID]
-  lazy val view =
-    signInAgainPage(accountDetails)(FakeRequest(), testMessages)
+  lazy val userId = "3214"
+  lazy val view: HtmlFormat.Appendable =
+    signInAgainPage(userId, accountDetails)(FakeRequest(), testMessages)
   lazy val document: Document =
     Jsoup.parse(view.toString())
 
   object Selectors {
-    val headingXL = "govuk-heading-xl"
+    val headingL = "govuk-heading-l"
     val headingM = "govuk-heading-m"
+    val headingS = "govuk-heading-s"
     val body = "govuk-body"
     val backLink = "govuk-back-link"
     val button = "govuk-button"
@@ -47,21 +51,22 @@ class SignInWithSAAccountSpec extends ViewSpecHelper {
     val summaryListKey = "govuk-summary-list__key"
     val summaryListValue = "govuk-summary-list__value"
     val link = "govuk-link"
+    val bulletPointList = "govuk-list govuk-list--bullet"
   }
 
-  val mfaDetails = Seq(
+  val mfaDetails: Seq[MFADetails] = Seq(
     MFADetails("Text message", "07390328923"),
     MFADetails("Voice call", "0193453839"),
-    MFADetails("Authenticator App", "HRMC APP")
+    MFADetails("Authenticator App", "HMRC APP")
   )
 
   val elementsToMFADetails: Map[Int, MFADetails] = Map(
     3 -> MFADetails("Text message", "07390328923"),
     4 -> MFADetails("Voice call", "0193453839"),
-    5 -> MFADetails("Authenticator App", "HRMC APP")
+    5 -> MFADetails("Authenticator App", "HMRC APP")
   )
 
-  val accountDetails = AccountDetails(
+  val accountDetails: AccountDetails = AccountDetails(
     credId = CREDENTIAL_ID,
     "********3214",
     Some(SensitiveString("email1@test.com")),
@@ -76,16 +81,25 @@ class SignInWithSAAccountSpec extends ViewSpecHelper {
 
     "contain the correct main header" in {
       document
-        .getElementsByClass(Selectors.headingXL)
+        .getElementsByClass(Selectors.headingL)
         .text shouldBe SignInAgainMessages.heading
     }
 
+    "contain the correct subheader" in {
+      document
+        .getElementsByClass(Selectors.headingS)
+        .text shouldBe SignInAgainMessages.subheading
+    }
+
     "contain the correct paragraph" in {
-      val paragraph = document.select("p." + Selectors.body)
+      val paragraph = document.getElementsByTag("p")
       paragraph
-        .get(0)
-        .getElementsByClass(Selectors.body)
-        .text() shouldBe SignInAgainMessages.paragraph
+        .get(1)
+        .text() shouldBe SignInAgainMessages.paragraph1 + s"$userId"
+
+      paragraph
+        .get(2)
+        .text() shouldBe SignInAgainMessages.paragraph2
     }
 
     "contain the correct second heading" in {
@@ -142,11 +156,18 @@ class SignInWithSAAccountSpec extends ViewSpecHelper {
         }
       }
     }
-
     "correct gov-uk link target and link text" in {
       document
         .getElementById("reportId")
         .text() shouldBe SignInAgainMessages.linkText
+    }
+    "correct govuk-list govuk-list--bullet text" in {
+      document
+        .getElementsByClass("govuk-list govuk-list--bullet")
+        .text() should include(listItem1)
+      document
+        .getElementsByClass("govuk-list govuk-list--bullet")
+        .text() should include(listItem2)
     }
     "contain the correct back link" in {
       val backLink = document
@@ -157,11 +178,12 @@ class SignInWithSAAccountSpec extends ViewSpecHelper {
     "contain the correct button" in {
       document
         .getElementsByClass(Selectors.button)
-        .text shouldBe SignInAgainMessages.continue
+        .text shouldBe SignInAgainMessages.confirmAndSignOut
     }
 
     validateTimeoutDialog(document)
     validateTechnicalHelpLinkPresent(document)
     validateAccessibilityStatementLinkPresent(document)
+
   }
 }

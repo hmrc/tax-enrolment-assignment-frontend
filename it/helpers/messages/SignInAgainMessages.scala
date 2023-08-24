@@ -17,12 +17,8 @@
 package helpers.messages
 
 object SignInAgainMessages {
-  val title = "You need to sign in again with your Self Assessment user ID"
-  val heading1 = "You need to sign in again with your Self Assessment user ID"
-  val paragraph =
-    "This is so that you can keep access to Self Assessment from your personal tax account."
-  val heading2 = "User ID with Self Assessment access"
-  val backLink = "Back"
-  val continue = "Continue"
-  val linkText = "The above user ID does not belong to me"
+  val title = "You have chosen to have a single Government Gateway user ID"
+  val paragraphLinkText = "The above user ID does not belong to me"
+  def paragraph1(userId: String): String = "You are currently signed in with a user ID ending with " + userId
+  val paragraph2 = "To access personal tax and Self Assessment:"
 }

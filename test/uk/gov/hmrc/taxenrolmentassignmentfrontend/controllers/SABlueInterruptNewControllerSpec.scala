@@ -111,9 +111,21 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
           page
             .select("h1")
             .text() shouldBe messages("selfAssessmentInterrupt.heading")
+
           page
             .select("p")
+            .get(0)
             .text() shouldBe messages("selfAssessmentInterrupt.paragraph1")
+
+          page
+            .select("p")
+            .get(1)
+            .text() shouldBe messages("selfAssessmentInterrupt.paragraph2")
+
+          page
+            .select("p")
+            .get(2)
+            .text() shouldBe messages("selfAssessmentInterrupt.paragraph3")
         }
       }
 

@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
-import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction, ThrottleAction}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.GetSACredentialIfNotFraudReturnedNone
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logRedirectingToReturnUrl
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
@@ -27,6 +27,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccounts
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTWithSAOnOtherAccount
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
@@ -51,12 +52,17 @@ class EnrolledPTWithSAOnOtherAccountController @Inject() (
 
       } yield (
         AccountDetails.userFriendlyAccountDetails(currentAccount).userId,
-        optSAAccount.map(AccountDetails.userFriendlyAccountDetails).map(_.userId)
+        optSAAccount
       )
 
       res.value.map {
-        case Right((currentUserId, optSAUserId)) =>
-          Ok(enrolledForPTPage(currentUserId, optSAUserId))
+        case Right((currentUserId, Some(optSAAccount))) =>
+          Ok(enrolledForPTPage(currentUserId, optSAAccount))
+        case Right((_, None)) =>
+          errorHandler.handleErrors(
+            GetSACredentialIfNotFraudReturnedNone,
+            "[EnrolledPTWithSAOnOtherAccountController][view]"
+          )(request, implicitly)
         case Left(error) =>
           errorHandler.handleErrors(error, "[EnrolledPTWithSAOnOtherAccountController][view]")(request, implicitly)
       }

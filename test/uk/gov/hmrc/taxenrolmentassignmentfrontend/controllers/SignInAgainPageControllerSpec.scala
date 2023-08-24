@@ -94,6 +94,17 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
             .expects(predicates, retrievals, *, *)
             .returning(Future.successful(retrievalResponse()))
 
+          (
+            mockMultipleAccountsOrchestrator
+              .getDetailsForEnrolledPTWithSAOnOtherAccount(
+                _: RequestWithUserDetailsFromSessionAndMongo[_],
+                _: HeaderCarrier,
+                _: ExecutionContext
+              )
+            )
+            .expects(*, *, *)
+            .returning(createInboundResult(accountDetails))
+
           (mockMultipleAccountsOrchestrator
             .checkAccessAllowedForPage(_: List[AccountTypes.Value])(
               _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
@@ -138,6 +149,17 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
             )
             .expects(predicates, retrievals, *, *)
             .returning(Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly)))
+
+          (
+            mockMultipleAccountsOrchestrator
+              .getDetailsForEnrolledPTWithSAOnOtherAccount(
+                _: RequestWithUserDetailsFromSessionAndMongo[_],
+                _: HeaderCarrier,
+                _: ExecutionContext
+              )
+            )
+            .expects(*, *, *)
+            .returning(createInboundResult(accountDetails))
 
           (mockMultipleAccountsOrchestrator
             .checkAccessAllowedForPage(_: List[AccountTypes.Value])(
@@ -206,6 +228,17 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
 
+        (
+          mockMultipleAccountsOrchestrator
+            .getDetailsForEnrolledPTWithSAOnOtherAccount(
+              _: RequestWithUserDetailsFromSessionAndMongo[_],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
+          .expects(*, *, *)
+          .returning(createInboundResult(accountDetails))
+
         (mockMultipleAccountsOrchestrator
           .checkAccessAllowedForPage(_: List[AccountTypes.Value])(
             _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
@@ -250,6 +283,17 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
           ))
           .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
           .returning(Right(SA_ASSIGNED_TO_OTHER_USER))
+
+        (
+          mockMultipleAccountsOrchestrator
+            .getDetailsForEnrolledPTWithSAOnOtherAccount(
+              _: RequestWithUserDetailsFromSessionAndMongo[_],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
+          .expects(*, *, *)
+          .returning(createInboundResult(accountDetails))
 
         (mockMultipleAccountsOrchestrator
           .getSACredentialDetails(

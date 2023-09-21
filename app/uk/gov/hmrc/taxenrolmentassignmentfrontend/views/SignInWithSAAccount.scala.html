@@ -32,7 +32,7 @@
 @layout(pageTitle = Some(messages("signInAgain.title")), backLinkEnabled = true) {
 
     <h1 class="govuk-heading-l">@messages("signInAgain.heading1")</h1>
-    <h3 class="govuk-heading-s">@messages("signInAgain.subheading")</h3>
+    <h2 class="govuk-heading-s">@messages("signInAgain.subheading")</h2>
     <dl class="govuk-summary-list">
         @summaryRow("common.userId", saAccountDetails.userId)
         @if(saAccountDetails.emailDecrypted.isDefined) {
@@ -50,7 +50,7 @@
         </a>
     </p>
 
-    <h3 class="govuk-heading-m">@messages("signInAgain.heading2")</h3>
+    <h2 class="govuk-heading-m">@messages("signInAgain.heading2")</h2>
     <p class="govuk-body">@messages("signInAgain.paragraph1", userId)</p>
     <p class="govuk-body">@messages("signInAgain.paragraph2")</p>
     <ul class="govuk-list govuk-list--bullet">

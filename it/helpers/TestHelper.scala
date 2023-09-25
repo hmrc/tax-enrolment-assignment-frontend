@@ -17,8 +17,10 @@
 package helpers
 
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.{routes => routesTestOnly}
 
 object ItUrlPaths {
+  val testOnlySuccessfulPath = routesTestOnly.TestOnlyController.successfulCall.url
   val enrolledPTNoSAOnAnyAccountPath = routes.EnrolledForPTController.view.url
   val enrolledPTWithSAOnAnyAccountPath = routes.EnrolledForPTWithSAController.view.url
   val enrolledPTSAOnOtherAccountPath =

@@ -18,6 +18,11 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
 
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import uk.gov.hmrc.auth.core.retrieve.~
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.{allEnrolments, nino}
+import uk.gov.hmrc.auth.core.{AuthConnector, AuthorisedFunctions}
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.http.HeaderCarrierConverter.fromRequestAndSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthAction
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TEAFrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
@@ -25,18 +30,39 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.formats.EnrolmentsFormats
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class TestOnlyController @Inject() (
+  override val authConnector: AuthConnector,
   mcc: MessagesControllerComponents,
   authAction: AuthAction,
   logger: EventLoggerService
-) extends TEAFrontendController(mcc) {
+)(implicit val executionContext: ExecutionContext)
+    extends TEAFrontendController(mcc) with AuthorisedFunctions {
 
-  def successfulCall: Action[AnyContent] = Action.async { _ =>
-    logger.logEvent(logSuccessfulRedirectToReturnUrl)
-    Future.successful(Ok("Successful"))
+  def successfulCall: Action[AnyContent] = Action.async { request =>
+    implicit val hc: HeaderCarrier = fromRequestAndSession(request, request.session)
+    authorised().retrieve(nino and allEnrolments) {
+      case Some(nino) ~ enrolments =>
+        enrolments.enrolments
+          .filter(_.key == "HMRC-PT")
+          .flatMap { enrolment =>
+            enrolment.identifiers
+              .filter(id => id.key == "NINO")
+          } match {
+          case enrolmentIdentifiers if enrolmentIdentifiers.isEmpty =>
+            Future.successful(Forbidden("No HMRC-PT enrolment present"))
+          case enrolmentIdentifiers
+              if enrolmentIdentifiers.exists(enrolmentIdentifier => enrolmentIdentifier.value == nino) =>
+            Future.successful(Ok("Successful"))
+          case _ =>
+            logger.logEvent(logSuccessfulRedirectToReturnUrl)
+            Future.successful(Forbidden("HMRC-PT enrolment present with wrong nino"))
+        }
+
+      case _ => Future.successful(InternalServerError("Server error"))
+    }
   }
 
   def usersGroupSearchCall(credId: String): Action[AnyContent] = Action.async { _ =>

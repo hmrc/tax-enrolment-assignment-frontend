@@ -108,9 +108,12 @@ object TestITData {
     optCreds: Option[Credentials] = Some(creds),
     optGroupId: Option[String] = Some(GROUP_ID),
     affinityGroup: AffinityGroup = Individual,
-    hasSA: Boolean = false
+    hasSA: Boolean = false,
+    optEnrolments: Option[JsValue] = None
   ) = {
-    val enrolments = if (hasSA) saAndptEnrolments else ptEnrolmentOnly
+    val enrolments = optEnrolments.getOrElse {
+      if (hasSA) saAndptEnrolments else ptEnrolmentOnly
+    }
     authoriseResponseJson(optNino, optCreds, optGroupId, affinityGroup, enrolments)
   }
 

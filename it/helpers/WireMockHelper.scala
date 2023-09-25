@@ -25,7 +25,7 @@ import helpers.TestITData.usergroupsResponseJson
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, NON_AUTHORITATIVE_INFORMATION}
-import play.api.libs.json.{JsString, Json}
+import play.api.libs.json.{JsObject, JsString, Json}
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core.{AuthProviders, ConfidenceLevel}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersGroupResponse
@@ -35,6 +35,18 @@ trait WireMockHelper extends Eventually with BeforeAndAfterAll with BeforeAndAft
   this: Suite =>
 
   protected val server: WireMockServer = new WireMockServer(wireMockConfig().dynamicPort())
+
+  private val authJsonRequest: JsObject = Json.obj(
+    "authorise" -> (AuthProviders(GovernmentGateway) and ConfidenceLevel.L200).toJson,
+    "retrieve" -> Json.arr(
+      JsString("nino"),
+      JsString("optionalCredentials"),
+      JsString("allEnrolments"),
+      JsString("groupIdentifier"),
+      JsString("affinityGroup"),
+      JsString("email")
+    )
+  )
 
   override def beforeAll(): Unit = {
     super.beforeAll()
@@ -57,19 +69,8 @@ trait WireMockHelper extends Eventually with BeforeAndAfterAll with BeforeAndAft
         .willReturn(aResponse().withStatus(status).withBody(responseBody))
     )
 
-  def stubAuthorizePost(status: Integer, responseBody: String): StubMapping = {
+  def stubAuthorizePost(status: Integer, responseBody: String, jsonRequest: JsObject = authJsonRequest): StubMapping = {
     val authorizePath = "/auth/authorise"
-    val jsonRequest = Json.obj(
-      "authorise" -> (AuthProviders(GovernmentGateway) and ConfidenceLevel.L200).toJson,
-      "retrieve" -> Json.arr(
-        JsString("nino"),
-        JsString("optionalCredentials"),
-        JsString("allEnrolments"),
-        JsString("groupIdentifier"),
-        JsString("affinityGroup"),
-        JsString("email")
-      )
-    )
     stubPost(
       authorizePath,
       equalToJson(jsonRequest.toString()),

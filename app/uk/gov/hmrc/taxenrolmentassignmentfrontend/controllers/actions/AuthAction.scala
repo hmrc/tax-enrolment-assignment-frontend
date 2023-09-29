@@ -84,6 +84,8 @@ class AuthAction @Inject() (
         nino and credentials and allEnrolments and groupIdentifier and affinityGroup and email
       ) {
         case Some(nino) ~ Some(credentials) ~ enrolments ~ Some(groupId) ~ Some(affinityGroup) ~ email =>
+          println(">>>>>>>>>>>> \n" + enrolments + "\n<<<<<<<<<<<<<<<<<<")
+
           val hasSAEnrolment =
             enrolments.getEnrolment(s"$IRSAKey").fold(false)(_.isActivated)
           val hasPTEnrolment = enrolments.getEnrolment(s"$hmrcPTKey").isDefined

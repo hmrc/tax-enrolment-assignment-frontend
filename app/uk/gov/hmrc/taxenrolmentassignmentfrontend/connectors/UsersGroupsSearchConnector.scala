@@ -17,9 +17,10 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors
 
 import cats.data.EitherT
+
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
-import play.api.http.Status.NON_AUTHORITATIVE_INFORMATION
+import play.api.http.Status.{NON_AUTHORITATIVE_INFORMATION, NOT_FOUND}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
 import uk.gov.hmrc.service.TEAFResult
@@ -40,11 +41,7 @@ class UsersGroupsSearchConnector @Inject() (httpClient: HttpClient, logger: Even
     ec: ExecutionContext,
     hc: HeaderCarrier
   ): TEAFResult[UsersGroupResponse] = EitherT {
-    val url = if (appConfig.useTestOnlyUsersGroupSearch) {
-      s"${appConfig.tenBaseUrl}/users-groups-search/test-only/users/$credId"
-    } else {
-      s"${appConfig.usersGroupsSearchBaseURL}/users/$credId"
-    }
+    val url = s"${appConfig.usersGroupsSearchBaseURL}/users/$credId"
 
     httpClient
       .GET[HttpResponse](url)
@@ -52,6 +49,8 @@ class UsersGroupsSearchConnector @Inject() (httpClient: HttpClient, logger: Even
         httpResponse.status match {
           case NON_AUTHORITATIVE_INFORMATION =>
             Right(httpResponse.json.as[UsersGroupResponse])
+          case NOT_FOUND =>
+            Right(UsersGroupResponse("unknown", Some("email"), "2018-06-11T12:13:14.555Z", None))
           case status =>
             logger.logEvent(
               logUnexpectedResponseFromUsersGroupsSearch(credId, status)

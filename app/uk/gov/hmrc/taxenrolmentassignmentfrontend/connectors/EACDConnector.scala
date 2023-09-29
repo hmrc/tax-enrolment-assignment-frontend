@@ -79,6 +79,7 @@ class EACDConnector @Inject() (httpClient: HttpClient, logger: EventLoggerServic
     getUsersWithAssignedEnrolment(enrolmentKey)
   }
 
+  //ES0
   def getUsersWithAssignedEnrolment(enrolmentKey: String)(implicit
     ec: ExecutionContext,
     hc: HeaderCarrier

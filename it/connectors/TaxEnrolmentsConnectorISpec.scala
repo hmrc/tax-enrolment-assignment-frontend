@@ -117,4 +117,34 @@ class TaxEnrolmentsConnectorISpec extends IntegrationSpecBase {
     }
   }
 
+  "deallocateEnrolment" should {
+    val groupId = "fakeId"
+    val enrolmentKey = s"HMRC-PT~NINO~$NINO"
+    val url =
+      s"/tax-enrolments/tax-enrolments/groups/$groupId/enrolments/$enrolmentKey"
+
+    "return Right if the delete request is successful" in {
+      stubPost("/write/audit/merged", Status.NO_CONTENT, "")
+      stubDelete(url, Status.CREATED)
+      whenReady(connector.deallocateEnrolment(groupId, enrolmentKey).value) { response =>
+        response shouldBe a[Right[_, _]]
+      }
+    }
+    List(
+      Status.BAD_REQUEST,
+      Status.NOT_FOUND,
+      Status.INTERNAL_SERVER_ERROR,
+      Status.BAD_GATEWAY,
+      Status.SERVICE_UNAVAILABLE
+    ).foreach { errorStatus =>
+      s"return Left if the delete request fails with $errorStatus" in {
+        stubPost("/write/audit/merged", Status.NO_CONTENT, "")
+        stubDelete(url, errorStatus)
+        whenReady(connector.deallocateEnrolment(groupId, enrolmentKey).value) { response =>
+          response shouldBe a[Left[_, _]]
+        }
+      }
+    }
+  }
+
 }

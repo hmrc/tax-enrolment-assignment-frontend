@@ -25,6 +25,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AffinityGroup.Individual
 import uk.gov.hmrc.auth.core.{Enrolment, Enrolments}
+import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.PT_ASSIGNED_TO_CURRENT_USER
@@ -59,13 +60,14 @@ class ThrottleActionSpec extends BaseSpec {
     .build()
 
   lazy val action = app.injector.instanceOf[ThrottleAction]
+  val nino: Nino = new Generator().nextNino
 
   val exampleRequestSessionAndMongo: RequestWithUserDetailsFromSessionAndMongo[_] =
     RequestWithUserDetailsFromSessionAndMongo(
       FakeRequest(),
       UserDetailsFromSession(
         "123",
-        "nino",
+        nino,
         "gID",
         Some(CURRENT_USER_EMAIL),
         Individual,
@@ -88,7 +90,7 @@ class ThrottleActionSpec extends BaseSpec {
   "invokeBlock" should {
     s"return result of function if throttling service returns $ThrottleDoesNotApply" in {
       (mockThrottlingService
-        .throttle(_: AccountTypes.Value, _: String, _: Set[Enrolment])(
+        .throttle(_: AccountTypes.Value, _: Nino, _: Set[Enrolment])(
           _: ExecutionContext,
           _: HeaderCarrier
         ))
@@ -107,7 +109,7 @@ class ThrottleActionSpec extends BaseSpec {
     }
     s"redirect to redirect URL of user if throttling service returns $ThrottleApplied" in {
       (mockThrottlingService
-        .throttle(_: AccountTypes.Value, _: String, _: Set[Enrolment])(
+        .throttle(_: AccountTypes.Value, _: Nino, _: Set[Enrolment])(
           _: ExecutionContext,
           _: HeaderCarrier
         ))
@@ -129,7 +131,7 @@ class ThrottleActionSpec extends BaseSpec {
     }
     s"return $INTERNAL_SERVER_ERROR if throttling service returns Error" in {
       (mockThrottlingService
-        .throttle(_: AccountTypes.Value, _: String, _: Set[Enrolment])(
+        .throttle(_: AccountTypes.Value, _: Nino, _: Set[Enrolment])(
           _: ExecutionContext,
           _: HeaderCarrier
         ))
@@ -151,7 +153,7 @@ class ThrottleActionSpec extends BaseSpec {
   "throttle" should {
     s"return None if throttle does not apply" in {
       (mockThrottlingService
-        .throttle(_: AccountTypes.Value, _: String, _: Set[Enrolment])(
+        .throttle(_: AccountTypes.Value, _: Nino, _: Set[Enrolment])(
           _: ExecutionContext,
           _: HeaderCarrier
         ))
@@ -169,7 +171,7 @@ class ThrottleActionSpec extends BaseSpec {
     }
     s"return result that redirects to users redirect URL of user if throttling service returns $ThrottleApplied" in {
       (mockThrottlingService
-        .throttle(_: AccountTypes.Value, _: String, _: Set[Enrolment])(
+        .throttle(_: AccountTypes.Value, _: Nino, _: Set[Enrolment])(
           _: ExecutionContext,
           _: HeaderCarrier
         ))
@@ -189,7 +191,7 @@ class ThrottleActionSpec extends BaseSpec {
     }
     s"return $INTERNAL_SERVER_ERROR if throttling service returns Error" in {
       (mockThrottlingService
-        .throttle(_: AccountTypes.Value, _: String, _: Set[Enrolment])(
+        .throttle(_: AccountTypes.Value, _: Nino, _: Set[Enrolment])(
           _: ExecutionContext,
           _: HeaderCarrier
         ))

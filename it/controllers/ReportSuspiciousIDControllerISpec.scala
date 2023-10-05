@@ -324,7 +324,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
         stubGetWithQueryParam(
           "/identity-verification/nino",
           "nino",
-          NINO,
+          NINO.nino,
           Status.NOT_FOUND,
           ""
         )
@@ -355,7 +355,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
         stubGetWithQueryParam(
           "/identity-verification/nino",
           "nino",
-          NINO,
+          NINO.nino,
           Status.INTERNAL_SERVER_ERROR,
           ""
         )
@@ -651,7 +651,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
         stubGetWithQueryParam(
           "/identity-verification/nino",
           "nino",
-          NINO,
+          NINO.nino,
           Status.NOT_FOUND,
           ""
         )
@@ -681,7 +681,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
         stubGetWithQueryParam(
           "/identity-verification/nino",
           "nino",
-          NINO,
+          NINO.nino,
           Status.INTERNAL_SERVER_ERROR,
           ""
         )

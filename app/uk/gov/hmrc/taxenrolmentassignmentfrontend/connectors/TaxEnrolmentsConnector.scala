@@ -22,31 +22,32 @@ import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.http.Status._
 import play.api.libs.json.Json
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, UpstreamErrorResponse}
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromTaxEnrolments
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{logDetailedUnexpectedResponseFromTaxEnrolmentsKnownFacts, logPTEnrolmentHasAlreadyBeenAssigned, logUnexpectedResponseFromTaxEnrolmentsKnownFacts}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{logDetailedUnexpectedResponseFromTaxEnrolmentsKnownFacts, logES2ErrorFromEACDDelete, logPTEnrolmentHasAlreadyBeenAssigned, logUnexpectedResponseFromTaxEnrolmentsKnownFacts}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.hmrcPTKey
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AssignHMRCPTRequest, IdentifiersOrVerifiers}
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class TaxEnrolmentsConnector @Inject() (httpClient: HttpClient, logger: EventLoggerService, appConfig: AppConfig) {
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
-  def assignPTEnrolmentWithKnownFacts(nino: String)(implicit
+  def assignPTEnrolmentWithKnownFacts(nino: Nino)(implicit
     ec: ExecutionContext,
     hc: HeaderCarrier
   ): TEAFResult[Unit] = EitherT {
 
     val request = AssignHMRCPTRequest(
-      identifiers = Seq(IdentifiersOrVerifiers("NINO", nino)),
-      verifiers = Seq(IdentifiersOrVerifiers("NINO1", nino))
+      identifiers = Seq(IdentifiersOrVerifiers("NINO", nino.nino)),
+      verifiers = Seq(IdentifiersOrVerifiers("NINO1", nino.nino))
     )
     val url = s"${appConfig.TAX_ENROLMENTS_BASE_URL}/service/$hmrcPTKey/enrolment"
 
@@ -82,6 +83,30 @@ class TaxEnrolmentsConnector @Inject() (httpClient: HttpClient, logger: EventLog
             Left(UnexpectedResponseFromTaxEnrolments)
         }
       )
+  }
+
+  def deallocateEnrolment(groupId: String, enrolmentKey: String)(implicit
+    hc: HeaderCarrier,
+    ec: ExecutionContext
+  ): EitherT[Future, UpstreamErrorResponse, HttpResponse] = {
+    val url =
+      s"${appConfig.TAX_ENROLMENTS_BASE_URL}/tax-enrolments/groups/$groupId/enrolments/$enrolmentKey"
+    EitherT(
+      httpClient
+        .DELETE[Either[UpstreamErrorResponse, HttpResponse]](url)
+    ).leftMap {
+      case error if error.statusCode >= 499 =>
+        logger.logEvent(
+          logES2ErrorFromEACDDelete(groupId, error.statusCode, error.message)
+        )
+        error
+      case error =>
+        logger.logEvent(
+          logES2ErrorFromEACDDelete(groupId, error.statusCode, error.message),
+          error
+        )
+        error
+    }
   }
 
 }

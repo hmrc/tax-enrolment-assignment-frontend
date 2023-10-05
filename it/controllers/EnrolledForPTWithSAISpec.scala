@@ -116,7 +116,7 @@ class EnrolledForPTWithSAISpec extends IntegrationSpecBase with ThrottleHelperIS
         stubGetWithQueryParam(
           "/identity-verification/nino",
           "nino",
-          NINO,
+          NINO.nino,
           NOT_FOUND,
           ""
         )

@@ -20,6 +20,7 @@ import play.api.Application
 import play.api.inject.bind
 import play.api.libs.json.Format
 import play.api.mvc.AnyContent
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{EACDConnector, IVConnector, TaxEnrolmentsConnector}
@@ -202,7 +203,7 @@ class SilentAssignmentServiceSpec extends BaseSpec {
 
     def mockIVCall(resp: List[IVNinoStoreEntry]) =
       (mockIVConnector
-        .getCredentialsWithNino(_: String)(
+        .getCredentialsWithNino(_: Nino)(
           _: ExecutionContext,
           _: HeaderCarrier
         ))

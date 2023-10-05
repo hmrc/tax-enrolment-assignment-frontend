@@ -19,17 +19,22 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions
 import play.api.Logger
 import play.api.mvc.Results._
 import play.api.mvc._
+import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, AuthProviders, AuthorisationException, AuthorisedFunctions, ConfidenceLevel, Enrolments, NoActiveSession}
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
-import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals._
 import uk.gov.hmrc.auth.core.retrieve.~
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
+import uk.gov.hmrc.play.http.HeaderCarrierConverter.fromRequestAndSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.ErrorHandler
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedError
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.{IRSAKey, hmrcPTKey}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.utils.HmrcPTEnrolment
 
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
@@ -37,7 +42,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 case class UserDetailsFromSession(
   credId: String,
-  nino: String,
+  nino: Nino,
   groupId: String,
   email: Option[String],
   affinityGroup: AffinityGroup,
@@ -65,7 +70,9 @@ class AuthAction @Inject() (
   override val authConnector: AuthConnector,
   val parser: BodyParsers.Default,
   logger: EventLoggerService,
-  val appConfig: AppConfig
+  val appConfig: AppConfig,
+  hmrcPTEnrolment: HmrcPTEnrolment,
+  errorHandler: ErrorHandler
 )(implicit val executionContext: ExecutionContext)
     extends AuthorisedFunctions with AuthIdentifierAction with RedirectHelper {
 
@@ -84,13 +91,14 @@ class AuthAction @Inject() (
         nino and credentials and allEnrolments and groupIdentifier and affinityGroup and email
       ) {
         case Some(nino) ~ Some(credentials) ~ enrolments ~ Some(groupId) ~ Some(affinityGroup) ~ email =>
-          val hasSAEnrolment =
-            enrolments.getEnrolment(s"$IRSAKey").fold(false)(_.isActivated)
-          val hasPTEnrolment = enrolments.getEnrolment(s"$hmrcPTKey").isDefined
+          implicit val hc: HeaderCarrier = fromRequestAndSession(request, request.session)
+          val hasSAEnrolment = enrolments.getEnrolment(s"$IRSAKey").fold(false)(_.isActivated)
+          val hasPTEnrolment =
+            enrolments.getEnrolment(s"$hmrcPTKey").flatMap(_.identifiers.find(_.value == nino)).isDefined
 
           val userDetails = UserDetailsFromSession(
             credentials.providerId,
-            nino,
+            Nino(nino),
             groupId,
             email,
             affinityGroup,
@@ -99,15 +107,23 @@ class AuthAction @Inject() (
             hasSAEnrolment
           )
 
-          val sessionID = request.session
-            .get("sessionId")
-            .getOrElse {
-              logger.logEvent(logUserDidNotHaveSessionIdGeneratedSessionId(credentials.providerId))
-              UUID.randomUUID().toString
-            }
-          block(
-            RequestWithUserDetailsFromSession(request, userDetails, sessionID)
-          )
+          val sessionID = hc.sessionId.fold {
+            logger.logEvent(logUserDidNotHaveSessionIdGeneratedSessionId(credentials.providerId))
+            UUID.randomUUID().toString
+          }(_.value)
+
+          val requestWithUserDetailsFromSession = RequestWithUserDetailsFromSession(request, userDetails, sessionID)
+
+          hmrcPTEnrolment
+            .findAndDeleteWrongPTEnrolment(Nino(nino), enrolments, groupId)
+            .foldF(
+              _ =>
+                Future.successful(
+                  errorHandler
+                    .handleErrors(UnexpectedError, "[AuthAction]")(requestWithUserDetailsFromSession, implicitly)
+                ),
+              _ => block(requestWithUserDetailsFromSession)
+            )
 
         case _ =>
           logger.logEvent(
@@ -115,9 +131,7 @@ class AuthAction @Inject() (
               s"session missing credential or NINO field for uri: ${request.uri}"
             )
           )
-          Future.successful(
-            Redirect(routes.AuthorisationController.notAuthorised.url)
-          )
+          Future.successful(Redirect(routes.AuthorisationController.notAuthorised.url))
       } recover {
       case er: NoActiveSession =>
         logger.logEvent(

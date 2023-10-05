@@ -33,7 +33,7 @@ class IVConnectorISpec extends IntegrationSpecBase {
         stubGetWithQueryParam(
           path,
           "nino",
-          NINO,
+          NINO.nino,
           Status.OK,
           ivResponseMultiCredsJsonString
         )
@@ -49,7 +49,7 @@ class IVConnectorISpec extends IntegrationSpecBase {
         stubGetWithQueryParam(
           path,
           "nino",
-          NINO,
+          NINO.nino,
           Status.OK,
           ivResponseSingleCredsJsonString
         )
@@ -62,7 +62,7 @@ class IVConnectorISpec extends IntegrationSpecBase {
 
     "a non 404 is returned" should {
       "return an UnexpectedResponseFromIV error" in {
-        stubGetWithQueryParam(path, "nino", NINO, Status.NOT_FOUND, "")
+        stubGetWithQueryParam(path, "nino", NINO.nino, Status.NOT_FOUND, "")
         stubPost(s"/write/.*", OK, """{"x":2}""")
         whenReady(connector.getCredentialsWithNino(NINO).value) { response =>
           response shouldBe Left(UnexpectedResponseFromIV)
@@ -72,7 +72,7 @@ class IVConnectorISpec extends IntegrationSpecBase {
 
     "a non 400 is returned" should {
       "return an UnexpectedResponseFromIV error" in {
-        stubGetWithQueryParam(path, "nino", NINO, Status.BAD_REQUEST, "")
+        stubGetWithQueryParam(path, "nino", NINO.nino, Status.BAD_REQUEST, "")
         stubPost(s"/write/.*", OK, """{"x":2}""")
         whenReady(connector.getCredentialsWithNino(NINO).value) { response =>
           response shouldBe Left(UnexpectedResponseFromIV)
@@ -85,7 +85,7 @@ class IVConnectorISpec extends IntegrationSpecBase {
         stubGetWithQueryParam(
           path,
           "nino",
-          NINO,
+          NINO.nino,
           Status.INTERNAL_SERVER_ERROR,
           ""
         )

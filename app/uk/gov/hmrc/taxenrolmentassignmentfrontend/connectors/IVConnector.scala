@@ -17,9 +17,11 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors
 
 import cats.data.EitherT
+
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.http.Status.OK
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
@@ -36,14 +38,14 @@ class IVConnector @Inject() (httpClient: HttpClient, logger: EventLoggerService,
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
-  def getCredentialsWithNino(nino: String)(implicit
+  def getCredentialsWithNino(nino: Nino)(implicit
     ec: ExecutionContext,
     hc: HeaderCarrier
   ): TEAFResult[List[IVNinoStoreEntry]] = EitherT {
     val url = s"${appConfig.IV_BASE_URL}/nino"
 
     httpClient
-      .GET[HttpResponse](url, queryParams = Seq("nino" -> nino))
+      .GET[HttpResponse](url, queryParams = Seq("nino" -> nino.nino))
       .map(httpResponse =>
         httpResponse.status match {
           case OK =>

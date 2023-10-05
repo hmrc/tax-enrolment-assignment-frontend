@@ -17,6 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.logging
 
 import play.api.libs.json.{Format, Json}
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IVNinoStoreEntry
@@ -26,13 +27,13 @@ object LoggingEvent {
 
   def logSingleAccountHolderAssignedEnrolment(
     credentialId: String,
-    nino: String
+    nino: Nino
   ): LoggingEvent =
     Info(
       Event(
         "[AccountCheckController][silentEnrol]",
         details = Some(
-          s"$hmrcPTKey enrolment assigned to single account credential $credentialId with nino $nino"
+          s"$hmrcPTKey enrolment assigned to single account credential $credentialId with nino ${nino.nino}"
         )
       )
     )
@@ -48,13 +49,13 @@ object LoggingEvent {
 
   def logMultipleAccountHolderAssignedEnrolment(
     credentialId: String,
-    nino: String
+    nino: Nino
   ): LoggingEvent =
     Info(
       Event(
         "[AccountCheckController][silentEnrol]",
         details = Some(
-          s"$hmrcPTKey enrolment assigned to credential $credentialId which has multiple accounts with nino $nino"
+          s"$hmrcPTKey enrolment assigned to credential $credentialId which has multiple accounts with nino ${nino.nino}"
         )
       )
     )
@@ -81,12 +82,12 @@ object LoggingEvent {
       )
     )
 
-  def logUserThrottled(credentialId: String, accountType: AccountTypes.Value, nino: String): LoggingEvent =
+  def logUserThrottled(credentialId: String, accountType: AccountTypes.Value, nino: Nino): LoggingEvent =
     Info(
       Event(
         "[Throttling]",
         details = Some(
-          s"$credentialId has been throttled with the account type $accountType and nino $nino"
+          s"$credentialId has been throttled with the account type $accountType and nino ${nino.nino}"
         )
       )
     )
@@ -187,12 +188,12 @@ object LoggingEvent {
       )
     )
 
-  def logUnexpectedResponseFromIV(nino: String, statusReturned: Int): LoggingEvent =
+  def logUnexpectedResponseFromIV(nino: Nino, statusReturned: Int): LoggingEvent =
     Error(
       Event(
         "[IVConnector][getCredentialsWithNino]",
         errorDetails = Some(
-          s"Identity Verification return status of $statusReturned for NINO $nino"
+          s"Identity Verification return status of $statusReturned for NINO ${nino.nino}"
         )
       )
     )
@@ -213,7 +214,7 @@ object LoggingEvent {
     )
 
   def logUnexpectedResponseFromEACDQueryKnownFacts(
-    nino: String,
+    nino: Nino,
     statusReturned: Int,
     eacdErrorMsg: String = "N/A"
   ): LoggingEvent =
@@ -221,7 +222,7 @@ object LoggingEvent {
       Event(
         "[EACDConnector][queryKnownFactsByNinoVerifier]",
         errorDetails = Some(
-          s"EACD returned status of $statusReturned when searching for users with $IRSAKey enrolment for NINO $nino." +
+          s"EACD returned status of $statusReturned when searching for users with $IRSAKey enrolment for NINO ${nino.nino}." +
             s"\nError Message: $eacdErrorMsg"
         )
       )
@@ -242,23 +243,23 @@ object LoggingEvent {
       )
     )
 
-  def logPTEnrolmentHasAlreadyBeenAssigned(nino: String): LoggingEvent =
+  def logPTEnrolmentHasAlreadyBeenAssigned(nino: Nino): LoggingEvent =
     Warn(
       Event(
         "[TaxEnrolmentsConnector][assignPTEnrolmentWithKnownFacts]",
-        details = Some(s"Personal Tax enrolment has already been assigned for $nino")
+        details = Some(s"Personal Tax enrolment has already been assigned for ${nino.nino}")
       )
     )
 
   def logUnexpectedResponseFromTaxEnrolmentsKnownFacts(
-    nino: String,
+    nino: Nino,
     statusReturned: Int
   ): LoggingEvent =
     Error(
       Event(
         "[TaxEnrolmentsConnector][assignPTEnrolmentWithKnownFacts]",
         errorDetails = Some(
-          s"Tax Enrolments return status of $statusReturned when allocating $hmrcPTKey enrolment for users with $nino NINO"
+          s"Tax Enrolments return status of $statusReturned when allocating $hmrcPTKey enrolment for users with ${nino.nino} NINO"
         )
       )
     )

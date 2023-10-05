@@ -41,7 +41,7 @@ trait ThrottleHelperISpec {
   def throttleSpecificTests(apiCall: () => Future[Result]) = {
     val newEnrolment = (nino: String) =>
       Enrolment(s"$hmrcPTKey", Seq(EnrolmentIdentifier("NINO", nino)), "Activated", None)
-    val ninoBelowThreshold = "QQ123400A"
+    val ninoBelowThreshold = ninoWithLast2digits("00")
     List(
       MULTIPLE_ACCOUNTS,
       SA_ASSIGNED_TO_CURRENT_USER,
@@ -49,14 +49,15 @@ trait ThrottleHelperISpec {
     ).foreach(accountTypeThatFallsIntoThrottle =>
       s"$accountTypeThatFallsIntoThrottle $ThrottleApplied" should {
         "redirect user to their RedirectURL and call to auth with their current enrolments plus new enrolment" in {
-          val authResponse = authoriseResponseJson(optNino = Some(ninoBelowThreshold), enrolments = saEnrolmentOnly)
+          val authResponse =
+            authoriseResponseJson(optNino = Some(ninoBelowThreshold.nino), enrolments = saEnrolmentOnly)
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
           stubPutWithRequestBody(
             url = "/auth/enrolments",
             status = OK,
             requestBody = Json
-              .toJson(Set(saEnrolmentAsCaseClass, newEnrolment(ninoBelowThreshold)))(EnrolmentsFormats.writes)
+              .toJson(Set(saEnrolmentAsCaseClass, newEnrolment(ninoBelowThreshold.nino)))(EnrolmentsFormats.writes)
               .toString,
             responseBody = ""
           )
@@ -69,28 +70,16 @@ trait ThrottleHelperISpec {
           status(result)(timeout) shouldBe SEE_OTHER
           redirectLocation(result)(timeout).get should include(returnUrl)
         }
-        s"return $INTERNAL_SERVER_ERROR if NINO wrong format" in {
-          val authResponse = authoriseResponseJson(optNino = Some("foo"), enrolments = saEnrolmentOnly)
-          stubAuthorizePost(OK, authResponse.toString())
-          stubPost(s"/write/.*", OK, """{"x":2}""")
-
-          save[String](sessionId, SessionKeys.REDIRECT_URL, returnUrl).futureValue
-          save[AccountTypes.Value](sessionId, SessionKeys.ACCOUNT_TYPE, accountTypeThatFallsIntoThrottle).futureValue
-
-          val result: Future[Result] = apiCall()
-          whenReady(result.failed) { result =>
-            result.getMessage shouldBe "nino is incorrect length 3"
-          }
-        }
         s"return $INTERNAL_SERVER_ERROR if put to auth fails" in {
-          val authResponse = authoriseResponseJson(optNino = Some(ninoBelowThreshold), enrolments = saEnrolmentOnly)
+          val authResponse =
+            authoriseResponseJson(optNino = Some(ninoBelowThreshold.nino), enrolments = saEnrolmentOnly)
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
           stubPutWithRequestBody(
             url = "/auth/enrolments",
             status = INTERNAL_SERVER_ERROR,
             requestBody = Json
-              .toJson(Set(saEnrolmentAsCaseClass, newEnrolment(ninoBelowThreshold)))(EnrolmentsFormats.writes)
+              .toJson(Set(saEnrolmentAsCaseClass, newEnrolment(ninoBelowThreshold.nino)))(EnrolmentsFormats.writes)
               .toString,
             responseBody = ""
           )

@@ -414,7 +414,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase with 
         case None =>
           val authResponse =
             authoriseResponseJson(
-              optNino = if (hasNino) { Some(NINO) }
+              optNino = if (hasNino) { Some(NINO.nino) }
               else {
                 None
               },

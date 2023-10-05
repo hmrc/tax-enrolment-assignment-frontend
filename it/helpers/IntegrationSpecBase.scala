@@ -48,6 +48,17 @@ trait IntegrationSpecBase
   def generateNino: Nino = new NinoGenerator().nextNino
   def secondGenerateNino: Nino = new NinoGenerator().nextNino
 
+  val nino = generateNino
+
+  def ninoWithLast2digits(digits: String): Nino = {
+    if (digits.length != 2) {
+      throw new IllegalArgumentException("digits must be 2 characters exactly")
+    }
+    val digit1 = digits.head
+    val digit2 = digits.reverse.head
+    Nino(nino.nino.toList.updated(6, digit1).updated(7, digit2).mkString(""))
+  }
+
   implicit lazy val ec: ExecutionContext = app.injector.instanceOf[ExecutionContext]
   lazy implicit val hc: HeaderCarrier = HeaderCarrier(
     authorization = Some(Authorization(AUTHORIZE_HEADER_VALUE))

@@ -105,7 +105,7 @@ class AuditEventSpec extends BaseSpec {
         "reporting-unrecognised-pt-account"
       },
       detail = Json.obj(
-        ("NINO", JsString(NINO)),
+        ("NINO", JsString(NINO.nino)),
         ("currentAccount", currentAccountDetails),
         ("reportedAccount", getReportedAccountJson(reportedAccountDetails, isWelsh))
       ) ++ translatedAccountJson
@@ -128,7 +128,7 @@ class AuditEventSpec extends BaseSpec {
       .deepMerge(email)
 
     val details = Json.obj(
-      ("NINO", JsString(NINO)),
+      ("NINO", JsString(NINO.nino)),
       ("currentAccount", currentAccountDetails)
     ) ++ optSACred.fold(Json.obj())(credId =>
       Json.obj(("saAccountCredentialId", JsString(credId)))
@@ -148,7 +148,7 @@ class AuditEventSpec extends BaseSpec {
       ("affinityGroup", JsString("Individual"))
     )
     val details = Json.obj(
-      ("NINO", JsString(NINO)),
+      ("NINO", JsString(NINO.nino)),
       ("currentAccount", currentAccountDetails)
     ) ++ saAccountDetails.getOrElse(Json.obj())
 

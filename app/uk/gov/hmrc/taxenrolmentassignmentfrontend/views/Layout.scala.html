@@ -39,7 +39,7 @@
     keepAliveUrl = Some(controllers.routes.TimeOutController.keepAlive.url)
 )
 }
-<link rel="stylesheet" type="text/css" href='@routes.Assets.versioned("stylesheets/application.css")'>
+<link @CSPNonce.attr rel="stylesheet" type="text/css" href='@routes.Assets.versioned("stylesheets/application.css")'>
 
 }
 @content = {

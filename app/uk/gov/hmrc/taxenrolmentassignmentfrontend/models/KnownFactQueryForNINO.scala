@@ -17,17 +17,17 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 
 import play.api.libs.json.{Format, Json}
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.IRSAKey
 
-case class KnownFactQueryForNINO(service: String, knownFacts: List[IdentifiersOrVerifiers]) {
-  def this(nino: String) =
-    this(
-      service = s"$IRSAKey",
-      knownFacts = List(IdentifiersOrVerifiers("NINO", nino))
-    )
-}
+case class KnownFactQueryForNINO(service: String, knownFacts: List[IdentifiersOrVerifiers])
 
 object KnownFactQueryForNINO {
+  def apply(nino: Nino): KnownFactQueryForNINO = KnownFactQueryForNINO(
+    service = s"$IRSAKey",
+    knownFacts = List(IdentifiersOrVerifiers("NINO", nino.nino))
+  )
+
   implicit val format: Format[KnownFactQueryForNINO] =
     Json.format[KnownFactQueryForNINO]
 }

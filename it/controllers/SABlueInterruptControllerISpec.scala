@@ -160,7 +160,7 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status wit
         stubGetWithQueryParam(
           "/identity-verification/nino",
           "nino",
-          NINO,
+          NINO.nino,
           Status.NOT_FOUND,
           ""
         )
@@ -183,7 +183,7 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status wit
         stubGetWithQueryParam(
           "/identity-verification/nino",
           "nino",
-          NINO,
+          NINO.nino,
           Status.INTERNAL_SERVER_ERROR,
           ""
         )

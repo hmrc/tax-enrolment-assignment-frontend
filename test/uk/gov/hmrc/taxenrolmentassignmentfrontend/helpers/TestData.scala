@@ -20,12 +20,12 @@ import play.api.mvc.{AnyContentAsEmpty, AnyContentAsFormUrlEncoded}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.auth.core.AffinityGroup.Individual
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
-import uk.gov.hmrc.auth.core._
+import uk.gov.hmrc.auth.core.{AffinityGroup, AuthProviders, ConfidenceLevel, Enrolment, EnrolmentIdentifier, Enrolments}
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals._
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
-import uk.gov.hmrc.domain.Generator
+import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.UserDetailsFromSession
@@ -33,8 +33,8 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{IVNinoStoreEntry, Iden
 
 object TestData {
 
-  val NINO: String = new Generator().nextNino.nino
-  val secondNino: String = new Generator().nextNino.nino
+  val NINO: Nino = new Generator().nextNino
+  val secondNino: Nino = new Generator().nextNino
   val GROUP_ID = "D37DB2E1-CF03-42E8-B151-E17300FFCF78"
   val CREDENTIAL_ID = "credId123"
   val USER_ID = "6037"
@@ -61,7 +61,7 @@ object TestData {
     Set(
       Enrolment(
         "HMRC-PT",
-        Seq(EnrolmentIdentifier("NINO", NINO)),
+        Seq(EnrolmentIdentifier("NINO", NINO.nino)),
         "Activated",
         None
       )
@@ -71,7 +71,7 @@ object TestData {
     Set(
       Enrolment(
         "HMRC-PT",
-        Seq(EnrolmentIdentifier("NINO", NINO)),
+        Seq(EnrolmentIdentifier("NINO", NINO.nino)),
         "Activated",
         None
       ),
@@ -95,7 +95,7 @@ object TestData {
   ] = nino and credentials and allEnrolments and groupIdentifier and affinityGroup and email
 
   def retrievalResponse(
-    optNino: Option[String] = Some(NINO),
+    optNino: Option[String] = Some(NINO.nino),
     optCredentials: Option[Credentials] = Some(creds),
     enrolments: Enrolments = noEnrolments,
     optGroupId: Option[String] = Some(GROUP_ID),

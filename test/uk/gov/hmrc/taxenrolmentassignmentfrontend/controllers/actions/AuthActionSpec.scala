@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions
 
+import cats.data.EitherT
 import org.scalamock.handlers.CallHandler1
 import org.scalatest.Assertion
 import play.api.Application
@@ -26,10 +27,12 @@ import play.api.test.Helpers.{contentAsString, redirectLocation, status, _}
 import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.domain.Nino
+import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.utils.HmrcPTEnrolment
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -44,6 +47,7 @@ class AuthActionSpec extends BaseSpec {
 
   lazy val mockTeaSessionCache = mock[TEASessionCache]
   lazy val mockAuthConnector = mock[AuthConnector]
+  lazy val mockHmrcPTEnrolment = mock[HmrcPTEnrolment]
 
   override lazy val overrides = Seq(
     bind[TEASessionCache].toInstance(mockTeaSessionCache)
@@ -51,7 +55,8 @@ class AuthActionSpec extends BaseSpec {
 
   override implicit lazy val app: Application = localGuiceApplicationBuilder()
     .overrides(
-      bind[AuthConnector].toInstance(mockAuthConnector)
+      bind[AuthConnector].toInstance(mockAuthConnector),
+      bind[HmrcPTEnrolment].toInstance(mockHmrcPTEnrolment)
     )
     .build()
 
@@ -84,6 +89,12 @@ class AuthActionSpec extends BaseSpec {
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
 
+        (mockHmrcPTEnrolment
+          .findAndDeleteWrongPTEnrolment(_: Nino, _: Enrolments, _: String)(_: HeaderCarrier, _: ExecutionContext))
+          .expects(*, *, *, *, *)
+          .returning(EitherT.rightT(()))
+          .once()
+
         val result: Future[Result] = authAction(
           defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
         )(FakeRequest())
@@ -113,6 +124,12 @@ class AuthActionSpec extends BaseSpec {
           .returning(
             Future.successful(retrievalResponse(enrolments = saEnrolmentOnly))
           )
+
+        (mockHmrcPTEnrolment
+          .findAndDeleteWrongPTEnrolment(_: Nino, _: Enrolments, _: String)(_: HeaderCarrier, _: ExecutionContext))
+          .expects(*, *, *, *, *)
+          .returning(EitherT.rightT(()))
+          .once()
 
         val result: Future[Result] = authAction(
           defaultAsyncBody(_.userDetails shouldBe userDetailsWithSAEnrolment)
@@ -144,6 +161,12 @@ class AuthActionSpec extends BaseSpec {
             Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly))
           )
 
+        (mockHmrcPTEnrolment
+          .findAndDeleteWrongPTEnrolment(_: Nino, _: Enrolments, _: String)(_: HeaderCarrier, _: ExecutionContext))
+          .expects(*, *, *, *, *)
+          .returning(EitherT.rightT(()))
+          .once()
+
         val result: Future[Result] = authAction(
           defaultAsyncBody(_.userDetails shouldBe userDetailsWithPTEnrolment)
         )(FakeRequest())
@@ -173,6 +196,12 @@ class AuthActionSpec extends BaseSpec {
           .returning(
             Future.successful(retrievalResponse(enrolments = saAndptEnrolments))
           )
+
+        (mockHmrcPTEnrolment
+          .findAndDeleteWrongPTEnrolment(_: Nino, _: Enrolments, _: String)(_: HeaderCarrier, _: ExecutionContext))
+          .expects(*, *, *, *, *)
+          .returning(EitherT.rightT(()))
+          .once()
 
         val result: Future[Result] = authAction(
           defaultAsyncBody(
@@ -206,6 +235,12 @@ class AuthActionSpec extends BaseSpec {
             Future.successful(retrievalResponse(optCredentials = None))
           )
 
+        (mockHmrcPTEnrolment
+          .findAndDeleteWrongPTEnrolment(_: Nino, _: Enrolments, _: String)(_: HeaderCarrier, _: ExecutionContext))
+          .expects(*, *, *, *, *)
+          .returning(EitherT.rightT(()))
+          .never()
+
         val result: Future[Result] = authAction(
           defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
         )(FakeRequest())
@@ -233,6 +268,12 @@ class AuthActionSpec extends BaseSpec {
           )
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse(optNino = None)))
+
+        (mockHmrcPTEnrolment
+          .findAndDeleteWrongPTEnrolment(_: Nino, _: Enrolments, _: String)(_: HeaderCarrier, _: ExecutionContext))
+          .expects(*, *, *, *, *)
+          .returning(EitherT.rightT(()))
+          .never()
 
         val result: Future[Result] = authAction(
           defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
@@ -266,6 +307,12 @@ class AuthActionSpec extends BaseSpec {
             )
           )
 
+        (mockHmrcPTEnrolment
+          .findAndDeleteWrongPTEnrolment(_: Nino, _: Enrolments, _: String)(_: HeaderCarrier, _: ExecutionContext))
+          .expects(*, *, *, *, *)
+          .returning(EitherT.rightT(()))
+          .never()
+
         val result: Future[Result] = authAction(
           defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
         )(FakeRequest())
@@ -293,6 +340,12 @@ class AuthActionSpec extends BaseSpec {
           )
           .expects(predicates, retrievals, *, *)
           .returning(Future.failed(SessionRecordNotFound("FAILED")))
+
+        (mockHmrcPTEnrolment
+          .findAndDeleteWrongPTEnrolment(_: Nino, _: Enrolments, _: String)(_: HeaderCarrier, _: ExecutionContext))
+          .expects(*, *, *, *, *)
+          .returning(EitherT.rightT(()))
+          .never()
 
         val result: Future[Result] = authAction(
           defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
@@ -325,6 +378,12 @@ class AuthActionSpec extends BaseSpec {
           .expects(predicates, retrievals, *, *)
           .returning(Future.failed(UnsupportedAuthProvider("FAILED")))
 
+        (mockHmrcPTEnrolment
+          .findAndDeleteWrongPTEnrolment(_: Nino, _: Enrolments, _: String)(_: HeaderCarrier, _: ExecutionContext))
+          .expects(*, *, *, *, *)
+          .returning(EitherT.rightT(()))
+          .never()
+
         val result: Future[Result] = authAction(
           defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
         )(FakeRequest())
@@ -353,6 +412,12 @@ class AuthActionSpec extends BaseSpec {
           .expects(predicates, retrievals, *, *)
           .returning(Future.failed(InsufficientConfidenceLevel("FAILED")))
 
+        (mockHmrcPTEnrolment
+          .findAndDeleteWrongPTEnrolment(_: Nino, _: Enrolments, _: String)(_: HeaderCarrier, _: ExecutionContext))
+          .expects(*, *, *, *, *)
+          .returning(EitherT.rightT(()))
+          .never()
+
         val result: Future[Result] = authAction(
           defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
         )(FakeRequest())
@@ -360,6 +425,41 @@ class AuthActionSpec extends BaseSpec {
         status(result) shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some("/protect-tax-info/unauthorised")
       }
+    }
+  }
+
+  "The call checking invalid enrolments fails" should {
+    "return an error page" in {
+      (
+        mockAuthConnector
+          .authorise(
+            _: Predicate,
+            _: Retrieval[
+              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                String
+              ] ~ Option[AffinityGroup] ~ Option[String]
+            ]
+          )(
+            _: HeaderCarrier,
+            _: ExecutionContext
+          )
+        )
+        .expects(predicates, retrievals, *, *)
+        .returning(
+          Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly))
+        )
+
+      (mockHmrcPTEnrolment
+        .findAndDeleteWrongPTEnrolment(_: Nino, _: Enrolments, _: String)(_: HeaderCarrier, _: ExecutionContext))
+        .expects(*, *, *, *, *)
+        .returning(EitherT.leftT(UpstreamErrorResponse("error", INTERNAL_SERVER_ERROR)))
+        .once()
+
+      val result: Future[Result] = authAction(
+        defaultAsyncBody(_.userDetails shouldBe userDetailsWithPTEnrolment)
+      )(FakeRequest())
+
+      status(result) shouldBe INTERNAL_SERVER_ERROR
     }
   }
 

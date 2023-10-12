@@ -22,15 +22,15 @@ import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core.retrieve.Credentials
 import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolment, EnrolmentIdentifier, Enrolments}
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
-import uk.gov.hmrc.domain.Generator
+import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.SessionKeys
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.UserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models._
 
 object TestITData {
 
-  val NINO: String = new Generator().nextNino.nino
-  val mismatchNino: String = new Generator().nextNino.nino
+  val NINO: Nino = new Generator().nextNino
+  val mismatchNino: Nino = new Generator().nextNino
   val CURRENT_USER_EMAIL = "foobarwizz"
   val CREDENTIAL_ID: String = "6902202884164548"
   val CREDENTIAL_ID_2: String = "8316291481001919"
@@ -48,11 +48,11 @@ object TestITData {
     Json.arr(createEnrolmentJson("IR-SA", "UTR", "123456789"))
   val saEnrolmentAsCaseClass = Enrolment("IR-SA", Seq(EnrolmentIdentifier("UTR", "123456789")), "Activated")
   val ptEnrolmentOnly: JsValue =
-    Json.arr(createEnrolmentJson("HMRC-PT", "NINO", NINO))
-  val mismatchPtEnrolmentOnly: JsValue =
-    Json.arr(createEnrolmentJson("HMRC-PT", "NINO", mismatchNino))
+    Json.arr(createEnrolmentJson("HMRC-PT", "NINO", NINO.nino))
+  val mismatchPtEnrolmentOnly: JsArray =
+    Json.arr(createEnrolmentJson("HMRC-PT", "NINO", mismatchNino.nino))
   val saAndptEnrolments: JsArray = Json.arr(
-    createEnrolmentJson("HMRC-PT", "NINO", NINO),
+    createEnrolmentJson("HMRC-PT", "NINO", NINO.nino),
     createEnrolmentJson("IR-SA", "UTR", "123456789")
   )
   val AUTHORIZE_HEADER_VALUE =
@@ -77,7 +77,7 @@ object TestITData {
   val xAuthToken: (String, String) = SessionKeys.authToken -> "Bearer 1"
 
   def authoriseResponseJson(
-    optNino: Option[String] = Some(NINO),
+    optNino: Option[String] = Some(NINO.nino),
     optCreds: Option[Credentials] = Some(creds),
     optGroupId: Option[String] = Some(GROUP_ID),
     affinityGroup: AffinityGroup = Individual,
@@ -104,7 +104,7 @@ object TestITData {
   }
 
   def authoriseResponseWithPTEnrolment(
-    optNino: Option[String] = Some(NINO),
+    optNino: Option[String] = Some(NINO.nino),
     optCreds: Option[Credentials] = Some(creds),
     optGroupId: Option[String] = Some(GROUP_ID),
     affinityGroup: AffinityGroup = Individual,
@@ -406,7 +406,7 @@ object TestITData {
         Set(
           Enrolment(
             "HMRC-PT",
-            Seq(EnrolmentIdentifier("NINO", NINO)),
+            Seq(EnrolmentIdentifier("NINO", NINO.nino)),
             "Activated",
             None
           )

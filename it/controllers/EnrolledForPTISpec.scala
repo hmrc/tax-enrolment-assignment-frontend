@@ -113,7 +113,7 @@ class EnrolledForPTISpec extends IntegrationSpecBase with ThrottleHelperISpec {
         stubGetWithQueryParam(
           "/identity-verification/nino",
           "nino",
-          NINO,
+          NINO.nino,
           NOT_FOUND,
           ""
         )
@@ -136,7 +136,7 @@ class EnrolledForPTISpec extends IntegrationSpecBase with ThrottleHelperISpec {
         stubGetWithQueryParam(
           "/identity-verification/nino",
           "nino",
-          NINO,
+          NINO.nino,
           INTERNAL_SERVER_ERROR,
           ""
         )

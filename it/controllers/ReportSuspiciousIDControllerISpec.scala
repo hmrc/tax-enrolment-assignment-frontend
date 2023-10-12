@@ -324,7 +324,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
         stubGetWithQueryParam(
           "/identity-verification/nino",
           "nino",
-          NINO,
+          NINO.nino,
           Status.NOT_FOUND,
           ""
         )
@@ -355,7 +355,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
         stubGetWithQueryParam(
           "/identity-verification/nino",
           "nino",
-          NINO,
+          NINO.nino,
           Status.INTERNAL_SERVER_ERROR,
           ""
         )
@@ -651,7 +651,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
         stubGetWithQueryParam(
           "/identity-verification/nino",
           "nino",
-          NINO,
+          NINO.nino,
           Status.NOT_FOUND,
           ""
         )
@@ -681,7 +681,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
         stubGetWithQueryParam(
           "/identity-verification/nino",
           "nino",
-          NINO,
+          NINO.nino,
           Status.INTERNAL_SERVER_ERROR,
           ""
         )
@@ -794,7 +794,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
           val result = route(app, request).get
 
           status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include("/protect-tax-info/enrol-pt/enrolment-success-no-sa")
+          redirectLocation(result).get should include(
+            uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes.EnrolledForPTController.continue.url
+          )
           val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(
             requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, mongoCacheData = cacheData),
             messagesApi
@@ -824,7 +826,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
 
           status(result) shouldBe SEE_OTHER
           redirectLocation(result).get should include(
-            "/enrol-pt/enrolment-success-sa-access-not-wanted"
+            "/enrol-pt/choose-two-user-ids"
           )
 
         }

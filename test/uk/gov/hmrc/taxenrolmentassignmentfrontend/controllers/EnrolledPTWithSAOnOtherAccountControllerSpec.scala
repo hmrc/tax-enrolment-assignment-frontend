@@ -71,67 +71,6 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
   "view" when {
     specificThrottleTests(controller.view())
 
-    "the user has enrolled for PT after reporting fraud" should {
-      "render the EnrolledForPTWithSAOnOtherAccount page without SA" in {
-        (
-          mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
-          .expects(predicates, retrievals, *, *)
-          .returning(
-            Future.successful(retrievalResponse(enrolments = saEnrolmentOnly))
-          )
-
-        (
-          mockMultipleAccountsOrchestrator
-            .getDetailsForEnrolledPTWithSAOnOtherAccount(
-              _: RequestWithUserDetailsFromSessionAndMongo[_],
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
-          .expects(*, *, *)
-          .returning(createInboundResult(accountDetails))
-
-        (mockMultipleAccountsOrchestrator
-          .getSACredentialIfNotFraud(
-            _: RequestWithUserDetailsFromSessionAndMongo[_],
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
-          .expects(*, *, *)
-          .returning(createInboundResult(None))
-
-        mockGetDataFromCacheForActionSuccess(randomAccountType)
-        mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
-
-        val result = controller.view
-          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
-
-        status(result) shouldBe OK
-        val content = Jsoup
-          .parse(contentAsString(result))
-
-        content.body().text() should include(messages("enrolledForPTWithSAOnOtherAccount.heading"))
-        content.body().text() shouldNot include(
-          messages(
-            "enrolledForPTWithSAOnOtherAccount.h2.paragraph1",
-            "1234"
-          )
-        )
-      }
-    }
-
     "the user has enrolled for PT after choosing to have SA separate" should {
       "render the EnrolledForPTWithSAOnOtherAccount page with SA details" in {
         (
@@ -188,10 +127,61 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
         content.body().text() should include(messages("enrolledForPTWithSAOnOtherAccount.heading"))
         content.body().text() should include(
           messages(
-            "enrolledForPTWithSAOnOtherAccount.h2.paragraph1",
-            "1234"
+            "enrolledForPTWithSAOnOtherAccount.paragraph1",
+            USER_ID
           )
         )
+      }
+    }
+
+    "the user has enrolled for PT after reporting fraud" should {
+      "return INTERNAL_SERVER_ERROR the EnrolledForPTWithSAOnOtherAccount page without SA" in { // Check this as new status is different
+        (
+          mockAuthConnector
+            .authorise(
+              _: Predicate,
+              _: Retrieval[
+                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  String
+                ] ~ Option[AffinityGroup] ~ Option[String]
+              ]
+            )(
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
+          .expects(predicates, retrievals, *, *)
+          .returning(
+            Future.successful(retrievalResponse(enrolments = saEnrolmentOnly))
+          )
+
+        (
+          mockMultipleAccountsOrchestrator
+            .getDetailsForEnrolledPTWithSAOnOtherAccount(
+              _: RequestWithUserDetailsFromSessionAndMongo[_],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            )
+          )
+          .expects(*, *, *)
+          .returning(createInboundResult(accountDetails))
+
+        (mockMultipleAccountsOrchestrator
+          .getSACredentialIfNotFraud(
+            _: RequestWithUserDetailsFromSessionAndMongo[_],
+            _: HeaderCarrier,
+            _: ExecutionContext
+          ))
+          .expects(*, *, *)
+          .returning(createInboundResult(None))
+
+        mockGetDataFromCacheForActionSuccess(randomAccountType)
+        mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
+
+        val result = controller.view
+          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+
+        status(result) shouldBe INTERNAL_SERVER_ERROR
       }
     }
 

@@ -19,6 +19,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.services
 import play.api.Application
 import play.api.inject.bind
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier}
+import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
@@ -41,40 +42,30 @@ class ThrottlingServiceSpec extends BaseSpec {
     )
     .build()
 
-  lazy val throttlingservice = app.injector.instanceOf[ThrottlingService]
-  val validNonRealNino = "QQ123456A"
+  lazy val throttlingservice: ThrottlingService = app.injector.instanceOf[ThrottlingService]
+  val validNonRealNino: Nino = new Generator().nextNino
+
+  def ninoWithlast2digits(digits: String) = {
+    if (digits.length != 2) {
+      throw new IllegalArgumentException("digits must be 2 characters exactly")
+    }
+    val digit1 = digits.head
+    val digit2 = digits.reverse.head
+    Nino(validNonRealNino.nino.toList.updated(6, digit1).updated(7, digit2).mkString(""))
+  }
 
   "isNinoWithinThrottleThreshold" should {
-    case class TestScenario(testName: String, nino: String, percentage: Int)
-    "return Exception" when {
-      List(
-        TestScenario("Nino is invalid format (all letters)", "JWAAAAAAA", 10),
-        TestScenario("Nino is invalid format (empty)", "", 10),
-        TestScenario("Nino is invalid format (not correct length 8)", "JW000000", 10),
-        TestScenario("Nino is invalid format (not correct length 7)", "JW00000", 10),
-        TestScenario("Nino is invalid format (not correct length 6)", "JW0000", 10),
-        TestScenario("Nino is invalid format (not correct length 5)", "JW000", 10),
-        TestScenario("Nino is invalid format (not correct length 4)", "JW00", 10),
-        TestScenario("Nino is invalid format (not correct length 3)", "JW0", 10),
-        TestScenario("Nino is invalid format (not correct length 2)", "JW", 10),
-        TestScenario("Nino is invalid format (not correct length 1)", "J", 10)
-      ).foreach(test =>
-        s"${test.testName}" in {
-          intercept[IllegalArgumentException](
-            throttlingservice.isNinoWithinThrottleThreshold(test.nino, test.percentage)
-          )
-        }
-      )
-    }
+    case class TestScenario(testName: String, nino: Nino, percentage: Int)
+
     "return true" when {
       List(
-        TestScenario("Nino last 2 digits == percentage (percentage is 1)", "QQ123401A", 1),
-        TestScenario("Nino last 2 digits == percentage (percentage is an amount)", "QQ123455A", 55),
-        TestScenario("Nino last 2 digits == percentage (percentage is max)", "QQ123499A", 99),
-        TestScenario("Nino last 2 digits < percentage (percentage is one above)", "QQ123401A", 2),
-        TestScenario("Nino last 2 digits < percentage (percentage is an amount above)", "QQ123401A", 50),
-        TestScenario("Nino last 2 digits < percentage (percentage is max amount above)", "QQ123401A", 99),
-        TestScenario("Nino last 2 digits == percentage (percentage is 0)", "QQ123400A", 0)
+        TestScenario("Nino last 2 digits == percentage (percentage is 1)", ninoWithlast2digits("01"), 1),
+        TestScenario("Nino last 2 digits == percentage (percentage is an amount)", ninoWithlast2digits("55"), 55),
+        TestScenario("Nino last 2 digits == percentage (percentage is max)", ninoWithlast2digits("99"), 99),
+        TestScenario("Nino last 2 digits < percentage (percentage is one above)", ninoWithlast2digits("01"), 2),
+        TestScenario("Nino last 2 digits < percentage (percentage is an amount above)", ninoWithlast2digits("01"), 50),
+        TestScenario("Nino last 2 digits < percentage (percentage is max amount above)", ninoWithlast2digits("01"), 99),
+        TestScenario("Nino last 2 digits == percentage (percentage is 0)", ninoWithlast2digits("00"), 0)
       ).foreach(test =>
         s"${test.testName}" in {
           throttlingservice.isNinoWithinThrottleThreshold(test.nino, test.percentage) shouldBe true
@@ -85,9 +76,9 @@ class ThrottlingServiceSpec extends BaseSpec {
       List(
         TestScenario("percentage is > 100", validNonRealNino, 101),
         TestScenario("percentage is 100", validNonRealNino, 100),
-        TestScenario("Nino last 2 digits > percentage by 1", "QQ123411A", 10),
-        TestScenario("Nino last 2 digits > percentage by an amount", "QQ123456A", 10),
-        TestScenario("Nino last 2 digits > percentage by max amount", "QQ123499A", 10),
+        TestScenario("Nino last 2 digits > percentage by 1", ninoWithlast2digits("11"), 10),
+        TestScenario("Nino last 2 digits > percentage by an amount", ninoWithlast2digits("56"), 10),
+        TestScenario("Nino last 2 digits > percentage by max amount", ninoWithlast2digits("99"), 10),
         TestScenario("percentage < 0 but Nino is correct format", validNonRealNino, -1)
       ).foreach(test =>
         s"${test.testName}" in {
@@ -97,42 +88,42 @@ class ThrottlingServiceSpec extends BaseSpec {
     }
   }
   "shouldAccountTypeBeThrottled" should {
-    case class TestScenario(testName: String, nino: String, percentage: Int, accountType: AccountTypes.Value)
+    case class TestScenario(testName: String, nino: Nino, percentage: Int, accountType: AccountTypes.Value)
     "return true" when {
       List(
         TestScenario(
           s"account type is $MULTIPLE_ACCOUNTS, valid Nino below threshold",
-          "QQ123405A",
+          ninoWithlast2digits("05"),
           6,
           MULTIPLE_ACCOUNTS
         ),
         TestScenario(
           s"account type is $SA_ASSIGNED_TO_CURRENT_USER, valid Nino below threshold",
-          "QQ123405A",
+          ninoWithlast2digits("05"),
           6,
           SA_ASSIGNED_TO_CURRENT_USER
         ),
         TestScenario(
           s"account type is $SA_ASSIGNED_TO_OTHER_USER, valid Nino below threshold",
-          "QQ123405A",
+          ninoWithlast2digits("05"),
           6,
           SA_ASSIGNED_TO_OTHER_USER
         ),
         TestScenario(
           s"account type is $MULTIPLE_ACCOUNTS, valid Nino equal to threshold",
-          "QQ123405A",
+          ninoWithlast2digits("05"),
           5,
           MULTIPLE_ACCOUNTS
         ),
         TestScenario(
           s"account type is $SA_ASSIGNED_TO_CURRENT_USER, valid Nino equal to threshold",
-          "QQ123405A",
+          ninoWithlast2digits("05"),
           5,
           SA_ASSIGNED_TO_CURRENT_USER
         ),
         TestScenario(
           s"account type is $SA_ASSIGNED_TO_OTHER_USER, vvalid Nino equal to threshold",
-          "QQ123405A",
+          ninoWithlast2digits("05"),
           5,
           SA_ASSIGNED_TO_OTHER_USER
         )
@@ -146,90 +137,79 @@ class ThrottlingServiceSpec extends BaseSpec {
       List(
         TestScenario(
           s"account type is $PT_ASSIGNED_TO_CURRENT_USER, Valid Nino below threshold",
-          "QQ123405A",
+          ninoWithlast2digits("05"),
           6,
           PT_ASSIGNED_TO_CURRENT_USER
         ),
         TestScenario(
           s"account type is $PT_ASSIGNED_TO_OTHER_USER, Valid Nino below threshold",
-          "QQ123405A",
+          ninoWithlast2digits("05"),
           6,
           PT_ASSIGNED_TO_OTHER_USER
         ),
         TestScenario(
           s"account type is $MULTIPLE_ACCOUNTS, valid Nino above threshold",
-          "QQ123405A",
+          ninoWithlast2digits("05"),
           4,
           MULTIPLE_ACCOUNTS
         ),
         TestScenario(
           s"account type is $SA_ASSIGNED_TO_CURRENT_USER, valid Nino above threshold",
-          "QQ123405A",
+          ninoWithlast2digits("05"),
           4,
           SA_ASSIGNED_TO_CURRENT_USER
         ),
         TestScenario(
           s"account type is $SA_ASSIGNED_TO_OTHER_USER, valid Nino above threshold",
-          "QQ123405A",
+          ninoWithlast2digits("05"),
           4,
           SA_ASSIGNED_TO_OTHER_USER
         ),
         TestScenario(
           s"account type is $PT_ASSIGNED_TO_CURRENT_USER, Valid Nino equal threshold",
-          "QQ123406A",
+          ninoWithlast2digits("06"),
           6,
           PT_ASSIGNED_TO_CURRENT_USER
         ),
         TestScenario(
           s"account type is $PT_ASSIGNED_TO_OTHER_USER, threshold is 100",
-          "QQ123405A",
+          ninoWithlast2digits("05"),
           100,
           PT_ASSIGNED_TO_OTHER_USER
         ),
-        TestScenario(s"account type is $MULTIPLE_ACCOUNTS, threshold is 100", "QQ123405A", 100, MULTIPLE_ACCOUNTS),
+        TestScenario(
+          s"account type is $MULTIPLE_ACCOUNTS, threshold is 100",
+          ninoWithlast2digits("05"),
+          100,
+          MULTIPLE_ACCOUNTS
+        ),
         TestScenario(
           s"account type is $SA_ASSIGNED_TO_CURRENT_USER, threshold is 100",
-          "QQ123405A",
+          ninoWithlast2digits("05"),
           100,
           SA_ASSIGNED_TO_CURRENT_USER
         ),
         TestScenario(
           s"account type is $SA_ASSIGNED_TO_OTHER_USER, threshold is 100",
-          "QQ123405A",
+          ninoWithlast2digits("05"),
           100,
           SA_ASSIGNED_TO_OTHER_USER
         ),
-        TestScenario(s"account type is $SINGLE_ACCOUNT, Valid Nino below threshold", "QQ123405A", 6, SINGLE_ACCOUNT),
-        TestScenario(s"account type is $SINGLE_ACCOUNT, Valid Nino equal threshold", "QQ123406A", 6, SINGLE_ACCOUNT),
-        TestScenario(s"account type is $SINGLE_ACCOUNT, Invalid Nino", "QQ", 1, SINGLE_ACCOUNT),
         TestScenario(
-          s"account type is $PT_ASSIGNED_TO_CURRENT_USER, Invalid Nino",
-          "QQ",
-          1,
-          PT_ASSIGNED_TO_CURRENT_USER
+          s"account type is $SINGLE_ACCOUNT, Valid Nino below threshold",
+          ninoWithlast2digits("05"),
+          6,
+          SINGLE_ACCOUNT
         ),
-        TestScenario(s"account type is $PT_ASSIGNED_TO_OTHER_USER, Invalid Nino", "QQ", 1, PT_ASSIGNED_TO_OTHER_USER)
+        TestScenario(
+          s"account type is $SINGLE_ACCOUNT, Valid Nino equal threshold",
+          ninoWithlast2digits("06"),
+          6,
+          SINGLE_ACCOUNT
+        )
       ).foreach(test =>
         s"${test.testName}" in {
           throttlingservice.shouldAccountTypeBeThrottled(test.accountType, test.percentage, test.nino) shouldBe false
-        }
-      )
-    }
-    "return Exception" when {
-      List(
-        TestScenario(s"account type is $MULTIPLE_ACCOUNTS, Invalid nino", "QQ", 1, MULTIPLE_ACCOUNTS),
-        TestScenario(
-          s"account type is $SA_ASSIGNED_TO_CURRENT_USER, Invalid nino",
-          "QQ",
-          1,
-          SA_ASSIGNED_TO_CURRENT_USER
-        ),
-        TestScenario(s"account type is $SA_ASSIGNED_TO_OTHER_USER, Invalid nino", "QQ", 1, SA_ASSIGNED_TO_OTHER_USER)
-      ).foreach(test =>
-        s"${test.testName}" in {
-          intercept[IllegalArgumentException](
-            throttlingservice.shouldAccountTypeBeThrottled(test.accountType, test.percentage, test.nino)
-          )
         }
       )
     }
@@ -237,7 +217,8 @@ class ThrottlingServiceSpec extends BaseSpec {
 
   "addPTEnrolmentToEnrolments" should {
     "add new enrolment to existing set of enrolments" in {
-      val newEnrolment = Enrolment(s"$hmrcPTKey", Seq(EnrolmentIdentifier("NINO", "foobarwizz")), "Activated", None)
+      val newEnrolment =
+        Enrolment(s"$hmrcPTKey", Seq(EnrolmentIdentifier("NINO", validNonRealNino.nino)), "Activated", None)
       val setOfExistingEnrolments = Set(
         Enrolment("foo", Seq(EnrolmentIdentifier("NINO", "foo")), "Activated", None),
         Enrolment("bar", Seq(EnrolmentIdentifier("NINO", "foo")), "Activated", None)
@@ -245,19 +226,19 @@ class ThrottlingServiceSpec extends BaseSpec {
 
       throttlingservice.addPTEnrolmentToEnrolments(
         setOfExistingEnrolments,
-        "foobarwizz"
+        validNonRealNino
       ) shouldBe setOfExistingEnrolments + newEnrolment
     }
   }
 
   "throttle" should {
-    case class TestScenario(testName: String, nino: String, percentage: Int, accountType: AccountTypes.Value)
+    case class TestScenario(testName: String, nino: Nino, percentage: Int, accountType: AccountTypes.Value)
     val setOfExistingEnrolments = Set(
       Enrolment("foo", Seq(EnrolmentIdentifier("NINO", "foo")), "Activated", None),
       Enrolment("bar", Seq(EnrolmentIdentifier("NINO", "foo")), "Activated", None)
     )
     val newEnrolment =
-      (nino: String) => Enrolment(s"$hmrcPTKey", Seq(EnrolmentIdentifier("NINO", nino)), "Activated", None)
+      (nino: Nino) => Enrolment(s"$hmrcPTKey", Seq(EnrolmentIdentifier("NINO", nino.nino)), "Activated", None)
     val throttlingservice = (percentageToThrottle: Int) =>
       new ThrottlingService(
         mockLegacyAuthConnector,
@@ -269,19 +250,19 @@ class ThrottlingServiceSpec extends BaseSpec {
       List(
         TestScenario(
           s"account type is $MULTIPLE_ACCOUNTS, Valid Nino below threshold auth call succeeds",
-          "QQ123455A",
+          ninoWithlast2digits("55"),
           99,
           MULTIPLE_ACCOUNTS
         ),
         TestScenario(
           s"account type is $SA_ASSIGNED_TO_CURRENT_USER, Valid Nino below threshold auth call succeeds",
-          "QQ123455A",
+          ninoWithlast2digits("55"),
           99,
           SA_ASSIGNED_TO_CURRENT_USER
         ),
         TestScenario(
           s"account type is $SA_ASSIGNED_TO_OTHER_USER, Valid Nino below threshold auth call succeeds",
-          "QQ123455A",
+          ninoWithlast2digits("55"),
           99,
           SA_ASSIGNED_TO_OTHER_USER
         )
@@ -305,37 +286,37 @@ class ThrottlingServiceSpec extends BaseSpec {
       List(
         TestScenario(
           s"account type is $PT_ASSIGNED_TO_CURRENT_USER, Valid Nino below threshold, no auth call",
-          "QQ123455A",
+          ninoWithlast2digits("55"),
           99,
           PT_ASSIGNED_TO_CURRENT_USER
         ),
         TestScenario(
           s"account type is $PT_ASSIGNED_TO_OTHER_USER,  Valid Nino below threshold, no auth call",
-          "QQ123455A",
+          ninoWithlast2digits("55"),
           99,
           PT_ASSIGNED_TO_OTHER_USER
         ),
         TestScenario(
           s"account type is $MULTIPLE_ACCOUNTS, Valid Nino above threshold, no auth call",
-          "QQ123455A",
+          ninoWithlast2digits("55"),
           54,
           MULTIPLE_ACCOUNTS
         ),
         TestScenario(
           s"account type is $SA_ASSIGNED_TO_CURRENT_USER, Valid Nino above threshold, no auth calls",
-          "QQ123455A",
+          ninoWithlast2digits("55"),
           54,
           SA_ASSIGNED_TO_CURRENT_USER
         ),
         TestScenario(
           s"account type is $SA_ASSIGNED_TO_OTHER_USER, Valid Nino above threshold, no auth call",
-          "QQ123455A",
+          ninoWithlast2digits("55"),
           54,
           SA_ASSIGNED_TO_OTHER_USER
         ),
         TestScenario(
           s"account type is $SINGLE_ACCOUNT, Valid Nino below threshold, no auth call",
-          "QQ123455A",
+          ninoWithlast2digits("55"),
           99,
           SINGLE_ACCOUNT
         )
@@ -395,9 +376,9 @@ class ThrottlingServiceSpec extends BaseSpec {
 
   "newPTEnrolment" should {
     "return correct class containing NINO" in {
-      throttlingservice.newPTEnrolment("foo") shouldBe Enrolment(
+      throttlingservice.newPTEnrolment(validNonRealNino) shouldBe Enrolment(
         s"$hmrcPTKey",
-        Seq(EnrolmentIdentifier("NINO", "foo")),
+        Seq(EnrolmentIdentifier("NINO", validNonRealNino.nino)),
         "Activated",
         None
       )

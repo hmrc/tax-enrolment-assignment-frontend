@@ -25,6 +25,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AffinityGroup.Individual
 import uk.gov.hmrc.auth.core.{Enrolment, Enrolments}
+import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_CURRENT_USER, SINGLE_ACCOUNT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo.requestConversion
@@ -60,6 +61,8 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
 
   lazy val accountMongoDetailsAction = app.injector.instanceOf[AccountMongoDetailsAction]
 
+  val nino: Nino = new Generator().nextNino
+
   "invoke" should {
     "return updated request when orchestrator returns success Some for both account type and redirect url" in {
       val exampleMongoSessionData =
@@ -68,7 +71,7 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
         FakeRequest(),
         UserDetailsFromSession(
           "foo",
-          "bar",
+          nino,
           "wizz",
           Some(CURRENT_USER_EMAIL),
           Individual,
@@ -111,7 +114,7 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
           FakeRequest(),
           UserDetailsFromSession(
             "foo",
-            "bar",
+            nino,
             "wizz",
             Some(CURRENT_USER_EMAIL),
             Individual,
@@ -153,7 +156,7 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
             FakeRequest(),
             UserDetailsFromSession(
               "foo",
-              "bar",
+              nino,
               "wizz",
               Some(CURRENT_USER_EMAIL),
               Individual,
@@ -191,7 +194,7 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
             FakeRequest(),
             UserDetailsFromSession(
               "foo",
-              "bar",
+              nino,
               "wizz",
               Some(CURRENT_USER_EMAIL),
               Individual,
@@ -229,7 +232,7 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
         FakeRequest(),
         UserDetailsFromSession(
           "foo",
-          "bar",
+          nino,
           "wizz",
           Some(CURRENT_USER_EMAIL),
           Individual,
@@ -267,7 +270,7 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
         FakeRequest(),
         UserDetailsFromSession(
           "foo",
-          "bar",
+          nino,
           "wizz",
           Some(CURRENT_USER_EMAIL),
           Individual,

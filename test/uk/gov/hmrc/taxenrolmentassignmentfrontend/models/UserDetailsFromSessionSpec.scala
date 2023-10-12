@@ -17,6 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 
 import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
+import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.UserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{CURRENT_USER_EMAIL, UTR, saEnrolmentOnly}
@@ -24,11 +25,13 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.IRS
 
 class UserDetailsFromSessionSpec extends BaseSpec {
 
+  val nino: Nino = new Generator().nextNino
+
   "utr" should {
     s"extract correctly if $IRSAKey exists" in {
       UserDetailsFromSession(
         "",
-        "",
+        nino,
         "",
         Some(CURRENT_USER_EMAIL),
         AffinityGroup.Agent,
@@ -40,7 +43,7 @@ class UserDetailsFromSessionSpec extends BaseSpec {
     s"return None if $IRSAKey doesnt exist" in {
       UserDetailsFromSession(
         "",
-        "",
+        nino,
         "",
         Some(CURRENT_USER_EMAIL),
         AffinityGroup.Agent,

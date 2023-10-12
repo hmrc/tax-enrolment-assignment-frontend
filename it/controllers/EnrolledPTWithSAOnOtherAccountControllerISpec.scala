@@ -35,45 +35,10 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec extends IntegrationSpecBase 
     ItUrlPaths.enrolledPTSAOnOtherAccountPath
 
   s"GET $urlPath" when {
-
     throttleSpecificTests { () =>
       val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
         .withSession(xAuthToken, xSessionId)
       route(app, request).get
-    }
-
-    s"the session cache has Account type of $SA_ASSIGNED_TO_OTHER_USER and the user has reported fraud" should {
-      s"render the enrolledPTPage with no self assessment information" in {
-        await(save[String](sessionId, "redirectURL", returnUrl))
-        await(save[Boolean](sessionId, "reportedFraud", true))
-        await(
-          save[AccountTypes.Value](
-            sessionId,
-            "ACCOUNT_TYPE",
-            SA_ASSIGNED_TO_OTHER_USER
-          )
-        )
-        val authResponse = authoriseResponseWithPTEnrolment()
-        stubAuthorizePost(OK, authResponse.toString())
-        stubPost(s"/write/.*", OK, """{"x":2}""")
-        stubGet(
-          s"/users-groups-search/users/$CREDENTIAL_ID",
-          NON_AUTHORITATIVE_INFORMATION,
-          usergroupsResponseJson().toString()
-        )
-
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
-          .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
-
-        status(result) shouldBe OK
-        page.title should include(EnrolledPTWithSAOnOtherAccountMessages.title)
-        page
-          .getElementsByClass("govuk-body")
-          .text() shouldBe EnrolledPTWithSAOnOtherAccountMessages.paragraphs
-
-      }
     }
 
     s"the session cache has Account type of $SA_ASSIGNED_TO_OTHER_USER and no fraud reported" should {
@@ -111,9 +76,45 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec extends IntegrationSpecBase 
           EnrolledPTWithSAOnOtherAccountMessages.title
         )
         page
-          .getElementsByClass("govuk-body")
-          .text() shouldBe EnrolledPTWithSAOnOtherAccountMessages.paragraphsSA
+          .getElementsByTag("p")
+          .get(0)
+          .text() shouldBe EnrolledPTWithSAOnOtherAccountMessages.paragraph1(USER_ID)
+        page
+          .getElementsByTag("p")
+          .get(1)
+          .text() shouldBe EnrolledPTWithSAOnOtherAccountMessages.paragraph2("********6037")
+        page
+          .getElementsByTag("p")
+          .get(2)
+          .text() shouldBe EnrolledPTWithSAOnOtherAccountMessages.paragraph3
+      }
+    }
 
+    s"the session cache has Account type of $SA_ASSIGNED_TO_OTHER_USER and the user has reported fraud" should {
+      s"render INTERNAL_SERVER_ERROR with no self assessment information" in {
+        await(save[String](sessionId, "redirectURL", returnUrl))
+        await(save[Boolean](sessionId, "reportedFraud", true))
+        await(
+          save[AccountTypes.Value](
+            sessionId,
+            "ACCOUNT_TYPE",
+            SA_ASSIGNED_TO_OTHER_USER
+          )
+        )
+        val authResponse = authoriseResponseWithPTEnrolment()
+        stubAuthorizePost(OK, authResponse.toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        stubGet(
+          s"/users-groups-search/users/$CREDENTIAL_ID",
+          NON_AUTHORITATIVE_INFORMATION,
+          usergroupsResponseJson().toString()
+        )
+
+        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+          .withSession(xAuthToken, xSessionId)
+        val result = route(app, request).get
+
+        status(result) shouldBe INTERNAL_SERVER_ERROR
       }
     }
 

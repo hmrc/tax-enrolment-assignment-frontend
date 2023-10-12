@@ -16,20 +16,19 @@
 
 package controllers
 
-import helpers.{IntegrationSpecBase, ItUrlPaths, ThrottleHelperISpec}
 import helpers.TestITData._
-import play.api.test.Helpers.{GET, POST, await, contentAsString, defaultAwaitTimeout, redirectLocation}
-import play.api.test.Helpers.{route, status, writeableOf_AnyContentAsEmpty, writeableOf_AnyContentAsJson}
 import helpers.messages._
+import helpers.{IntegrationSpecBase, ItUrlPaths, ThrottleHelperISpec}
 import org.jsoup.Jsoup
 import play.api.http.Status
 import play.api.libs.json.{JsString, Json}
+import play.api.test.FakeRequest
+import play.api.test.Helpers.{GET, POST, await, contentAsString, defaultAwaitTimeout, redirectLocation, route, status, writeableOf_AnyContentAsEmpty, writeableOf_AnyContentAsJson}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, UsersAssignedEnrolment}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL, USER_ASSIGNED_SA_ENROLMENT, accountDetailsForCredential}
-import play.api.test.FakeRequest
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL, USER_ASSIGNED_SA_ENROLMENT, accountDetailsForCredential}
 
 class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status with ThrottleHelperISpec {
 
@@ -65,6 +64,11 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
           stubGet(
+            s"/users-groups-search/users/$CREDENTIAL_ID",
+            NON_AUTHORITATIVE_INFORMATION,
+            usergroupsResponseJson().toString()
+          )
+          stubGet(
             s"/users-groups-search/users/$CREDENTIAL_ID_2",
             NON_AUTHORITATIVE_INFORMATION,
             usergroupsResponseJson().toString()
@@ -77,7 +81,18 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
 
           status(result) shouldBe OK
           page.title should include(SignInAgainMessages.title)
-
+          page
+            .getElementsByClass("govuk-body")
+            .get(0)
+            .text shouldBe SignInAgainMessages.paragraphLinkText
+          page
+            .getElementsByTag("p")
+            .get(1)
+            .text shouldBe SignInAgainMessages.paragraph1(USER_ID)
+          page
+            .getElementsByTag("p")
+            .get(2)
+            .text shouldBe SignInAgainMessages.paragraph2
         }
       }
       s"redirect to ${ItUrlPaths.enrolledPTSAOnOtherAccountPath}" when {
@@ -100,6 +115,11 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
           val authResponse = authoriseResponseWithPTEnrolment()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
+          stubGet( // TODO - Investigate why the double call now
+            s"/users-groups-search/users/$CREDENTIAL_ID",
+            NON_AUTHORITATIVE_INFORMATION,
+            usergroupsResponseJson().toString()
+          )
           stubGet(
             s"/users-groups-search/users/$CREDENTIAL_ID_2",
             NON_AUTHORITATIVE_INFORMATION,

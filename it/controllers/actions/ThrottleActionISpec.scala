@@ -39,7 +39,7 @@ class ThrottleActionISpec extends IntegrationSpecBase with Status {
     FakeRequest(),
     UserDetailsFromSession(
       "123",
-      "QQ123400A",
+      ninoWithLast2digits("00"),
       "gID",
       Some(TestITData.CURRENT_USER_EMAIL),
       Individual,
@@ -54,7 +54,7 @@ class ThrottleActionISpec extends IntegrationSpecBase with Status {
     FakeRequest(),
     UserDetailsFromSession(
       "123",
-      "QQ123499A",
+      ninoWithLast2digits("99"),
       "gID",
       Some(TestITData.CURRENT_USER_EMAIL),
       Individual,
@@ -89,7 +89,7 @@ class ThrottleActionISpec extends IntegrationSpecBase with Status {
         requestBody = Json
           .toJson(
             exampleRequestBelowThreshold.userDetails.enrolments.enrolments + newEnrolment(
-              exampleRequestBelowThreshold.userDetails.nino
+              exampleRequestBelowThreshold.userDetails.nino.nino
             )
           )(EnrolmentsFormats.writes)
           .toString,
@@ -130,7 +130,7 @@ class ThrottleActionISpec extends IntegrationSpecBase with Status {
         requestBody = Json
           .toJson(
             exampleRequestBelowThreshold.userDetails.enrolments.enrolments + newEnrolment(
-              exampleRequestBelowThreshold.userDetails.nino
+              exampleRequestBelowThreshold.userDetails.nino.nino
             )
           )(EnrolmentsFormats.writes)
           .toString,

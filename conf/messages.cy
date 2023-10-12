@@ -57,32 +57,55 @@ enrolmentError.paragraph2.text = os ydych yn cael y broblem hon o hyd.
 multiplePTE.true.title = Tax Enrolment Assignment Frontend - Enrolment Present
 multiplePTE.true.heading = This user has no PT enrolment
 multiplePTE.true.text =  The current user does not have an assigned PT enrolment
-enrolledForPTWithSAOnOtherAccount.title = Dim ond eich ID cyfredol all gael mynediad at eich cyfrif treth personol o hyn allan
-enrolledForPTWithSAOnOtherAccount.heading = Dim ond eich ID cyfredol all gael mynediad at eich cyfrif treth personol o hyn allan
-enrolledForPTWithSAOnOtherAccount.paragraph1 = Ar hyn o bryd, rydych wedi mewngofnodi gyda’ch ID ar gyfer Porth y Llywodraeth, sy’n gorffen gyda {0}.
-enrolledForPTWithSAOnOtherAccount.paragraph2 = Dyma’r unig ID a all gael mynediad at eich cyfrif treth personol erbyn hyn. Cadwch fanylion y ID hwn yn ddiogel.
-enrolledForPTWithSAOnOtherAccount.heading2 = Beth sydd wedi digwydd i’m Dynodyddion Defnyddiwr (ID) eraill ar gyfer Porth y Llywodraeth?
-enrolledForPTWithSAOnOtherAccount.h2.paragraph1 = I gael mynediad at Hunanasesiad, bydd yn rhaid i chi fewngofnodi gyda’r ID sy’n gorffen gyda {0}.
-enrolledForPTWithSAOnOtherAccount.h2.paragraph2 = Os oes gennych unrhyw Ddynodyddion Defnyddiwr (ID) eraill ar gyfer Porth y Llywodraeth, byddant yn colli mynediad at eich cyfrif treth personol.
-signInAgain.title = Mae angen i chi fewngofnodi eto gyda’ch ID ar gyfer Hunanasesiad
-signInAgain.heading1 = Mae angen i chi fewngofnodi eto gyda’ch ID ar gyfer Hunanasesiad
-signInAgain.paragraph = Mae hyn er mwyn i chi allu cadw mynediad at Hunanasesiad o’ch cyfrif treth personol.
-signInAgain.heading2 = ID gyda mynediad at Hunanasesiad
+
+
+selfAssessmentInterrupt.title = Mae gennych fwy nag un Dynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth ar hyn o bryd
+selfAssessmentInterrupt.heading = Mae gennych fwy nag un Dynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth ar hyn o bryd
+selfAssessmentInterrupt.paragraph1 = Dim ond un Dynodydd Defnyddiwr ar gyfer Porth y Llywodraeth rydym yn argymell eich bod yn defnyddio er mwyn cael mynediad at eich gwybodaeth treth bersonol.
+selfAssessmentInterrupt.paragraph2 = Os ydych yn llenwi Ffurflen Dreth Hunanasesiad, gallwch ddewis i wneud y canlynol:
+selfAssessmentInterrupt.listItem1 = defnyddio Dynodydd Defnyddiwr (ID) sengl ar gyfer Treth Bersonol a Hunanasesiad
+selfAssessmentInterrupt.listItem2 = defnyddio Dynodydd Defnyddiwr (ID) ar wahn ond ar gyfer Hunanasesiad
+selfAssessmentInterrupt.paragraph3 = Ar y sgriniau nesaf, byddwn yn gofyn i chi pa opsiynau rydych am eu dewis
+selfAssessmentInterrupt.continue = Yn eich blaen
+
+keepAccessToSA.title = A ydych am gadw mynediad at Hunanasesiad o’ch cyfrif treth personol?
+keepAccessToSA.heading = A ydych am gael un Dynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth ar gyfer gwybodaeth treth bersonol a Hunanasesiad?
+keepAccessToSA.radio.yes = Iawn
+keepAccessToSA.radio.no = Na, rwyf am gadw’r Dynodyddion Defnyddiwr (ID) ar wahn
+keepAccessToSA.noSA = Nid wyf yn llenwi Ffurflenni Treth Hunanasesiad ar-lein
+keepAccessToSA.error.required = Dewiswch ’Iawn’ os ydych am gael un Dynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth ar gyfer gwybodaeth treth bersonol a Hunanasesiad
+
+signInAgain.title = Rydych wedi dewis cael Dynodydd Defnyddiwr (ID) unigol ar gyfer Porth y Llywodraeth
+signInAgain.heading1 = Rydych wedi dewis cael Dynodydd Defnyddiwr (ID) unigol ar gyfer Porth y Llywodraeth
+signInAgain.subheading = Dynodydd Defnyddiwr ar gyfer gwybodaeth treth bersonol a Hunanasesiad
 signInAgain.userId = Dynodydd Defnyddiwr (ID)
 signInAgain.email =  E-bost
 signInAgain.lastLoginDate = Mewngofnodwyd ddiwethaf
 signInAgain.phoneNumber = Rhif ffôn
-signInAgain.linkText = Nid yw’r ID uchod yn perthyn i mi
-selfAssessmentInterrupt.title = Rydym yn newid y ffordd yr ydych yn cael mynediad at eich cyfrif treth personol
-selfAssessmentInterrupt.heading = Rydym yn newid y ffordd yr ydych yn cael mynediad at eich cyfrif treth personol
-selfAssessmentInterrupt.paragraph1 = Ar hyn o bryd, mae gennych fwy nag un ID ar gyfer Porth y Llywodraeth sydd â mynediad at eich cyfrif treth personol. Er mwyn diogelu’ch gwybodaeth, rydym yn cyfyngu mynediad i un ID o hyn allan.
-selfAssessmentInterrupt.continue = Yn eich blaen
-keepAccessToSA.title = A ydych am gadw mynediad at Hunanasesiad o’ch cyfrif treth personol?
-keepAccessToSA.heading = A ydych am gadw mynediad at Hunanasesiad o’ch cyfrif treth personol?
-keepAccessToSA.radio.yes = Iawn
-keepAccessToSA.radio.no = Na
-keepAccessToSA.noSA = Nid wyf yn llenwi Ffurflenni Treth Hunanasesiad ar-lein
-keepAccessToSA.error.required = Dewiswch ‘Iawn’ os ydych am gadw mynediad at Hunanasesiad o’ch cyfrif treth personol
+signInAgain.linkText = Nid yw’r Dynodydd Defnyddiwr (ID) uchod yn perthyn i mi
+signInAgain.heading2 = Yr hyn i’w wneud nesaf
+signInAgain.paragraph1 = Ar hyn o bryd, rydych wedi mewngofnodi gyda Dynodydd Defnyddiwr (ID) sy’n gorffen {0}
+signInAgain.paragraph2 = I gael mynediad at dreth bersonol a Hunanasesiad:
+signInAgain.listItem1 = allgofnodwch nawr
+signInAgain.listItem2 = mewngofnodwch eto gan ddefnyddio’ch Dynodydd Defnyddiwr (ID) arall sy’n gorffen {0}
+signInAgain.exclamation = Eich Dynodydd Defnyddiwr (ID) sy’n gorffen {0} yw’r unig Ddynodydd Defnyddiwr (ID) y gallwch ei ddefnyddio ar gyfer gwybodaeth treth bersonol a Hunanasesiad
+signInAgain.continue = Cadarnhau ac allgofnodi
+
+enrolledForPTWithSAOnOtherAccount.title = Rydych yn dewis cael dau Ddynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth
+enrolledForPTWithSAOnOtherAccount.heading = Rydych yn dewis cael dau Ddynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth
+enrolledForPTWithSAOnOtherAccount.paragraph1 = Mae’r Dynodydd Defnyddiwr (ID) rydych wedi’i ddefnyddio i fewngofnodi ar hyn o bryd yn gorffen {0}. Dyma fydd yr unig Ddynodydd Defnyddiwr (ID) y gallwch ei ddefnyddio i gael mynediad at eich gwybodaeth treth bersonol.
+enrolledForPTWithSAOnOtherAccount.heading2 = Dynodydd Defnyddiwr (ID) ar gyfer Hunanasesiad yn eich cyfrif treth busnes
+enrolledForPTWithSAOnOtherAccount.paragraph2 = Yn y dyfodol, i reoli’ch Hunanasesiad, bydd angen i chi fynd i’ch cyfrif treth busnes. I wneud hyn nawr, bydd angen i chi allgofnodi a mewngofnodi gyda’ch Dynodydd Defnyddiwr (ID) arall sy’n gorffen {0}.
+enrolledForPTWithSAOnOtherAccount.paragraph3 = Os nad ydych am fynd i’ch Hunanasesiad nawr, gwnewch nodyn o’r manylion yma. Dyma fydd yr unig Ddynodydd Defnyddiwr (ID) y gallwch ei ddefnyddio i gael mynediad at eich Hunanasesiad
+enrolledForPTWithSAOnOtherAccount.subheading = Dynodydd Defnyddiwr (ID) ar gyfer Hunanasesiad
+enrolledForPTWithSAOnOtherAccount.userId = Dynodydd Def{nyddiwr (ID)
+enrolledForPTWithSAOnOtherAccount.email =  E-bost
+enrolledForPTWithSAOnOtherAccount.lastLoginDate = Mewngofnodwyd ddiwethaf
+enrolledForPTWithSAOnOtherAccount.linkText = Nid yw’r Dynodydd Defnyddiwr (ID) uchod yn perthyn i mi
+enrolledForPTWithSAOnOtherAccount.exclamation = Os oes gennych unrhyw Ddynodyddion Defnyddiwr (IDs) eraill ar gyfer Porth y Llywodraeth, ni fyddwch yn gallu eu defnyddio i gael mynediad at eich gwybodaeth treth bersonol na Hunanasesiad.
+enrolledForPTWithSAOnOtherAccount.continue = Parhau i dreth bersonol
+
+
 timedout.title = Er eich diogelwch, gwnaethom eich allgofnodi
 timedout.heading = Er eich diogelwch, gwnaethom eich allgofnodi
 timedout.signin = Mewngofnodi

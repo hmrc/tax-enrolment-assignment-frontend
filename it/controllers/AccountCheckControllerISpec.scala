@@ -16,7 +16,7 @@
 
 package controllers
 
-import com.github.tomakehurst.wiremock.client.WireMock.{deleteRequestedFor, urlMatching}
+import com.github.tomakehurst.wiremock.client.WireMock.{deleteRequestedFor, urlEqualTo, urlMatching}
 import helpers.TestITData._
 import helpers.messages._
 import helpers.{IntegrationSpecBase, ItUrlPaths}
@@ -41,10 +41,10 @@ import java.net.URLEncoder
 class AccountCheckControllerISpec extends IntegrationSpecBase {
 
   lazy val urlPath: String = accountCheckPath
-  val ninoBelowThreshold = "QQ123400A"
-  val ninoSameAsThrottlePercentage = "QQ123402A"
-  val ninoAboveThrottlePercentage = "QQ123403A"
-  lazy val throttlePercentage = config.get("throttle.percentage")
+  val ninoBelowThreshold: String = ninoWithLast2digits("00").nino
+  val ninoSameAsThrottlePercentage: String = ninoWithLast2digits("02").nino
+  val ninoAboveThrottlePercentage: String = ninoWithLast2digits("03").nino
+  lazy val throttlePercentage: Option[Any] = config.get("throttle.percentage")
   val newEnrolment: String => Enrolment = (nino: String) =>
     Enrolment(s"$hmrcPTKey", Seq(EnrolmentIdentifier("NINO", nino)), "Activated", None)
 
@@ -532,7 +532,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
         stubGetWithQueryParam(
           "/identity-verification/nino",
           "nino",
-          NINO,
+          NINO.nino,
           OK,
           ivResponseSingleCredsJsonString
         )
@@ -561,6 +561,61 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
           SINGLE_ACCOUNT
         )(requestWithUserDetails(), messagesApi)
         verifyAuditEventSent(expectedAuditEvent)
+
+      }
+
+      "the user is a single account holder with an invalid PT enrolment in session or EACD" in {
+        val authResponse = authoriseResponseJson(enrolments = mismatchPtEnrolmentOnly)
+        stubAuthorizePost(OK, authResponse.toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        stubGet(
+          s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~${NINO.nino}/users",
+          OK,
+          es0ResponseNoRecordCred
+        )
+        stubGetWithQueryParam(
+          "/identity-verification/nino",
+          "nino",
+          NINO.nino,
+          OK,
+          ivResponseSingleCredsJsonString
+        )
+
+        stubPost(
+          s"/enrolment-store-proxy/enrolment-store/enrolments",
+          NO_CONTENT,
+          ""
+        )
+
+        stubPut(
+          s"/tax-enrolments/service/HMRC-PT/enrolment",
+          NO_CONTENT,
+          ""
+        )
+
+        stubDelete(
+          s"/tax-enrolments/tax-enrolments/groups/$GROUP_ID/enrolments/HMRC-PT~NINO~${mismatchNino.nino}",
+          Status.CREATED
+        )
+
+        val request = FakeRequest(GET, urlPath)
+          .withSession(xAuthToken)
+        val result = route(app, request).get
+
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result).get should include(returnUrl)
+        recordExistsInMongo shouldBe false
+
+        val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
+          SINGLE_ACCOUNT
+        )(requestWithUserDetails(), messagesApi)
+        verifyAuditEventSent(expectedAuditEvent)
+        server.verify(
+          1,
+          deleteRequestedFor(
+            urlEqualTo(s"/tax-enrolments/tax-enrolments/groups/$GROUP_ID/enrolments/HMRC-PT~NINO~${mismatchNino.nino}")
+          )
+        )
 
       }
     }
@@ -600,7 +655,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
         stubGetWithQueryParam(
           "/identity-verification/nino",
           "nino",
-          NINO,
+          NINO.nino,
           OK,
           ivResponseMultiCredsJsonString
         )
@@ -649,7 +704,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
         stubGetWithQueryParam(
           "/identity-verification/nino",
           "nino",
-          NINO,
+          NINO.nino,
           OK,
           ivResponseMultiCredsJsonString
         )
@@ -698,7 +753,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
         stubGetWithQueryParam(
           "/identity-verification/nino",
           "nino",
-          NINO,
+          NINO.nino,
           OK,
           ivResponseMultiCredsJsonString
         )
@@ -758,7 +813,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
         stubGetWithQueryParam(
           "/identity-verification/nino",
           "nino",
-          NINO,
+          NINO.nino,
           OK,
           ivResponseMultiCredsJsonString
         )
@@ -1073,30 +1128,11 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
     "the user has a nino which mismatches their enrolment nino" should {
       val url =
-        s"/enrolment-store-proxy/enrolment-store/groups/.*/enrolments/.*"
-      "return SEE_OTHER, redirect to protect-tax-info after deleting mismatched enrolment with the redirect url as a query parameter" in {
-        val authResponse = authoriseResponseJson(enrolments = mismatchPtEnrolmentOnly)
-        stubAuthorizePost(OK, authResponse.toString())
-        stubPost(s"/write/.*", OK, """{"x":2}""")
-        stubDelete(url, Status.CREATED)
-
-        val request = FakeRequest(GET, urlPath)
-          .withSession(xAuthToken)
-        val result = route(app, request).get
-
-        status(result) shouldBe SEE_OTHER
-        redirectLocation(result).get should include("/protect-tax-info?redirectUrl=")
-        server.verify(1, deleteRequestedFor(urlMatching(url)))
-      }
-    }
-
-    "the user has a nino which mismatches their enrolment nino" should {
-      val url =
-        s"/enrolment-store-proxy/enrolment-store/groups/.*/enrolments/.*"
+        s"/tax-enrolments/tax-enrolments/groups/$GROUP_ID/enrolments/HMRC-PT~NINO~${mismatchNino.nino}"
       "return technical difficulty when enrolment deletion is failing" in {
         val authResponse = authoriseResponseJson(enrolments = mismatchPtEnrolmentOnly)
         stubAuthorizePost(OK, authResponse.toString())
-        //stubPost(s"/write/.*", OK, """{"x":2}""")
+        stubPost(s"/write/.*", OK, """{"x":2}""")
         stubDelete(url, Status.INTERNAL_SERVER_ERROR)
 
         val request = FakeRequest(GET, urlPath)

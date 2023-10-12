@@ -73,7 +73,7 @@ object AuditEvent {
   def auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
     accountType: AccountTypes.Value
   )(implicit request: RequestWithUserDetailsFromSession[_], messagesApi: MessagesApi): AuditEvent = {
-    implicit val lang = getLang
+    implicit val lang: Lang = getLang
     val optSACredentialId: Option[String] =
       if (request.userDetails.hasSAEnrolment || accountType == SA_ASSIGNED_TO_CURRENT_USER) {
         Some(request.userDetails.credId)
@@ -88,7 +88,7 @@ object AuditEvent {
   def auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(
     enrolledAfterReportingFraud: Boolean = false
   )(implicit request: RequestWithUserDetailsFromSessionAndMongo[_], messagesApi: MessagesApi): AuditEvent = {
-    implicit val lang = getLang(request, implicitly)
+    implicit val lang: Lang = getLang(request, implicitly)
     val optSACredentialId: Option[String] = if (request.userDetails.hasSAEnrolment) {
       Some(request.userDetails.credId)
     } else {
@@ -134,13 +134,13 @@ object AuditEvent {
   )(implicit request: RequestWithUserDetailsFromSessionAndMongo[_], messagesApi: MessagesApi, lang: Lang): JsObject = {
     val userDetails: UserDetailsFromSession = request.userDetails
     val defaultDetails = Json.obj(
-      ("NINO", JsString(userDetails.nino)),
-      ("currentAccount", getCurrentAccountJson(userDetails, request.accountDetailsFromMongo.accountType)),
-      ("reportedAccount", getPresentedAccountJson(suspiciousAccountDetails))
+      "NINO"            -> userDetails.nino.nino,
+      "currentAccount"  -> getCurrentAccountJson(userDetails, request.accountDetailsFromMongo.accountType),
+      "reportedAccount" -> getPresentedAccountJson(suspiciousAccountDetails)
     )
     if (translationRequired) {
       defaultDetails ++
-        Json.obj(("reportedAccountEN", getTranslatedAccountJson(suspiciousAccountDetails)))
+        Json.obj("reportedAccountEN" -> getTranslatedAccountJson(suspiciousAccountDetails))
     } else {
       defaultDetails
     }
@@ -150,13 +150,13 @@ object AuditEvent {
   )(implicit request: RequestWithUserDetailsFromSessionAndMongo[_], messagesApi: MessagesApi, lang: Lang): JsObject = {
     val userDetails: UserDetailsFromSession = request.userDetails
     val defaultDetails = Json.obj(
-      ("NINO", JsString(userDetails.nino)),
-      ("currentAccount", getCurrentAccountJson(userDetails, request.accountDetailsFromMongo.accountType)),
-      ("enrolledAccount", getPresentedAccountJson(enrolledAccountDetails))
+      "NINO"            -> userDetails.nino.nino,
+      "currentAccount"  -> getCurrentAccountJson(userDetails, request.accountDetailsFromMongo.accountType),
+      "enrolledAccount" -> getPresentedAccountJson(enrolledAccountDetails)
     )
     if (translationRequired) {
       defaultDetails ++
-        Json.obj(("enrolledAccountEN", getTranslatedAccountJson(enrolledAccountDetails)))
+        Json.obj("enrolledAccountEN" -> getTranslatedAccountJson(enrolledAccountDetails))
     } else {
       defaultDetails
     }
@@ -170,20 +170,20 @@ object AuditEvent {
 
     val userDetails: UserDetailsFromSession = request.userDetails
     val optSACredIdJson: JsObject =
-      optSACredentialId.fold(Json.obj())(credId => Json.obj(("saAccountCredentialId", JsString(credId))))
+      optSACredentialId.fold(Json.obj())(credId => Json.obj("saAccountCredentialId" -> credId))
     val optReportedAccountJson: JsObject = suspiciousAccountDetails.fold(Json.obj()) { accountDetails =>
-      val defaultReportedAccountDetails = Json.obj(("reportedAccount", getPresentedAccountJson(accountDetails)))
+      val defaultReportedAccountDetails = Json.obj("reportedAccount" -> getPresentedAccountJson(accountDetails))
       if (translationRequired) {
         defaultReportedAccountDetails ++
-          Json.obj(("reportedAccountEN", getTranslatedAccountJson(accountDetails)))
+          Json.obj("reportedAccountEN" -> getTranslatedAccountJson(accountDetails))
       } else {
         defaultReportedAccountDetails
       }
     }
 
     Json.obj(
-      ("NINO", JsString(userDetails.nino)),
-      ("currentAccount", getCurrentAccountJson(userDetails, accountType, withCurrentEmail = true))
+      "NINO"           -> userDetails.nino.nino,
+      "currentAccount" -> getCurrentAccountJson(userDetails, accountType, withCurrentEmail = true)
     ) ++ optSACredIdJson ++ optReportedAccountJson
   }
 
@@ -199,10 +199,10 @@ object AuditEvent {
       request.accountDetailsFromMongo
         .optAccountDetails(credId)
         .fold(Json.obj()) { accountDetails =>
-          val defaultSAAccountDetails = Json.obj(("saAccount", getPresentedAccountJson(accountDetails)))
+          val defaultSAAccountDetails = Json.obj("saAccount" -> getPresentedAccountJson(accountDetails))
           if (translationRequired) {
             defaultSAAccountDetails ++
-              Json.obj(("saAccountEN", getTranslatedAccountJson(accountDetails)))
+              Json.obj("saAccountEN" -> getTranslatedAccountJson(accountDetails))
           } else {
             defaultSAAccountDetails
           }
@@ -210,8 +210,8 @@ object AuditEvent {
     }
 
     Json.obj(
-      ("NINO", JsString(userDetails.nino)),
-      ("currentAccount", getCurrentAccountJson(userDetails, SA_ASSIGNED_TO_OTHER_USER))
+      "NINO"           -> userDetails.nino.nino,
+      "currentAccount" -> getCurrentAccountJson(userDetails, SA_ASSIGNED_TO_OTHER_USER)
     ) ++ optSAAccountJson
   }
 
@@ -221,14 +221,14 @@ object AuditEvent {
     withCurrentEmail: Boolean = false
   ): JsObject = {
 
-    val emailObj: JsObject = if (withCurrentEmail) {
-      Json.obj("email" -> JsString(userDetails.email.getOrElse("-")))
+    val emailObj = if (withCurrentEmail) {
+      Json.obj("email" -> userDetails.email.getOrElse("-").toString)
     } else {
       Json.obj()
     }
     Json.obj(
-      ("credentialId", JsString(userDetails.credId)),
-      ("type", JsString(accountType.toString))
+      "credentialId" -> userDetails.credId,
+      "type"         -> accountType.toString
     ) ++ userDetails.affinityGroup.toJson.as[JsObject].deepMerge(emailObj)
 
   }
@@ -237,21 +237,21 @@ object AuditEvent {
     accountDetails: AccountDetails
   )(implicit messagesApi: MessagesApi, lang: Lang): JsObject =
     Json.obj(
-      ("credentialId", JsString(accountDetails.credId)),
-      ("userId", JsString(messagesApi("common.endingWith", accountDetails.userId))),
-      ("email", JsString(accountDetails.emailDecrypted.getOrElse("-"))),
-      ("lastSignedIn", JsString(accountDetails.lastLoginDate)),
-      ("mfaDetails", mfaDetailsToJson(accountDetails.mfaDetails))
+      "credentialId" -> accountDetails.credId,
+      "userId"       -> messagesApi("common.endingWith", accountDetails.userId),
+      "email"        -> accountDetails.emailDecrypted.getOrElse("-").toString,
+      "lastSignedIn" -> accountDetails.lastLoginDate,
+      "mfaDetails"   -> mfaDetailsToJson(accountDetails.mfaDetails)
     )
 
   private def getTranslatedAccountJson(accountDetails: AccountDetails)(implicit messagesApi: MessagesApi): JsObject = {
     val enLang = Lang(Locale.ENGLISH)
     Json.obj(
-      ("credentialId", JsString(accountDetails.credId)),
-      ("userId", JsString(messagesApi("common.endingWith", accountDetails.userId)(enLang))),
-      ("email", JsString(accountDetails.emailDecrypted.getOrElse("-"))),
-      ("lastSignedIn", JsString(accountDetails.lastLoginDate)),
-      ("mfaDetails", mfaDetailsToJson(accountDetails.mfaDetails)(messagesApi, enLang))
+      "credentialId" -> accountDetails.credId,
+      "userId"       -> messagesApi("common.endingWith", accountDetails.userId)(enLang),
+      "email"        -> accountDetails.emailDecrypted.getOrElse("-").toString,
+      "lastSignedIn" -> accountDetails.lastLoginDate,
+      "mfaDetails"   -> mfaDetailsToJson(accountDetails.mfaDetails)(messagesApi, enLang)
     )
   }
 
@@ -262,18 +262,18 @@ object AuditEvent {
     mfaDetail.factorNameKey match {
       case "mfaDetails.totp" =>
         Json.obj(
-          ("factorType", JsString(messagesApi("mfaDetails.totp"))),
-          ("factorValue", JsString(mfaDetail.factorValue))
+          "factorType"  -> messagesApi("mfaDetails.totp"),
+          "factorValue" -> mfaDetail.factorValue
         )
       case "mfaDetails.voice" =>
         Json.obj(
-          ("factorType", JsString(messagesApi("mfaDetails.voice"))),
-          ("factorValue", JsString(messagesApi("common.endingWith", mfaDetail.factorValue)))
+          "factorType"  -> messagesApi("mfaDetails.voice"),
+          "factorValue" -> messagesApi("common.endingWith", mfaDetail.factorValue)
         )
       case _ =>
         Json.obj(
-          ("factorType", JsString(messagesApi("mfaDetails.text"))),
-          ("factorValue", JsString(messagesApi("common.endingWith", mfaDetail.factorValue)))
+          "factorType"  -> messagesApi("mfaDetails.text"),
+          "factorValue" -> messagesApi("common.endingWith", mfaDetail.factorValue)
         )
     }
 

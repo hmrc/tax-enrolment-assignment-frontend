@@ -17,21 +17,8 @@
 package helpers.messages
 
 object KeepAccessToSAMessages {
-
-  val continue = "Continue"
-  val title =
-    "Do you want to keep access to Self Assessment from your personal tax account?"
-  val heading =
-    "Do you want to keep access to Self Assessment from your personal tax account?"
-  val radioYes = "Yes"
-  val radioNo = "No"
-  val noSALink = "I do not complete Self Assessment Online"
-  val fraudReportingUrl =
-    "/protect-tax-info/enrol-pt/contact-hmrc-sa"
+  val title = "Do you want to keep access to Self Assessment from your personal tax account?"
   val errorTitle = "There is a problem"
-  val errorMessage = "Select yes if you want to keep access to Self Assessment from your personal tax account"
-  val button = "Continue"
-  val action =
-    "/protect-tax-info/enrol-pt/other-user-id-has-sa/keep-access-to-sa-from-pta"
-
+  val errorMessage =
+    "Select yes if you want a single Government Gateway user ID for personal tax information and Self Assessment"
 }

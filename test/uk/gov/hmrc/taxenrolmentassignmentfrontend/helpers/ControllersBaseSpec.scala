@@ -23,6 +23,7 @@ import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, Enrolment, Enrolments}
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.service.TEAFResult
@@ -53,9 +54,9 @@ trait ControllersBaseSpec extends BaseSpec {
       .returning(Future.successful(Some(cacheMap)))
   }
 
-  def mockErrorFromThrottlingService(accountTypes: AccountTypes.Value, nino: String, enrolments: Set[Enrolment]) =
+  def mockErrorFromThrottlingService(accountTypes: AccountTypes.Value, nino: Nino, enrolments: Set[Enrolment]) =
     (mockThrottlingService
-      .throttle(_: AccountTypes.Value, _: String, _: Set[Enrolment])(_: ExecutionContext, _: HeaderCarrier))
+      .throttle(_: AccountTypes.Value, _: Nino, _: Set[Enrolment])(_: ExecutionContext, _: HeaderCarrier))
       .expects(
         accountTypes,
         nino,
@@ -83,13 +84,13 @@ trait ControllersBaseSpec extends BaseSpec {
 
   def mockAccountShouldBeThrottled(
     accountTypes: AccountTypes.Value,
-    nino: String,
+    nino: Nino,
     enrolments: Set[Enrolment]
-  ): CallHandler5[AccountTypes.Value, String, Set[Enrolment], ExecutionContext, HeaderCarrier, TEAFResult[
+  ): CallHandler5[AccountTypes.Value, Nino, Set[Enrolment], ExecutionContext, HeaderCarrier, TEAFResult[
     ThrottleResult
   ]] =
     (mockThrottlingService
-      .throttle(_: AccountTypes.Value, _: String, _: Set[Enrolment])(_: ExecutionContext, _: HeaderCarrier))
+      .throttle(_: AccountTypes.Value, _: Nino, _: Set[Enrolment])(_: ExecutionContext, _: HeaderCarrier))
       .expects(
         accountTypes,
         nino,
@@ -109,13 +110,13 @@ trait ControllersBaseSpec extends BaseSpec {
 
   def mockAccountShouldNotBeThrottled(
     accountTypes: AccountTypes.Value,
-    nino: String,
+    nino: Nino,
     enrolments: Set[Enrolment]
-  ): CallHandler5[AccountTypes.Value, String, Set[Enrolment], ExecutionContext, HeaderCarrier, TEAFResult[
+  ): CallHandler5[AccountTypes.Value, Nino, Set[Enrolment], ExecutionContext, HeaderCarrier, TEAFResult[
     ThrottleResult
   ]] =
     (mockThrottlingService
-      .throttle(_: AccountTypes.Value, _: String, _: Set[Enrolment])(_: ExecutionContext, _: HeaderCarrier))
+      .throttle(_: AccountTypes.Value, _: Nino, _: Set[Enrolment])(_: ExecutionContext, _: HeaderCarrier))
       .expects(
         accountTypes,
         nino,
@@ -183,5 +184,4 @@ trait ControllersBaseSpec extends BaseSpec {
       }
     }
   }
-
 }

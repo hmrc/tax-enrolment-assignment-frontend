@@ -16,13 +16,11 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.services
 
-import cats.data.EitherT
-import play.api.http.Status
-import play.api.http.Status.{BAD_REQUEST, NO_CONTENT}
 import play.api.libs.json.Format
 import play.api.mvc.AnyContent
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.cache.client.CacheMap
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, UpstreamErrorResponse}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.EACDConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromEACD
@@ -45,7 +43,7 @@ class EACDServiceSpec extends BaseSpec {
     "the a PT enrolment has been assigned for the nino" should {
       "call the EACD, save to cache and return the account details" in {
         (mockEacdConnector
-          .getUsersWithPTEnrolment(_: String)(
+          .getUsersWithPTEnrolment(_: Nino)(
             _: ExecutionContext,
             _: HeaderCarrier
           ))
@@ -68,7 +66,7 @@ class EACDServiceSpec extends BaseSpec {
     "EACD returns an error" should {
       "return an error" in {
         (mockEacdConnector
-          .getUsersWithPTEnrolment(_: String)(
+          .getUsersWithPTEnrolment(_: Nino)(
             _: ExecutionContext,
             _: HeaderCarrier
           ))
@@ -88,7 +86,7 @@ class EACDServiceSpec extends BaseSpec {
       "call the EACD twice to get the UTR and then enrolled credentials, save to cache and return the credentialId" in {
 
         (mockEacdConnector
-          .queryKnownFactsByNinoVerifier(_: String)(
+          .queryKnownFactsByNinoVerifier(_: Nino)(
             _: ExecutionContext,
             _: HeaderCarrier
           ))
@@ -119,7 +117,7 @@ class EACDServiceSpec extends BaseSpec {
       "call EACD to get the UTR, then save no creds with enrolment to cache and return None" in {
 
         (mockEacdConnector
-          .queryKnownFactsByNinoVerifier(_: String)(
+          .queryKnownFactsByNinoVerifier(_: Nino)(
             _: ExecutionContext,
             _: HeaderCarrier
           ))
@@ -149,7 +147,7 @@ class EACDServiceSpec extends BaseSpec {
       "return an error" in {
 
         (mockEacdConnector
-          .queryKnownFactsByNinoVerifier(_: String)(
+          .queryKnownFactsByNinoVerifier(_: Nino)(
             _: ExecutionContext,
             _: HeaderCarrier
           ))
@@ -163,53 +161,4 @@ class EACDServiceSpec extends BaseSpec {
     }
   }
 
-  "deallocateEnrolment" when {
-    "there is an existing HMRC-PT enrolment to delete" should {
-      "return true if the request was successful" in {
-
-        (mockEacdConnector
-          .deallocateEnrolment(_: String, _: String)(
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
-          .expects("testId", s"HMRC-PT~NINO~$NINO", *, *)
-          .returning(
-            EitherT[Future, UpstreamErrorResponse, HttpResponse](Future.successful(Right(HttpResponse(NO_CONTENT, ""))))
-          )
-
-        val result = service
-          .deallocateEnrolment("testId", s"HMRC-PT~NINO~$NINO")
-          .value
-          .futureValue
-          .getOrElse(HttpResponse(BAD_REQUEST, ""))
-        result.status shouldBe NO_CONTENT
-      }
-
-      List(
-        Status.BAD_REQUEST,
-        Status.NOT_FOUND,
-        Status.INTERNAL_SERVER_ERROR,
-        Status.BAD_GATEWAY,
-        Status.SERVICE_UNAVAILABLE
-      ).foreach { errorStatus =>
-        s"return false if the request was unsuccessful due to a $errorStatus response" in {
-
-          (mockEacdConnector
-            .deallocateEnrolment(_: String, _: String)(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            ))
-            .expects("testId", s"HMRC-PT~NINO~$NINO", *, *)
-            .returning(
-              EitherT[Future, UpstreamErrorResponse, HttpResponse](
-                Future.successful(Left(UpstreamErrorResponse("", errorStatus)))
-              )
-            )
-
-          val result = service.deallocateEnrolment("testId", s"HMRC-PT~NINO~$NINO")
-          result.value.futureValue shouldBe Left(UpstreamErrorResponse("", errorStatus))
-        }
-      }
-    }
-  }
 }

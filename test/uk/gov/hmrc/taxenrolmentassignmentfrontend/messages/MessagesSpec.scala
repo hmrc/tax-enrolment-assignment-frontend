@@ -67,7 +67,7 @@ class MessagesSpec extends BaseSpec {
   private def countMessagesWithArgs(messages: Map[String, String]) =
     messages.values.filter(_.contains("{0}"))
 
-  private def assertNonEmpty(label: String, messages: Map[String, String]) =
+  private def assertNonEmpty(label: String, messages: Map[String, String]): Unit =
     messages.foreach { case (key: String, value: String) =>
       withClue(
         s"In $label, there is an empty value for the key:[$key][$value]"
@@ -76,7 +76,7 @@ class MessagesSpec extends BaseSpec {
       }
     }
 
-  private def assertCorrectUseOfQuotes(label: String, messages: Map[String, String]) =
+  private def assertCorrectUseOfQuotes(label: String, messages: Map[String, String]): Unit =
     messages.foreach { case (key: String, value: String) =>
       withClue(
         s"In $label, there is an unescaped or invalid quote:[$key][$value]"

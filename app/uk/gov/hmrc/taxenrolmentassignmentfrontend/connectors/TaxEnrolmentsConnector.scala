@@ -90,7 +90,7 @@ class TaxEnrolmentsConnector @Inject() (httpClient: HttpClient, logger: EventLog
     ec: ExecutionContext
   ): EitherT[Future, UpstreamErrorResponse, HttpResponse] = {
     val url =
-      s"${appConfig.TAX_ENROLMENTS_BASE_URL}/tax-enrolments/groups/$groupId/enrolments/$enrolmentKey"
+      s"${appConfig.TAX_ENROLMENTS_BASE_URL}/groups/$groupId/enrolments/$enrolmentKey"
     EitherT(
       httpClient
         .DELETE[Either[UpstreamErrorResponse, HttpResponse]](url)

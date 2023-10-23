@@ -121,7 +121,7 @@ class TaxEnrolmentsConnectorISpec extends IntegrationSpecBase {
     val groupId = "fakeId"
     val enrolmentKey = s"HMRC-PT~NINO~$NINO"
     val url =
-      s"/tax-enrolments/tax-enrolments/groups/$groupId/enrolments/$enrolmentKey"
+      s"/tax-enrolments/groups/$groupId/enrolments/$enrolmentKey"
 
     "return Right if the delete request is successful" in {
       stubPost("/write/audit/merged", Status.NO_CONTENT, "")

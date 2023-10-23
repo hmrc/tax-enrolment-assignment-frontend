@@ -594,7 +594,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
         )
 
         stubDelete(
-          s"/tax-enrolments/tax-enrolments/groups/$GROUP_ID/enrolments/HMRC-PT~NINO~${mismatchNino.nino}",
+          s"/tax-enrolments/groups/$GROUP_ID/enrolments/HMRC-PT~NINO~${mismatchNino.nino}",
           Status.CREATED
         )
 
@@ -613,7 +613,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
         server.verify(
           1,
           deleteRequestedFor(
-            urlEqualTo(s"/tax-enrolments/tax-enrolments/groups/$GROUP_ID/enrolments/HMRC-PT~NINO~${mismatchNino.nino}")
+            urlEqualTo(s"/tax-enrolments/groups/$GROUP_ID/enrolments/HMRC-PT~NINO~${mismatchNino.nino}")
           )
         )
 
@@ -1128,7 +1128,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
     "the user has a nino which mismatches their enrolment nino" should {
       val url =
-        s"/tax-enrolments/tax-enrolments/groups/$GROUP_ID/enrolments/HMRC-PT~NINO~${mismatchNino.nino}"
+        s"/tax-enrolments/groups/$GROUP_ID/enrolments/HMRC-PT~NINO~${mismatchNino.nino}"
       "return technical difficulty when enrolment deletion is failing" in {
         val authResponse = authoriseResponseJson(enrolments = mismatchPtEnrolmentOnly)
         stubAuthorizePost(OK, authResponse.toString())

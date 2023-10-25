@@ -20,3 +20,7 @@ GET        /sa/test-only/start                                                  
 PUT       /auth/test-only/enrolments                                                                          uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController.authStub
 +nocsrf
 PUT       /tax-enrolments/test-only/service/HMRC-PT/enrolment                                                 uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController.taxEnrolmentsStub
++nocsrf
+POST      /protect-tax-info/test-only/repair                                                                  uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController.repairAccount
++nocsrf
+POST      /protect-tax-info/test-only/create-or-update                                                                  uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController.updateOrCreateAccount

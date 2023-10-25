@@ -28,13 +28,16 @@ class AppConfig @Inject() (val config: ServicesConfig) {
   lazy val validRedirectHostNames: Set[String] = config.getConfString("validRedirectHostNames", "").split(",").toSet
 
   lazy val IV_BASE_URL: String = config.baseUrl("identity-verification") + "/identity-verification"
-  lazy val EACD_BASE_URL: String = config.baseUrl("enrolment-store-proxy") + "/enrolment-store-proxy"
+  lazy val EACD_BASE_URL: String = config.baseUrl("enrolment-store-proxy")
   lazy val TAX_ENROLMENTS_BASE_URL: String = {
     if (config.getConfBool("tax-enrolments.isTest", defBool = false)) {
       s"$tenBaseUrl/tax-enrolments/test-only"
     } else {
       config.baseUrl("tax-enrolments") + "/tax-enrolments"
     }
+  }
+  lazy val TAX_ENROLMENTS_BASE_URL_REAL: String = {
+    config.baseUrl("tax-enrolments") + "/tax-enrolments"
   }
   lazy val AUTH_BASE_URL: String = {
     if (config.getConfBool("auth.isTest", defBool = false)) {

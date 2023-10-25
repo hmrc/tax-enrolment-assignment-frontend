@@ -12,6 +12,9 @@
 # Add all the application routes to the prod.routes file
 ->         /                                             prod.Routes
 
++nocsrf
+POST       /protect-tax-info/create                                                                           uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController.create
+
 GET        /protect-tax-info/test-only/successful                                                             uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController.successfulCall
 GET        /users-groups-search/test-only/users/:credId                                                       uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController.usersGroupSearchCall(credId)
 GET        /protect-tax-info/test-only/auth/enrolments                                                        uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly.TestOnlyController.enrolmentsFromAuth()

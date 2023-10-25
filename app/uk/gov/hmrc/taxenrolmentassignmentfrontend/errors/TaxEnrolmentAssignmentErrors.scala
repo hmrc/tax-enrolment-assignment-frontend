@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.errors
 
+import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 
 sealed trait TaxEnrolmentAssignmentErrors
@@ -40,3 +41,5 @@ case object GetSACredentialIfNotFraudReturnedNone extends TaxEnrolmentAssignment
 
 object InvalidRedirectUrl extends TaxEnrolmentAssignmentErrors
 object EnrolmentStoreServiceUnavailable extends TaxEnrolmentAssignmentErrors
+
+case class UpstreamError(error: UpstreamErrorResponse) extends TaxEnrolmentAssignmentErrors

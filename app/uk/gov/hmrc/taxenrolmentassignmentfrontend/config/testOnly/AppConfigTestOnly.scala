@@ -23,4 +23,5 @@ import javax.inject.{Inject, Singleton}
 @Singleton
 class AppConfigTestOnly @Inject() (val config: ServicesConfig) {
   val enrolmentStoreStub = config.baseUrl("enrolment-store-stub")
+  val identityVerification: String = config.baseUrl("identity-verification")
 }

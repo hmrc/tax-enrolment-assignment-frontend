@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.testOnly
 
 import cats.data.EitherT
-import play.api.http.Status.{CREATED, NO_CONTENT}
+import play.api.http.Status.{CREATED, NOT_FOUND, NO_CONTENT, OK}
 import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, UpstreamErrorResponse}
@@ -33,6 +33,42 @@ import scala.concurrent.ExecutionContext
 class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConfig: AppConfig)(implicit
   ec: ExecutionContext
 ) {
+  //ES0
+  def getUsersFromEnrolment(enrolmentKey: String)(implicit hc: HeaderCarrier): TEAFResult[List[String]] =
+    EitherT(
+      httpClient.GET[Either[UpstreamErrorResponse, HttpResponse]](
+        s"${appConfig.EACD_BASE_URL}/enrolment-store/enrolments/$enrolmentKey/users"
+      )
+    )
+      .transform {
+        case Right(response) if response.status == NO_CONTENT => Right(List.empty)
+        case Right(response) if response.status == OK =>
+          val principals = (response.json \ "principalUserIds").as[List[String]]
+          val delegated = (response.json \ "delegatedUserIds").as[List[String]]
+          Right(principals ++ delegated)
+
+        case Right(response) => Left(UpstreamError(UpstreamErrorResponse(response.body, response.status)))
+        case Left(error)     => Left(UpstreamError(error))
+      }
+
+  //ES1
+  def getGroupsFromEnrolment(enrolmentKey: String)(implicit hc: HeaderCarrier): TEAFResult[List[String]] =
+    EitherT(
+      httpClient.GET[Either[UpstreamErrorResponse, HttpResponse]](
+        s"${appConfig.EACD_BASE_URL}/enrolment-store/enrolments/$enrolmentKey/groups"
+      )
+    )
+      .transform {
+        case Right(response) if response.status == NO_CONTENT => Right(List.empty)
+        case Right(response) if response.status == OK =>
+          val principals = (response.json \ "principalGroupIds").as[List[String]]
+          val delegated = (response.json \ "delegatedGroupIds").as[List[String]]
+          Right(principals ++ delegated)
+
+        case Right(response) => Left(UpstreamError(UpstreamErrorResponse(response.body, response.status)))
+        case Left(error)     => Left(UpstreamError(error))
+      }
+
   //ES6
   def upsertEnrolment(enrolment: EnrolmentDetailsTestOnly)(implicit hc: HeaderCarrier): TEAFResult[Unit] = {
     val verifiers = Json.obj(
@@ -84,5 +120,47 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
         case Left(error)                                   => Left(UpstreamError(error))
       }
   }
+
+  //ES9
+  def deleteEnrolmentFromGroup(enrolmentKey: String, groupId: String)(implicit hc: HeaderCarrier): TEAFResult[Unit] =
+    EitherT(
+      httpClient.DELETE[Either[UpstreamErrorResponse, HttpResponse]](
+        s"${appConfig.EACD_BASE_URL}/enrolment-store/groups/$groupId/enrolments/$enrolmentKey"
+      )
+    )
+      .transform {
+        case Left(response) if response.statusCode == NOT_FOUND => Right(())
+        case Right(response) if response.status == NO_CONTENT   => Right(())
+        case Right(response)                                    => Left(UpstreamError(UpstreamErrorResponse(response.body, response.status)))
+        case Left(error)                                        => Left(UpstreamError(error))
+      }
+
+  //ES12
+  def deleteEnrolmentFromUser(enrolmentKey: String, credId: String)(implicit hc: HeaderCarrier): TEAFResult[Unit] =
+    EitherT(
+      httpClient.DELETE[Either[UpstreamErrorResponse, HttpResponse]](
+        s"${appConfig.EACD_BASE_URL}/enrolment-store/users/$credId/enrolments/$enrolmentKey"
+      )
+    )
+      .transform {
+        case Left(response) if response.statusCode == NOT_FOUND => Right(())
+        case Right(response) if response.status == NO_CONTENT   => Right(())
+        case Right(response)                                    => Left(UpstreamError(UpstreamErrorResponse(response.body, response.status)))
+        case Left(error)                                        => Left(UpstreamError(error))
+      }
+
+  //ES7
+  def deleteEnrolment(enrolmentKey: String)(implicit hc: HeaderCarrier): TEAFResult[Unit] =
+    EitherT(
+      httpClient.DELETE[Either[UpstreamErrorResponse, HttpResponse]](
+        s"${appConfig.EACD_BASE_URL}/enrolment-store/enrolments/$enrolmentKey"
+      )
+    )
+      .transform {
+        case Left(response) if response.statusCode == NOT_FOUND => Right(())
+        case Right(response) if response.status == NO_CONTENT   => Right(())
+        case Right(response)                                    => Left(UpstreamError(UpstreamErrorResponse(response.body, response.status)))
+        case Left(error)                                        => Left(UpstreamError(error))
+      }
 
 }

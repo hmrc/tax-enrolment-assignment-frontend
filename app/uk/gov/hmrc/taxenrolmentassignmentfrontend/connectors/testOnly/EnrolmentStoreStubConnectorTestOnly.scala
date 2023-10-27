@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.testOnly
 
 import cats.data.EitherT
-import play.api.http.Status.{NO_CONTENT, OK}
+import play.api.http.Status.{NOT_FOUND, NO_CONTENT, OK}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, UpstreamErrorResponse}
 import uk.gov.hmrc.service.TEAFResult
@@ -44,13 +44,24 @@ class EnrolmentStoreStubConnectorTestOnly @Inject() (appConfig: AppConfigTestOnl
       }
   }
 
-  def getStubAccount(groupId: String)(implicit hc: HeaderCarrier): TEAFResult[AccountDetailsTestOnly] = {
+  def getStubAccount(groupId: String)(implicit hc: HeaderCarrier): TEAFResult[Option[AccountDetailsTestOnly]] = {
     val url = s"${appConfig.enrolmentStoreStub}/data/group/$groupId"
 
     EitherT(httpClient.GET[Either[UpstreamErrorResponse, HttpResponse]](url)).transform {
-      case Right(response) if response.status == OK => Right(response.json.as[AccountDetailsTestOnly])
-      case Right(response)                          => Left(UpstreamError(UpstreamErrorResponse(response.body, response.status)))
-      case Left(error)                              => Left(UpstreamError(error))
+      case Right(response) if response.status == OK           => Right(Some(response.json.as[AccountDetailsTestOnly]))
+      case Left(response) if response.statusCode == NOT_FOUND => Right(None)
+      case Right(response)                                    => Left(UpstreamError(UpstreamErrorResponse(response.body, response.status)))
+      case Left(error)                                        => Left(UpstreamError(error))
+    }
+  }
+
+  def deleteStubAccount(groupId: String)(implicit hc: HeaderCarrier): TEAFResult[Unit] = {
+    val url = s"${appConfig.enrolmentStoreStub}/data/group/$groupId"
+
+    EitherT(httpClient.DELETE[Either[UpstreamErrorResponse, HttpResponse]](url)).transform {
+      case Right(response) if response.status == NO_CONTENT => Right(())
+      case Right(response)                                  => Left(UpstreamError(UpstreamErrorResponse(response.body, response.status)))
+      case Left(error)                                      => Left(UpstreamError(error))
     }
   }
 }

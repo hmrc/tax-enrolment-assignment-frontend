@@ -17,6 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.models.testOnly
 
 import play.api.libs.json.{Format, Json}
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IdentifiersOrVerifiers
 
 case class Users(
@@ -29,14 +30,16 @@ case class Users(
 
 case class AccountDetailsTestOnly(
   groupId: String,
+  nino: Nino,
   affinityGroup: String = "Individual",
   users: List[Users],
   enrolments: List[EnrolmentDetailsTestOnly] = List.empty
 )
 
 object AccountDetailsTestOnly {
-  def apply(groupId: String, credId: String): AccountDetailsTestOnly = new AccountDetailsTestOnly(
+  def apply(groupId: String, credId: String, nino: Nino): AccountDetailsTestOnly = new AccountDetailsTestOnly(
     groupId = groupId,
+    nino = nino,
     users = List(Users(credId))
   )
 

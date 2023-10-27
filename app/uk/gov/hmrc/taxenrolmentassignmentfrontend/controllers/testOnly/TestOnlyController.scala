@@ -20,7 +20,7 @@ import cats.implicits.toTraverseOps
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.testOnly.{EnrolmentStoreConnectorTestOnly, EnrolmentStoreStubConnectorTestOnly}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.testOnly.{EnrolmentStoreConnectorTestOnly, EnrolmentStoreStubConnectorTestOnly, IdentityVerificationConnectorTestOnly}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthAction
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TEAFrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UpstreamError
@@ -28,6 +28,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.formats.EnrolmentsFormats
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.testOnly.AccountDetailsTestOnly
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.testOnly.{EnrolmentStoreServiceTestOnly, EnrolmentStoreStubServiceTestOnly}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -35,7 +36,10 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class TestOnlyController @Inject() (
   enrolmentStoreStubConnectorTestOnly: EnrolmentStoreStubConnectorTestOnly,
+  enrolmentStoreStubServiceTestOnly: EnrolmentStoreStubServiceTestOnly,
   enrolmentStoreConnectorTestOnly: EnrolmentStoreConnectorTestOnly,
+  enrolmentStoreServiceTestOnly: EnrolmentStoreServiceTestOnly,
+  identityVerificationConnectorTestOnly: IdentityVerificationConnectorTestOnly,
   mcc: MessagesControllerComponents,
   authAction: AuthAction,
   logger: EventLoggerService
@@ -53,6 +57,14 @@ class TestOnlyController @Inject() (
     val data = request.body.asJson.get.as[AccountDetailsTestOnly]
 
     (for {
+      // delete identity-verification data
+      _ <- identityVerificationConnectorTestOnly.deleteCredId(data.users.head.credId)
+      // delete enrolment-store data
+      _ <- data.enrolments.map(enrolmentStoreServiceTestOnly.deallocateEnrolmentFromGroups(_)).sequence
+      _ <- data.enrolments.map(enrolmentStoreServiceTestOnly.deallocateEnrolmentFromUsers(_)).sequence
+      _ <- data.enrolments.map(enrolmentStoreServiceTestOnly.deleteEnrolment(_)).sequence
+      _ <- enrolmentStoreStubServiceTestOnly.deleteAccountIfExist(data.groupId)
+      // Insert new data
       _ <- enrolmentStoreStubConnectorTestOnly
              .addStubAccount(data)
       _ <- data.enrolments.map(enrolment => enrolmentStoreConnectorTestOnly.upsertEnrolment(enrolment)).sequence
@@ -62,6 +74,7 @@ class TestOnlyController @Inject() (
             enrolmentStoreConnectorTestOnly.addEnrolmentToGroup(data.groupId, data.users.head.credId, enrolment)
           )
           .sequence
+      _ <- identityVerificationConnectorTestOnly.insertCredId(data.users.head.credId, data.nino)
     } yield ()).fold(
       {
         case UpstreamError(error) => InternalServerError(error.message)

@@ -43,3 +43,5 @@ object InvalidRedirectUrl extends TaxEnrolmentAssignmentErrors
 object EnrolmentStoreServiceUnavailable extends TaxEnrolmentAssignmentErrors
 
 case class UpstreamError(error: UpstreamErrorResponse) extends TaxEnrolmentAssignmentErrors
+
+case class UpstreamUnexpected2XX(message: String, statusCode: Int) extends TaxEnrolmentAssignmentErrors

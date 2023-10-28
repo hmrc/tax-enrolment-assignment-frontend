@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.services.testOnly
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.services
 
 import cats.data.EitherT
+import cats.implicits.toTraverseOps
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.testOnly.EnrolmentStoreConnectorTestOnly
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.connectors.EnrolmentStoreConnectorTestOnly
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.EnrolmentDetailsTestOnly
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
-import cats.implicits.toTraverseOps
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.testOnly.EnrolmentDetailsTestOnly
 
 @Singleton
 class EnrolmentStoreServiceTestOnly @Inject() (enrolmentStoreConnectorTestOnly: EnrolmentStoreConnectorTestOnly)(
@@ -33,7 +33,7 @@ class EnrolmentStoreServiceTestOnly @Inject() (enrolmentStoreConnectorTestOnly: 
   def deallocateEnrolmentFromGroups(
     enrolment: EnrolmentDetailsTestOnly
   )(implicit hc: HeaderCarrier): EitherT[Future, TaxEnrolmentAssignmentErrors, Unit] = {
-    val enrolmentKey = s"${enrolment.serviceName}~${enrolment.identifiers.head.key}~${enrolment.identifiers.head.value}"
+    val enrolmentKey = s"${enrolment.serviceName}~${enrolment.identifiers.key}~${enrolment.identifiers.value}"
     enrolmentStoreConnectorTestOnly.getGroupsFromEnrolment(enrolmentKey).flatMap { groupList =>
       groupList.map { groupId =>
         enrolmentStoreConnectorTestOnly.deleteEnrolmentFromGroup(enrolmentKey, groupId)
@@ -44,7 +44,7 @@ class EnrolmentStoreServiceTestOnly @Inject() (enrolmentStoreConnectorTestOnly: 
   def deallocateEnrolmentFromUsers(
     enrolment: EnrolmentDetailsTestOnly
   )(implicit hc: HeaderCarrier): EitherT[Future, TaxEnrolmentAssignmentErrors, Unit] = {
-    val enrolmentKey = s"${enrolment.serviceName}~${enrolment.identifiers.head.key}~${enrolment.identifiers.head.value}"
+    val enrolmentKey = s"${enrolment.serviceName}~${enrolment.identifiers.key}~${enrolment.identifiers.value}"
     enrolmentStoreConnectorTestOnly.getUsersFromEnrolment(enrolmentKey).flatMap { groupList =>
       groupList.map { groupId =>
         enrolmentStoreConnectorTestOnly.deleteEnrolmentFromUser(enrolmentKey, groupId)
@@ -55,7 +55,32 @@ class EnrolmentStoreServiceTestOnly @Inject() (enrolmentStoreConnectorTestOnly: 
   def deleteEnrolment(
     enrolment: EnrolmentDetailsTestOnly
   )(implicit hc: HeaderCarrier): EitherT[Future, TaxEnrolmentAssignmentErrors, Unit] = {
-    val enrolmentKey = s"${enrolment.serviceName}~${enrolment.identifiers.head.key}~${enrolment.identifiers.head.value}"
+    val enrolmentKey = s"${enrolment.serviceName}~${enrolment.identifiers.key}~${enrolment.identifiers.value}"
     enrolmentStoreConnectorTestOnly.deleteEnrolment(enrolmentKey)
   }
+
+  def deallocateEnrolmentsFromGroup(
+    groupId: String
+  )(implicit hc: HeaderCarrier): EitherT[Future, TaxEnrolmentAssignmentErrors, Unit] =
+    enrolmentStoreConnectorTestOnly
+      .getEnrolmentsFromGroup(groupId)
+      .flatMap { enrolmentKeys =>
+        enrolmentKeys.map { enrolmentKey =>
+          enrolmentStoreConnectorTestOnly.deleteEnrolmentFromGroup(enrolmentKey, groupId)
+        }.sequence
+      }
+      .map(_ => ())
+
+  def deallocateEnrolmentsFromUser(
+    credId: String
+  )(implicit hc: HeaderCarrier): EitherT[Future, TaxEnrolmentAssignmentErrors, Unit] =
+    enrolmentStoreConnectorTestOnly
+      .getEnrolmentsFromUser(credId)
+      .flatMap { enrolmentKeys =>
+        enrolmentKeys.map { enrolmentKey =>
+          enrolmentStoreConnectorTestOnly.deleteEnrolmentFromUser(enrolmentKey, credId)
+        }.sequence
+      }
+      .map(_ => ())
+
 }

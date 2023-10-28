@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
-
-import java.time.format.DateTimeFormatter
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.controllers
 
 import play.api.libs.json.{JsArray, JsString, JsValue, Json}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AdditonalFactors, UsersGroupResponse}
+
+import java.time.format.DateTimeFormatter
 
 object UsersGroupsFixedData {
   val credId1 = "4684455594391511"

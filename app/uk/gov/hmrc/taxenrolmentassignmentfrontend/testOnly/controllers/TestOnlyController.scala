@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.controllers
 
 import cats.implicits.toTraverseOps
 import play.api.libs.json.{JsArray, JsResultException, Json}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.play.http.HeaderCarrierConverter
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.testOnly.{BasStubsConnectorTestOnly, EnrolmentStoreConnectorTestOnly, EnrolmentStoreStubConnectorTestOnly, IdentityVerificationConnectorTestOnly}
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthAction
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TEAFrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UpstreamError
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.formats.EnrolmentsFormats
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.testOnly.AccountDetailsTestOnly
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.testOnly.{EnrolmentStoreServiceTestOnly, EnrolmentStoreStubServiceTestOnly}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.connectors.{BasStubsConnectorTestOnly, EnrolmentStoreConnectorTestOnly, EnrolmentStoreStubConnectorTestOnly, IdentityVerificationConnectorTestOnly}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.AccountDetailsTestOnly
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.services.{EnrolmentStoreServiceTestOnly, EnrolmentStoreStubServiceTestOnly}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -49,12 +49,7 @@ class TestOnlyController @Inject() (
     extends TEAFrontendController(mcc) {
 
   def create: Action[AnyContent] = Action.async { request =>
-    val hcFromSession = HeaderCarrierConverter.fromRequestAndSession(request, request.session)
-    implicit val hc = if (hcFromSession.authorization.isEmpty) {
-      hcFromSession.copy(authorization = HeaderCarrierConverter.fromRequest(request).authorization)
-    } else {
-      hcFromSession
-    }
+    implicit val hc = HeaderCarrier(Some(Authorization("Bearer 1")))
 
     val jsonData = request.body.asJson.get
 
@@ -67,15 +62,17 @@ class TestOnlyController @Inject() (
     accountList
       .map { data =>
         for {
+          // delete bas-stub data
+          _ <- basStubsConnectorTestOnly.deleteAdditionalFactors(data.user.credId)
           // delete identity-verification data
-          _ <- identityVerificationConnectorTestOnly.deleteCredId(data.users.head.credId)
+          _ <- identityVerificationConnectorTestOnly.deleteCredId(data.user.credId)
           // delete enrolment-store data
           _ <- data.enrolments.map(enrolmentStoreServiceTestOnly.deallocateEnrolmentFromGroups(_)).sequence
           _ <- data.enrolments.map(enrolmentStoreServiceTestOnly.deallocateEnrolmentFromUsers(_)).sequence
           _ <- data.enrolments.map(enrolmentStoreServiceTestOnly.deleteEnrolment(_)).sequence
           _ <- enrolmentStoreStubServiceTestOnly.deleteAccountIfExist(data.groupId)
-          //todo get all enrolments from groups and delete
-          //todo get all enrolments from users and delete
+          _ <- enrolmentStoreServiceTestOnly.deallocateEnrolmentsFromGroup(data.groupId)
+          _ <- enrolmentStoreServiceTestOnly.deallocateEnrolmentsFromUser(data.user.credId)
 
           // Insert enrolment-store data
           _ <- enrolmentStoreStubConnectorTestOnly
@@ -84,13 +81,14 @@ class TestOnlyController @Inject() (
           _ <-
             data.enrolments
               .map(enrolment =>
-                enrolmentStoreConnectorTestOnly.addEnrolmentToGroup(data.groupId, data.users.head.credId, enrolment)
+                enrolmentStoreConnectorTestOnly.addEnrolmentToGroup(data.groupId, data.user.credId, enrolment)
               )
               .sequence
           // insert identity-verification data
-          _ <- identityVerificationConnectorTestOnly.insertCredId(data.users.head.credId, data.nino)
+          _ <- identityVerificationConnectorTestOnly.insertCredId(data.user.credId, data.nino)
           // insert bas-stubs data
           _ <- basStubsConnectorTestOnly.putAccount(data)
+          _ <- basStubsConnectorTestOnly.putAdditionalFactors(data)
         } yield ()
       }
       .sequence

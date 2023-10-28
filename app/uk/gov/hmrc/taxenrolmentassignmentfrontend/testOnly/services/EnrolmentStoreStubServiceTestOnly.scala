@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.services.testOnly
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.services
 
 import cats.data.EitherT
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.service.TEAFResult
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.testOnly.EnrolmentStoreStubConnectorTestOnly
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.connectors.EnrolmentStoreStubConnectorTestOnly
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext

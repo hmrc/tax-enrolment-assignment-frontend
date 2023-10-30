@@ -90,7 +90,7 @@ class AccountCheckController @Inject() (
       _           <- enrolForPTIfRequired(accountType, throttle.isEmpty)
     } yield (accountType, throttle)
 
-  def handleNoneThrottledUsers(accountType: AccountTypes.Value, redirectUrl: String)(implicit
+  private def handleNoneThrottledUsers(accountType: AccountTypes.Value, redirectUrl: String)(implicit
     request: RequestWithUserDetailsFromSession[_]
   ): Future[Result] =
     accountType match {

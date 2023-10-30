@@ -23,7 +23,7 @@ import uk.gov.hmrc.http.cache.client.CacheMap
 @Singleton
 class CascadeUpsert {
 
-  val funcMap: Map[String, (JsValue, CacheMap) => CacheMap] = Map()
+  private val funcMap: Map[String, (JsValue, CacheMap) => CacheMap] = Map()
 
   def apply[A](key: String, value: A, originalCacheMap: CacheMap)(implicit fmt: Format[A]): CacheMap =
     funcMap.get(key).fold(store(key, value, originalCacheMap))(fn => fn(Json.toJson(value), originalCacheMap))

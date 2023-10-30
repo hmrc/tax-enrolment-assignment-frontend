@@ -40,8 +40,6 @@ class AppConfig @Inject() (val config: ServicesConfig) {
   lazy val loginCallback: String =
     config.getString("external-url.bas-gateway-frontend.continue-callback.url")
 
-  lazy val tenBaseUrl: String =
-    s"${config.baseUrl("tax-enrolment-assignment-frontend")}"
   lazy val usersGroupsSearchBaseURL: String =
     s"${config.baseUrl("users-groups-search")}/users-groups-search"
   lazy val loginURL: String = s"$basAuthHost/bas-gateway/sign-in"
@@ -54,6 +52,4 @@ class AppConfig @Inject() (val config: ServicesConfig) {
 
   lazy val percentageOfUsersThrottledToGetFakeEnrolment: Int =
     config.getInt("throttle.percentage") - 1
-
-  def ptNinoMismatchToggle(): Boolean = config.getConfBool("feature.pt-nino-mismatch", defBool = true)
 }

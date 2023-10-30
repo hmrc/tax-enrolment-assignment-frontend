@@ -78,7 +78,7 @@ object AccountDetails {
   def trimmedUserId(obfuscatedId: String): String =
     obfuscatedId.replaceAll("[*]", "")
 
-  def formatDate(date: String)(implicit messages: Messages): String = {
+  private def formatDate(date: String)(implicit messages: Messages): String = {
     val zonedDateTime = ZonedDateTime.parse(date)
     val timeFormatter =
       DateTimeFormatter.ofPattern("h:mm a")

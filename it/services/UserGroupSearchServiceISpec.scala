@@ -47,9 +47,7 @@ class UserGroupSearchServiceISpec extends IntegrationSpecBase {
           .get(request.sessionID))
           .futureValue
           .get
-          .data
-          .get("AccountDetailsFor6902202884164548")
-          .get
+          .data("AccountDetailsFor6902202884164548")
           .as[JsObject] \ "email").as[String]
 
       crypto.crypto.decrypt(Crypted(emailEncrypted)).value shouldBe """"email1@test.com""""

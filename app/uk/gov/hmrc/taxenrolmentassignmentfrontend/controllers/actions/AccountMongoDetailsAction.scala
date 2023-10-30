@@ -52,7 +52,6 @@ trait AccountMongoDetailsActionTrait
 
 class AccountMongoDetailsAction @Inject() (
   teaSessionCache: TEASessionCache,
-  val parser: BodyParsers.Default,
   errorHandler: ErrorHandler,
   val appConfig: AppConfig,
   logger: EventLoggerService

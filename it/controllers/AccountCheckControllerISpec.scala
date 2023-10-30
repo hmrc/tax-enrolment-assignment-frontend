@@ -1020,7 +1020,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
         PT_ASSIGNED_TO_CURRENT_USER,
         SA_ASSIGNED_TO_OTHER_USER,
         PT_ASSIGNED_TO_OTHER_USER
-      ).foreach { case accountType =>
+      ).foreach { accountType =>
         if (accountTypesThatSilentlyEnrol.contains(accountType)) {
           s"not enrol for PT and redirect to redirectUrl" when {
             s"the session cache has accountType $accountType" in {

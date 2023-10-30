@@ -40,7 +40,7 @@ class TestOnlyController @Inject() (
     extends TEAFrontendController(mcc) {
 
   def create: Action[AnyContent] = Action.async { request =>
-    implicit val hc = HeaderCarrier(Some(Authorization("Bearer 1")))
+    implicit val hc: HeaderCarrier = HeaderCarrier(Some(Authorization("Bearer 1")))
 
     val jsonData = request.body.asJson.get
 
@@ -71,10 +71,6 @@ class TestOnlyController @Inject() (
   def successfulCall: Action[AnyContent] = Action.async { _ =>
     logger.logEvent(logSuccessfulRedirectToReturnUrl)
     Future.successful(Ok("Successful"))
-  }
-
-  val successfulSACall: Action[AnyContent] = Action.async { _ =>
-    Future.successful(Ok("Successful Redirect to SA"))
   }
 
 }

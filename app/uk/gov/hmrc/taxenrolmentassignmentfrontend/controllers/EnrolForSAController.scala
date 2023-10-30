@@ -36,14 +36,13 @@ class EnrolForSAController @Inject() (
     extends TEAFrontendController(mcc) {
 
   def enrolForSA: Action[AnyContent] = authAction.async { implicit request =>
-    request.userDetails.hasSAEnrolment match {
-      case false =>
-        Future.successful(
-          errorHandler
-            .handleErrors(NoSAEnrolmentWhenOneExpected, "[EnrolForSAController][enrolForSA]")(request, implicitly)
-        )
-      case true =>
-        teaSessionCache.removeRecord.map(_ => Redirect(appConfig.btaUrl))
+    if (request.userDetails.hasSAEnrolment) {
+      teaSessionCache.removeRecord.map(_ => Redirect(appConfig.btaUrl))
+    } else {
+      Future.successful(
+        errorHandler
+          .handleErrors(NoSAEnrolmentWhenOneExpected, "[EnrolForSAController][enrolForSA]")(request, implicitly)
+      )
     }
   }
 

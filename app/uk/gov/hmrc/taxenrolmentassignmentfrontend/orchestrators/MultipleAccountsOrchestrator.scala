@@ -211,7 +211,7 @@ class MultipleAccountsOrchestrator @Inject() (
       )
     }
 
-  def checkPTEnrolmentDoesNotExist(implicit
+  private def checkPTEnrolmentDoesNotExist(implicit
     requestWithUserDetailsAndMongo: RequestWithUserDetailsFromSessionAndMongo[_]
   ): Either[TaxEnrolmentAssignmentErrors, Unit] = {
     val hasPTEnrolment = requestWithUserDetailsAndMongo.userDetails.hasPTEnrolment

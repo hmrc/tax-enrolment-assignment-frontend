@@ -1,4 +1,3 @@
-import play.sbt.PlayImport.ehcache
 import sbt._
 
 object AppDependencies {
@@ -22,7 +21,7 @@ object AppDependencies {
     "org.mockito"             %% "mockito-scala-scalatest"       % "1.17.14",
     "org.scalatest"           %%  "scalatest"                 %  "3.2.15",
     "org.jsoup"               %   "jsoup"                     %  "1.15.4",
-    "com.vladsch.flexmark"    %   "flexmark-profile-pegdown"  %  "0.62.2",
+    "com.vladsch.flexmark"    %   "flexmark-profile-pegdown"  %  "0.64.0",
     "org.scalamock"           %%  "scalamock"                 %  "5.2.0",
     "uk.gov.hmrc.mongo"       %% s"hmrc-mongo-test-$playVersion" % hmrcMongoVersion
   ).map(_  % "test, it")

@@ -144,7 +144,7 @@ class EnrolledForPTControllerSpec extends ControllersBaseSpec {
           .returning(
             createInboundResultError(
               IncorrectUserType(
-                testOnly.routes.TestOnlyController.successfulCall.url,
+                "/redirect/url",
                 randomAccountType
               )
             )
@@ -158,7 +158,7 @@ class EnrolledForPTControllerSpec extends ControllersBaseSpec {
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some(
-          "/protect-tax-info?redirectUrl=%2Fprotect-tax-info%2Ftest-only%2Fsuccessful"
+          "/protect-tax-info?redirectUrl=%2Fredirect%2Furl"
         )
       }
     }

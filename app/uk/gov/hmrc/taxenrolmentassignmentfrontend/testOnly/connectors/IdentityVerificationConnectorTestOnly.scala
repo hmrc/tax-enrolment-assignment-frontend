@@ -22,8 +22,8 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, UpstreamErrorResponse}
 import uk.gov.hmrc.service.TEAFResult
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.testOnly.AppConfigTestOnly
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UpstreamError
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.config.AppConfigTestOnly
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext

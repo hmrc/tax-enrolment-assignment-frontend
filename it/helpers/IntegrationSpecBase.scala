@@ -32,7 +32,7 @@ import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSessionAndMongo}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{routes, testOnly}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.TENCrypto
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.domain.{Generator => NinoGenerator}
@@ -69,13 +69,10 @@ trait IntegrationSpecBase
     "play.filters.csrf.header.bypassHeaders.Csrf-Token" -> "nocheck",
     "auditing.consumer.baseUri.port"                    -> server.port(),
     "microservice.services.auth.port"                   -> server.port(),
-    "microservice.services.auth.isTest"                 -> "false",
     "microservice.services.identity-verification.port"  -> server.port(),
     "microservice.services.enrolment-store-proxy.port"  -> server.port(),
     "microservice.services.tax-enrolments.port"         -> server.port(),
-    "microservice.services.tax-enrolments.isTest"       -> "false",
     "microservice.services.users-groups-search.port"    -> server.port(),
-    "microservice.services.users-groups-search.isTest"  -> "false",
     "play.http.router"                                  -> "testOnlyDoNotUseInAppConf.Routes",
     "throttle.percentage"                               -> "3",
     "mongodb.uri"                                       -> mongoUri
@@ -89,10 +86,7 @@ trait IntegrationSpecBase
     localGuiceApplicationBuilder
       .build()
 
-  lazy val teaHost = s"localhost:${server.port()}"
-
-  lazy val returnUrl: String = testOnly.routes.TestOnlyController.successfulCall
-    .absoluteURL(false, teaHost)
+  lazy val returnUrl: String = "http://localhost:1234/redirect/url"
 
   lazy val accountCheckPath =
     routes.AccountCheckController.accountCheck(RedirectUrl.apply(returnUrl)).url

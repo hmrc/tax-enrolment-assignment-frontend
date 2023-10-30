@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.config.testOnly
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.config
 
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 

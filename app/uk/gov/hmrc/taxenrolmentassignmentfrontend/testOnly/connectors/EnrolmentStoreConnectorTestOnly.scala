@@ -17,6 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.connectors
 
 import cats.data.EitherT
+import play.api.Logging
 import play.api.http.Status.{CREATED, NOT_FOUND, NO_CONTENT, OK}
 import play.api.libs.json.{JsArray, JsObject, Json}
 import uk.gov.hmrc.http.HttpReads.Implicits._
@@ -32,7 +33,7 @@ import scala.concurrent.ExecutionContext
 @Singleton
 class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConfig: AppConfig)(implicit
   ec: ExecutionContext
-) {
+) extends Logging {
   //ES0
   def getUsersFromEnrolment(enrolmentKey: String)(implicit hc: HeaderCarrier): TEAFResult[List[String]] =
     EitherT(
@@ -47,8 +48,13 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
           val delegated = (response.json \ "delegatedUserIds").as[List[String]]
           Right(principals ++ delegated)
 
-        case Right(response) => Left(UpstreamUnexpected2XX(response.body, response.status))
-        case Left(error)     => Left(UpstreamError(error))
+        case Right(response) =>
+          val ex = new RuntimeException(s"Unexpected ${response.status} status")
+          logger.error(ex.getMessage, ex)
+          Left(UpstreamUnexpected2XX(response.body, response.status))
+        case Left(upstreamError) =>
+          logger.error(upstreamError.message)
+          Left(UpstreamError(upstreamError))
       }
 
   //ES1
@@ -65,8 +71,13 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
           val delegated = (response.json \ "delegatedGroupIds").as[List[String]]
           Right(principals ++ delegated)
 
-        case Right(response) => Left(UpstreamUnexpected2XX(response.body, response.status))
-        case Left(error)     => Left(UpstreamError(error))
+        case Right(response) =>
+          val ex = new RuntimeException(s"Unexpected ${response.status} status")
+          logger.error(ex.getMessage, ex)
+          Left(UpstreamUnexpected2XX(response.body, response.status))
+        case Left(upstreamError) =>
+          logger.error(upstreamError.message)
+          Left(UpstreamError(upstreamError))
       }
 
   //ES2
@@ -87,8 +98,13 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
             s"$service~$key~$value"
           })
 
-        case Right(response) => Left(UpstreamUnexpected2XX(response.body, response.status))
-        case Left(error)     => Left(UpstreamError(error))
+        case Right(response) =>
+          val ex = new RuntimeException(s"Unexpected ${response.status} status")
+          logger.error(ex.getMessage, ex)
+          Left(UpstreamUnexpected2XX(response.body, response.status))
+        case Left(upstreamError) =>
+          logger.error(upstreamError.message)
+          Left(UpstreamError(upstreamError))
       }
 
   //ES3
@@ -109,8 +125,13 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
             s"$service~$key~$value"
           })
 
-        case Right(response) => Left(UpstreamUnexpected2XX(response.body, response.status))
-        case Left(error)     => Left(UpstreamError(error))
+        case Right(response) =>
+          val ex = new RuntimeException(s"Unexpected ${response.status} status")
+          logger.error(ex.getMessage, ex)
+          Left(UpstreamUnexpected2XX(response.body, response.status))
+        case Left(upstreamError) =>
+          logger.error(upstreamError.message)
+          Left(UpstreamError(upstreamError))
       }
 
   //ES6
@@ -130,8 +151,13 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
     )
       .transform {
         case Right(response) if response.status == NO_CONTENT => Right(())
-        case Right(response)                                  => Left(UpstreamUnexpected2XX(response.body, response.status))
-        case Left(error)                                      => Left(UpstreamError(error))
+        case Right(response) =>
+          val ex = new RuntimeException(s"Unexpected ${response.status} status")
+          logger.error(ex.getMessage, ex)
+          Left(UpstreamUnexpected2XX(response.body, response.status))
+        case Left(upstreamError) =>
+          logger.error(upstreamError.message)
+          Left(UpstreamError(upstreamError))
       }
   }
 
@@ -156,8 +182,13 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
     )
       .transform {
         case Right(response) if response.status == CREATED => Right(())
-        case Right(response)                               => Left(UpstreamUnexpected2XX(response.body, response.status))
-        case Left(error)                                   => Left(UpstreamError(error))
+        case Right(response) =>
+          val ex = new RuntimeException(s"Unexpected ${response.status} status")
+          logger.error(ex.getMessage, ex)
+          Left(UpstreamUnexpected2XX(response.body, response.status))
+        case Left(upstreamError) =>
+          logger.error(upstreamError.message)
+          Left(UpstreamError(upstreamError))
       }
   }
 
@@ -171,8 +202,13 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
       .transform {
         case Left(response) if response.statusCode == NOT_FOUND => Right(())
         case Right(response) if response.status == NO_CONTENT   => Right(())
-        case Right(response)                                    => Left(UpstreamUnexpected2XX(response.body, response.status))
-        case Left(error)                                        => Left(UpstreamError(error))
+        case Right(response) =>
+          val ex = new RuntimeException(s"Unexpected ${response.status} status")
+          logger.error(ex.getMessage, ex)
+          Left(UpstreamUnexpected2XX(response.body, response.status))
+        case Left(upstreamError) =>
+          logger.error(upstreamError.message)
+          Left(UpstreamError(upstreamError))
       }
 
   //ES12
@@ -185,8 +221,13 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
       .transform {
         case Left(response) if response.statusCode == NOT_FOUND => Right(())
         case Right(response) if response.status == NO_CONTENT   => Right(())
-        case Right(response)                                    => Left(UpstreamUnexpected2XX(response.body, response.status))
-        case Left(error)                                        => Left(UpstreamError(error))
+        case Right(response) =>
+          val ex = new RuntimeException(s"Unexpected ${response.status} status")
+          logger.error(ex.getMessage, ex)
+          Left(UpstreamUnexpected2XX(response.body, response.status))
+        case Left(upstreamError) =>
+          logger.error(upstreamError.message)
+          Left(UpstreamError(upstreamError))
       }
 
   //ES7
@@ -199,8 +240,13 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
       .transform {
         case Left(response) if response.statusCode == NOT_FOUND => Right(())
         case Right(response) if response.status == NO_CONTENT   => Right(())
-        case Right(response)                                    => Left(UpstreamUnexpected2XX(response.body, response.status))
-        case Left(error)                                        => Left(UpstreamError(error))
+        case Right(response) =>
+          val ex = new RuntimeException(s"Unexpected ${response.status} status")
+          logger.error(ex.getMessage, ex)
+          Left(UpstreamUnexpected2XX(response.body, response.status))
+        case Left(upstreamError) =>
+          logger.error(upstreamError.message)
+          Left(UpstreamError(upstreamError))
       }
 
 }

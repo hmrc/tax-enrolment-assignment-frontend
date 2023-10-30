@@ -153,7 +153,8 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
 
   lazy val controller = app.injector.instanceOf[AccountCheckController]
 
-  lazy val returnUrl = RedirectUrl.apply(testOnly.routes.TestOnlyController.successfulCall.url)
+  val returnUrlvalue = "/redirect/url"
+  lazy val returnUrl = RedirectUrl.apply(returnUrlvalue)
 
   "accountCheck" when {
 
@@ -181,7 +182,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
           status(result) shouldBe SEE_OTHER
-          redirectLocation(result) shouldBe Some(testOnly.routes.TestOnlyController.successfulCall.url)
+          redirectLocation(result) shouldBe Some(returnUrlvalue)
         }
       }
 
@@ -206,7 +207,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
           status(result) shouldBe SEE_OTHER
-          redirectLocation(result) shouldBe Some(testOnly.routes.TestOnlyController.successfulCall.url)
+          redirectLocation(result) shouldBe Some(returnUrlvalue)
         }
       }
 
@@ -417,9 +418,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(res) shouldBe SEE_OTHER
-        redirectLocation(res) shouldBe Some(
-          testOnly.routes.TestOnlyController.successfulCall.url
-        )
+        redirectLocation(res) shouldBe Some(returnUrlvalue)
       }
     }
     "throttle returns error" should {

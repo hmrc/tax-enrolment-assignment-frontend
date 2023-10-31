@@ -19,7 +19,6 @@ package helpers
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock._
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig
-import com.github.tomakehurst.wiremock.matching.StringValuePattern
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import helpers.TestITData.usergroupsResponseJson
 import org.scalatest.concurrent.Eventually
@@ -72,7 +71,7 @@ trait WireMockHelper extends Eventually with BeforeAndAfterAll with BeforeAndAft
     )
     stubPost(
       authorizePath,
-      equalToJson(jsonRequest.toString()),
+      jsonRequest.toString(),
       status,
       responseBody
     )
@@ -90,10 +89,12 @@ trait WireMockHelper extends Eventually with BeforeAndAfterAll with BeforeAndAft
     )
   }
 
-  def stubPost(url: String, requestBody: StringValuePattern, status: Integer, responseBody: String): StubMapping =
+  def stubPost(url: String, requestBody: String, status: Integer, responseBody: String): StubMapping =
     server.stubFor(
       post(urlMatching(url))
-        .withRequestBody(requestBody)
+        .withRequestBody(
+          equalToJson(requestBody)
+        )
         .willReturn(
           aResponse()
             .withStatus(status)

@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.connectors
 
 import cats.data.EitherT
 import play.api.Logging
-import play.api.http.Status.{CREATED, NOT_FOUND, NO_CONTENT, OK}
+import play.api.http.Status.{CREATED, NOT_FOUND, NO_CONTENT}
 import play.api.libs.json.{JsArray, JsObject, Json}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, UpstreamErrorResponse}
@@ -43,15 +43,11 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
     )
       .transform {
         case Right(response) if response.status == NO_CONTENT => Right(List.empty)
-        case Right(response) if response.status == OK =>
+        case Right(response) =>
           val principals = (response.json \ "principalUserIds").as[List[String]]
           val delegated = (response.json \ "delegatedUserIds").as[List[String]]
           Right(principals ++ delegated)
 
-        case Right(response) =>
-          val ex = new RuntimeException(s"Unexpected ${response.status} status")
-          logger.error(ex.getMessage, ex)
-          Left(UpstreamUnexpected2XX(response.body, response.status))
         case Left(upstreamError) =>
           logger.error(upstreamError.message)
           Left(UpstreamError(upstreamError))
@@ -66,15 +62,11 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
     )
       .transform {
         case Right(response) if response.status == NO_CONTENT => Right(List.empty)
-        case Right(response) if response.status == OK =>
+        case Right(response) =>
           val principals = (response.json \ "principalGroupIds").as[List[String]]
           val delegated = (response.json \ "delegatedGroupIds").as[List[String]]
           Right(principals ++ delegated)
 
-        case Right(response) =>
-          val ex = new RuntimeException(s"Unexpected ${response.status} status")
-          logger.error(ex.getMessage, ex)
-          Left(UpstreamUnexpected2XX(response.body, response.status))
         case Left(upstreamError) =>
           logger.error(upstreamError.message)
           Left(UpstreamError(upstreamError))
@@ -89,7 +81,7 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
     )
       .transform {
         case Right(response) if response.status == NO_CONTENT => Right(List.empty)
-        case Right(response) if response.status == OK =>
+        case Right(response) =>
           Right((response.json \ "enrolments").as[JsArray].value.toList.map { enrolment =>
             val service = (enrolment \ "service").as[String]
             val identifier = (enrolment \ "identifiers").as[JsArray].value.toList.head
@@ -98,10 +90,6 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
             s"$service~$key~$value"
           })
 
-        case Right(response) =>
-          val ex = new RuntimeException(s"Unexpected ${response.status} status")
-          logger.error(ex.getMessage, ex)
-          Left(UpstreamUnexpected2XX(response.body, response.status))
         case Left(upstreamError) =>
           logger.error(upstreamError.message)
           Left(UpstreamError(upstreamError))
@@ -116,7 +104,7 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
     )
       .transform {
         case Right(response) if response.status == NO_CONTENT => Right(List.empty)
-        case Right(response) if response.status == OK =>
+        case Right(response) =>
           Right((response.json \ "enrolments").as[JsArray].value.toList.map { enrolment =>
             val service = (enrolment \ "service").as[String]
             val identifier = (enrolment \ "identifiers").as[JsArray].value.toList.head
@@ -125,10 +113,6 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
             s"$service~$key~$value"
           })
 
-        case Right(response) =>
-          val ex = new RuntimeException(s"Unexpected ${response.status} status")
-          logger.error(ex.getMessage, ex)
-          Left(UpstreamUnexpected2XX(response.body, response.status))
         case Left(upstreamError) =>
           logger.error(upstreamError.message)
           Left(UpstreamError(upstreamError))

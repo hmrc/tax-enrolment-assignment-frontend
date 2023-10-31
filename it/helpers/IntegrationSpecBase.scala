@@ -67,12 +67,14 @@ trait IntegrationSpecBase
 
   lazy val config: Map[String, Any] = Map(
     "play.filters.csrf.header.bypassHeaders.Csrf-Token" -> "nocheck",
-    "auditing.consumer.baseUri.port"                    -> server.port(),
+    "auditing.enabled"                                  -> false,
     "microservice.services.auth.port"                   -> server.port(),
     "microservice.services.identity-verification.port"  -> server.port(),
     "microservice.services.enrolment-store-proxy.port"  -> server.port(),
+    "microservice.services.enrolment-store-stub.port"   -> server.port(),
     "microservice.services.tax-enrolments.port"         -> server.port(),
     "microservice.services.users-groups-search.port"    -> server.port(),
+    "microservice.services.bas-stubs.port"              -> server.port(),
     "play.http.router"                                  -> "testOnlyDoNotUseInAppConf.Routes",
     "throttle.percentage"                               -> "3",
     "mongodb.uri"                                       -> mongoUri

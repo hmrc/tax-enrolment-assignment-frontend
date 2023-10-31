@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.connectors
 
 import cats.data.EitherT
 import play.api.Logging
-import play.api.http.Status.{NOT_FOUND, NO_CONTENT, OK}
+import play.api.http.Status.NO_CONTENT
 import play.api.libs.json.JsObject
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, UpstreamErrorResponse}
@@ -55,22 +55,6 @@ class EnrolmentStoreStubConnectorTestOnly @Inject() (appConfig: AppConfigTestOnl
           logger.error(upstreamError.message)
           Left(UpstreamError(upstreamError))
       }
-  }
-
-  def getStubAccount(groupId: String)(implicit hc: HeaderCarrier): TEAFResult[Option[AccountDetailsTestOnly]] = {
-    val url = s"${appConfig.enrolmentStoreStub}/data/group/$groupId"
-
-    EitherT(httpClient.GET[Either[UpstreamErrorResponse, HttpResponse]](url)).transform {
-      case Right(response) if response.status == OK           => Right(Some(response.json.as[AccountDetailsTestOnly]))
-      case Left(response) if response.statusCode == NOT_FOUND => Right(None)
-      case Right(response) =>
-        val ex = new RuntimeException(s"Unexpected ${response.status} status")
-        logger.error(ex.getMessage, ex)
-        Left(UpstreamUnexpected2XX(response.body, response.status))
-      case Left(upstreamError) =>
-        logger.error(upstreamError.message)
-        Left(UpstreamError(upstreamError))
-    }
   }
 
   def deleteStubAccount(groupId: String)(implicit hc: HeaderCarrier): TEAFResult[Unit] = {

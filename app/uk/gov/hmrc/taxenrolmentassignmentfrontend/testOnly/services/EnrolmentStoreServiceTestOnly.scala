@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.services
 
-import cats.data.EitherT
 import cats.implicits.toTraverseOps
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.service.TEAFResult
@@ -33,10 +32,7 @@ class EnrolmentStoreServiceTestOnly @Inject() (
 )(implicit ec: ExecutionContext) {
 
   def deleteAccountIfExist(groupId: String)(implicit hc: HeaderCarrier): TEAFResult[Unit] =
-    enrolmentStoreStubConnectorTestOnly.getStubAccount(groupId).flatMap {
-      case None    => EitherT.rightT(()): TEAFResult[Unit]
-      case Some(_) => enrolmentStoreStubConnectorTestOnly.deleteStubAccount(groupId)
-    }
+    enrolmentStoreStubConnectorTestOnly.deleteStubAccount(groupId)
 
   def deallocateEnrolmentFromGroups(
     enrolment: EnrolmentDetailsTestOnly

@@ -67,7 +67,8 @@ trait IntegrationSpecBase
 
   lazy val config: Map[String, Any] = Map(
     "play.filters.csrf.header.bypassHeaders.Csrf-Token" -> "nocheck",
-    "auditing.enabled"                                  -> false,
+    "auditing.enabled"                                  -> true,
+    "auditing.consumer.baseUri.port"                    -> server.port(),
     "microservice.services.auth.port"                   -> server.port(),
     "microservice.services.identity-verification.port"  -> server.port(),
     "microservice.services.enrolment-store-proxy.port"  -> server.port(),

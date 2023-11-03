@@ -17,12 +17,14 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.connectors
 
 import cats.data.EitherT
+import play.api.Logging
+import play.api.http.Status.OK
 import play.api.libs.json.{JsObject, Json}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, UpstreamErrorResponse}
 import uk.gov.hmrc.service.TEAFResult
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UpstreamError
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{UpstreamError, UpstreamUnexpected2XX}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.config.AppConfigTestOnly
 
 import javax.inject.{Inject, Singleton}
@@ -31,15 +33,23 @@ import scala.concurrent.ExecutionContext
 @Singleton
 class IdentityVerificationConnectorTestOnly @Inject() (httpClient: HttpClient, appConfigTestOnly: AppConfigTestOnly)(
   implicit ec: ExecutionContext
-) {
+) extends Logging {
 
   def deleteCredId(credId: String)(implicit hc: HeaderCarrier): TEAFResult[Unit] =
     EitherT(
       httpClient.DELETE[Either[UpstreamErrorResponse, HttpResponse]](
         s"${appConfigTestOnly.identityVerification}/test-only/nino/$credId"
       )
-    )
-      .bimap(error => UpstreamError(error), _ => ())
+    ).transform {
+      case Right(response) if response.status == OK => Right(())
+      case Right(response) =>
+        val ex = new RuntimeException(s"Unexpected ${response.status} status")
+        logger.error(ex.getMessage, ex)
+        Left(UpstreamUnexpected2XX(response.body, response.status))
+      case Left(upstreamError) =>
+        logger.error(upstreamError.message)
+        Left(UpstreamError(upstreamError))
+    }
 
   def insertCredId(credId: String, nino: Nino)(implicit hc: HeaderCarrier): TEAFResult[Unit] = {
     val requestBody = Json.obj(
@@ -53,7 +63,15 @@ class IdentityVerificationConnectorTestOnly @Inject() (httpClient: HttpClient, a
         s"${appConfigTestOnly.identityVerification}/identity-verification/nino/$credId",
         requestBody
       )
-    )
-      .bimap(error => UpstreamError(error), _ => ())
+    ).transform {
+      case Right(response) if response.status == OK => Right(())
+      case Right(response) =>
+        val ex = new RuntimeException(s"Unexpected ${response.status} status")
+        logger.error(ex.getMessage, ex)
+        Left(UpstreamUnexpected2XX(response.body, response.status))
+      case Left(upstreamError) =>
+        logger.error(upstreamError.message)
+        Left(UpstreamError(upstreamError))
+    }
   }
 }

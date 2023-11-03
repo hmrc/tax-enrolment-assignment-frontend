@@ -98,6 +98,13 @@ class EnrolmentStoreStubConnectorTestOnlyISpec extends IntegrationSpecBase {
       }
     }
 
+    "return an UpstreamUnexpected2XX error" in {
+      stubPost(apiUrl, requestBody, Status.OK, "")
+      whenReady(connector.addStubAccount(account).value) { response =>
+        response shouldBe Left(UpstreamUnexpected2XX("", Status.OK))
+      }
+    }
+
     "return an UpstreamError error" in {
       stubGet(apiUrl, Status.INTERNAL_SERVER_ERROR, "Ooops")
       whenReady(connector.addStubAccount(account).value) { response =>

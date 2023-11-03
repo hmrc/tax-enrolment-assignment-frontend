@@ -28,8 +28,6 @@ import scala.concurrent.ExecutionContext
 
 @Singleton
 class AccountUtilsTestOnly @Inject() (
-  enrolmentStoreStubConnectorTestOnly: EnrolmentStoreStubConnectorTestOnly,
-  enrolmentStoreConnectorTestOnly: EnrolmentStoreConnectorTestOnly,
   enrolmentStoreServiceTestOnly: EnrolmentStoreServiceTestOnly,
   identityVerificationConnectorTestOnly: IdentityVerificationConnectorTestOnly,
   basStubsConnectorTestOnly: BasStubsConnectorTestOnly
@@ -44,7 +42,7 @@ class AccountUtilsTestOnly @Inject() (
       _ <- account.enrolments.map(enrolmentStoreServiceTestOnly.deallocateEnrolmentFromGroups(_)).sequence
       _ <- account.enrolments.map(enrolmentStoreServiceTestOnly.deallocateEnrolmentFromUsers(_)).sequence
       _ <- account.enrolments.map(enrolmentStoreServiceTestOnly.deleteEnrolment(_)).sequence
-      _ <- enrolmentStoreServiceTestOnly.deleteAccountIfExist(account.groupId)
+      _ <- enrolmentStoreServiceTestOnly.deleteAccount(account.groupId)
       _ <- enrolmentStoreServiceTestOnly.deallocateEnrolmentsFromGroup(account.groupId)
       _ <- enrolmentStoreServiceTestOnly.deallocateEnrolmentsFromUser(account.user.credId)
     } yield ()
@@ -52,13 +50,12 @@ class AccountUtilsTestOnly @Inject() (
   def insertAccountDetails(account: AccountDetailsTestOnly)(implicit hc: HeaderCarrier): TEAFResult[Unit] =
     for {
       // Insert enrolment-store data
-      _ <- enrolmentStoreStubConnectorTestOnly
-             .addStubAccount(account)
-      _ <- account.enrolments.map(enrolment => enrolmentStoreConnectorTestOnly.upsertEnrolment(enrolment)).sequence
+      _ <- enrolmentStoreServiceTestOnly.insertAccount(account)
+      _ <- account.enrolments.map(enrolment => enrolmentStoreServiceTestOnly.upsertEnrolment(enrolment)).sequence
       _ <-
         account.enrolments
           .map(enrolment =>
-            enrolmentStoreConnectorTestOnly.addEnrolmentToGroup(account.groupId, account.user.credId, enrolment)
+            enrolmentStoreServiceTestOnly.addEnrolmentToGroup(account.groupId, account.user.credId, enrolment)
           )
           .sequence
       // insert identity-verification data - Link nino / confidence level to account and holds mfa details

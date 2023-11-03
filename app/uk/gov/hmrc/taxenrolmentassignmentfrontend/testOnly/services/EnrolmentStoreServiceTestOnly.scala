@@ -20,7 +20,7 @@ import cats.implicits.toTraverseOps
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.connectors.{EnrolmentStoreConnectorTestOnly, EnrolmentStoreStubConnectorTestOnly}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.EnrolmentDetailsTestOnly
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.{AccountDetailsTestOnly, EnrolmentDetailsTestOnly}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
@@ -31,8 +31,16 @@ class EnrolmentStoreServiceTestOnly @Inject() (
   enrolmentStoreStubConnectorTestOnly: EnrolmentStoreStubConnectorTestOnly
 )(implicit ec: ExecutionContext) {
 
-  def deleteAccountIfExist(groupId: String)(implicit hc: HeaderCarrier): TEAFResult[Unit] =
+  def deleteAccount(groupId: String)(implicit hc: HeaderCarrier): TEAFResult[Unit] =
     enrolmentStoreStubConnectorTestOnly.deleteStubAccount(groupId)
+
+  def insertAccount(account: AccountDetailsTestOnly)(implicit hc: HeaderCarrier): TEAFResult[Unit] =
+    enrolmentStoreStubConnectorTestOnly.addStubAccount(account)
+
+  def addEnrolmentToGroup(groupId: String, credId: String, enrolment: EnrolmentDetailsTestOnly)(implicit
+    hc: HeaderCarrier
+  ): TEAFResult[Unit] =
+    enrolmentStoreConnectorTestOnly.addEnrolmentToGroup(groupId, credId, enrolment)
 
   def deallocateEnrolmentFromGroups(
     enrolment: EnrolmentDetailsTestOnly
@@ -62,6 +70,11 @@ class EnrolmentStoreServiceTestOnly @Inject() (
     val enrolmentKey = s"${enrolment.serviceName}~${enrolment.identifiers.key}~${enrolment.identifiers.value}"
     enrolmentStoreConnectorTestOnly.deleteEnrolment(enrolmentKey)
   }
+
+  def upsertEnrolment(
+    enrolment: EnrolmentDetailsTestOnly
+  )(implicit hc: HeaderCarrier): TEAFResult[Unit] =
+    enrolmentStoreConnectorTestOnly.upsertEnrolment(enrolment)
 
   def deallocateEnrolmentsFromGroup(
     groupId: String

@@ -23,7 +23,7 @@ groupId and credId can be edited to any values.
 ```
 
 ### Two accounts for the same nino with SA enrolment and no HMRC-PT enrolment
-Replace <nino> with a valid nino and <factorType> with either `sms` or `totp`.
+Replace <nino> with a valid nino and <factorType> with either `sms` or `totp` (HMRC app) or `voiceCall`.
 groupId and credId can be edited to any values.
 
 ```json

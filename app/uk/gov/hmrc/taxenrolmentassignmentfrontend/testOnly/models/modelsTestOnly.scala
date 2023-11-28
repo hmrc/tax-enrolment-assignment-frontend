@@ -66,7 +66,7 @@ case class AccountDetailsTestOnly(
       "credId"        -> user.credId,
       "userId"        -> user.credId,
       "isAdmin"       -> true,
-      "email"         -> "email@example.com",
+      "email"         -> user.email,
       "emailVerified" -> true,
       "profile"       -> "/profile",
       "groupId"       -> groupId,

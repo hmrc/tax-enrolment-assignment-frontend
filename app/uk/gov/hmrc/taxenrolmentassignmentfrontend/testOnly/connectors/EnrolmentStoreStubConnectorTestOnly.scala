@@ -62,7 +62,7 @@ class EnrolmentStoreStubConnectorTestOnly @Inject() (appConfig: AppConfigTestOnl
 
     EitherT(httpClient.DELETE[Either[UpstreamErrorResponse, HttpResponse]](url)).transform {
       case Right(response) if response.status == NO_CONTENT => Right(())
-      case Left(error) if error.statusCode == NOT_FOUND => Right(())
+      case Left(error) if error.statusCode == NOT_FOUND     => Right(())
       case Right(response) =>
         val ex = new RuntimeException(s"Unexpected ${response.status} status")
         logger.error(ex.getMessage, ex)

@@ -4,6 +4,9 @@ The request body describes the different accounts, enrolments and users necessar
 
 ## Examples request Body
 ### A single account with no enrolments
+Replace <nino> with a valid nino.
+groupId and credId can be edited to any values.
+
 ```json
     {
         "groupId": "98ADEA51-C0BA-497D-997E-F585FAADBCEI",
@@ -19,30 +22,28 @@ The request body describes the different accounts, enrolments and users necessar
     }
 ```
 
-### Multiples accounts with enrolments and mfas
+### Two accounts for the same nino with SA enrolment and no HMRC-PT enrolment
+Replace <nino> with a valid nino and <factorType> with either `sms` or `totp`.
+groupId and credId can be edited to any values.
+
 ```json
 [
   {
-    "groupId": "98ADEA51-C0BA-497D-997E-F585FAADBCEH",
+    "groupId": "00ADEA51-C0BA-497D-997E-F585FAADBCEK",
     "affinityGroup": "Individual",
     "nino": "<nino>",
     "user": {
-      "credId": "5217739547427626",
+      "credId": "5517739547427626",
       "name": "Firstname Surname",
-      "email": "email@example.invalid",
-      "credentialRole": "Admin",
-      "description": "Description"
+      "email": "email@example.invalid"
     },
     "enrolments": [
       {
         "serviceName": "IR-SA",
-        "assignedUserCreds": [
-          "1"
-        ],
         "identifiers":
         {
           "key": "UTR",
-          "value": "123456"
+          "value": "64567890"
         }
       ,
         "verifiers": [
@@ -65,17 +66,15 @@ The request body describes the different accounts, enrolments and users necessar
   {
     "groupId": "98ADEA51-C0BA-497D-997E-F585FAADBCEI",
     "affinityGroup": "Individual",
-    "nino": "$nino",
+    "nino": "<nino>",
     "user": {
       "credId": "5217739547427627",
       "name": "Firstname Surname",
-      "email": "email@example.invalid",
-      "credentialRole": "Admin",
-      "description": "Description"
+      "email": "email@example.invalid"
     },
     "additionalFactors": [
       {
-        "factorType": "factorType",
+        "factorType": "<factorType>",
         "phoneNumber": "Phone number",
         "name": "name"
       }

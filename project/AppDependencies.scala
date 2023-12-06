@@ -11,7 +11,7 @@ object AppDependencies {
     "uk.gov.hmrc"         %%  "play-frontend-hmrc"          % s"7.19.0-$playVersion",
     "org.typelevel"       %%  "cats-core"                   % "2.9.0",
     "uk.gov.hmrc"         %%  "domain"                      % s"8.1.0-$playVersion",
-    "uk.gov.hmrc"         %%  "http-caching-client"         % s"9.6.0-$playVersion",
+    "uk.gov.hmrc"         %%  "http-caching-client"         % s"10.0.0-$playVersion",
     "uk.gov.hmrc.mongo"   %%  s"hmrc-mongo-$playVersion"          % hmrcMongoVersion,
     "uk.gov.hmrc"         %%  s"crypto-json-$playVersion"         % "7.2.0"
   )

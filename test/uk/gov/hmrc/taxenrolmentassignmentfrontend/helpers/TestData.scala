@@ -213,7 +213,7 @@ object TestData {
   )
 
   val usersGroupSearchResponse = UsersGroupResponse(
-    obfuscatedUserId = "********6037",
+    obfuscatedUserId = Some("********6037"),
     email = Some("email1@test.com"),
     lastAccessedTimestamp = Some("2022-02-27T12:00:27Z"),
     additionalFactors = Some(List(AdditonalFactors("sms", Some("07783924321"))))

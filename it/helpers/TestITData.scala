@@ -174,7 +174,7 @@ object TestITData {
   )
 
   val usersGroupSearchResponse = UsersGroupResponse(
-    obfuscatedUserId = "********6037",
+    obfuscatedUserId = Some("********6037"),
     email = Some("email1@test.com"),
     lastAccessedTimestamp = Some("2022-01-16T14:40:05Z"),
     additionalFactors = Some(List(AdditonalFactors("sms", Some("07783924321"))))
@@ -194,7 +194,7 @@ object TestITData {
     )
 
   def usersGroupSearchResponsePTEnrolment(userId: String = "********1234"): UsersGroupResponse =
-    usersGroupSearchResponse.copy(userId)
+    usersGroupSearchResponse.copy(Some(userId))
 
   def accountDetailsUnUserFriendly(credId: String) =
     AccountDetails(
@@ -207,7 +207,7 @@ object TestITData {
     )
 
   val usersGroupSearchResponseSAEnrolment: UsersGroupResponse =
-    usersGroupSearchResponse.copy(obfuscatedUserId = "********1243")
+    usersGroupSearchResponse.copy(obfuscatedUserId = Some("********1243"))
 
   def additionalFactorsJson(additionalFactors: List[AdditonalFactors]) =
     additionalFactors.foldLeft[JsArray](Json.arr()) { (a, b) =>

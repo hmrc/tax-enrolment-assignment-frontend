@@ -38,7 +38,7 @@ class AccountDetailsSpec extends BaseSpec {
     additionalFactors: List[AdditonalFactors]
   ): UsersGroupResponse =
     UsersGroupResponse(
-      obfuscatedUserId = "********6037",
+      obfuscatedUserId = Some("********6037"),
       email = Some("email1@test.com"),
       lastAccessedTimestamp = Some(lastAccessedTime),
       additionalFactors = Some(additionalFactors)

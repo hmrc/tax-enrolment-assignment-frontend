@@ -176,7 +176,7 @@ object TestITData {
   val usersGroupSearchResponse = UsersGroupResponse(
     obfuscatedUserId = "********6037",
     email = Some("email1@test.com"),
-    lastAccessedTimestamp = "2022-01-16T14:40:05Z",
+    lastAccessedTimestamp = Some("2022-01-16T14:40:05Z"),
     additionalFactors = Some(List(AdditonalFactors("sms", Some("07783924321"))))
   )
 
@@ -229,12 +229,9 @@ object TestITData {
     usersGroupResponse: UsersGroupResponse = usersGroupSearchResponse
   ): JsObject = {
     val compulsaryJson = Json.obj(
-      ("obfuscatedUserId", JsString(usersGroupResponse.obfuscatedUserId)),
-      ("email", JsString(usersGroupResponse.email.get)),
-      (
-        "lastAccessedTimestamp",
-        JsString(usersGroupResponse.lastAccessedTimestamp)
-      )
+      "obfuscatedUserId"      -> usersGroupResponse.obfuscatedUserId,
+      "email"                 -> usersGroupResponse.email.get,
+      "lastAccessedTimestamp" -> Some(usersGroupResponse.lastAccessedTimestamp)
     )
     usersGroupResponse.additionalFactors.fold(compulsaryJson) { additionFactors =>
       compulsaryJson ++ Json.obj(

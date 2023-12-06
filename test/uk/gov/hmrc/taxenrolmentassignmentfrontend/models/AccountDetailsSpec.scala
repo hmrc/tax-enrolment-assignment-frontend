@@ -40,7 +40,7 @@ class AccountDetailsSpec extends BaseSpec {
     UsersGroupResponse(
       obfuscatedUserId = "********6037",
       email = Some("email1@test.com"),
-      lastAccessedTimestamp = lastAccessedTime,
+      lastAccessedTimestamp = Some(lastAccessedTime),
       additionalFactors = Some(additionalFactors)
     )
 

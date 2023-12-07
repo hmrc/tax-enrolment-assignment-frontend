@@ -182,7 +182,7 @@ object TestData {
     credId = CREDENTIAL_ID,
     userId = USER_ID,
     email = Some(SensitiveString("email1@test.com")),
-    lastLoginDate = "2022-02-27T12:00:27Z",
+    lastLoginDate = Some("2022-02-27T12:00:27Z"),
     mfaDetails = List(MFADetails("mfaDetails.text", "24321"))
   )
 
@@ -190,7 +190,7 @@ object TestData {
     credId = CREDENTIAL_ID_1,
     userId = USER_ID,
     email = Some(SensitiveString("email1@test.com")),
-    lastLoginDate = "27 February 2022 at 12:00 PM",
+    lastLoginDate = Some("27 February 2022 at 12:00 PM"),
     mfaDetails = List(MFADetails("mfaDetails.text", "24321"))
   )
 
@@ -198,7 +198,7 @@ object TestData {
     credId = CREDENTIAL_ID_1,
     userId = PT_USER_ID,
     email = Some(SensitiveString("email.otherUser@test.com")),
-    lastLoginDate = "2022-02-27T12:00:27Z",
+    lastLoginDate = Some("2022-02-27T12:00:27Z"),
     mfaDetails = List(MFADetails("mfaDetails.text", "26543")),
     hasSA = Some(true)
   )

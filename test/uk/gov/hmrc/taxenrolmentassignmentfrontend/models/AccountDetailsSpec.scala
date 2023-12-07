@@ -49,7 +49,7 @@ class AccountDetailsSpec extends BaseSpec {
       "credId",
       "6037",
       Some(SensitiveString("email1@test.com")),
-      formattedLastLoginDate,
+      Some(formattedLastLoginDate),
       mfaDetails
     )
 
@@ -77,7 +77,7 @@ class AccountDetailsSpec extends BaseSpec {
               "credId",
               "********6037",
               Some(SensitiveString("email1@test.com")),
-              test._2,
+              Some(test._2),
               List(mfaDetailsText)
             )
           )(messagesApi.preferred(List(Lang("cy"))))
@@ -109,7 +109,7 @@ class AccountDetailsSpec extends BaseSpec {
               "credId",
               "********6037",
               Some(SensitiveString("email1@test.com")),
-              test._2,
+              Some(test._2),
               List(mfaDetailsText)
             )
           )(messagesApi.preferred(List(Lang("en"))))
@@ -129,7 +129,7 @@ class AccountDetailsSpec extends BaseSpec {
               "credId",
               "********6037",
               Some(SensitiveString("email1@test.com")),
-              lastAccessedDate,
+              Some(lastAccessedDate),
               List(mfaDetailsText)
             )
           )(messages)
@@ -151,7 +151,7 @@ class AccountDetailsSpec extends BaseSpec {
               "credId",
               "********6037",
               Some(SensitiveString("email1@test.com")),
-              lastAccessedDate,
+              Some(lastAccessedDate),
               List(mfaDetailsVoice),
               None
             )
@@ -174,7 +174,7 @@ class AccountDetailsSpec extends BaseSpec {
               "credId",
               "********6037",
               Some(SensitiveString("email1@test.com")),
-              lastAccessedDate,
+              Some(lastAccessedDate),
               List(mfaDetailsTotp)
             )
           )(messages)
@@ -198,7 +198,7 @@ class AccountDetailsSpec extends BaseSpec {
               "credId",
               "********6037",
               Some(SensitiveString("email1@test.com")),
-              lastAccessedDate,
+              Some(lastAccessedDate),
               List(mfaDetailsText, mfaDetailsVoice, mfaDetailsTotp)
             )
           )(messages)
@@ -212,7 +212,14 @@ class AccountDetailsSpec extends BaseSpec {
   "mongoFormats" should {
     "write correctly to json" in {
       val accountDetails =
-        AccountDetails("credid", "userId", Some(SensitiveString("foo")), "lastLoginDate", Seq(mfaDetailsTotp), None)
+        AccountDetails(
+          "credid",
+          "userId",
+          Some(SensitiveString("foo")),
+          Some("lastLoginDate"),
+          Seq(mfaDetailsTotp),
+          None
+        )
 
       val res = Json.toJson(accountDetails)(AccountDetails.mongoFormats(crypto.crypto))
       res.as[JsObject] - "email" shouldBe Json.obj(
@@ -239,7 +246,14 @@ class AccountDetailsSpec extends BaseSpec {
       )
 
       val accountDetails =
-        AccountDetails("credid", "userId", Some(SensitiveString("foo")), "lastLoginDate", Seq(mfaDetailsTotp), None)
+        AccountDetails(
+          "credid",
+          "userId",
+          Some(SensitiveString("foo")),
+          Some("lastLoginDate"),
+          Seq(mfaDetailsTotp),
+          None
+        )
       Json.fromJson(json)(AccountDetails.mongoFormats(crypto.crypto)).get shouldBe accountDetails
       accountDetails.emailDecrypted shouldBe Some("foo")
     }

@@ -50,12 +50,22 @@ case class AccountDetails(
   credId: String,
   userId: String,
   private val email: Option[SensitiveString],
-  lastLoginDate: String,
+  lastLoginDate: Option[String],
   mfaDetails: Seq[MFADetails],
   hasSA: Option[Boolean] = None
 ) {
 
   val emailDecrypted: Option[String] = email.map(_.decryptedValue)
+
+  private def formatDate(implicit messages: Messages): Option[String] =
+    lastLoginDate.map { date =>
+      val zonedDateTime = ZonedDateTime.parse(date)
+      val timeFormatter =
+        DateTimeFormatter.ofPattern("h:mm a")
+      s"${zonedDateTime.getDayOfMonth} ${messages(
+        s"common.month${zonedDateTime.getMonth.getValue}"
+      )} ${zonedDateTime.getYear} ${messages("common.dateToTime")} ${zonedDateTime.format(timeFormatter).toUpperCase}"
+    }
 }
 
 object AccountDetails {
@@ -72,20 +82,11 @@ object AccountDetails {
       credId = accountDetails.credId,
       userId = AccountDetails.trimmedUserId(accountDetails.userId),
       email = accountDetails.email,
-      lastLoginDate = AccountDetails.formatDate(accountDetails.lastLoginDate)
+      lastLoginDate = accountDetails.formatDate
     )
 
   def trimmedUserId(obfuscatedId: String): String =
     obfuscatedId.replaceAll("[*]", "")
-
-  private def formatDate(date: String)(implicit messages: Messages): String = {
-    val zonedDateTime = ZonedDateTime.parse(date)
-    val timeFormatter =
-      DateTimeFormatter.ofPattern("h:mm a")
-    s"${zonedDateTime.getDayOfMonth} ${messages(
-      s"common.month${zonedDateTime.getMonth.getValue}"
-    )} ${zonedDateTime.getYear} ${messages("common.dateToTime")} ${zonedDateTime.format(timeFormatter).toUpperCase}"
-  }
 
   implicit val AccountDetailsWrites: Writes[AccountDetails] = new Writes[AccountDetails] {
     override def writes(o: AccountDetails): JsValue =
@@ -106,7 +107,7 @@ object AccountDetails {
     ((__ \ "credId").format[String] ~
       (__ \ "userId").format[String] ~
       (__ \ "email").formatNullable[SensitiveString] ~
-      (__ \ "lastLoginDate").format[String] ~
+      (__ \ "lastLoginDate").formatNullable[String] ~
       (__ \ "mfaDetails").format[Seq[MFADetails]] ~
       (__ \ "hasSA").formatNullable[Boolean])(AccountDetails.apply, unlift(AccountDetails.unapply))
 

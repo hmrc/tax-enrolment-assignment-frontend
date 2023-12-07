@@ -62,7 +62,7 @@ class UsersGroupsSearchService @Inject() (
             credId,
             userDetails.obfuscatedUserId.getOrElse(""),
             userDetails.email.map(SensitiveString),
-            userDetails.lastAccessedTimestamp.getOrElse(""),
+            userDetails.lastAccessedTimestamp,
             AccountDetails.additionalFactorsToMFADetails(userDetails.additionalFactors),
             None
           )

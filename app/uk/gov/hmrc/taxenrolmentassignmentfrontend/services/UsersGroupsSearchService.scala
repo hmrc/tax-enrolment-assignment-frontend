@@ -60,7 +60,7 @@ class UsersGroupsSearchService @Inject() (
         case Right(userDetails) =>
           val accountDetails: AccountDetails = AccountDetails(
             credId,
-            userDetails.obfuscatedUserId,
+            userDetails.obfuscatedUserId.getOrElse(""),
             userDetails.email.map(SensitiveString),
             userDetails.lastAccessedTimestamp,
             AccountDetails.additionalFactorsToMFADetails(userDetails.additionalFactors),

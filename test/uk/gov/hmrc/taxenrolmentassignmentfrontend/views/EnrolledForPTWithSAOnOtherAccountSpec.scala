@@ -39,7 +39,7 @@ class EnrolledForPTWithSAOnOtherAccountSpec extends ViewSpecHelper {
     credId = CREDENTIAL_ID,
     userId,
     Some(SensitiveString("email1@test.com")),
-    "Yesterday",
+    Some("Yesterday"),
     mfaDetails
   )
   val html: HtmlFormat.Appendable =

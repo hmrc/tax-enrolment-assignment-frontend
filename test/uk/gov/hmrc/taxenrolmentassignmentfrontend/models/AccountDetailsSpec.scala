@@ -14,22 +14,6 @@
  * limitations under the License.
  */
 
-/*
- * Copyright 2022 HM Revenue & Customs
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 
 import play.api.i18n.Lang
@@ -54,9 +38,9 @@ class AccountDetailsSpec extends BaseSpec {
     additionalFactors: List[AdditonalFactors]
   ): UsersGroupResponse =
     UsersGroupResponse(
-      obfuscatedUserId = "********6037",
+      obfuscatedUserId = Some("********6037"),
       email = Some("email1@test.com"),
-      lastAccessedTimestamp = lastAccessedTime,
+      lastAccessedTimestamp = Some(lastAccessedTime),
       additionalFactors = Some(additionalFactors)
     )
 
@@ -65,7 +49,7 @@ class AccountDetailsSpec extends BaseSpec {
       "credId",
       "6037",
       Some(SensitiveString("email1@test.com")),
-      formattedLastLoginDate,
+      Some(formattedLastLoginDate),
       mfaDetails
     )
 
@@ -93,7 +77,7 @@ class AccountDetailsSpec extends BaseSpec {
               "credId",
               "********6037",
               Some(SensitiveString("email1@test.com")),
-              test._2,
+              Some(test._2),
               List(mfaDetailsText)
             )
           )(messagesApi.preferred(List(Lang("cy"))))
@@ -125,7 +109,7 @@ class AccountDetailsSpec extends BaseSpec {
               "credId",
               "********6037",
               Some(SensitiveString("email1@test.com")),
-              test._2,
+              Some(test._2),
               List(mfaDetailsText)
             )
           )(messagesApi.preferred(List(Lang("en"))))
@@ -145,7 +129,7 @@ class AccountDetailsSpec extends BaseSpec {
               "credId",
               "********6037",
               Some(SensitiveString("email1@test.com")),
-              lastAccessedDate,
+              Some(lastAccessedDate),
               List(mfaDetailsText)
             )
           )(messages)
@@ -167,7 +151,7 @@ class AccountDetailsSpec extends BaseSpec {
               "credId",
               "********6037",
               Some(SensitiveString("email1@test.com")),
-              lastAccessedDate,
+              Some(lastAccessedDate),
               List(mfaDetailsVoice),
               None
             )
@@ -190,7 +174,7 @@ class AccountDetailsSpec extends BaseSpec {
               "credId",
               "********6037",
               Some(SensitiveString("email1@test.com")),
-              lastAccessedDate,
+              Some(lastAccessedDate),
               List(mfaDetailsTotp)
             )
           )(messages)
@@ -214,7 +198,7 @@ class AccountDetailsSpec extends BaseSpec {
               "credId",
               "********6037",
               Some(SensitiveString("email1@test.com")),
-              lastAccessedDate,
+              Some(lastAccessedDate),
               List(mfaDetailsText, mfaDetailsVoice, mfaDetailsTotp)
             )
           )(messages)
@@ -228,7 +212,14 @@ class AccountDetailsSpec extends BaseSpec {
   "mongoFormats" should {
     "write correctly to json" in {
       val accountDetails =
-        AccountDetails("credid", "userId", Some(SensitiveString("foo")), "lastLoginDate", Seq(mfaDetailsTotp), None)
+        AccountDetails(
+          "credid",
+          "userId",
+          Some(SensitiveString("foo")),
+          Some("lastLoginDate"),
+          Seq(mfaDetailsTotp),
+          None
+        )
 
       val res = Json.toJson(accountDetails)(AccountDetails.mongoFormats(crypto.crypto))
       res.as[JsObject] - "email" shouldBe Json.obj(
@@ -240,7 +231,7 @@ class AccountDetailsSpec extends BaseSpec {
         )
       )
 
-      crypto.crypto.decrypt(Crypted(res.as[JsObject].value.get("email").get.as[String])).value shouldBe """"foo""""
+      crypto.crypto.decrypt(Crypted(res.as[JsObject].value("email").as[String])).value shouldBe """"foo""""
     }
     "read from json" in {
       implicit val ssf = JsonEncryption.sensitiveEncrypterDecrypter(SensitiveString.apply)(implicitly, crypto.crypto)
@@ -255,7 +246,14 @@ class AccountDetailsSpec extends BaseSpec {
       )
 
       val accountDetails =
-        AccountDetails("credid", "userId", Some(SensitiveString("foo")), "lastLoginDate", Seq(mfaDetailsTotp), None)
+        AccountDetails(
+          "credid",
+          "userId",
+          Some(SensitiveString("foo")),
+          Some("lastLoginDate"),
+          Seq(mfaDetailsTotp),
+          None
+        )
       Json.fromJson(json)(AccountDetails.mongoFormats(crypto.crypto)).get shouldBe accountDetails
       accountDetails.emailDecrypted shouldBe Some("foo")
     }

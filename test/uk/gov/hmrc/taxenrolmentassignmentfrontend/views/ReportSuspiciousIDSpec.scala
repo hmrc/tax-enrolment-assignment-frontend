@@ -46,7 +46,7 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
       "credId",
       "4533",
       Some(SensitiveString("email1@test.com")),
-      "Yesterday",
+      Some("Yesterday"),
       mfaDetails
     )
 
@@ -114,7 +114,7 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
         suspiciousIdDetailsRows
           .get(2)
           .getElementsByClass(Selectors.summaryListValue)
-          .text() shouldBe accountDetails.lastLoginDate
+          .text() shouldBe accountDetails.lastLoginDate.get
       }
       "includes the text message field with correct value" in {
         suspiciousIdDetailsRows

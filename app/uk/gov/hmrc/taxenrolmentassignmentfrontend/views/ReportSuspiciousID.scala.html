@@ -53,7 +53,7 @@
 
         @summaryRow("common.userId", ptAccountDetails.userId)
         @summaryRow("ReportSuspiciousID.email", ptAccountDetails.emailDecrypted.get)
-        @summaryRow("ReportSuspiciousID.lastLoginDate", ptAccountDetails.lastLoginDate)
+        @summaryRow("ReportSuspiciousID.lastLoginDate", ptAccountDetails.lastLoginDate.getOrElse(""))
         @for(mfaDetail <- ptAccountDetails.mfaDetails) {
             @summaryRow(mfaDetail.factorNameKey, mfaDetail.factorValue)
         }

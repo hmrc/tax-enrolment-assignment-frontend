@@ -34,7 +34,6 @@ trait ThrottleActionTrait extends ActionFilter[RequestWithUserDetailsFromSession
 
 class ThrottleAction @Inject() (
   throttlingService: ThrottlingService,
-  val parser: BodyParsers.Default,
   errorHandler: ErrorHandler,
   val logger: EventLoggerService,
   teaSessionCache: TEASessionCache

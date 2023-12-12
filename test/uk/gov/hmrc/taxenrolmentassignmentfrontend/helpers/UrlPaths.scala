@@ -17,11 +17,11 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers
 
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.{routes, testOnly}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 
 object UrlPaths {
 
-  val returnUrl: String = testOnly.routes.TestOnlyController.successfulCall.url
+  val returnUrl: String = "/redirect/url"
   val accountCheckPath =
     routes.AccountCheckController.accountCheck(RedirectUrl.apply(returnUrl)).url
   val enrolledPTNoSAOnAnyAccountPath = routes.EnrolledForPTController.view.url

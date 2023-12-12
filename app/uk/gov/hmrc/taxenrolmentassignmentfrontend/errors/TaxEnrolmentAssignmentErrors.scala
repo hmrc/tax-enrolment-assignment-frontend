@@ -16,18 +16,17 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.errors
 
+import uk.gov.hmrc.http.UpstreamErrorResponse
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 
 sealed trait TaxEnrolmentAssignmentErrors
 
 object UnexpectedResponseFromIV extends TaxEnrolmentAssignmentErrors
 object UnexpectedResponseFromEACD extends TaxEnrolmentAssignmentErrors
-object NoAccountsHaveSA extends TaxEnrolmentAssignmentErrors
 object UnexpectedResponseFromTaxEnrolments extends TaxEnrolmentAssignmentErrors
 object UnexpectedResponseFromUsersGroupsSearch extends TaxEnrolmentAssignmentErrors
 object NoPTEnrolmentWhenOneExpected extends TaxEnrolmentAssignmentErrors
 object NoSAEnrolmentWhenOneExpected extends TaxEnrolmentAssignmentErrors
-object NoRedirectUrlInCache extends TaxEnrolmentAssignmentErrors
 object UnexpectedError extends TaxEnrolmentAssignmentErrors
 object UnexpectedResponseAssigningTemporaryPTAEnrolment extends TaxEnrolmentAssignmentErrors
 case class CacheNotCompleteOrNotCorrect(redirectUrl: Option[String], accountType: Option[AccountTypes.Value])
@@ -40,3 +39,7 @@ case object GetSACredentialIfNotFraudReturnedNone extends TaxEnrolmentAssignment
 
 object InvalidRedirectUrl extends TaxEnrolmentAssignmentErrors
 object EnrolmentStoreServiceUnavailable extends TaxEnrolmentAssignmentErrors
+
+case class UpstreamError(error: UpstreamErrorResponse) extends TaxEnrolmentAssignmentErrors
+
+case class UpstreamUnexpected2XX(message: String, statusCode: Int) extends TaxEnrolmentAssignmentErrors

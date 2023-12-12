@@ -54,14 +54,14 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
     "credId",
     userId = USER_ID,
     email = Some(SensitiveString("email.otherUser@test.com")),
-    lastLoginDate = "27 February 2022 at 12:00 PM",
+    lastLoginDate = Some("27 February 2022 at 12:00 PM"),
     mfaDetails
   )
   val testAccountDetailsWithSA = AccountDetails(
     "credId",
     userId = PT_USER_ID,
     email = Some(SensitiveString("email.otherUser@test.com")),
-    lastLoginDate = "27 February 2022 at 12:00 PM",
+    lastLoginDate = Some("27 February 2022 at 12:00 PM"),
     mfaDetails,
     hasSA = Some(true)
   )
@@ -70,7 +70,7 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
     "credId",
     userId = "9871",
     email = None,
-    lastLoginDate = "27 February 2022 at 12:00 PM",
+    lastLoginDate = Some("27 February 2022 at 12:00 PM"),
     mfaDetails = List(MFADetails("mfaDetails.text", "26543"))
   )
 
@@ -179,7 +179,7 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
         summaryListRows
           .get(2)
           .getElementsByClass(Selectors.summaryListValue)
-          .text() shouldBe testAccountDetails.lastLoginDate
+          .text() shouldBe testAccountDetails.lastLoginDate.get
       }
       elementsToMFADetails.foreach { case (elementNumber, mfaDetails) =>
         s"include the ${mfaDetails.factorNameKey}" in {

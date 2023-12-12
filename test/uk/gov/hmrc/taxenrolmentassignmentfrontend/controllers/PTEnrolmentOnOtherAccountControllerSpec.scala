@@ -106,7 +106,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
           accountDetailsWithPT.copy(lastLoginDate =
-            s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"
+            Some(s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
           )
         )(requestWithAccountType(randomAccountType), messagesApi)
 
@@ -124,10 +124,10 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
           ptEnrolmentDataModelNone
             .copy(
               currentAccountDetails = ptEnrolmentDataModelNone.currentAccountDetails.copy(lastLoginDate =
-                s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"
+                Some(s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
               ),
               ptAccountDetails = ptEnrolmentDataModelNone.ptAccountDetails.copy(lastLoginDate =
-                s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"
+                Some(s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
               )
             )
         )(
@@ -176,7 +176,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
           accountDetailsWithPT.copy(lastLoginDate =
-            s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"
+            Some(s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
           )
         )(requestWithAccountType(randomAccountType), messagesApi)
 
@@ -193,10 +193,10 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
         contentAsString(result) shouldBe view(
           ptEnrolmentModel.copy(
             currentAccountDetails = ptEnrolmentModel.currentAccountDetails.copy(lastLoginDate =
-              s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"
+              Some(s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
             ),
             ptAccountDetails = ptEnrolmentModel.ptAccountDetails.copy(lastLoginDate =
-              s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"
+              Some(s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
             )
           )
         )(
@@ -245,7 +245,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
           accountDetailsWithPT.copy(lastLoginDate =
-            s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"
+            Some(s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
           )
         )(requestWithAccountType(randomAccountType), messagesApi)
 
@@ -262,10 +262,10 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
         contentAsString(result) shouldBe view(
           ptEnrolmentModel.copy(
             currentAccountDetails = ptEnrolmentModel.currentAccountDetails.copy(lastLoginDate =
-              s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"
+              Some(s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
             ),
             ptAccountDetails = ptEnrolmentModel.ptAccountDetails.copy(lastLoginDate =
-              s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"
+              Some(s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
             )
           )
         )(
@@ -314,7 +314,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
           accountDetailsWithPT.copy(lastLoginDate =
-            s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"
+            Some(s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
           )
         )(requestWithAccountType(randomAccountType), messagesApi)
 
@@ -331,10 +331,10 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
         contentAsString(result) shouldBe view(
           ptEnrolmentModel.copy(
             currentAccountDetails = ptEnrolmentModel.currentAccountDetails.copy(lastLoginDate =
-              s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"
+              Some(s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
             ),
             ptAccountDetails = ptEnrolmentModel.ptAccountDetails.copy(lastLoginDate =
-              s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"
+              Some(s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
             )
           )
         )(
@@ -383,7 +383,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
           accountDetailsWithPT.copy(lastLoginDate =
-            s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"
+            Some(s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
           )
         )(requestWithAccountType(randomAccountType), messagesApi)
 
@@ -400,10 +400,10 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
         contentAsString(result) shouldBe view(
           ptEnrolmentModel.copy(
             currentAccountDetails = ptEnrolmentModel.currentAccountDetails.copy(lastLoginDate =
-              s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"
+              Some(s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
             ),
             ptAccountDetails = ptEnrolmentModel.ptAccountDetails.copy(lastLoginDate =
-              s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"
+              Some(s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
             )
           )
         )(

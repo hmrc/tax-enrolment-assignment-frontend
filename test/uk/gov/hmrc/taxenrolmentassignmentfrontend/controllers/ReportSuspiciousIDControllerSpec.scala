@@ -116,7 +116,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
         val auditEvent = AuditEvent.auditReportSuspiciousPTAccount(
           accountDetails.copy(lastLoginDate =
-            s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"
+            Some(s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
           )
         )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
         (mockAuditHandler
@@ -267,7 +267,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
           val auditEvent = AuditEvent.auditReportSuspiciousSAAccount(
             accountDetails.copy(lastLoginDate =
-              s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM"
+              Some(s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
             )
           )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER), messagesApi)
           (mockAuditHandler

@@ -30,7 +30,6 @@ import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession, UserDetailsFromSession}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.testOnly
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.hmrcPTKey
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.formats.EnrolmentsFormats
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
@@ -861,7 +860,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
     s"the user has pt enrolment in session" should {
       "redirect to the return url" when {
         "the redirectUrl is a valid encoded relative url" in {
-          val relativeUrl = testOnly.routes.TestOnlyController.successfulCall.url
+          val relativeUrl = "/redirect/url"
           val encodedUrl = URLEncoder.encode(relativeUrl, "UTF-8")
           val urlPath = s"/protect-tax-info?redirectUrl=$encodedUrl"
 
@@ -879,7 +878,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
         }
 
         "the redirectUrl is a valid relative url" in {
-          val relativeUrl = testOnly.routes.TestOnlyController.successfulCall.url
+          val relativeUrl = "/redirect/url"
           val urlPath = s"/protect-tax-info?redirectUrl=$relativeUrl"
 
           val authResponse = authoriseResponseJson(enrolments = ptEnrolmentOnly)
@@ -896,8 +895,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
         }
 
         "the redirectUrl is a valid encoded absolute localhost url" in {
-          val absoluteUrl = testOnly.routes.TestOnlyController.successfulCall
-            .absoluteURL(false, teaHost)
+          val absoluteUrl = "http://localhost:1234/redirect/url"
           val encodedUrl = URLEncoder.encode(absoluteUrl, "UTF-8")
           val urlPath = s"/protect-tax-info?redirectUrl=$encodedUrl"
 
@@ -915,8 +913,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
         }
 
         "the redirectUrl is a valid absolute localhost url" in {
-          val absoluteUrl = testOnly.routes.TestOnlyController.successfulCall
-            .absoluteURL(false, teaHost)
+          val absoluteUrl = "http://localhost:1234/redirect/url"
           val urlPath = s"/protect-tax-info?redirectUrl=$absoluteUrl"
 
           val authResponse = authoriseResponseJson(enrolments = ptEnrolmentOnly)
@@ -933,8 +930,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
         }
 
         "the redirectUrl is a valid encoded absolute url with hostname www.tax.service.gov.uk" in {
-          val absoluteUrl = testOnly.routes.TestOnlyController.successfulCall
-            .absoluteURL(true, "www.tax.service.gov.uk")
+          val absoluteUrl = "https://www.tax.service.gov.uk/redirect/url"
           val encodedUrl = URLEncoder.encode(absoluteUrl, "UTF-8")
           val urlPath = s"/protect-tax-info?redirectUrl=$encodedUrl"
 
@@ -952,8 +948,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
         }
 
         "the redirectUrl is a valid absolute url with hostname www.tax.service.gov.uk" in {
-          val absoluteUrl = testOnly.routes.TestOnlyController.successfulCall
-            .absoluteURL(true, "www.tax.service.gov.uk")
+          val absoluteUrl = "https://www.tax.service.gov.uk/redirect/url"
           val urlPath = s"/protect-tax-info?redirectUrl=$absoluteUrl"
 
           val authResponse = authoriseResponseJson(enrolments = ptEnrolmentOnly)
@@ -1025,7 +1020,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
         PT_ASSIGNED_TO_CURRENT_USER,
         SA_ASSIGNED_TO_OTHER_USER,
         PT_ASSIGNED_TO_OTHER_USER
-      ).foreach { case accountType =>
+      ).foreach { accountType =>
         if (accountTypesThatSilentlyEnrol.contains(accountType)) {
           s"not enrol for PT and redirect to redirectUrl" when {
             s"the session cache has accountType $accountType" in {

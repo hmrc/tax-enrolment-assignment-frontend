@@ -24,9 +24,9 @@ case class AdditonalFactors(factorType: String, phoneNumber: Option[String] = No
 }
 
 case class UsersGroupResponse(
-  obfuscatedUserId: String,
+  obfuscatedUserId: Option[String],
   email: Option[String],
-  lastAccessedTimestamp: String,
+  lastAccessedTimestamp: Option[String],
   additionalFactors: Option[List[AdditonalFactors]]
 )
 

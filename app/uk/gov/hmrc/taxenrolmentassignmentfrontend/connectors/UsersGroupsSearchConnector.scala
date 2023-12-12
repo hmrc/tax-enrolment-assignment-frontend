@@ -40,11 +40,7 @@ class UsersGroupsSearchConnector @Inject() (httpClient: HttpClient, logger: Even
     ec: ExecutionContext,
     hc: HeaderCarrier
   ): TEAFResult[UsersGroupResponse] = EitherT {
-    val url = if (appConfig.useTestOnlyUsersGroupSearch) {
-      s"${appConfig.tenBaseUrl}/users-groups-search/test-only/users/$credId"
-    } else {
-      s"${appConfig.usersGroupsSearchBaseURL}/users/$credId"
-    }
+    val url = s"${appConfig.usersGroupsSearchBaseURL}/users/$credId"
 
     httpClient
       .GET[HttpResponse](url)

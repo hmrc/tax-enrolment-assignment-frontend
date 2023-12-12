@@ -70,7 +70,7 @@ class SignInWithSAAccountSpec extends ViewSpecHelper {
     credId = CREDENTIAL_ID,
     "********3214",
     Some(SensitiveString("email1@test.com")),
-    "Yesterday",
+    Some("Yesterday"),
     mfaDetails
   )
 
@@ -141,7 +141,7 @@ class SignInWithSAAccountSpec extends ViewSpecHelper {
         summaryListRows
           .get(2)
           .getElementsByClass(Selectors.summaryListValue)
-          .text() shouldBe accountDetails.lastLoginDate
+          .text() shouldBe accountDetails.lastLoginDate.get
       }
       elementsToMFADetails.foreach { case (elementNumber, mfaDetails) =>
         s"include the key - ${mfaDetails.factorNameKey}" in {

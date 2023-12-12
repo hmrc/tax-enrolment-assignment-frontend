@@ -38,7 +38,7 @@
         @if(saAccountDetails.emailDecrypted.isDefined) {
             @summaryRow("signInAgain.email", saAccountDetails.emailDecrypted.get)
         }
-        @summaryRow("signInAgain.lastLoginDate", saAccountDetails.lastLoginDate)
+        @summaryRow("signInAgain.lastLoginDate", saAccountDetails.lastLoginDate.getOrElse(""))
         @for(mfaDetail <- saAccountDetails.mfaDetails) {
             @summaryRow(mfaDetail.factorNameKey, mfaDetail.factorValue)
         }

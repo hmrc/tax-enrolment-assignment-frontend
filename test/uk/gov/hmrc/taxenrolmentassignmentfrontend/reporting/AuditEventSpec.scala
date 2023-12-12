@@ -32,7 +32,7 @@ class AuditEventSpec extends BaseSpec {
     credId = CREDENTIAL_ID_1,
     userId = "6037",
     email = Some(SensitiveString("test@mail.com")),
-    lastLoginDate = "27 February 2022 at 12:00 PM",
+    lastLoginDate = Some("27 February 2022 at 12:00 PM"),
     mfaDetails = Seq(MFADetails("mfaDetails.text", "24321"))
   )
 
@@ -42,32 +42,32 @@ class AuditEventSpec extends BaseSpec {
       case 1 =>
         Json.arr(
           Json.obj(
-            ("factorType", JsString(getFactorType("text", isWelsh))),
-            ("factorValue", JsString(getEndingWith("24321", isWelsh)))
+            "factorType"  -> getFactorType("text", isWelsh),
+            "factorValue" -> getEndingWith("24321", isWelsh)
           )
         )
       case _ =>
         Json.arr(
           Json.obj(
-            ("factorType", JsString(getFactorType("text", isWelsh))),
-            ("factorValue", JsString(getEndingWith("24321", isWelsh)))
+            "factorType"  -> getFactorType("text", isWelsh),
+            "factorValue" -> getEndingWith("24321", isWelsh)
           ),
           Json.obj(
-            ("factorType", JsString(getFactorType("voice", isWelsh))),
-            ("factorValue", JsString(getEndingWith("24322", isWelsh)))
+            "factorType"  -> getFactorType("voice", isWelsh),
+            "factorValue" -> getEndingWith("24322", isWelsh)
           ),
           Json.obj(
-            ("factorType", JsString(getFactorType("totp", isWelsh))),
-            ("factorValue", JsString("TEST"))
+            "factorType"  -> getFactorType("totp", isWelsh),
+            "factorValue" -> "TEST"
           )
         )
     }
     Json.obj(
-      ("credentialId", JsString(accountDetails.credId)),
-      ("userId", JsString(getEndingWith(accountDetails.userId, isWelsh))),
-      ("email", JsString(accountDetails.emailDecrypted.getOrElse("-"))),
-      ("lastSignedIn", JsString(accountDetails.lastLoginDate)),
-      ("mfaDetails", mfaJson)
+      "credentialId" -> accountDetails.credId,
+      "userId"       -> getEndingWith(accountDetails.userId, isWelsh),
+      "email"        -> accountDetails.emailDecrypted.getOrElse("-").toString,
+      "lastSignedIn" -> accountDetails.lastLoginDate,
+      "mfaDetails"   -> mfaJson
     )
   }
 

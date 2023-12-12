@@ -29,20 +29,9 @@ class AppConfig @Inject() (val config: ServicesConfig) {
 
   lazy val IV_BASE_URL: String = config.baseUrl("identity-verification") + "/identity-verification"
   lazy val EACD_BASE_URL: String = config.baseUrl("enrolment-store-proxy") + "/enrolment-store-proxy"
-  lazy val TAX_ENROLMENTS_BASE_URL: String = {
-    if (config.getConfBool("tax-enrolments.isTest", defBool = false)) {
-      s"$tenBaseUrl/tax-enrolments/test-only"
-    } else {
-      config.baseUrl("tax-enrolments") + "/tax-enrolments"
-    }
-  }
-  lazy val AUTH_BASE_URL: String = {
-    if (config.getConfBool("auth.isTest", defBool = false)) {
-      s"$tenBaseUrl/auth/test-only"
-    } else {
-      config.baseUrl("auth") + "/auth"
-    }
-  }
+  lazy val TAX_ENROLMENTS_BASE_URL: String = config.baseUrl("tax-enrolments") + "/tax-enrolments"
+
+  lazy val AUTH_BASE_URL: String = config.baseUrl("auth") + "/auth"
 
   lazy val btaUrl: String =
     config.getString("external-url.business-tax-account.host")
@@ -51,10 +40,6 @@ class AppConfig @Inject() (val config: ServicesConfig) {
   lazy val loginCallback: String =
     config.getString("external-url.bas-gateway-frontend.continue-callback.url")
 
-  lazy val useTestOnlyUsersGroupSearch: Boolean =
-    config.getConfBool("users-groups-search.isTest", defBool = false)
-  lazy val tenBaseUrl: String =
-    s"${config.baseUrl("tax-enrolment-assignment-frontend")}"
   lazy val usersGroupsSearchBaseURL: String =
     s"${config.baseUrl("users-groups-search")}/users-groups-search"
   lazy val loginURL: String = s"$basAuthHost/bas-gateway/sign-in"
@@ -67,6 +52,4 @@ class AppConfig @Inject() (val config: ServicesConfig) {
 
   lazy val percentageOfUsersThrottledToGetFakeEnrolment: Int =
     config.getInt("throttle.percentage") - 1
-
-  def ptNinoMismatchToggle(): Boolean = config.getConfBool("feature.pt-nino-mismatch", defBool = true)
 }

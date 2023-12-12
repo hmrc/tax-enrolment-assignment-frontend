@@ -240,7 +240,7 @@ object AuditEvent {
       "credentialId" -> accountDetails.credId,
       "userId"       -> messagesApi("common.endingWith", accountDetails.userId),
       "email"        -> accountDetails.emailDecrypted.getOrElse("-").toString,
-      "lastSignedIn" -> accountDetails.lastLoginDate,
+      "lastSignedIn" -> accountDetails.lastLoginDate.getOrElse("").toString,
       "mfaDetails"   -> mfaDetailsToJson(accountDetails.mfaDetails)
     )
 
@@ -250,7 +250,7 @@ object AuditEvent {
       "credentialId" -> accountDetails.credId,
       "userId"       -> messagesApi("common.endingWith", accountDetails.userId)(enLang),
       "email"        -> accountDetails.emailDecrypted.getOrElse("-").toString,
-      "lastSignedIn" -> accountDetails.lastLoginDate,
+      "lastSignedIn" -> accountDetails.lastLoginDate.getOrElse("").toString,
       "mfaDetails"   -> mfaDetailsToJson(accountDetails.mfaDetails)(messagesApi, enLang)
     )
   }

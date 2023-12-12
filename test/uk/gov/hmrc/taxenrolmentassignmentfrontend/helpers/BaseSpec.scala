@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers
 
+import akka.stream.Materializer
 import cats.data.EitherT
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.{IntegrationPatience, PatienceConfiguration, ScalaFutures}
@@ -79,6 +80,7 @@ trait BaseSpec
   lazy val config = inject[Configuration]
   lazy val messagesApi: MessagesApi = inject[MessagesApi]
   implicit lazy val messages: Messages = MessagesImpl(Lang("en"), messagesApi)
+  implicit lazy val mat: Materializer = inject[Materializer]
 
   lazy val requestPath = "Not Used"
   implicit lazy val fakeRequest: FakeRequest[AnyContentAsEmpty.type] =

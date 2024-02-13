@@ -41,7 +41,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SINGLE_ACCOUNT
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.HmrcModule
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo, UserDetailsFromSession}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.userDetailsNoEnrolments
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{userDetails, userDetailsNoEnrolments}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.TENCrypto
@@ -112,6 +112,13 @@ trait BaseSpec
     new RequestWithUserDetailsFromSession[AnyContent](
       FakeRequest().asInstanceOf[Request[AnyContent]],
       userDetailsNoEnrolments,
+      "sessionId"
+    )
+
+  def requestWithEnrolments(hmrcPt: Boolean, irSa: Boolean): RequestWithUserDetailsFromSession[AnyContent] =
+    new RequestWithUserDetailsFromSession[AnyContent](
+      FakeRequest().asInstanceOf[Request[AnyContent]],
+      userDetails(hmrcPt, irSa),
       "sessionId"
     )
 

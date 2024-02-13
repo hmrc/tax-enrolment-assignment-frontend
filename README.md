@@ -33,16 +33,6 @@ Run Performance Tests see [here](https://github.com/hmrc/tax-enrolment-assignmen
 | `/protect-tax-info/test-only/successful`                     |        GET        | Test | Endpoint to get a successful redirect.                  |
 | `/protect-tax-info/test-only/create`                         |        POST       | Test | Setup data in all the stubs                             |                   
 
-## Throttling
-
-- controlled via one config value `throttle.percentage`
-- allocates temporary PTA enrolment (to Auth not ESP)
-- applies to certain account types
-- set to 0 to disable
-- set to 1 to throttle NINOs with pattern QQ112200Q
-- set to 100 to throttle NINOS with pattern QQ112299Q
-- https://confluence.tools.tax.service.gov.uk/display/TEN/Throttling+processes
-
 ## Audits
 https://confluence.tools.tax.service.gov.uk/display/TEN/CIP+Assessment+tracker+-+TENINO
 

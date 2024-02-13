@@ -19,7 +19,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 import javax.inject.{Inject, Singleton}
 import play.api.mvc._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction, ThrottleAction}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
@@ -29,7 +29,6 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SABlueInterrupt
 class SABlueInterruptController @Inject() (
   authAction: AuthAction,
   accountMongoDetailsAction: AccountMongoDetailsAction,
-  throttleAction: ThrottleAction,
   mcc: MessagesControllerComponents,
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
   val logger: EventLoggerService,
@@ -38,7 +37,7 @@ class SABlueInterruptController @Inject() (
 ) extends TEAFrontendController(mcc) {
 
   def view: Action[AnyContent] =
-    authAction.andThen(accountMongoDetailsAction).andThen(throttleAction) { implicit request =>
+    authAction.andThen(accountMongoDetailsAction) { implicit request =>
       multipleAccountsOrchestrator
         .checkAccessAllowedForPage(List(SA_ASSIGNED_TO_OTHER_USER)) match {
         case Right(_) =>
@@ -49,7 +48,7 @@ class SABlueInterruptController @Inject() (
     }
 
   def continue: Action[AnyContent] =
-    authAction.andThen(accountMongoDetailsAction).andThen(throttleAction) { implicit request =>
+    authAction.andThen(accountMongoDetailsAction) { implicit request =>
       multipleAccountsOrchestrator
         .checkAccessAllowedForPage(List(SA_ASSIGNED_TO_OTHER_USER)) match {
         case Right(_) => Redirect(routes.KeepAccessToSAController.view)

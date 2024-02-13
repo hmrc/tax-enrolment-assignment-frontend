@@ -32,7 +32,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditHandler
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{SilentAssignmentService, ThrottlingService}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{SilentAssignmentService}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTPage
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -55,7 +55,6 @@ class EnrolledForPTControllerSpec extends ControllersBaseSpec {
       bind[SilentAssignmentService].toInstance(mockSilentAssignmentService),
       bind[AccountCheckOrchestrator].toInstance(mockAccountCheckOrchestrator),
       bind[AuditHandler].toInstance(mockAuditHandler),
-      bind[ThrottlingService].toInstance(mockThrottlingService),
       bind[AuthConnector].toInstance(mockAuthConnector),
       bind[BodyParsers.Default].toInstance(testBodyParser),
       bind[MultipleAccountsOrchestrator].toInstance(mockMultipleAccountsOrchestrator)
@@ -68,8 +67,6 @@ class EnrolledForPTControllerSpec extends ControllersBaseSpec {
     app.injector.instanceOf[EnrolledForPTPage]
 
   "view" when {
-    specificThrottleTests(controller.view)
-
     "the user has multiple accounts and none have SA" should {
       "render the landing page" in {
         (
@@ -101,8 +98,6 @@ class EnrolledForPTControllerSpec extends ControllersBaseSpec {
           .returning(createInboundResult(accountDetails))
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
-
-        mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -151,7 +146,6 @@ class EnrolledForPTControllerSpec extends ControllersBaseSpec {
           )
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
-        mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -224,8 +218,6 @@ class EnrolledForPTControllerSpec extends ControllersBaseSpec {
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
-        mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
-
         val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
@@ -233,8 +225,5 @@ class EnrolledForPTControllerSpec extends ControllersBaseSpec {
         contentAsString(res) should include(messages("enrolmentError.heading"))
       }
     }
-  }
-  "continue" when {
-    specificThrottleTests(controller.continue)
   }
 }

@@ -112,6 +112,18 @@ object TestData {
       email
     )
 
+  def userDetails(hmrcPt: Boolean, irSa: Boolean) =
+    UserDetailsFromSession(
+      CREDENTIAL_ID,
+      NINO,
+      GROUP_ID,
+      Some(CURRENT_USER_EMAIL),
+      Individual,
+      enrolments = Enrolments(Set.empty[Enrolment]),
+      hasPTEnrolment = hmrcPt,
+      hasSAEnrolment = irSa
+    )
+
   val userDetailsNoEnrolments =
     UserDetailsFromSession(
       CREDENTIAL_ID,

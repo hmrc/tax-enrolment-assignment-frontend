@@ -33,7 +33,6 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.CURRENT_USER_EMAIL
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.ThrottlingService
 
 import scala.concurrent.Future
 
@@ -47,16 +46,12 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
       .once()
 
   lazy val mockTeaSessionCache = mock[TEASessionCache]
-  lazy val mockThrottlingService = mock[ThrottlingService]
 
   override lazy val overrides = Seq(
     bind[TEASessionCache].toInstance(mockTeaSessionCache)
   )
 
   override implicit lazy val app: Application = localGuiceApplicationBuilder()
-    .overrides(
-      bind[ThrottlingService].toInstance(mockThrottlingService)
-    )
     .build()
 
   lazy val accountMongoDetailsAction = app.injector.instanceOf[AccountMongoDetailsAction]

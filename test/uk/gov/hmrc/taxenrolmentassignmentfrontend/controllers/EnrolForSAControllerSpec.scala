@@ -32,7 +32,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.AccountCheckOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditHandler
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{SilentAssignmentService, ThrottlingService}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{SilentAssignmentService}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -43,7 +43,6 @@ class EnrolForSAControllerSpec extends BaseSpec {
   lazy val mockSilentAssignmentService = mock[SilentAssignmentService]
   lazy val mockAccountCheckOrchestrator = mock[AccountCheckOrchestrator]
   lazy val mockAuditHandler = mock[AuditHandler]
-  lazy val mockThrottlingService = mock[ThrottlingService]
 
   lazy val mockAuthConnector = mock[AuthConnector]
   lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
@@ -58,7 +57,6 @@ class EnrolForSAControllerSpec extends BaseSpec {
       bind[SilentAssignmentService].toInstance(mockSilentAssignmentService),
       bind[AccountCheckOrchestrator].toInstance(mockAccountCheckOrchestrator),
       bind[AuditHandler].toInstance(mockAuditHandler),
-      bind[ThrottlingService].toInstance(mockThrottlingService),
       bind[AuthConnector].toInstance(mockAuthConnector),
       bind[BodyParsers.Default].toInstance(testBodyParser)
     )

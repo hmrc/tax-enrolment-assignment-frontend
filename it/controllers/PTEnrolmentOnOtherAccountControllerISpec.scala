@@ -17,7 +17,7 @@
 package controllers
 
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
-import helpers.{IntegrationSpecBase, ItUrlPaths, ThrottleHelperISpec}
+import helpers.{IntegrationSpecBase, ItUrlPaths}
 import helpers.TestITData._
 import play.api.test.Helpers.{GET, await, contentAsString, defaultAwaitTimeout, redirectLocation, route}
 import play.api.test.Helpers.{status, writeableOf_AnyContentAsEmpty}
@@ -34,18 +34,11 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_A
 
 import scala.jdk.CollectionConverters._
 
-class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase with ThrottleHelperISpec {
+class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
 
   val urlPath: String = ItUrlPaths.ptOnOtherAccountPath
 
   s"GET $urlPath" when {
-
-    throttleSpecificTests { () =>
-      val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
-        .withSession(xAuthToken, xSessionId)
-      route(app, request).get
-    }
-
     "the signed in user has SA enrolment in session and PT enrolment on another account" should {
       s"render the pt on another account page" in new DataAndMockSetup {
         saveDataToCache(optSAEnrolledCredential = None)

@@ -16,17 +16,21 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators
 
-import cats.data.EitherT
+import cats.data.{EitherT, OptionT}
 import cats.implicits._
+
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.{AccountTypes, _}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSession}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{logAnotherAccountAlreadyHasPTEnrolment, logAnotherAccountHasSAEnrolment, logCurrentUserAlreadyHasPTEnrolment, logCurrentUserHasSAEnrolment, logCurrentUserhasMultipleAccounts, logCurrentUserhasOneAccount}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, SilentAssignmentService}
@@ -36,7 +40,6 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class AccountCheckOrchestrator @Inject() (
   eacdService: EACDService,
-  silentAssignmentService: SilentAssignmentService,
   logger: EventLoggerService,
   sessionCache: TEASessionCache
 ) {
@@ -47,130 +50,66 @@ class AccountCheckOrchestrator @Inject() (
     ec: ExecutionContext,
     hc: HeaderCarrier,
     requestWithUserDetails: RequestWithUserDetailsFromSession[_]
-  ): TEAFResult[AccountTypes.Value] = EitherT {
-    getOptAccountTypeFromCache.flatMap {
-      case Some(accountType) => Future.successful(Right(accountType))
-      case None =>
-        generateAccountType.value.flatMap {
-          case Right(accountType) =>
-            sessionCache
-              .save[AccountTypes.Value](ACCOUNT_TYPE, accountType)
-              .map(_ => Right(accountType))
-          case Left(error) => Future.successful(Left(error))
-        }
-    }
-  }
-
-  private def generateAccountType(implicit
-    ec: ExecutionContext,
-    hc: HeaderCarrier,
-    requestWithUserDetails: RequestWithUserDetailsFromSession[_]
-  ): TEAFResult[AccountTypes.Value] = EitherT {
-    checkUsersWithPTEnrolmentAlreadyAssigned.value
-      .flatMap {
-        case Right(Some(accountTypes)) => Future.successful(Right(accountTypes))
-        case Right(None)               => getNonePTAccountType.value
-        case Left(error)               => Future.successful(Left(error))
-      }
-  }
-
-  private def checkUsersWithPTEnrolmentAlreadyAssigned(implicit
-    hc: HeaderCarrier,
-    ec: ExecutionContext,
-    requestWithUserDetails: RequestWithUserDetailsFromSession[_]
-  ): TEAFResult[Option[AccountTypes.Value]] =
-    if (requestWithUserDetails.userDetails.hasPTEnrolment) {
-      logger.logEvent(
-        logCurrentUserAlreadyHasPTEnrolment(
-          requestWithUserDetails.userDetails.credId
-        )
-      )
-      EitherT.right(Future.successful(Some(PT_ASSIGNED_TO_CURRENT_USER)))
-    } else {
-      eacdService.getUsersAssignedPTEnrolment
-        .map(usersAssignedEnrolment =>
-          usersAssignedEnrolment.enrolledCredential.map { credId =>
-            if (credId == requestWithUserDetails.userDetails.credId) {
-              logger.logEvent(
-                logCurrentUserAlreadyHasPTEnrolment(
-                  requestWithUserDetails.userDetails.credId
-                )
-              )
-              PT_ASSIGNED_TO_CURRENT_USER
-            } else {
-              logger.logEvent(
-                logAnotherAccountAlreadyHasPTEnrolment(
-                  requestWithUserDetails.userDetails.credId,
-                  credId
-                )
-              )
-              PT_ASSIGNED_TO_OTHER_USER
-            }
+  ): EitherT[Future, TaxEnrolmentAssignmentErrors, AccountTypes.Value] = EitherT {
+    getOptAccountTypeFromCache.foldF {
+      val hmrcPtOnOtherAccountFuture =
+        eacdService.getUsersAssignedPTEnrolment.map { userAssignedEnrolment: UsersAssignedEnrolment =>
+          userAssignedEnrolment.enrolledCredential match {
+            case Some(requestWithUserDetails.userDetails.credId) => None
+            case Some(credId)                                    => Some(credId)
+            case None                                            => None
           }
-        )
-    }
 
-  private def getNonePTAccountType(implicit
-    requestWithUserDetails: RequestWithUserDetailsFromSession[_],
-    hc: HeaderCarrier,
-    ec: ExecutionContext
-  ): TEAFResult[AccountTypes.Value] = EitherT {
-    silentAssignmentService.hasOtherAccountsWithPTAAccess.value.flatMap {
-      case Right(true) =>
-        logger.logEvent(logCurrentUserhasMultipleAccounts(requestWithUserDetails.userDetails.credId))
-        getAccountTypeIfHasSA.map(_.getOrElse(MULTIPLE_ACCOUNTS)).value
-      case Right(_) =>
-        logger.logEvent(logCurrentUserhasOneAccount(requestWithUserDetails.userDetails.credId))
-        Future.successful(Right(SINGLE_ACCOUNT))
-      case Left(error) => Future.successful(Left(error))
-    }
+        }
+
+      val irSaOnOtherAccountFuture = eacdService.getUsersAssignedSAEnrolment.map {
+        userAssignedEnrolment: UsersAssignedEnrolment =>
+          userAssignedEnrolment.enrolledCredential match {
+            case Some(requestWithUserDetails.userDetails.credId) => None
+            case Some(credId)                                    => Some(credId)
+            case None                                            => None
+          }
+      }
+
+      val hmrcPt = requestWithUserDetails.userDetails.hasPTEnrolment
+      val irSa = requestWithUserDetails.userDetails.hasSAEnrolment
+
+      (for {
+        hmrcPtOnOtherAccount <- hmrcPtOnOtherAccountFuture
+        irSaOnOtherAccount   <- irSaOnOtherAccountFuture
+        accountType = {
+          (hmrcPtOnOtherAccount, irSaOnOtherAccount, hmrcPt, irSa) match {
+            case (None, _, true, _)     => PT_ASSIGNED_TO_CURRENT_USER
+            case (Some(_), _, false, _) => PT_ASSIGNED_TO_OTHER_USER
+            case (Some(_), _, true, _) =>
+              throw new RuntimeException("HMRC-PT enrolment cannot be on both the current and an other account")
+            case (_, None, _, true)     => SA_ASSIGNED_TO_CURRENT_USER
+            case (_, Some(_), _, false) => SA_ASSIGNED_TO_OTHER_USER
+            case (_, Some(_), _, true) =>
+              throw new RuntimeException("IR-SA enrolment cannot be on both the current and an other account")
+            case _ => MULTIPLE_ACCOUNTS
+          }
+        }
+        _ <- {
+          EitherT[Future, TaxEnrolmentAssignmentErrors, CacheMap](
+            sessionCache.save[AccountTypes.Value](ACCOUNT_TYPE, accountType).map(Right(_))
+          )
+        }
+      } yield accountType).value
+
+    }(account => Future.successful(Right(account)))
   }
-
-  private def getAccountTypeIfHasSA(implicit
-    hc: HeaderCarrier,
-    ec: ExecutionContext,
-    requestWithUserDetails: RequestWithUserDetailsFromSession[_]
-  ): TEAFResult[Option[AccountTypes.Value]] =
-    if (requestWithUserDetails.userDetails.hasSAEnrolment) {
-      logger.logEvent(
-        logCurrentUserHasSAEnrolment(requestWithUserDetails.userDetails.credId)
-      )
-      EitherT.right(Future.successful(Some(SA_ASSIGNED_TO_CURRENT_USER)))
-    } else {
-      eacdService.getUsersAssignedSAEnrolment
-        .map(usersAssignedEnrolment =>
-          usersAssignedEnrolment.enrolledCredential
-            .map { credId =>
-              if (credId == requestWithUserDetails.userDetails.credId) {
-                logger.logEvent(
-                  logCurrentUserHasSAEnrolment(
-                    requestWithUserDetails.userDetails.credId
-                  )
-                )
-                SA_ASSIGNED_TO_CURRENT_USER
-              } else {
-                logger.logEvent(
-                  logAnotherAccountHasSAEnrolment(
-                    requestWithUserDetails.userDetails.credId,
-                    credId
-                  )
-                )
-                SA_ASSIGNED_TO_OTHER_USER
-              }
-            }
-        )
-    }
 
   private def getOptAccountTypeFromCache(implicit
     request: RequestWithUserDetailsFromSession[_],
     ec: ExecutionContext
-  ): Future[Option[AccountTypes.Value]] =
-    sessionCache.fetch().map { optCachedMap =>
+  ): OptionT[Future, AccountTypes.Value] =
+    OptionT(sessionCache.fetch().map { optCachedMap =>
       optCachedMap
         .fold[Option[AccountTypes.Value]](
           None
         ) { cachedMap =>
           AccountDetailsFromMongo.optAccountType(cachedMap.data)
         }
-    }
+    })
 }

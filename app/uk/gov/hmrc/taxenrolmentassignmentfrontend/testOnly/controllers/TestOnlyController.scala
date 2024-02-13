@@ -68,6 +68,32 @@ class TestOnlyController @Inject() (
       )
   }
 
+  def delete: Action[AnyContent] = Action.async { request =>
+    implicit val hc: HeaderCarrier = HeaderCarrier(Some(Authorization("Bearer 1")))
+
+    val jsonData = request.body.asJson.get
+
+    val accountList = Try(jsonData.as[JsArray]) match {
+      case Success(_)                    => jsonData.as[List[AccountDetailsTestOnly]]
+      case Failure(_: JsResultException) => List(jsonData.as[AccountDetailsTestOnly])
+      case Failure(error)                => throw error
+    }
+
+    accountList
+      .map { data =>
+        accountUtilsTestOnly.deleteAccountDetails(data)
+      }
+      .sequence
+      .fold(
+        {
+          case UpstreamError(error)              => InternalServerError(error.message)
+          case UpstreamUnexpected2XX(message, _) => InternalServerError(message)
+          case error                             => InternalServerError(error.toString)
+        },
+        _ => Ok("Deleted")
+      )
+  }
+
   def successfulCall: Action[AnyContent] = Action.async { _ =>
     logger.logEvent(logSuccessfulRedirectToReturnUrl)
     Future.successful(Ok("Successful"))

@@ -34,6 +34,9 @@ class EnrolmentStoreServiceTestOnly @Inject() (
   def deleteAccount(groupId: String)(implicit hc: HeaderCarrier): TEAFResult[Unit] =
     enrolmentStoreStubConnectorTestOnly.deleteStubAccount(groupId)
 
+  def deleteGroup(groupId: String)(implicit hc: HeaderCarrier): TEAFResult[Unit] =
+    enrolmentStoreConnectorTestOnly.deleteGroup(groupId)
+
   def insertAccount(account: AccountDetailsTestOnly)(implicit hc: HeaderCarrier): TEAFResult[Unit] =
     enrolmentStoreStubConnectorTestOnly.addStubAccount(account)
 

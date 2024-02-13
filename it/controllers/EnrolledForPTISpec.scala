@@ -16,7 +16,7 @@
 
 package controllers
 
-import helpers.{IntegrationSpecBase, ItUrlPaths, ThrottleHelperISpec}
+import helpers.{IntegrationSpecBase, ItUrlPaths}
 import helpers.TestITData._
 import play.api.test.Helpers.{GET, POST, await, contentAsString, defaultAwaitTimeout, redirectLocation, route, status}
 import play.api.test.Helpers.{writeableOf_AnyContentAsEmpty, writeableOf_AnyContentAsJson}
@@ -28,18 +28,11 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import play.api.test.FakeRequest
 
-class EnrolledForPTISpec extends IntegrationSpecBase with ThrottleHelperISpec {
+class EnrolledForPTISpec extends IntegrationSpecBase {
 
   val urlPath: String = ItUrlPaths.enrolledPTNoSAOnAnyAccountPath
 
   s"GET $urlPath" when {
-
-    throttleSpecificTests { () =>
-      val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
-        .withSession(xSessionId, xAuthToken)
-      route(app, request).get
-    }
-
     s"the session cache has Account type of $MULTIPLE_ACCOUNTS" should {
       s"render the EnrolledForPT page" in {
         await(save[String](sessionId, "redirectURL", returnUrl))
@@ -217,14 +210,6 @@ class EnrolledForPTISpec extends IntegrationSpecBase with ThrottleHelperISpec {
   }
 
   s"POST $urlPath" when {
-
-    throttleSpecificTests { () =>
-      val request = FakeRequest(POST, "/protect-tax-info" + urlPath)
-        .withSession(xSessionId, xAuthToken)
-        .withJsonBody(Json.obj())
-      route(app, request).get
-    }
-
     "the session cache contains the redirect url" should {
       s"redirect to the redirect url" in {
         await(save[String](sessionId, "redirectURL", returnUrl))

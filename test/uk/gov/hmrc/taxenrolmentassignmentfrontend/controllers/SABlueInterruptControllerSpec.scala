@@ -34,7 +34,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{ControllersBaseSpec, 
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditHandler
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{SilentAssignmentService, ThrottlingService}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{SilentAssignmentService}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SABlueInterrupt
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -57,7 +57,6 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
       bind[SilentAssignmentService].toInstance(mockSilentAssignmentService),
       bind[AccountCheckOrchestrator].toInstance(mockAccountCheckOrchestrator),
       bind[AuditHandler].toInstance(mockAuditHandler),
-      bind[ThrottlingService].toInstance(mockThrottlingService),
       bind[AuthConnector].toInstance(mockAuthConnector),
       bind[BodyParsers.Default].toInstance(testBodyParser),
       bind[MultipleAccountsOrchestrator].toInstance(mockMultipleAccountsOrchestrator)
@@ -70,9 +69,6 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
     inject[SABlueInterrupt]
 
   "view" when {
-
-    specificThrottleTests(controller.view())
-
     "a user has SA on another account" should {
       "render the SABlueInterrupt page" when {
         "the user has not already been assigned a PT enrolment" in {
@@ -100,7 +96,6 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
             .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
             .returning(Right(SA_ASSIGNED_TO_OTHER_USER))
           mockGetDataFromCacheForActionSuccess(randomAccountType)
-          mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
           val result = controller
             .view()
@@ -155,7 +150,6 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
             .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
             .returning(Left(UnexpectedPTEnrolment(SA_ASSIGNED_TO_OTHER_USER)))
           mockGetDataFromCacheForActionSuccess(randomAccountType)
-          mockAccountShouldNotBeThrottled(randomAccountType, NINO, ptEnrolmentOnly.enrolments)
 
           val result = controller
             .view()
@@ -223,7 +217,6 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
             Left(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
           )
         mockGetDataFromCacheForActionSuccess(randomAccountType)
-        mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val result = controller
           .view()
@@ -236,9 +229,6 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
   }
 
   "continue" when {
-
-    specificThrottleTests(controller.continue())
-
     "a user has SA on another account" should {
       s"redirect to ${UrlPaths.saOnOtherAccountKeepAccessToSAPath}" in {
         (
@@ -265,7 +255,6 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
           .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
           .returning(Right(SA_ASSIGNED_TO_OTHER_USER))
         mockGetDataFromCacheForActionSuccess(randomAccountType)
-        mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val result = controller
           .continue()
@@ -334,7 +323,6 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
             Left(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
           )
         mockGetDataFromCacheForActionSuccess(randomAccountType)
-        mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val result = controller
           .continue()

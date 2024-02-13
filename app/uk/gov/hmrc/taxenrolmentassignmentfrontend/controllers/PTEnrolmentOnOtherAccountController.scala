@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction, ThrottleAction}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, PTEnrolmentOnOtherAccount}
@@ -32,7 +32,6 @@ import scala.concurrent.ExecutionContext
 class PTEnrolmentOnOtherAccountController @Inject() (
   authAction: AuthAction,
   accountMongoDetailsAction: AccountMongoDetailsAction,
-  throttleAction: ThrottleAction,
   mcc: MessagesControllerComponents,
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
   ptEnrolmentOnAnotherAccountView: PTEnrolmentOnAnotherAccount,
@@ -43,7 +42,7 @@ class PTEnrolmentOnOtherAccountController @Inject() (
     extends TEAFrontendController(mcc) {
 
   def view: Action[AnyContent] =
-    authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
+    authAction.andThen(accountMongoDetailsAction).async { implicit request =>
       val res = multipleAccountsOrchestrator.getCurrentAndPTAAndSAIfExistsForUser
 
       res.value.map {

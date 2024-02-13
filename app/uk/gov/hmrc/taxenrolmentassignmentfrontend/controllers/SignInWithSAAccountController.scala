@@ -19,7 +19,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 import cats.data.EitherT
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction, ThrottleAction}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
@@ -35,7 +35,6 @@ import scala.concurrent.{ExecutionContext, Future}
 class SignInWithSAAccountController @Inject() (
   authAction: AuthAction,
   accountMongoDetailsAction: AccountMongoDetailsAction,
-  throttleAction: ThrottleAction,
   mcc: MessagesControllerComponents,
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
   signInWithSAAccount: SignInWithSAAccount,
@@ -46,7 +45,7 @@ class SignInWithSAAccountController @Inject() (
     extends TEAFrontendController(mcc) {
 
   def view: Action[AnyContent] =
-    authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
+    authAction.andThen(accountMongoDetailsAction).async { implicit request =>
       val res = for {
         currentAccount <- multipleAccountsOrchestrator.getDetailsForEnrolledPTWithSAOnOtherAccount
         _ <- EitherT {
@@ -68,7 +67,7 @@ class SignInWithSAAccountController @Inject() (
     }
 
   def continue: Action[AnyContent] =
-    authAction.andThen(accountMongoDetailsAction).andThen(throttleAction) { implicit request =>
+    authAction.andThen(accountMongoDetailsAction) { implicit request =>
       logger.logEvent(
         logUserSignsInAgainWithSAAccount(request.userDetails.credId)
       )

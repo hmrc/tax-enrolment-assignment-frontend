@@ -16,7 +16,7 @@
 
 package controllers
 
-import helpers.{IntegrationSpecBase, ItUrlPaths, ThrottleHelperISpec}
+import helpers.{IntegrationSpecBase, ItUrlPaths}
 import helpers.TestITData._
 import play.api.test.Helpers.{GET, POST, await, contentAsString, defaultAwaitTimeout, redirectLocation}
 import play.api.test.Helpers.{route, status, writeableOf_AnyContentAsEmpty, writeableOf_AnyContentAsJson}
@@ -34,19 +34,12 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, UsersA
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
 
-class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with ThrottleHelperISpec {
+class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
   val urlPathSa: String = ItUrlPaths.reportFraudSAAccountPath
   val urlPathPT: String = ItUrlPaths.reportFraudPTAccountPath
 
   s"GET $urlPathSa" should {
-
-    throttleSpecificTests { () =>
-      val request = FakeRequest(GET, "/protect-tax-info" + urlPathSa)
-        .withSession(xAuthToken, xSessionId)
-      route(app, request).get
-    }
-
     "the session cache has a credential for SA enrolment that is not the signed in account" when {
       s"render the report suspiciousId page with a continue button" in {
         await(save[String](sessionId, "redirectURL", returnUrl))
@@ -434,13 +427,6 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
   }
 
   s"GET $urlPathPT" when {
-
-    throttleSpecificTests { () =>
-      val request = FakeRequest(GET, "/protect-tax-info" + urlPathPT)
-        .withSession(xAuthToken, xSessionId)
-      route(app, request).get
-    }
-
     "the session cache has a credential for PT enrolment that is not the signed in account" when {
       s"render the report suspiciousId page with no continue button" in {
         await(save[String](sessionId, "redirectURL", returnUrl))
@@ -759,14 +745,6 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase with Throttl
   }
 
   s"POST $urlPathSa" when {
-
-    throttleSpecificTests { () =>
-      val request = FakeRequest(POST, "/protect-tax-info" + urlPathSa)
-        .withSession(xAuthToken, xSessionId)
-        .withJsonBody(Json.obj())
-      route(app, request).get
-    }
-
     "the user has account type of SA_ASSIGNED_TO_OTHER_USER" when {
       s"enrol the user for PT and redirect to the EnroledAfterReportingFraud" when {
         "the user hasn't already been assigned a PT enrolment" in {

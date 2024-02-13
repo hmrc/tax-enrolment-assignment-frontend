@@ -18,7 +18,7 @@ package controllers
 
 import helpers.TestITData._
 import play.api.test.Helpers.{GET, POST, await, contentAsString, defaultAwaitTimeout, redirectLocation, route}
-import play.api.test.Helpers.{status, writeableOf_AnyContentAsEmpty, writeableOf_AnyContentAsJson}
+import play.api.test.Helpers.{status, writeableOf_AnyContentAsEmpty}
 import helpers.messages._
 import helpers.{IntegrationSpecBase, ItUrlPaths}
 import org.jsoup.Jsoup

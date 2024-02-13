@@ -136,11 +136,11 @@ object LoggingEvent {
       )
     )
 
-  def logCurrentUserhasMultipleAccounts(credentialId: String): LoggingEvent =
+  def logCurrentUserhasOneOrMultipleAccounts(credentialId: String): LoggingEvent =
     Info(
       Event(
         "[AccountCheckOrchestrator][getAccountType]",
-        details = Some(s"Signed in credential $credentialId has multiple accounts")
+        details = Some(s"Signed in credential $credentialId has one or multiple accounts with no enrolments")
       )
     )
 

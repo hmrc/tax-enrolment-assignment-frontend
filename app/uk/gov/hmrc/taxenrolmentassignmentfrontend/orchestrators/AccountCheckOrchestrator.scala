@@ -23,17 +23,16 @@ import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.cache.client.CacheMap
-import uk.gov.hmrc.service.TEAFResult
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.{AccountTypes, _}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSession}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{logAnotherAccountAlreadyHasPTEnrolment, logAnotherAccountHasSAEnrolment, logCurrentUserAlreadyHasPTEnrolment, logCurrentUserHasSAEnrolment, logCurrentUserhasMultipleAccounts, logCurrentUserhasOneAccount}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{logAnotherAccountAlreadyHasPTEnrolment, logAnotherAccountHasSAEnrolment, logCurrentUserAlreadyHasPTEnrolment, logCurrentUserHasSAEnrolment, logCurrentUserhasOneOrMultipleAccounts}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, SilentAssignmentService}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.EACDService
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -79,22 +78,47 @@ class AccountCheckOrchestrator @Inject() (
         irSaOnOtherAccount   <- irSaOnOtherAccountFuture
         accountType = {
           (hmrcPtOnOtherAccount, irSaOnOtherAccount, hmrcPt, irSa) match {
-            case (None, _, true, _)     => PT_ASSIGNED_TO_CURRENT_USER
-            case (Some(_), _, false, _) => PT_ASSIGNED_TO_OTHER_USER
+            case (None, _, true, _) =>
+              logger.logEvent(
+                logCurrentUserAlreadyHasPTEnrolment(
+                  requestWithUserDetails.userDetails.credId
+                )
+              )
+              PT_ASSIGNED_TO_CURRENT_USER
+            case (Some(credId), _, false, _) =>
+              logger.logEvent(
+                logAnotherAccountAlreadyHasPTEnrolment(
+                  requestWithUserDetails.userDetails.credId,
+                  credId
+                )
+              )
+              PT_ASSIGNED_TO_OTHER_USER
             case (Some(_), _, true, _) =>
               throw new RuntimeException("HMRC-PT enrolment cannot be on both the current and an other account")
-            case (_, None, _, true)     => SA_ASSIGNED_TO_CURRENT_USER
-            case (_, Some(_), _, false) => SA_ASSIGNED_TO_OTHER_USER
+            case (_, None, _, true) =>
+              logger.logEvent(
+                logCurrentUserHasSAEnrolment(requestWithUserDetails.userDetails.credId)
+              )
+              SA_ASSIGNED_TO_CURRENT_USER
+            case (_, Some(credId), _, false) =>
+              logger.logEvent(
+                logAnotherAccountHasSAEnrolment(
+                  requestWithUserDetails.userDetails.credId,
+                  credId
+                )
+              )
+              SA_ASSIGNED_TO_OTHER_USER
             case (_, Some(_), _, true) =>
               throw new RuntimeException("IR-SA enrolment cannot be on both the current and an other account")
-            case _ => MULTIPLE_ACCOUNTS
+            case _ =>
+              logger.logEvent(logCurrentUserhasOneOrMultipleAccounts(requestWithUserDetails.userDetails.credId))
+              MULTIPLE_ACCOUNTS
           }
         }
-        _ <- {
+        _ <-
           EitherT[Future, TaxEnrolmentAssignmentErrors, CacheMap](
             sessionCache.save[AccountTypes.Value](ACCOUNT_TYPE, accountType).map(Right(_))
           )
-        }
       } yield accountType).value
 
     }(account => Future.successful(Right(account)))

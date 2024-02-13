@@ -16,23 +16,14 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.services
 
-import cats.data.EitherT
-import cats.implicits._
 import uk.gov.hmrc.http.HeaderCarrier
 import play.api.Logger
 import uk.gov.hmrc.service.TEAFResult
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{EACDConnector, TaxEnrolmentsConnector}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.TaxEnrolmentsConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logCurrentUserhasMultipleAccountsDebug
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IVNinoStoreEntry
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.saEnrolmentSet
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.HAS_OTHER_VALID_PTA_ACCOUNTS
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 
 import javax.inject.Inject
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 class SilentAssignmentService @Inject() (
   taxEnrolmentsConnector: TaxEnrolmentsConnector

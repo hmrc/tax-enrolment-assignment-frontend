@@ -43,6 +43,10 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
     )
       .transform {
         case Right(response) if response.status == NO_CONTENT => Right(())
+        case Right(response) =>
+          val ex = new RuntimeException(s"Unexpected ${response.status} status")
+          logger.error(ex.getMessage, ex)
+          Left(UpstreamUnexpected2XX(response.body, response.status))
         case Left(upstreamError) =>
           logger.error(upstreamError.message)
           Left(UpstreamError(upstreamError))
@@ -68,7 +72,7 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
       }
 
   //ES1
-  def getGroupsFromEnrolment(enrolmentKey: String)(implicit hc: HeaderCarrier): TEAFResult[List[String]] = {
+  def getGroupsFromEnrolment(enrolmentKey: String)(implicit hc: HeaderCarrier): TEAFResult[List[String]] =
     EitherT(
       httpClient.GET[Either[UpstreamErrorResponse, HttpResponse]](
         s"${appConfig.EACD_BASE_URL}/enrolment-store/enrolments/$enrolmentKey/groups"
@@ -85,7 +89,6 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
           logger.error(upstreamError.message)
           Left(UpstreamError(upstreamError))
       }
-  }
 
   //ES2
   def getEnrolmentsFromUser(credId: String)(implicit hc: HeaderCarrier): TEAFResult[List[String]] =
@@ -192,7 +195,7 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
   }
 
   //ES9
-  def deleteEnrolmentFromGroup(enrolmentKey: String, groupId: String)(implicit hc: HeaderCarrier): TEAFResult[Unit] = {
+  def deleteEnrolmentFromGroup(enrolmentKey: String, groupId: String)(implicit hc: HeaderCarrier): TEAFResult[Unit] =
     EitherT(
       httpClient.DELETE[Either[UpstreamErrorResponse, HttpResponse]](
         s"${appConfig.EACD_BASE_URL}/enrolment-store/groups/$groupId/enrolments/$enrolmentKey"
@@ -209,7 +212,6 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
           logger.error(upstreamError.message)
           Left(UpstreamError(upstreamError))
       }
-  }
 
   //ES12
   def deleteEnrolmentFromUser(enrolmentKey: String, credId: String)(implicit hc: HeaderCarrier): TEAFResult[Unit] =

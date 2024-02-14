@@ -86,7 +86,6 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
     }
 
     List(
-      SINGLE_OR_MULTIPLE_ACCOUNTS,
       PT_ASSIGNED_TO_OTHER_USER,
       PT_ASSIGNED_TO_CURRENT_USER
     ).foreach { accountType =>

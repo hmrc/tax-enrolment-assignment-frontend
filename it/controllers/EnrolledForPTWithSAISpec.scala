@@ -59,7 +59,7 @@ class EnrolledForPTWithSAISpec extends IntegrationSpecBase {
       }
     }
 
-    List(PT_ASSIGNED_TO_OTHER_USER, PT_ASSIGNED_TO_CURRENT_USER, SINGLE_ACCOUNT)
+    List(PT_ASSIGNED_TO_OTHER_USER, PT_ASSIGNED_TO_CURRENT_USER)
       .foreach { accountType =>
         s"the session cache has Account type of $accountType" should {
           s"redirect to /protect-tax-info?redirectUrl=" in {
@@ -75,6 +75,7 @@ class EnrolledForPTWithSAISpec extends IntegrationSpecBase {
               .withSession(xSessionId, xAuthToken)
             val result = route(app, request).get
 
+            contentAsString(result) shouldBe ""
             status(result) shouldBe SEE_OTHER
             redirectLocation(result).get should include(
               accountCheckPath

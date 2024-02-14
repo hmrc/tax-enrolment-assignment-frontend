@@ -97,9 +97,8 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
     }
 
     List(
-      SINGLE_ACCOUNT,
       PT_ASSIGNED_TO_CURRENT_USER,
-      MULTIPLE_ACCOUNTS,
+      SINGLE_OR_MULTIPLE_ACCOUNTS,
       PT_ASSIGNED_TO_OTHER_USER,
       SA_ASSIGNED_TO_CURRENT_USER
     ).foreach { accountType =>
@@ -128,7 +127,7 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
     "the session cache has no redirectUrl" should {
       s"return $INTERNAL_SERVER_ERROR" in {
         await(
-          save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", AccountTypes.SINGLE_ACCOUNT)
+          save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", SINGLE_OR_MULTIPLE_ACCOUNTS)
         )
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
@@ -308,9 +307,8 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
     }
 
     List(
-      SINGLE_ACCOUNT,
       PT_ASSIGNED_TO_CURRENT_USER,
-      MULTIPLE_ACCOUNTS,
+      SINGLE_OR_MULTIPLE_ACCOUNTS,
       PT_ASSIGNED_TO_OTHER_USER,
       SA_ASSIGNED_TO_CURRENT_USER
     ).foreach { accountType =>

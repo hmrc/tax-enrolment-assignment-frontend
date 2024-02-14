@@ -109,25 +109,22 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
         "the user has not been assigned the enrolment already" in new TestHelper {
           mockAuthCall()
           mockSaveDataToCache
-          mockAccountCheckSuccess(SINGLE_ACCOUNT)
+          mockAccountCheckSuccess(SINGLE_OR_MULTIPLE_ACCOUNTS)
           mockSilentEnrolSuccess
-          mockAuditPTEnrolled(SINGLE_ACCOUNT, requestWithUserDetails(), messagesApi)
+          mockAuditPTEnrolled(SINGLE_OR_MULTIPLE_ACCOUNTS, requestWithUserDetails(), messagesApi)
 
-          // removeRecord is called twice.
-          // - Once in enrolForPTIfRequired
-          // - Once in handleNoneThrottledUsers
           (mockTeaSessionCache
             .removeRecord(_: RequestWithUserDetailsFromSession[_]))
             .expects(*)
             .returning(Future.successful(true))
-            .twice()
+            .never()
 
           val result = controller
             .accountCheck(returnUrl)
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
           status(result) shouldBe SEE_OTHER
-          redirectLocation(result) shouldBe Some(returnUrlvalue)
+          redirectLocation(result) shouldBe Some("/protect-tax-info/enrol-pt/enrolment-success-no-sa")
         }
       }
 
@@ -135,7 +132,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
         "the user has been assigned the enrolment already" in new TestHelper {
           mockAuthCallWithPT()
           mockSaveDataToCache
-          mockAccountCheckSuccess(SINGLE_ACCOUNT)
+          mockAccountCheckSuccess(PT_ASSIGNED_TO_CURRENT_USER)
 
           // removeRecord is called twice.
           // - Once in enrolForPTIfRequired
@@ -158,7 +155,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
       "return an error page if there was an error assigning the enrolment" in new TestHelper {
         mockAuthCall()
         mockSaveDataToCache
-        mockAccountCheckSuccess(SINGLE_ACCOUNT)
+        mockAccountCheckSuccess(SINGLE_OR_MULTIPLE_ACCOUNTS)
         mockSilentEnrolFailure
 
         val result = controller
@@ -207,9 +204,9 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
         "the user has not already been assigned the PT enrolment" in new TestHelper {
           mockAuthCall()
           mockSaveDataToCache
-          mockAccountCheckSuccess(MULTIPLE_ACCOUNTS)
+          mockAccountCheckSuccess(SINGLE_OR_MULTIPLE_ACCOUNTS)
           mockSilentEnrolSuccess
-          mockAuditPTEnrolled(MULTIPLE_ACCOUNTS, requestWithUserDetails(), messagesApi)
+          mockAuditPTEnrolled(SINGLE_OR_MULTIPLE_ACCOUNTS, requestWithUserDetails(), messagesApi)
 
           val result = controller
             .accountCheck(returnUrl)
@@ -226,7 +223,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
         "the user has already been assigned the PT enrolment" in new TestHelper {
           mockAuthCallWithPT()
           mockSaveDataToCache
-          mockAccountCheckSuccess(MULTIPLE_ACCOUNTS)
+          mockAccountCheckSuccess(SINGLE_OR_MULTIPLE_ACCOUNTS)
           mockDeleteDataFromCache
 
           val result = controller

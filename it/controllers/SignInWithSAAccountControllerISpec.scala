@@ -133,9 +133,8 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
     }
 
     List(
-      SINGLE_ACCOUNT,
       PT_ASSIGNED_TO_CURRENT_USER,
-      MULTIPLE_ACCOUNTS,
+      SINGLE_OR_MULTIPLE_ACCOUNTS,
       PT_ASSIGNED_TO_OTHER_USER,
       SA_ASSIGNED_TO_CURRENT_USER
     ).foreach { accountType =>

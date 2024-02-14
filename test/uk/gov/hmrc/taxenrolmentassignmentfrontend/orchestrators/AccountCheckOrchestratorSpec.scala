@@ -66,11 +66,11 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
             _: RequestWithUserDetailsFromSession[AnyContent]
           ))
           .expects(*)
-          .returning(Future.successful(Some(generateBasicCacheMap(SINGLE_ACCOUNT))))
+          .returning(Future.successful(Some(generateBasicCacheMap(SINGLE_OR_MULTIPLE_ACCOUNTS))))
 
         val res = orchestrator.getAccountType
         whenReady(res.value) { result =>
-          result shouldBe Right(SINGLE_ACCOUNT)
+          result shouldBe Right(SINGLE_OR_MULTIPLE_ACCOUNTS)
         }
       }
     }
@@ -108,13 +108,13 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
               _: RequestWithUserDetailsFromSession[AnyContent],
               _: Format[AccountTypes.Value]
             ))
-            .expects(ACCOUNT_TYPE, MULTIPLE_ACCOUNTS, *, *)
+            .expects(ACCOUNT_TYPE, SINGLE_OR_MULTIPLE_ACCOUNTS, *, *)
             .returning(Future(CacheMap(request.sessionID, Map())))
 
           val res = orchestrator.getAccountType
 
           whenReady(res.value) { result =>
-            result shouldBe Right(MULTIPLE_ACCOUNTS)
+            result shouldBe Right(SINGLE_OR_MULTIPLE_ACCOUNTS)
           }
         }
       }
@@ -418,13 +418,13 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
               _: RequestWithUserDetailsFromSession[AnyContent],
               _: Format[AccountTypes.Value]
             ))
-            .expects(ACCOUNT_TYPE, MULTIPLE_ACCOUNTS, *, *)
+            .expects(ACCOUNT_TYPE, SINGLE_OR_MULTIPLE_ACCOUNTS, *, *)
             .returning(Future(CacheMap(request.sessionID, Map())))
 
           val res = orchestrator.getAccountType
 
           whenReady(res.value) { result =>
-            result shouldBe Right(MULTIPLE_ACCOUNTS)
+            result shouldBe Right(SINGLE_OR_MULTIPLE_ACCOUNTS)
           }
         }
       }

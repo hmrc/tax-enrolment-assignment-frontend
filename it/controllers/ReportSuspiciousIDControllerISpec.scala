@@ -159,9 +159,8 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
     }
 
     List(
-      SINGLE_ACCOUNT,
       PT_ASSIGNED_TO_CURRENT_USER,
-      MULTIPLE_ACCOUNTS,
+      SINGLE_OR_MULTIPLE_ACCOUNTS,
       PT_ASSIGNED_TO_OTHER_USER,
       SA_ASSIGNED_TO_CURRENT_USER
     ).foreach { accountType =>
@@ -471,9 +470,8 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
     }
 
     List(
-      SINGLE_ACCOUNT,
       PT_ASSIGNED_TO_CURRENT_USER,
-      MULTIPLE_ACCOUNTS,
+      SINGLE_OR_MULTIPLE_ACCOUNTS,
       SA_ASSIGNED_TO_OTHER_USER,
       SA_ASSIGNED_TO_CURRENT_USER
     ).foreach { accountType =>
@@ -842,10 +840,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
     }
 
     List(
-      SINGLE_ACCOUNT,
       PT_ASSIGNED_TO_OTHER_USER,
       PT_ASSIGNED_TO_CURRENT_USER,
-      MULTIPLE_ACCOUNTS,
+      SINGLE_OR_MULTIPLE_ACCOUNTS,
       SA_ASSIGNED_TO_CURRENT_USER
     ).foreach { accountType =>
       s"the session cache has Account type of $accountType" when {

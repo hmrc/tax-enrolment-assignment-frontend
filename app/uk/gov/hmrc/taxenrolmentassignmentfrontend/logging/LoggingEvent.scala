@@ -45,7 +45,7 @@ object LoggingEvent {
     )
   )
 
-  def logMultipleAccountHolderAssignedEnrolment(
+  def logSingleOrMultipleAccountHolderAssignedEnrolment(
     credentialId: String,
     nino: Nino
   ): LoggingEvent =
@@ -53,7 +53,7 @@ object LoggingEvent {
       Event(
         "[AccountCheckController][silentEnrol]",
         details = Some(
-          s"$hmrcPTKey enrolment assigned to credential $credentialId which has multiple accounts with nino ${nino.nino}"
+          s"$hmrcPTKey enrolment assigned to credential $credentialId which has a single or multiple accounts with nino ${nino.nino}"
         )
       )
     )

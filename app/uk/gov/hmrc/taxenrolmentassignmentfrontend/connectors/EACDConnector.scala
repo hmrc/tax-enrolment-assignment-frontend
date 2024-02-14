@@ -37,33 +37,6 @@ class EACDConnector @Inject() (httpClient: HttpClient, logger: EventLoggerServic
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
-  def assignPTEnrolmentToUser(userId: String, nino: Nino)(implicit
-    ec: ExecutionContext,
-    hc: HeaderCarrier
-  ): TEAFResult[String] = EitherT {
-    val enrolmentKey = s"$hmrcPTKey~NINO~${nino.nino}"
-    lazy val url =
-      s"${appConfig.EACD_BASE_URL}/enrolment-store/users/$userId/enrolments/$enrolmentKey"
-
-    httpClient
-      .POSTEmpty[HttpResponse](url)
-      .map { response =>
-        response.status match {
-          case CREATED  => Right("Success")
-          case CONFLICT => Right("Duplicate Enrolment Request")
-          case status =>
-            logger.logEvent(
-              logUnexpectedResponseFromEACD(
-                "HMRC-PT~NINO",
-                status,
-                response.body
-              )
-            )
-            Left(UnexpectedResponseFromEACD)
-        }
-      }
-  }
-
   def getUsersWithPTEnrolment(nino: Nino)(implicit
     ec: ExecutionContext,
     hc: HeaderCarrier

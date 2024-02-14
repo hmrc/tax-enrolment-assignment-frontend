@@ -35,12 +35,4 @@ object AccountTypes extends Enumeration {
   )
   implicit val read: Reads[AccountTypes.Value] =
     Reads.enumNameReads(AccountTypes)
-
-  def unapply(fileStatus: AccountTypes.Value): String = fileStatus match {
-    case SINGLE_ACCOUNT              => "SINGLE_ACCOUNT"
-    case PT_ASSIGNED_TO_CURRENT_USER => "PT_ASSIGNED_TO_CURRENT_USER"
-    case PT_ASSIGNED_TO_OTHER_USER   => "PT_ASSIGNED_TO_OTHER_USER"
-    case MULTIPLE_ACCOUNTS           => "MULTIPLE_ACCOUNTS"
-    case _                           => throw new RuntimeException(s"AccountTypes declaration `$fileStatus` is missing")
-  }
 }

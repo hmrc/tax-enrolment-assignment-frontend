@@ -18,7 +18,6 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.logging
 
 import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.{IRSAKey, hmrcPTKey}
 
@@ -77,16 +76,6 @@ object LoggingEvent {
         "[SignInWithSAAccountController][continue]",
         details = Some(
           s"User with credential $credentialId chose to sign in again with their $IRSAKey account"
-        )
-      )
-    )
-
-  def logUserThrottled(credentialId: String, accountType: AccountTypes.Value, nino: Nino): LoggingEvent =
-    Info(
-      Event(
-        "[Throttling]",
-        details = Some(
-          s"$credentialId has been throttled with the account type $accountType and nino ${nino.nino}"
         )
       )
     )

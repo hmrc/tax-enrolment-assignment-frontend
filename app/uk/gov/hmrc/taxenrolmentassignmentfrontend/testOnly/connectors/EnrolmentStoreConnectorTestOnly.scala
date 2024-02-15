@@ -47,6 +47,7 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
           val ex = new RuntimeException(s"Unexpected ${response.status} status")
           logger.error(ex.getMessage, ex)
           Left(UpstreamUnexpected2XX(response.body, response.status))
+        case Left(upstreamError) if upstreamError.statusCode == NOT_FOUND => Right(())
         case Left(upstreamError) =>
           logger.error(upstreamError.message)
           Left(UpstreamError(upstreamError))

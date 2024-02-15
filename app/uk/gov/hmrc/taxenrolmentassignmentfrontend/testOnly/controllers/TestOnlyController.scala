@@ -20,22 +20,26 @@ import cats.implicits.toTraverseOps
 import play.api.libs.json.{JsArray, JsResultException}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthJourney
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TEAFrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{UpstreamError, UpstreamUnexpected2XX}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.EACDService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.AccountDetailsTestOnly
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.utils.AccountUtilsTestOnly
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext}
 import scala.util.{Failure, Success, Try}
 
 @Singleton
 class TestOnlyController @Inject() (
   accountUtilsTestOnly: AccountUtilsTestOnly,
   mcc: MessagesControllerComponents,
-  logger: EventLoggerService
+  logger: EventLoggerService,
+  authJourney: AuthJourney,
+  eacdService: EACDService
 )(implicit ec: ExecutionContext)
     extends TEAFrontendController(mcc) {
 
@@ -94,9 +98,19 @@ class TestOnlyController @Inject() (
       )
   }
 
-  def successfulCall: Action[AnyContent] = Action.async { _ =>
+  def successfulCall: Action[AnyContent] = authJourney.authJourney.async { implicit request =>
     logger.logEvent(logSuccessfulRedirectToReturnUrl)
-    Future.successful(Ok("Successful"))
+    eacdService.getUsersAssignedPTEnrolment
+      .bimap(
+        error => InternalServerError(error.toString),
+        userAssignedEnrolment =>
+          userAssignedEnrolment.enrolledCredential match {
+            case None                                                 => InternalServerError("No HMRC-PT enrolment")
+            case Some(credID) if credID == request.userDetails.credId => Ok("Successful")
+            case Some(credId) =>
+              InternalServerError(s"Wrong credid `$credId` in enrolment. It should be ${request.userDetails.credId}")
+          }
+      )
+      .merge
   }
-
 }

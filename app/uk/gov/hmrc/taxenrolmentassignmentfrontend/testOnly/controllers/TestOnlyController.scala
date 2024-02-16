@@ -30,7 +30,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.AccountDetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.utils.AccountUtilsTestOnly
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext}
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
 @Singleton
@@ -98,7 +98,8 @@ class TestOnlyController @Inject() (
       )
   }
 
-  def successfulCall: Action[AnyContent] = authJourney.authJourney.async { implicit request =>
+  //todo: to be used instead of the call below successfulCall. See DDCNL-8607
+  def newSuccessfulCall: Action[AnyContent] = authJourney.authJourney.async { implicit request =>
     logger.logEvent(logSuccessfulRedirectToReturnUrl)
     eacdService.getUsersAssignedPTEnrolment
       .bimap(
@@ -112,5 +113,10 @@ class TestOnlyController @Inject() (
           }
       )
       .merge
+  }
+
+  def successfulCall: Action[AnyContent] = Action.async { _ =>
+    logger.logEvent(logSuccessfulRedirectToReturnUrl)
+    Future.successful(Ok("Successful"))
   }
 }

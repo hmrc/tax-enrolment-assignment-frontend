@@ -14,5 +14,7 @@
 
 +nocsrf
 POST       /protect-tax-info/test-only/create                                                                 uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.controllers.TestOnlyController.create
++nocsrf
+POST       /protect-tax-info/test-only/delete                                                                 uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.controllers.TestOnlyController.delete
 
 GET        /protect-tax-info/test-only/successful                                                             uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.controllers.TestOnlyController.successfulCall

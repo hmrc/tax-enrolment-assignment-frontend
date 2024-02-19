@@ -16,7 +16,7 @@
 
 package controllers
 
-import helpers.{IntegrationSpecBase, ItUrlPaths, ThrottleHelperISpec}
+import helpers.{IntegrationSpecBase, ItUrlPaths}
 import helpers.TestITData._
 import play.api.test.Helpers.{GET, POST, await, contentAsString, defaultAwaitTimeout, redirectLocation}
 import play.api.test.Helpers.{route, status, writeableOf_AnyContentAsEmpty, writeableOf_AnyContentAsJson}
@@ -28,17 +28,10 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import play.api.test.FakeRequest
 
-class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status with ThrottleHelperISpec {
+class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
   val urlPath: String = ItUrlPaths.saOnOtherAccountInterruptPath
 
   s"GET $urlPath" when {
-
-    throttleSpecificTests { () =>
-      val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
-        .withSession(xAuthToken, xSessionId)
-      route(app, request).get
-    }
-
     "the session cache has a credential for SA enrolment that is not the signed in account" should {
       s"render the report blue interrupt page" when {
         "the user has not been assigned a PT enrolment" in {
@@ -104,9 +97,8 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status wit
     }
 
     List(
-      SINGLE_ACCOUNT,
       PT_ASSIGNED_TO_CURRENT_USER,
-      MULTIPLE_ACCOUNTS,
+      SINGLE_OR_MULTIPLE_ACCOUNTS,
       PT_ASSIGNED_TO_OTHER_USER,
       SA_ASSIGNED_TO_CURRENT_USER
     ).foreach { accountType =>
@@ -135,7 +127,7 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status wit
     "the session cache has no redirectUrl" should {
       s"return $INTERNAL_SERVER_ERROR" in {
         await(
-          save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", AccountTypes.SINGLE_ACCOUNT)
+          save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", SINGLE_OR_MULTIPLE_ACCOUNTS)
         )
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
@@ -259,14 +251,6 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status wit
   }
 
   s"POST $urlPath" when {
-
-    throttleSpecificTests { () =>
-      val request = FakeRequest(POST, "/protect-tax-info" + urlPath)
-        .withSession(xAuthToken, xSessionId)
-        .withJsonBody(Json.obj())
-      route(app, request).get
-    }
-
     "the session cache has a credential for SA enrolment that is not the signed in account" should {
       s"redirect to ${ItUrlPaths.saOnOtherAccountKeepAccessToSAPath}" when {
         "the user has not already been assigned PT enrolment" in {
@@ -323,9 +307,8 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status wit
     }
 
     List(
-      SINGLE_ACCOUNT,
       PT_ASSIGNED_TO_CURRENT_USER,
-      MULTIPLE_ACCOUNTS,
+      SINGLE_OR_MULTIPLE_ACCOUNTS,
       PT_ASSIGNED_TO_OTHER_USER,
       SA_ASSIGNED_TO_CURRENT_USER
     ).foreach { accountType =>

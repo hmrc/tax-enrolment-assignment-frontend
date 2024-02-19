@@ -18,7 +18,7 @@ package controllers
 
 import helpers.TestITData._
 import helpers.messages._
-import helpers.{IntegrationSpecBase, ItUrlPaths, ThrottleHelperISpec}
+import helpers.{IntegrationSpecBase, ItUrlPaths}
 import org.jsoup.Jsoup
 import play.api.http.Status
 import play.api.libs.json.{JsString, Json}
@@ -30,18 +30,11 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, UsersA
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL, USER_ASSIGNED_SA_ENROLMENT, accountDetailsForCredential}
 
-class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status with ThrottleHelperISpec {
+class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status {
 
   val urlPath: String = ItUrlPaths.saOnOtherAccountSigninAgainPath
 
   s"GET $urlPath" when {
-
-    throttleSpecificTests { () =>
-      val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
-        .withSession(xAuthToken, xSessionId)
-      route(app, request).get
-    }
-
     "the session cache has a credential for SA enrolment that is not the signed in account" should {
       s"return $OK with the sign in again page" when {
         "the user has not already been assigned a PT enrolment" in {
@@ -140,9 +133,8 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
     }
 
     List(
-      SINGLE_ACCOUNT,
       PT_ASSIGNED_TO_CURRENT_USER,
-      MULTIPLE_ACCOUNTS,
+      SINGLE_OR_MULTIPLE_ACCOUNTS,
       PT_ASSIGNED_TO_OTHER_USER,
       SA_ASSIGNED_TO_CURRENT_USER
     ).foreach { accountType =>
@@ -361,14 +353,6 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
   s"POST $urlPath" when {
 
     import play.api.test.Helpers.redirectLocation
-
-    throttleSpecificTests { () =>
-      val request = FakeRequest(POST, "/protect-tax-info" + urlPath)
-        .withSession(xAuthToken, xSessionId)
-        .withJsonBody(Json.obj())
-      route(app, request).get
-    }
-
     "the session cache has a credential for SA enrolment that is not the signed in account" should {
       s"redirect to ${ItUrlPaths.logoutPath}" in {
         val cacheData = Map(

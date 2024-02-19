@@ -18,31 +18,24 @@ package controllers
 
 import helpers.TestITData._
 import play.api.test.Helpers.{GET, POST, await, contentAsString, defaultAwaitTimeout, redirectLocation, route}
-import play.api.test.Helpers.{status, writeableOf_AnyContentAsEmpty, writeableOf_AnyContentAsJson}
+import play.api.test.Helpers.{status, writeableOf_AnyContentAsEmpty}
 import helpers.messages._
-import helpers.{IntegrationSpecBase, ItUrlPaths, ThrottleHelperISpec}
+import helpers.{IntegrationSpecBase, ItUrlPaths}
 import org.jsoup.Jsoup
 import play.api.http.Status
 import play.api.libs.json.{JsString, Json}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_OR_MULTIPLE_ACCOUNTS}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys._
 
-class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status with ThrottleHelperISpec {
+class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
 
   val urlPath: String = ItUrlPaths.saOnOtherAccountKeepAccessToSAPath
 
   s"GET $urlPath" when {
-
-    throttleSpecificTests { () =>
-      val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
-        .withSession(xAuthToken, xSessionId)
-      route(app, request).get
-    }
-
     s"the session cache contains Account type of $SA_ASSIGNED_TO_OTHER_USER and no page data" should {
       s"render the KeepAccessToSA page with radio buttons unchecked" in {
         await(save[String](sessionId, "redirectURL", returnUrl))
@@ -185,10 +178,9 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status with
     }
 
     List(
-      SINGLE_ACCOUNT,
       PT_ASSIGNED_TO_OTHER_USER,
       PT_ASSIGNED_TO_CURRENT_USER,
-      MULTIPLE_ACCOUNTS,
+      SINGLE_OR_MULTIPLE_ACCOUNTS,
       SA_ASSIGNED_TO_CURRENT_USER
     ).foreach { accountType =>
       s"the session cache has Account type of $accountType" should {
@@ -288,14 +280,6 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status with
   s"POST $urlPath" when {
 
     import play.api.test.Helpers.status
-
-    throttleSpecificTests { () =>
-      val request = FakeRequest(POST, "/protect-tax-info" + urlPath)
-        .withSession(xAuthToken, xSessionId)
-        .withJsonBody(Json.obj())
-      route(app, request).get
-    }
-
     s"the session cache contains Account type of $SA_ASSIGNED_TO_OTHER_USER" should {
       s"redirect to the ${ItUrlPaths.saOnOtherAccountSigninAgainPath}" when {
         "the user selects yes and has not already been assigned a PT enrolment" in {
@@ -445,10 +429,9 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status with
     }
 
     List(
-      SINGLE_ACCOUNT,
       PT_ASSIGNED_TO_OTHER_USER,
       PT_ASSIGNED_TO_CURRENT_USER,
-      MULTIPLE_ACCOUNTS,
+      SINGLE_OR_MULTIPLE_ACCOUNTS,
       SA_ASSIGNED_TO_CURRENT_USER
     ).foreach { accountType =>
       s"the session cache has Account type of $accountType" should {

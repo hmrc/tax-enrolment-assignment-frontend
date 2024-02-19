@@ -36,7 +36,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrc
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_ASSIGNED_SA_ENROLMENT, accountDetailsForCredential}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{SilentAssignmentService, ThrottlingService}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{SilentAssignmentService}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SignInWithSAAccount
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -59,7 +59,6 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
       bind[SilentAssignmentService].toInstance(mockSilentAssignmentService),
       bind[AccountCheckOrchestrator].toInstance(mockAccountCheckOrchestrator),
       bind[AuditHandler].toInstance(mockAuditHandler),
-      bind[ThrottlingService].toInstance(mockThrottlingService),
       bind[AuthConnector].toInstance(mockAuthConnector),
       bind[BodyParsers.Default].toInstance(testBodyParser),
       bind[MultipleAccountsOrchestrator].toInstance(mockMultipleAccountsOrchestrator)
@@ -71,9 +70,6 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
   val view: SignInWithSAAccount = app.injector.instanceOf[SignInWithSAAccount]
 
   "view" when {
-
-    specificThrottleTests(controller.view())
-
     "a user has SA on another account" should {
       "render the signInWithSAAccount page" when {
         "the user has not already been assigned the PT enrolment" in {
@@ -121,7 +117,6 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
             .expects(*, *, *)
             .returning(createInboundResult(accountDetails))
           mockGetDataFromCacheForActionSuccess(randomAccountType)
-          mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
           val result = controller
             .view()
@@ -169,7 +164,6 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
             .returning(Left(UnexpectedPTEnrolment(SA_ASSIGNED_TO_OTHER_USER)))
 
           mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
-          mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, ptEnrolmentOnly.enrolments)
 
           val result = controller
             .view()
@@ -248,7 +242,6 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
             Left(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
           )
         mockGetDataFromCacheForActionSuccess(randomAccountType)
-        mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -304,7 +297,6 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
           .expects(*, *, *)
           .returning(createInboundResultError(NoSAEnrolmentWhenOneExpected))
         mockGetDataFromCacheForActionSuccess(randomAccountType)
-        mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val res = controller
           .view()
@@ -316,9 +308,6 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
     }
   }
   "continue" should {
-
-    specificThrottleTests(controller.continue())
-
     s"redirect to ${UrlPaths.logoutPath}" in {
       val additionalCacheData = Map(
         USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
@@ -344,7 +333,6 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
         .returning(Future.successful(retrievalResponse()))
 
       mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData)
-      mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
       val auditEvent = AuditEvent.auditSigninAgainWithSACredential()(
         requestWithAccountType(
           SA_ASSIGNED_TO_OTHER_USER,

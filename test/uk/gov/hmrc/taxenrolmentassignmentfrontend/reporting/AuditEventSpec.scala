@@ -19,7 +19,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting
 import play.api.libs.json.{JsObject, JsString, Json}
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_OR_MULTIPLE_ACCOUNTS}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSessionAndMongo}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
@@ -458,10 +458,10 @@ class AuditEventSpec extends BaseSpec {
           requestWithUserDetails(userDetailsNoEnrolments.copy(email = None))
 
         val expectedAuditEvent =
-          getExpectedAuditForPTEnrolled(SINGLE_ACCOUNT, None, None, withEmail = Some("-"))
+          getExpectedAuditForPTEnrolled(SINGLE_OR_MULTIPLE_ACCOUNTS, None, None, withEmail = Some("-"))
 
         AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
-          SINGLE_ACCOUNT
+          SINGLE_OR_MULTIPLE_ACCOUNTS
         )(requestForAudit, messagesApi) shouldEqual expectedAuditEvent
 
       }
@@ -473,10 +473,10 @@ class AuditEventSpec extends BaseSpec {
           requestWithUserDetails(userDetailsNoEnrolments)
 
         val expectedAuditEvent =
-          getExpectedAuditForPTEnrolled(SINGLE_ACCOUNT, None, None)
+          getExpectedAuditForPTEnrolled(SINGLE_OR_MULTIPLE_ACCOUNTS, None, None)
 
         AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
-          SINGLE_ACCOUNT
+          SINGLE_OR_MULTIPLE_ACCOUNTS
         )(requestForAudit, messagesApi) shouldEqual expectedAuditEvent
       }
     }
@@ -487,10 +487,10 @@ class AuditEventSpec extends BaseSpec {
           requestWithUserDetails(userDetailsWithSAEnrolment)
 
         val expectedAuditEvent =
-          getExpectedAuditForPTEnrolled(SINGLE_ACCOUNT, None, Some(CREDENTIAL_ID))
+          getExpectedAuditForPTEnrolled(SINGLE_OR_MULTIPLE_ACCOUNTS, None, Some(CREDENTIAL_ID))
 
         AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
-          SINGLE_ACCOUNT
+          SINGLE_OR_MULTIPLE_ACCOUNTS
         )(requestForAudit, messagesApi) shouldEqual expectedAuditEvent
       }
     }
@@ -501,10 +501,10 @@ class AuditEventSpec extends BaseSpec {
           requestWithUserDetails(userDetailsNoEnrolments)
 
         val expectedAuditEvent =
-          getExpectedAuditForPTEnrolled(MULTIPLE_ACCOUNTS, None, None)
+          getExpectedAuditForPTEnrolled(SINGLE_OR_MULTIPLE_ACCOUNTS, None, None)
 
         AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
-          MULTIPLE_ACCOUNTS
+          SINGLE_OR_MULTIPLE_ACCOUNTS
         )(requestForAudit, messagesApi) shouldEqual expectedAuditEvent
       }
     }

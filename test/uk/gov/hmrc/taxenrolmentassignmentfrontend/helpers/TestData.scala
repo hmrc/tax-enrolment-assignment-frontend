@@ -27,9 +27,9 @@ import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_OR_MULTIPLE_ACCOUNTS}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.UserDetailsFromSession
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{IVNinoStoreEntry, IdentifiersOrVerifiers, UserEnrolment, UsersAssignedEnrolment, EACDEnrolment => _, _}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{EACDEnrolment => _, _}
 
 object TestData {
 
@@ -84,7 +84,7 @@ object TestData {
     )
   )
 
-  val randomAccountType: AccountTypes.Value = SINGLE_ACCOUNT
+  val randomAccountType: AccountTypes.Value = SINGLE_OR_MULTIPLE_ACCOUNTS
   val predicates: Predicate =
     AuthProviders(GovernmentGateway) and ConfidenceLevel.L200
 
@@ -110,6 +110,18 @@ object TestData {
         optAffinityGroup
       ),
       email
+    )
+
+  def userDetails(hmrcPt: Boolean, irSa: Boolean) =
+    UserDetailsFromSession(
+      CREDENTIAL_ID,
+      NINO,
+      GROUP_ID,
+      Some(CURRENT_USER_EMAIL),
+      Individual,
+      enrolments = Enrolments(Set.empty[Enrolment]),
+      hasPTEnrolment = hmrcPt,
+      hasSAEnrolment = irSa
     )
 
   val userDetailsNoEnrolments =
@@ -157,26 +169,12 @@ object TestData {
       hasSAEnrolment = true
     )
 
-  val ivNinoStoreEntryCurrent = IVNinoStoreEntry(CREDENTIAL_ID, Some(200))
-  val ivNinoStoreEntry1 = IVNinoStoreEntry("6902202884164548", Some(50))
-  val ivNinoStoreEntry2 = IVNinoStoreEntry("8316291481001919", Some(200))
-  val ivNinoStoreEntry3 = IVNinoStoreEntry("0493831301037584", Some(200))
-  val ivNinoStoreEntry4 = IVNinoStoreEntry("2884521810163541", Some(200))
-
   val UsersAssignedEnrolmentCurrentCred =
     UsersAssignedEnrolment(Some(CREDENTIAL_ID))
   val UsersAssignedEnrolment1 =
     UsersAssignedEnrolment(Some(CREDENTIAL_ID_1))
   val UsersAssignedEnrolmentEmpty =
     UsersAssignedEnrolment(None)
-
-  val multiIVCreds = List(
-    ivNinoStoreEntryCurrent,
-    ivNinoStoreEntry1,
-    ivNinoStoreEntry2,
-    ivNinoStoreEntry3,
-    ivNinoStoreEntry4
-  )
 
   val accountDetails: AccountDetails = AccountDetails(
     credId = CREDENTIAL_ID,
@@ -217,31 +215,6 @@ object TestData {
     email = Some("email1@test.com"),
     lastAccessedTimestamp = Some("2022-02-27T12:00:27Z"),
     additionalFactors = Some(List(AdditonalFactors("sms", Some("07783924321"))))
-  )
-
-  val multiCL200IVCreds = List(
-    ivNinoStoreEntry2,
-    ivNinoStoreEntry3,
-    ivNinoStoreEntry4,
-    ivNinoStoreEntry2,
-    ivNinoStoreEntry3,
-    ivNinoStoreEntry4,
-    ivNinoStoreEntry2,
-    ivNinoStoreEntry3,
-    ivNinoStoreEntry4,
-    ivNinoStoreEntry2,
-    ivNinoStoreEntry3,
-    ivNinoStoreEntry4
-  )
-
-  val multiOptionalIVCreds = Seq(
-    Some(ivNinoStoreEntry1),
-    Some(ivNinoStoreEntry2),
-    None,
-    Some(ivNinoStoreEntry3),
-    None,
-    None,
-    Some(ivNinoStoreEntry4)
   )
 
   val identifierTxNum = IdentifiersOrVerifiers("TaxOfficeNumber", "123")
@@ -291,10 +264,9 @@ object TestData {
     )
 
   val all_account_types = List(
-    SINGLE_ACCOUNT,
     PT_ASSIGNED_TO_OTHER_USER,
     PT_ASSIGNED_TO_CURRENT_USER,
-    MULTIPLE_ACCOUNTS,
+    SINGLE_OR_MULTIPLE_ACCOUNTS,
     SA_ASSIGNED_TO_CURRENT_USER,
     SA_ASSIGNED_TO_OTHER_USER
   )

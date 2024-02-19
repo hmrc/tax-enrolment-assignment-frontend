@@ -29,6 +29,7 @@ class AppConfig @Inject() (val config: ServicesConfig) {
 
   lazy val IV_BASE_URL: String = config.baseUrl("identity-verification") + "/identity-verification"
   lazy val EACD_BASE_URL: String = config.baseUrl("enrolment-store-proxy") + "/enrolment-store-proxy"
+  lazy val EACD_BASE_URL_TESTONLY: String = config.baseUrl("enrolment-store-proxy") + "/test-only"
   lazy val TAX_ENROLMENTS_BASE_URL: String = config.baseUrl("tax-enrolments") + "/tax-enrolments"
 
   lazy val AUTH_BASE_URL: String = config.baseUrl("auth") + "/auth"
@@ -49,7 +50,4 @@ class AppConfig @Inject() (val config: ServicesConfig) {
     s"/protect-tax-info/keepAlive"
 
   lazy val appName = config.getString("appName")
-
-  lazy val percentageOfUsersThrottledToGetFakeEnrolment: Int =
-    config.getInt("throttle.percentage") - 1
 }

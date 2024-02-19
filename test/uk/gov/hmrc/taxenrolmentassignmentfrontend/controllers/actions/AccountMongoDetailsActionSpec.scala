@@ -27,13 +27,12 @@ import uk.gov.hmrc.auth.core.AffinityGroup.Individual
 import uk.gov.hmrc.auth.core.{Enrolment, Enrolments}
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.http.cache.client.CacheMap
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_CURRENT_USER, SINGLE_ACCOUNT}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_CURRENT_USER, SINGLE_OR_MULTIPLE_ACCOUNTS}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo.requestConversion
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.CURRENT_USER_EMAIL
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.ThrottlingService
 
 import scala.concurrent.Future
 
@@ -47,16 +46,12 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
       .once()
 
   lazy val mockTeaSessionCache = mock[TEASessionCache]
-  lazy val mockThrottlingService = mock[ThrottlingService]
 
   override lazy val overrides = Seq(
     bind[TEASessionCache].toInstance(mockTeaSessionCache)
   )
 
   override implicit lazy val app: Application = localGuiceApplicationBuilder()
-    .overrides(
-      bind[ThrottlingService].toInstance(mockThrottlingService)
-    )
     .build()
 
   lazy val accountMongoDetailsAction = app.injector.instanceOf[AccountMongoDetailsAction]
@@ -286,7 +281,7 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
           requestWithUserDetailsFromSession.request,
           requestWithUserDetailsFromSession.userDetails,
           requestWithUserDetailsFromSession.sessionID,
-          AccountDetailsFromMongo(SINGLE_ACCOUNT, "redirect", Map())(crypto.crypto)
+          AccountDetailsFromMongo(SINGLE_OR_MULTIPLE_ACCOUNTS, "redirect", Map())(crypto.crypto)
         )
       ) shouldBe requestWithUserDetailsFromSession
     }

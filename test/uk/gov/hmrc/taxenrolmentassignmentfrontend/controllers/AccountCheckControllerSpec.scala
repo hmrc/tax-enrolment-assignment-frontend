@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import cats.data.EitherT
-import org.scalamock.handlers.{CallHandler1, CallHandler4, CallHandler5}
+import org.scalamock.handlers.{CallHandler1, CallHandler4}
 import org.scalatest.OneInstancePerTest
 import play.api.Application
 import play.api.http.Status.SEE_OTHER
@@ -28,16 +28,15 @@ import play.api.mvc.BodyParsers
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
-import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, Enrolment, Enrolments}
+import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, Enrolments}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
-import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{TaxEnrolmentAssignmentErrors, UnexpectedError, UnexpectedResponseFromIV, UnexpectedResponseFromTaxEnrolments}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{TaxEnrolmentAssignmentErrors, UnexpectedResponseFromIV, UnexpectedResponseFromTaxEnrolments}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{BaseSpec, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.AccountCheckOrchestrator
@@ -49,44 +48,6 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.utils.HmrcPTEnrolment
 import scala.concurrent.{ExecutionContext, Future}
 
 class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
-
-  def mockAccountShouldNotBeThrottled(
-    accountTypes: AccountTypes.Value,
-    nino: Nino,
-    enrolments: Set[Enrolment]
-  ): CallHandler5[AccountTypes.Value, Nino, Set[Enrolment], ExecutionContext, HeaderCarrier, TEAFResult[
-    ThrottleResult
-  ]] =
-    (mockThrottlingService
-      .throttle(_: AccountTypes.Value, _: Nino, _: Set[Enrolment])(_: ExecutionContext, _: HeaderCarrier))
-      .expects(
-        accountTypes,
-        nino,
-        enrolments,
-        *,
-        *
-      )
-      .returning(createInboundResult(ThrottleDoesNotApply))
-      .once()
-
-  def mockAccountShouldBeThrottled(
-    accountTypes: AccountTypes.Value,
-    nino: Nino,
-    enrolments: Set[Enrolment]
-  ): CallHandler5[AccountTypes.Value, Nino, Set[Enrolment], ExecutionContext, HeaderCarrier, TEAFResult[
-    ThrottleResult
-  ]] =
-    (mockThrottlingService
-      .throttle(_: AccountTypes.Value, _: Nino, _: Set[Enrolment])(_: ExecutionContext, _: HeaderCarrier))
-      .expects(
-        accountTypes,
-        nino,
-        enrolments,
-        *,
-        *
-      )
-      .returning(createInboundResult(ThrottleApplied))
-      .once()
 
   def mockDeleteDataFromCache: CallHandler1[RequestWithUserDetailsFromSession[_], Future[Boolean]] =
     (mockTeaSessionCache
@@ -103,23 +64,9 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
       .returning(Future.successful(CacheMap("FAKE_SESSION_ID", Map.empty)))
       .once()
 
-  def mockErrorFromThrottlingService(
-    accountTypes: AccountTypes.Value,
-    nino: Nino,
-    enrolments: Set[Enrolment]
-  ): CallHandler5[AccountTypes.Value, Nino, Set[Enrolment], ExecutionContext, HeaderCarrier, TEAFResult[
-    ThrottleResult
-  ]] =
-    (mockThrottlingService
-      .throttle(_: AccountTypes.Value, _: Nino, _: Set[Enrolment])(_: ExecutionContext, _: HeaderCarrier))
-      .expects(accountTypes, nino, enrolments, *, *)
-      .returning(createInboundResultError(UnexpectedError))
-      .once()
-
   lazy val mockSilentAssignmentService = mock[SilentAssignmentService]
   lazy val mockAccountCheckOrchestrator = mock[AccountCheckOrchestrator]
   lazy val mockAuditHandler = mock[AuditHandler]
-  lazy val mockThrottlingService = mock[ThrottlingService]
 
   lazy val mockAuthConnector = mock[AuthConnector]
   lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
@@ -135,7 +82,6 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
       bind[SilentAssignmentService].toInstance(mockSilentAssignmentService),
       bind[AccountCheckOrchestrator].toInstance(mockAccountCheckOrchestrator),
       bind[AuditHandler].toInstance(mockAuditHandler),
-      bind[ThrottlingService].toInstance(mockThrottlingService),
       bind[AuthConnector].toInstance(mockAuthConnector),
       bind[BodyParsers.Default].toInstance(testBodyParser),
       bind[HmrcPTEnrolment].toInstance(mockHmrcPTEnrolment)
@@ -163,26 +109,22 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
         "the user has not been assigned the enrolment already" in new TestHelper {
           mockAuthCall()
           mockSaveDataToCache
-          mockAccountCheckSuccess(SINGLE_ACCOUNT)
+          mockAccountCheckSuccess(SINGLE_OR_MULTIPLE_ACCOUNTS)
           mockSilentEnrolSuccess
-          mockAuditPTEnrolled(SINGLE_ACCOUNT, requestWithUserDetails(), messagesApi)
-          mockAccountShouldNotBeThrottled(SINGLE_ACCOUNT, NINO, noEnrolments.enrolments)
+          mockAuditPTEnrolled(SINGLE_OR_MULTIPLE_ACCOUNTS, requestWithUserDetails(), messagesApi)
 
-          // removeRecord is called twice.
-          // - Once in enrolForPTIfRequired
-          // - Once in handleNoneThrottledUsers
           (mockTeaSessionCache
             .removeRecord(_: RequestWithUserDetailsFromSession[_]))
             .expects(*)
             .returning(Future.successful(true))
-            .twice()
+            .never()
 
           val result = controller
             .accountCheck(returnUrl)
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
           status(result) shouldBe SEE_OTHER
-          redirectLocation(result) shouldBe Some(returnUrlvalue)
+          redirectLocation(result) shouldBe Some("/protect-tax-info/enrol-pt/enrolment-success-no-sa")
         }
       }
 
@@ -190,8 +132,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
         "the user has been assigned the enrolment already" in new TestHelper {
           mockAuthCallWithPT()
           mockSaveDataToCache
-          mockAccountCheckSuccess(SINGLE_ACCOUNT)
-          mockAccountShouldNotBeThrottled(SINGLE_ACCOUNT, NINO, ptEnrolmentOnly.enrolments)
+          mockAccountCheckSuccess(PT_ASSIGNED_TO_CURRENT_USER)
 
           // removeRecord is called twice.
           // - Once in enrolForPTIfRequired
@@ -214,9 +155,8 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
       "return an error page if there was an error assigning the enrolment" in new TestHelper {
         mockAuthCall()
         mockSaveDataToCache
-        mockAccountCheckSuccess(SINGLE_ACCOUNT)
+        mockAccountCheckSuccess(SINGLE_OR_MULTIPLE_ACCOUNTS)
         mockSilentEnrolFailure
-        mockAccountShouldNotBeThrottled(SINGLE_ACCOUNT, NINO, noEnrolments.enrolments)
 
         val result = controller
           .accountCheck(returnUrl)
@@ -233,7 +173,6 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
         mockAuthCall()
         mockSaveDataToCache
         mockAccountCheckSuccess(PT_ASSIGNED_TO_CURRENT_USER)
-        mockAccountShouldNotBeThrottled(PT_ASSIGNED_TO_CURRENT_USER, NINO, noEnrolments.enrolments)
         mockDeleteDataFromCache
 
         val result = controller
@@ -250,14 +189,13 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
         mockAuthCall()
         mockSaveDataToCache
         mockAccountCheckSuccess(PT_ASSIGNED_TO_OTHER_USER)
-        mockAccountShouldNotBeThrottled(PT_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
 
         val result = controller
           .accountCheck(returnUrl)
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe SEE_OTHER
-        redirectLocation(result) shouldBe Some(UrlPaths.ptOnOtherAccountPath)
+        redirectLocation(result) shouldBe Some("/protect-tax-info/no-pt-enrolment")
       }
     }
 
@@ -266,10 +204,9 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
         "the user has not already been assigned the PT enrolment" in new TestHelper {
           mockAuthCall()
           mockSaveDataToCache
-          mockAccountCheckSuccess(MULTIPLE_ACCOUNTS)
+          mockAccountCheckSuccess(SINGLE_OR_MULTIPLE_ACCOUNTS)
           mockSilentEnrolSuccess
-          mockAccountShouldNotBeThrottled(MULTIPLE_ACCOUNTS, NINO, noEnrolments.enrolments)
-          mockAuditPTEnrolled(MULTIPLE_ACCOUNTS, requestWithUserDetails(), messagesApi)
+          mockAuditPTEnrolled(SINGLE_OR_MULTIPLE_ACCOUNTS, requestWithUserDetails(), messagesApi)
 
           val result = controller
             .accountCheck(returnUrl)
@@ -277,7 +214,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
 
           status(result) shouldBe SEE_OTHER
           redirectLocation(result) shouldBe Some(
-            UrlPaths.enrolledPTNoSAOnAnyAccountPath
+            "/protect-tax-info/enrol-pt/enrolment-success-no-sa"
           )
         }
       }
@@ -286,8 +223,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
         "the user has already been assigned the PT enrolment" in new TestHelper {
           mockAuthCallWithPT()
           mockSaveDataToCache
-          mockAccountCheckSuccess(MULTIPLE_ACCOUNTS)
-          mockAccountShouldNotBeThrottled(MULTIPLE_ACCOUNTS, NINO, ptEnrolmentOnly.enrolments)
+          mockAccountCheckSuccess(SINGLE_OR_MULTIPLE_ACCOUNTS)
           mockDeleteDataFromCache
 
           val result = controller
@@ -296,7 +232,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
 
           status(result) shouldBe SEE_OTHER
           redirectLocation(result) shouldBe Some(
-            UrlPaths.enrolledPTNoSAOnAnyAccountPath
+            "/protect-tax-info/enrol-pt/enrolment-success-no-sa"
           )
         }
       }
@@ -309,7 +245,6 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
           mockSaveDataToCache
           mockAccountCheckSuccess(SA_ASSIGNED_TO_CURRENT_USER)
           mockSilentEnrolSuccess
-          mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_CURRENT_USER, NINO, saEnrolmentOnly.enrolments)
           mockAuditPTEnrolled(
             SA_ASSIGNED_TO_CURRENT_USER,
             requestWithUserDetails(userDetailsWithSAEnrolment),
@@ -322,26 +257,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
 
           status(result) shouldBe SEE_OTHER
           redirectLocation(result) shouldBe Some(
-            UrlPaths.enrolledPTWithSAAccountPath
-          )
-        }
-      }
-
-      s"not enrol for PT and redirect to ${UrlPaths.enrolledPTWithSAAccountPath}" when {
-        "the current user has already been assigned a PT enrolment" in new TestHelper {
-          mockAuthCallWithPT(true)
-          mockSaveDataToCache
-          mockAccountCheckSuccess(SA_ASSIGNED_TO_CURRENT_USER)
-          mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_CURRENT_USER, NINO, saAndptEnrolments.enrolments)
-          mockDeleteDataFromCache
-
-          val result = controller
-            .accountCheck(returnUrl)
-            .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
-
-          status(result) shouldBe SEE_OTHER
-          redirectLocation(result) shouldBe Some(
-            UrlPaths.enrolledPTWithSAAccountPath
+            "/protect-tax-info/enrol-pt/enrolment-success-sa-user-id"
           )
         }
       }
@@ -353,7 +269,6 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
           mockAuthCall()
           mockSaveDataToCache
           mockAccountCheckSuccess(SA_ASSIGNED_TO_OTHER_USER)
-          mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
 
           (mockTeaSessionCache
             .removeRecord(_: RequestWithUserDetailsFromSession[_]))
@@ -366,7 +281,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
 
           status(result) shouldBe SEE_OTHER
           redirectLocation(result) shouldBe Some(
-            UrlPaths.saOnOtherAccountInterruptPath
+            "/protect-tax-info/enrol-pt/more-than-one-user-id"
           )
         }
       }
@@ -376,7 +291,6 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
           mockAuthCallWithPT()
           mockSaveDataToCache
           mockAccountCheckSuccess(SA_ASSIGNED_TO_OTHER_USER)
-          mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, ptEnrolmentOnly.enrolments)
           mockDeleteDataFromCache
 
           val result = controller
@@ -385,7 +299,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
 
           status(result) shouldBe SEE_OTHER
           redirectLocation(result) shouldBe Some(
-            UrlPaths.enrolledPTSAOnOtherAccountPath
+            "/protect-tax-info/enrol-pt/choose-two-user-ids"
           )
         }
       }
@@ -396,37 +310,6 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
         mockAuthCall()
         mockSaveDataToCache
         mockGetAccountTypeFailure(UnexpectedResponseFromIV)
-
-        val res = controller
-          .accountCheck(returnUrl)
-          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
-
-        status(res) shouldBe INTERNAL_SERVER_ERROR
-        contentAsString(res) should include(messages("enrolmentError.heading"))
-      }
-    }
-
-    "throttled" should {
-      "redirect user to their redirect url" in new TestHelper {
-        mockAuthCall()
-        mockSaveDataToCache
-        mockAccountShouldBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
-        mockAccountCheckSuccess(SA_ASSIGNED_TO_OTHER_USER)
-        mockDeleteDataFromCache
-        val res = controller
-          .accountCheck(returnUrl)
-          .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
-
-        status(res) shouldBe SEE_OTHER
-        redirectLocation(res) shouldBe Some(returnUrlvalue)
-      }
-    }
-    "throttle returns error" should {
-      s"return $INTERNAL_SERVER_ERROR" in new TestHelper {
-        mockAuthCall()
-        mockSaveDataToCache
-        mockErrorFromThrottlingService(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
-        mockAccountCheckSuccess(SA_ASSIGNED_TO_OTHER_USER)
 
         val res = controller
           .accountCheck(returnUrl)

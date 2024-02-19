@@ -50,7 +50,6 @@ class TaxEnrolmentsConnector @Inject() (httpClient: HttpClient, logger: EventLog
       verifiers = Seq(IdentifiersOrVerifiers("NINO1", nino.nino))
     )
     val url = s"${appConfig.TAX_ENROLMENTS_BASE_URL}/service/$hmrcPTKey/enrolment"
-
     httpClient
       .PUT[AssignHMRCPTRequest, HttpResponse](url, request)
       .map(httpResponse =>

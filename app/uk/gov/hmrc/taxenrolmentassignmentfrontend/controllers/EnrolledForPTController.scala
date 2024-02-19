@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import play.api.http.ContentTypeOf.contentTypeOf_Html
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction, ThrottleAction}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logRedirectingToReturnUrl
@@ -34,7 +34,6 @@ import scala.concurrent.ExecutionContext
 class EnrolledForPTController @Inject() (
   authAction: AuthAction,
   accountMongoDetailsAction: AccountMongoDetailsAction,
-  throttleAction: ThrottleAction,
   mcc: MessagesControllerComponents,
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
   val logger: EventLoggerService,
@@ -45,7 +44,7 @@ class EnrolledForPTController @Inject() (
     extends TEAFrontendController(mcc) {
 
   def view: Action[AnyContent] =
-    authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
+    authAction.andThen(accountMongoDetailsAction).async { implicit request =>
       multipleAccountsOrchestrator.getDetailsForEnrolledPT(request, implicitly, implicitly).value.map {
         case Right(accountDetails) =>
           Ok(
@@ -61,7 +60,7 @@ class EnrolledForPTController @Inject() (
     }
 
   def continue: Action[AnyContent] =
-    authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
+    authAction.andThen(accountMongoDetailsAction).async { implicit request =>
       logger.logEvent(
         logRedirectingToReturnUrl(
           request.userDetails.credId,

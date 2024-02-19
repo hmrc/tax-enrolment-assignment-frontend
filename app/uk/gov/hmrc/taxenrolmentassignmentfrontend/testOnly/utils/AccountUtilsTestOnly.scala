@@ -42,6 +42,7 @@ class AccountUtilsTestOnly @Inject() (
       _ <- account.enrolments.map(enrolmentStoreServiceTestOnly.deallocateEnrolmentFromGroups(_)).sequence
       _ <- account.enrolments.map(enrolmentStoreServiceTestOnly.deallocateEnrolmentFromUsers(_)).sequence
       _ <- account.enrolments.map(enrolmentStoreServiceTestOnly.deleteEnrolment(_)).sequence
+      _ <- enrolmentStoreServiceTestOnly.deleteGroup(account.groupId)
       _ <- enrolmentStoreServiceTestOnly.deleteAccount(account.groupId)
       _ <- enrolmentStoreServiceTestOnly.deallocateEnrolmentsFromGroup(account.groupId)
       _ <- enrolmentStoreServiceTestOnly.deallocateEnrolmentsFromUser(account.user.credId)

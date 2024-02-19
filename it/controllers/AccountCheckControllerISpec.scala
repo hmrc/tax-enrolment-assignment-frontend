@@ -22,28 +22,20 @@ import helpers.messages._
 import helpers.{IntegrationSpecBase, ItUrlPaths}
 import play.api.http.Status
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NO_CONTENT, OK, SEE_OTHER}
-import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{AnyContent, Request}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{GET, contentAsString, defaultAwaitTimeout, redirectLocation, route, status, writeableOf_AnyContentAsEmpty}
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{SA_ASSIGNED_TO_CURRENT_USER, SINGLE_OR_MULTIPLE_ACCOUNTS}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession, UserDetailsFromSession}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.hmrcPTKey
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.formats.EnrolmentsFormats
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{ThrottleApplied, ThrottleDoesNotApply}
 
 import java.net.URLEncoder
 
 class AccountCheckControllerISpec extends IntegrationSpecBase {
 
   lazy val urlPath: String = accountCheckPath
-  val ninoBelowThreshold: String = ninoWithLast2digits("00").nino
-  val ninoSameAsThrottlePercentage: String = ninoWithLast2digits("02").nino
-  val ninoAboveThrottlePercentage: String = ninoWithLast2digits("03").nino
-  lazy val throttlePercentage: Option[Any] = config.get("throttle.percentage")
   val newEnrolment: String => Enrolment = (nino: String) =>
     Enrolment(s"$hmrcPTKey", Seq(EnrolmentIdentifier("NINO", nino)), "Activated", None)
 
@@ -56,730 +48,19 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
       sessionId
     )
 
-  s"GET /protect-tax-info?redirectUrl" when {
-    s"$ThrottleApplied" should {
-      "call to auth with their current enrolments plus new enrolment and redirect the user to their RedirectURL" when {
-
-        s"the current user has $MULTIPLE_ACCOUNTS for a Nino within threshold" in {
-          val authResponse = authoriseResponseJson(optNino = Some(ninoBelowThreshold), enrolments = noEnrolments)
-          stubAuthorizePost(OK, authResponse.toString())
-          stubPost(s"/write/.*", OK, """{"x":2}""")
-          stubGet(
-            s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$ninoBelowThreshold/users",
-            OK,
-            es0ResponseNoRecordCred
-          )
-          stubGetWithQueryParam(
-            "/identity-verification/nino",
-            "nino",
-            ninoBelowThreshold,
-            OK,
-            ivResponseMultiCredsJsonString
-          )
-          stubGetMatching(
-            s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_3/enrolments?type=principal",
-            NO_CONTENT,
-            ""
-          )
-          stubGetMatching(
-            s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_4/enrolments?type=principal",
-            NO_CONTENT,
-            ""
-          )
-
-          stubPost(
-            s"/enrolment-store-proxy/enrolment-store/enrolments",
-            NO_CONTENT,
-            ""
-          )
-          stubPut(
-            s"/tax-enrolments/service/HMRC-PT/enrolment",
-            NO_CONTENT,
-            ""
-          )
-          stubPutWithRequestBody(
-            url = "/auth/enrolments",
-            status = OK,
-            requestBody = Json.toJson(Set(newEnrolment(ninoBelowThreshold)))(EnrolmentsFormats.writes).toString,
-            responseBody = ""
-          )
-
-          val request = FakeRequest(GET, urlPath)
-            .withSession(xAuthToken)
-          val result = route(app, request).get
-
-          status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(returnUrl)
-          recordExistsInMongo shouldBe false
-        }
-
-        s"the current user has $SA_ASSIGNED_TO_OTHER_USER for a Nino within threshold" in {
-          val authResponse = authoriseResponseJson(optNino = Some(ninoBelowThreshold), enrolments = noEnrolments)
-          stubAuthorizePost(OK, authResponse.toString())
-          stubPost(s"/write/.*", OK, """{"x":2}""")
-          stubGet(
-            s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$ninoBelowThreshold/users",
-            OK,
-            es0ResponseNoRecordCred
-          )
-          stubGetWithQueryParam(
-            "/identity-verification/nino",
-            "nino",
-            ninoBelowThreshold,
-            OK,
-            ivResponseMultiCredsJsonString
-          )
-          stubGetMatching(
-            s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_3/enrolments?type=principal",
-            NO_CONTENT,
-            ""
-          )
-          stubGetMatching(
-            s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_4/enrolments?type=principal",
-            NO_CONTENT,
-            ""
-          )
-
-          stubPost(
-            s"/enrolment-store-proxy/enrolment-store/enrolments",
-            OK,
-            eacdResponse
-          )
-          stubGet(
-            s"/enrolment-store-proxy/enrolment-store/enrolments/IR-SA~UTR~$UTR/users",
-            OK,
-            es0ResponseNotMatchingCred
-          )
-          stubPutWithRequestBody(
-            url = "/auth/enrolments",
-            status = OK,
-            requestBody = Json.toJson(Set(newEnrolment(ninoBelowThreshold)))(EnrolmentsFormats.writes).toString,
-            responseBody = ""
-          )
-
-          val request = FakeRequest(GET, urlPath)
-            .withSession(xAuthToken)
-          val result = route(app, request).get
-
-          status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(returnUrl)
-          recordExistsInMongo shouldBe false
-        }
-
-        s"the current user has $SA_ASSIGNED_TO_CURRENT_USER for a Nino within threshold" in {
-          val authResponse = authoriseResponseJson(optNino = Some(ninoBelowThreshold), enrolments = saEnrolmentOnly)
-          stubAuthorizePost(OK, authResponse.toString())
-          stubPost(s"/write/.*", OK, """{"x":2}""")
-          stubGet(
-            s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$ninoBelowThreshold/users",
-            OK,
-            es0ResponseNoRecordCred
-          )
-          stubGetWithQueryParam(
-            "/identity-verification/nino",
-            "nino",
-            ninoBelowThreshold,
-            OK,
-            ivResponseMultiCredsJsonString
-          )
-          stubGetMatching(
-            s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_3/enrolments?type=principal",
-            NO_CONTENT,
-            ""
-          )
-          stubGetMatching(
-            s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_4/enrolments?type=principal",
-            NO_CONTENT,
-            ""
-          )
-          stubPutWithRequestBody(
-            url = "/auth/enrolments",
-            status = OK,
-            requestBody = Json
-              .toJson(Set(saEnrolmentAsCaseClass, newEnrolment(ninoBelowThreshold)))(EnrolmentsFormats.writes)
-              .toString,
-            responseBody = ""
-          )
-
-          val request = FakeRequest(GET, urlPath)
-            .withSession(xAuthToken)
-          val result = route(app, request).get
-
-          status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(returnUrl)
-          recordExistsInMongo shouldBe false
-        }
-      }
-
-      "return INTERNAL_SERVER_ERROR and take user to errorView" when {
-        s"/identity-verification/nino fails" in {
-          val authResponse = authoriseResponseJson(optNino = Some(ninoBelowThreshold), enrolments = noEnrolments)
-          stubAuthorizePost(OK, authResponse.toString())
-          stubPost(s"/write/.*", OK, """{"x":2}""")
-          stubGet(
-            s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$ninoBelowThreshold/users",
-            OK,
-            es0ResponseNoRecordCred
-          )
-          stubGetWithQueryParam(
-            "/identity-verification/nino",
-            "nino",
-            ninoBelowThreshold,
-            INTERNAL_SERVER_ERROR,
-            ""
-          )
-          stubGetMatching(
-            s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_3/enrolments?type=principal",
-            NO_CONTENT,
-            ""
-          )
-          stubGetMatching(
-            s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_4/enrolments?type=principal",
-            NO_CONTENT,
-            ""
-          )
-
-          stubPost(
-            s"/enrolment-store-proxy/enrolment-store/enrolments",
-            NO_CONTENT,
-            ""
-          )
-          stubPut(
-            s"/tax-enrolments/service/HMRC-PT/enrolment",
-            NO_CONTENT,
-            ""
-          )
-          stubPutWithRequestBody(
-            url = "/auth/enrolments",
-            status = OK,
-            requestBody = Json.toJson(Set(newEnrolment(ninoBelowThreshold)))(EnrolmentsFormats.writes).toString,
-            responseBody = ""
-          )
-
-          val request = FakeRequest(GET, urlPath)
-            .withSession(xAuthToken)
-          val result = route(app, request).get
-
-          status(result) shouldBe INTERNAL_SERVER_ERROR
-          contentAsString(result) should include(ErrorTemplateMessages.title)
-        }
-      }
-    }
-
-    s"$ThrottleDoesNotApply" should {
-      "not redirect user to their redirect url and follow standard logic" when {
-        s"the current user has $PT_ASSIGNED_TO_CURRENT_USER for a Nino within threshold" in {
-          val ptEnrolmentOnly: JsValue =
-            Json.arr(createEnrolmentJson("HMRC-PT", "NINO", ninoBelowThreshold))
-          val authResponse = authoriseResponseJson(optNino = Some(ninoBelowThreshold), enrolments = ptEnrolmentOnly)
-          stubAuthorizePost(OK, authResponse.toString())
-          stubPost(s"/write/.*", OK, """{"x":2}""")
-
-          val request = FakeRequest(GET, urlPath)
-            .withSession(xAuthToken)
-          val result = route(app, request).get
-
-          status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(returnUrl)
-          recordExistsInMongo shouldBe false
-        }
-
-        s"the current user has $PT_ASSIGNED_TO_OTHER_USER for a Nino within threshold" in {
-          val authResponse = authoriseResponseJson(optNino = Some(ninoBelowThreshold), enrolments = noEnrolments)
-          stubAuthorizePost(OK, authResponse.toString())
-          stubPost(s"/write/.*", OK, """{"x":2}""")
-          stubGet(
-            s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$ninoBelowThreshold/users",
-            OK,
-            es0ResponseNotMatchingCred
-          )
-
-          val request = FakeRequest(GET, urlPath)
-            .withSession(xAuthToken)
-          val result = route(app, request).get
-
-          status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(ItUrlPaths.ptOnOtherAccountPath)
-          recordExistsInMongo shouldBe true
-        }
-
-        s"the current user has $SINGLE_ACCOUNT for a Nino within threshold" in {
-          val authResponse = authoriseResponseJson(optNino = Some(ninoBelowThreshold), enrolments = noEnrolments)
-          stubAuthorizePost(OK, authResponse.toString())
-          stubPost(s"/write/.*", OK, """{"x":2}""")
-          stubGet(
-            s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$ninoBelowThreshold/users",
-            OK,
-            es0ResponseNoRecordCred
-          )
-          stubGetWithQueryParam(
-            "/identity-verification/nino",
-            "nino",
-            ninoBelowThreshold,
-            OK,
-            ivResponseSingleCredsJsonString
-          )
-
-          stubPost(
-            s"/enrolment-store-proxy/enrolment-store/enrolments",
-            NO_CONTENT,
-            ""
-          )
-
-          stubPut(
-            s"/tax-enrolments/service/HMRC-PT/enrolment",
-            NO_CONTENT,
-            ""
-          )
-
-          val request = FakeRequest(GET, urlPath)
-            .withSession(xAuthToken)
-          val result = route(app, request).get
-
-          status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(returnUrl)
-          recordExistsInMongo shouldBe false
-        }
-
-        s"the current user has $MULTIPLE_ACCOUNTS where Nino's last 2 digits are above throttle" in {
-          val authResponse =
-            authoriseResponseJson(optNino = Some(ninoAboveThrottlePercentage), enrolments = noEnrolments)
-          stubAuthorizePost(OK, authResponse.toString())
-          stubPost(s"/write/.*", OK, """{"x":2}""")
-          stubGet(
-            s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$ninoAboveThrottlePercentage/users",
-            OK,
-            es0ResponseNoRecordCred
-          )
-          stubGetWithQueryParam(
-            "/identity-verification/nino",
-            "nino",
-            ninoAboveThrottlePercentage,
-            OK,
-            ivResponseMultiCredsJsonString
-          )
-          stubGetMatching(
-            s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_3/enrolments?type=principal",
-            NO_CONTENT,
-            ""
-          )
-          stubGetMatching(
-            s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_4/enrolments?type=principal",
-            NO_CONTENT,
-            ""
-          )
-
-          stubPost(
-            s"/enrolment-store-proxy/enrolment-store/enrolments",
-            NO_CONTENT,
-            ""
-          )
-          stubPut(
-            s"/tax-enrolments/service/HMRC-PT/enrolment",
-            NO_CONTENT,
-            ""
-          )
-
-          val request = FakeRequest(GET, urlPath)
-            .withSession(xAuthToken)
-          val result = route(app, request).get
-
-          status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(ItUrlPaths.enrolledPTNoSAOnAnyAccountPath)
-          recordExistsInMongo shouldBe true
-        }
-
-        s"the current user has $SA_ASSIGNED_TO_OTHER_USER where Nino's last 2 digits are above throttle" in {
-          val authResponse =
-            authoriseResponseJson(optNino = Some(ninoAboveThrottlePercentage), enrolments = noEnrolments)
-          stubAuthorizePost(OK, authResponse.toString())
-          stubPost(s"/write/.*", OK, """{"x":2}""")
-          stubGet(
-            s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$ninoAboveThrottlePercentage/users",
-            OK,
-            es0ResponseNoRecordCred
-          )
-          stubGetWithQueryParam(
-            "/identity-verification/nino",
-            "nino",
-            ninoAboveThrottlePercentage,
-            OK,
-            ivResponseMultiCredsJsonString
-          )
-          stubGetMatching(
-            s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_3/enrolments?type=principal",
-            NO_CONTENT,
-            ""
-          )
-          stubGetMatching(
-            s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_4/enrolments?type=principal",
-            NO_CONTENT,
-            ""
-          )
-
-          stubPost(
-            s"/enrolment-store-proxy/enrolment-store/enrolments",
-            OK,
-            eacdResponse
-          )
-          stubGet(
-            s"/enrolment-store-proxy/enrolment-store/enrolments/IR-SA~UTR~$UTR/users",
-            OK,
-            es0ResponseNotMatchingCred
-          )
-
-          val request = FakeRequest(GET, urlPath)
-            .withSession(xAuthToken)
-          val result = route(app, request).get
-
-          status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(ItUrlPaths.saOnOtherAccountInterruptPath)
-          recordExistsInMongo shouldBe true
-        }
-
-        s"the current user has $SA_ASSIGNED_TO_CURRENT_USER where Nino's last 2 digits are above throttle" in {
-          val authResponse =
-            authoriseResponseJson(optNino = Some(ninoAboveThrottlePercentage), enrolments = saEnrolmentOnly)
-          stubAuthorizePost(OK, authResponse.toString())
-          stubPost(s"/write/.*", OK, """{"x":2}""")
-          stubGet(
-            s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$ninoAboveThrottlePercentage/users",
-            OK,
-            es0ResponseNoRecordCred
-          )
-          stubGetWithQueryParam(
-            "/identity-verification/nino",
-            "nino",
-            ninoAboveThrottlePercentage,
-            OK,
-            ivResponseMultiCredsJsonString
-          )
-          stubGetMatching(
-            s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_3/enrolments?type=principal",
-            NO_CONTENT,
-            ""
-          )
-          stubGetMatching(
-            s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_4/enrolments?type=principal",
-            NO_CONTENT,
-            ""
-          )
-
-          stubPut(
-            s"/tax-enrolments/service/HMRC-PT/enrolment",
-            NO_CONTENT,
-            ""
-          )
-
-          val request = FakeRequest(GET, urlPath)
-            .withSession(xAuthToken)
-          val result = route(app, request).get
-
-          status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(ItUrlPaths.enrolledPTWithSAOnAnyAccountPath)
-          recordExistsInMongo shouldBe true
-        }
-      }
-    }
-
-    s"redirect to {returnUrl}" when {
-      "a user has one credential associated with their nino" that {
-        "has a PT enrolment in the session" in {
-          val authResponse = authoriseResponseJson(enrolments = ptEnrolmentOnly)
-          stubAuthorizePost(OK, authResponse.toString())
-          stubPost(s"/write/.*", OK, """{"x":2}""")
-
-          val request = FakeRequest(GET, urlPath)
-            .withSession(xAuthToken)
-          val result = route(app, request).get
-
-          status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(returnUrl)
-        }
-
-        "has PT enrolment in EACD but not the session" in {
-          val authResponse = authoriseResponseJson()
-          stubAuthorizePost(OK, authResponse.toString())
-          stubPost(s"/write/.*", OK, """{"x":2}""")
-          stubGet(
-            s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/users",
-            OK,
-            es0ResponseMatchingCred
-          )
-
-          val request = FakeRequest(GET, urlPath)
-            .withSession(xAuthToken)
-          val result = route(app, request).get
-
-          status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(returnUrl)
-          recordExistsInMongo shouldBe false
-        }
-      }
-    }
-
-    s"silently enrol for PT and redirect to users redirect url" when {
-      "the user is a single account holder with no PT enrolment in session or EACD" in {
-        val authResponse = authoriseResponseJson()
+  s"redirect to {returnUrl}" when {
+    "a user has one credential associated with their nino" that {
+      "has a PT enrolment in the session" in {
+        val authResponse = authoriseResponseJson(enrolments = ptEnrolmentOnly)
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGet(
           s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/users",
-          OK,
-          es0ResponseNoRecordCred
-        )
-        stubGetWithQueryParam(
-          "/identity-verification/nino",
-          "nino",
-          NINO.nino,
-          OK,
-          ivResponseSingleCredsJsonString
-        )
-
-        stubPost(
-          s"/enrolment-store-proxy/enrolment-store/enrolments",
-          NO_CONTENT,
-          ""
-        )
-
-        stubPut(
-          s"/tax-enrolments/service/HMRC-PT/enrolment",
-          NO_CONTENT,
-          ""
-        )
-
-        val request = FakeRequest(GET, urlPath)
-          .withSession(xAuthToken)
-        val result = route(app, request).get
-
-        status(result) shouldBe SEE_OTHER
-        redirectLocation(result).get should include(returnUrl)
-        recordExistsInMongo shouldBe false
-
-        val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
-          SINGLE_ACCOUNT
-        )(requestWithUserDetails(), messagesApi)
-        verifyAuditEventSent(expectedAuditEvent)
-
-      }
-
-      "the user is a single account holder with an invalid PT enrolment in session or EACD" in {
-        val authResponse = authoriseResponseJson(enrolments = mismatchPtEnrolmentOnly)
-        stubAuthorizePost(OK, authResponse.toString())
-        stubPost(s"/write/.*", OK, """{"x":2}""")
-        stubGet(
-          s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~${NINO.nino}/users",
-          OK,
-          es0ResponseNoRecordCred
-        )
-        stubGetWithQueryParam(
-          "/identity-verification/nino",
-          "nino",
-          NINO.nino,
-          OK,
-          ivResponseSingleCredsJsonString
-        )
-
-        stubPost(
-          s"/enrolment-store-proxy/enrolment-store/enrolments",
-          NO_CONTENT,
-          ""
-        )
-
-        stubPut(
-          s"/tax-enrolments/service/HMRC-PT/enrolment",
-          NO_CONTENT,
-          ""
-        )
-
-        stubDelete(
-          s"/tax-enrolments/groups/$GROUP_ID/enrolments/HMRC-PT~NINO~${mismatchNino.nino}",
-          Status.CREATED
-        )
-
-        val request = FakeRequest(GET, urlPath)
-          .withSession(xAuthToken)
-        val result = route(app, request).get
-
-        status(result) shouldBe SEE_OTHER
-        redirectLocation(result).get should include(returnUrl)
-        recordExistsInMongo shouldBe false
-
-        val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
-          SINGLE_ACCOUNT
-        )(requestWithUserDetails(), messagesApi)
-        verifyAuditEventSent(expectedAuditEvent)
-        server.verify(
-          1,
-          deleteRequestedFor(
-            urlEqualTo(s"/tax-enrolments/groups/$GROUP_ID/enrolments/HMRC-PT~NINO~${mismatchNino.nino}")
-          )
-        )
-
-      }
-    }
-
-    s"redirect to ${ItUrlPaths.ptOnOtherAccountPath}" when {
-      "a user has other credentials associated with their NINO" that {
-        "includes one with a PT enrolment" in {
-          stubAuthorizePost(OK, authoriseResponseJson().toString())
-          stubPost(s"/write/.*", OK, """{"x":2}""")
-          stubGet(
-            s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/users",
-            OK,
-            es0ResponseNotMatchingCred
-          )
-
-          val request = FakeRequest(GET, urlPath)
-            .withSession(xAuthToken)
-          val result = route(app, request).get
-
-          status(result) shouldBe SEE_OTHER
-          redirectLocation(result).get should include(ItUrlPaths.ptOnOtherAccountPath)
-          recordExistsInMongo shouldBe true
-        }
-      }
-    }
-
-    s"redirect to ${ItUrlPaths.saOnOtherAccountInterruptPath}" when {
-      "the user has SA enrolment on an other account" in {
-        val authResponse = authoriseResponseJson()
-        stubAuthorizePost(OK, authResponse.toString())
-        stubPost(s"/write/.*", OK, """{"x":2}""")
-        stubGet(
-          s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/users",
-          OK,
-          es0ResponseNoRecordCred
-        )
-        stubGetWithQueryParam(
-          "/identity-verification/nino",
-          "nino",
-          NINO.nino,
-          OK,
-          ivResponseMultiCredsJsonString
-        )
-        stubGetMatching(
-          s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_3/enrolments?type=principal",
-          NO_CONTENT,
-          ""
-        )
-        stubGetMatching(
-          s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_4/enrolments?type=principal",
-          NO_CONTENT,
-          ""
-        )
-
-        stubPost(
-          s"/enrolment-store-proxy/enrolment-store/enrolments",
-          OK,
-          eacdResponse
-        )
-        stubGet(
-          s"/enrolment-store-proxy/enrolment-store/enrolments/IR-SA~UTR~$UTR/users",
-          OK,
-          es0ResponseNotMatchingCred
-        )
-
-        val request = FakeRequest(GET, urlPath)
-          .withSession(xAuthToken)
-        val result = route(app, request).get
-
-        status(result) shouldBe SEE_OTHER
-        redirectLocation(result).get should include(ItUrlPaths.saOnOtherAccountInterruptPath)
-        recordExistsInMongo shouldBe true
-      }
-    }
-
-    s"redirect to ${ItUrlPaths.enrolledPTWithSAOnAnyAccountPath}" when {
-      "the user has no PT enrolments but current credential has SA enrolment in session" in {
-        val authResponse = authoriseResponseJson(enrolments = saEnrolmentOnly)
-        stubAuthorizePost(OK, authResponse.toString())
-        stubPost(s"/write/.*", OK, """{"x":2}""")
-        stubGet(
-          s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/users",
-          OK,
-          es0ResponseNoRecordCred
-        )
-        stubGetWithQueryParam(
-          "/identity-verification/nino",
-          "nino",
-          NINO.nino,
-          OK,
-          ivResponseMultiCredsJsonString
-        )
-        stubGetMatching(
-          s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_3/enrolments?type=principal",
-          NO_CONTENT,
-          ""
-        )
-        stubGetMatching(
-          s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_4/enrolments?type=principal",
-          NO_CONTENT,
-          ""
-        )
-
-        stubPut(
-          s"/tax-enrolments/service/HMRC-PT/enrolment",
-          NO_CONTENT,
-          ""
-        )
-
-        val request = FakeRequest(GET, urlPath)
-          .withSession(xAuthToken)
-        val result = route(app, request).get
-
-        status(result) shouldBe SEE_OTHER
-        redirectLocation(result).get should include(ItUrlPaths.enrolledPTWithSAOnAnyAccountPath)
-        recordExistsInMongo shouldBe true
-
-        val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
-          SA_ASSIGNED_TO_CURRENT_USER
-        )(requestWithUserDetails(userDetailsNoEnrolments.copy(hasSAEnrolment = true)), messagesApi)
-        verifyAuditEventSent(expectedAuditEvent)
-      }
-    }
-
-    s"redirect to ${ItUrlPaths.enrolledPTWithSAOnAnyAccountPath}" when {
-      "the user has no PT enrolments but current credential has SA enrolment in EACD" in {
-        val authResponse = authoriseResponseJson(enrolments = saEnrolmentOnly)
-        stubAuthorizePost(OK, authResponse.toString())
-        stubPost(s"/write/.*", OK, """{"x":2}""")
-        stubGet(
-          s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/users",
-          OK,
-          es0ResponseNoRecordCred
-        )
-        stubGetWithQueryParam(
-          "/identity-verification/nino",
-          "nino",
-          NINO.nino,
-          OK,
-          ivResponseMultiCredsJsonString
-        )
-        stubGetMatching(
-          s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_3/enrolments?type=principal",
-          NO_CONTENT,
-          ""
-        )
-        stubGetMatching(
-          s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_4/enrolments?type=principal",
-          NO_CONTENT,
-          ""
-        )
-
-        stubPost(
-          s"/enrolment-store-proxy/enrolment-store/enrolments",
-          OK,
-          eacdResponse
-        )
-        stubGet(
-          s"/enrolment-store-proxy/enrolment-store/enrolments/IR-SA~UTR~$UTR/users",
           OK,
           es0ResponseMatchingCred
         )
-
-        stubPut(
-          s"/tax-enrolments/service/HMRC-PT/enrolment",
+        stubPost(
+          s"/enrolment-store-proxy/enrolment-store/enrolments",
           NO_CONTENT,
           ""
         )
@@ -789,44 +70,18 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
         val result = route(app, request).get
 
         status(result) shouldBe SEE_OTHER
-        redirectLocation(result).get should include(ItUrlPaths.enrolledPTWithSAOnAnyAccountPath)
-        recordExistsInMongo shouldBe true
-
-        val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
-          SA_ASSIGNED_TO_CURRENT_USER
-        )(requestWithUserDetails(), messagesApi)
-        verifyAuditEventSent(expectedAuditEvent)
+        redirectLocation(result).get should include(returnUrl)
       }
-    }
 
-    s"redirect to ${ItUrlPaths.enrolledPTNoSAOnAnyAccountPath}" when {
-      "the user has no PT or SA enrolments" in {
+      "has PT enrolment in EACD but not the session" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGet(
           s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/users",
           OK,
-          es0ResponseNoRecordCred
+          es0ResponseMatchingCred
         )
-        stubGetWithQueryParam(
-          "/identity-verification/nino",
-          "nino",
-          NINO.nino,
-          OK,
-          ivResponseMultiCredsJsonString
-        )
-        stubGetMatching(
-          s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_3/enrolments?type=principal",
-          NO_CONTENT,
-          ""
-        )
-        stubGetMatching(
-          s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_4/enrolments?type=principal",
-          NO_CONTENT,
-          ""
-        )
-
         stubPost(
           s"/enrolment-store-proxy/enrolment-store/enrolments",
           NO_CONTENT,
@@ -843,17 +98,346 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
         val result = route(app, request).get
 
         status(result) shouldBe SEE_OTHER
-        redirectLocation(result).get should include(ItUrlPaths.enrolledPTNoSAOnAnyAccountPath)
-        recordExistsInMongo shouldBe true
-
-        val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
-          MULTIPLE_ACCOUNTS
-        )(requestWithUserDetails(), messagesApi)
-        verifyAuditEventSent(expectedAuditEvent)
-
+        redirectLocation(result).get should include("/protect-tax-info/enrol-pt/enrolment-success-no-sa")
       }
     }
+  }
 
+  s"silently enrol for PT and redirect to users redirect url" when {
+    "the user is a single account holder with no PT enrolment in session or EACD" in {
+      val authResponse = authoriseResponseJson()
+      stubAuthorizePost(OK, authResponse.toString())
+      stubPost(s"/write/.*", OK, """{"x":2}""")
+      stubGet(
+        s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/users",
+        OK,
+        es0ResponseNoRecordCred
+      )
+      stubGetWithQueryParam(
+        "/identity-verification/nino",
+        "nino",
+        NINO.nino,
+        OK,
+        ivResponseSingleCredsJsonString
+      )
+
+      stubPost(
+        s"/enrolment-store-proxy/enrolment-store/enrolments",
+        NO_CONTENT,
+        ""
+      )
+
+      stubPut(
+        s"/tax-enrolments/service/HMRC-PT/enrolment",
+        NO_CONTENT,
+        ""
+      )
+
+      val request = FakeRequest(GET, urlPath)
+        .withSession(xAuthToken)
+      val result = route(app, request).get
+
+      status(result) shouldBe SEE_OTHER
+      redirectLocation(result).get should include("/protect-tax-info/enrol-pt/enrolment-success-no-sa")
+
+      val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
+        SINGLE_OR_MULTIPLE_ACCOUNTS
+      )(requestWithUserDetails(), messagesApi)
+      verifyAuditEventSent(expectedAuditEvent)
+
+    }
+
+    "the user is a single account holder with an invalid PT enrolment in session or EACD" in {
+      val authResponse = authoriseResponseJson(enrolments = mismatchPtEnrolmentOnly)
+      stubAuthorizePost(OK, authResponse.toString())
+      stubPost(s"/write/.*", OK, """{"x":2}""")
+      stubGet(
+        s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~${NINO.nino}/users",
+        OK,
+        es0ResponseNoRecordCred
+      )
+      stubGetWithQueryParam(
+        "/identity-verification/nino",
+        "nino",
+        NINO.nino,
+        OK,
+        ivResponseSingleCredsJsonString
+      )
+
+      stubPost(
+        s"/enrolment-store-proxy/enrolment-store/enrolments",
+        NO_CONTENT,
+        ""
+      )
+
+      stubPut(
+        s"/tax-enrolments/service/HMRC-PT/enrolment",
+        NO_CONTENT,
+        ""
+      )
+
+      stubDelete(
+        s"/tax-enrolments/groups/$GROUP_ID/enrolments/HMRC-PT~NINO~${mismatchNino.nino}",
+        Status.CREATED
+      )
+
+      val request = FakeRequest(GET, urlPath)
+        .withSession(xAuthToken)
+      val result = route(app, request).get
+
+      status(result) shouldBe SEE_OTHER
+      redirectLocation(result).get should include("/protect-tax-info/enrol-pt/enrolment-success-no-sa")
+
+      val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
+        SINGLE_OR_MULTIPLE_ACCOUNTS
+      )(requestWithUserDetails(), messagesApi)
+      verifyAuditEventSent(expectedAuditEvent)
+      server.verify(
+        1,
+        deleteRequestedFor(
+          urlEqualTo(s"/tax-enrolments/groups/$GROUP_ID/enrolments/HMRC-PT~NINO~${mismatchNino.nino}")
+        )
+      )
+
+    }
+  }
+
+  s"redirect to ${ItUrlPaths.ptOnOtherAccountPath}" when {
+    "a user has other credentials associated with their NINO" that {
+      "includes one with a PT enrolment" in {
+        stubAuthorizePost(OK, authoriseResponseJson().toString())
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        stubGet(
+          s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/users",
+          OK,
+          es0ResponseNotMatchingCred
+        )
+        stubPost(
+          s"/enrolment-store-proxy/enrolment-store/enrolments",
+          NO_CONTENT,
+          ""
+        )
+
+        val request = FakeRequest(GET, urlPath)
+          .withSession(xAuthToken)
+        val result = route(app, request).get
+
+        status(result) shouldBe SEE_OTHER
+        redirectLocation(result).get should include(ItUrlPaths.ptOnOtherAccountPath)
+        recordExistsInMongo shouldBe true
+      }
+    }
+  }
+
+  s"redirect to ${ItUrlPaths.saOnOtherAccountInterruptPath}" when {
+    "the user has SA enrolment on an other account" in {
+      val authResponse = authoriseResponseJson()
+      stubAuthorizePost(OK, authResponse.toString())
+      stubPost(s"/write/.*", OK, """{"x":2}""")
+      stubGet(
+        s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/users",
+        OK,
+        es0ResponseNoRecordCred
+      )
+      stubGetWithQueryParam(
+        "/identity-verification/nino",
+        "nino",
+        NINO.nino,
+        OK,
+        ivResponseMultiCredsJsonString
+      )
+      stubGetMatching(
+        s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_3/enrolments?type=principal",
+        NO_CONTENT,
+        ""
+      )
+      stubGetMatching(
+        s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_4/enrolments?type=principal",
+        NO_CONTENT,
+        ""
+      )
+
+      stubPost(
+        s"/enrolment-store-proxy/enrolment-store/enrolments",
+        OK,
+        eacdResponse
+      )
+      stubGet(
+        s"/enrolment-store-proxy/enrolment-store/enrolments/IR-SA~UTR~$UTR/users",
+        OK,
+        es0ResponseNotMatchingCred
+      )
+
+      val request = FakeRequest(GET, urlPath)
+        .withSession(xAuthToken)
+      val result = route(app, request).get
+
+      status(result) shouldBe SEE_OTHER
+      redirectLocation(result).get should include(ItUrlPaths.saOnOtherAccountInterruptPath)
+      recordExistsInMongo shouldBe true
+    }
+  }
+
+  s"redirect to ${ItUrlPaths.enrolledPTWithSAOnAnyAccountPath}" when {
+    "the user has no PT enrolments but current credential has SA enrolment in session" in {
+      val authResponse = authoriseResponseJson(enrolments = saEnrolmentOnly)
+      stubAuthorizePost(OK, authResponse.toString())
+      stubPost(s"/write/.*", OK, """{"x":2}""")
+      stubGet(
+        s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/users",
+        OK,
+        es0ResponseNoRecordCred
+      )
+      stubGetWithQueryParam(
+        "/identity-verification/nino",
+        "nino",
+        NINO.nino,
+        OK,
+        ivResponseMultiCredsJsonString
+      )
+      stubGetMatching(
+        s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_3/enrolments?type=principal",
+        NO_CONTENT,
+        ""
+      )
+      stubGetMatching(
+        s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_4/enrolments?type=principal",
+        NO_CONTENT,
+        ""
+      )
+      stubPost(
+        s"/enrolment-store-proxy/enrolment-store/enrolments",
+        NO_CONTENT,
+        ""
+      )
+
+      stubPut(
+        s"/tax-enrolments/service/HMRC-PT/enrolment",
+        NO_CONTENT,
+        ""
+      )
+
+      val request = FakeRequest(GET, urlPath)
+        .withSession(xAuthToken)
+      val result = route(app, request).get
+
+      status(result) shouldBe SEE_OTHER
+      redirectLocation(result).get should include(ItUrlPaths.enrolledPTWithSAOnAnyAccountPath)
+      recordExistsInMongo shouldBe true
+
+      val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
+        SA_ASSIGNED_TO_CURRENT_USER
+      )(requestWithUserDetails(userDetailsNoEnrolments.copy(hasSAEnrolment = true)), messagesApi)
+      verifyAuditEventSent(expectedAuditEvent)
+    }
+  }
+
+  s"redirect to ${ItUrlPaths.enrolledPTWithSAOnAnyAccountPath}" when {
+    "the user has no PT enrolments but current credential has SA enrolment in EACD" in {
+      val authResponse = authoriseResponseJson(enrolments = saEnrolmentOnly)
+      stubAuthorizePost(OK, authResponse.toString())
+      stubPost(s"/write/.*", OK, """{"x":2}""")
+      stubGet(
+        s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/users",
+        OK,
+        es0ResponseNoRecordCred
+      )
+      stubGetMatching(
+        s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_3/enrolments?type=principal",
+        NO_CONTENT,
+        ""
+      )
+      stubGetMatching(
+        s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_4/enrolments?type=principal",
+        NO_CONTENT,
+        ""
+      )
+
+      stubPost(
+        s"/enrolment-store-proxy/enrolment-store/enrolments",
+        OK,
+        eacdResponse
+      )
+      stubGet(
+        s"/enrolment-store-proxy/enrolment-store/enrolments/IR-SA~UTR~$UTR/users",
+        OK,
+        es0ResponseMatchingCred
+      )
+
+      stubPut(
+        s"/tax-enrolments/service/HMRC-PT/enrolment",
+        NO_CONTENT,
+        ""
+      )
+
+      val request = FakeRequest(GET, urlPath)
+        .withSession(xAuthToken)
+      val result = route(app, request).get
+
+      status(result) shouldBe SEE_OTHER
+      redirectLocation(result).get should include(ItUrlPaths.enrolledPTWithSAOnAnyAccountPath)
+      recordExistsInMongo shouldBe true
+
+      val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
+        SA_ASSIGNED_TO_CURRENT_USER
+      )(requestWithUserDetails(), messagesApi)
+      verifyAuditEventSent(expectedAuditEvent)
+    }
+  }
+
+  s"redirect to ${ItUrlPaths.enrolledPTNoSAOnAnyAccountPath}" when {
+    "the user has no PT or SA enrolments" in {
+      val authResponse = authoriseResponseJson()
+      stubAuthorizePost(OK, authResponse.toString())
+      stubPost(s"/write/.*", OK, """{"x":2}""")
+      stubGet(
+        s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/users",
+        OK,
+        es0ResponseNoRecordCred
+      )
+      stubGetWithQueryParam(
+        "/identity-verification/nino",
+        "nino",
+        NINO.nino,
+        OK,
+        ivResponseMultiCredsJsonString
+      )
+      stubGetMatching(
+        s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_3/enrolments?type=principal",
+        NO_CONTENT,
+        ""
+      )
+      stubGetMatching(
+        s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_4/enrolments?type=principal",
+        NO_CONTENT,
+        ""
+      )
+
+      stubPost(
+        s"/enrolment-store-proxy/enrolment-store/enrolments",
+        NO_CONTENT,
+        ""
+      )
+      stubPut(
+        s"/tax-enrolments/service/HMRC-PT/enrolment",
+        NO_CONTENT,
+        ""
+      )
+
+      val request = FakeRequest(GET, urlPath)
+        .withSession(xAuthToken)
+      val result = route(app, request).get
+
+      status(result) shouldBe SEE_OTHER
+      redirectLocation(result).get should include(ItUrlPaths.enrolledPTNoSAOnAnyAccountPath)
+      recordExistsInMongo shouldBe true
+
+      val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
+        SINGLE_OR_MULTIPLE_ACCOUNTS
+      )(requestWithUserDetails(), messagesApi)
+      verifyAuditEventSent(expectedAuditEvent)
+
+    }
   }
 
   "redirect to the return url" when {
@@ -867,6 +451,16 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
           val authResponse = authoriseResponseJson(enrolments = ptEnrolmentOnly)
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
+          stubPost(
+            s"/enrolment-store-proxy/enrolment-store/enrolments",
+            NO_CONTENT,
+            ""
+          )
+          stubGet(
+            s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/users",
+            OK,
+            es0ResponseNoRecordCred
+          )
 
           val request = FakeRequest(GET, urlPath)
             .withSession(xAuthToken)
@@ -884,6 +478,16 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
           val authResponse = authoriseResponseJson(enrolments = ptEnrolmentOnly)
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
+          stubPost(
+            s"/enrolment-store-proxy/enrolment-store/enrolments",
+            NO_CONTENT,
+            ""
+          )
+          stubGet(
+            s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/users",
+            OK,
+            es0ResponseNoRecordCred
+          )
 
           val request = FakeRequest(GET, urlPath)
             .withSession(xAuthToken)
@@ -902,6 +506,21 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
           val authResponse = authoriseResponseJson(enrolments = ptEnrolmentOnly)
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
+          stubPost(
+            s"/enrolment-store-proxy/enrolment-store/enrolments",
+            OK,
+            eacdResponse
+          )
+          stubGet(
+            s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/users",
+            OK,
+            es0ResponseNoRecordCred
+          )
+          stubGet(
+            s"/enrolment-store-proxy/enrolment-store/enrolments/IR-SA~UTR~$UTR/users",
+            OK,
+            es0ResponseNotMatchingCred
+          )
 
           val request = FakeRequest(GET, urlPath)
             .withSession(xAuthToken)
@@ -919,6 +538,21 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
           val authResponse = authoriseResponseJson(enrolments = ptEnrolmentOnly)
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
+          stubPost(
+            s"/enrolment-store-proxy/enrolment-store/enrolments",
+            OK,
+            eacdResponse
+          )
+          stubGet(
+            s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/users",
+            OK,
+            es0ResponseNoRecordCred
+          )
+          stubGet(
+            s"/enrolment-store-proxy/enrolment-store/enrolments/IR-SA~UTR~$UTR/users",
+            OK,
+            es0ResponseNotMatchingCred
+          )
 
           val request = FakeRequest(GET, urlPath)
             .withSession(xAuthToken)
@@ -937,6 +571,21 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
           val authResponse = authoriseResponseJson(enrolments = ptEnrolmentOnly)
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
+          stubPost(
+            s"/enrolment-store-proxy/enrolment-store/enrolments",
+            OK,
+            eacdResponse
+          )
+          stubGet(
+            s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/users",
+            OK,
+            es0ResponseNoRecordCred
+          )
+          stubGet(
+            s"/enrolment-store-proxy/enrolment-store/enrolments/IR-SA~UTR~$UTR/users",
+            OK,
+            es0ResponseNotMatchingCred
+          )
 
           val request = FakeRequest(GET, urlPath)
             .withSession(xAuthToken)
@@ -954,6 +603,21 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
           val authResponse = authoriseResponseJson(enrolments = ptEnrolmentOnly)
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
+          stubPost(
+            s"/enrolment-store-proxy/enrolment-store/enrolments",
+            OK,
+            eacdResponse
+          )
+          stubGet(
+            s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/users",
+            OK,
+            es0ResponseNoRecordCred
+          )
+          stubGet(
+            s"/enrolment-store-proxy/enrolment-store/enrolments/IR-SA~UTR~$UTR/users",
+            OK,
+            es0ResponseNotMatchingCred
+          )
 
           val request = FakeRequest(GET, urlPath)
             .withSession(xAuthToken)
@@ -996,65 +660,6 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
           status(result) shouldBe BAD_REQUEST
           contentAsString(result) should include(ErrorTemplateMessages.title)
           recordExistsInMongo shouldBe false
-        }
-      }
-    }
-
-    s"$ThrottleDoesNotApply and user has already been through account check and enrolled for PT" should {
-      def accountTypeWithExpectedRedirectUrl(accountType: AccountTypes.Value): String =
-        Map(
-          SINGLE_ACCOUNT              -> returnUrl,
-          MULTIPLE_ACCOUNTS           -> ItUrlPaths.enrolledPTNoSAOnAnyAccountPath,
-          SA_ASSIGNED_TO_CURRENT_USER -> ItUrlPaths.enrolledPTWithSAOnAnyAccountPath,
-          PT_ASSIGNED_TO_CURRENT_USER -> returnUrl,
-          SA_ASSIGNED_TO_OTHER_USER   -> ItUrlPaths.enrolledPTSAOnOtherAccountPath,
-          PT_ASSIGNED_TO_OTHER_USER   -> ItUrlPaths.ptOnOtherAccountPath
-        )(accountType)
-
-      val accountTypesThatSilentlyEnrol = List(SINGLE_ACCOUNT, MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER)
-
-      List(
-        SINGLE_ACCOUNT,
-        MULTIPLE_ACCOUNTS,
-        SA_ASSIGNED_TO_CURRENT_USER,
-        PT_ASSIGNED_TO_CURRENT_USER,
-        SA_ASSIGNED_TO_OTHER_USER,
-        PT_ASSIGNED_TO_OTHER_USER
-      ).foreach { accountType =>
-        if (accountTypesThatSilentlyEnrol.contains(accountType)) {
-          s"not enrol for PT and redirect to redirectUrl" when {
-            s"the session cache has accountType $accountType" in {
-              save[String](sessionId, "redirectURL", returnUrl).futureValue
-              save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", accountType).futureValue
-              stubAuthorizePost(OK, authoriseResponseWithPTEnrolment().toString())
-              stubPost(s"/write/.*", OK, """{"x":2}""")
-
-              val request = FakeRequest(GET, urlPath)
-                .withSession(xAuthToken, xSessionId)
-              val result = route(app, request).get
-
-              status(result) shouldBe SEE_OTHER
-              redirectLocation(result).get should include(accountTypeWithExpectedRedirectUrl(accountType))
-              recordExistsInMongo shouldBe false
-            }
-          }
-        } else {
-          s"redirect to redirectUrl" when {
-            s"the session cache has accountType $accountType" in {
-              save[String](sessionId, "redirectURL", returnUrl).futureValue
-              save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", accountType).futureValue
-              stubAuthorizePost(OK, authoriseResponseWithPTEnrolment().toString())
-              stubPost(s"/write/.*", OK, """{"x":2}""")
-
-              val request = FakeRequest(GET, urlPath)
-                .withSession(xAuthToken, xSessionId)
-              val result = route(app, request).get
-
-              status(result) shouldBe SEE_OTHER
-              redirectLocation(result).get should include(accountTypeWithExpectedRedirectUrl(accountType))
-              recordExistsInMongo shouldBe false
-            }
-          }
         }
       }
     }

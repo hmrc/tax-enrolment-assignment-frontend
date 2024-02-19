@@ -35,6 +35,25 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
   ec: ExecutionContext
 ) extends Logging {
   //ES0
+  def deleteGroup(groupId: String)(implicit hc: HeaderCarrier): TEAFResult[Unit] =
+    EitherT(
+      httpClient.DELETE[Either[UpstreamErrorResponse, HttpResponse]](
+        s"${appConfig.EACD_BASE_URL_TESTONLY}/enrolment-store/data/$groupId"
+      )
+    )
+      .transform {
+        case Right(response) if response.status == NO_CONTENT => Right(())
+        case Right(response) =>
+          val ex = new RuntimeException(s"Unexpected ${response.status} status")
+          logger.error(ex.getMessage, ex)
+          Left(UpstreamUnexpected2XX(response.body, response.status))
+        case Left(upstreamError) if upstreamError.statusCode == NOT_FOUND => Right(())
+        case Left(upstreamError) =>
+          logger.error(upstreamError.message)
+          Left(UpstreamError(upstreamError))
+      }
+
+  //ES0
   def getUsersFromEnrolment(enrolmentKey: String)(implicit hc: HeaderCarrier): TEAFResult[List[String]] =
     EitherT(
       httpClient.GET[Either[UpstreamErrorResponse, HttpResponse]](

@@ -66,11 +66,11 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
             _: RequestWithUserDetailsFromSession[AnyContent]
           ))
           .expects(*)
-          .returning(Future.successful(Some(generateBasicCacheMap(SINGLE_ACCOUNT))))
+          .returning(Future.successful(Some(generateBasicCacheMap(SINGLE_OR_MULTIPLE_ACCOUNTS))))
 
         val res = orchestrator.getAccountType
         whenReady(res.value) { result =>
-          result shouldBe Right(SINGLE_ACCOUNT)
+          result shouldBe Right(SINGLE_OR_MULTIPLE_ACCOUNTS)
         }
       }
     }
@@ -94,27 +94,27 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
             .expects(*, *, *)
             .returning(createInboundResult(UsersAssignedEnrolmentEmpty))
 
-          (mockSilentAssignmentService
-            .hasOtherAccountsWithPTAAccess(
+          (mockEacdService
+            .getUsersAssignedSAEnrolment(
               _: RequestWithUserDetailsFromSession[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
             .expects(*, *, *)
-            .returning(createInboundResult(false))
+            .returning(createInboundResult(UsersAssignedEnrolmentEmpty))
 
           (mockTeaSessionCache
             .save(_: String, _: AccountTypes.Value)(
               _: RequestWithUserDetailsFromSession[AnyContent],
               _: Format[AccountTypes.Value]
             ))
-            .expects(ACCOUNT_TYPE, SINGLE_ACCOUNT, *, *)
+            .expects(ACCOUNT_TYPE, SINGLE_OR_MULTIPLE_ACCOUNTS, *, *)
             .returning(Future(CacheMap(request.sessionID, Map())))
 
           val res = orchestrator.getAccountType
 
           whenReady(res.value) { result =>
-            result shouldBe Right(SINGLE_ACCOUNT)
+            result shouldBe Right(SINGLE_OR_MULTIPLE_ACCOUNTS)
           }
         }
       }
@@ -136,10 +136,28 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
             .expects(ACCOUNT_TYPE, PT_ASSIGNED_TO_CURRENT_USER, *, *)
             .returning(Future(CacheMap(request.sessionID, Map())))
 
+          (mockEacdService
+            .getUsersAssignedSAEnrolment(
+              _: RequestWithUserDetailsFromSession[AnyContent],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            ))
+            .expects(*, *, *)
+            .returning(createInboundResult(UsersAssignedEnrolment1))
+
+          (mockEacdService
+            .getUsersAssignedPTEnrolment(
+              _: RequestWithUserDetailsFromSession[AnyContent],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            ))
+            .expects(*, *, *)
+            .returning(createInboundResult(UsersAssignedEnrolmentCurrentCred))
+
           val res = orchestrator.getAccountType(
             ec,
             hc,
-            request.copy(userDetails = userDetailsWithPTEnrolment)
+            requestWithEnrolments(true, false)
           )
 
           whenReady(res.value) { result =>
@@ -166,6 +184,15 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
             .expects(*, *, *)
             .returning(createInboundResult(UsersAssignedEnrolmentCurrentCred))
 
+          (mockEacdService
+            .getUsersAssignedSAEnrolment(
+              _: RequestWithUserDetailsFromSession[AnyContent],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            ))
+            .expects(*, *, *)
+            .returning(createInboundResult(UsersAssignedEnrolment1))
+
           (mockTeaSessionCache
             .save(_: String, _: AccountTypes.Value)(
               _: RequestWithUserDetailsFromSession[AnyContent],
@@ -173,7 +200,7 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
             ))
             .expects(ACCOUNT_TYPE, PT_ASSIGNED_TO_CURRENT_USER, *, *)
             .returning(Future(CacheMap(request.sessionID, Map())))
-          val res = orchestrator.getAccountType
+          val res = orchestrator.getAccountType(implicitly, implicitly, requestWithEnrolments(true, false))
 
           whenReady(res.value) { result =>
             result shouldBe Right(PT_ASSIGNED_TO_CURRENT_USER)
@@ -194,6 +221,15 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
 
           (mockEacdService
             .getUsersAssignedPTEnrolment(
+              _: RequestWithUserDetailsFromSession[AnyContent],
+              _: HeaderCarrier,
+              _: ExecutionContext
+            ))
+            .expects(*, *, *)
+            .returning(createInboundResult(UsersAssignedEnrolment1))
+
+          (mockEacdService
+            .getUsersAssignedSAEnrolment(
               _: RequestWithUserDetailsFromSession[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
@@ -234,15 +270,6 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
             ))
             .expects(*, *, *)
             .returning(createInboundResult(UsersAssignedEnrolmentEmpty))
-
-          (mockSilentAssignmentService
-            .hasOtherAccountsWithPTAAccess(
-              _: RequestWithUserDetailsFromSession[AnyContent],
-              _: HeaderCarrier,
-              _: ExecutionContext
-            ))
-            .expects(*, *, *)
-            .returning(createInboundResult(true))
 
           (mockEacdService
             .getUsersAssignedSAEnrolment(
@@ -287,14 +314,14 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
             .expects(*, *, *)
             .returning(createInboundResult(UsersAssignedEnrolmentEmpty))
 
-          (mockSilentAssignmentService
-            .hasOtherAccountsWithPTAAccess(
+          (mockEacdService
+            .getUsersAssignedSAEnrolment(
               _: RequestWithUserDetailsFromSession[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
             .expects(*, *, *)
-            .returning(createInboundResult(true))
+            .returning(createInboundResult(UsersAssignedEnrolmentEmpty))
 
           (mockTeaSessionCache
             .save(_: String, _: AccountTypes.Value)(
@@ -307,7 +334,7 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
           val res = orchestrator.getAccountType(
             ec,
             hc,
-            request.copy(userDetails = userDetailsWithSAEnrolment)
+            requestWithEnrolments(false, true)
           )
 
           whenReady(res.value) { result =>
@@ -334,15 +361,6 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
             .expects(*, *, *)
             .returning(createInboundResult(UsersAssignedEnrolmentEmpty))
 
-          (mockSilentAssignmentService
-            .hasOtherAccountsWithPTAAccess(
-              _: RequestWithUserDetailsFromSession[AnyContent],
-              _: HeaderCarrier,
-              _: ExecutionContext
-            ))
-            .expects(*, *, *)
-            .returning(createInboundResult(true))
-
           (mockEacdService
             .getUsersAssignedSAEnrolment(
               _: RequestWithUserDetailsFromSession[AnyContent],
@@ -360,7 +378,7 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
             .expects(ACCOUNT_TYPE, SA_ASSIGNED_TO_CURRENT_USER, *, *)
             .returning(Future(CacheMap(request.sessionID, Map())))
 
-          val res = orchestrator.getAccountType
+          val res = orchestrator.getAccountType(implicitly, implicitly, requestWithEnrolments(false, true))
 
           whenReady(res.value) { result =>
             result shouldBe Right(SA_ASSIGNED_TO_CURRENT_USER)
@@ -386,15 +404,6 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
             .expects(*, *, *)
             .returning(createInboundResult(UsersAssignedEnrolmentEmpty))
 
-          (mockSilentAssignmentService
-            .hasOtherAccountsWithPTAAccess(
-              _: RequestWithUserDetailsFromSession[AnyContent],
-              _: HeaderCarrier,
-              _: ExecutionContext
-            ))
-            .expects(*, *, *)
-            .returning(createInboundResult(true))
-
           (mockEacdService
             .getUsersAssignedSAEnrolment(
               _: RequestWithUserDetailsFromSession[AnyContent],
@@ -409,13 +418,13 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
               _: RequestWithUserDetailsFromSession[AnyContent],
               _: Format[AccountTypes.Value]
             ))
-            .expects(ACCOUNT_TYPE, MULTIPLE_ACCOUNTS, *, *)
+            .expects(ACCOUNT_TYPE, SINGLE_OR_MULTIPLE_ACCOUNTS, *, *)
             .returning(Future(CacheMap(request.sessionID, Map())))
 
           val res = orchestrator.getAccountType
 
           whenReady(res.value) { result =>
-            result shouldBe Right(MULTIPLE_ACCOUNTS)
+            result shouldBe Right(SINGLE_OR_MULTIPLE_ACCOUNTS)
           }
         }
       }
@@ -437,15 +446,6 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
             ))
             .expects(*, *, *)
             .returning(createInboundResult(UsersAssignedEnrolmentEmpty))
-
-          (mockSilentAssignmentService
-            .hasOtherAccountsWithPTAAccess(
-              _: RequestWithUserDetailsFromSession[AnyContent],
-              _: HeaderCarrier,
-              _: ExecutionContext
-            ))
-            .expects(*, *, *)
-            .returning(createInboundResult(true))
 
           (mockEacdService
             .getUsersAssignedSAEnrolment(

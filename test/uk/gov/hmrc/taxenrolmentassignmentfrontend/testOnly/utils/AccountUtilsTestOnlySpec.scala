@@ -97,6 +97,11 @@ class AccountUtilsTestOnlySpec extends BaseSpec {
       }
 
       (mockEnrolmentStoreServiceTestOnly
+        .deleteGroup(_: String)(_: HeaderCarrier))
+        .expects(groupId, *)
+        .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+
+      (mockEnrolmentStoreServiceTestOnly
         .deleteAccount(_: String)(_: HeaderCarrier))
         .expects(groupId, *)
         .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))

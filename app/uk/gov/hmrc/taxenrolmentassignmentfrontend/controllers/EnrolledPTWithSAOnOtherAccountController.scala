@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction, ThrottleAction}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.GetSACredentialIfNotFraudReturnedNone
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
@@ -34,7 +34,6 @@ import scala.concurrent.ExecutionContext
 class EnrolledPTWithSAOnOtherAccountController @Inject() (
   authAction: AuthAction,
   accountMongoDetailsAction: AccountMongoDetailsAction,
-  throttleAction: ThrottleAction,
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
   mcc: MessagesControllerComponents,
   enrolledForPTPage: EnrolledForPTWithSAOnOtherAccount,
@@ -45,7 +44,7 @@ class EnrolledPTWithSAOnOtherAccountController @Inject() (
     extends TEAFrontendController(mcc) {
 
   def view: Action[AnyContent] =
-    authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
+    authAction.andThen(accountMongoDetailsAction).async { implicit request =>
       val res = for {
         currentAccount <- multipleAccountsOrchestrator.getDetailsForEnrolledPTWithSAOnOtherAccount
         optSAAccount   <- multipleAccountsOrchestrator.getSACredentialIfNotFraud
@@ -69,7 +68,7 @@ class EnrolledPTWithSAOnOtherAccountController @Inject() (
     }
 
   def continue: Action[AnyContent] =
-    authAction.andThen(accountMongoDetailsAction).andThen(throttleAction).async { implicit request =>
+    authAction.andThen(accountMongoDetailsAction).async { implicit request =>
       logger.logEvent(
         logRedirectingToReturnUrl(
           request.userDetails.credId,

@@ -203,4 +203,159 @@ class TestOnlyControllerSpec extends BaseSpec {
     }
 
   }
+
+  "delete" must {
+
+    "delete all data related to accounts" in {
+      val nino = generateNino
+      val requestBody =
+        s"""
+           |    {
+           |        "groupId": "98ADEA51-C0BA-497D-997E-F585FAADBCEH",
+           |        "affinityGroup": "Individual",
+           |        "nino": "$nino",
+           |        "user": {
+           |            "credId": "5217739547427626",
+           |            "name": "Firstname Surname",
+           |            "email": "email@example.invalid",
+           |            "credentialRole": "Admin",
+           |            "description": "Description"
+           |        },
+           |        "enrolments": [
+           |            {
+           |                "serviceName": "IR-SA",
+           |                "assignedUserCreds": [
+           |                    "1"
+           |                ],
+           |                "identifiers":
+           |                    {
+           |                        "key": "UTR",
+           |                        "value": "123456"
+           |                    }
+           |                ,
+           |                "verifiers": [
+           |                    {
+           |                        "key": "Postcode",
+           |                        "value": "postcode"
+           |                    },
+           |                    {
+           |                        "key": "NINO",
+           |                        "value": "$nino"
+           |                    }
+           |                ],
+           |                "enrolmentFriendlyName": "IR-SA Enrolment",
+           |                "state": "Activated",
+           |                "enrolmentType": "principal",
+           |                "assignedToAll": false
+           |            }
+           |        ],
+           |        "additionalFactors": [
+           |            {
+           |                "factorType": "factorType",
+           |                "phoneNumber": "Phone number",
+           |                "name": "name"
+           |            }
+           |        ]
+           |    }
+           |""".stripMargin
+      val account = Json.parse(requestBody).as[AccountDetailsTestOnly]
+
+      (mockAccountUtilsTestOnly
+        .deleteAccountDetails(_: AccountDetailsTestOnly)(_: HeaderCarrier))
+        .expects(account, *)
+        .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+
+      val request = FakeRequest()
+        .withMethod("POST")
+        .withJsonBody(Json.parse(requestBody))
+
+      val result = sut.delete.apply(request)
+
+      status(result) mustBe OK
+    }
+
+    "create multiple accounts" in {
+      val nino = generateNino
+      val requestBody =
+        s"""
+           |[
+           |    {
+           |        "groupId": "98ADEA51-C0BA-497D-997E-F585FAADBCEH",
+           |        "affinityGroup": "Individual",
+           |        "nino": "$nino",
+           |        "user": {
+           |            "credId": "5217739547427626",
+           |            "name": "Firstname Surname",
+           |            "email": "email@example.invalid",
+           |            "credentialRole": "Admin",
+           |            "description": "Description"
+           |        },
+           |        "enrolments": [
+           |            {
+           |                "serviceName": "IR-SA",
+           |                "assignedUserCreds": [
+           |                    "1"
+           |                ],
+           |                "identifiers":
+           |                    {
+           |                        "key": "UTR",
+           |                        "value": "123456"
+           |                    }
+           |                ,
+           |                "verifiers": [
+           |                    {
+           |                        "key": "Postcode",
+           |                        "value": "postcode"
+           |                    },
+           |                    {
+           |                        "key": "NINO",
+           |                        "value": "$nino"
+           |                    }
+           |                ],
+           |                "enrolmentFriendlyName": "IR-SA Enrolment",
+           |                "state": "Activated",
+           |                "enrolmentType": "principal",
+           |                "assignedToAll": false
+           |            }
+           |        ]
+           |    },
+           |    {
+           |        "groupId": "98ADEA51-C0BA-497D-997E-F585FAADBCEI",
+           |        "affinityGroup": "Individual",
+           |        "nino": "$nino",
+           |        "user": {
+           |            "credId": "5217739547427627",
+           |            "name": "Firstname Surname",
+           |            "email": "email@example.invalid",
+           |            "credentialRole": "Admin",
+           |            "description": "Description"
+           |        },
+           |        "enrolments": []
+           |    }
+           |]
+           |""".stripMargin
+      val accounts = Json.parse(requestBody).as[List[AccountDetailsTestOnly]]
+
+      accounts.foreach { account =>
+        (mockAccountUtilsTestOnly
+          .deleteAccountDetails(_: AccountDetailsTestOnly)(_: HeaderCarrier))
+          .expects(account, *)
+          .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+
+        (mockAccountUtilsTestOnly
+          .insertAccountDetails(_: AccountDetailsTestOnly)(_: HeaderCarrier))
+          .expects(account, *)
+          .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+      }
+
+      val request = FakeRequest()
+        .withMethod("POST")
+        .withJsonBody(Json.parse(requestBody))
+
+      val result = sut.create.apply(request)
+
+      status(result) mustBe OK
+    }
+
+  }
 }

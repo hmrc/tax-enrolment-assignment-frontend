@@ -33,7 +33,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{ControllersBaseSpec, 
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditHandler
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{SilentAssignmentService, ThrottlingService}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{SilentAssignmentService}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTWithSAOnOtherAccount
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -56,7 +56,6 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
       bind[SilentAssignmentService].toInstance(mockSilentAssignmentService),
       bind[AccountCheckOrchestrator].toInstance(mockAccountCheckOrchestrator),
       bind[AuditHandler].toInstance(mockAuditHandler),
-      bind[ThrottlingService].toInstance(mockThrottlingService),
       bind[AuthConnector].toInstance(mockAuthConnector),
       bind[BodyParsers.Default].toInstance(testBodyParser),
       bind[MultipleAccountsOrchestrator].toInstance(mockMultipleAccountsOrchestrator)
@@ -69,7 +68,6 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
     app.injector.instanceOf[EnrolledForPTWithSAOnOtherAccount]
 
   "view" when {
-    specificThrottleTests(controller.view())
 
     "the user has enrolled for PT after choosing to have SA separate" should {
       "render the EnrolledForPTWithSAOnOtherAccount page with SA details" in {
@@ -102,7 +100,6 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
           )
           .expects(*, *, *)
           .returning(createInboundResult(accountDetails))
-        mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
 
         (mockMultipleAccountsOrchestrator
           .getSACredentialIfNotFraud(
@@ -176,7 +173,6 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
           .returning(createInboundResult(None))
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
-        mockAccountShouldNotBeThrottled(randomAccountType, NINO, saEnrolmentOnly.enrolments)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -203,8 +199,6 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
           )
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
-
-        mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         (
           mockMultipleAccountsOrchestrator
@@ -275,7 +269,6 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
           )
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
-        mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
         (
           mockMultipleAccountsOrchestrator
             .getDetailsForEnrolledPTWithSAOnOtherAccount(
@@ -298,7 +291,6 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
     }
   }
   "continue" when {
-    specificThrottleTests(controller.continue)
     "the call to continue deletes user data and redirects to their redirectURL" in {
       (
         mockAuthConnector
@@ -317,7 +309,6 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
         .expects(predicates, retrievals, *, *)
         .returning(Future.successful(retrievalResponse()))
       mockGetDataFromCacheForActionSuccess(accountType = randomAccountType, redirectUrl = "redirect")
-      mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
       mockDeleteDataFromCache
       val res = controller.continue
         .apply(buildFakeRequestWithSessionId("", ""))

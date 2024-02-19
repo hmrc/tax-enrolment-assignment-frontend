@@ -25,7 +25,7 @@ import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AuthJourney, RequestWithUserDetailsFromSession, ThrottleAction}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AuthJourney, RequestWithUserDetailsFromSession}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{InvalidRedirectUrl, TaxEnrolmentAssignmentErrors}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
@@ -43,7 +43,6 @@ import scala.util.{Failure, Success, Try}
 @Singleton
 class AccountCheckController @Inject() (
   silentAssignmentService: SilentAssignmentService,
-  throttleAction: ThrottleAction,
   authJourney: AuthJourney,
   accountCheckOrchestrator: AccountCheckOrchestrator,
   auditHandler: AuditHandler,
@@ -61,8 +60,7 @@ class AccountCheckController @Inject() (
     } match {
       case Success(redirectUrlString) =>
         handleRequest(redirectUrlString).value.flatMap {
-          case Right((_, Some(redirectResult))) => Future.successful(redirectResult)
-          case Right((accountType, _))          => handleNoneThrottledUsers(accountType, redirectUrlString)
+          case Right(accountType) => handleUsers(accountType, redirectUrlString)
           case Left(error) =>
             Future.successful(
               errorHandler.handleErrors(error, "[AccountCheckController][accountCheck]")
@@ -80,17 +78,16 @@ class AccountCheckController @Inject() (
   private def handleRequest(redirectUrl: String)(implicit
     request: RequestWithUserDetailsFromSession[_],
     hc: HeaderCarrier
-  ): TEAFResult[(AccountTypes.Value, Option[Result])] =
+  ): TEAFResult[AccountTypes.Value] =
     for {
       _ <- EitherT.right[TaxEnrolmentAssignmentErrors](
              sessionCache.save[String](REDIRECT_URL, redirectUrl)(request, implicitly)
            )
       accountType <- accountCheckOrchestrator.getAccountType
-      throttle    <- EitherT.right[TaxEnrolmentAssignmentErrors](throttleAction.throttle(accountType, redirectUrl))
-      _           <- enrolForPTIfRequired(accountType, throttle.isEmpty)
-    } yield (accountType, throttle)
+      _           <- enrolForPTIfRequired(accountType)
+    } yield accountType
 
-  private def handleNoneThrottledUsers(accountType: AccountTypes.Value, redirectUrl: String)(implicit
+  private def handleUsers(accountType: AccountTypes.Value, redirectUrl: String)(implicit
     request: RequestWithUserDetailsFromSession[_]
   ): Future[Result] =
     accountType match {
@@ -98,7 +95,7 @@ class AccountCheckController @Inject() (
       case SA_ASSIGNED_TO_OTHER_USER if request.userDetails.hasPTEnrolment =>
         Future.successful(Redirect(routes.EnrolledPTWithSAOnOtherAccountController.view))
       case SA_ASSIGNED_TO_OTHER_USER   => Future.successful(Redirect(routes.SABlueInterruptController.view))
-      case MULTIPLE_ACCOUNTS           => Future.successful(Redirect(routes.EnrolledForPTController.view))
+      case SINGLE_OR_MULTIPLE_ACCOUNTS => Future.successful(Redirect(routes.EnrolledForPTController.view))
       case SA_ASSIGNED_TO_CURRENT_USER => Future.successful(Redirect(routes.EnrolledForPTWithSAController.view))
       case _ =>
         logger.logEvent(
@@ -110,29 +107,22 @@ class AccountCheckController @Inject() (
         sessionCache.removeRecord.map(_ => Redirect(redirectUrl))
     }
 
-  private def enrolForPTIfRequired(accountType: AccountTypes.Value, isThrottled: Boolean)(implicit
+  private def enrolForPTIfRequired(accountType: AccountTypes.Value)(implicit
     request: RequestWithUserDetailsFromSession[_],
     hc: HeaderCarrier
   ): TEAFResult[Unit] = {
-    val accountTypesToEnrolForPT = List(SINGLE_ACCOUNT, MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER)
+    val accountTypesToEnrolForPT = List(SINGLE_OR_MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER)
     val hasPTEnrolmentAlready = request.userDetails.hasPTEnrolment
-    if (isThrottled && !hasPTEnrolmentAlready && accountTypesToEnrolForPT.contains(accountType)) {
+    if (!hasPTEnrolmentAlready && accountTypesToEnrolForPT.contains(accountType)) {
       silentAssignmentService.enrolUser().flatMap { _ =>
         auditHandler.audit(AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(accountType))
-        EitherT.right(if (accountType == SINGLE_ACCOUNT) {
-          sessionCache.removeRecord.map { _ =>
-            logger.logEvent(
-              logSingleAccountHolderAssignedEnrolment(request.userDetails.credId, request.userDetails.nino)
-            )
-
-          }
-        } else {
+        EitherT.right(
           Future.successful(
             logger.logEvent(
-              logMultipleAccountHolderAssignedEnrolment(request.userDetails.credId, request.userDetails.nino)
+              logSingleOrMultipleAccountHolderAssignedEnrolment(request.userDetails.credId, request.userDetails.nino)
             )
           )
-        })
+        )
       }
     } else if (hasPTEnrolmentAlready) {
       EitherT.right(sessionCache.removeRecord.map(_ => (): Unit))

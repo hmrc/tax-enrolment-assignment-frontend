@@ -16,7 +16,7 @@
 
 package controllers
 
-import helpers.{IntegrationSpecBase, ItUrlPaths, ThrottleHelperISpec}
+import helpers.{IntegrationSpecBase, ItUrlPaths}
 import helpers.TestITData._
 import play.api.test.Helpers.{GET, POST, await, contentAsString, defaultAwaitTimeout, redirectLocation, route}
 import play.api.test.Helpers.{status, writeableOf_AnyContentAsEmpty, writeableOf_AnyContentAsJson}
@@ -29,18 +29,12 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.USER_ASSIGNED_SA_ENROLMENT
 
-class EnrolledPTWithSAOnOtherAccountControllerISpec extends IntegrationSpecBase with ThrottleHelperISpec {
+class EnrolledPTWithSAOnOtherAccountControllerISpec extends IntegrationSpecBase {
 
   val urlPath: String =
     ItUrlPaths.enrolledPTSAOnOtherAccountPath
 
   s"GET $urlPath" when {
-    throttleSpecificTests { () =>
-      val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
-        .withSession(xAuthToken, xSessionId)
-      route(app, request).get
-    }
-
     s"the session cache has Account type of $SA_ASSIGNED_TO_OTHER_USER and no fraud reported" should {
       s"render the enrolledPTPage that includes SA details" in {
         await(save[String](sessionId, "redirectURL", returnUrl))
@@ -150,10 +144,9 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec extends IntegrationSpecBase 
     }
 
     List(
-      SINGLE_ACCOUNT,
       PT_ASSIGNED_TO_OTHER_USER,
       PT_ASSIGNED_TO_CURRENT_USER,
-      MULTIPLE_ACCOUNTS,
+      SINGLE_OR_MULTIPLE_ACCOUNTS,
       SA_ASSIGNED_TO_CURRENT_USER
     ).foreach { accountType =>
       s"the session cache has Account type of $accountType" should {
@@ -259,14 +252,6 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec extends IntegrationSpecBase 
   }
 
   s"POST $urlPath" when {
-
-    throttleSpecificTests { () =>
-      val request = FakeRequest(POST, "/protect-tax-info" + urlPath)
-        .withSession(xAuthToken, xSessionId)
-        .withJsonBody(Json.obj())
-      route(app, request).get
-    }
-
     "the session cache contains the redirect url" should {
       s"redirect to the redirect url" in {
         await(save[String](sessionId, "redirectURL", returnUrl))

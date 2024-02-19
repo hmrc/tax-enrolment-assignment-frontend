@@ -16,7 +16,7 @@
 
 package controllers
 
-import helpers.{IntegrationSpecBase, ItUrlPaths, ThrottleHelperISpec}
+import helpers.{IntegrationSpecBase, ItUrlPaths}
 import helpers.TestITData._
 import play.api.test.Helpers.{GET, POST, await, contentAsString, defaultAwaitTimeout, redirectLocation}
 import play.api.test.Helpers.{route, status, writeableOf_AnyContentAsEmpty, writeableOf_AnyContentAsJson}
@@ -28,18 +28,11 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import play.api.test.FakeRequest
 
-class EnrolledForPTWithSAISpec extends IntegrationSpecBase with ThrottleHelperISpec {
+class EnrolledForPTWithSAISpec extends IntegrationSpecBase {
 
   val urlPath: String = ItUrlPaths.enrolledPTWithSAOnAnyAccountPath
 
   s"GET $urlPath" when {
-
-    throttleSpecificTests { () =>
-      val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
-        .withSession(xSessionId, xAuthToken)
-      route(app, request).get
-    }
-
     s"the session cache has Account type of $SA_ASSIGNED_TO_CURRENT_USER" should {
       s"render the EnrolledForPTWithSA page ($urlPath)" in {
         await(save[String](sessionId, "redirectURL", returnUrl))
@@ -66,7 +59,7 @@ class EnrolledForPTWithSAISpec extends IntegrationSpecBase with ThrottleHelperIS
       }
     }
 
-    List(PT_ASSIGNED_TO_OTHER_USER, PT_ASSIGNED_TO_CURRENT_USER, SINGLE_ACCOUNT)
+    List(PT_ASSIGNED_TO_OTHER_USER, PT_ASSIGNED_TO_CURRENT_USER)
       .foreach { accountType =>
         s"the session cache has Account type of $accountType" should {
           s"redirect to /protect-tax-info?redirectUrl=" in {
@@ -82,6 +75,7 @@ class EnrolledForPTWithSAISpec extends IntegrationSpecBase with ThrottleHelperIS
               .withSession(xSessionId, xAuthToken)
             val result = route(app, request).get
 
+            contentAsString(result) shouldBe ""
             status(result) shouldBe SEE_OTHER
             redirectLocation(result).get should include(
               accountCheckPath
@@ -215,14 +209,6 @@ class EnrolledForPTWithSAISpec extends IntegrationSpecBase with ThrottleHelperIS
   }
 
   s"POST $urlPath" when {
-
-    throttleSpecificTests { () =>
-      val request = FakeRequest(POST, "/protect-tax-info" + urlPath)
-        .withSession(xSessionId, xAuthToken)
-        .withJsonBody(Json.obj())
-      route(app, request).get
-    }
-
     "the session cache contains the redirect url" should {
       s"redirect to the redirect url" in {
         await(save[String](sessionId, "redirectURL", returnUrl))

@@ -38,7 +38,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrc
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_ASSIGNED_SA_ENROLMENT, accountDetailsForCredential}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{SilentAssignmentService, ThrottlingService}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{SilentAssignmentService}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.KeepAccessToSA
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -61,7 +61,6 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
       bind[SilentAssignmentService].toInstance(mockSilentAssignmentService),
       bind[AccountCheckOrchestrator].toInstance(mockAccountCheckOrchestrator),
       bind[AuditHandler].toInstance(mockAuditHandler),
-      bind[ThrottlingService].toInstance(mockThrottlingService),
       bind[AuthConnector].toInstance(mockAuthConnector),
       bind[BodyParsers.Default].toInstance(testBodyParser),
       bind[MultipleAccountsOrchestrator].toInstance(mockMultipleAccountsOrchestrator)
@@ -73,9 +72,6 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
   val view: KeepAccessToSA = app.injector.instanceOf[KeepAccessToSA]
 
   "view" when {
-
-    specificThrottleTests(controller.view())
-
     "the user has multiple accounts, is signed in with one without SA and has no form data in cache" should {
       "render the keep access to sa page with radio buttons unchecked" in {
         (
@@ -105,7 +101,6 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
           .expects(*, *)
           .returning(createInboundResult(keepAccessToSAThroughPTAForm))
         mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
-        mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -157,7 +152,6 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
             )
           )
         mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
-        mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -209,7 +203,6 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
             )
           )
         mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
-        mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -257,7 +250,6 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
           .expects(*, *)
           .returning(createInboundResultError(UnexpectedPTEnrolment(SA_ASSIGNED_TO_OTHER_USER)))
         mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
-        mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, ptEnrolmentOnly.enrolments)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -296,7 +288,6 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
             createInboundResultError(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
           )
         mockGetDataFromCacheForActionSuccess(randomAccountType)
-        mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -334,9 +325,6 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
   }
 
   "continue" when {
-
-    specificThrottleTests(controller.continue())
-
     "the user has selected Yes" should {
       s"redirect to ${UrlPaths.saOnOtherAccountSigninAgainPath}" when {
         "they have SA on another account" in {
@@ -368,8 +356,6 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
             .expects(KeepAccessToSAThroughPTA(true), *, *, *)
             .returning(createInboundResult(true))
           mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
-          mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
-
           val res = controller.continue
             .apply(
               buildFakePOSTRequestWithSessionId(
@@ -414,7 +400,6 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
             .expects(KeepAccessToSAThroughPTA(true), *, *, *)
             .returning(createInboundResultError(UnexpectedPTEnrolment(SA_ASSIGNED_TO_OTHER_USER)))
           mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
-          mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, ptEnrolmentOnly.enrolments)
 
           val res = controller.continue
             .apply(
@@ -462,7 +447,6 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
               )
             )
           mockGetDataFromCacheForActionSuccess(randomAccountType)
-          mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
           val res = controller.continue
             .apply(
@@ -511,7 +495,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
             .expects(KeepAccessToSAThroughPTA(false), *, *, *)
             .returning(createInboundResult(false))
           mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData)
-          mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, noEnrolments.enrolments)
+
           val auditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(false)(
             requestWithAccountType(
               SA_ASSIGNED_TO_OTHER_USER,
@@ -573,7 +557,6 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
             .expects(KeepAccessToSAThroughPTA(false), *, *, *)
             .returning(createInboundResultError(UnexpectedPTEnrolment(SA_ASSIGNED_TO_OTHER_USER)))
           mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData)
-          mockAccountShouldNotBeThrottled(SA_ASSIGNED_TO_OTHER_USER, NINO, ptEnrolmentOnly.enrolments)
 
           val res = controller.continue
             .apply(
@@ -622,7 +605,6 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
               )
             )
           mockGetDataFromCacheForActionSuccess(randomAccountType)
-          mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
           val res = controller.continue
             .apply(
@@ -667,7 +649,6 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
               createInboundResultError(UnexpectedResponseFromTaxEnrolments)
             )
           mockGetDataFromCacheForActionSuccess(randomAccountType)
-          mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
           val res = controller.continue
             .apply(
@@ -700,7 +681,6 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
         mockGetDataFromCacheForActionSuccess(randomAccountType)
-        mockAccountShouldNotBeThrottled(randomAccountType, NINO, noEnrolments.enrolments)
 
         val res = controller.continue
           .apply(

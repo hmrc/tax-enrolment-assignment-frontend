@@ -157,22 +157,6 @@ object TestITData {
       |"createdAt":{"$date":1638531686457},
       |"updatedAt":{"$date":1638531686525}}]""".stripMargin
 
-  val ivNinoStoreEntry1: IVNinoStoreEntry =
-    IVNinoStoreEntry(CREDENTIAL_ID, Some(CL200))
-  val ivNinoStoreEntry2: IVNinoStoreEntry =
-    IVNinoStoreEntry(CREDENTIAL_ID_2, Some(CL50))
-  val ivNinoStoreEntry3: IVNinoStoreEntry =
-    IVNinoStoreEntry(CREDENTIAL_ID_3, Some(CL200))
-  val ivNinoStoreEntry4: IVNinoStoreEntry =
-    IVNinoStoreEntry(CREDENTIAL_ID_4, Some(CL200))
-
-  val multiIVCreds = List(
-    ivNinoStoreEntry1,
-    ivNinoStoreEntry2,
-    ivNinoStoreEntry3,
-    ivNinoStoreEntry4
-  )
-
   val usersGroupSearchResponse = UsersGroupResponse(
     obfuscatedUserId = Some("********6037"),
     email = Some("email1@test.com"),

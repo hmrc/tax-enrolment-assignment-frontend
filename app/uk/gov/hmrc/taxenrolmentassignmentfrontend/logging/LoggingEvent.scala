@@ -18,9 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.logging
 
 import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IVNinoStoreEntry
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.{IRSAKey, hmrcPTKey}
 
 object LoggingEvent {
@@ -47,7 +45,7 @@ object LoggingEvent {
     )
   )
 
-  def logMultipleAccountHolderAssignedEnrolment(
+  def logSingleOrMultipleAccountHolderAssignedEnrolment(
     credentialId: String,
     nino: Nino
   ): LoggingEvent =
@@ -55,7 +53,7 @@ object LoggingEvent {
       Event(
         "[AccountCheckController][silentEnrol]",
         details = Some(
-          s"$hmrcPTKey enrolment assigned to credential $credentialId which has multiple accounts with nino ${nino.nino}"
+          s"$hmrcPTKey enrolment assigned to credential $credentialId which has a single or multiple accounts with nino ${nino.nino}"
         )
       )
     )
@@ -78,16 +76,6 @@ object LoggingEvent {
         "[SignInWithSAAccountController][continue]",
         details = Some(
           s"User with credential $credentialId chose to sign in again with their $IRSAKey account"
-        )
-      )
-    )
-
-  def logUserThrottled(credentialId: String, accountType: AccountTypes.Value, nino: Nino): LoggingEvent =
-    Info(
-      Event(
-        "[Throttling]",
-        details = Some(
-          s"$credentialId has been throttled with the account type $accountType and nino ${nino.nino}"
         )
       )
     )
@@ -136,27 +124,11 @@ object LoggingEvent {
       )
     )
 
-  def logCurrentUserhasMultipleAccounts(credentialId: String): LoggingEvent =
+  def logCurrentUserhasOneOrMultipleAccounts(credentialId: String): LoggingEvent =
     Info(
       Event(
         "[AccountCheckOrchestrator][getAccountType]",
-        details = Some(s"Signed in credential $credentialId has multiple accounts")
-      )
-    )
-
-  def logCurrentUserhasMultipleAccountsDebug(credentialId: String, allCreds: List[IVNinoStoreEntry]): LoggingEvent =
-    Debug(
-      Event(
-        "[AccountCheckOrchestrator][getAccountType]",
-        details = Some(s"Signed in credential $credentialId has multiple accounts: " + allCreds.mkString(", "))
-      )
-    )
-
-  def logCurrentUserhasOneAccount(credentialId: String): LoggingEvent =
-    Info(
-      Event(
-        "[AccountCheckOrchestrator][getAccountType]",
-        details = Some(s"Signed in credential $credentialId has one account")
+        details = Some(s"Signed in credential $credentialId has one or multiple accounts with no enrolments")
       )
     )
 

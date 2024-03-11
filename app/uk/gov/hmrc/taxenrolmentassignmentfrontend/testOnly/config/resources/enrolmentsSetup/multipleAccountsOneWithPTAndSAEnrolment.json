@@ -1,0 +1,109 @@
+[
+    {
+        "groupId": "1B958C76-8F5B-406A-B2D6-CB3B7D92E063",
+        "affinityGroup": "Individual",
+        "nino": "JS347435A",
+        "user": {
+            "credId": "1358163060829375",
+            "name": "Firstname Surname",
+            "email": "email10@test.com",
+            "userId": "Ending with 9711",
+            "hasPTEnrolment": true,
+            "hasSAEnrolment": true
+        },
+        "enrolments": [
+            {
+                "serviceName": "IR-SA",
+                "assignedUserCreds": [
+                    "1"
+                ],
+                "identifiers": {
+                    "key": "UTR",
+                    "value": "AA543003E"
+                },
+                "verifiers": [
+                    {
+                        "key": "Postcode",
+                        "value": "postcode"
+                    },
+                    {
+                        "key": "NINO",
+                        "value": "JS347435A"
+                    }
+                ],
+                "enrolmentFriendlyName": "IR-SA Enrolment",
+                "state": "Activated",
+                "enrolmentType": "principal",
+                "assignedToAll": false
+            },
+            {
+                "serviceName": "HMRC-PT",
+                "identifiers": {
+                    "key": "NINO",
+                    "value": "JS347435A"
+                },
+                "verifiers": [
+                    {
+                        "key": "NINO1",
+                        "value": "JS347435A"
+                    }
+                ],
+                "enrolmentFriendlyName": "HMRC-PT Enrolment",
+                "state": "Activated",
+                "enrolmentType": "principal",
+                "assignedToAll": false
+            }
+        ],
+        "additionalFactors": [
+            {
+                "factorType": "totp",
+                "name": "HMRC App"
+            }
+        ]
+    },
+    {
+        "groupId": "A707606F-BF9C-4469-8234-F72D97E27278",
+        "affinityGroup": "Individual",
+        "nino": "JS347435A",
+        "user": {
+            "credId": "5500977999892956",
+            "name": "Firstname Surname",
+            "email": "email11@test.com",
+            "userId": "Ending with 7127",
+            "hasPTEnrolment": false,
+            "hasSAEnrolment": true
+        },
+        "enrolments": [
+            {
+                "serviceName": "IR-SA",
+                "assignedUserCreds": [
+                    "1"
+                ],
+                "identifiers": {
+                    "key": "UTR",
+                    "value": "AA543004E"
+                },
+                "verifiers": [
+                    {
+                        "key": "Postcode",
+                        "value": "postcode"
+                    },
+                    {
+                        "key": "NINO",
+                        "value": "JS347435A"
+                    }
+                ],
+                "enrolmentFriendlyName": "IR-SA Enrolment",
+                "state": "Activated",
+                "enrolmentType": "principal",
+                "assignedToAll": false
+            }
+        ],
+        "additionalFactors": [
+            {
+                "factorType": "totp",
+                "name": "HMRC App"
+            }
+        ]
+    }
+]

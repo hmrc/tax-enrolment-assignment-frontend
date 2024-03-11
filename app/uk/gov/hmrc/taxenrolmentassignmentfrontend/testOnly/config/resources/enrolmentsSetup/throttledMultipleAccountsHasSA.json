@@ -1,0 +1,54 @@
+[
+    {
+        "groupId": "26C4C8E8-06B3-4E4B-B17D-E28C912FE639",
+        "affinityGroup": "Individual",
+        "nino": "JT543200D",
+        "user": {
+            "credId": "1008123561528207",
+            "name": "Firstname Surname",
+            "email": "email5@test.com",
+            "userId": "Ending with 0297",
+            "hasPTEnrolment": false,
+            "hasSAEnrolment": false
+        }
+    },
+    {
+        "groupId": "84ADB869-2FDC-4415-8B35-8D173DF598BE",
+        "affinityGroup": "Individual",
+        "nino": "JT543200D",
+        "user": {
+            "credId": "8566068310215338",
+            "name": "Firstname Surname",
+            "email": "email7@test.com",
+            "userId": "Ending with 1655",
+            "hasPTEnrolment": false,
+            "hasSAEnrolment": true
+        },
+        "enrolments": [
+            {
+                "serviceName": "IR-SA",
+                "assignedUserCreds": [
+                    "1"
+                ],
+                "identifiers": {
+                    "key": "UTR",
+                    "value": "JT543200D"
+                },
+                "verifiers": [
+                    {
+                        "key": "Postcode",
+                        "value": "postcode"
+                    },
+                    {
+                        "key": "NINO",
+                        "value": "JT543200D"
+                    }
+                ],
+                "enrolmentFriendlyName": "IR-SA Enrolment",
+                "state": "Activated",
+                "enrolmentType": "principal",
+                "assignedToAll": false
+            }
+        ]
+    }
+]

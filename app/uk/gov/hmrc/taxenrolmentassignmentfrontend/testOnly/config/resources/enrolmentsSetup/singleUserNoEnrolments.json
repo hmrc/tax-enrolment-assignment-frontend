@@ -1,0 +1,19 @@
+{
+    "groupId": "E9099DA7-7AAA-4D8C-B07A-68923620DCF6",
+    "affinityGroup": "Individual",
+    "nino": "JS271435D",
+    "user": {
+        "credId": "4684455594391511",
+        "name": "Firstname Surname",
+        "email": "email5@test.com",
+        "userId": "Ending with 3469",
+        "hasPTEnrolment": false
+    },
+    "additionalFactors": [
+        {
+            "factorType": "sms",
+            "phoneNumber": "07783924122",
+            "name": "Text Messages"
+        }
+    ]
+}

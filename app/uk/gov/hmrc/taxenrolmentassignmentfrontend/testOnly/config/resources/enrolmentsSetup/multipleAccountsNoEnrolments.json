@@ -1,0 +1,58 @@
+[
+    {
+        "groupId": "F8AEE9A3-2BD0-42F8-9782-610567E81A9F",
+        "affinityGroup": "Individual",
+        "nino": "JS271435A",
+        "user": {
+            "credId": "2338687273700685",
+            "name": "Firstname Surname",
+            "email": "email3@test.com",
+            "userId": "Ending with 4229",
+            "hasPTEnrolment": false
+        },
+        "additionalFactors": [
+            {
+                "factorType": "voiceCall",
+                "phoneNumber": "07783924122",
+                "name": "voice call"
+            }
+        ]
+    },
+    {
+        "groupId": "ED4EA886-52C5-478F-9DFB-DFEA2CC400DD",
+        "affinityGroup": "Individual",
+        "nino": "JS271435A",
+        "user": {
+            "credId": "5052110129550895",
+            "name": "Firstname Surname",
+            "email": "email4@test.com",
+            "userId": "Ending with 5216",
+            "hasPTEnrolment": false
+        },
+        "additionalFactors": [
+            {
+                "factorType": "totp",
+                "name": "HMRC App"
+            }
+        ]
+    },
+    {
+        "groupId": "1A36CD9E-7F29-474F-859E-F6E043845673",
+        "affinityGroup": "Individual",
+        "nino": "JS271435A",
+        "user": {
+            "credId": "6508728649413980",
+            "name": "Firstname Surname",
+            "email": "email2@test.com",
+            "userId": "Ending with 3980",
+            "hasPTEnrolment": false
+        },
+        "additionalFactors": [
+            {
+                "factorType": "sms",
+                "phoneNumber": "07783924122",
+                "name": "Text Messages"
+            }
+        ]
+    }
+]

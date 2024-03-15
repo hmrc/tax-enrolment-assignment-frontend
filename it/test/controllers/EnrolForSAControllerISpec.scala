@@ -18,16 +18,16 @@ package controllers
 
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import helpers.TestITData._
-import play.api.test.Helpers.{GET, defaultAwaitTimeout, redirectLocation, route, status, writeableOf_AnyContentAsEmpty}
 import helpers.{IntegrationSpecBase, ItUrlPaths}
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK, SEE_OTHER}
 import play.api.test.FakeRequest
+import play.api.test.Helpers.{GET, defaultAwaitTimeout, redirectLocation, route, status, writeableOf_AnyContentAsEmpty}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 
 class EnrolForSAControllerISpec extends IntegrationSpecBase {
 
   val urlPath: String = ItUrlPaths.enrolForSAPath
-  lazy val appConfig = app.injector.instanceOf[AppConfig]
+  lazy val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
 
   s"GET to $urlPath" should {
 

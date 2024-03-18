@@ -23,8 +23,10 @@ import play.api.test.Helpers.{GET, await, contentAsString, defaultAwaitTimeout, 
 import play.api.test.Helpers.{status, writeableOf_AnyContentAsEmpty}
 import helpers.messages._
 import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK, SEE_OTHER}
 import play.api.libs.json.{JsString, Json}
+import play.api.mvc.{AnyContentAsEmpty, Result}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_OR_MULTIPLE_ACCOUNTS}
@@ -32,6 +34,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_ASSIGNED_PT_ENROLMENT, USER_ASSIGNED_SA_ENROLMENT}
 
+import scala.concurrent.Future
 import scala.jdk.CollectionConverters._
 
 class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
@@ -49,10 +52,10 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
           usersGroupSearchResponsePTEnrolment(USER_ID)
         )
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
+        val result: Future[Result] = route(app, request).get
+        val page: Document = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe OK
         page.title should include(PTEnrolmentOtherAccountMesages.title)
@@ -67,7 +70,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
           PTEnrolmentOtherAccountMesages.saText3
         )
 
-        val expectedAuditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
+        val expectedAuditEvent: AuditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
           accountDetailsUserFriendly(CREDENTIAL_ID_2)
         )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
 
@@ -85,10 +88,10 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
           usersGroupSearchResponsePTEnrolment()
         )
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
+        val result: Future[Result] = route(app, request).get
+        val page: Document = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe OK
         page.title should include(PTEnrolmentOtherAccountMesages.title)
@@ -104,7 +107,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
           PTEnrolmentOtherAccountMesages.saText2
         )
 
-        val expectedAuditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
+        val expectedAuditEvent: AuditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
           accountDetailsUserFriendly(CREDENTIAL_ID_2, "1234")
         )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
 
@@ -127,10 +130,10 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
           usersGroupSearchResponseSAEnrolment
         )
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
+        val result: Future[Result] = route(app, request).get
+        val page: Document = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe OK
         page.title should include(PTEnrolmentOtherAccountMesages.title)
@@ -143,7 +146,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
           .toList
           .map(_.text()) should contain(PTEnrolmentOtherAccountMesages.saText)
 
-        val expectedAuditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
+        val expectedAuditEvent: AuditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
           accountDetailsUserFriendly(CREDENTIAL_ID_2)
         )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
 
@@ -162,16 +165,16 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
           usersGroupSearchResponsePTEnrolment(USER_ID)
         )
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
+        val result: Future[Result] = route(app, request).get
+        val page: Document = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe OK
         page.title should include(PTEnrolmentOtherAccountMesages.title)
         page.getElementsByClass("govuk-heading-m").text().isEmpty
 
-        val expectedAuditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
+        val expectedAuditEvent: AuditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
           accountDetailsUserFriendly(CREDENTIAL_ID_2)
         )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
 
@@ -191,9 +194,9 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
           saveDataToCache(accountType = accountType, optSAEnrolledCredential = Some(CREDENTIAL_ID_3))
           stubAuthoriseSuccess()
 
-          val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+          val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/protect-tax-info" + urlPath)
             .withSession(xAuthToken, xSessionId)
-          val result = route(app, request).get
+          val result: Future[Result] = route(app, request).get
 
           status(result) shouldBe SEE_OTHER
           redirectLocation(result).get should include(
@@ -210,9 +213,9 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
         stubAuthoriseSuccess()
         stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result: Future[Result] = route(app, request).get
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) should include(ErrorTemplateMessages.title)
@@ -225,9 +228,9 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
         stubAuthoriseSuccess()
         stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result: Future[Result] = route(app, request).get
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) should include(ErrorTemplateMessages.title)
@@ -240,9 +243,9 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
         stubAuthoriseSuccess()
         stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result: Future[Result] = route(app, request).get
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) should include(ErrorTemplateMessages.title)
@@ -254,9 +257,9 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
         await(save[AccountTypes.Value](xSessionId._2, "ACCOUNT_TYPE", PT_ASSIGNED_TO_CURRENT_USER))
         stubAuthoriseSuccess()
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result: Future[Result] = route(app, request).get
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) should include(ErrorTemplateMessages.title)
@@ -269,9 +272,9 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
         stubAuthoriseSuccess()
         stubUserGroupSearchFailure(CREDENTIAL_ID)
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result: Future[Result] = route(app, request).get
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) should include(ErrorTemplateMessages.title)
@@ -285,9 +288,9 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
         stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
         stubUserGroupSearchFailure(CREDENTIAL_ID_2)
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result: Future[Result] = route(app, request).get
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) should include(ErrorTemplateMessages.title)
@@ -305,9 +308,9 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
         )
         stubUserGroupSearchFailure(CREDENTIAL_ID)
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result: Future[Result] = route(app, request).get
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) should include(ErrorTemplateMessages.title)
@@ -318,9 +321,9 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
       s"redirect to ${ItUrlPaths.unauthorizedPath}" in new DataAndMockSetup {
         stubUnAuthorised(hasNino = false)
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result: Future[Result] = route(app, request).get
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
@@ -331,9 +334,9 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
       s"redirect to ${ItUrlPaths.unauthorizedPath}" in new DataAndMockSetup {
         stubUnAuthorised(hasCred = false)
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result: Future[Result] = route(app, request).get
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
@@ -344,9 +347,9 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
       s"redirect to ${ItUrlPaths.unauthorizedPath}" in new DataAndMockSetup {
         stubUnAuthorised(unauthorisedError = Some(insufficientConfidenceLevel))
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result: Future[Result] = route(app, request).get
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
@@ -357,9 +360,9 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
       s"redirect to login" in new DataAndMockSetup {
         stubUnAuthorised(unauthorisedError = Some(sessionNotFound))
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/protect-tax-info" + urlPath)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result: Future[Result] = route(app, request).get
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result).get should include("/bas-gateway/sign-in")
@@ -391,7 +394,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
     def stubAuthoriseSuccess(hasSAEnrolment: Boolean = false): StubMapping = {
       val authResponse = authoriseResponseJson(
         enrolments = if (hasSAEnrolment) { saEnrolmentOnly }
-        else noEnrolments
+        else { noEnrolments }
       )
       stubAuthorizePost(OK, authResponse.toString())
     }
@@ -411,7 +414,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
                 None
               },
               optCreds = if (hasCred) { Some(creds) }
-              else None
+              else {None}
             )
           stubAuthorizePost(OK, authResponse.toString())
       }

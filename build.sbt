@@ -1,10 +1,15 @@
-import play.sbt.routes.RoutesKeys
-import scoverage.ScoverageKeys
-import uk.gov.hmrc.DefaultBuildSettings.integrationTestSettings
+import sbt.*
+import uk.gov.hmrc.DefaultBuildSettings
+import uk.gov.hmrc.DefaultBuildSettings.*
 
 val appName = "tax-enrolment-assignment-frontend"
 
-lazy val coverageSettings: Seq[Setting[_]] = {
+ThisBuild / majorVersion := 1
+ThisBuild / scalaVersion := "2.13.12"
+ThisBuild / scalafmtOnCompile := true
+
+lazy val scoverageSettings: Seq[Setting[?]] = {
+  import scoverage.ScoverageKeys
   Seq(
     ScoverageKeys.coverageExcludedPackages := "<empty>;Reverse.*;models/.data/..*;view.*;models.*;config.*;.*(BuildInfo|Routes).*;controllers.testOnly.*",
     ScoverageKeys.coverageMinimumStmtTotal := 92,
@@ -12,26 +17,24 @@ lazy val coverageSettings: Seq[Setting[_]] = {
     ScoverageKeys.coverageHighlighting := true
   )
 }
-
 lazy val microservice = Project(appName, file("."))
   .enablePlugins(play.sbt.PlayScala, SbtDistributablesPlugin)
   .disablePlugins(JUnitXmlReportPlugin) //Required to prevent https://github.com/scalatest/scalatest/issues/1427
   .settings(
-    majorVersion := 0,
-    scalaVersion := "2.13.8",
-    scalafmtOnCompile                := true,
-    libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
-    RoutesKeys.routesImport ++= Seq("uk.gov.hmrc.play.bootstrap.binders.RedirectUrl"),
     PlayKeys.playDefaultPort := 7750,
-    TwirlKeys.templateImports ++= Seq(
-      "uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig",
-      "uk.gov.hmrc.govukfrontend.views.html.components._",
-      "uk.gov.hmrc.hmrcfrontend.views.html.components._"
-    ),
-    Assets / pipelineStages := Seq(gzip),
+    scoverageSettings,
+    scalaSettings,
+    libraryDependencies ++= AppDependencies.all
+  )
+  .settings(
     scalacOptions ++= Seq(
-      "-Ywarn-unused",
+      "-unchecked",
       "-feature",
+      "-Xlint:_",
+      "-Wdead-code",
+      "-Wunused:_",
+      "-Wextra-implicit",
+      "-Ywarn-unused",
       "-Werror",
       "-Wconf:cat=unused-imports&site=.*views\\.html.*:s",
       "-Wconf:cat=unused-imports&site=<empty>:s",
@@ -41,13 +44,25 @@ lazy val microservice = Project(appName, file("."))
       "-Wconf:cat=deprecation&src=views/.*:s" // should be removed after the UI is upgraded to use HmrcStandardPage
     )
   )
-  .settings(coverageSettings: _*)
-  .configs(IntegrationTest)
-  .settings(integrationTestSettings(): _*)
-  .settings(resolvers += Resolver.jcenterRepo)
+  .settings(routesImport ++= Seq("uk.gov.hmrc.play.bootstrap.binders.RedirectUrl"))
+
+
+Test / Keys.fork := true
+Test / parallelExecution := true
+Test / scalacOptions --= Seq("-Wdead-code", "-Wvalue-discard")
+
+
+lazy val it = project
+  .enablePlugins(play.sbt.PlayScala)
+  .dependsOn(microservice % "test->test")
+  .settings(
+    libraryDependencies ++= AppDependencies.test,
+    DefaultBuildSettings.itSettings()
+  )
 
 TwirlKeys.templateImports ++= Seq(
   "uk.gov.hmrc.govukfrontend.views.html.components._",
   "uk.gov.hmrc.hmrcfrontend.views.html.components._",
   "uk.gov.hmrc.hmrcfrontend.views.html.helpers._"
 )
+

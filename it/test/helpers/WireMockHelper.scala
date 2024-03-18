@@ -168,9 +168,9 @@ trait WireMockHelper extends Eventually with BeforeAndAfterAll with BeforeAndAft
         .willReturn(aResponse().withStatus(status).withBody(responseBody))
     )
 
-  def verifyNoPOSTmade(url: String) =
+  def verifyNoPOSTmade(url: String): Unit =
     eventually(server.verify(0, postRequestedFor(urlMatching(url))))
-  def verifyAuditEventSent(auditEvent: AuditEvent) =
+  def verifyAuditEventSent(auditEvent: AuditEvent): Unit =
     eventually(
       server.verify(
         postRequestedFor(urlMatching("/write/audit"))

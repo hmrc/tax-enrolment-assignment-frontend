@@ -258,7 +258,7 @@ class TestOnlyControllerSpec extends BaseSpec {
         .expects(account, *)
         .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
-      val result = sut.postFormData.apply(request)
+      val result = sut.insertTestData.apply(request)
 
       status(result) mustBe OK
     }
@@ -305,7 +305,7 @@ class TestOnlyControllerSpec extends BaseSpec {
         .expects(account, *)
         .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
-      val result = sut.postFormData.apply(request)
+      val result = sut.insertTestData.apply(request)
 
       status(result) mustBe OK
     }
@@ -332,7 +332,7 @@ class TestOnlyControllerSpec extends BaseSpec {
           "additionalFactors[0].name"           -> "HMRC-APP"
         )
 
-      val result = sut.postFormData.apply(request)
+      val result = sut.insertTestData.apply(request)
 
       status(result) mustBe BAD_REQUEST
     }

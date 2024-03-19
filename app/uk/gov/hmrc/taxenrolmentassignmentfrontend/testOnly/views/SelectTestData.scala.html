@@ -27,9 +27,9 @@
     govukButton: GovukButton
 )
 
-@(listOfUsers: List[String])(implicit request: Request[AnyRef], messages: Messages)
+@(listOfUsers: List[(String, String)])(implicit request: Request[AnyRef], messages: Messages)
 
-@layout(pageTitle = Some(messages("ptEnrolmentOnOtherAccount.title")), displaySignout = false){
+@layout(pageTitle = Some("Select Test case to insert"), displaySignout = false){
 
     <h1 class="govuk-heading-l">Enter Test Data</h1>
     @formHelper(action = routes.TestOnlyController.insertTestData) {
@@ -47,18 +47,19 @@
 
         @govukButton(Button(
             preventDoubleClick = Some(true),
-            content = Text(messages("enrolledForPT.continue"))
+            content = Text(messages("enrolledForPT.continue")),
+            id = Some("submit")
         ))
     }
 }
 
-@items(users: List[String]) = @{
+@items(users: List[(String, String)]) = @{
 
-    users.mapWithIndex{ (user, index) =>
+    users.map{ user =>
         RadioItem(
-            content = Text(user),
-            id = Some(s"radio-$index"),
-            value = Some(user)
+            content = Text(user._1),
+            id = Some(user._2),
+            value = Some(user._2)
         )
-    }
+    }.toList
 }

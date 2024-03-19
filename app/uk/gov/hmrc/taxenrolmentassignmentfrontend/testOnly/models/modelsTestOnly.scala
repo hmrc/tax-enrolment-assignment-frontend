@@ -21,6 +21,11 @@ import play.api.libs.json._
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AdditonalFactors, IdentifiersOrVerifiers}
 
+case class SubmitLogin(
+  user: String,
+  accountNumber: Int
+)
+
 case class UserTestOnly(
   credId: String,
   name: String,
@@ -92,7 +97,6 @@ case class AccountDetailsTestOnly(
         )
       }
     )
-
 }
 
 object AccountDetailsTestOnly {

@@ -17,16 +17,18 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models
 
 object TestMocks {
-  val mocks: List[String] = List(
-    "Multiple Accounts: No Enrolments",
-    "Multiple Accounts: One with PT and SA Enrolment",
-    "Multiple Accounts: One with PT Enrolment",
-    "Multiple Accounts: One with PT Enrolment, another with SA Enrolment",
-    "Multiple Accounts: One with SA Enrolment",
-    "Single User: No enrolments",
-    "Single User: SA Enrolments",
-    "Throttled Multiple Accounts: Has SA Enrolment",
-    "Throttled Multiple Accounts: No SA Enrolment",
-    "Throttled Multiple Accounts: One with PT Enrolment"
+  val mocks: List[(String, String)] = List(
+    "Multiple Accounts: No Enrolments"                                    -> "multipleAccountsNoEnrolments",
+    "Multiple Accounts: One with PT and SA Enrolment"                     -> "multipleAccountsOneWithPTAndSAEnrolment",
+    "Multiple Accounts: One with PT Enrolment"                            -> "multipleAccountsOneWithPTEnrolment",
+    "Multiple Accounts: One with PT Enrolment, another with SA Enrolment" -> "multipleAccountsOneWithPTEnrolmentOtherWithSA",
+    "Multiple Accounts: One with SA Enrolment"                            -> "multipleAccountsOneWithSAEnrolment",
+    "Single User: No enrolments"                                          -> "singleUserNoEnrolments",
+    "Single User: SA Enrolments"                                          -> "singleUserWithSAEnrolment",
+    "E2E Two Credentials: One with SA Enrolment"                          -> "e2eTwoCredentialsOneWithSAEnrolment",
+    "E2E Two Credentials: One with SA and PT Enrolment"                   -> "e2eTwoCredentialsWithSAandPTEnrolment",
+    "Two Credentials: No enrolment"                                       -> "twoCredentialsNoEnrolment",
+    "Two Credentials: One with SA Enrolment"                              -> "twoCredentialsOneWithSAEnrolment",
+    "Two Credentials: One with SA and PT Enrolment"                       -> "twoCredentialsWithSAandPTEnrolment"
   )
 }

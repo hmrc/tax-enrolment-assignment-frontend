@@ -1,0 +1,107 @@
+@*
+ * Copyright 2024 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.Layout
+@import uk.gov.hmrc.govukfrontend.views.html.components._
+@import uk.gov.hmrc.govukfrontend.views.html.components.implicits._
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.controllers.routes
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.AccountDetailsTestOnly
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.config.AppConfigTestOnly
+@import cats.implicits.toTraverseOps
+
+@this(
+    layout: Layout,
+    govukButton: GovukButton
+)
+
+@(accounts: List[AccountDetailsTestOnly], appConfig: AppConfigTestOnly)(implicit request: Request[AnyRef], messages: Messages)
+
+@layout(pageTitle = Some("Action successful"), displaySignout = false){
+
+    <h1 class="govuk-heading-l">Action successful</h1>
+
+    @accounts.mapWithIndex{ (account, index) =>
+        <table class="govuk-table">
+            <caption class="govuk-table__caption govuk-table__caption--m">Account @(index+1)</caption>
+            <thead class="govuk-table__head">
+                <tr class="govuk-table__row">
+                    <th scope="col" class="govuk-table__header">Field</th>
+                    <th scope="col" class="govuk-table__header">Value</th>
+                </tr>
+            </thead>
+            <tbody class="govuk-table__body">
+                <tr class="govuk-table__row">
+                    <th scope="row" class="govuk-table__header">Cred ID</th>
+                    <td class="govuk-table__cell">@account.user.credId</td>
+                </tr>
+                <tr class="govuk-table__row">
+                    <th scope="row" class="govuk-table__header">RedirectUrl</th>
+                    <td class="govuk-table__cell">@appConfig.tensUrl/protect-tax-info?redirectUrl=/protect-tax-info/test-only/successful</td>
+                </tr>
+                <tr class="govuk-table__row">
+                    <th scope="row" class="govuk-table__header">Confidence Level</th>
+                    <td class="govuk-table__cell">200</td>
+                </tr>
+                <tr class="govuk-table__row">
+                    <th scope="row" class="govuk-table__header">NINO</th>
+                    <td class="govuk-table__cell">@account.nino</td>
+                </tr>
+                <tr class="govuk-table__row">
+                    <th scope="row" class="govuk-table__header">Group ID</th>
+                    <td class="govuk-table__cell">@account.groupId</td>
+                </tr>
+                @account.enrolments.map{ enrolment =>
+                    <tr class="govuk-table__row">
+                        <th scope="row" class="govuk-table__header">@enrolment.serviceName</th>
+                        <td class="govuk-table__cell">@enrolment.identifiers.key - @enrolment.identifiers.value</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+    <form accept-charset="UTF-8" action="@appConfig.authLoginStub/auth-login-stub/gg-sign-in" method="post" rel="noreferrer noopener" target="_blank">
+        <input name="redirectionUrl" value="@appConfig.tensUrl/protect-tax-info?redirectUrl=/protect-tax-info/test-only/successful" class="govuk-visually-hidden"/>
+        <input name="confidenceLevel" value="200" class="govuk-visually-hidden"/>
+        <input name="nino" value="@account.nino" class="govuk-visually-hidden"/>
+        @account.enrolments.mapWithIndex{ (enrolment, enrolmentIndex) =>
+            <input name="enrolment[@enrolmentIndex].name" value="@enrolment.serviceName" class="govuk-visually-hidden"/>
+            <input name="enrolment[@enrolmentIndex].taxIdentifier[0].name" value="@enrolment.identifiers.key" class="govuk-visually-hidden"/>
+            <input name="enrolment[@enrolmentIndex].taxIdentifier[0].value" value="@enrolment.identifiers.value" class="govuk-visually-hidden"/>
+            <input name="enrolment[@enrolmentIndex].state" value="Actiivated" class="govuk-visually-hidden"/>
+        }
+        <input name="groupIdentifier" value="@account.groupId" class="govuk-visually-hidden"/>
+        <input name="authorityId" value="@account.user.credId" class="govuk-visually-hidden"/>
+        <input name="credentialStrength" value="strong" class="govuk-visually-hidden"/>
+        <input name="affinityGroup" value="Individual" class="govuk-visually-hidden"/>
+
+        @govukButton(Button(
+            preventDoubleClick = Some(true),
+            content = Text(s"Login for this account ${index+1}"),
+            id = Some("login")
+        ))
+    </form>
+}
+
+
+    @govukButton(Button(
+        preventDoubleClick = Some(true),
+        content = Text("Add another user"),
+        id = Some("return"),
+        href = Some(routes.TestOnlyController.getTestDataInfo.url)
+    ))
+    <br/>
+
+}

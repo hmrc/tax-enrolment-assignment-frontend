@@ -26,15 +26,15 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{UpstreamError, Upstrea
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.EACDService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.AccountDetailsTestOnly
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.TestMocks
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.config.AppConfigTestOnly
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.{AccountDetailsTestOnly, TestMocks}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.utils.AccountUtilsTestOnly
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.testOnly.SelectTestData
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.TestDataForm.selectUserForm
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.views.html.{LoginCheckCompleteView, SelectTestData, SuccessView}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.TestDataForm.selectUserForm
 
 @Singleton
 class TestOnlyController @Inject() (
@@ -43,7 +43,10 @@ class TestOnlyController @Inject() (
   logger: EventLoggerService,
   authJourney: AuthJourney,
   eacdService: EACDService,
-  selectTestDataPage: SelectTestData
+  selectTestDataPage: SelectTestData,
+  successPage: SuccessView,
+  loginCheckCompleteView: LoginCheckCompleteView,
+  appConfigTestOnly: AppConfigTestOnly
 )(implicit ec: ExecutionContext)
     extends TEAFrontendController(mcc) {
 
@@ -60,43 +63,33 @@ class TestOnlyController @Inject() (
         _ =>
           Future
             .successful(BadRequest(selectTestDataPage(TestMocks.mocks)(request, mcc.messagesApi.preferred(request)))),
-        data => {
-          val fileName = data match {
-            case "Multiple Accounts: No Enrolments"                => "multipleAccountsNoEnrolments.json"
-            case "Multiple Accounts: One with PT and SA Enrolment" => "multipleAccountsOneWithPTAndSAEnrolment.json"
-            case "Multiple Accounts: One with PT Enrolment"        => "multipleAccountsOneWithPTEnrolment.json"
-            case "Multiple Accounts: One with PT Enrolment, another with SA Enrolment" =>
-              "multipleAccountsOneWithPTEnrolmentOtherWithSA.json"
-            case "Multiple Accounts: One with SA Enrolment"           => "multipleAccountsOneWithSAEnrolment.json"
-            case "Single User: No enrolments"                         => "singleUserNoEnrolments.json"
-            case "Single User: SA Enrolments"                         => "singleUserWithSAEnrolment.json"
-            case "Throttled Multiple Accounts: Has SA Enrolment"      => "throttledMultipleAccountsHasSA.json"
-            case "Throttled Multiple Accounts: No SA Enrolment"       => "throttledMultipleAccountsNoSA.json"
-            case "Throttled Multiple Accounts: One with PT Enrolment" => "throttledMultipleAccountsOneWithPT.json"
-          }
-          val x = Json.parse(FileHelper.loadFile(fileName))
-          println("aaaaaa " + x)
-          val y = Try(x.as[JsArray]) match {
-            case Success(_)                    => x.as[List[AccountDetailsTestOnly]]
-            case Failure(_: JsResultException) => List(x.as[AccountDetailsTestOnly])
-            case Failure(error)                => throw error
-          }
-          y.map { data =>
-            for {
-              _ <- accountUtilsTestOnly.deleteAccountDetails(data)
-              _ <- accountUtilsTestOnly.insertAccountDetails(data)
-            } yield ()
-          }.sequence
+        data =>
+          extractData(data)
+            .map { account =>
+              for {
+                _ <- accountUtilsTestOnly.deleteAccountDetails(account)
+                _ <- accountUtilsTestOnly.insertAccountDetails(account)
+              } yield ()
+            }
+            .sequence
             .fold(
               {
                 case UpstreamError(error)              => InternalServerError(error.message)
                 case UpstreamUnexpected2XX(message, _) => InternalServerError(message)
                 case error                             => InternalServerError(error.toString)
               },
-              _ => Ok("Created")
+              _ => Ok(successPage(extractData(data), appConfigTestOnly))
             )
-        }
       )
+  }
+
+  def extractData(file: String) = {
+    val data = Json.parse(FileHelper.loadFile(s"$file.json"))
+    Try(data.as[JsArray]) match {
+      case Success(_)                    => data.as[List[AccountDetailsTestOnly]]
+      case Failure(_: JsResultException) => List(data.as[AccountDetailsTestOnly])
+      case Failure(error)                => throw error
+    }
   }
 
   def create: Action[AnyContent] = Action.async { request =>
@@ -155,7 +148,7 @@ class TestOnlyController @Inject() (
   }
 
   //todo: to be used instead of the call below successfulCall. See DDCNL-8607
-  def newSuccessfulCall: Action[AnyContent] = authJourney.authJourney.async { implicit request =>
+  def successfulCall: Action[AnyContent] = authJourney.authJourney.async { implicit request =>
     logger.logEvent(logSuccessfulRedirectToReturnUrl)
     eacdService.getUsersAssignedPTEnrolment
       .bimap(
@@ -163,16 +156,11 @@ class TestOnlyController @Inject() (
         userAssignedEnrolment =>
           userAssignedEnrolment.enrolledCredential match {
             case None                                                 => InternalServerError("No HMRC-PT enrolment")
-            case Some(credID) if credID == request.userDetails.credId => Ok("Successful")
+            case Some(credID) if credID == request.userDetails.credId => Ok(loginCheckCompleteView())
             case Some(credId) =>
               InternalServerError(s"Wrong credid `$credId` in enrolment. It should be ${request.userDetails.credId}")
           }
       )
       .merge
-  }
-
-  def successfulCall: Action[AnyContent] = Action.async { _ =>
-    logger.logEvent(logSuccessfulRedirectToReturnUrl)
-    Future.successful(Ok("Successful"))
   }
 }

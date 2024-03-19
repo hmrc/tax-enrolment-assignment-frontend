@@ -773,7 +773,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
           redirectLocation(result).get should include(
             uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes.EnrolledForPTController.continue.url
           )
-          val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(
+          val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
             requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, mongoCacheData = cacheData),
             messagesApi
           )

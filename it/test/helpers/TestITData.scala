@@ -46,7 +46,7 @@ object TestITData {
   val noEnrolments: JsValue = Json.arr()
   val saEnrolmentOnly: JsValue =
     Json.arr(createEnrolmentJson("IR-SA", "UTR", "123456789"))
-  val saEnrolmentAsCaseClass = Enrolment("IR-SA", Seq(EnrolmentIdentifier("UTR", "123456789")), "Activated")
+  val saEnrolmentAsCaseClass: Enrolment = Enrolment("IR-SA", Seq(EnrolmentIdentifier("UTR", "123456789")), "Activated")
   val ptEnrolmentOnly: JsValue =
     Json.arr(createEnrolmentJson("HMRC-PT", "NINO", NINO.nino))
   val mismatchPtEnrolmentOnly: JsArray =
@@ -109,7 +109,7 @@ object TestITData {
     optGroupId: Option[String] = Some(GROUP_ID),
     affinityGroup: AffinityGroup = Individual,
     hasSA: Boolean = false
-  ) = {
+  ): JsValue = {
     val enrolments = if (hasSA) saAndptEnrolments else ptEnrolmentOnly
     authoriseResponseJson(optNino, optCreds, optGroupId, affinityGroup, enrolments)
   }
@@ -157,7 +157,7 @@ object TestITData {
       |"createdAt":{"$date":1638531686457},
       |"updatedAt":{"$date":1638531686525}}]""".stripMargin
 
-  val usersGroupSearchResponse = UsersGroupResponse(
+  val usersGroupSearchResponse: UsersGroupResponse = UsersGroupResponse(
     obfuscatedUserId = Some("********6037"),
     email = Some("email1@test.com"),
     lastAccessedTimestamp = Some("2022-01-16T14:40:05Z"),
@@ -180,7 +180,7 @@ object TestITData {
   def usersGroupSearchResponsePTEnrolment(userId: String = "********1234"): UsersGroupResponse =
     usersGroupSearchResponse.copy(Some(userId))
 
-  def accountDetailsUnUserFriendly(credId: String) =
+  def accountDetailsUnUserFriendly(credId: String): AccountDetails =
     AccountDetails(
       credId,
       "********6037",
@@ -193,7 +193,7 @@ object TestITData {
   val usersGroupSearchResponseSAEnrolment: UsersGroupResponse =
     usersGroupSearchResponse.copy(obfuscatedUserId = Some("********1243"))
 
-  def additionalFactorsJson(additionalFactors: List[AdditonalFactors]) =
+  def additionalFactorsJson(additionalFactors: List[AdditonalFactors]): JsArray =
     additionalFactors.foldLeft[JsArray](Json.arr()) { (a, b) =>
       val jsObject = if (b.factorType == "totp") {
         Json.obj(
@@ -296,12 +296,12 @@ object TestITData {
       |}
       |""".stripMargin
 
-  val identifierTxNum = IdentifiersOrVerifiers("TaxOfficeNumber", "123")
-  val identifierTxRef =
+  val identifierTxNum: IdentifiersOrVerifiers = IdentifiersOrVerifiers("TaxOfficeNumber", "123")
+  val identifierTxRef: IdentifiersOrVerifiers =
     IdentifiersOrVerifiers("TaxOfficeReference", "XYZ9876543")
-  val identifierUTR = IdentifiersOrVerifiers("UTR", "1234567890")
+  val identifierUTR: IdentifiersOrVerifiers = IdentifiersOrVerifiers("UTR", "1234567890")
 
-  val userEnrolmentIRSA = UserEnrolment(
+  val userEnrolmentIRSA: UserEnrolment = UserEnrolment(
     service = "IR-SA",
     state = "NotYetActivated",
     friendlyName = "",
@@ -309,7 +309,7 @@ object TestITData {
     identifiers = Seq(identifierUTR)
   )
 
-  val userEnrolmentIRPAYE = UserEnrolment(
+  val userEnrolmentIRPAYE: UserEnrolment = UserEnrolment(
     service = "IR-PAYE",
     state = "Activated",
     friendlyName = "Something",
@@ -317,7 +317,7 @@ object TestITData {
     identifiers = Seq(identifierTxNum, identifierTxRef)
   )
 
-  val es0ResponseMatchingCred =
+  val es0ResponseMatchingCred: String =
     """
       |{
       |    "principalUserIds": [
@@ -327,7 +327,7 @@ object TestITData {
       |}
       |""".stripMargin
 
-  val es0ResponseNotMatchingCred =
+  val es0ResponseNotMatchingCred: String =
     """
       |{
       |    "principalUserIds": [
@@ -336,7 +336,7 @@ object TestITData {
       |}
       |""".stripMargin
 
-  val es0ResponseNoRecordCred =
+  val es0ResponseNoRecordCred: String =
     """
       |{
       |    "principalUserIds": [],
@@ -344,7 +344,7 @@ object TestITData {
       |}
       |""".stripMargin
 
-  val saUsers = UsersAssignedEnrolment(Some(CREDENTIAL_ID_2))
+  val saUsers: UsersAssignedEnrolment = UsersAssignedEnrolment(Some(CREDENTIAL_ID_2))
 
   val underConstructionTruePageTitle =
     "Tax Enrolment Assignment Frontend - Enrolment Present"
@@ -361,7 +361,7 @@ object TestITData {
   val signInAgainPageTitle =
     "You need to sign in again with your Self Assessment user ID"
 
-  val userDetailsNoEnrolments =
+  val userDetailsNoEnrolments: UserDetailsFromSession =
     UserDetailsFromSession(
       CREDENTIAL_ID,
       NINO,
@@ -402,7 +402,7 @@ object TestITData {
     mfaDetails = List(MFADetails("mfaDetails.text", "24321"))
   )
 
-  val eacdResponse = s"""{
+  val eacdResponse: String = s"""{
                         |    "service": "IR-SA",
                         |    "enrolments": [{
                         |        "identifiers": [{

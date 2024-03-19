@@ -33,7 +33,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.TestDataForm.s
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.views.html.{LoginCheckCompleteView, SelectTestData, SuccessView}
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success, Try}
 
 @Singleton

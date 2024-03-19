@@ -21,12 +21,12 @@ import helpers.TestITData.{CREDENTIAL_ID, accountDetailsUnUserFriendly, usersGro
 import play.api.libs.json.JsObject
 import uk.gov.hmrc.crypto.Crypted
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.PT_ASSIGNED_TO_OTHER_USER
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.UsersGroupsSearchService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.UsersGroupsSearchService
 
 class UserGroupSearchServiceISpec extends IntegrationSpecBase {
 
-  lazy val service = app.injector.instanceOf[UsersGroupsSearchService]
+  lazy val service: UsersGroupsSearchService = app.injector.instanceOf[UsersGroupsSearchService]
 
   s"getAccountDetails" should {
     s"userGroupSearch response in mongo and email should be encrypted" in {
@@ -43,8 +43,8 @@ class UserGroupSearchServiceISpec extends IntegrationSpecBase {
 
       }
       val emailEncrypted: String =
-        ((sessionRepository
-          .get(request.sessionID))
+        (sessionRepository
+          .get(request.sessionID)
           .futureValue
           .get
           .data("AccountDetailsFor6902202884164548")

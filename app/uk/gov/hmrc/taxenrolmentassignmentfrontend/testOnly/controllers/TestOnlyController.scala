@@ -46,7 +46,8 @@ class TestOnlyController @Inject() (
   selectTestDataPage: SelectTestData,
   successPage: SuccessView,
   loginCheckCompleteView: LoginCheckCompleteView,
-  appConfigTestOnly: AppConfigTestOnly
+  appConfigTestOnly: AppConfigTestOnly,
+  fileHelper: FileHelper
 )(implicit ec: ExecutionContext)
     extends TEAFrontendController(mcc) {
 
@@ -63,8 +64,9 @@ class TestOnlyController @Inject() (
         _ =>
           Future
             .successful(BadRequest(selectTestDataPage(TestMocks.mocks)(request, mcc.messagesApi.preferred(request)))),
-        data =>
-          extractData(data)
+        data => {
+          val account = extractData(data)
+          account
             .map { account =>
               for {
                 _ <- accountUtilsTestOnly.deleteAccountDetails(account)
@@ -78,13 +80,14 @@ class TestOnlyController @Inject() (
                 case UpstreamUnexpected2XX(message, _) => InternalServerError(message)
                 case error                             => InternalServerError(error.toString)
               },
-              _ => Ok(successPage(extractData(data), appConfigTestOnly))
+              _ => Ok(successPage(account, appConfigTestOnly))
             )
+        }
       )
   }
 
   def extractData(file: String) = {
-    val data = Json.parse(FileHelper.loadFile(s"$file.json"))
+    val data = Json.parse(fileHelper.loadFile(s"$file.json"))
     Try(data.as[JsArray]) match {
       case Success(_)                    => data.as[List[AccountDetailsTestOnly]]
       case Failure(_: JsResultException) => List(data.as[AccountDetailsTestOnly])
@@ -147,7 +150,6 @@ class TestOnlyController @Inject() (
       )
   }
 
-  //todo: to be used instead of the call below successfulCall. See DDCNL-8607
   def successfulCall: Action[AnyContent] = authJourney.authJourney.async { implicit request =>
     logger.logEvent(logSuccessfulRedirectToReturnUrl)
     eacdService.getUsersAssignedPTEnrolment

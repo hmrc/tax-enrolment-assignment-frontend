@@ -16,9 +16,11 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.controllers
 
+import javax.inject.{Inject, Singleton}
 import scala.io.Source.fromFile
 
-object FileHelper {
+@Singleton
+class FileHelper @Inject() () {
 
   def loadFile(name: String): String = {
     val source = fromFile(

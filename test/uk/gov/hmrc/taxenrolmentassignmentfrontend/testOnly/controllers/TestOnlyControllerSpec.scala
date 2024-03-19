@@ -36,10 +36,12 @@ import scala.concurrent.Future
 class TestOnlyControllerSpec extends BaseSpec {
 
   lazy val mockAccountUtilsTestOnly: AccountUtilsTestOnly = mock[AccountUtilsTestOnly]
+  lazy val mockFileHelper: FileHelper = mock[FileHelper]
 
   override implicit lazy val app: Application = localGuiceApplicationBuilder()
     .overrides(
-      bind[AccountUtilsTestOnly].toInstance(mockAccountUtilsTestOnly)
+      bind[AccountUtilsTestOnly].toInstance(mockAccountUtilsTestOnly),
+      bind[FileHelper].toInstance(mockFileHelper)
     )
     .build()
 
@@ -205,7 +207,7 @@ class TestOnlyControllerSpec extends BaseSpec {
 
   }
 
-  "postFormData" must {
+  "insertTestData" must {
     "create an account with enrolmemts" in {
       val nino = generateNino
 
@@ -230,23 +232,13 @@ class TestOnlyControllerSpec extends BaseSpec {
       val request = FakeRequest()
         .withMethod("POST")
         .withFormUrlEncodedBody(
-          "groupId"                             -> "98ADEA51-C0BA-497D-997E-F585FAADBCEH",
-          "nino.nino"                           -> nino.nino,
-          "affinityGroup"                       -> "Individual",
-          "user.credId"                         -> "5217739547427626",
-          "user.name"                           -> "Firstname Surname",
-          "user.email"                          -> "email@example.com",
-          "enrolments[0].serviceName"           -> "IR-SA",
-          "enrolments[0].identifiers.key"       -> "UTR",
-          "enrolments[0].identifiers.value"     -> "AA543004E",
-          "enrolments[0].verifiers[0].key"      -> "postcode",
-          "enrolments[0].verifiers[0].value"    -> "postcode",
-          "enrolments[0].enrolmentFriendlyName" -> "IR-SA Enrolment",
-          "enrolments[0].state"                 -> "Activated",
-          "enrolments[0].enrolmentType"         -> "principal",
-          "additionalFactors[0].factorType"     -> "totp",
-          "additionalFactors[0].name"           -> "HMRC-APP"
+          "selectUser" -> nino.nino
         )
+
+      (mockFileHelper
+        .loadFile(_: String))
+        .expects(s"${nino.nino}.json")
+        .returning(Json.toJson(account).toString())
 
       (mockAccountUtilsTestOnly
         .deleteAccountDetails(_: AccountDetailsTestOnly)(_: HeaderCarrier))
@@ -277,23 +269,13 @@ class TestOnlyControllerSpec extends BaseSpec {
       val request = FakeRequest()
         .withMethod("POST")
         .withFormUrlEncodedBody(
-          "groupId"                             -> "98ADEA51-C0BA-497D-997E-F585FAADBCEH",
-          "nino.nino"                           -> nino.nino,
-          "affinityGroup"                       -> "Individual",
-          "user.credId"                         -> "5217739547427626",
-          "user.name"                           -> "Firstname Surname",
-          "user.email"                          -> "email@example.com",
-          "enrolments[0].serviceName"           -> "",
-          "enrolments[0].identifiers.key"       -> "",
-          "enrolments[0].identifiers.value"     -> "",
-          "enrolments[0].verifiers[0].key"      -> "",
-          "enrolments[0].verifiers[0].value"    -> "",
-          "enrolments[0].enrolmentFriendlyName" -> "",
-          "enrolments[0].state"                 -> "Activated",
-          "enrolments[0].enrolmentType"         -> "",
-          "additionalFactors[0].factorType"     -> "totp",
-          "additionalFactors[0].name"           -> "HMRC-APP"
+          "selectUser" -> nino.nino
         )
+
+      (mockFileHelper
+        .loadFile(_: String))
+        .expects(s"${nino.nino}.json")
+        .returning(Json.toJson(account).toString())
 
       (mockAccountUtilsTestOnly
         .deleteAccountDetails(_: AccountDetailsTestOnly)(_: HeaderCarrier))

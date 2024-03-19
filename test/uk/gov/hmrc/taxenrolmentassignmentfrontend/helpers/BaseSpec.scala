@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers
 
-import akka.stream.Materializer
 import cats.data.EitherT
+import org.apache.pekko.stream.Materializer
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.{IntegrationPatience, PatienceConfiguration, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
@@ -25,8 +25,8 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.{BeforeAndAfterEach, OneInstancePerTest, Suite}
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.i18n.{Lang, Messages, MessagesApi, MessagesImpl}
-import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.inject.{Binding, bind}
 import play.api.libs.json.{Format, JsString, JsValue, Json}
 import play.api.mvc.{AnyContent, AnyContentAsEmpty, Request}
 import play.api.test.CSRFTokenHelper._
@@ -55,7 +55,7 @@ trait BaseSpec
 
   def generateNino: Nino = new NinoGenerator().nextNino
 
-  implicit val hc = HeaderCarrier()
+  implicit val hc: HeaderCarrier = HeaderCarrier()
 
   lazy val configValues: Map[String, AnyVal] =
     Map(
@@ -63,7 +63,7 @@ trait BaseSpec
       "auditing.enabled" -> false
     )
 
-  lazy val overrides = Seq(
+  lazy val overrides: Seq[Binding[TEASessionCache]] = Seq(
     bind[TEASessionCache].toInstance(new TestTeaSessionCache)
   )
 
@@ -75,9 +75,9 @@ trait BaseSpec
 
   override implicit lazy val app: Application = localGuiceApplicationBuilder().build()
 
-  implicit lazy val ec = inject[ExecutionContext]
-  implicit lazy val crypto = inject[TENCrypto]
-  lazy val config = inject[Configuration]
+  implicit lazy val ec: ExecutionContext = inject[ExecutionContext]
+  implicit lazy val crypto: TENCrypto = inject[TENCrypto]
+  lazy val config: Configuration = inject[Configuration]
   lazy val messagesApi: MessagesApi = inject[MessagesApi]
   implicit lazy val messages: Messages = MessagesImpl(Lang("en"), messagesApi)
   implicit lazy val mat: Materializer = inject[Materializer]
@@ -122,7 +122,7 @@ trait BaseSpec
       "sessionId"
     )
 
-  def generateBasicCacheData(accountType: AccountTypes.Value, redirectUrl: String = "foo") =
+  def generateBasicCacheData(accountType: AccountTypes.Value, redirectUrl: String = "foo"): Map[String, JsValue] =
     Map(ACCOUNT_TYPE -> Json.toJson(accountType), REDIRECT_URL -> JsString(redirectUrl))
 
   def requestWithAccountType(
@@ -161,11 +161,12 @@ trait BaseSpec
     ): Future[Option[CacheMap]] =
       Future(Some(CacheMap(request.sessionID, Map())))
 
+    @annotation.nowarn("msg=parameter request in method extendSession is never used")
     override def extendSession()(implicit
       request: RequestWithUserDetailsFromSession[_]
     ): Future[Boolean] = Future.successful(true)
 
-    def collectionDeleteOne(id: String) = ???
+    def collectionDeleteOne(id: String): Future[Boolean] = ???
     def get(id: String): scala.concurrent.Future[Option[uk.gov.hmrc.http.cache.client.CacheMap]] = ???
     def updateLastUpdated(id: String): scala.concurrent.Future[Boolean] = ???
     def upsert(cm: uk.gov.hmrc.http.cache.client.CacheMap): scala.concurrent.Future[Boolean] = ???

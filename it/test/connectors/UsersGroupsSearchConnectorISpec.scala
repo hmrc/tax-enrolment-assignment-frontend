@@ -16,7 +16,7 @@
 
 package connectors
 
-import helpers.{IntegrationSpecBase}
+import helpers.IntegrationSpecBase
 import helpers.TestITData._
 import play.api.http.Status._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.UsersGroupsSearchConnector

@@ -30,7 +30,7 @@ import scala.concurrent.Future
 trait SessionCacheOperations extends DefaultPlayMongoRepositorySupport[DatedCacheMap] {
   _: IntegrationSpecBase =>
 
-  override protected lazy val optSchema = Some(BsonDocument("""
+  override protected lazy val optSchema: Option[BsonDocument] = Some(BsonDocument("""
       { bsonType: "object"
       , required: [ "_id", "data", "lastUpdated" ]
       , properties:
@@ -41,9 +41,9 @@ trait SessionCacheOperations extends DefaultPlayMongoRepositorySupport[DatedCach
       }
     """))
 
-  lazy val sessionRepository = app.injector.instanceOf[DefaultTEASessionCache]
+  lazy val sessionRepository: DefaultTEASessionCache = app.injector.instanceOf[DefaultTEASessionCache]
   lazy val cascadeUpsert: CascadeUpsert = app.injector.instanceOf[CascadeUpsert]
-  lazy val repository = inject[DefaultTEASessionCache]
+  lazy val repository: DefaultTEASessionCache = inject[DefaultTEASessionCache]
 
   def save[T](sessionID: String, key: String, value: T)(implicit
     fmt: Format[T]

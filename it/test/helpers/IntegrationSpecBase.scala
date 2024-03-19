@@ -48,7 +48,7 @@ trait IntegrationSpecBase
   def generateNino: Nino = new NinoGenerator().nextNino
   def secondGenerateNino: Nino = new NinoGenerator().nextNino
 
-  val nino = generateNino
+  val nino: Nino = generateNino
 
   def ninoWithLast2digits(digits: String): Nino = {
     if (digits.length != 2) {
@@ -63,7 +63,7 @@ trait IntegrationSpecBase
   lazy implicit val hc: HeaderCarrier = HeaderCarrier(
     authorization = Some(Authorization(AUTHORIZE_HEADER_VALUE))
   )
-  lazy val crypto = app.injector.instanceOf[TENCrypto]
+  lazy val crypto: TENCrypto = app.injector.instanceOf[TENCrypto]
 
   lazy val config: Map[String, Any] = Map(
     "play.filters.csrf.header.bypassHeaders.Csrf-Token" -> "nocheck",
@@ -81,7 +81,7 @@ trait IntegrationSpecBase
     "mongodb.uri"                                       -> mongoUri
   )
 
-  protected def localGuiceApplicationBuilder =
+  protected def localGuiceApplicationBuilder: GuiceApplicationBuilder =
     GuiceApplicationBuilder()
       .configure(config)
 
@@ -91,12 +91,12 @@ trait IntegrationSpecBase
 
   lazy val returnUrl: String = "http://localhost:1234/redirect/url"
 
-  lazy val accountCheckPath =
+  lazy val accountCheckPath: String =
     routes.AccountCheckController.accountCheck(RedirectUrl.apply(returnUrl)).url
 
   lazy val unauthorizedPath: String = routes.AuthorisationController.notAuthorised.url
 
-  val exampleMongoSessionData =
+  val exampleMongoSessionData: Map[String, JsValue] =
     Map(ACCOUNT_TYPE -> Json.toJson(SA_ASSIGNED_TO_OTHER_USER), REDIRECT_URL -> JsString("redirectURL"))
 
   def requestWithAccountType(

@@ -516,4 +516,15 @@ class TestOnlyControllerSpec extends BaseSpec {
     }
 
   }
+
+  "getTestData" must {
+    "return ok response" in {
+      val request = FakeRequest()
+        .withMethod("GET")
+
+      val result = sut.getTestDataInfo.apply(request)
+
+      status(result) mustBe OK
+    }
+  }
 }

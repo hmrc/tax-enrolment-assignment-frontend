@@ -75,11 +75,7 @@ class TestOnlyController @Inject() (
             }
             .sequence
             .fold(
-              {
-                case UpstreamError(error)              => InternalServerError(error.message)
-                case UpstreamUnexpected2XX(message, _) => InternalServerError(message)
-                case error                             => InternalServerError(error.toString)
-              },
+              error => InternalServerError(error.toString),
               _ => Ok(successPage(account, appConfigTestOnly))
             )
         }

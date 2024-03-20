@@ -414,7 +414,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
                 None
               },
               optCreds = if (hasCred) { Some(creds) }
-              else {None}
+              else { None }
             )
           stubAuthorizePost(OK, authResponse.toString())
       }

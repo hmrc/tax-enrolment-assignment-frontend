@@ -30,7 +30,8 @@
   backLinkEnabled: Boolean = false,
   mainLayout: Option[Html => Html] = Some(defaultMainContent(_)),
   displaySignout: Boolean = true,
-  hasError: Boolean = false)(contentBlock: Html)(implicit request: Request[_], messages: Messages)
+  hasError: Boolean = false,
+  scripts: Option[Html] = None)(contentBlock: Html)(implicit request: Request[_], messages: Messages)
 
 @headBlock = {
 @if(displaySignout) {
@@ -54,5 +55,6 @@
  isWelshTranslationAvailable = appConfig.welshLanguageSupportEnabled,
  backLink = if(backLinkEnabled) Some(BackLink.mimicsBrowserBackButtonViaJavaScript) else None,
  signOutUrl = if(displaySignout) {Some(appConfig.signOutUrl)} else {None},
- mainContentLayout = mainLayout
+ mainContentLayout = mainLayout,
+ additionalScriptsBlock = scripts
 )(content)

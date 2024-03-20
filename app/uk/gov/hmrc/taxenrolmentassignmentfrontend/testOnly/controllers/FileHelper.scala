@@ -14,17 +14,19 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.config
-
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.controllers
 
 import javax.inject.{Inject, Singleton}
+import scala.io.Source.fromFile
 
 @Singleton
-class AppConfigTestOnly @Inject() (val config: ServicesConfig) {
-  val enrolmentStoreStub: String = config.baseUrl("enrolment-store-stub")
-  val identityVerification: String = config.baseUrl("identity-verification")
-  val basStubsBaseUrl: String = config.baseUrl("bas-stubs")
-  val authLoginStub: String = config.baseUrl("auth-login-stub")
-  val tensUrl: String = config.baseUrl("tax-enrolment-assignment-frontend")
+class FileHelper @Inject() () {
+
+  def loadFile(name: String): String = {
+    val source = fromFile(
+      "./app/uk/gov/hmrc/taxenrolmentassignmentfrontend/testOnly/config/resources/enrolmentsSetup/" + name
+    )
+    try source.mkString
+    finally source.close()
+  }
 }

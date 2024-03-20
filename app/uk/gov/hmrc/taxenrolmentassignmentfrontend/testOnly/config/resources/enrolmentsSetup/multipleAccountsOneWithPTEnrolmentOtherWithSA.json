@@ -1,0 +1,107 @@
+[
+    {
+        "groupId": "7284B3E9-D253-4D16-BC96-E685FD9DE3D6",
+        "affinityGroup": "Individual",
+        "nino": "JS271435C",
+        "user": {
+            "credId": "6408620249920679",
+            "name": "Firstname Surname",
+            "email": "email5@test.com",
+            "userId": "Ending with 0297",
+            "hasPTEnrolment": true,
+            "hasSAEnrolment": false
+        },
+        "enrolments": [
+            {
+                "serviceName": "HMRC-PT",
+                "identifiers": {
+                    "key": "NINO",
+                    "value": "JS271435C"
+                },
+                "verifiers": [
+                    {
+                        "key": "NINO1",
+                        "value": "JS271435C"
+                    }
+                ],
+                "enrolmentFriendlyName": "HMRC-PT Enrolment",
+                "state": "Activated",
+                "enrolmentType": "principal",
+                "assignedToAll": false
+            }
+        ],
+        "additionalFactors": [
+            {
+                "factorType": "sms",
+                "phoneNumber": "07783924122",
+                "name": "Text Messages"
+            }
+        ]
+    },
+    {
+        "groupId": "13BE43AE-DC3E-40BB-958E-EF724998C7A0",
+        "affinityGroup": "Individual",
+        "nino": "JS271435C",
+        "user": {
+            "credId": "1447340264123859",
+            "name": "Firstname Surname",
+            "email": "email6@test.com",
+            "userId": "Ending with 6461",
+            "hasPTEnrolment": false,
+            "hasSAEnrolment": true
+        },
+        "enrolments": [
+            {
+                "serviceName": "IR-SA",
+                "assignedUserCreds": [
+                    "1"
+                ],
+                "identifiers": {
+                    "key": "UTR",
+                    "value": "AA223003E"
+                },
+                "verifiers": [
+                    {
+                        "key": "Postcode",
+                        "value": "postcode"
+                    },
+                    {
+                        "key": "NINO",
+                        "value": "JS271435C"
+                    }
+                ],
+                "enrolmentFriendlyName": "IR-SA Enrolment",
+                "state": "Activated",
+                "enrolmentType": "principal",
+                "assignedToAll": false
+            }
+        ],
+        "additionalFactors": [
+            {
+                "factorType": "sms",
+                "phoneNumber": "07783924122",
+                "name": "Text Messages"
+            }
+        ]
+    },
+    {
+        "groupId": "E1752CD2-C568-4E29-BF4F-ECDDEB8B10A5",
+        "affinityGroup": "Individual",
+        "nino": "JS271435C",
+        "user": {
+            "credId": "8970021278265987",
+            "name": "Firstname Surname",
+            "email": "email7@test.com",
+            "userId": "Ending with 1655",
+            "hasPTEnrolment": false,
+            "hasSAEnrolment": false
+        },
+        "additionalFactors": [
+            {
+                "factorType": "voiceCall",
+                "phoneNumber": "07783924122",
+                "name": "voice call"
+            }
+        ]
+    }
+]

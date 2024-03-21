@@ -32,6 +32,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.{AccountDetail
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.utils.AccountUtilsTestOnly
 
 import scala.concurrent.Future
+import scala.util.Success
 
 class TestOnlyControllerSpec extends BaseSpec {
 
@@ -238,7 +239,7 @@ class TestOnlyControllerSpec extends BaseSpec {
       (mockFileHelper
         .loadFile(_: String))
         .expects(s"${nino.nino}.json")
-        .returning(Json.toJson(account).toString())
+        .returning(Success(Json.toJson(account)))
 
       (mockAccountUtilsTestOnly
         .deleteAccountDetails(_: AccountDetailsTestOnly)(_: HeaderCarrier))
@@ -275,7 +276,7 @@ class TestOnlyControllerSpec extends BaseSpec {
       (mockFileHelper
         .loadFile(_: String))
         .expects(s"${nino.nino}.json")
-        .returning(Json.toJson(account).toString())
+        .returning(Success(Json.toJson(account)))
 
       (mockAccountUtilsTestOnly
         .deleteAccountDetails(_: AccountDetailsTestOnly)(_: HeaderCarrier))
@@ -321,7 +322,7 @@ class TestOnlyControllerSpec extends BaseSpec {
       (mockFileHelper
         .loadFile(_: String))
         .expects(s"${nino.nino}.json")
-        .returning(Json.toJson(account).toString())
+        .returning(Success(Json.toJson(account)))
 
       (mockAccountUtilsTestOnly
         .deleteAccountDetails(_: AccountDetailsTestOnly)(_: HeaderCarrier))
@@ -356,7 +357,7 @@ class TestOnlyControllerSpec extends BaseSpec {
       (mockFileHelper
         .loadFile(_: String))
         .expects(s"${nino.nino}.json")
-        .returning(json.toString())
+        .returning(Success(json))
 
       sut.extractData(nino.nino) mustBe List(account)
     }

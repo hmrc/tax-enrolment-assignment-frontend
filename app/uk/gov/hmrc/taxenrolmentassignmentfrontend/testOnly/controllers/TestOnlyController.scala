@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.controllers
 
 import cats.implicits.toTraverseOps
-import play.api.libs.json.{JsArray, JsResultException, Json}
+import play.api.libs.json.{JsArray, JsResultException}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthJourney
@@ -82,14 +82,16 @@ class TestOnlyController @Inject() (
       )
   }
 
-  def extractData(file: String) = {
-    val data = Json.parse(fileHelper.loadFile(s"$file.json"))
-    Try(data.as[JsArray]) match {
-      case Success(_)                    => data.as[List[AccountDetailsTestOnly]]
-      case Failure(_: JsResultException) => List(data.as[AccountDetailsTestOnly])
-      case Failure(error)                => throw error
+  def extractData(file: String) =
+    fileHelper.loadFile(s"$file.json") match {
+      case Success(json) =>
+        Try(json.as[JsArray]) match {
+          case Success(_)                    => json.as[List[AccountDetailsTestOnly]]
+          case Failure(_: JsResultException) => List(json.as[AccountDetailsTestOnly])
+          case Failure(error)                => throw error
+        }
+      case Failure(error) => throw error
     }
-  }
 
   def create: Action[AnyContent] = Action.async { request =>
     implicit val hc: HeaderCarrier = HeaderCarrier(Some(Authorization("Bearer 1")))

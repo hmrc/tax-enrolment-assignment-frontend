@@ -30,6 +30,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.config.AppConfigTestO
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.{AccountDetailsTestOnly, TestMocks}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.utils.AccountUtilsTestOnly
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.TestDataForm.selectUserForm
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.services.EnrolmentStoreServiceTestOnly
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.views.html.{LoginCheckCompleteView, SelectTestData, SuccessView}
 
 import javax.inject.{Inject, Singleton}
@@ -43,6 +44,7 @@ class TestOnlyController @Inject() (
   logger: EventLoggerService,
   authJourney: AuthJourney,
   eacdService: EACDService,
+  enrolmentStoreServiceTestOnly: EnrolmentStoreServiceTestOnly,
   selectTestDataPage: SelectTestData,
   successPage: SuccessView,
   loginCheckCompleteView: LoginCheckCompleteView,
@@ -150,7 +152,12 @@ class TestOnlyController @Inject() (
 
   def successfulCall: Action[AnyContent] = authJourney.authJourney.async { implicit request =>
     logger.logEvent(logSuccessfulRedirectToReturnUrl)
-    eacdService.getUsersAssignedPTEnrolment
+    val connectorCall =
+      if (appConfigTestOnly.environment == "Staging")
+        enrolmentStoreServiceTestOnly.getUsersAssignedPTEnrolment(request.userDetails.nino)
+      else eacdService.getUsersAssignedPTEnrolment
+
+    connectorCall
       .bimap(
         error => InternalServerError(error.toString),
         userAssignedEnrolment =>

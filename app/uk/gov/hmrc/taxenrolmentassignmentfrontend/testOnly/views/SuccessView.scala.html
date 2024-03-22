@@ -49,7 +49,7 @@
                 </tr>
                 <tr class="govuk-table__row">
                     <th scope="row" class="govuk-table__header">RedirectUrl</th>
-                    <td class="govuk-table__cell">@appConfig.tensUrl/protect-tax-info?redirectUrl=/protect-tax-info/test-only/successful</td>
+                    <td class="govuk-table__cell">@appConfig.tensRedirectUrl</td>
                 </tr>
                 <tr class="govuk-table__row">
                     <th scope="row" class="govuk-table__header">Confidence Level</th>
@@ -72,8 +72,8 @@
             </tbody>
         </table>
 
-    <form accept-charset="UTF-8" action="@appConfig.authLoginStub/auth-login-stub/gg-sign-in" method="post" rel="noreferrer noopener" target="_blank">
-        <input name="redirectionUrl" value="@appConfig.tensUrl/protect-tax-info?redirectUrl=/protect-tax-info/test-only/successful" class="govuk-visually-hidden"/>
+    <form accept-charset="UTF-8" action="@appConfig.authLoginStub" method="post" rel="noreferrer noopener" target="_blank">
+        <input name="redirectionUrl" value="@appConfig.tensRedirectUrl" class="govuk-visually-hidden"/>
         <input name="confidenceLevel" value="200" class="govuk-visually-hidden"/>
         <input name="nino" value="@account.nino" class="govuk-visually-hidden"/>
         @account.enrolments.mapWithIndex{ (enrolment, enrolmentIndex) =>

@@ -17,13 +17,18 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.connectors
 
 import cats.data.EitherT
-import play.api.Logging
-import play.api.http.Status.{NOT_FOUND, NO_CONTENT}
+import play.api.{Logger, Logging}
+import play.api.http.Status.{NOT_FOUND, NO_CONTENT, OK}
 import play.api.libs.json.JsObject
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, UpstreamErrorResponse}
 import uk.gov.hmrc.service.TEAFResult
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{UpstreamError, UpstreamUnexpected2XX}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{UnexpectedResponseFromEACD, UpstreamError, UpstreamUnexpected2XX}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logUnexpectedResponseFromEACD
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.hmrcPTKey
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.config.AppConfigTestOnly
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.AccountDetailsTestOnly
 
@@ -31,9 +36,15 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class EnrolmentStoreStubConnectorTestOnly @Inject() (appConfig: AppConfigTestOnly, httpClient: HttpClient)(implicit
+class EnrolmentStoreStubConnectorTestOnly @Inject() (
+  appConfig: AppConfigTestOnly,
+  httpClient: HttpClient,
+  eventLogger: EventLoggerService
+)(implicit
   val executionContext: ExecutionContext
 ) extends Logging {
+
+  implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
   def addStubAccount(account: AccountDetailsTestOnly)(implicit hc: HeaderCarrier): TEAFResult[Unit] = {
     val url = appConfig.enrolmentStoreStub + "/enrolment-store-stub/data"
@@ -71,5 +82,33 @@ class EnrolmentStoreStubConnectorTestOnly @Inject() (appConfig: AppConfigTestOnl
         logger.error(upstreamError.message)
         Left(UpstreamError(upstreamError))
     }
+  }
+
+  def getStubAccounts(nino: Nino)(implicit hc: HeaderCarrier): TEAFResult[UsersAssignedEnrolment] = EitherT {
+
+    val enrolmentKey = s"$hmrcPTKey~NINO~${nino.nino}"
+    val url =
+      s"${appConfig.enrolmentStoreStub}/enrolment-store-proxy/enrolment-store/enrolments/$enrolmentKey/users"
+
+    httpClient
+      .GET[HttpResponse](url)
+      .map(httpResponse =>
+        httpResponse.status match {
+          case OK =>
+            Right(
+              httpResponse.json
+                .as[UsersAssignedEnrolment](UsersAssignedEnrolment.reads)
+            )
+          case NO_CONTENT => Right(UsersAssignedEnrolment(None))
+          case status =>
+            eventLogger.logEvent(
+              logUnexpectedResponseFromEACD(
+                enrolmentKey.split("~").head,
+                status
+              )
+            )
+            Left(UnexpectedResponseFromEACD)
+        }
+      )
   }
 }

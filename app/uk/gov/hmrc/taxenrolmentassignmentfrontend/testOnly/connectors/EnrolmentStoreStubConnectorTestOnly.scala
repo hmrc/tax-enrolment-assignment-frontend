@@ -84,7 +84,7 @@ class EnrolmentStoreStubConnectorTestOnly @Inject() (
     }
   }
 
-  def getStubAccounts(nino: Nino)(implicit hc: HeaderCarrier): TEAFResult[UsersAssignedEnrolment] = EitherT {
+  def getUsersWithPTEnrolment(nino: Nino)(implicit hc: HeaderCarrier): TEAFResult[UsersAssignedEnrolment] = EitherT {
 
     val enrolmentKey = s"$hmrcPTKey~NINO~${nino.nino}"
     val url =

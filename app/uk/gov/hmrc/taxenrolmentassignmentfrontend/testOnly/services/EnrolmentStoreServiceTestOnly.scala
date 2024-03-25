@@ -105,7 +105,7 @@ class EnrolmentStoreServiceTestOnly @Inject() (
       }
       .map(_ => ())
 
-  def getUsersAssignedPTEnrolment(nino: Nino)(implicit hc: HeaderCarrier): TEAFResult[UsersAssignedEnrolment] =
-    enrolmentStoreStubConnectorTestOnly.getStubAccounts(nino)
+  def getUsersAssignedPTEnrolmentFromStub(nino: Nino)(implicit hc: HeaderCarrier): TEAFResult[UsersAssignedEnrolment] =
+    enrolmentStoreStubConnectorTestOnly.getUsersWithPTEnrolment(nino)
 
 }

@@ -154,7 +154,7 @@ class TestOnlyController @Inject() (
     logger.logEvent(logSuccessfulRedirectToReturnUrl)
     val connectorCall =
       if (appConfigTestOnly.environment == "Staging")
-        enrolmentStoreServiceTestOnly.getUsersAssignedPTEnrolment(request.userDetails.nino)
+        enrolmentStoreServiceTestOnly.getUsersAssignedPTEnrolmentFromStub(request.userDetails.nino)
       else eacdService.getUsersAssignedPTEnrolment
 
     connectorCall

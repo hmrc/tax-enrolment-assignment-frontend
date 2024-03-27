@@ -16,17 +16,25 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.controllers
 
+import play.api.Environment
+import play.api.libs.json.{JsValue, Json}
+
+import java.io.IOException
 import javax.inject.{Inject, Singleton}
-import scala.io.Source.fromFile
+import scala.io.Source
+import scala.util.Try
 
 @Singleton
-class FileHelper @Inject() () {
+class FileHelper @Inject() (environment: Environment) {
 
-  def loadFile(name: String): String = {
-    val source = fromFile(
-      "./app/uk/gov/hmrc/taxenrolmentassignmentfrontend/testOnly/config/resources/enrolmentsSetup/" + name
-    )
-    try source.mkString
-    finally source.close()
+  def loadFile(filePath: String): Try[JsValue] = {
+    val fullPath = s"/resources/testOnly/$filePath"
+    Try {
+      val stream = environment
+        .resourceAsStream(fullPath)
+        .getOrElse(throw new IOException(s"filePath not found: $fullPath"))
+
+      Json.parse(Source.fromInputStream(stream).mkString)
+    }
   }
 }

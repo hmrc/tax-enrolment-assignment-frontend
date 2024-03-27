@@ -20,9 +20,11 @@ import cats.data.EitherT
 import org.scalatest.matchers.must.Matchers._
 import play.api.Application
 import play.api.inject.bind
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{InvalidRedirectUrl, TaxEnrolmentAssignmentErrors, UnexpectedError, UnexpectedResponseFromEACD}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{NINO, UsersAssignedEnrolment1}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IdentifiersOrVerifiers
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.connectors.{EnrolmentStoreConnectorTestOnly, EnrolmentStoreStubConnectorTestOnly}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.EnrolmentDetailsTestOnly
@@ -357,6 +359,38 @@ class EnrolmentStoreServiceTestOnlySpec extends BaseSpec {
       val result = sut.deleteEnrolment(enrolment).value.futureValue
 
       result mustBe a[Left[UnexpectedError.type, _]]
+    }
+  }
+
+  "getUsersAssignedPTEnrolmentFromStub" when {
+    "the a PT enrolment has been assigned for the nino" should {
+      "call the EACD, save to cache and return the account details" in {
+        (mockEnrolmentStoreStubConnectorTestOnly
+          .getUsersWithPTEnrolment(_: Nino)(_: HeaderCarrier))
+          .expects(NINO, *)
+          .returning(createInboundResult(UsersAssignedEnrolment1))
+
+        val result = sut.getUsersAssignedPTEnrolmentFromStub(NINO)
+        whenReady(result.value) { res =>
+          res shouldBe Right(UsersAssignedEnrolment1)
+        }
+      }
+    }
+
+    "EACD returns an error" should {
+      "return an error" in {
+        (mockEnrolmentStoreStubConnectorTestOnly
+          .getUsersWithPTEnrolment(_: Nino)(
+            _: HeaderCarrier
+          ))
+          .expects(NINO, *)
+          .returning(createInboundResultError(UnexpectedResponseFromEACD))
+
+        val result = sut.getUsersAssignedPTEnrolmentFromStub(NINO)
+        whenReady(result.value) { res =>
+          res shouldBe Left(UnexpectedResponseFromEACD)
+        }
+      }
     }
   }
 }

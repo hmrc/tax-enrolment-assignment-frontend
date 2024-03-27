@@ -25,6 +25,7 @@ class AppConfigTestOnly @Inject() (val config: ServicesConfig) {
   val enrolmentStoreStub: String = config.baseUrl("enrolment-store-stub")
   val identityVerification: String = config.baseUrl("identity-verification")
   val basStubsBaseUrl: String = config.baseUrl("bas-stubs")
-  val authLoginStub: String = config.baseUrl("auth-login-stub")
-  val tensUrl: String = config.baseUrl("tax-enrolment-assignment-frontend")
+  val authLoginStub: String = config.getString("testOnly.loginUrl")
+  val environment: String = config.getString("testOnly.environment")
+  val tensRedirectUrl: String = config.getString("testOnly.redirectUrl")
 }

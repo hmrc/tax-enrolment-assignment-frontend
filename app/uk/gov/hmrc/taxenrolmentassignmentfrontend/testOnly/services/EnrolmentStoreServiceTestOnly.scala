@@ -17,8 +17,10 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.services
 
 import cats.implicits.toTraverseOps
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.service.TEAFResult
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.connectors.{EnrolmentStoreConnectorTestOnly, EnrolmentStoreStubConnectorTestOnly}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.{AccountDetailsTestOnly, EnrolmentDetailsTestOnly}
 
@@ -102,5 +104,8 @@ class EnrolmentStoreServiceTestOnly @Inject() (
         }.sequence
       }
       .map(_ => ())
+
+  def getUsersAssignedPTEnrolmentFromStub(nino: Nino)(implicit hc: HeaderCarrier): TEAFResult[UsersAssignedEnrolment] =
+    enrolmentStoreStubConnectorTestOnly.getUsersWithPTEnrolment(nino)
 
 }

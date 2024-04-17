@@ -107,7 +107,7 @@ class SignOutControllerSpec extends ControllersBaseSpec {
         status(result) shouldBe SEE_OTHER
         headers(result).contains("X-Request-ID") shouldBe false
         redirectLocation(result) shouldBe Some(
-          s"http://localhost:9553/bas-gateway/sign-out-without-state?continueUrl=${URLEncoder.encode(UrlPaths.returnUrl, "UTF-8")}"
+          s"http://localhost:9553/bas-gateway/sign-out-without-state?continue=${URLEncoder.encode(UrlPaths.returnUrl, "UTF-8")}"
         )
       }
     }

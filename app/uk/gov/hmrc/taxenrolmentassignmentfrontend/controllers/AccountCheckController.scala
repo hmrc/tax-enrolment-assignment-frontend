@@ -55,6 +55,7 @@ class AccountCheckController @Inject() (
     extends TEAFrontendController(mcc) {
 
   def accountCheck(redirectUrl: RedirectUrl): Action[AnyContent] = authJourney.authJourney.async { implicit request =>
+    println("\n>>>RED=" + redirectUrl)
     Try {
       redirectUrl.get(OnlyRelative | AbsoluteWithHostnameFromAllowlist(appConfig.validRedirectHostNames)).url
     } match {

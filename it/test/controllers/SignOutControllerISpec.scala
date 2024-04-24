@@ -50,7 +50,7 @@ class SignOutControllerISpec extends IntegrationSpecBase {
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result).get should include(
-          s"/bas-gateway/sign-out-without-state?continueUrl=${URLEncoder.encode(returnUrl, "UTF-8")}"
+          s"/bas-gateway/sign-out-without-state?continue=${URLEncoder.encode(returnUrl, "UTF-8")}"
         )
         await(sessionRepository.get(sessionId)) shouldBe None
 

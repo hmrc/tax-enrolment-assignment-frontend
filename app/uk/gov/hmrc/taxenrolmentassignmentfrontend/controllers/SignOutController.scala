@@ -51,7 +51,7 @@ class SignOutController @Inject() (
       logger.logEvent(logUserSigninAgain(request.userDetails.credId))
       optRedirectUrl match {
         case Some(redirectUrl) =>
-          Redirect(appConfig.signOutUrl, Map("continueUrl" -> Seq(redirectUrl)))
+          Redirect(appConfig.signOutUrl, Map("continue" -> Seq(redirectUrl)))
             .removingFromSession("X-Request-ID", "Session-Id")
         case None =>
           Redirect(appConfig.signOutUrl)

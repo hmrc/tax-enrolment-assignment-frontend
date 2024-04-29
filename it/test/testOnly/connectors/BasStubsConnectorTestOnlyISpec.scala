@@ -42,6 +42,7 @@ class BasStubsConnectorTestOnlyISpec extends IntegrationSpecBase {
         |  "credId": "credId",
         |  "userId": "credId",
         |  "isAdmin": true,
+        |  "accountType" : "Individual",
         |  "email": "email@example.invalid",
         |  "emailVerified": true,
         |  "profile": "/profile",

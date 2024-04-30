@@ -57,13 +57,13 @@ case class AccountDetailsTestOnly(
   enrolments: List[EnrolmentDetailsTestOnly],
   additionalFactors: List[AdditonalFactors]
 ) {
-  def enrolmentStoreStubAccountDetailsRequestBody: JsObject =
+  def enrolmentStoreStubAccountDetailsRequestBody(credId: String): JsObject =
     Json.obj(
       "groupId"       -> groupId,
       "nino"          -> nino,
       "affinityGroup" -> affinityGroup,
       "users"         -> List(user),
-      "enrolments"    -> enrolments.map(_.enrolmentStoreStubEnrolmentDetails)
+      "enrolments"    -> enrolments.map(_.enrolmentStoreStubEnrolmentDetails(credId))
     )
 
   def basStubAccountDetailsRequestBody: JsObject =
@@ -121,12 +121,12 @@ case class EnrolmentDetailsTestOnly(
   state: String,
   enrolmentType: String
 ) {
-  def enrolmentStoreStubEnrolmentDetails: JsObject =
+  def enrolmentStoreStubEnrolmentDetails(credId: String): JsObject =
     Json.obj(
       "serviceName"           -> serviceName,
       "identifiers"           -> List(identifiers),
       "verifiers"             -> verifiers,
-      "assignedUserCreds"     -> List("credId"),
+      "assignedUserCreds"     -> List(credId),
       "assignedToAll"         -> false,
       "enrolmentFriendlyName" -> enrolmentFriendlyName,
       "state"                 -> state,

@@ -53,7 +53,7 @@ class EnrolmentStoreStubConnectorTestOnly @Inject() (
       httpClient
         .POST[JsObject, Either[UpstreamErrorResponse, HttpResponse]](
           url,
-          account.enrolmentStoreStubAccountDetailsRequestBody
+          account.enrolmentStoreStubAccountDetailsRequestBody(account.user.credId)
         )
     )
       .transform {

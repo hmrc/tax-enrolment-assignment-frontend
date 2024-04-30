@@ -171,7 +171,7 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
     val payload = Json.obj(
       "userId" -> credId,
       "type"   -> "principal",
-      "action" -> "enrolOnly"
+      "action" -> "enrolAndActivate"
     )
 
     val identifierKey = enrolment.identifiers.key

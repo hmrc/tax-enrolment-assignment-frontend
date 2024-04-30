@@ -361,7 +361,7 @@ class EnrolmentStoreConnectorTestOnlyISpec extends IntegrationSpecBase {
          |{
          |    "userId" : "$credId",
          |    "type":         "principal",
-         |    "action" :       "enrolOnly"
+         |    "action" :       "enrolAndActivate"
          |
          |}
          |""".stripMargin

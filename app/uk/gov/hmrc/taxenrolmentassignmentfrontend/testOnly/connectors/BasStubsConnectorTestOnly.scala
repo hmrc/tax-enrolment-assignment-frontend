@@ -55,6 +55,26 @@ class BasStubsConnectorTestOnly @Inject() (httpClient: HttpClient, appConfigTest
       }
   }
 
+  def deleteAccount(account: AccountDetailsTestOnly)(implicit hc: HeaderCarrier): TEAFResult[Unit] = {
+    val url = s"${appConfigTestOnly.basStubsBaseUrl}/bas-stubs/account/${account.user.credId}"
+
+    EitherT(
+      httpClient.DELETE[Either[UpstreamErrorResponse, HttpResponse]](
+        url
+      )
+    )
+      .transform {
+        case Right(response) if response.status == NO_CONTENT => Right(())
+        case Right(response) =>
+          val ex = new RuntimeException(s"Unexpected ${response.status} status")
+          logger.error(ex.getMessage, ex)
+          Left(UpstreamUnexpected2XX(response.body, response.status))
+        case Left(upstreamError) =>
+          logger.error(upstreamError.message)
+          Left(UpstreamError(upstreamError))
+      }
+  }
+
   def putAdditionalFactors(account: AccountDetailsTestOnly)(implicit hc: HeaderCarrier): TEAFResult[Unit] = {
     val url = s"${appConfigTestOnly.basStubsBaseUrl}/bas-stubs/credentials/factors"
     EitherT(httpClient.PUT[JsObject, Either[UpstreamErrorResponse, HttpResponse]](url, account.mfaAccountRequestBody))

@@ -54,11 +54,7 @@ class AccountDetailsSpec extends BaseSpec {
         res shouldBe expectedResult
       }
     }
-  /*
-AccountDetails("credId", "6037", Some(Sensitive(...)), Some("27 February 2022 at 12:00 pm"), List(MFADetails("mfaDetails.text", "24321")), None) was not equal to
- AccountDetails("credId", "6037", Some(Sensitive(...)), Some("27 February 2022 at 12:00 pm"), List(MFADetails("mfaDetails.text", "24321")), None) (AccountDetailsSpec.scala:54)
-2024-05-21 13:01:40,273 lev
-   */
+
   "userFriendlyAccountDetails" must {
     behave like accountDetailsForEachMonth(
       Seq(
@@ -88,10 +84,11 @@ AccountDetails("credId", "6037", Some(Sensitive(...)), Some("27 February 2022 at
         DateInfo("Mehefin", "2022-06-27T12:00:27Z", "27 Mehefin 2022 am 1:00 yh"),
         DateInfo("Gorffennaf", "2022-07-27T12:00:27Z", "27 Gorffennaf 2022 am 1:00 yh"),
         DateInfo("Awst", "2022-08-27T12:00:27Z", "27 Awst 2022 am 1:00 yh"),
-        DateInfo("Medi", "2022-09-27T12:00:27Z", "27 Medi 2022 am 1:00 yh"),
-        DateInfo("Hydref", "2022-10-27T12:00:27Z", "27 Hydref 2022 am 1:00 yh"),
-        DateInfo("Tachwedd", "2022-11-27T12:00:27Z", "27 Tachwedd 2022 am 12:00 yh"),
-        DateInfo("Rhagfyr", "2022-12-27T12:00:27Z", "27 Rhagfyr 2022 am 12:00 yh")
+        DateInfo("Medi", "2022-09-27T17:00:27Z", "27 Medi 2022 am 6:00 yh"),
+        DateInfo("Hydref", "2022-10-27T11:00:27Z", "27 Hydref 2022 am 12:00 yh"),
+        DateInfo("Tachwedd", "2022-11-27T09:00:27Z", "27 Tachwedd 2022 am 9:00 yb"),
+        DateInfo("Rhagfyr", "2022-12-27T15:00:27Z", "27 Rhagfyr 2022 am 3:00 yh")
+//        DateInfo("Rhagfyr", "2022-12-27T15:00:27Z", "27 Rhagfyr 2022 am 3:00 yp")
       ),
       "cy"
     )

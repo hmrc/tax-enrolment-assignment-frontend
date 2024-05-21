@@ -59,6 +59,7 @@ case class AccountDetails(
   private def formatDate(implicit messages: Messages): Option[String] =
     lastLoginDate.map { date =>
       val zonedDateTime = ZonedDateTime.ofInstant(Instant.parse(date), ZoneId.of("GB"))
+
       val timeFormatter = DateTimeFormatter.ofPattern("h:mm a")
       s"${zonedDateTime.getDayOfMonth} ${messages(
         s"common.month${zonedDateTime.getMonth.getValue}"

@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
-import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
@@ -26,6 +25,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccounts
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnotherAccount
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
@@ -53,9 +53,9 @@ class PTEnrolmentOnOtherAccountController @Inject() (
           Ok(
             ptEnrolmentOnAnotherAccountView(
               PTEnrolmentOnOtherAccount(
-                currentAccountDetails = AccountDetails.userFriendlyAccountDetails(accountDetails.currentAccountDetails),
-                ptAccountDetails = accountFriendlyDetails,
-                saUserCred = accountDetails.saUserCred.map(AccountDetails.trimmedUserId)
+                AccountDetails.userFriendlyAccountDetails(accountDetails.currentAccountDetails),
+                accountFriendlyDetails,
+                accountDetails.saUserCred.map(AccountDetails.trimmedUserId)
               )
             )
           )

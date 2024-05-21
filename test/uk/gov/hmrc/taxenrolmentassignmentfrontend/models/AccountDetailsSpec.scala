@@ -24,12 +24,7 @@ import uk.gov.hmrc.crypto.json.JsonEncryption
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 
 class AccountDetailsSpec extends BaseSpec {
-
   private case class DateInfo(month: String, sourceDate: String, expectedDate: String)
-  private val additionalFactorText = AdditonalFactors("sms", Some("07783924321"))
-  private val additionalFactorVoice = AdditonalFactors("voice", Some("07783924321"))
-  private val additionalFactorTotp = AdditonalFactors("totp", name = Some("HMRC App"))
-
   private val mfaDetailsText = MFADetails("mfaDetails.text", "24321")
   private val mfaDetailsVoice = MFADetails("mfaDetails.voice", "24321")
   private val mfaDetailsTotp = MFADetails("mfaDetails.totp", "HMRC App")

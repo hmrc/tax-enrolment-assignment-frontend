@@ -68,8 +68,8 @@ class AccountDetailsSpec extends BaseSpec {
         DateInfo("August", "2022-08-27T12:00:27Z", "27 August 2022 at 1:00 pm"),
         DateInfo("September", "2022-09-27T12:00:27Z", "27 September 2022 at 1:00 pm"),
         DateInfo("October", "2022-10-27T12:00:27Z", "27 October 2022 at 1:00 pm"),
-        DateInfo("November", "2022-11-27T12:00:27Z", "27 November 2022 at 12:00 pm"),
-        DateInfo("December", "2022-12-27T12:00:27Z", "27 December 2022 at 12:00 pm")
+        DateInfo("November", "2022-11-27T09:00:27Z", "27 November 2022 at 9:00 am"),
+        DateInfo("December", "2022-12-27T15:00:27Z", "27 December 2022 at 3:00 pm")
       ),
       "en"
     )
@@ -88,7 +88,6 @@ class AccountDetailsSpec extends BaseSpec {
         DateInfo("Hydref", "2022-10-27T11:00:27Z", "27 Hydref 2022 am 12:00 yh"),
         DateInfo("Tachwedd", "2022-11-27T09:00:27Z", "27 Tachwedd 2022 am 9:00 yb"),
         DateInfo("Rhagfyr", "2022-12-27T15:00:27Z", "27 Rhagfyr 2022 am 3:00 yh")
-//        DateInfo("Rhagfyr", "2022-12-27T15:00:27Z", "27 Rhagfyr 2022 am 3:00 yp")
       ),
       "cy"
     )

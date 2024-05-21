@@ -25,6 +25,7 @@ import uk.gov.hmrc.crypto.{Decrypter, Encrypter}
 
 import java.time.format.DateTimeFormatter
 import java.time.{Instant, ZoneId, ZonedDateTime}
+import java.util.Locale
 
 case class MFADetails(factorNameKey: String, factorValue: String) {
   def this(additonalFactors: AdditonalFactors) =
@@ -58,12 +59,16 @@ case class AccountDetails(
 
   private def formatDate(implicit messages: Messages): Option[String] =
     lastLoginDate.map { date =>
-      val zonedDateTime = ZonedDateTime.ofInstant(Instant.parse(date), ZoneId.of("GB"))
+      val locale = if (messages.lang.code == "cy") {
+        Locale.forLanguageTag("cy-GB")
+      } else {
+        Locale.forLanguageTag("en-GB")
+      }
 
-      val timeFormatter = DateTimeFormatter.ofPattern("h:mm a")
-      s"${zonedDateTime.getDayOfMonth} ${messages(
-        s"common.month${zonedDateTime.getMonth.getValue}"
-      )} ${zonedDateTime.getYear} ${messages("common.dateToTime")} ${zonedDateTime.format(timeFormatter).toUpperCase}"
+      val timeFormatter =
+        DateTimeFormatter.ofPattern(s"dd MMMM uuuu '${messages("common.dateToTime")}' h:mm a").withLocale(locale)
+      val zonedDateTime = ZonedDateTime.ofInstant(Instant.parse(date), ZoneId.of("GB"))
+      zonedDateTime.format(timeFormatter)
     }
 }
 

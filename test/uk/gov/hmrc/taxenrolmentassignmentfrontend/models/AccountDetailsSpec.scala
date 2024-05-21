@@ -29,17 +29,6 @@ class AccountDetailsSpec extends BaseSpec {
   private val mfaDetailsVoice = MFADetails("mfaDetails.voice", "24321")
   private val mfaDetailsTotp = MFADetails("mfaDetails.totp", "HMRC App")
 
-  private def usersGroupResponse(
-    lastAccessedTime: String,
-    additionalFactors: List[AdditonalFactors]
-  ): UsersGroupResponse =
-    UsersGroupResponse(
-      obfuscatedUserId = Some("********6037"),
-      email = Some("email1@test.com"),
-      lastAccessedTimestamp = Some(lastAccessedTime),
-      additionalFactors = Some(additionalFactors)
-    )
-
   private def accountDetails(formattedLastLoginDate: String, mfaDetails: List[MFADetails]): AccountDetails =
     AccountDetails(
       "credId",
@@ -49,9 +38,9 @@ class AccountDetailsSpec extends BaseSpec {
       mfaDetails
     )
 
-  private def testEachMonth(seqDateInfo: Seq[DateInfo], lang: String): Unit =
+  private def accountDetailsForEachMonth(seqDateInfo: Seq[DateInfo], lang: String): Unit =
     seqDateInfo.foreach { test =>
-      s"${test.month} should display ${test.expectedDate} for ${test.sourceDate}" in {
+      s"${test.month} should display ${test.expectedDate} for ${test.sourceDate} for language $lang" in {
         val expectedResult = accountDetails(test.expectedDate, List(mfaDetailsText))
         val res = AccountDetails.userFriendlyAccountDetails(
           AccountDetails(
@@ -65,48 +54,45 @@ class AccountDetailsSpec extends BaseSpec {
         res shouldBe expectedResult
       }
     }
-  "userFriendlyAccountDetails" when {
-    "userFriendlyAccountDetails is called with English Messages" that {
-      behave like testEachMonth(
-        Seq(
-          DateInfo("January", "2022-01-27T12:00:27Z", "27 January 2022 at 12:00 PM"),
-          DateInfo("February", "2022-02-27T12:00:27Z", "27 February 2022 at 12:00 PM"),
-          DateInfo("March", "2022-03-27T12:00:27Z", "27 March 2022 at 1:00 PM"),
-          DateInfo("April", "2022-04-27T12:00:27Z", "27 April 2022 at 1:00 PM"),
-          DateInfo("May", "2022-05-27T12:00:27Z", "27 May 2022 at 1:00 PM"),
-          DateInfo("June", "2022-06-27T12:00:27Z", "27 June 2022 at 1:00 PM"),
-          DateInfo("July", "2022-07-27T12:00:27Z", "27 July 2022 at 1:00 PM"),
-          DateInfo("August", "2022-08-27T12:00:27Z", "27 August 2022 at 1:00 PM"),
-          DateInfo("September", "2022-09-27T12:00:27Z", "27 September 2022 at 1:00 PM"),
-          DateInfo("October", "2022-10-27T12:00:27Z", "27 October 2022 at 1:00 PM"),
-          DateInfo("November", "2022-11-27T12:00:27Z", "27 November 2022 at 12:00 PM"),
-          DateInfo("December", "2022-12-27T12:00:27Z", "27 December 2022 at 12:00 PM")
-        ),
-        "en"
-      )
-    }
 
-    "userFriendlyAccountDetails is called with Welsh Messages" that {
-      behave like testEachMonth(
-        Seq(
-          DateInfo("Ionawr", "2022-01-27T12:00:27Z", "27 Ionawr 2022 am 12:00 PM"),
-          DateInfo("Chwefror", "2022-02-27T12:00:27Z", "27 Chwefror 2022 am 12:00 PM"),
-          DateInfo("Mawrth", "2022-03-27T12:00:27Z", "27 Mawrth 2022 am 1:00 PM"),
-          DateInfo("Ebrill", "2022-04-27T12:00:27Z", "27 Ebrill 2022 am 1:00 PM"),
-          DateInfo("Mai", "2022-05-27T12:00:27Z", "27 Mai 2022 am 1:00 PM"),
-          DateInfo("Mehefin", "2022-06-27T12:00:27Z", "27 Mehefin 2022 am 1:00 PM"),
-          DateInfo("Gorffennaf", "2022-07-27T12:00:27Z", "27 Gorffennaf 2022 am 1:00 PM"),
-          DateInfo("Awst", "2022-08-27T12:00:27Z", "27 Awst 2022 am 1:00 PM"),
-          DateInfo("Medi", "2022-09-27T12:00:27Z", "27 Medi 2022 am 1:00 PM"),
-          DateInfo("Hydref", "2022-10-27T12:00:27Z", "27 Hydref 2022 am 1:00 PM"),
-          DateInfo("Tachwedd", "2022-11-27T12:00:27Z", "27 Tachwedd 2022 am 12:00 PM"),
-          DateInfo("Rhagfyr", "2022-12-27T12:00:27Z", "27 Rhagfyr 2022 am 12:00 PM")
-        ),
-        "cy"
-      )
-    }
+  "userFriendlyAccountDetails" must {
+    behave like accountDetailsForEachMonth(
+      Seq(
+        DateInfo("January", "2022-01-27T12:00:27Z", "27 January 2022 at 12:00 PM"),
+        DateInfo("February", "2022-02-27T12:00:27Z", "27 February 2022 at 12:00 PM"),
+        DateInfo("March", "2022-03-27T12:00:27Z", "27 March 2022 at 1:00 PM"),
+        DateInfo("April", "2022-04-27T12:00:27Z", "27 April 2022 at 1:00 PM"),
+        DateInfo("May", "2022-05-27T12:00:27Z", "27 May 2022 at 1:00 PM"),
+        DateInfo("June", "2022-06-27T12:00:27Z", "27 June 2022 at 1:00 PM"),
+        DateInfo("July", "2022-07-27T12:00:27Z", "27 July 2022 at 1:00 PM"),
+        DateInfo("August", "2022-08-27T12:00:27Z", "27 August 2022 at 1:00 PM"),
+        DateInfo("September", "2022-09-27T12:00:27Z", "27 September 2022 at 1:00 PM"),
+        DateInfo("October", "2022-10-27T12:00:27Z", "27 October 2022 at 1:00 PM"),
+        DateInfo("November", "2022-11-27T12:00:27Z", "27 November 2022 at 12:00 PM"),
+        DateInfo("December", "2022-12-27T12:00:27Z", "27 December 2022 at 12:00 PM")
+      ),
+      "en"
+    )
 
-    "has a sms additionalFactor" should {
+    behave like accountDetailsForEachMonth(
+      Seq(
+        DateInfo("Ionawr", "2022-01-27T12:00:27Z", "27 Ionawr 2022 am 12:00 PM"),
+        DateInfo("Chwefror", "2022-02-27T12:00:27Z", "27 Chwefror 2022 am 12:00 PM"),
+        DateInfo("Mawrth", "2022-03-27T12:00:27Z", "27 Mawrth 2022 am 1:00 PM"),
+        DateInfo("Ebrill", "2022-04-27T12:00:27Z", "27 Ebrill 2022 am 1:00 PM"),
+        DateInfo("Mai", "2022-05-27T12:00:27Z", "27 Mai 2022 am 1:00 PM"),
+        DateInfo("Mehefin", "2022-06-27T12:00:27Z", "27 Mehefin 2022 am 1:00 PM"),
+        DateInfo("Gorffennaf", "2022-07-27T12:00:27Z", "27 Gorffennaf 2022 am 1:00 PM"),
+        DateInfo("Awst", "2022-08-27T12:00:27Z", "27 Awst 2022 am 1:00 PM"),
+        DateInfo("Medi", "2022-09-27T12:00:27Z", "27 Medi 2022 am 1:00 PM"),
+        DateInfo("Hydref", "2022-10-27T12:00:27Z", "27 Hydref 2022 am 1:00 PM"),
+        DateInfo("Tachwedd", "2022-11-27T12:00:27Z", "27 Tachwedd 2022 am 12:00 PM"),
+        DateInfo("Rhagfyr", "2022-12-27T12:00:27Z", "27 Rhagfyr 2022 am 12:00 PM")
+      ),
+      "cy"
+    )
+
+    "have an sms additionalFactor" should {
       "return the expected account details" in {
         val lastAccessedDate =
           "2022-02-27T12:00:27Z"
@@ -127,7 +113,7 @@ class AccountDetailsSpec extends BaseSpec {
       }
     }
 
-    "has a voice additionalFactor" should {
+    "have a voice additionalFactor" should {
       "return the expected account details" in {
         val lastAccessedDate =
           "2022-02-27T12:00:27Z"
@@ -150,7 +136,7 @@ class AccountDetailsSpec extends BaseSpec {
       }
     }
 
-    "has a lastAccessedTimestamp over 2 days ago and a totp additionalFactor" should {
+    "have a lastAccessedTimestamp over 2 days ago and a totp additionalFactor" should {
       "return the expected account details" in {
         val lastAccessedDate =
           "2022-02-27T12:00:27Z"
@@ -172,7 +158,7 @@ class AccountDetailsSpec extends BaseSpec {
       }
     }
 
-    "has a lastAccessedTimestamp over 2 days ago and a more than one factor" should {
+    "have a lastAccessedTimestamp over 2 days ago and a more than one factor" should {
       "return the expected account details" in {
         val lastAccessedDate =
           "2022-03-27T12:00:27Z"

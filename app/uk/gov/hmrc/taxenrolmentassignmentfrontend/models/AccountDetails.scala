@@ -18,14 +18,13 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 
 import play.api.i18n.Messages
 import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
-import play.api.libs.json.{Format, Json, __}
-import uk.gov.hmrc.crypto.{Decrypter, Encrypter}
+import play.api.libs.json._
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.crypto.json.JsonEncryption
-import play.api.libs.json._
+import uk.gov.hmrc.crypto.{Decrypter, Encrypter}
 
-import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.time.{Instant, ZoneId, ZonedDateTime}
 
 case class MFADetails(factorNameKey: String, factorValue: String) {
   def this(additonalFactors: AdditonalFactors) =
@@ -59,9 +58,8 @@ case class AccountDetails(
 
   private def formatDate(implicit messages: Messages): Option[String] =
     lastLoginDate.map { date =>
-      val zonedDateTime = ZonedDateTime.parse(date)
-      val timeFormatter =
-        DateTimeFormatter.ofPattern("h:mm a")
+      val zonedDateTime = ZonedDateTime.ofInstant(Instant.parse(date), ZoneId.of("GB"))
+      val timeFormatter = DateTimeFormatter.ofPattern("h:mm a")
       s"${zonedDateTime.getDayOfMonth} ${messages(
         s"common.month${zonedDateTime.getMonth.getValue}"
       )} ${zonedDateTime.getYear} ${messages("common.dateToTime")} ${zonedDateTime.format(timeFormatter).toUpperCase}"

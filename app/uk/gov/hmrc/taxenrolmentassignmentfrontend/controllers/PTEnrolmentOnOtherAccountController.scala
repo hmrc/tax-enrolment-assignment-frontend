@@ -53,9 +53,9 @@ class PTEnrolmentOnOtherAccountController @Inject() (
           Ok(
             ptEnrolmentOnAnotherAccountView(
               PTEnrolmentOnOtherAccount(
-                AccountDetails.userFriendlyAccountDetails(accountDetails.currentAccountDetails),
-                accountFriendlyDetails,
-                accountDetails.saUserCred.map(AccountDetails.trimmedUserId)
+                currentAccountDetails = AccountDetails.userFriendlyAccountDetails(accountDetails.currentAccountDetails),
+                ptAccountDetails = accountFriendlyDetails,
+                saUserCred = accountDetails.saUserCred.map(AccountDetails.trimmedUserId)
               )
             )
           )

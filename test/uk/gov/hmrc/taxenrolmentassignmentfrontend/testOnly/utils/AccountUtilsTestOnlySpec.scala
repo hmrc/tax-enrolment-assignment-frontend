@@ -72,8 +72,13 @@ class AccountUtilsTestOnlySpec extends BaseSpec {
 
     "delete all details" in {
       (mockBasStubsConnectorTestOnly
-        .deleteAdditionalFactors(_: String)(_: HeaderCarrier))
-        .expects(credId, *)
+        .putAccount(_: AccountDetailsTestOnly)(_: HeaderCarrier))
+        .expects(account, *)
+        .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+
+      (mockBasStubsConnectorTestOnly
+        .deleteAccount(_: AccountDetailsTestOnly)(_: HeaderCarrier))
+        .expects(account, *)
         .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
       (mockIdentityVerificationConnectorTestOnly
@@ -113,6 +118,11 @@ class AccountUtilsTestOnlySpec extends BaseSpec {
 
       (mockEnrolmentStoreServiceTestOnly
         .deallocateEnrolmentsFromUser(_: String)(_: HeaderCarrier))
+        .expects(credId, *)
+        .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+
+      (mockBasStubsConnectorTestOnly
+        .deleteAdditionalFactors(_: String)(_: HeaderCarrier))
         .expects(credId, *)
         .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 

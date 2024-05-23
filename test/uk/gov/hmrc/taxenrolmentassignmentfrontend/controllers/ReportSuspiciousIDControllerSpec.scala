@@ -111,7 +111,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
         mockGetDataFromCacheForActionSuccess(PT_ASSIGNED_TO_OTHER_USER)
 
         val auditEvent = AuditEvent.auditReportSuspiciousPTAccount(
-          accountDetails.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00 pm"))
+          accountDetails.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00pm"))
         )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
         (mockAuditHandler
           .audit(_: AuditEvent)(_: HeaderCarrier))
@@ -255,7 +255,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
           mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
 
           val auditEvent = AuditEvent.auditReportSuspiciousSAAccount(
-            accountDetails.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00 pm"))
+            accountDetails.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00pm"))
           )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER), messagesApi)
           (mockAuditHandler
             .audit(_: AuditEvent)(_: HeaderCarrier))

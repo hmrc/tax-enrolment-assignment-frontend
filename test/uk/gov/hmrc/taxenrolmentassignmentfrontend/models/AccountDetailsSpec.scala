@@ -66,8 +66,8 @@ class AccountDetailsSpec extends BaseSpec {
         DateInfo("June", "2022-06-27T12:00:27Z", "27 June 2022 at 1:00 pm"),
         DateInfo("July", "2022-07-27T12:00:27Z", "27 July 2022 at 1:00 pm"),
         DateInfo("August", "2022-08-27T12:00:27Z", "27 August 2022 at 1:00 pm"),
-        DateInfo("September", "2022-09-27T12:00:27Z", "27 September 2022 at 1:00 pm"),
-        DateInfo("October", "2022-10-27T12:00:27Z", "27 October 2022 at 1:00 pm"),
+        DateInfo("September", "2022-09-27T17:00:27Z", "27 September 2022 at 6:00 pm"),
+        DateInfo("October", "2022-10-27T11:00:27Z", "27 October 2022 at 12:00 pm"),
         DateInfo("November", "2022-11-27T09:00:27Z", "27 November 2022 at 9:00 am"),
         DateInfo("December", "2022-12-27T15:00:27Z", "27 December 2022 at 3:00 pm")
       ),
@@ -76,18 +76,18 @@ class AccountDetailsSpec extends BaseSpec {
 
     behave like accountDetailsForEachMonth(
       Seq(
-        DateInfo("Ionawr", "2022-01-27T12:00:27Z", "27 Ionawr 2022 am 12:00 yh"),
-        DateInfo("Chwefror", "2022-02-27T12:00:27Z", "27 Chwefror 2022 am 12:00 yh"),
-        DateInfo("Mawrth", "2022-03-27T12:00:27Z", "27 Mawrth 2022 am 1:00 yh"),
-        DateInfo("Ebrill", "2022-04-27T12:00:27Z", "27 Ebrill 2022 am 1:00 yh"),
-        DateInfo("Mai", "2022-05-27T12:00:27Z", "27 Mai 2022 am 1:00 yh"),
-        DateInfo("Mehefin", "2022-06-27T12:00:27Z", "27 Mehefin 2022 am 1:00 yh"),
-        DateInfo("Gorffennaf", "2022-07-27T12:00:27Z", "27 Gorffennaf 2022 am 1:00 yh"),
-        DateInfo("Awst", "2022-08-27T12:00:27Z", "27 Awst 2022 am 1:00 yh"),
-        DateInfo("Medi", "2022-09-27T17:00:27Z", "27 Medi 2022 am 6:00 yh"),
-        DateInfo("Hydref", "2022-10-27T11:00:27Z", "27 Hydref 2022 am 12:00 yh"),
-        DateInfo("Tachwedd", "2022-11-27T09:00:27Z", "27 Tachwedd 2022 am 9:00 yb"),
-        DateInfo("Rhagfyr", "2022-12-27T15:00:27Z", "27 Rhagfyr 2022 am 3:00 yh")
+        DateInfo("Ionawr", "2022-01-27T12:00:27Z", "27 Ionawr 2022 am 12:00 pm"),
+        DateInfo("Chwefror", "2022-02-27T12:00:27Z", "27 Chwefror 2022 am 12:00 pm"),
+        DateInfo("Mawrth", "2022-03-27T12:00:27Z", "27 Mawrth 2022 am 1:00 pm"),
+        DateInfo("Ebrill", "2022-04-27T12:00:27Z", "27 Ebrill 2022 am 1:00 pm"),
+        DateInfo("Mai", "2022-05-27T12:00:27Z", "27 Mai 2022 am 1:00 pm"),
+        DateInfo("Mehefin", "2022-06-27T12:00:27Z", "27 Mehefin 2022 am 1:00 pm"),
+        DateInfo("Gorffennaf", "2022-07-27T12:00:27Z", "27 Gorffennaf 2022 am 1:00 pm"),
+        DateInfo("Awst", "2022-08-27T12:00:27Z", "27 Awst 2022 am 1:00 pm"),
+        DateInfo("Medi", "2022-09-27T17:00:27Z", "27 Medi 2022 am 6:00 pm"),
+        DateInfo("Hydref", "2022-10-27T11:00:27Z", "27 Hydref 2022 am 12:00 pm"),
+        DateInfo("Tachwedd", "2022-11-27T09:00:27Z", "27 Tachwedd 2022 am 9:00 am"),
+        DateInfo("Rhagfyr", "2022-12-27T15:00:27Z", "27 Rhagfyr 2022 am 3:00 pm")
       ),
       "cy"
     )

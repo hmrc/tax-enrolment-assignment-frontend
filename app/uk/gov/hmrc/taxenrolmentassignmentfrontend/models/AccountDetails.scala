@@ -59,16 +59,11 @@ case class AccountDetails(
 
   private def formatDate(implicit messages: Messages): Option[String] =
     lastLoginDate.map { date =>
-      val locale = if (messages.lang.code == "cy") {
-        Locale.forLanguageTag("cy-GB")
-      } else {
-        Locale.forLanguageTag("en-GB")
-      }
-
-      val timeFormatter =
-        DateTimeFormatter.ofPattern(s"dd MMMM uuuu '${messages("common.dateToTime")}' h:mm a").withLocale(locale)
+      val locale = Locale.forLanguageTag(s"${messages.lang.code}-GB")
       val zonedDateTime = ZonedDateTime.ofInstant(Instant.parse(date), ZoneId.of("GB"))
-      zonedDateTime.format(timeFormatter)
+      zonedDateTime.format(DateTimeFormatter.ofPattern("dd MMMM uuuu").withLocale(locale)) +
+        " " + messages("common.dateToTime") + " " +
+        zonedDateTime.format(DateTimeFormatter.ofPattern("h:mm a"))
     }
 }
 

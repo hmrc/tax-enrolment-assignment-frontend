@@ -44,7 +44,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.ReportSuspiciousID
 import scala.concurrent.{ExecutionContext, Future}
 
 class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
- 
+
   lazy val mockSilentAssignmentService = mock[SilentAssignmentService]
   lazy val mockAccountCheckOrchestrator = mock[AccountCheckOrchestrator]
   lazy val mockAuditHandler = mock[AuditHandler]

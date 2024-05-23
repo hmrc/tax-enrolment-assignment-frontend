@@ -34,8 +34,10 @@ class AccountUtilsTestOnly @Inject() (
 )(implicit ec: ExecutionContext) {
   def deleteAccountDetails(account: AccountDetailsTestOnly)(implicit hc: HeaderCarrier): TEAFResult[Unit] =
     for {
-      // delete bas-stub data - The users accounts
-      _ <- basStubsConnectorTestOnly.deleteAdditionalFactors(account.user.credId)
+      /*  Overwrite the account first
+          Sometimes the account is not of type individual causing a later call to fail
+       */
+      _ <- basStubsConnectorTestOnly.putAccount(account)
       // delete identity-verification data - Link nino / confidence level to account and holds mfa details
       _ <- identityVerificationConnectorTestOnly.deleteCredId(account.user.credId)
       // delete enrolment-store data
@@ -46,6 +48,9 @@ class AccountUtilsTestOnly @Inject() (
       _ <- enrolmentStoreServiceTestOnly.deleteAccount(account.groupId)
       _ <- enrolmentStoreServiceTestOnly.deallocateEnrolmentsFromGroup(account.groupId)
       _ <- enrolmentStoreServiceTestOnly.deallocateEnrolmentsFromUser(account.user.credId)
+      // delete bas-stub data - The users accounts
+      _ <- basStubsConnectorTestOnly.deleteAdditionalFactors(account.user.credId)
+      _ <- basStubsConnectorTestOnly.deleteAccount(account)
     } yield ()
 
   def insertAccountDetails(account: AccountDetailsTestOnly)(implicit hc: HeaderCarrier): TEAFResult[Unit] =

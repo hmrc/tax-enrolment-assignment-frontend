@@ -54,14 +54,14 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
     "credId",
     userId = USER_ID,
     email = Some(SensitiveString("email.otherUser@test.com")),
-    lastLoginDate = Some("27 February 2022 at 12:00pm"),
+    lastLoginDate = Some("27 February 2022 at 12:00PM"),
     mfaDetails
   )
   val testAccountDetailsWithSA = AccountDetails(
     "credId",
     userId = PT_USER_ID,
     email = Some(SensitiveString("email.otherUser@test.com")),
-    lastLoginDate = Some("27 February 2022 at 12:00pm"),
+    lastLoginDate = Some("27 February 2022 at 12:00PM"),
     mfaDetails,
     hasSA = Some(true)
   )
@@ -70,7 +70,7 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
     "credId",
     userId = "9871",
     email = None,
-    lastLoginDate = Some("27 February 2022 at 12:00pm"),
+    lastLoginDate = Some("27 February 2022 at 12:00PM"),
     mfaDetails = List(MFADetails("mfaDetails.text", "26543"))
   )
 

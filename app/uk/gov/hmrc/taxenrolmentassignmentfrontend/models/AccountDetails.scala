@@ -63,7 +63,8 @@ case class AccountDetails(
       val zonedDateTime = ZonedDateTime.ofInstant(Instant.parse(date), ZoneId.of("GB"))
       zonedDateTime.format(DateTimeFormatter.ofPattern("dd MMMM uuuu").withLocale(locale)) +
         " " + messages("common.dateToTime") + " " +
-        zonedDateTime.format(DateTimeFormatter.ofPattern("h:mma"))
+        zonedDateTime.format(DateTimeFormatter.ofPattern("h:mm")) +
+        zonedDateTime.format(DateTimeFormatter.ofPattern("a")).toUpperCase
     }
 }
 

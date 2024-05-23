@@ -54,40 +54,39 @@ class AccountDetailsSpec extends BaseSpec {
         res shouldBe expectedResult
       }
     }
-
   "userFriendlyAccountDetails" must {
     behave like accountDetailsForEachMonth(
       Seq(
-        DateInfo("January", "2022-01-27T12:00:27Z", "27 January 2022 at 12:00pm"),
-        DateInfo("February", "2022-02-27T12:00:27Z", "27 February 2022 at 12:00pm"),
-        DateInfo("March", "2022-03-27T12:00:27Z", "27 March 2022 at 1:00pm"),
-        DateInfo("April", "2022-04-27T12:00:27Z", "27 April 2022 at 1:00pm"),
-        DateInfo("May", "2022-05-27T12:00:27Z", "27 May 2022 at 1:00pm"),
-        DateInfo("June", "2022-06-27T12:00:27Z", "27 June 2022 at 1:00pm"),
-        DateInfo("July", "2022-07-27T12:00:27Z", "27 July 2022 at 1:00pm"),
-        DateInfo("August", "2022-08-27T12:00:27Z", "27 August 2022 at 1:00pm"),
-        DateInfo("September", "2022-09-27T17:00:27Z", "27 September 2022 at 6:00pm"),
-        DateInfo("October", "2022-10-27T11:00:27Z", "27 October 2022 at 12:00pm"),
-        DateInfo("November", "2022-11-27T09:00:27Z", "27 November 2022 at 9:00am"),
-        DateInfo("December", "2022-12-27T15:00:27Z", "27 December 2022 at 3:00pm")
+        DateInfo("January", "2022-01-27T12:00:27Z", "27 January 2022 at 12:00PM"),
+        DateInfo("February", "2022-02-27T12:00:27Z", "27 February 2022 at 12:00PM"),
+        DateInfo("March", "2022-03-27T12:00:27Z", "27 March 2022 at 1:00PM"),
+        DateInfo("April", "2022-04-27T12:00:27Z", "27 April 2022 at 1:00PM"),
+        DateInfo("May", "2022-05-27T12:00:27Z", "27 May 2022 at 1:00PM"),
+        DateInfo("June", "2022-06-27T12:00:27Z", "27 June 2022 at 1:00PM"),
+        DateInfo("July", "2022-07-27T12:00:27Z", "27 July 2022 at 1:00PM"),
+        DateInfo("August", "2022-08-27T12:00:27Z", "27 August 2022 at 1:00PM"),
+        DateInfo("September", "2022-09-27T17:00:27Z", "27 September 2022 at 6:00PM"),
+        DateInfo("October", "2022-10-27T11:00:27Z", "27 October 2022 at 12:00PM"),
+        DateInfo("November", "2022-11-27T09:00:27Z", "27 November 2022 at 9:00AM"),
+        DateInfo("December", "2022-12-27T15:00:27Z", "27 December 2022 at 3:00PM")
       ),
       "en"
     )
 
     behave like accountDetailsForEachMonth(
       Seq(
-        DateInfo("Ionawr", "2022-01-27T12:00:27Z", "27 Ionawr 2022 am 12:00pm"),
-        DateInfo("Chwefror", "2022-02-27T12:00:27Z", "27 Chwefror 2022 am 12:00pm"),
-        DateInfo("Mawrth", "2022-03-27T12:00:27Z", "27 Mawrth 2022 am 1:00pm"),
-        DateInfo("Ebrill", "2022-04-27T12:00:27Z", "27 Ebrill 2022 am 1:00pm"),
-        DateInfo("Mai", "2022-05-27T12:00:27Z", "27 Mai 2022 am 1:00pm"),
-        DateInfo("Mehefin", "2022-06-27T12:00:27Z", "27 Mehefin 2022 am 1:00pm"),
-        DateInfo("Gorffennaf", "2022-07-27T12:00:27Z", "27 Gorffennaf 2022 am 1:00pm"),
-        DateInfo("Awst", "2022-08-27T12:00:27Z", "27 Awst 2022 am 1:00pm"),
-        DateInfo("Medi", "2022-09-27T17:00:27Z", "27 Medi 2022 am 6:00pm"),
-        DateInfo("Hydref", "2022-10-27T11:00:27Z", "27 Hydref 2022 am 12:00pm"),
-        DateInfo("Tachwedd", "2022-11-27T09:00:27Z", "27 Tachwedd 2022 am 9:00am"),
-        DateInfo("Rhagfyr", "2022-12-27T15:00:27Z", "27 Rhagfyr 2022 am 3:00pm")
+        DateInfo("Ionawr", "2022-01-27T12:00:27Z", "27 Ionawr 2022 am 12:00PM"),
+        DateInfo("Chwefror", "2022-02-27T12:00:27Z", "27 Chwefror 2022 am 12:00PM"),
+        DateInfo("Mawrth", "2022-03-27T12:00:27Z", "27 Mawrth 2022 am 1:00PM"),
+        DateInfo("Ebrill", "2022-04-27T12:00:27Z", "27 Ebrill 2022 am 1:00PM"),
+        DateInfo("Mai", "2022-05-27T12:00:27Z", "27 Mai 2022 am 1:00PM"),
+        DateInfo("Mehefin", "2022-06-27T12:00:27Z", "27 Mehefin 2022 am 1:00PM"),
+        DateInfo("Gorffennaf", "2022-07-27T12:00:27Z", "27 Gorffennaf 2022 am 1:00PM"),
+        DateInfo("Awst", "2022-08-27T12:00:27Z", "27 Awst 2022 am 1:00PM"),
+        DateInfo("Medi", "2022-09-27T17:00:27Z", "27 Medi 2022 am 6:00PM"),
+        DateInfo("Hydref", "2022-10-27T11:00:27Z", "27 Hydref 2022 am 12:00PM"),
+        DateInfo("Tachwedd", "2022-11-27T09:00:27Z", "27 Tachwedd 2022 am 9:00AM"),
+        DateInfo("Rhagfyr", "2022-12-27T15:00:27Z", "27 Rhagfyr 2022 am 3:00PM")
       ),
       "cy"
     )
@@ -97,7 +96,7 @@ class AccountDetailsSpec extends BaseSpec {
         val lastAccessedDate =
           "2022-02-27T12:00:27Z"
 
-        val expectedResult = accountDetails("27 February 2022 at 12:00pm", List(mfaDetailsText))
+        val expectedResult = accountDetails("27 February 2022 at 12:00PM", List(mfaDetailsText))
 
         val res = AccountDetails.userFriendlyAccountDetails(
           AccountDetails(
@@ -119,7 +118,7 @@ class AccountDetailsSpec extends BaseSpec {
           "2022-02-27T12:00:27Z"
 
         val expectedResult =
-          accountDetails("27 February 2022 at 12:00pm", List(mfaDetailsVoice))
+          accountDetails("27 February 2022 at 12:00PM", List(mfaDetailsVoice))
 
         val res = AccountDetails.userFriendlyAccountDetails(
           AccountDetails(
@@ -142,7 +141,7 @@ class AccountDetailsSpec extends BaseSpec {
           "2022-02-27T12:00:27Z"
 
         val expectedResult =
-          accountDetails("27 February 2022 at 12:00pm", List(mfaDetailsTotp))
+          accountDetails("27 February 2022 at 12:00PM", List(mfaDetailsTotp))
 
         val res = AccountDetails.userFriendlyAccountDetails(
           AccountDetails(
@@ -164,7 +163,7 @@ class AccountDetailsSpec extends BaseSpec {
           "2022-03-27T12:00:27Z"
 
         val expectedResult = accountDetails(
-          "27 March 2022 at 1:00pm",
+          "27 March 2022 at 1:00PM",
           List(mfaDetailsText, mfaDetailsVoice, mfaDetailsTotp)
         )
         val res = AccountDetails.userFriendlyAccountDetails(

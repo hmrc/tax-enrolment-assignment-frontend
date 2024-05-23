@@ -172,7 +172,7 @@ object TestITData {
       credId,
       userId,
       Some(SensitiveString("email1@test.com")),
-      Some("16 January 2022 at 2:40pm"),
+      Some("16 January 2022 at 2:40PM"),
       List(MFADetails("mfaDetails.text", "24321")),
       None
     )
@@ -398,7 +398,7 @@ object TestITData {
     credId = CREDENTIAL_ID_2,
     userId = USER_ID,
     email = Some(SensitiveString("email1@test.com")),
-    lastLoginDate = Some("27 February 2022 at 12:00pm"),
+    lastLoginDate = Some("27 February 2022 at 12:00PM"),
     mfaDetails = List(MFADetails("mfaDetails.text", "24321"))
   )
 

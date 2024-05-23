@@ -32,7 +32,7 @@ class AuditEventSpec extends BaseSpec {
     credId = CREDENTIAL_ID_1,
     userId = "6037",
     email = Some(SensitiveString("test@mail.com")),
-    lastLoginDate = Some("27 February 2022 at 12:00pm"),
+    lastLoginDate = Some("27 February 2022 at 12:00PM"),
     mfaDetails = Seq(MFADetails("mfaDetails.text", "24321"))
   )
 

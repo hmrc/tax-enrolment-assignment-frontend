@@ -19,7 +19,7 @@ https://confluence.tools.tax.service.gov.uk/pages/viewpage.action?spaceKey=TEN&t
 See https://confluence.tools.tax.service.gov.uk/display/TEN/Journey+Testing+-+Data+setup+requirements for more info
 
 ## Tests
-Run local tests here utilising plugins and coverage requirements `sbt clean coverage test it:test coverageReport scalastyle`
+Run local tests here utilising plugins and coverage requirements `sbt clean coverage test it/test coverageReport scalastyle`
 
 Run Journey Tests: see [here](https://github.com/hmrc/tax-enrolment-assignment-journey-tests)
 

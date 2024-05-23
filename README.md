@@ -17,7 +17,7 @@ https://confluence.tools.tax.service.gov.uk/pages/viewpage.action?spaceKey=TEN&t
   - Confidence Level to 200
 
 See https://confluence.tools.tax.service.gov.uk/display/TEN/Journey+Testing+-+Data+setup+requirements for more info
-
+ 
 ## Tests
 Run local tests here utilising plugins and coverage requirements `sbt clean coverage test it/test coverageReport scalastyle`
 

@@ -64,7 +64,9 @@ case class AccountDetails(
       zonedDateTime.format(DateTimeFormatter.ofPattern("dd MMMM uuuu").withLocale(locale)) +
         " " + messages("common.dateToTime") + " " +
         zonedDateTime.format(DateTimeFormatter.ofPattern("h:mm")) +
-        zonedDateTime.format(DateTimeFormatter.ofPattern("a")).toUpperCase
+        zonedDateTime
+          .format(DateTimeFormatter.ofPattern("a"))
+          .toUpperCase // <- Older versions of Java return this in lower case
     }
 }
 

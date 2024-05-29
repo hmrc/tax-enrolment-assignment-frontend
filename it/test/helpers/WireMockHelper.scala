@@ -103,12 +103,13 @@ trait WireMockHelper extends Eventually with BeforeAndAfterAll with BeforeAndAft
         )
     )
 
-  def stubDelete(url: String, status: Integer): StubMapping =
+  def stubDelete(url: String, status: Integer, body: String = ""): StubMapping =
     server.stubFor(
       delete(urlMatching(url))
         .willReturn(
           aResponse()
             .withStatus(status)
+            .withBody(body)
         )
     )
 

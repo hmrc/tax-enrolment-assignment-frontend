@@ -437,7 +437,7 @@ class EnrolmentStoreConnectorTestOnlyISpec extends IntegrationSpecBase {
     val apiUrl =
       s"/enrolment-store-proxy/enrolment-store/users/$credId/enrolments/$enrolmentKey"
 
-    "delete enrolment from user" when {
+    "return success" when {
       "response is NO_CONTENT" in {
         stubDelete(apiUrl, Status.NO_CONTENT)
         whenReady(connector.deleteEnrolmentFromUser(enrolmentKey, credId).value) { response =>
@@ -447,6 +447,17 @@ class EnrolmentStoreConnectorTestOnlyISpec extends IntegrationSpecBase {
 
       "response is NOT_FOUND" in {
         stubDelete(apiUrl, Status.NOT_FOUND)
+        whenReady(connector.deleteEnrolmentFromUser(enrolmentKey, credId).value) { response =>
+          response shouldBe Right(())
+        }
+      }
+
+      "response is BAD_REQUEST with INVALID_SERVICE" in {
+        stubDelete(
+          apiUrl,
+          Status.BAD_REQUEST,
+          """{ "code": "INVALID_SERVICE", "message": "The provided service is not valid for this operation" }"""
+        )
         whenReady(connector.deleteEnrolmentFromUser(enrolmentKey, credId).value) { response =>
           response shouldBe Right(())
         }

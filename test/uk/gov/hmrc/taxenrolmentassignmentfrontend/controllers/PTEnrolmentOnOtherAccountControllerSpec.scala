@@ -33,7 +33,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{ControllersBaseSpec, 
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{SilentAssignmentService}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnotherAccount
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -101,9 +101,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-          accountDetailsWithPT.copy(lastLoginDate =
-            Some(s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
-          )
+          accountDetailsWithPT.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM"))
         )(requestWithAccountType(randomAccountType), messagesApi)
 
         (mockAuditHandler
@@ -120,10 +118,10 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
           ptEnrolmentDataModelNone
             .copy(
               currentAccountDetails = ptEnrolmentDataModelNone.currentAccountDetails.copy(lastLoginDate =
-                Some(s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
+                Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM")
               ),
               ptAccountDetails = ptEnrolmentDataModelNone.ptAccountDetails.copy(lastLoginDate =
-                Some(s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
+                Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM")
               )
             )
         )(
@@ -170,9 +168,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-          accountDetailsWithPT.copy(lastLoginDate =
-            Some(s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
-          )
+          accountDetailsWithPT.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM"))
         )(requestWithAccountType(randomAccountType), messagesApi)
 
         (mockAuditHandler
@@ -188,10 +184,10 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
         contentAsString(result) shouldBe view(
           ptEnrolmentModel.copy(
             currentAccountDetails = ptEnrolmentModel.currentAccountDetails.copy(lastLoginDate =
-              Some(s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
+              Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM")
             ),
             ptAccountDetails = ptEnrolmentModel.ptAccountDetails.copy(lastLoginDate =
-              Some(s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
+              Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM")
             )
           )
         )(
@@ -238,9 +234,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-          accountDetailsWithPT.copy(lastLoginDate =
-            Some(s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
-          )
+          accountDetailsWithPT.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM"))
         )(requestWithAccountType(randomAccountType), messagesApi)
 
         (mockAuditHandler
@@ -256,10 +250,10 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
         contentAsString(result) shouldBe view(
           ptEnrolmentModel.copy(
             currentAccountDetails = ptEnrolmentModel.currentAccountDetails.copy(lastLoginDate =
-              Some(s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
+              Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM")
             ),
             ptAccountDetails = ptEnrolmentModel.ptAccountDetails.copy(lastLoginDate =
-              Some(s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
+              Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM")
             )
           )
         )(
@@ -306,9 +300,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-          accountDetailsWithPT.copy(lastLoginDate =
-            Some(s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
-          )
+          accountDetailsWithPT.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM"))
         )(requestWithAccountType(randomAccountType), messagesApi)
 
         (mockAuditHandler
@@ -324,10 +316,10 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
         contentAsString(result) shouldBe view(
           ptEnrolmentModel.copy(
             currentAccountDetails = ptEnrolmentModel.currentAccountDetails.copy(lastLoginDate =
-              Some(s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
+              Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM")
             ),
             ptAccountDetails = ptEnrolmentModel.ptAccountDetails.copy(lastLoginDate =
-              Some(s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
+              Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM")
             )
           )
         )(
@@ -374,9 +366,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-          accountDetailsWithPT.copy(lastLoginDate =
-            Some(s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
-          )
+          accountDetailsWithPT.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM"))
         )(requestWithAccountType(randomAccountType), messagesApi)
 
         (mockAuditHandler
@@ -392,10 +382,10 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
         contentAsString(result) shouldBe view(
           ptEnrolmentModel.copy(
             currentAccountDetails = ptEnrolmentModel.currentAccountDetails.copy(lastLoginDate =
-              Some(s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
+              Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM")
             ),
             ptAccountDetails = ptEnrolmentModel.ptAccountDetails.copy(lastLoginDate =
-              Some(s"27 ${messages("common.month2")} 2022 ${messages("common.dateToTime")} 12:00 PM")
+              Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM")
             )
           )
         )(

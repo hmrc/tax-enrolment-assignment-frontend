@@ -59,6 +59,7 @@ class UsersGroupsSearchService @Inject() (
       .flatMap {
         case Right(userDetails) =>
           val accountDetails: AccountDetails = AccountDetails(
+            userDetails.identityProviderType,
             credId,
             userDetails.obfuscatedUserId.getOrElse(""),
             userDetails.email.map(SensitiveString),

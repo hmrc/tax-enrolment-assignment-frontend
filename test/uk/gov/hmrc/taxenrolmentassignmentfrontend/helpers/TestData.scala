@@ -177,6 +177,7 @@ object TestData {
     UsersAssignedEnrolment(None)
 
   val accountDetails: AccountDetails = AccountDetails(
+    identityProviderType = "SCP",
     credId = CREDENTIAL_ID,
     userId = USER_ID,
     email = Some(SensitiveString("email1@test.com")),
@@ -185,6 +186,7 @@ object TestData {
   )
 
   val accountDetailsSA: AccountDetails = AccountDetails(
+    identityProviderType = "SCP",
     credId = CREDENTIAL_ID_1,
     userId = USER_ID,
     email = Some(SensitiveString("email1@test.com")),
@@ -193,6 +195,7 @@ object TestData {
   )
 
   val accountDetailsWithPT: AccountDetails = AccountDetails(
+    identityProviderType = "SCP",
     credId = CREDENTIAL_ID_1,
     userId = PT_USER_ID,
     email = Some(SensitiveString("email.otherUser@test.com")),
@@ -211,6 +214,7 @@ object TestData {
   )
 
   val usersGroupSearchResponse = UsersGroupResponse(
+    identityProviderType = "SCP",
     obfuscatedUserId = Some("********6037"),
     email = Some("email1@test.com"),
     lastAccessedTimestamp = Some("2022-02-27T12:00:27Z"),

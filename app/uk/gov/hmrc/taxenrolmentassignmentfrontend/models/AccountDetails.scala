@@ -47,6 +47,7 @@ object MFADetails {
 }
 
 case class AccountDetails(
+  identityProviderType: String,
   credId: String,
   userId: String,
   private val email: Option[SensitiveString],
@@ -106,7 +107,8 @@ object AccountDetails {
     implicit val strFormats: Format[String] = Format(Reads.StringReads, Writes.StringWrites)
     implicit val ssf = JsonEncryption.sensitiveEncrypterDecrypter(SensitiveString.apply)
 
-    ((__ \ "credId").format[String] ~
+    ((__ \ "identityProviderType").format[String] ~
+      (__ \ "credId").format[String] ~
       (__ \ "userId").format[String] ~
       (__ \ "email").formatNullable[SensitiveString] ~
       (__ \ "lastLoginDate").formatNullable[String] ~

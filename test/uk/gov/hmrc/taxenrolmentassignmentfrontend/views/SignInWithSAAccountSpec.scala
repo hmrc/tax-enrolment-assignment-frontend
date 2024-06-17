@@ -67,6 +67,7 @@ class SignInWithSAAccountSpec extends ViewSpecHelper {
   )
 
   val accountDetails: AccountDetails = AccountDetails(
+    identityProviderType = "SCP",
     credId = CREDENTIAL_ID,
     "********3214",
     Some(SensitiveString("email1@test.com")),

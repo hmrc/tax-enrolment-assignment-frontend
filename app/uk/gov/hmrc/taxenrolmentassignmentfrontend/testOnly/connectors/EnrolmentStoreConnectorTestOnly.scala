@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.connectors
 
 import cats.data.EitherT
 import play.api.Logging
-import play.api.http.Status.{CREATED, NOT_FOUND, NO_CONTENT}
+import play.api.http.Status.{BAD_REQUEST, CREATED, NOT_FOUND, NO_CONTENT}
 import play.api.libs.json.{JsArray, JsObject, Json}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, UpstreamErrorResponse}
@@ -209,6 +209,10 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
           val ex = new RuntimeException(s"Unexpected ${response.status} status")
           logger.error(ex.getMessage, ex)
           Left(UpstreamUnexpected2XX(response.body, response.status))
+        case Left(upstreamError)
+            if upstreamError.statusCode == BAD_REQUEST && upstreamError.message.contains("INVALID_SERVICE") =>
+          logger.error(upstreamError.message)
+          Right(())
         case Left(upstreamError) =>
           logger.error(upstreamError.message)
           Left(UpstreamError(upstreamError))
@@ -228,6 +232,10 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
           val ex = new RuntimeException(s"Unexpected ${response.status} status")
           logger.error(ex.getMessage, ex)
           Left(UpstreamUnexpected2XX(response.body, response.status))
+        case Left(upstreamError)
+            if upstreamError.statusCode == BAD_REQUEST && upstreamError.message.contains("INVALID_SERVICE") =>
+          logger.error(upstreamError.message)
+          Right(())
         case Left(upstreamError) =>
           logger.error(upstreamError.message)
           Left(UpstreamError(upstreamError))

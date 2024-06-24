@@ -25,7 +25,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, UpstreamErrorR
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{UpstreamError, UpstreamUnexpected2XX}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{IdentifiersOrVerifiers, KnownFactResponseForNINO}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IdentifiersOrVerifiers
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.EnrolmentDetailsTestOnly
 
 import javax.inject.{Inject, Singleton}

@@ -19,7 +19,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.connectors
 import cats.data.EitherT
 import play.api.Logging
 import play.api.http.Status.{CONFLICT, CREATED, OK}
-import play.api.libs.json.{JsObject, JsValue}
+import play.api.libs.json.JsObject
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, UpstreamErrorResponse}
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{UpstreamError, UpstreamUnexpected2XX}

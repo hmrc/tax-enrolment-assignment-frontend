@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.utils
 
-import cats.data.EitherT
 import cats.implicits.toTraverseOps
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.service.TEAFResult
@@ -25,7 +24,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.AccountDetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.services.EnrolmentStoreServiceTestOnly
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class AccountUtilsTestOnly @Inject() (

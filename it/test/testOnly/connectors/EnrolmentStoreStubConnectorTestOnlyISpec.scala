@@ -30,6 +30,7 @@ class EnrolmentStoreStubConnectorTestOnlyISpec extends IntegrationSpecBase {
   "addStubAccount" should {
 
     val account = AccountDetailsTestOnly(
+      "SCP",
       "groupId",
       nino,
       "Individual",

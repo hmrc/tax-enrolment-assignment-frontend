@@ -50,6 +50,7 @@ object UserTestOnly {
 }
 
 case class AccountDetailsTestOnly(
+  identityProviderType: String,
   groupId: String,
   nino: Nino,
   affinityGroup: String = "Individual",
@@ -57,6 +58,19 @@ case class AccountDetailsTestOnly(
   enrolments: List[EnrolmentDetailsTestOnly],
   additionalFactors: List[AdditonalFactors]
 ) {
+
+  def individualContextUpdateRequestBody(caUserId: String) =
+    Json.obj(
+      "caUserId" -> caUserId,
+      "nino"     -> nino
+    )
+  def identityProviderAccountContextRequestBody: JsObject =
+    Json.obj(
+      "action"               -> "create",
+      "identityProviderId"   -> user.credId,
+      "identityProviderType" -> identityProviderType,
+      "email"                -> user.email
+    )
   def enrolmentStoreStubAccountDetailsRequestBody(credId: String): JsObject =
     Json.obj(
       "groupId"       -> groupId,
@@ -102,7 +116,8 @@ case class AccountDetailsTestOnly(
 
 object AccountDetailsTestOnly {
   implicit val reads: Reads[AccountDetailsTestOnly] = (
-    (JsPath \ "groupId").read[String] and
+    (JsPath \ "identityProviderType").readNullable[String].map(_.getOrElse("SCP")) and
+      (JsPath \ "groupId").read[String] and
       (JsPath \ "nino").read[Nino] and
       (JsPath \ "affinityGroup").read[String] and
       (JsPath \ "user").read[UserTestOnly] and

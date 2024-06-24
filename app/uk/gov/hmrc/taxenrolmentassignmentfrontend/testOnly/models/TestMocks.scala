@@ -29,6 +29,7 @@ object TestMocks {
     "E2E Two Credentials: One with SA and PT Enrolment"                   -> "e2eTwoCredentialsWithSAandPTEnrolment",
     "Two Credentials: No enrolment"                                       -> "twoCredentialsNoEnrolment",
     "Two Credentials: One with SA Enrolment"                              -> "twoCredentialsOneWithSAEnrolment",
-    "Two Credentials: One with SA and PT Enrolment"                       -> "twoCredentialsWithSAandPTEnrolment"
+    "Two Credentials: One with SA and PT Enrolment"                       -> "twoCredentialsWithSAandPTEnrolment",
+    "One Login Multiple Accounts: One with SA Enrolment"                  -> "OneLoginMultipleAccountsOneWithSAEnrolment"
   )
 }

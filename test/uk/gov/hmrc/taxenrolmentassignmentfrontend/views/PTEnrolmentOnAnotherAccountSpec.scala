@@ -51,6 +51,7 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
   )
 
   val testAccountDetails = AccountDetails(
+    identityProviderType = "SCP",
     "credId",
     userId = USER_ID,
     email = Some(SensitiveString("email.otherUser@test.com")),
@@ -58,6 +59,7 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
     mfaDetails
   )
   val testAccountDetailsWithSA = AccountDetails(
+    identityProviderType = "SCP",
     "credId",
     userId = PT_USER_ID,
     email = Some(SensitiveString("email.otherUser@test.com")),
@@ -67,6 +69,7 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
   )
 
   val accountDetailsWithNoEmail: AccountDetails = AccountDetails(
+    identityProviderType = "SCP",
     "credId",
     userId = "9871",
     email = None,

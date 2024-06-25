@@ -296,8 +296,10 @@ class TestOnlyControllerSpec extends BaseSpec {
   "insertTestData" must {
     "create an account with enrolmemts" in {
       val nino = generateNino
+      val identityProviderType = "SCP"
 
       val account = AccountDetailsTestOnly(
+        identityProviderType,
         "98ADEA51-C0BA-497D-997E-F585FAADBCEH",
         nino,
         "Individual",
@@ -342,8 +344,10 @@ class TestOnlyControllerSpec extends BaseSpec {
     }
     "create an account with no enrolments" in {
       val nino = generateNino
+      val identityProviderType = "SCP"
 
       val account = AccountDetailsTestOnly(
+        identityProviderType,
         "98ADEA51-C0BA-497D-997E-F585FAADBCEH",
         nino,
         "Individual",
@@ -388,8 +392,10 @@ class TestOnlyControllerSpec extends BaseSpec {
     }
     "give 500 response when API returns an error" in {
       val nino = generateNino
+      val identityProviderType = "SCP"
 
       val account = AccountDetailsTestOnly(
+        identityProviderType,
         "98ADEA51-C0BA-497D-997E-F585FAADBCEH",
         nino,
         "Individual",
@@ -427,8 +433,10 @@ class TestOnlyControllerSpec extends BaseSpec {
   "extractData" must {
     "return List of AccountDetailsTestOnly when given valid json" in {
       val nino = generateNino
+      val identityProviderType = "SCP"
 
       val account = AccountDetailsTestOnly(
+        identityProviderType,
         "98ADEA51-C0BA-497D-997E-F585FAADBCEH",
         nino,
         "Individual",

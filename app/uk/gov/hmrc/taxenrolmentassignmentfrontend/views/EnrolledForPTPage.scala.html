@@ -14,18 +14,20 @@
  * limitations under the License.
  *@
 
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
+
 @this(
         layout: Layout,
         formHelper: FormWithCSRF,
         govukButton: GovukButton
 )
 
-@(userId: String, hasSA: Boolean, postAction: Call)(implicit request: Request[AnyRef], messages: Messages)
+@(accountDetails: AccountDetails, hasSA: Boolean, postAction: Call)(implicit request: Request[AnyRef], messages: Messages)
 
 @layout(pageTitle = Some(messages("enrolledForPT.title"))) {
 
  <h1 class="govuk-heading-xl">@messages("enrolledForPT.heading")</h1>
- <p class="govuk-body">@messages("enrolledForPT.paragraph1", userId)</p>
+ <p class="govuk-body">@messages("enrolledForPT.paragraph1", accountDetails.userId)</p>
  <p class="govuk-body">@messages("enrolledForPT.paragraph2")</p>
 
  @if(hasSA) {

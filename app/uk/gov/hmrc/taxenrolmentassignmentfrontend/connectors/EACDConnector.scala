@@ -68,7 +68,8 @@ class EACDConnector @Inject() (httpClient: HttpClient, logger: EventLoggerServic
               httpResponse.json
                 .as[UsersAssignedEnrolment](UsersAssignedEnrolment.reads)
             )
-          case NO_CONTENT => Right(UsersAssignedEnrolment(None))
+          case NO_CONTENT =>
+            Right(UsersAssignedEnrolment(None))
           case status =>
             logger.logEvent(
               logUnexpectedResponseFromEACD(
@@ -81,6 +82,7 @@ class EACDConnector @Inject() (httpClient: HttpClient, logger: EventLoggerServic
       )
   }
 
+  //ES20 Query known facts that match the supplied query parameters
   def queryKnownFactsByNinoVerifier(nino: Nino)(implicit
     ec: ExecutionContext,
     hc: HeaderCarrier

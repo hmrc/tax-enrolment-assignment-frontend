@@ -29,6 +29,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_A
 class AuditEventSpec extends BaseSpec {
 
   val accountDetailsWithOneMFADetails = AccountDetails(
+    identityProviderType = "SCP",
     credId = CREDENTIAL_ID_1,
     userId = "6037",
     email = Some(SensitiveString("test@mail.com")),

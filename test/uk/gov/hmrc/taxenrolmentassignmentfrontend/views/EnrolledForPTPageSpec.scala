@@ -20,17 +20,25 @@ import play.api.test.FakeRequest
 import play.twirl.api.HtmlFormat
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.EnrolledForPTPageMessages
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTPage
 
 class EnrolledForPTPageSpec extends ViewSpecHelper {
-
+  val userId = "3214"
+  val accountDetails = AccountDetails(
+    identityProviderType = "SCP",
+    credId = "credId",
+    userId = userId,
+    email = None,
+    lastLoginDate = None,
+    mfaDetails = Seq.empty
+  )
   val enrolledForPTPage: EnrolledForPTPage =
     app.injector.instanceOf[EnrolledForPTPage]
-  val userId = "3214"
   val htmlWithSA: HtmlFormat.Appendable =
-    enrolledForPTPage(userId, true, routes.EnrolledForPTWithSAController.continue)(FakeRequest(), testMessages)
+    enrolledForPTPage(accountDetails, true, routes.EnrolledForPTWithSAController.continue)(FakeRequest(), testMessages)
   val htmlWithNoSA: HtmlFormat.Appendable =
-    enrolledForPTPage(userId, false, routes.EnrolledForPTController.continue)(FakeRequest(), testMessages)
+    enrolledForPTPage(accountDetails, false, routes.EnrolledForPTController.continue)(FakeRequest(), testMessages)
   val documentWithSA = doc(htmlWithSA)
   val documentWithNoSA = doc(htmlWithNoSA)
 

@@ -31,6 +31,7 @@ class AccountDetailsSpec extends BaseSpec {
 
   private def accountDetails(formattedLastLoginDate: String, mfaDetails: List[MFADetails]): AccountDetails =
     AccountDetails(
+      identityProviderType = "SCP",
       "credId",
       "6037",
       Some(SensitiveString("email1@test.com")),
@@ -44,6 +45,7 @@ class AccountDetailsSpec extends BaseSpec {
         val expectedResult = accountDetails(test.expectedDate, List(mfaDetailsText))
         val res = AccountDetails.userFriendlyAccountDetails(
           AccountDetails(
+            identityProviderType = "SCP",
             "credId",
             "********6037",
             Some(SensitiveString("email1@test.com")),
@@ -100,6 +102,7 @@ class AccountDetailsSpec extends BaseSpec {
 
         val res = AccountDetails.userFriendlyAccountDetails(
           AccountDetails(
+            identityProviderType = "SCP",
             "credId",
             "********6037",
             Some(SensitiveString("email1@test.com")),
@@ -122,6 +125,7 @@ class AccountDetailsSpec extends BaseSpec {
 
         val res = AccountDetails.userFriendlyAccountDetails(
           AccountDetails(
+            identityProviderType = "SCP",
             "credId",
             "********6037",
             Some(SensitiveString("email1@test.com")),
@@ -145,6 +149,7 @@ class AccountDetailsSpec extends BaseSpec {
 
         val res = AccountDetails.userFriendlyAccountDetails(
           AccountDetails(
+            identityProviderType = "SCP",
             "credId",
             "********6037",
             Some(SensitiveString("email1@test.com")),
@@ -168,6 +173,7 @@ class AccountDetailsSpec extends BaseSpec {
         )
         val res = AccountDetails.userFriendlyAccountDetails(
           AccountDetails(
+            identityProviderType = "SCP",
             "credId",
             "********6037",
             Some(SensitiveString("email1@test.com")),
@@ -185,6 +191,7 @@ class AccountDetailsSpec extends BaseSpec {
     "write correctly to json" in {
       val accountDetails =
         AccountDetails(
+          identityProviderType = "SCP",
           "credid",
           "userId",
           Some(SensitiveString("foo")),
@@ -195,9 +202,10 @@ class AccountDetailsSpec extends BaseSpec {
 
       val res = Json.toJson(accountDetails)(AccountDetails.mongoFormats(crypto.crypto))
       res.as[JsObject] - "email" shouldBe Json.obj(
-        "credId"        -> "credid",
-        "userId"        -> "userId",
-        "lastLoginDate" -> "lastLoginDate",
+        "identityProviderType" -> "SCP",
+        "credId"               -> "credid",
+        "userId"               -> "userId",
+        "lastLoginDate"        -> "lastLoginDate",
         "mfaDetails" -> Json.arr(
           Json.obj("factorNameKey" -> "mfaDetails.totp", "factorValue" -> "HMRC App")
         )
@@ -208,10 +216,11 @@ class AccountDetailsSpec extends BaseSpec {
     "read from json" in {
       implicit val ssf = JsonEncryption.sensitiveEncrypterDecrypter(SensitiveString.apply)(implicitly, crypto.crypto)
       val json = Json.obj(
-        "credId"        -> "credid",
-        "userId"        -> "userId",
-        "lastLoginDate" -> "lastLoginDate",
-        "email"         -> SensitiveString("foo"),
+        "identityProviderType" -> "SCP",
+        "credId"               -> "credid",
+        "userId"               -> "userId",
+        "lastLoginDate"        -> "lastLoginDate",
+        "email"                -> SensitiveString("foo"),
         "mfaDetails" -> Json.arr(
           Json.obj("factorNameKey" -> "mfaDetails.totp", "factorValue" -> "HMRC App")
         )
@@ -219,6 +228,7 @@ class AccountDetailsSpec extends BaseSpec {
 
       val accountDetails =
         AccountDetails(
+          identityProviderType = "SCP",
           "credid",
           "userId",
           Some(SensitiveString("foo")),
@@ -226,6 +236,7 @@ class AccountDetailsSpec extends BaseSpec {
           Seq(mfaDetailsTotp),
           None
         )
+
       Json.fromJson(json)(AccountDetails.mongoFormats(crypto.crypto)).get shouldBe accountDetails
       accountDetails.emailDecrypted shouldBe Some("foo")
     }

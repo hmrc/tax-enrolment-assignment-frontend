@@ -36,6 +36,7 @@ class EnrolledForPTWithSAOnOtherAccountSpec extends ViewSpecHelper {
     MFADetails("Authenticator App", "HRMC APP")
   )
   val accountDetails: AccountDetails = AccountDetails(
+    identityProviderType = "SCP",
     credId = CREDENTIAL_ID,
     userId,
     Some(SensitiveString("email1@test.com")),

@@ -18,13 +18,14 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.connectors
 
 import cats.data.EitherT
 import play.api.Logging
-import play.api.http.Status.{BAD_REQUEST, CREATED, NOT_FOUND, NO_CONTENT}
+import play.api.http.Status.{BAD_REQUEST, CREATED, NOT_FOUND, NO_CONTENT, OK}
 import play.api.libs.json.{JsArray, JsObject, Json}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, UpstreamErrorResponse}
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{UpstreamError, UpstreamUnexpected2XX}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IdentifiersOrVerifiers
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.EnrolmentDetailsTestOnly
 
 import javax.inject.{Inject, Singleton}
@@ -209,10 +210,6 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
           val ex = new RuntimeException(s"Unexpected ${response.status} status")
           logger.error(ex.getMessage, ex)
           Left(UpstreamUnexpected2XX(response.body, response.status))
-        case Left(upstreamError)
-            if upstreamError.statusCode == BAD_REQUEST && upstreamError.message.contains("INVALID_SERVICE") =>
-          logger.error(upstreamError.message)
-          Right(())
         case Left(upstreamError) =>
           logger.error(upstreamError.message)
           Left(UpstreamError(upstreamError))
@@ -259,5 +256,39 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
           logger.error(upstreamError.message)
           Left(UpstreamError(upstreamError))
       }
+
+  //ES20 Query known facts that match the supplied query parameters
+  def queryKnownFactsByVerifiers(service: String, identifiersOrVerifiers: List[IdentifiersOrVerifiers])(implicit
+    ec: ExecutionContext,
+    hc: HeaderCarrier
+  ): TEAFResult[List[String]] = {
+    val url = s"${appConfig.EACD_BASE_URL}/enrolment-store/enrolments"
+
+    val requestBody = Json.obj(
+      "service"    -> service,
+      "knownFacts" -> Json.toJson(identifiersOrVerifiers)
+    )
+
+    EitherT(
+      httpClient
+        .POST[JsObject, Either[UpstreamErrorResponse, HttpResponse]](url, requestBody)
+    )
+      .transform {
+        case Right(response) if response.status == OK =>
+          Right((response.json \ "enrolments").as[List[JsObject]].map { enrolment =>
+            val key = (enrolment \ "identifiers" \\ "key").head.as[String]
+            val value = (enrolment \ "identifiers" \\ "value").head.as[String]
+            s"$service~$key~$value"
+          })
+        case Right(response) if response.status == NO_CONTENT => Right(List.empty)
+        case Right(response) =>
+          val ex = new RuntimeException(s"Unexpected ${response.status} status")
+          logger.error(ex.getMessage, ex)
+          Left(UpstreamUnexpected2XX(response.body, response.status))
+        case Left(upstreamError) =>
+          logger.error(upstreamError.message)
+          Left(UpstreamError(upstreamError))
+      }
+  }
 
 }

@@ -53,6 +53,7 @@ class AccountUtilsTestOnlySpec extends BaseSpec {
   "deleteAccountDetails" must {
     val credId = "credId"
     val groupId = "groupId"
+    val identityProviderType = "SCP"
     val enrolment = EnrolmentDetailsTestOnly(
       "serviceName",
       IdentifiersOrVerifiers("KEY", "VALUE"),
@@ -62,6 +63,7 @@ class AccountUtilsTestOnlySpec extends BaseSpec {
       "enrolmentType"
     )
     val account = AccountDetailsTestOnly(
+      identityProviderType,
       groupId,
       nino,
       "Individual",
@@ -102,6 +104,11 @@ class AccountUtilsTestOnlySpec extends BaseSpec {
       }
 
       (mockEnrolmentStoreServiceTestOnly
+        .deleteAllKnownFactsForNino(_: Nino)(_: HeaderCarrier))
+        .expects(nino, *)
+        .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+
+      (mockEnrolmentStoreServiceTestOnly
         .deleteGroup(_: String)(_: HeaderCarrier))
         .expects(groupId, *)
         .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
@@ -136,6 +143,7 @@ class AccountUtilsTestOnlySpec extends BaseSpec {
   "insertAccountDetails" must {
     val credId = "credId"
     val groupId = "groupId"
+    val identityProviderType = "SCP"
     val enrolment = EnrolmentDetailsTestOnly(
       "serviceName",
       IdentifiersOrVerifiers("KEY", "VALUE"),
@@ -145,6 +153,7 @@ class AccountUtilsTestOnlySpec extends BaseSpec {
       "enrolmentType"
     )
     val account = AccountDetailsTestOnly(
+      identityProviderType,
       groupId,
       nino,
       "Individual",

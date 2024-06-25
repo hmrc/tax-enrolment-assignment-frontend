@@ -43,6 +43,7 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
 
   val accountDetails: AccountDetails =
     AccountDetails(
+      identityProviderType = "SCP",
       "credId",
       "4533",
       Some(SensitiveString("email1@test.com")),

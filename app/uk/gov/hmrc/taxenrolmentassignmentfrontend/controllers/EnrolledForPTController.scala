@@ -49,7 +49,7 @@ class EnrolledForPTController @Inject() (
         case Right(accountDetails) =>
           Ok(
             enrolledForPTPage(
-              AccountDetails.userFriendlyAccountDetails(accountDetails).userId,
+              AccountDetails.userFriendlyAccountDetails(accountDetails),
               false,
               routes.EnrolledForPTController.continue
             )

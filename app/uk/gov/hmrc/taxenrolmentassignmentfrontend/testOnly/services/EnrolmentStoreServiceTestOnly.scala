@@ -20,7 +20,7 @@ import cats.implicits.toTraverseOps
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.service.TEAFResult
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{IdentifiersOrVerifiers, UsersAssignedEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.connectors.{EnrolmentStoreConnectorTestOnly, EnrolmentStoreStubConnectorTestOnly}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.{AccountDetailsTestOnly, EnrolmentDetailsTestOnly}
 
@@ -107,5 +107,22 @@ class EnrolmentStoreServiceTestOnly @Inject() (
 
   def getUsersAssignedPTEnrolmentFromStub(nino: Nino)(implicit hc: HeaderCarrier): TEAFResult[UsersAssignedEnrolment] =
     enrolmentStoreStubConnectorTestOnly.getUsersWithPTEnrolment(nino)
+
+  def deleteAllKnownFactsForNino(nino: Nino)(implicit hc: HeaderCarrier): TEAFResult[Unit] = {
+    val verifiers = List(
+      IdentifiersOrVerifiers("NINO", nino.nino)
+    )
+
+    List("IR-SA", "HMRC-PT")
+      .map { service =>
+        enrolmentStoreConnectorTestOnly.queryKnownFactsByVerifiers(service, verifiers).flatMap { enrolmentKeys =>
+          enrolmentKeys.map { enrolmentKey =>
+            enrolmentStoreConnectorTestOnly.deleteEnrolment(enrolmentKey)
+          }.sequence
+        }
+      }
+      .sequence
+      .map(_ => ())
+  }
 
 }

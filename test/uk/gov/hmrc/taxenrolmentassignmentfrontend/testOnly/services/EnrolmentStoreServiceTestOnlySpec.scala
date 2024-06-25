@@ -27,11 +27,21 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{NINO, UsersAssignedEnrolment1}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IdentifiersOrVerifiers
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.connectors.{EnrolmentStoreConnectorTestOnly, EnrolmentStoreStubConnectorTestOnly}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.EnrolmentDetailsTestOnly
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.{AccountDetailsTestOnly, EnrolmentDetailsTestOnly, UserTestOnly}
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class EnrolmentStoreServiceTestOnlySpec extends BaseSpec {
+
+  val accountDetailsTestOnly: AccountDetailsTestOnly = AccountDetailsTestOnly(
+    "SCP",
+    "groupId",
+    generateNino,
+    "Individual",
+    UserTestOnly("credId", "name", "email"),
+    List.empty,
+    List.empty
+  )
 
   lazy val mockEnrolmentStoreStubConnectorTestOnly: EnrolmentStoreStubConnectorTestOnly =
     mock[EnrolmentStoreStubConnectorTestOnly]
@@ -67,6 +77,56 @@ class EnrolmentStoreServiceTestOnlySpec extends BaseSpec {
         .returning(EitherT.leftT[Future, Unit](InvalidRedirectUrl))
 
       val result = sut.deleteAccount(groupId).value.futureValue
+
+      result mustBe a[Left[TaxEnrolmentAssignmentErrors, _]]
+    }
+  }
+
+  "deleteGroup" must {
+    val groupId = "groupId"
+
+    "delete group" in {
+      (mockEnrolmentStoreConnectorTestOnly
+        .deleteGroup(_: String)(_: HeaderCarrier))
+        .expects(groupId, *)
+        .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+
+      val result = sut.deleteGroup(groupId).value.futureValue
+
+      result mustBe Right(())
+    }
+
+    "return Left" in {
+      (mockEnrolmentStoreConnectorTestOnly
+        .deleteGroup(_: String)(_: HeaderCarrier))
+        .expects(groupId, *)
+        .returning(EitherT.leftT[Future, Unit](InvalidRedirectUrl))
+
+      val result = sut.deleteGroup(groupId).value.futureValue
+
+      result mustBe a[Left[TaxEnrolmentAssignmentErrors, _]]
+    }
+  }
+
+  "insertAccount" must {
+    "insert account" in {
+      (mockEnrolmentStoreStubConnectorTestOnly
+        .addStubAccount(_: AccountDetailsTestOnly)(_: HeaderCarrier))
+        .expects(accountDetailsTestOnly, *)
+        .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+
+      val result = sut.insertAccount(accountDetailsTestOnly).value.futureValue
+
+      result mustBe Right(())
+    }
+
+    "return Left" in {
+      (mockEnrolmentStoreStubConnectorTestOnly
+        .addStubAccount(_: AccountDetailsTestOnly)(_: HeaderCarrier))
+        .expects(accountDetailsTestOnly, *)
+        .returning(EitherT.leftT[Future, Unit](InvalidRedirectUrl))
+
+      val result = sut.insertAccount(accountDetailsTestOnly).value.futureValue
 
       result mustBe a[Left[TaxEnrolmentAssignmentErrors, _]]
     }
@@ -391,6 +451,77 @@ class EnrolmentStoreServiceTestOnlySpec extends BaseSpec {
           res shouldBe Left(UnexpectedResponseFromEACD)
         }
       }
+    }
+  }
+
+  "deleteAllKnownFactsForNino" must {
+    "delete all known IR-SA and HMRC-PT known facts" in {
+      /* val irSaResponseBody =
+        """
+          |{
+          |  "service": "IR-SA",
+          |  "enrolments": [
+          |    {
+          |      "identifiers": [
+          |        {
+          |          "key": "UTR",
+          |          "value": "1"
+          |        }
+          |      ],
+          |      "verifiers": [
+          |        {
+          |          "key": "Postcode",
+          |          "value": "postcode"
+          |        },
+          |        {
+          |          "key": "NINO",
+          |          "value": "nino1"
+          |        }
+          |      ]
+          |    },
+          |    {
+          |      "identifiers": [
+          |        {
+          |          "key": "UTR",
+          |          "value": "2"
+          |        }
+          |      ],
+          |      "verifiers": [
+          |        {
+          |          "key": "Postcode",
+          |          "value": "postcode"
+          |        },
+          |        {
+          |          "key": "NINO",
+          |          "value": "nino2"
+          |        }
+          |      ]
+          |    }
+          |  ]
+          |}
+          |""".stripMargin
+
+       */
+
+      (mockEnrolmentStoreConnectorTestOnly
+        .queryKnownFactsByVerifiers(_: String, _: List[IdentifiersOrVerifiers])(_: ExecutionContext, _: HeaderCarrier))
+        .expects("IR-SA", *, *, *)
+        .returning(createInboundResult(List("enrolmentKey1", "enrolmentKey2")))
+
+      (mockEnrolmentStoreConnectorTestOnly
+        .queryKnownFactsByVerifiers(_: String, _: List[IdentifiersOrVerifiers])(_: ExecutionContext, _: HeaderCarrier))
+        .expects("HMRC-PT", *, *, *)
+        .returning(createInboundResult(List("enrolmentKey3")))
+
+      List("enrolmentKey1", "enrolmentKey2", "enrolmentKey3").foreach { enrolmentKey =>
+        (mockEnrolmentStoreConnectorTestOnly
+          .deleteEnrolment(_: String)(_: HeaderCarrier))
+          .expects(enrolmentKey, *)
+          .returning(createInboundResult(()))
+      }
+
+      val result = sut.deleteAllKnownFactsForNino(NINO).value.futureValue
+      result mustBe a[Right[_, Unit]]
     }
   }
 }

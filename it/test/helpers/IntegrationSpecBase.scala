@@ -66,19 +66,20 @@ trait IntegrationSpecBase
   lazy val crypto: TENCrypto = app.injector.instanceOf[TENCrypto]
 
   lazy val config: Map[String, Any] = Map(
-    "play.filters.csrf.header.bypassHeaders.Csrf-Token" -> "nocheck",
-    "auditing.enabled"                                  -> true,
-    "auditing.consumer.baseUri.port"                    -> server.port(),
-    "microservice.services.auth.port"                   -> server.port(),
-    "microservice.services.identity-verification.port"  -> server.port(),
-    "microservice.services.enrolment-store-proxy.port"  -> server.port(),
-    "microservice.services.enrolment-store-stub.port"   -> server.port(),
-    "microservice.services.tax-enrolments.port"         -> server.port(),
-    "microservice.services.users-groups-search.port"    -> server.port(),
-    "microservice.services.bas-stubs.port"              -> server.port(),
-    "play.http.router"                                  -> "testOnlyDoNotUseInAppConf.Routes",
-    "throttle.percentage"                               -> "3",
-    "mongodb.uri"                                       -> mongoUri
+    "play.filters.csrf.header.bypassHeaders.Csrf-Token"            -> "nocheck",
+    "auditing.enabled"                                             -> true,
+    "auditing.consumer.baseUri.port"                               -> server.port(),
+    "microservice.services.auth.port"                              -> server.port(),
+    "microservice.services.identity-verification.port"             -> server.port(),
+    "microservice.services.enrolment-store-proxy.port"             -> server.port(),
+    "microservice.services.enrolment-store-stub.port"              -> server.port(),
+    "microservice.services.tax-enrolments.port"                    -> server.port(),
+    "microservice.services.users-groups-search.port"               -> server.port(),
+    "microservice.services.bas-stubs.port"                         -> server.port(),
+    "microservice.services.identity-provider-account-context.port" -> server.port(),
+    "play.http.router"                                             -> "testOnlyDoNotUseInAppConf.Routes",
+    "throttle.percentage"                                          -> "3",
+    "mongodb.uri"                                                  -> mongoUri
   )
 
   protected def localGuiceApplicationBuilder: GuiceApplicationBuilder =

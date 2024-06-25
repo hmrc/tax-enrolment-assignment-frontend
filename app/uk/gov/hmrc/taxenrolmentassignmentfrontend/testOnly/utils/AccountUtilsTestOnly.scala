@@ -30,7 +30,8 @@ import scala.concurrent.ExecutionContext
 class AccountUtilsTestOnly @Inject() (
   enrolmentStoreServiceTestOnly: EnrolmentStoreServiceTestOnly,
   identityVerificationConnectorTestOnly: IdentityVerificationConnectorTestOnly,
-  basStubsConnectorTestOnly: BasStubsConnectorTestOnly
+  basStubsConnectorTestOnly: BasStubsConnectorTestOnly,
+  identityProviderAccountContextConnectorTestOnly: IdentityProviderAccountContextConnectorTestOnly
 )(implicit ec: ExecutionContext) {
   def deleteAccountDetails(account: AccountDetailsTestOnly)(implicit hc: HeaderCarrier): TEAFResult[Unit] =
     for {
@@ -44,6 +45,8 @@ class AccountUtilsTestOnly @Inject() (
       _ <- account.enrolments.map(enrolmentStoreServiceTestOnly.deallocateEnrolmentFromGroups(_)).sequence
       _ <- account.enrolments.map(enrolmentStoreServiceTestOnly.deallocateEnrolmentFromUsers(_)).sequence
       _ <- account.enrolments.map(enrolmentStoreServiceTestOnly.deleteEnrolment(_)).sequence
+      // Search and delete other known facts that might remains after the step above
+      _ <- enrolmentStoreServiceTestOnly.deleteAllKnownFactsForNino(account.nino)
       _ <- enrolmentStoreServiceTestOnly.deleteGroup(account.groupId)
       _ <- enrolmentStoreServiceTestOnly.deleteAccount(account.groupId)
       _ <- enrolmentStoreServiceTestOnly.deallocateEnrolmentsFromGroup(account.groupId)
@@ -54,21 +57,37 @@ class AccountUtilsTestOnly @Inject() (
     } yield ()
 
   def insertAccountDetails(account: AccountDetailsTestOnly)(implicit hc: HeaderCarrier): TEAFResult[Unit] =
-    for {
-      // Insert enrolment-store data
-      _ <- enrolmentStoreServiceTestOnly.insertAccount(account)
-      _ <- account.enrolments.map(enrolment => enrolmentStoreServiceTestOnly.upsertEnrolment(enrolment)).sequence
-      _ <-
-        account.enrolments
-          .map(enrolment =>
-            enrolmentStoreServiceTestOnly.addEnrolmentToGroup(account.groupId, account.user.credId, enrolment)
-          )
-          .sequence
-      // insert identity-verification data - Link nino / confidence level to account and holds mfa details
-      _ <- identityVerificationConnectorTestOnly.insertCredId(account.user.credId, account.nino)
-      // insert bas-stubs data - The users accounts
-      _ <- basStubsConnectorTestOnly.putAccount(account)
-      _ <- basStubsConnectorTestOnly.putAdditionalFactors(account)
-    } yield ()
+    if (account.identityProviderType == "ONE_LOGIN") {
+      for {
+        // Insert enrolment-store data
+        _ <- enrolmentStoreServiceTestOnly.insertAccount(account)
+        _ <- account.enrolments.map(enrolment => enrolmentStoreServiceTestOnly.upsertEnrolment(enrolment)).sequence
+        _ <-
+          account.enrolments
+            .map(enrolment =>
+              enrolmentStoreServiceTestOnly.addEnrolmentToGroup(account.groupId, account.user.credId, enrolment)
+            )
+            .sequence
+        caUserId <- identityProviderAccountContextConnectorTestOnly.postAccount(account)
+        _        <- identityProviderAccountContextConnectorTestOnly.postIndividual(account, caUserId)
+      } yield ()
+    } else {
+      for {
+        // Insert enrolment-store data
+        _ <- enrolmentStoreServiceTestOnly.insertAccount(account)
+        _ <- account.enrolments.map(enrolment => enrolmentStoreServiceTestOnly.upsertEnrolment(enrolment)).sequence
+        _ <-
+          account.enrolments
+            .map(enrolment =>
+              enrolmentStoreServiceTestOnly.addEnrolmentToGroup(account.groupId, account.user.credId, enrolment)
+            )
+            .sequence
+        // insert identity-verification data - Link nino / confidence level to account and holds mfa details
+        _ <- identityVerificationConnectorTestOnly.insertCredId(account.user.credId, account.nino)
+        // insert bas-stubs data - The users accounts
+        _ <- basStubsConnectorTestOnly.putAccount(account)
+        _ <- basStubsConnectorTestOnly.putAdditionalFactors(account)
+      } yield ()
+    }
 
 }

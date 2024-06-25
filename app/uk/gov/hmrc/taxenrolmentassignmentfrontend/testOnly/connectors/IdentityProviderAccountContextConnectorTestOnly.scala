@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.connectors
 
 import cats.data.EitherT
 import play.api.Logging
-import play.api.http.Status.{CONFLICT, CREATED, OK}
+import play.api.http.Status.{CONFLICT, CREATED}
 import play.api.libs.json.JsObject
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, UpstreamErrorResponse}
 import uk.gov.hmrc.service.TEAFResult
@@ -52,28 +52,6 @@ class IdentityProviderAccountContextConnectorTestOnly @Inject() (
           Right(
             (response.json \ "caUserId").as[String]
           )
-        case Right(response) =>
-          val ex = new RuntimeException(s"Unexpected ${response.status} status")
-          logger.error(ex.getMessage, ex)
-          Left(UpstreamUnexpected2XX(response.body, response.status))
-        case Left(upstreamError) =>
-          logger.error(upstreamError.message)
-          Left(UpstreamError(upstreamError))
-      }
-  }
-
-  def getAccountCaUserId(account: AccountDetailsTestOnly)(implicit hc: HeaderCarrier): TEAFResult[String] = {
-    val url =
-      s"${appConfigTestOnly.identityProviderAccountContextBaseUrl}/identity-provider-account-context/accounts?eacdUserId=${account.user.credId}"
-
-    EitherT(
-      httpClient.GET[Either[UpstreamErrorResponse, HttpResponse]](
-        url
-      )
-    )
-      .transform {
-        case Right(response) if response.status == OK =>
-          Right((response.json \ "caUserId").as[String])
         case Right(response) =>
           val ex = new RuntimeException(s"Unexpected ${response.status} status")
           logger.error(ex.getMessage, ex)

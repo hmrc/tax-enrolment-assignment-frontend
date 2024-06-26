@@ -21,7 +21,7 @@ import play.api.test.FakeRequest
 import play.twirl.api.HtmlFormat
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.CREDENTIAL_ID
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.EnrolledPTWithSAOnOtherAccountMessages
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails, SCP}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTWithSAOnOtherAccount
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 
@@ -36,7 +36,7 @@ class EnrolledForPTWithSAOnOtherAccountSpec extends ViewSpecHelper {
     MFADetails("Authenticator App", "HRMC APP")
   )
   val accountDetails: AccountDetails = AccountDetails(
-    identityProviderType = "SCP",
+    identityProviderType = SCP,
     credId = CREDENTIAL_ID,
     userId,
     Some(SensitiveString("email1@test.com")),

@@ -20,13 +20,13 @@ import play.api.test.FakeRequest
 import play.twirl.api.HtmlFormat
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.EnrolledForPTPageMessages
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, SCP}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTPage
 
 class EnrolledForPTPageSpec extends ViewSpecHelper {
   val userId = "3214"
   val accountDetails = AccountDetails(
-    identityProviderType = "SCP",
+    identityProviderType = SCP,
     credId = "credId",
     userId = userId,
     email = None,

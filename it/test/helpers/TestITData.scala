@@ -158,7 +158,7 @@ object TestITData {
       |"updatedAt":{"$date":1638531686525}}]""".stripMargin
 
   val usersGroupSearchResponse: UsersGroupResponse = UsersGroupResponse(
-    identityProviderType = "SCP",
+    identityProviderType = SCP,
     obfuscatedUserId = Some("********6037"),
     email = Some("email1@test.com"),
     lastAccessedTimestamp = Some("2022-01-16T14:40:05Z"),
@@ -170,7 +170,7 @@ object TestITData {
     userId: String = USER_ID
   ): AccountDetails =
     AccountDetails(
-      identityProviderType = "SCP",
+      identityProviderType = SCP,
       credId,
       userId,
       Some(SensitiveString("email1@test.com")),
@@ -184,7 +184,7 @@ object TestITData {
 
   def accountDetailsUnUserFriendly(credId: String): AccountDetails =
     AccountDetails(
-      identityProviderType = "SCP",
+      identityProviderType = SCP,
       credId,
       "********6037",
       Some(SensitiveString("email1@test.com")),
@@ -216,7 +216,7 @@ object TestITData {
     usersGroupResponse: UsersGroupResponse = usersGroupSearchResponse
   ): JsObject = {
     val compulsaryJson = Json.obj(
-      "identityProviderType"  -> usersGroupResponse.identityProviderType,
+      "identityProviderType"  -> usersGroupResponse.identityProviderType.toString,
       "obfuscatedUserId"      -> usersGroupResponse.obfuscatedUserId,
       "email"                 -> usersGroupResponse.email.get,
       "lastAccessedTimestamp" -> Some(usersGroupResponse.lastAccessedTimestamp)
@@ -399,7 +399,7 @@ object TestITData {
     )
 
   val accountDetails: AccountDetails = AccountDetails(
-    identityProviderType = "SCP",
+    identityProviderType = SCP,
     credId = CREDENTIAL_ID_2,
     userId = USER_ID,
     email = Some(SensitiveString("email1@test.com")),

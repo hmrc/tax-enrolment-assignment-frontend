@@ -31,7 +31,7 @@ class AccountDetailsSpec extends BaseSpec {
 
   private def accountDetails(formattedLastLoginDate: String, mfaDetails: List[MFADetails]): AccountDetails =
     AccountDetails(
-      identityProviderType = "SCP",
+      identityProviderType = SCP,
       "credId",
       "6037",
       Some(SensitiveString("email1@test.com")),
@@ -45,7 +45,7 @@ class AccountDetailsSpec extends BaseSpec {
         val expectedResult = accountDetails(test.expectedDate, List(mfaDetailsText))
         val res = AccountDetails.userFriendlyAccountDetails(
           AccountDetails(
-            identityProviderType = "SCP",
+            identityProviderType = SCP,
             "credId",
             "********6037",
             Some(SensitiveString("email1@test.com")),
@@ -102,7 +102,7 @@ class AccountDetailsSpec extends BaseSpec {
 
         val res = AccountDetails.userFriendlyAccountDetails(
           AccountDetails(
-            identityProviderType = "SCP",
+            identityProviderType = SCP,
             "credId",
             "********6037",
             Some(SensitiveString("email1@test.com")),
@@ -125,7 +125,7 @@ class AccountDetailsSpec extends BaseSpec {
 
         val res = AccountDetails.userFriendlyAccountDetails(
           AccountDetails(
-            identityProviderType = "SCP",
+            identityProviderType = SCP,
             "credId",
             "********6037",
             Some(SensitiveString("email1@test.com")),
@@ -149,7 +149,7 @@ class AccountDetailsSpec extends BaseSpec {
 
         val res = AccountDetails.userFriendlyAccountDetails(
           AccountDetails(
-            identityProviderType = "SCP",
+            identityProviderType = SCP,
             "credId",
             "********6037",
             Some(SensitiveString("email1@test.com")),
@@ -173,7 +173,7 @@ class AccountDetailsSpec extends BaseSpec {
         )
         val res = AccountDetails.userFriendlyAccountDetails(
           AccountDetails(
-            identityProviderType = "SCP",
+            identityProviderType = SCP,
             "credId",
             "********6037",
             Some(SensitiveString("email1@test.com")),
@@ -191,7 +191,7 @@ class AccountDetailsSpec extends BaseSpec {
     "write correctly to json" in {
       val accountDetails =
         AccountDetails(
-          identityProviderType = "SCP",
+          identityProviderType = SCP,
           "credid",
           "userId",
           Some(SensitiveString("foo")),
@@ -228,7 +228,7 @@ class AccountDetailsSpec extends BaseSpec {
 
       val accountDetails =
         AccountDetails(
-          identityProviderType = "SCP",
+          identityProviderType = SCP,
           "credid",
           "userId",
           Some(SensitiveString("foo")),

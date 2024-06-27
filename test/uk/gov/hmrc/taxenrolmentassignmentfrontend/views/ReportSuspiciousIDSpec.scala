@@ -21,7 +21,7 @@ import play.api.test.FakeRequest
 import play.twirl.api.HtmlFormat
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.ReportSuspiciousIDMessages
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails, SCP}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.ReportSuspiciousID
 
 class ReportSuspiciousIDSpec extends ViewSpecHelper {
@@ -43,7 +43,7 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
 
   val accountDetails: AccountDetails =
     AccountDetails(
-      identityProviderType = "SCP",
+      identityProviderType = SCP,
       "credId",
       "4533",
       Some(SensitiveString("email1@test.com")),

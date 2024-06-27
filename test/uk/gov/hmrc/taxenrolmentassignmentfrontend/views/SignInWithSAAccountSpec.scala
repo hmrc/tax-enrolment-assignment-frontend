@@ -25,7 +25,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.SignOutController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.CREDENTIAL_ID
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.SignInAgainMessages
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.SignInAgainMessages.{listItem1, listItem2}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails, SCP}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{ReportSuspiciousID, SignInWithSAAccount}
 
 class SignInWithSAAccountSpec extends ViewSpecHelper {
@@ -67,7 +67,7 @@ class SignInWithSAAccountSpec extends ViewSpecHelper {
   )
 
   val accountDetails: AccountDetails = AccountDetails(
-    identityProviderType = "SCP",
+    identityProviderType = SCP,
     credId = CREDENTIAL_ID,
     "********3214",
     Some(SensitiveString("email1@test.com")),

@@ -30,10 +30,7 @@ case class UsersGroupResponse(
   email: Option[String],
   lastAccessedTimestamp: Option[String],
   additionalFactors: Option[List[AdditonalFactors]]
-) {
-  def isIdentityProviderSCP: Boolean = identityProviderType == SCP
-  def isIdentityProviderOneLogin: Boolean = identityProviderType == ONE_LOGIN
-}
+)
 
 object AdditonalFactors {
   implicit val format: Format[AdditonalFactors] = Json.format[AdditonalFactors]
@@ -45,7 +42,7 @@ object UsersGroupResponse {
       .readNullable[JsValue]
       .map(_.fold(SCP: IdentityProviderType)(_.as[IdentityProviderType](IdentityProviderTypeFormat.reads))) and
       (JsPath \ "obfuscatedUserId").readNullable[String] and
-      (JsPath \ "email").readNullable[String] and
+      (JsPath \ "email").readNullable[String].map(_.flatMap(s => if (s.isEmpty) None else Some(s))) and
       (JsPath \ "lastAccessedTimestamp").readNullable[String] and
       (JsPath \ "additionalFactors").readNullable[List[AdditonalFactors]]
   )(UsersGroupResponse.apply _)

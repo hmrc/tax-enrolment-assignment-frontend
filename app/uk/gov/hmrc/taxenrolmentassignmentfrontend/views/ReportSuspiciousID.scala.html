@@ -46,14 +46,33 @@
 
     <p class="govuk-body">
         @messages("ReportSuspiciousID.text1")
-        @messages("ReportSuspiciousID.text2")
+        @if(ptAccountDetails.isIdentityProviderOneLogin) {
+            @for(email <- ptAccountDetails.emailDecrypted) {
+                 @messages("ReportSuspiciousID.text2.oo.withEmail")
+            }
+        } else {
+            @ptAccountDetails.emailDecrypted match {
+                case Some(_) => {
+                    @messages("ReportSuspiciousID.text2.gg.withEmail")
+                }
+                case None => {
+                    @messages("ReportSuspiciousID.text2.gg.withoutEmail")
+                }
+            }
+        }
     </p>
 
     <dl class="govuk-summary-list">
 
-        @summaryRow("common.userId", ptAccountDetails.userId)
-        @summaryRow("ReportSuspiciousID.email", ptAccountDetails.emailDecrypted.get)
-        @summaryRow("ReportSuspiciousID.lastLoginDate", ptAccountDetails.lastLoginDate.getOrElse(""))
+        @if(ptAccountDetails.isIdentityProviderSCP) {
+            @summaryRow("common.userId", ptAccountDetails.userId)
+        }
+        @for(email <- ptAccountDetails.emailDecrypted) {
+            @summaryRow("ReportSuspiciousID.email", email)
+        }
+        @for(lastLogin <- ptAccountDetails.lastLoginDate) {
+         @summaryRow("ReportSuspiciousID.lastLoginDate", lastLogin)
+        }
         @for(mfaDetail <- ptAccountDetails.mfaDetails) {
             @summaryRow(mfaDetail.factorNameKey, mfaDetail.factorValue)
         }

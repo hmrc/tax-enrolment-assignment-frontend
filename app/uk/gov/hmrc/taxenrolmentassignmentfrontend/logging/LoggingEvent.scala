@@ -304,6 +304,16 @@ object LoggingEvent {
       )
     )
 
+  def logOneLoginEmailIsMissing: LoggingEvent =
+    Error(
+      Event(
+        "[SignInWithSAAccountController][view]",
+        errorDetails = Some(
+          s"The email for the One Login account is missing"
+        )
+      )
+    )
+
   def logUnexpectedErrorOccurred(
     credentialId: String,
     classAndMethod: String,

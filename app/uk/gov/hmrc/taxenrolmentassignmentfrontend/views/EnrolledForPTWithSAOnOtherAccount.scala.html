@@ -26,26 +26,68 @@
         govukWarningText: GovukWarningText
 )
 
-@(userId: String, saAccountDetails: AccountDetails)(implicit request: Request[AnyRef], messages: Messages)
+@(saAccountDetails: AccountDetails, ptaAccountDetails: AccountDetails)(implicit request: Request[AnyRef], messages: Messages)
 
 @layout(pageTitle = Some(messages("enrolledForPTWithSAOnOtherAccount.title")), backLinkEnabled = true) {
 
     <h1 class="govuk-heading-l">@messages("enrolledForPTWithSAOnOtherAccount.heading")</h1>
-    <p class="govuk-body">@messages("enrolledForPTWithSAOnOtherAccount.paragraph1", userId)</p>
-    <h2 class="govuk-heading-m">@messages("enrolledForPTWithSAOnOtherAccount.heading2")</h2>
-    <p class="govuk-body">@messages("enrolledForPTWithSAOnOtherAccount.paragraph2", saAccountDetails.userId)</p>
-    <p class="govuk-body">@messages("enrolledForPTWithSAOnOtherAccount.paragraph3")</p>
-    <h3 class="govuk-heading-s">@messages("enrolledForPTWithSAOnOtherAccount.subheading")</h3>
+    <h2 class="govuk-heading-m">@messages("enrolledForPTWithSAOnOtherAccount.heading2.pta")</h2>
+    @if(ptaAccountDetails.isIdentityProviderSCP) {
+        <p class="govuk-body">@messages("enrolledForPTWithSAOnOtherAccount.paragraph1.pta.gg", ptaAccountDetails.userId)</p>
+    } else {
+        @for(email <- ptaAccountDetails.emailDecrypted) {
+            <p class="govuk-body">@messages("enrolledForPTWithSAOnOtherAccount.paragraph1.pta.ol", email)</p>
+        }
+    }
+
     <dl class="govuk-summary-list">
-        @summaryRow("common.userId", saAccountDetails.userId)
-        @if(saAccountDetails.emailDecrypted.isDefined) {
-            @summaryRow("enrolledForPTWithSAOnOtherAccount.email", saAccountDetails.emailDecrypted.get)
-        }
-        @summaryRow("enrolledForPTWithSAOnOtherAccount.lastLoginDate", saAccountDetails.lastLoginDate.getOrElse(""))
-        @for(mfaDetail <- saAccountDetails.mfaDetails) {
-            @summaryRow(mfaDetail.factorNameKey, mfaDetail.factorValue)
-        }
+    @if(ptaAccountDetails.isIdentityProviderSCP) {
+        @summaryRow("common.userId", ptaAccountDetails.userId)
+    }
+    @for(email <- ptaAccountDetails.emailDecrypted) {
+        @summaryRow("ReportSuspiciousID.email", email)
+    }
+    @for(lastLogin <- ptaAccountDetails.lastLoginDate) {
+        @summaryRow("ReportSuspiciousID.lastLoginDate", lastLogin)
+    }
+    @for(mfaDetail <- ptaAccountDetails.mfaDetails) {
+        @summaryRow(mfaDetail.factorNameKey, mfaDetail.factorValue)
+    }
     </dl>
+
+    <h2 class="govuk-heading-m">@messages("enrolledForPTWithSAOnOtherAccount.heading2.sa")</h2>
+    <p class="govuk-body">@messages("enrolledForPTWithSAOnOtherAccount.paragraph1.sa")</p>
+    <p class="govuk-body">@messages("enrolledForPTWithSAOnOtherAccount.paragraph2.sa")</p>
+
+    <ul class="govuk-list govuk-list--bullet">
+        <li class="govuk-body">@messages("enrolledForPTWithSAOnOtherAccount.signOut")</li>
+        @if(saAccountDetails.isIdentityProviderSCP) {
+            <li class="govuk-body">@messages("enrolledForPTWithSAOnOtherAccount.signIn.gg", saAccountDetails.userId)</li>
+        } else {
+            @for(email <- saAccountDetails.emailDecrypted) {
+                <li class="govuk-body">@messages("enrolledForPTWithSAOnOtherAccount.signIn.ol", email)</li>
+            }
+        }
+    </ul>
+
+    <p class="govuk-body">@messages("enrolledForPTWithSAOnOtherAccount.paragraph3.sa")</p>
+    <p class="govuk-body">@messages("enrolledForPTWithSAOnOtherAccount.paragraph4.sa")</p>
+
+    <dl class="govuk-summary-list">
+    @if(saAccountDetails.isIdentityProviderSCP) {
+        @summaryRow("common.userId", saAccountDetails.userId)
+    }
+    @for(email <- saAccountDetails.emailDecrypted) {
+        @summaryRow("ReportSuspiciousID.email", email)
+    }
+    @for(lastLogin <- saAccountDetails.lastLoginDate) {
+        @summaryRow("ReportSuspiciousID.lastLoginDate", lastLogin)
+    }
+    @for(mfaDetail <- saAccountDetails.mfaDetails) {
+        @summaryRow(mfaDetail.factorNameKey, mfaDetail.factorValue)
+    }
+    </dl>
+
     <p class="govuk-body govuk-!-margin-bottom-6">
         <a class="govuk-link" id="reportId" href="@routes.ReportSuspiciousIDController.viewSA">
         @messages("enrolledForPTWithSAOnOtherAccount.linkText")

@@ -16,17 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions
 
-import play.api.mvc.{ActionBuilder, AnyContent}
+import play.api.mvc.WrappedRequest
 
-import javax.inject.Inject
-
-class AuthJourney @Inject() (
-  authAction: AuthAction,
-  identifierAction: IdentifierAction,
-  dataRetrievalAction: DataRetrievalAction
-) {
-  val authJourney: ActionBuilder[RequestWithUserDetailsFromSession, AnyContent] = authAction
-
-  val authWithDataRetrieval: ActionBuilder[DataRequest, AnyContent] =
-    authJourney andThen identifierAction andThen dataRetrievalAction
-}
+case class IdentifierRequest[A](request: RequestWithUserDetailsFromSession[A], userId: String)
+    extends WrappedRequest[A](request)

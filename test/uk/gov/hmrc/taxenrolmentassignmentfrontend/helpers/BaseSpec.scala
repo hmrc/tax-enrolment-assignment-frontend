@@ -27,23 +27,23 @@ import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.i18n.{Lang, Messages, MessagesApi, MessagesImpl}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.inject.{Binding, bind}
-import play.api.libs.json.{Format, JsString, JsValue, Json}
+import play.api.libs.json.{JsString, JsValue, Json}
 import play.api.mvc.{AnyContent, AnyContentAsEmpty, Request}
 import play.api.test.CSRFTokenHelper._
 import play.api.test.{FakeRequest, Injecting}
 import play.api.{Application, Configuration}
 import uk.gov.hmrc.domain.{Nino, Generator => NinoGenerator}
-import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SINGLE_OR_MULTIPLE_ACCOUNTS
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.HmrcModule
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo, UserDetailsFromSession}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.SessionModule
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, DataRequest, RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo, UserDetailsFromSession}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{userDetails, userDetailsNoEnrolments}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UserAnswers
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.JourneyCacheRepository
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.TENCrypto
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -57,19 +57,21 @@ trait BaseSpec
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
+  private val mockJourneyCacheRepository = mock[JourneyCacheRepository]
+
   lazy val configValues: Map[String, AnyVal] =
     Map(
       "metrics.enabled"  -> false,
       "auditing.enabled" -> false
     )
 
-  lazy val overrides: Seq[Binding[TEASessionCache]] = Seq(
-    bind[TEASessionCache].toInstance(new TestTeaSessionCache)
+  lazy val overrides: Seq[Binding[JourneyCacheRepository]] = Seq(
+    bind[JourneyCacheRepository].toInstance(mockJourneyCacheRepository)
   )
 
   protected def localGuiceApplicationBuilder(): GuiceApplicationBuilder =
     GuiceApplicationBuilder()
-      .disable[HmrcModule]
+      .disable[SessionModule]
       .overrides(overrides)
       .configure(configValues)
 
@@ -94,11 +96,22 @@ trait BaseSpec
 
   def requestWithUserDetails(
     userDetails: UserDetailsFromSession = userDetailsNoEnrolments
-  ): RequestWithUserDetailsFromSession[AnyContent] =
-    new RequestWithUserDetailsFromSession[AnyContent](
+  ): DataRequest[AnyContent] =
+    new DataRequest[AnyContent](
       FakeRequest().asInstanceOf[Request[AnyContent]],
       userDetails,
-      "sessionId"
+      UserAnswers("sessionId", generateNino.nino),
+      None
+    )
+
+  def requestWithGivenMongoData(
+    requestWithMongo: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
+  ): DataRequest[AnyContent] =
+    new DataRequest[AnyContent](
+      FakeRequest().asInstanceOf[Request[AnyContent]],
+      userDetailsNoEnrolments,
+      UserAnswers("sessionId", generateNino.nino),
+      Some(requestWithMongo)
     )
 
   def createInboundResult[T](result: T): TEAFResult[T] =
@@ -122,15 +135,24 @@ trait BaseSpec
       "sessionId"
     )
 
+  def requestWithGivenSessionData(
+    requestWithSession: RequestWithUserDetailsFromSession[AnyContent]
+  ): DataRequest[AnyContent] =
+    new DataRequest[AnyContent](
+      requestWithSession,
+      userDetailsNoEnrolments,
+      UserAnswers("sessionId", generateNino.nino),
+      None
+    )
+
   def generateBasicCacheData(accountType: AccountTypes.Value, redirectUrl: String = "foo"): Map[String, JsValue] =
     Map(ACCOUNT_TYPE -> Json.toJson(accountType), REDIRECT_URL -> JsString(redirectUrl))
 
   def requestWithAccountType(
     accountType: AccountTypes.Value = SINGLE_OR_MULTIPLE_ACCOUNTS,
     redirectUrl: String = UrlPaths.returnUrl,
-    additionalCacheData: Map[String, JsValue] = Map(),
     langCode: String = "en"
-  ): RequestWithUserDetailsFromSessionAndMongo[_] =
+  ): RequestWithUserDetailsFromSessionAndMongo[AnyContent] =
     RequestWithUserDetailsFromSessionAndMongo(
       request.request.withTransientLang(langCode),
       request.userDetails,
@@ -138,39 +160,10 @@ trait BaseSpec
       AccountDetailsFromMongo(
         accountType,
         redirectUrl,
-        generateBasicCacheData(accountType, redirectUrl) ++ additionalCacheData
-      )(crypto.crypto)
+        None,
+        None,
+        None,
+        None
+      )
     )
-
-  class TestTeaSessionCache extends TEASessionCache {
-    override def save[A](key: String, value: A)(implicit
-      request: RequestWithUserDetailsFromSession[_],
-      fmt: Format[A]
-    ): Future[CacheMap] = Future(CacheMap(request.sessionID, Map()))
-
-    override def remove(key: String)(implicit
-      request: RequestWithUserDetailsFromSession[_]
-    ): Future[Boolean] = ???
-
-    override def removeRecord(implicit
-      request: RequestWithUserDetailsFromSession[_]
-    ): Future[Boolean] = ???
-
-    override def fetch()(implicit
-      request: RequestWithUserDetailsFromSession[_]
-    ): Future[Option[CacheMap]] =
-      Future(Some(CacheMap(request.sessionID, Map())))
-
-    @annotation.nowarn("msg=parameter request in method extendSession is never used")
-    override def extendSession()(implicit
-      request: RequestWithUserDetailsFromSession[_]
-    ): Future[Boolean] = Future.successful(true)
-
-    def collectionDeleteOne(id: String): Future[Boolean] = ???
-    def get(id: String): scala.concurrent.Future[Option[uk.gov.hmrc.http.cache.client.CacheMap]] = ???
-    def updateLastUpdated(id: String): scala.concurrent.Future[Boolean] = ???
-    def upsert(cm: uk.gov.hmrc.http.cache.client.CacheMap): scala.concurrent.Future[Boolean] = ???
-
-  }
-
 }

@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.config
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.pages
 
-import play.api.inject.{Binding, Module}
-import play.api.{Configuration, Environment}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.{DefaultTEASessionCache, TEASessionCache}
+import play.api.libs.json.JsPath
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys
 
-class HmrcModule extends Module {
-  override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] =
-    Seq(
-      bind[TEASessionCache].to[DefaultTEASessionCache].eagerly()
-    )
+case object UserAssignedSaEnrolmentPage extends QuestionPage[UsersAssignedEnrolment] {
+
+  override def path: JsPath = JsPath \ toString
+
+  override def toString: String = SessionKeys.USER_ASSIGNED_SA_ENROLMENT
 }

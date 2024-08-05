@@ -16,54 +16,59 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers
 
-import org.scalamock.handlers.CallHandler1
-import play.api.libs.json.{JsValue, Json}
+import org.scalamock.handlers.{CallHandler1, CallHandler2}
+import play.api.libs.json.{JsObject, JsValue, Json}
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UserAnswers
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.JourneyCacheRepository
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.ACCOUNT_TYPE
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 
 import scala.concurrent.Future
 
 trait ControllersBaseSpec extends BaseSpec {
 
-  lazy val mockAuthConnector = mock[AuthConnector]
-  lazy val mockTeaSessionCache = mock[TEASessionCache]
+  lazy val mockAuthConnector: AuthConnector = mock[AuthConnector]
+  lazy val mockRepository: JourneyCacheRepository = mock[JourneyCacheRepository]
 
-  def mockGetDataFromCacheForActionNoRedirectUrl = {
+  def mockGetDataFromCacheForActionNoRedirectUrl: CallHandler1[UserAnswers, Future[Boolean]] = {
     val data = Map(ACCOUNT_TYPE -> Json.toJson(randomAccountType))
-    val cacheMap = CacheMap("id", data)
-    (mockTeaSessionCache
-      .fetch()(
-        _: RequestWithUserDetailsFromSession[_]
-      ))
-      .expects(*)
-      .returning(Future.successful(Some(cacheMap)))
+    val userAnswers: UserAnswers = UserAnswers(
+      request.sessionID,
+      generateNino.nino,
+      Json.toJson(data).as[JsObject]
+    )
+    (mockRepository
+      .set(_: UserAnswers))
+      .expects(userAnswers)
+      .returning(Future.successful(true))
+      .once()
   }
 
   def mockGetDataFromCacheForActionSuccess(
     accountType: AccountTypes.Value,
     redirectUrl: String = "foo",
     additionCacheData: Map[String, JsValue] = Map()
-  ) = {
+  ): CallHandler1[UserAnswers, Future[Boolean]] = {
     val data = generateBasicCacheData(accountType, redirectUrl) ++ additionCacheData
-    val cacheMap = CacheMap("id", data)
-    (mockTeaSessionCache
-      .fetch()(
-        _: RequestWithUserDetailsFromSession[_]
-      ))
-      .expects(*)
-      .returning(Future.successful(Some(cacheMap)))
+    val userAnswers: UserAnswers = UserAnswers(
+      request.sessionID,
+      generateNino.nino,
+      Json.toJson(data).as[JsObject]
+    )
+
+    (mockRepository
+      .set(_: UserAnswers))
+      .expects(userAnswers)
+      .returning(Future.successful(true))
+
   }
 
-  def mockDeleteDataFromCache: CallHandler1[RequestWithUserDetailsFromSession[_], Future[Boolean]] =
-    (mockTeaSessionCache
-      .removeRecord(_: RequestWithUserDetailsFromSession[_]))
-      .expects(*)
+  def mockDeleteDataFromCache: CallHandler2[String, String, Future[Boolean]] =
+    (mockRepository
+      .clear(_: String, _: String))
+      .expects(*, *)
       .returning(Future.successful(true))
       .once()
-
 }

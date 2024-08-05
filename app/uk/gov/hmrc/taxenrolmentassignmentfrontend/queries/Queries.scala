@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,19 +14,22 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.queries
 
-import play.api.mvc.{ActionBuilder, AnyContent}
+import play.api.libs.json.JsPath
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UserAnswers
 
-import javax.inject.Inject
+import scala.util.{Success, Try}
 
-class AuthJourney @Inject() (
-  authAction: AuthAction,
-  identifierAction: IdentifierAction,
-  dataRetrievalAction: DataRetrievalAction
-) {
-  val authJourney: ActionBuilder[RequestWithUserDetailsFromSession, AnyContent] = authAction
+sealed trait Query {
 
-  val authWithDataRetrieval: ActionBuilder[DataRequest, AnyContent] =
-    authJourney andThen identifierAction andThen dataRetrievalAction
+  def path: JsPath
+}
+
+trait Gettable[A] extends Query
+
+trait Settable[A] extends Query {
+
+  def cleanup(userAnswers: UserAnswers): Try[UserAnswers] =
+    Success(userAnswers)
 }

@@ -18,37 +18,37 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators
 
 import cats.data.EitherT
 import play.api.Application
-import play.api.inject.bind
+import play.api.inject.{Binding, bind}
 import play.api.libs.json.{Format, JsBoolean, Json}
 import play.api.mvc.{AnyContent, BodyParsers}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{DataRequest, RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{BaseSpec, UrlPaths}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{UserAnswers, UsersAssignedEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.JourneyCacheRepository
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM, REPORTED_FRAUD}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, SilentAssignmentService, UsersGroupsSearchService}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class MultipleAccountsOrchestratorSpec extends BaseSpec {
 
-  lazy val mockSilentAssignmentService = mock[SilentAssignmentService]
-  lazy val mockEacdService = mock[EACDService]
-  lazy val mockTeaSessionCache = mock[TEASessionCache]
+  lazy val mockSilentAssignmentService: SilentAssignmentService = mock[SilentAssignmentService]
+  lazy val mockEacdService: EACDService = mock[EACDService]
 
   lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
-  lazy val mockMultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
-  lazy val mockUsersGroupService = mock[UsersGroupsSearchService]
+  lazy val mockMultipleAccountsOrchestrator: MultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
+  lazy val mockUsersGroupService: UsersGroupsSearchService = mock[UsersGroupsSearchService]
+  lazy val mockRepository: JourneyCacheRepository = mock[JourneyCacheRepository]
 
-  override lazy val overrides = Seq(
-    bind[TEASessionCache].toInstance(mockTeaSessionCache)
+
+  override lazy val overrides: Seq[Binding[JourneyCacheRepository]] = Seq(
+    bind[JourneyCacheRepository].toInstance(mockRepository)
   )
 
   override implicit lazy val app: Application = localGuiceApplicationBuilder()
@@ -59,7 +59,7 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
     )
     .build()
 
-  val orchestrator = app.injector.instanceOf[MultipleAccountsOrchestrator]
+  val orchestrator: MultipleAccountsOrchestrator = app.injector.instanceOf[MultipleAccountsOrchestrator]
 
   s"getDetailsForEnrolledPT" when {
     List(SINGLE_OR_MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER).foreach { accountType =>
@@ -69,12 +69,12 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
             .getAccountDetails(_: String)(
               _: ExecutionContext,
               _: HeaderCarrier,
-              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
+              _: DataRequest[AnyContent]
             ))
             .expects(CREDENTIAL_ID, *, *, *)
             .returning(createInboundResult(accountDetails))
 
-          val res = orchestrator.getDetailsForEnrolledPT(requestWithAccountType(accountType), implicitly, implicitly)
+          val res = orchestrator.getDetailsForEnrolledPT(requestWithGivenMongoData(requestWithAccountType(accountType)), implicitly, implicitly)
           whenReady(res.value) { result =>
             result shouldBe Right(
               accountDetails
@@ -91,7 +91,7 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
     ).foreach { accountType =>
       s"the accountType is $accountType" should {
         s"return the $IncorrectUserType containing redirectUrl" in {
-          val res = orchestrator.getDetailsForEnrolledPT(requestWithAccountType(accountType), implicitly, implicitly)
+          val res = orchestrator.getDetailsForEnrolledPT(requestWithGivenMongoData(requestWithAccountType(accountType)), implicitly, implicitly)
           whenReady(res.value) { result =>
             result shouldBe Left(IncorrectUserType(UrlPaths.returnUrl, accountType))
           }
@@ -107,13 +107,13 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
           .getAccountDetails(_: String)(
             _: ExecutionContext,
             _: HeaderCarrier,
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
+            _: DataRequest[AnyContent]
           ))
           .expects(CREDENTIAL_ID, *, *, *)
           .returning(createInboundResult(accountDetails))
 
         val res = orchestrator.getDetailsForEnrolledPTWithSAOnOtherAccount(
-          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER),
+          requestWithGivenMongoData(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER)),
           implicitly,
           implicitly
         )
@@ -131,7 +131,7 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
       s"the accountType is $accountType" should {
         s"return the $IncorrectUserType" in {
           val res = orchestrator.getDetailsForEnrolledPTWithSAOnOtherAccount(
-            requestWithAccountType(accountType),
+            requestWithGivenMongoData(requestWithAccountType(accountType)),
             implicitly,
             implicitly
           )
@@ -152,7 +152,7 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
           .getAccountDetails(_: String)(
             _: ExecutionContext,
             _: HeaderCarrier,
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
+            _: DataRequest[AnyContent]
           ))
           .expects(CREDENTIAL_ID, *, *, *)
           .returning(createInboundResult(accountDetails))
@@ -161,19 +161,27 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
           .getAccountDetails(_: String)(
             _: ExecutionContext,
             _: HeaderCarrier,
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
+            _: DataRequest[AnyContent]
           ))
           .expects(CREDENTIAL_ID_1, *, *, *)
           .returning(createInboundResult(accountDetailsWithPT.copy(hasSA = None)))
 
         (mockEacdService
           .getUsersAssignedSAEnrolment(
-            _: RequestWithUserDetailsFromSession[AnyContent],
+            _: DataRequest[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
           .expects(*, *, *)
           .returning(createInboundResult(UsersAssignedEnrolment(None)))
+
+        val userAnswers: UserAnswers = UserAnswers(
+          request.sessionID,
+          generateNino.nino,
+          Json.obj(
+            REPORTED_FRAUD -> true
+          )
+        )
 
         val res = orchestrator
           .getCurrentAndPTAAndSAIfExistsForUser(

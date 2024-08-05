@@ -25,15 +25,14 @@ import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AuthJourney, RequestWithUserDetailsFromSession}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AuthJourney, DataRequest}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{InvalidRedirectUrl, TaxEnrolmentAssignmentErrors}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.InvalidRedirectUrl
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.AccountCheckOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REDIRECT_URL
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.JourneyCacheRepository
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
 
 import javax.inject.{Inject, Singleton}
@@ -47,48 +46,47 @@ class AccountCheckController @Inject() (
   accountCheckOrchestrator: AccountCheckOrchestrator,
   auditHandler: AuditHandler,
   mcc: MessagesControllerComponents,
-  sessionCache: TEASessionCache,
   appConfig: AppConfig,
   val logger: EventLoggerService,
-  errorHandler: ErrorHandler
+  errorHandler: ErrorHandler,
+  journeyCacheRepository: JourneyCacheRepository
 )(implicit ec: ExecutionContext)
     extends TEAFrontendController(mcc) {
 
-  def accountCheck(redirectUrl: RedirectUrl): Action[AnyContent] = authJourney.authJourney.async { implicit request =>
-    Try {
-      redirectUrl.get(OnlyRelative | AbsoluteWithHostnameFromAllowlist(appConfig.validRedirectHostNames)).url
-    } match {
-      case Success(redirectUrlString) =>
-        handleRequest(redirectUrlString).value.flatMap {
-          case Right(accountType) => handleUsers(accountType, redirectUrlString)
-          case Left(error) =>
-            Future.successful(
-              errorHandler.handleErrors(error, "[AccountCheckController][accountCheck]")
-            )
-        }
-      case Failure(error) =>
-        logger.logEvent(logInvalidRedirectUrl(error.getMessage), error)
-        Future.successful(
-          errorHandler.handleErrors(InvalidRedirectUrl, "[AccountCheckController][accountCheck]")
-        )
+  def accountCheck(redirectUrl: RedirectUrl): Action[AnyContent] =
+    authJourney.authWithDataRetrieval.async { implicit request =>
+      Try {
+        redirectUrl.get(OnlyRelative | AbsoluteWithHostnameFromAllowlist(appConfig.validRedirectHostNames)).url
+      } match {
+        case Success(redirectUrlString) =>
+          handleRequest(redirectUrlString).value.flatMap {
+            case Right(accountType) => handleUsers(accountType, redirectUrlString)
+            case Left(error) =>
+              Future.successful(
+                errorHandler.handleErrors(error, "[AccountCheckController][accountCheck]")
+              )
+          }
+        case Failure(error) =>
+          logger.logEvent(logInvalidRedirectUrl(error.getMessage), error)
+          Future.successful(
+            errorHandler.handleErrors(InvalidRedirectUrl, "[AccountCheckController][accountCheck]")
+          )
+      }
+
     }
 
-  }
-
   private def handleRequest(redirectUrl: String)(implicit
-    request: RequestWithUserDetailsFromSession[_],
+    request: DataRequest[AnyContent],
     hc: HeaderCarrier
   ): TEAFResult[AccountTypes.Value] =
     for {
-      _ <- EitherT.right[TaxEnrolmentAssignmentErrors](
-             sessionCache.save[String](REDIRECT_URL, redirectUrl)(request, implicitly)
-           )
-      accountType <- accountCheckOrchestrator.getAccountType
+      accountType <- accountCheckOrchestrator.getAccountType(Some(redirectUrl))
       _           <- enrolForPTIfRequired(accountType)
+
     } yield accountType
 
   private def handleUsers(accountType: AccountTypes.Value, redirectUrl: String)(implicit
-    request: RequestWithUserDetailsFromSession[_]
+    request: DataRequest[AnyContent]
   ): Future[Result] =
     accountType match {
       case PT_ASSIGNED_TO_OTHER_USER => Future.successful(Redirect(routes.PTEnrolmentOnOtherAccountController.view))
@@ -104,13 +102,16 @@ class AccountCheckController @Inject() (
             "[AccountCheckController][accountCheck]"
           )
         )
-        sessionCache.removeRecord.map(_ => Redirect(redirectUrl))
+        journeyCacheRepository
+          .clear(request.userAnswers.sessionId, request.userAnswers.nino)
+          .map(_ => Redirect(redirectUrl))
     }
 
   private def enrolForPTIfRequired(accountType: AccountTypes.Value)(implicit
-    request: RequestWithUserDetailsFromSession[_],
+    request: DataRequest[AnyContent],
     hc: HeaderCarrier
   ): TEAFResult[Unit] = {
+
     val accountTypesToEnrolForPT = List(SINGLE_OR_MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER)
     val hasPTEnrolmentAlready = request.userDetails.hasPTEnrolment
     if (!hasPTEnrolmentAlready && accountTypesToEnrolForPT.contains(accountType)) {
@@ -125,7 +126,9 @@ class AccountCheckController @Inject() (
         )
       }
     } else if (hasPTEnrolmentAlready) {
-      EitherT.right(sessionCache.removeRecord.map(_ => (): Unit))
+      EitherT.right(
+        journeyCacheRepository.clear(request.userAnswers.sessionId, request.userAnswers.nino).map(_ => (): Unit)
+      )
     } else {
       EitherT.right(Future.successful((): Unit))
     }

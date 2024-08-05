@@ -19,7 +19,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 import org.jsoup.Jsoup
 import play.api.Application
 import play.api.http.Status.OK
-import play.api.inject.bind
+import play.api.inject.{Binding, bind}
 import play.api.libs.json.Json
 import play.api.mvc.BodyParsers
 import play.api.test.Helpers._
@@ -28,7 +28,7 @@ import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, Enrolments}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.DataRequest
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, UnexpectedPTEnrolment, UnexpectedResponseFromTaxEnrolments}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm.keepAccessToSAThroughPTAForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
@@ -36,24 +36,25 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{ControllersBaseSpec, 
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.JourneyCacheRepository
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_ASSIGNED_SA_ENROLMENT, accountDetailsForCredential}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{SilentAssignmentService}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.KeepAccessToSA
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
 
-  lazy val mockSilentAssignmentService = mock[SilentAssignmentService]
-  lazy val mockAccountCheckOrchestrator = mock[AccountCheckOrchestrator]
-  lazy val mockAuditHandler = mock[AuditHandler]
+  lazy val mockSilentAssignmentService: SilentAssignmentService = mock[SilentAssignmentService]
+  lazy val mockAccountCheckOrchestrator: AccountCheckOrchestrator = mock[AccountCheckOrchestrator]
+  lazy val mockAuditHandler: AuditHandler = mock[AuditHandler]
 
   lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
-  lazy val mockMultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
+  lazy val mockMultipleAccountsOrchestrator: MultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
+  lazy val mockRepository: JourneyCacheRepository = mock[JourneyCacheRepository]
 
-  override lazy val overrides = Seq(
-    bind[TEASessionCache].toInstance(mockTeaSessionCache)
+  override lazy val overrides: Seq[Binding[JourneyCacheRepository]] = Seq(
+    bind[JourneyCacheRepository].toInstance(mockRepository)
   )
 
   override implicit lazy val app: Application = localGuiceApplicationBuilder()
@@ -67,7 +68,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
     )
     .build()
 
-  lazy val controller = app.injector.instanceOf[KeepAccessToSAController]
+  lazy val controller: KeepAccessToSAController = app.injector.instanceOf[KeepAccessToSAController]
 
   val view: KeepAccessToSA = app.injector.instanceOf[KeepAccessToSA]
 
@@ -79,7 +80,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
             .authorise(
               _: Predicate,
               _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                   String
                 ] ~ Option[AffinityGroup] ~ Option[String]
               ]
@@ -95,7 +96,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
 
         (mockMultipleAccountsOrchestrator
           .getDetailsForKeepAccessToSA(
-            _: RequestWithUserDetailsFromSessionAndMongo[_],
+            _: DataRequest[_],
             _: ExecutionContext
           ))
           .expects(*, *)
@@ -126,7 +127,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
             .authorise(
               _: Predicate,
               _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                   String
                 ] ~ Option[AffinityGroup] ~ Option[String]
               ]
@@ -142,7 +143,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
 
         (mockMultipleAccountsOrchestrator
           .getDetailsForKeepAccessToSA(
-            _: RequestWithUserDetailsFromSessionAndMongo[_],
+            _: DataRequest[_],
             _: ExecutionContext
           ))
           .expects(*, *)
@@ -177,7 +178,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
             .authorise(
               _: Predicate,
               _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                   String
                 ] ~ Option[AffinityGroup] ~ Option[String]
               ]
@@ -193,7 +194,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
 
         (mockMultipleAccountsOrchestrator
           .getDetailsForKeepAccessToSA(
-            _: RequestWithUserDetailsFromSessionAndMongo[_],
+            _: DataRequest[_],
             _: ExecutionContext
           ))
           .expects(*, *)
@@ -228,7 +229,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
             .authorise(
               _: Predicate,
               _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                   String
                 ] ~ Option[AffinityGroup] ~ Option[String]
               ]
@@ -244,7 +245,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
 
         (mockMultipleAccountsOrchestrator
           .getDetailsForKeepAccessToSA(
-            _: RequestWithUserDetailsFromSessionAndMongo[_],
+            _: DataRequest[_],
             _: ExecutionContext
           ))
           .expects(*, *)
@@ -266,7 +267,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
             .authorise(
               _: Predicate,
               _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                   String
                 ] ~ Option[AffinityGroup] ~ Option[String]
               ]
@@ -280,7 +281,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
 
         (mockMultipleAccountsOrchestrator
           .getDetailsForKeepAccessToSA(
-            _: RequestWithUserDetailsFromSessionAndMongo[_],
+            _: DataRequest[_],
             _: ExecutionContext
           ))
           .expects(*, *)
@@ -303,7 +304,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
             .authorise(
               _: Predicate,
               _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                   String
                 ] ~ Option[AffinityGroup] ~ Option[String]
               ]
@@ -333,7 +334,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
               .authorise(
                 _: Predicate,
                 _: Retrieval[
-                  ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                     String
                   ] ~ Option[AffinityGroup] ~ Option[String]
                 ]
@@ -348,7 +349,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
           (
             mockMultipleAccountsOrchestrator
               .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
-                _: RequestWithUserDetailsFromSessionAndMongo[_],
+                _: DataRequest[_],
                 _: HeaderCarrier,
                 _: ExecutionContext
               )
@@ -377,7 +378,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
               .authorise(
                 _: Predicate,
                 _: Retrieval[
-                  ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                     String
                   ] ~ Option[AffinityGroup] ~ Option[String]
                 ]
@@ -392,7 +393,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
           (
             mockMultipleAccountsOrchestrator
               .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
-                _: RequestWithUserDetailsFromSessionAndMongo[_],
+                _: DataRequest[_],
                 _: HeaderCarrier,
                 _: ExecutionContext
               )
@@ -421,7 +422,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
               .authorise(
                 _: Predicate,
                 _: Retrieval[
-                  ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                     String
                   ] ~ Option[AffinityGroup] ~ Option[String]
                 ]
@@ -435,7 +436,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
           (
             mockMultipleAccountsOrchestrator
               .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
-                _: RequestWithUserDetailsFromSessionAndMongo[_],
+                _: DataRequest[_],
                 _: HeaderCarrier,
                 _: ExecutionContext
               )
@@ -473,7 +474,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
               .authorise(
                 _: Predicate,
                 _: Retrieval[
-                  ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                     String
                   ] ~ Option[AffinityGroup] ~ Option[String]
                 ]
@@ -487,7 +488,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
           (
             mockMultipleAccountsOrchestrator
               .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
-                _: RequestWithUserDetailsFromSessionAndMongo[_],
+                _: DataRequest[_],
                 _: HeaderCarrier,
                 _: ExecutionContext
               )
@@ -496,13 +497,15 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
             .returning(createInboundResult(false))
           mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData)
 
-          val auditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(false)(
-            requestWithAccountType(
-              SA_ASSIGNED_TO_OTHER_USER,
-              UrlPaths.returnUrl,
-              additionalCacheData = additionalCacheData
+          val auditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount()(
+            requestWithGivenMongoData(
+              requestWithAccountType(
+                SA_ASSIGNED_TO_OTHER_USER,
+                UrlPaths.returnUrl
+              )
             ),
-            messagesApi
+            messagesApi,
+            crypto
           )
           (mockAuditHandler
             .audit(_: AuditEvent)(_: HeaderCarrier))
@@ -535,7 +538,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
               .authorise(
                 _: Predicate,
                 _: Retrieval[
-                  ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                     String
                   ] ~ Option[AffinityGroup] ~ Option[String]
                 ]
@@ -549,7 +552,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
           (
             mockMultipleAccountsOrchestrator
               .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
-                _: RequestWithUserDetailsFromSessionAndMongo[_],
+                _: DataRequest[_],
                 _: HeaderCarrier,
                 _: ExecutionContext
               )
@@ -579,7 +582,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
               .authorise(
                 _: Predicate,
                 _: Retrieval[
-                  ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                     String
                   ] ~ Option[AffinityGroup] ~ Option[String]
                 ]
@@ -593,7 +596,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
           (
             mockMultipleAccountsOrchestrator
               .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
-                _: RequestWithUserDetailsFromSessionAndMongo[_],
+                _: DataRequest[_],
                 _: HeaderCarrier,
                 _: ExecutionContext
               )
@@ -625,7 +628,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
               .authorise(
                 _: Predicate,
                 _: Retrieval[
-                  ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                     String
                   ] ~ Option[AffinityGroup] ~ Option[String]
                 ]
@@ -639,7 +642,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
           (
             mockMultipleAccountsOrchestrator
               .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
-                _: RequestWithUserDetailsFromSessionAndMongo[_],
+                _: DataRequest[_],
                 _: HeaderCarrier,
                 _: ExecutionContext
               )
@@ -669,7 +672,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
             .authorise(
               _: Predicate,
               _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                   String
                 ] ~ Option[AffinityGroup] ~ Option[String]
               ]

@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import play.api.Application
 import play.api.http.Status.OK
-import play.api.inject.bind
+import play.api.inject.{Binding, bind}
 import play.api.mvc.BodyParsers
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.authorise.Predicate
@@ -26,28 +26,28 @@ import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, Enrolments}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_CURRENT_USER
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.DataRequest
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{ControllersBaseSpec, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditHandler
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{SilentAssignmentService}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.JourneyCacheRepository
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTPage
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class EnrolledForPTWithSAControllerSpec extends ControllersBaseSpec {
 
-  lazy val mockSilentAssignmentService = mock[SilentAssignmentService]
-  lazy val mockAccountCheckOrchestrator = mock[AccountCheckOrchestrator]
-  lazy val mockAuditHandler = mock[AuditHandler]
+  lazy val mockSilentAssignmentService: SilentAssignmentService = mock[SilentAssignmentService]
+  lazy val mockAccountCheckOrchestrator: AccountCheckOrchestrator = mock[AccountCheckOrchestrator]
+  lazy val mockAuditHandler: AuditHandler = mock[AuditHandler]
 
   lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
-  lazy val mockMultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
+  lazy val mockMultipleAccountsOrchestrator: MultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
 
-  override lazy val overrides = Seq(
-    bind[TEASessionCache].toInstance(mockTeaSessionCache)
+  override lazy val overrides: Seq[Binding[JourneyCacheRepository]] = Seq(
+    bind[JourneyCacheRepository].toInstance(mockRepository)
   )
 
   override implicit lazy val app: Application = localGuiceApplicationBuilder()
@@ -61,7 +61,7 @@ class EnrolledForPTWithSAControllerSpec extends ControllersBaseSpec {
     )
     .build()
 
-  lazy val controller = app.injector.instanceOf[EnrolledForPTWithSAController]
+  lazy val controller: EnrolledForPTWithSAController = app.injector.instanceOf[EnrolledForPTWithSAController]
 
   val view: EnrolledForPTPage =
     app.injector.instanceOf[EnrolledForPTPage]
@@ -74,7 +74,7 @@ class EnrolledForPTWithSAControllerSpec extends ControllersBaseSpec {
             .authorise(
               _: Predicate,
               _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                   String
                 ] ~ Option[AffinityGroup] ~ Option[String]
               ]
@@ -90,7 +90,7 @@ class EnrolledForPTWithSAControllerSpec extends ControllersBaseSpec {
 
         (mockMultipleAccountsOrchestrator
           .getDetailsForEnrolledPT(
-            _: RequestWithUserDetailsFromSessionAndMongo[_],
+            _: DataRequest[_],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -100,7 +100,7 @@ class EnrolledForPTWithSAControllerSpec extends ControllersBaseSpec {
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
         val result = controller.view
-          .apply(buildFakeRequestWithSessionId("", ""))
+          .apply(buildFakeRequestWithSessionId(""))
 
         status(result) shouldBe OK
 
@@ -120,7 +120,7 @@ class EnrolledForPTWithSAControllerSpec extends ControllersBaseSpec {
             .authorise(
               _: Predicate,
               _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                   String
                 ] ~ Option[AffinityGroup] ~ Option[String]
               ]
@@ -136,7 +136,7 @@ class EnrolledForPTWithSAControllerSpec extends ControllersBaseSpec {
 
         val result = controller
           .continue()
-          .apply(buildFakeRequestWithSessionId("", ""))
+          .apply(buildFakeRequestWithSessionId(""))
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some(

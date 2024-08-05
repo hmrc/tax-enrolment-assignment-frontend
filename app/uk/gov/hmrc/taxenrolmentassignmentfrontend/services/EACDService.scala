@@ -18,45 +18,44 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.services
 
 import cats.data.EitherT
 import cats.implicits._
+import play.api.mvc.AnyContent
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.EACDConnector
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.DataRequest
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_ASSIGNED_PT_ENROLMENT, USER_ASSIGNED_SA_ENROLMENT}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.pages.{UserAssignedPtaEnrolmentPage, UserAssignedSaEnrolmentPage}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.JourneyCacheRepository
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class EACDService @Inject() (eacdConnector: EACDConnector, sessionCache: TEASessionCache) {
+class EACDService @Inject() (eacdConnector: EACDConnector, journeyCacheRepository: JourneyCacheRepository) {
 
   def getUsersAssignedPTEnrolment(implicit
-    requestWithUserDetails: RequestWithUserDetailsFromSession[_],
+    request: DataRequest[AnyContent],
     hc: HeaderCarrier,
     ec: ExecutionContext
   ): TEAFResult[UsersAssignedEnrolment] =
     for {
       userWithPTEnrolment <- eacdConnector
-                               .getUsersWithPTEnrolment(requestWithUserDetails.userDetails.nino)
+                               .getUsersWithPTEnrolment(request.userDetails.nino)
       _ <- EitherT.right[TaxEnrolmentAssignmentErrors](
-             sessionCache
-               .save[UsersAssignedEnrolment](
-                 USER_ASSIGNED_PT_ENROLMENT,
-                 userWithPTEnrolment
-               )
+             journeyCacheRepository.set(
+               request.userAnswers.setOrException(UserAssignedPtaEnrolmentPage, userWithPTEnrolment)
+             )
            )
     } yield userWithPTEnrolment
 
   def getUsersAssignedSAEnrolment(implicit
-    requestWithUserDetails: RequestWithUserDetailsFromSession[_],
+    request: DataRequest[_],
     hc: HeaderCarrier,
     ec: ExecutionContext
   ): TEAFResult[UsersAssignedEnrolment] =
     for {
       optUTR <- eacdConnector.queryKnownFactsByNinoVerifier(
-                  requestWithUserDetails.userDetails.nino
+                  request.userDetails.nino
                 )
       usersWithSAEnrolment <- optUTR match {
                                 case Some(utr) => eacdConnector.getUsersWithSAEnrolment(utr)
@@ -66,9 +65,8 @@ class EACDService @Inject() (eacdConnector: EACDConnector, sessionCache: TEASess
                                   )
                               }
       _ <- EitherT.right[TaxEnrolmentAssignmentErrors](
-             sessionCache.save[UsersAssignedEnrolment](
-               USER_ASSIGNED_SA_ENROLMENT,
-               usersWithSAEnrolment
+             journeyCacheRepository.set(
+               request.userAnswers.setOrException(UserAssignedSaEnrolmentPage, usersWithSAEnrolment)
              )
            )
     } yield usersWithSAEnrolment

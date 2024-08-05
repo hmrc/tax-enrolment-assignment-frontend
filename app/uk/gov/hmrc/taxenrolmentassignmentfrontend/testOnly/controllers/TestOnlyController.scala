@@ -84,7 +84,7 @@ class TestOnlyController @Inject() (
       )
   }
 
-  def extractData(file: String) =
+  def extractData(file: String): List[AccountDetailsTestOnly] =
     fileHelper.loadFile(s"$file.json") match {
       case Success(json) =>
         Try(json.as[JsArray]) match {
@@ -150,12 +150,12 @@ class TestOnlyController @Inject() (
       )
   }
 
-  def successfulCall: Action[AnyContent] = authJourney.authJourney.async { implicit request =>
+  def successfulCall: Action[AnyContent] = authJourney.authWithDataRetrieval.async { implicit request =>
     logger.logEvent(logSuccessfulRedirectToReturnUrl)
     val connectorCall =
-      if (appConfigTestOnly.environment == "Staging")
+      if (appConfigTestOnly.environment == "Staging") {
         enrolmentStoreServiceTestOnly.getUsersAssignedPTEnrolmentFromStub(request.userDetails.nino)
-      else eacdService.getUsersAssignedPTEnrolment
+      } else { eacdService.getUsersAssignedPTEnrolment }
 
     connectorCall
       .bimap(
@@ -165,7 +165,7 @@ class TestOnlyController @Inject() (
             case None                                                 => InternalServerError("No HMRC-PT enrolment")
             case Some(credID) if credID == request.userDetails.credId => Ok(loginCheckCompleteView())
             case Some(credId) =>
-              InternalServerError(s"Wrong credid `$credId` in enrolment. It should be ${request.userDetails.credId}")
+              InternalServerError(s"Wrong credId `$credId` in enrolment. It should be ${request.userDetails.credId}")
           }
       )
       .merge

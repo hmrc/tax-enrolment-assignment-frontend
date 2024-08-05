@@ -17,31 +17,31 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import cats.data.EitherT
-import org.scalamock.handlers.{CallHandler1, CallHandler4}
+import org.scalamock.handlers.{CallHandler1, CallHandler2, CallHandler3, CallHandler4}
 import org.scalatest.OneInstancePerTest
 import play.api.Application
 import play.api.http.Status.SEE_OTHER
 import play.api.i18n.MessagesApi
-import play.api.inject.bind
-import play.api.libs.json.Format
-import play.api.mvc.BodyParsers
+import play.api.inject.{Binding, bind}
+import play.api.mvc.{AnyContent, BodyParsers, Result}
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, Enrolments}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
+import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.DataRequest
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{TaxEnrolmentAssignmentErrors, UnexpectedResponseFromIV, UnexpectedResponseFromTaxEnrolments}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{BaseSpec, UrlPaths}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UserAnswers
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.AccountCheckOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.JourneyCacheRepository
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.utils.HmrcPTEnrolment
 
@@ -49,32 +49,32 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
 
-  def mockDeleteDataFromCache: CallHandler1[RequestWithUserDetailsFromSession[_], Future[Boolean]] =
-    (mockTeaSessionCache
-      .removeRecord(_: RequestWithUserDetailsFromSession[_]))
+  lazy val mockRepository: JourneyCacheRepository = mock[JourneyCacheRepository]
+
+  def mockDeleteDataFromCache: CallHandler2[String, String, Future[Boolean]] =
+    (mockRepository
+      .clear(_: String, _: String))
+      .expects(*, *)
+      .returning(Future.successful(true))
+      .once()
+
+  def mockSaveDataToCache: CallHandler1[UserAnswers, Future[Boolean]] =
+    (mockRepository
+      .set(_: UserAnswers))
       .expects(*)
       .returning(Future.successful(true))
       .once()
 
-  def mockSaveDataToCache
-    : CallHandler4[String, String, RequestWithUserDetailsFromSession[_], Format[String], Future[CacheMap]] =
-    (mockTeaSessionCache
-      .save[String](_: String, _: String)(_: RequestWithUserDetailsFromSession[_], _: Format[String]))
-      .expects(*, *, *, *)
-      .returning(Future.successful(CacheMap("FAKE_SESSION_ID", Map.empty)))
-      .once()
+  lazy val mockSilentAssignmentService: SilentAssignmentService = mock[SilentAssignmentService]
+  lazy val mockAccountCheckOrchestrator: AccountCheckOrchestrator = mock[AccountCheckOrchestrator]
+  lazy val mockAuditHandler: AuditHandler = mock[AuditHandler]
 
-  lazy val mockSilentAssignmentService = mock[SilentAssignmentService]
-  lazy val mockAccountCheckOrchestrator = mock[AccountCheckOrchestrator]
-  lazy val mockAuditHandler = mock[AuditHandler]
-
-  lazy val mockAuthConnector = mock[AuthConnector]
+  lazy val mockAuthConnector: AuthConnector = mock[AuthConnector]
   lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
-  lazy val mockTeaSessionCache = mock[TEASessionCache]
-  lazy val mockHmrcPTEnrolment = mock[HmrcPTEnrolment]
+  lazy val mockHmrcPTEnrolment: HmrcPTEnrolment = mock[HmrcPTEnrolment]
 
-  override lazy val overrides = Seq(
-    bind[TEASessionCache].toInstance(mockTeaSessionCache)
+  override lazy val overrides: Seq[Binding[JourneyCacheRepository]] = Seq(
+    bind[JourneyCacheRepository].toInstance(mockRepository)
   )
 
   override implicit lazy val app: Application = localGuiceApplicationBuilder()
@@ -97,10 +97,10 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
       .once()
   }
 
-  lazy val controller = app.injector.instanceOf[AccountCheckController]
+  lazy val controller: AccountCheckController = app.injector.instanceOf[AccountCheckController]
 
-  val returnUrlvalue = "/redirect/url"
-  lazy val returnUrl = RedirectUrl.apply(returnUrlvalue)
+  val returnUrlValue = "/redirect/url"
+  lazy val returnUrl: RedirectUrl = RedirectUrl.apply(returnUrlValue)
 
   "accountCheck" when {
 
@@ -113,13 +113,13 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
           mockSilentEnrolSuccess
           mockAuditPTEnrolled(SINGLE_OR_MULTIPLE_ACCOUNTS, requestWithUserDetails(), messagesApi)
 
-          (mockTeaSessionCache
-            .removeRecord(_: RequestWithUserDetailsFromSession[_]))
-            .expects(*)
+          (mockRepository
+            .clear(_: String, _: String))
+            .expects(*, *)
             .returning(Future.successful(true))
             .never()
 
-          val result = controller
+          val result: Future[Result] = controller
             .accountCheck(returnUrl)
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
@@ -137,18 +137,18 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
           // removeRecord is called twice.
           // - Once in enrolForPTIfRequired
           // - Once in handleNoneThrottledUsers
-          (mockTeaSessionCache
-            .removeRecord(_: RequestWithUserDetailsFromSession[_]))
-            .expects(*)
+          (mockRepository
+            .clear(_: String, _: String))
+            .expects(*, *)
             .returning(Future.successful(true))
             .twice()
 
-          val result = controller
+          val result: Future[Result] = controller
             .accountCheck(returnUrl)
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
           status(result) shouldBe SEE_OTHER
-          redirectLocation(result) shouldBe Some(returnUrlvalue)
+          redirectLocation(result) shouldBe Some(returnUrlValue)
         }
       }
 
@@ -158,7 +158,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
         mockAccountCheckSuccess(SINGLE_OR_MULTIPLE_ACCOUNTS)
         mockSilentEnrolFailure
 
-        val result = controller
+        val result: Future[Result] = controller
           .accountCheck(returnUrl)
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
@@ -175,7 +175,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
         mockAccountCheckSuccess(PT_ASSIGNED_TO_CURRENT_USER)
         mockDeleteDataFromCache
 
-        val result = controller
+        val result: Future[Result] = controller
           .accountCheck(returnUrl)
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
@@ -190,7 +190,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
         mockSaveDataToCache
         mockAccountCheckSuccess(PT_ASSIGNED_TO_OTHER_USER)
 
-        val result = controller
+        val result: Future[Result] = controller
           .accountCheck(returnUrl)
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
@@ -208,7 +208,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
           mockSilentEnrolSuccess
           mockAuditPTEnrolled(SINGLE_OR_MULTIPLE_ACCOUNTS, requestWithUserDetails(), messagesApi)
 
-          val result = controller
+          val result: Future[Result] = controller
             .accountCheck(returnUrl)
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
@@ -226,7 +226,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
           mockAccountCheckSuccess(SINGLE_OR_MULTIPLE_ACCOUNTS)
           mockDeleteDataFromCache
 
-          val result = controller
+          val result: Future[Result] = controller
             .accountCheck(returnUrl)
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
@@ -251,7 +251,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
             messagesApi
           )
 
-          val result = controller
+          val result: Future[Result] = controller
             .accountCheck(returnUrl)
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
@@ -270,12 +270,13 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
           mockSaveDataToCache
           mockAccountCheckSuccess(SA_ASSIGNED_TO_OTHER_USER)
 
-          (mockTeaSessionCache
-            .removeRecord(_: RequestWithUserDetailsFromSession[_]))
-            .expects(*)
+          (mockRepository
+            .clear(_: String, _: String))
+            .expects(*, *)
+            .returning(Future.successful(true))
             .never()
 
-          val result = controller
+          val result: Future[Result] = controller
             .accountCheck(returnUrl)
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
@@ -293,7 +294,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
           mockAccountCheckSuccess(SA_ASSIGNED_TO_OTHER_USER)
           mockDeleteDataFromCache
 
-          val result = controller
+          val result: Future[Result] = controller
             .accountCheck(returnUrl)
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
@@ -311,7 +312,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
         mockSaveDataToCache
         mockGetAccountTypeFailure(UnexpectedResponseFromIV)
 
-        val res = controller
+        val res: Future[Result] = controller
           .accountCheck(returnUrl)
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
@@ -323,16 +324,18 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
 
   class TestHelper {
 
-    def mockAuthCall() =
+    def mockAuthCall(): CallHandler4[Predicate, Retrieval[
+      Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String] ~ Option[AffinityGroup] ~ Option[String]
+    ], HeaderCarrier, ExecutionContext, Future[
+      Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String] ~ Option[AffinityGroup] ~ Option[String]
+    ]] =
       (
         mockAuthConnector
           .authorise(
             _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
+            _: Retrieval[Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String] ~ Option[
+              AffinityGroup
+            ] ~ Option[String]]
           )(
             _: HeaderCarrier,
             _: ExecutionContext
@@ -341,16 +344,18 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
         .expects(predicates, retrievals, *, *)
         .returning(Future.successful(retrievalResponse()))
 
-    def mockAuthCallWithSA() =
+    def mockAuthCallWithSA(): CallHandler4[Predicate, Retrieval[
+      Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String] ~ Option[AffinityGroup] ~ Option[String]
+    ], HeaderCarrier, ExecutionContext, Future[
+      Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String] ~ Option[AffinityGroup] ~ Option[String]
+    ]] =
       (
         mockAuthConnector
           .authorise(
             _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
+            _: Retrieval[Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String] ~ Option[
+              AffinityGroup
+            ] ~ Option[String]]
           )(
             _: HeaderCarrier,
             _: ExecutionContext
@@ -359,17 +364,19 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
         .expects(predicates, retrievals, *, *)
         .returning(Future.successful(retrievalResponse(enrolments = saEnrolmentOnly)))
 
-    def mockAuthCallWithPT(hasSA: Boolean = false) = {
+    def mockAuthCallWithPT(hasSA: Boolean = false): CallHandler4[Predicate, Retrieval[
+      Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String] ~ Option[AffinityGroup] ~ Option[String]
+    ], HeaderCarrier, ExecutionContext, Future[
+      Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String] ~ Option[AffinityGroup] ~ Option[String]
+    ]] = {
       val enrolments = if (hasSA) saAndptEnrolments else ptEnrolmentOnly
       (
         mockAuthConnector
           .authorise(
             _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
+            _: Retrieval[Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String] ~ Option[
+              AffinityGroup
+            ] ~ Option[String]]
           )(
             _: HeaderCarrier,
             _: ExecutionContext
@@ -379,30 +386,42 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
         .returning(Future.successful(retrievalResponse(enrolments = enrolments)))
     }
 
-    def mockGetAccountTypeFailure(error: TaxEnrolmentAssignmentErrors) =
+    def mockGetAccountTypeFailure(
+      error: TaxEnrolmentAssignmentErrors
+    ): CallHandler4[Option[String], ExecutionContext, HeaderCarrier, DataRequest[AnyContent], EitherT[
+      Future,
+      TaxEnrolmentAssignmentErrors,
+      AccountTypes.Value
+    ]] =
       (mockAccountCheckOrchestrator
-        .getAccountType(
+        .getAccountType(_: Option[String])(
           _: ExecutionContext,
           _: HeaderCarrier,
-          _: RequestWithUserDetailsFromSession[_]
+          _: DataRequest[AnyContent]
         ))
-        .expects(*, *, *)
+        .expects(*, *, *, *)
         .returning(createInboundResultError(error))
 
-    def mockAccountCheckSuccess(accountType: AccountTypes.Value) =
+    def mockAccountCheckSuccess(
+      accountType: AccountTypes.Value
+    ): CallHandler4[Option[String], ExecutionContext, HeaderCarrier, DataRequest[AnyContent], EitherT[
+      Future,
+      TaxEnrolmentAssignmentErrors,
+      AccountTypes.Value
+    ]] =
       (mockAccountCheckOrchestrator
-        .getAccountType(
+        .getAccountType(_: Option[String])(
           _: ExecutionContext,
           _: HeaderCarrier,
-          _: RequestWithUserDetailsFromSession[_]
+          _: DataRequest[AnyContent]
         ))
-        .expects(*, *, *)
+        .expects(*, *, *, *)
         .returning(createInboundResult(accountType))
 
-    def mockSilentEnrolSuccess =
+    def mockSilentEnrolSuccess: CallHandler3[DataRequest[_], HeaderCarrier, ExecutionContext, TEAFResult[Unit]] =
       (mockSilentAssignmentService
         .enrolUser()(
-          _: RequestWithUserDetailsFromSession[_],
+          _: DataRequest[_],
           _: HeaderCarrier,
           _: ExecutionContext
         ))
@@ -411,10 +430,10 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
           EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(()))
         )
 
-    def mockSilentEnrolFailure =
+    def mockSilentEnrolFailure: CallHandler3[DataRequest[_], HeaderCarrier, ExecutionContext, TEAFResult[Unit]] =
       (mockSilentAssignmentService
         .enrolUser()(
-          _: RequestWithUserDetailsFromSession[_],
+          _: DataRequest[_],
           _: HeaderCarrier,
           _: ExecutionContext
         ))
@@ -425,9 +444,9 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
 
     def mockAuditPTEnrolled(
       accountType: AccountTypes.Value,
-      requestWithUserDetailsFromSession: RequestWithUserDetailsFromSession[_],
+      requestWithUserDetailsFromSession: DataRequest[_],
       messagesApi: MessagesApi
-    ) = {
+    ): CallHandler2[AuditEvent, HeaderCarrier, Future[Unit]] = {
       val expectedAudit = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(accountType)(
         requestWithUserDetailsFromSession,
         messagesApi

@@ -19,13 +19,14 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 import cats.data.EitherT
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthJourney}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.TENCrypto
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SignInWithSAAccount
 
 import javax.inject.{Inject, Singleton}
@@ -33,19 +34,19 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class SignInWithSAAccountController @Inject() (
-  authAction: AuthAction,
   accountMongoDetailsAction: AccountMongoDetailsAction,
   mcc: MessagesControllerComponents,
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
   signInWithSAAccount: SignInWithSAAccount,
   val logger: EventLoggerService,
   auditHandler: AuditHandler,
-  errorHandler: ErrorHandler
-)(implicit ec: ExecutionContext)
+  errorHandler: ErrorHandler,
+  authJourney: AuthJourney
+)(implicit ec: ExecutionContext, crypto: TENCrypto)
     extends TEAFrontendController(mcc) {
 
   def view: Action[AnyContent] =
-    authAction.andThen(accountMongoDetailsAction).async { implicit request =>
+    authJourney.authWithDataRetrieval.andThen(accountMongoDetailsAction).async { implicit request =>
       val res = for {
         currentAccount <- multipleAccountsOrchestrator.getDetailsForEnrolledPTWithSAOnOtherAccount
         _ <- EitherT {
@@ -67,7 +68,7 @@ class SignInWithSAAccountController @Inject() (
     }
 
   def continue: Action[AnyContent] =
-    authAction.andThen(accountMongoDetailsAction) { implicit request =>
+    authJourney.authWithDataRetrieval.andThen(accountMongoDetailsAction) { implicit request =>
       logger.logEvent(
         logUserSignsInAgainWithSAAccount(request.userDetails.credId)
       )

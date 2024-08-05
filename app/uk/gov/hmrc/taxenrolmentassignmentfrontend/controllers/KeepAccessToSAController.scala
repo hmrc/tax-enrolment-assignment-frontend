@@ -16,34 +16,34 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
-import javax.inject.{Inject, Singleton}
 import play.api.mvc._
-
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthJourney}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.TENCrypto
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.KeepAccessToSA
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class KeepAccessToSAController @Inject() (
-  authAction: AuthAction,
   accountMongoDetailsAction: AccountMongoDetailsAction,
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
   mcc: MessagesControllerComponents,
   val logger: EventLoggerService,
   keepAccessToSA: KeepAccessToSA,
   auditHandler: AuditHandler,
-  errorHandler: ErrorHandler
-)(implicit ec: ExecutionContext)
+  errorHandler: ErrorHandler,
+  authJourney: AuthJourney
+)(implicit ec: ExecutionContext, crypto: TENCrypto)
     extends TEAFrontendController(mcc) {
 
   def view: Action[AnyContent] =
-    authAction.andThen(accountMongoDetailsAction).async { implicit request =>
+    authJourney.authWithDataRetrieval.andThen(accountMongoDetailsAction).async { implicit request =>
       multipleAccountsOrchestrator.getDetailsForKeepAccessToSA.value.map {
         case Right(form) => Ok(keepAccessToSA(form))
         case Left(error) =>
@@ -52,7 +52,7 @@ class KeepAccessToSAController @Inject() (
     }
 
   def continue: Action[AnyContent] =
-    authAction.andThen(accountMongoDetailsAction).async { implicit request =>
+    authJourney.authWithDataRetrieval.andThen(accountMongoDetailsAction).async { implicit request =>
       KeepAccessToSAThroughPTAForm.keepAccessToSAThroughPTAForm
         .bindFromRequest()
         .fold(
@@ -65,7 +65,7 @@ class KeepAccessToSAController @Inject() (
                 case Right(true) =>
                   Redirect(routes.SignInWithSAAccountController.view)
                 case Right(false) =>
-                  auditHandler.audit(AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(false))
+                  auditHandler.audit(AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount())
                   Redirect(routes.EnrolledPTWithSAOnOtherAccountController.view)
                 case Left(error) =>
                   errorHandler.handleErrors(error, "[KeepAccessToSAController][continue]")(request, implicitly)

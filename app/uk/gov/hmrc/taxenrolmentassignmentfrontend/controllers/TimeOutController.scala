@@ -17,9 +17,9 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthAction
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthJourney
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TEAFrontendController
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.JourneyCacheRepository
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.TimedOutView
 
 import javax.inject.{Inject, Singleton}
@@ -27,19 +27,18 @@ import scala.concurrent.Future
 
 @Singleton
 class TimeOutController @Inject() (
-  authAction: AuthAction,
   mcc: MessagesControllerComponents,
-  sessionCache: TEASessionCache,
-  timedoutView: TimedOutView
+  timedOutView: TimedOutView,
+  journeyCacheRepository: JourneyCacheRepository,
+  authJourney: AuthJourney
 ) extends TEAFrontendController(mcc) {
 
-  def keepAlive: Action[AnyContent] = authAction.async { implicit request =>
-    sessionCache.extendSession()
+  def keepAlive: Action[AnyContent] = authJourney.authWithDataRetrieval.async { implicit request =>
+    journeyCacheRepository.keepAlive(request.userAnswers.sessionId, request.userAnswers.nino)
     Future.successful(NoContent)
   }
 
   def timeout: Action[AnyContent] = Action { implicit request =>
-    Ok(timedoutView())
+    Ok(timedOutView())
   }
-
 }

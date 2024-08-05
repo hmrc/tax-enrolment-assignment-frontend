@@ -17,38 +17,39 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import cats.data.EitherT
-import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_OTHER_USER}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthJourney}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logAssignedEnrolmentAfterReportingFraud
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.pages.ReportedFraudPage
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REPORTED_FRAUD
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.JourneyCacheRepository
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.TENCrypto
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.ReportSuspiciousID
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ReportSuspiciousIDController @Inject() (
-  authAction: AuthAction,
   accountMongoDetailsAction: AccountMongoDetailsAction,
-  sessionCache: TEASessionCache,
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
   mcc: MessagesControllerComponents,
   reportSuspiciousID: ReportSuspiciousID,
   val logger: EventLoggerService,
   auditHandler: AuditHandler,
-  errorHandler: ErrorHandler
-)(implicit ec: ExecutionContext)
+  errorHandler: ErrorHandler,
+  authJourney: AuthJourney,
+  journeyCacheRepository: JourneyCacheRepository
+)(implicit ec: ExecutionContext, crypto: TENCrypto)
     extends TEAFrontendController(mcc) {
 
   def viewNoSA: Action[AnyContent] =
-    authAction.andThen(accountMongoDetailsAction).async { implicit request =>
+    authJourney.authWithDataRetrieval.andThen(accountMongoDetailsAction).async { implicit request =>
       val res = for {
         _ <- EitherT {
                Future.successful(
@@ -73,7 +74,7 @@ class ReportSuspiciousIDController @Inject() (
     }
 
   def viewSA: Action[AnyContent] =
-    authAction.andThen(accountMongoDetailsAction).async { implicit request =>
+    authJourney.authWithDataRetrieval.andThen(accountMongoDetailsAction).async { implicit request =>
       val res = for {
         _ <- EitherT {
                Future.successful(
@@ -90,7 +91,7 @@ class ReportSuspiciousIDController @Inject() (
             auditHandler
               .audit(AuditEvent.auditReportSuspiciousSAAccount(saAccount))
           }
-          Ok(reportSuspiciousID(saAccount, true))
+          Ok(reportSuspiciousID(saAccount, saOnOtherAccountJourney = true))
         case Left(error) =>
           errorHandler.handleErrors(
             error,
@@ -100,8 +101,8 @@ class ReportSuspiciousIDController @Inject() (
     }
 
   def continue: Action[AnyContent] =
-    authAction.andThen(accountMongoDetailsAction).async { implicit request =>
-      sessionCache.save[Boolean](REPORTED_FRAUD, true)(request, implicitly)
+    authJourney.authWithDataRetrieval.andThen(accountMongoDetailsAction).async { implicit request =>
+      journeyCacheRepository.set(request.userAnswers.setOrException(ReportedFraudPage, true))
       multipleAccountsOrchestrator
         .checkValidAccountTypeAndEnrolForPT(SA_ASSIGNED_TO_OTHER_USER)
         .value
@@ -112,7 +113,8 @@ class ReportSuspiciousIDController @Inject() (
                 request.userDetails.credId
               )
             )
-            auditHandler.audit(AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true))
+            auditHandler
+              .audit(AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true))
             Redirect(routes.EnrolledForPTController.view)
           case Left(error) =>
             errorHandler.handleErrors(

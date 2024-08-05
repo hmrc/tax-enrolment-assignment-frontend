@@ -18,42 +18,42 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import play.api.Application
 import play.api.http.Status.OK
-import play.api.inject.bind
-import play.api.libs.json.{Format, Json}
+import play.api.inject.{Binding, bind}
+import play.api.libs.json.Json
 import play.api.mvc.{AnyContent, BodyParsers}
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, Enrolments}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_OTHER_USER}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.DataRequest
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{ControllersBaseSpec, UrlPaths}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, UserAnswers}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{REPORTED_FRAUD, USER_ASSIGNED_SA_ENROLMENT, accountDetailsForCredential}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{SilentAssignmentService}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REPORTED_FRAUD, USER_ASSIGNED_SA_ENROLMENT, accountDetailsForCredential}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.{JourneyCacheRepository, SessionKeys}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.ReportSuspiciousID
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
+  lazy val mockRepository: JourneyCacheRepository = mock[JourneyCacheRepository]
 
-  lazy val mockSilentAssignmentService = mock[SilentAssignmentService]
-  lazy val mockAccountCheckOrchestrator = mock[AccountCheckOrchestrator]
-  lazy val mockAuditHandler = mock[AuditHandler]
+  lazy val mockSilentAssignmentService: SilentAssignmentService = mock[SilentAssignmentService]
+  lazy val mockAccountCheckOrchestrator: AccountCheckOrchestrator = mock[AccountCheckOrchestrator]
+  lazy val mockAuditHandler: AuditHandler = mock[AuditHandler]
 
   lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
-  lazy val mockMultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
+  lazy val mockMultipleAccountsOrchestrator: MultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
 
-  override lazy val overrides = Seq(
-    bind[TEASessionCache].toInstance(mockTeaSessionCache)
+  override lazy val overrides: Seq[Binding[JourneyCacheRepository]] = Seq(
+    bind[JourneyCacheRepository].toInstance(mockRepository)
   )
 
   override implicit lazy val app: Application = localGuiceApplicationBuilder()
@@ -67,7 +67,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
     )
     .build()
 
-  lazy val controller = app.injector.instanceOf[ReportSuspiciousIDController]
+  lazy val controller: ReportSuspiciousIDController = app.injector.instanceOf[ReportSuspiciousIDController]
 
   val view: ReportSuspiciousID = app.injector.instanceOf[ReportSuspiciousID]
 
@@ -81,7 +81,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
             .authorise(
               _: Predicate,
               _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                   String
                 ] ~ Option[AffinityGroup] ~ Option[String]
               ]
@@ -95,14 +95,14 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
         (mockMultipleAccountsOrchestrator
           .checkValidAccountType(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
+            _: DataRequest[AnyContent]
           ))
           .expects(List(PT_ASSIGNED_TO_OTHER_USER), *)
           .returning(Right(PT_ASSIGNED_TO_OTHER_USER))
 
         (mockMultipleAccountsOrchestrator
           .getPTCredentialDetails(
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+            _: DataRequest[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -112,7 +112,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
         val auditEvent = AuditEvent.auditReportSuspiciousPTAccount(
           accountDetails.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM"))
-        )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
+        )(requestWithGivenMongoData(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER)), messagesApi)
         (mockAuditHandler
           .audit(_: AuditEvent)(_: HeaderCarrier))
           .expects(auditEvent, *)
@@ -135,7 +135,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
             .authorise(
               _: Predicate,
               _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                   String
                 ] ~ Option[AffinityGroup] ~ Option[String]
               ]
@@ -149,7 +149,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
         (mockMultipleAccountsOrchestrator
           .checkValidAccountType(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
+            _: DataRequest[AnyContent]
           ))
           .expects(List(PT_ASSIGNED_TO_OTHER_USER), *)
           .returning(
@@ -173,7 +173,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
             .authorise(
               _: Predicate,
               _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                   String
                 ] ~ Option[AffinityGroup] ~ Option[String]
               ]
@@ -189,14 +189,14 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
         (mockMultipleAccountsOrchestrator
           .checkValidAccountType(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
+            _: DataRequest[AnyContent]
           ))
           .expects(List(PT_ASSIGNED_TO_OTHER_USER), *)
           .returning(Right(PT_ASSIGNED_TO_OTHER_USER))
 
         (mockMultipleAccountsOrchestrator
           .getPTCredentialDetails(
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+            _: DataRequest[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -225,7 +225,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
               .authorise(
                 _: Predicate,
                 _: Retrieval[
-                  ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                     String
                   ] ~ Option[AffinityGroup] ~ Option[String]
                 ]
@@ -239,14 +239,14 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
           (mockMultipleAccountsOrchestrator
             .checkValidAccountType(_: List[AccountTypes.Value])(
-              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
+              _: DataRequest[AnyContent]
             ))
             .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
             .returning(Right(SA_ASSIGNED_TO_OTHER_USER))
 
           (mockMultipleAccountsOrchestrator
             .getSACredentialDetails(
-              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+              _: DataRequest[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
@@ -256,7 +256,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
           val auditEvent = AuditEvent.auditReportSuspiciousSAAccount(
             accountDetails.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM"))
-          )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER), messagesApi)
+          )(requestWithGivenMongoData(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER)), messagesApi)
           (mockAuditHandler
             .audit(_: AuditEvent)(_: HeaderCarrier))
             .expects(auditEvent, *)
@@ -277,7 +277,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
               .authorise(
                 _: Predicate,
                 _: Retrieval[
-                  ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                     String
                   ] ~ Option[AffinityGroup] ~ Option[String]
                 ]
@@ -291,14 +291,14 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
           (mockMultipleAccountsOrchestrator
             .checkValidAccountType(_: List[AccountTypes.Value])(
-              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
+              _: DataRequest[AnyContent]
             ))
             .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
             .returning(Right(SA_ASSIGNED_TO_OTHER_USER))
 
           (mockMultipleAccountsOrchestrator
             .getSACredentialDetails(
-              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+              _: DataRequest[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             ))
@@ -322,7 +322,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
             .authorise(
               _: Predicate,
               _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                   String
                 ] ~ Option[AffinityGroup] ~ Option[String]
               ]
@@ -351,7 +351,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
             .authorise(
               _: Predicate,
               _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                   String
                 ] ~ Option[AffinityGroup] ~ Option[String]
               ]
@@ -365,7 +365,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
         (mockMultipleAccountsOrchestrator
           .checkValidAccountType(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
+            _: DataRequest[AnyContent]
           ))
           .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
           .returning(
@@ -389,7 +389,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
             .authorise(
               _: Predicate,
               _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                   String
                 ] ~ Option[AffinityGroup] ~ Option[String]
               ]
@@ -403,14 +403,14 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
         (mockMultipleAccountsOrchestrator
           .checkValidAccountType(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
+            _: DataRequest[AnyContent]
           ))
           .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
           .returning(Right(SA_ASSIGNED_TO_OTHER_USER))
 
         (mockMultipleAccountsOrchestrator
           .getSACredentialDetails(
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+            _: DataRequest[AnyContent],
             _: HeaderCarrier,
             _: ExecutionContext
           ))
@@ -437,13 +437,12 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
             AccountDetails.mongoFormats(crypto.crypto)
           )
         )
-        val sessionData = generateBasicCacheData(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl) ++ additionalCacheData
         (
           mockAuthConnector
             .authorise(
               _: Predicate,
               _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                   String
                 ] ~ Option[AffinityGroup] ~ Option[String]
               ]
@@ -455,18 +454,23 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
 
-        (mockTeaSessionCache
-          .save(_: String, _: Boolean)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: Format[Boolean]
-          ))
-          .expects(REPORTED_FRAUD, true, *, *)
-          .returning(Future(CacheMap(request.sessionID, sessionData)))
+        val userAnswers: UserAnswers = UserAnswers(
+          request.sessionID,
+          generateNino.nino,
+          Json.obj(
+            "reportedFraud" -> true
+          )
+        )
+        (mockRepository
+          .set(_: UserAnswers))
+          .expects(userAnswers)
+          .returning(Future.successful(true))
+          .once()
 
         (
           mockMultipleAccountsOrchestrator
             .checkValidAccountTypeAndEnrolForPT(_: AccountTypes.Value)(
-              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+              _: DataRequest[_],
               _: HeaderCarrier,
               _: ExecutionContext
             )
@@ -475,13 +479,10 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
           .returning(createInboundResult((): Unit))
         mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData)
 
-        val auditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(
-          requestWithAccountType(
-            SA_ASSIGNED_TO_OTHER_USER,
-            UrlPaths.returnUrl,
-            additionalCacheData = additionalCacheData
-          ),
-          messagesApi
+        val auditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
+          requestWithGivenMongoData(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER)),
+          messagesApi,
+          crypto
         )
         (mockAuditHandler
           .audit(_: AuditEvent)(_: HeaderCarrier))
@@ -505,13 +506,12 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
           USER_ASSIGNED_SA_ENROLMENT                   -> Json.toJson(UsersAssignedEnrolment1),
           accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetails)
         )
-        val sessionData = generateBasicCacheData(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl) ++ additionalCacheData
         (
           mockAuthConnector
             .authorise(
               _: Predicate,
               _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                   String
                 ] ~ Option[AffinityGroup] ~ Option[String]
               ]
@@ -523,18 +523,25 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly)))
 
-        (mockTeaSessionCache
-          .save(_: String, _: Boolean)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: Format[Boolean]
-          ))
-          .expects(REPORTED_FRAUD, true, *, *)
-          .returning(Future(CacheMap(request.sessionID, sessionData)))
+        val userAnswers: UserAnswers = UserAnswers(
+          request.sessionID,
+          generateNino.nino,
+          Json.obj(
+            ACCOUNT_TYPE             -> SA_ASSIGNED_TO_OTHER_USER,
+            SessionKeys.REDIRECT_URL -> UrlPaths.returnUrl
+          )
+        )
+
+        (mockRepository
+          .set(_: UserAnswers))
+          .expects(userAnswers)
+          .returning(Future.successful(true))
+          .once()
 
         (
           mockMultipleAccountsOrchestrator
             .checkValidAccountTypeAndEnrolForPT(_: AccountTypes.Value)(
-              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+              _: DataRequest[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             )
@@ -561,7 +568,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
             .authorise(
               _: Predicate,
               _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                   String
                 ] ~ Option[AffinityGroup] ~ Option[String]
               ]
@@ -590,7 +597,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
             .authorise(
               _: Predicate,
               _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                   String
                 ] ~ Option[AffinityGroup] ~ Option[String]
               ]
@@ -602,18 +609,24 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
 
-        (mockTeaSessionCache
-          .save(_: String, _: Boolean)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: Format[Boolean]
-          ))
-          .expects(REPORTED_FRAUD, true, *, *)
-          .returning(Future(CacheMap(request.sessionID, Map())))
+        val userAnswers: UserAnswers = UserAnswers(
+          request.sessionID,
+          generateNino.nino,
+          Json.obj(
+            REPORTED_FRAUD -> true
+          )
+        )
+
+        (mockRepository
+          .set(_: UserAnswers))
+          .expects(userAnswers)
+          .returning(Future.successful(true))
+          .once()
 
         (
           mockMultipleAccountsOrchestrator
             .checkValidAccountTypeAndEnrolForPT(_: AccountTypes.Value)(
-              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+              _: DataRequest[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             )
@@ -641,7 +654,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
             .authorise(
               _: Predicate,
               _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                   String
                 ] ~ Option[AffinityGroup] ~ Option[String]
               ]
@@ -653,18 +666,24 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
           .expects(predicates, retrievals, *, *)
           .returning(Future.successful(retrievalResponse()))
 
-        (mockTeaSessionCache
-          .save(_: String, _: Boolean)(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: Format[Boolean]
-          ))
-          .expects(REPORTED_FRAUD, true, *, *)
-          .returning(Future(CacheMap(request.sessionID, Map())))
+        val userAnswers: UserAnswers = UserAnswers(
+          request.sessionID,
+          generateNino.nino,
+          Json.obj(
+            REPORTED_FRAUD -> true
+          )
+        )
+
+        (mockRepository
+          .set(_: UserAnswers))
+          .expects(userAnswers)
+          .returning(Future.successful(true))
+          .once()
 
         (
           mockMultipleAccountsOrchestrator
             .checkValidAccountTypeAndEnrolForPT(_: AccountTypes.Value)(
-              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+              _: DataRequest[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             )

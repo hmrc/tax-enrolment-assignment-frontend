@@ -18,13 +18,13 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import play.api.http.ContentTypeOf.contentTypeOf_Html
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthJourney}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logRedirectingToReturnUrl
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.JourneyCacheRepository
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTPage
 
 import javax.inject.{Inject, Singleton}
@@ -32,25 +32,25 @@ import scala.concurrent.ExecutionContext
 
 @Singleton
 class EnrolledForPTWithSAController @Inject() (
-  authAction: AuthAction,
   accountMongoDetailsAction: AccountMongoDetailsAction,
   mcc: MessagesControllerComponents,
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
   val logger: EventLoggerService,
   enrolledForPTPage: EnrolledForPTPage,
   errorHandler: ErrorHandler,
-  teaSessionCache: TEASessionCache
+  authJourney: AuthJourney,
+  journeyCacheRepository: JourneyCacheRepository
 )(implicit ec: ExecutionContext)
     extends TEAFrontendController(mcc) {
 
   def view: Action[AnyContent] =
-    authAction.andThen(accountMongoDetailsAction).async { implicit request =>
+    authJourney.authWithDataRetrieval.andThen(accountMongoDetailsAction).async { implicit request =>
       multipleAccountsOrchestrator.getDetailsForEnrolledPT(request, implicitly, implicitly).value.map {
         case Right(accountDetails) =>
           Ok(
             enrolledForPTPage(
               AccountDetails.userFriendlyAccountDetails(accountDetails),
-              true,
+              hasSA = true,
               routes.EnrolledForPTWithSAController.continue
             )
           )
@@ -60,14 +60,16 @@ class EnrolledForPTWithSAController @Inject() (
     }
 
   def continue: Action[AnyContent] =
-    authAction.andThen(accountMongoDetailsAction).async { implicit request =>
+    authJourney.authWithDataRetrieval.andThen(accountMongoDetailsAction).async { implicit request =>
       logger.logEvent(
         logRedirectingToReturnUrl(
           request.userDetails.credId,
           "[EnrolledForPTWithSAController][continue]"
         )
       )
-      teaSessionCache.removeRecord(request).map(_ => Redirect(request.accountDetailsFromMongo.redirectUrl))
+      journeyCacheRepository
+        .clear(request.userAnswers.sessionId, request.userAnswers.nino)
+        .map(_ => Redirect(request.requestWithUserDetailsFromSessionAndMongo.get.accountDetailsFromMongo.redirectUrl))
 
     }
 }

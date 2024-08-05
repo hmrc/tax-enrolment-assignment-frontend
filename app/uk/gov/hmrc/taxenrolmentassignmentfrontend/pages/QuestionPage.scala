@@ -14,19 +14,8 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.pages
 
-import play.api.mvc.{ActionBuilder, AnyContent}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.queries.{Gettable, Settable}
 
-import javax.inject.Inject
-
-class AuthJourney @Inject() (
-  authAction: AuthAction,
-  identifierAction: IdentifierAction,
-  dataRetrievalAction: DataRetrievalAction
-) {
-  val authJourney: ActionBuilder[RequestWithUserDetailsFromSession, AnyContent] = authAction
-
-  val authWithDataRetrieval: ActionBuilder[DataRequest, AnyContent] =
-    authJourney andThen identifierAction andThen dataRetrievalAction
-}
+trait QuestionPage[A] extends Page with Gettable[A] with Settable[A]

@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.services
 
-import uk.gov.hmrc.http.HeaderCarrier
 import play.api.Logger
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.TaxEnrolmentsConnector
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.DataRequest
 
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext
@@ -32,7 +32,7 @@ class SilentAssignmentService @Inject() (
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
   def enrolUser()(implicit
-    request: RequestWithUserDetailsFromSession[_],
+    request: DataRequest[_],
     hc: HeaderCarrier,
     ec: ExecutionContext
   ): TEAFResult[Unit] = {

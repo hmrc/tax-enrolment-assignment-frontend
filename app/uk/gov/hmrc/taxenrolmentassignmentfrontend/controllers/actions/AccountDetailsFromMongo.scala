@@ -16,35 +16,28 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions
 
-import play.api.libs.json.JsValue
-import uk.gov.hmrc.crypto.{Decrypter, Encrypter}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, UsersAssignedEnrolment}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM, REDIRECT_URL, REPORTED_FRAUD, USER_ASSIGNED_PT_ENROLMENT, USER_ASSIGNED_SA_ENROLMENT, accountDetailsForCredential}
 
 case class AccountDetailsFromMongo(
   accountType: AccountTypes.Value,
   redirectUrl: String,
-  private val sessionData: Map[String, JsValue]
-)(private val crypto: Encrypter with Decrypter) {
+  optKeepAccessToSAThroughPTA: Option[Boolean],
+  optReportedFraud: Option[Boolean],
+  optUserAssignedSAParam: Option[UsersAssignedEnrolment],
+  optUserAssignedPTParam: Option[UsersAssignedEnrolment]
+) {
 
   val optKeepAccessToSAFormData: Option[KeepAccessToSAThroughPTA] =
-    sessionData.get(KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM).map(_.as[KeepAccessToSAThroughPTA])
-  val optReportedFraud: Option[Boolean] =
-    sessionData.get(REPORTED_FRAUD).map(_.as[Boolean])
+    optKeepAccessToSAThroughPTA.map(KeepAccessToSAThroughPTA(_))
   val optUserAssignedSA: Option[UsersAssignedEnrolment] =
-    sessionData.get(USER_ASSIGNED_SA_ENROLMENT).map(_.as[UsersAssignedEnrolment])
+    optUserAssignedSAParam
   val optUserAssignedPT: Option[UsersAssignedEnrolment] =
-    sessionData.get(USER_ASSIGNED_PT_ENROLMENT).map(_.as[UsersAssignedEnrolment])
-  def optAccountDetails(credId: String): Option[AccountDetails] =
-    sessionData.get(accountDetailsForCredential(credId)).map(_.as[AccountDetails](AccountDetails.mongoFormats(crypto)))
-
+    optUserAssignedPTParam
 }
 
 object AccountDetailsFromMongo {
-  val optAccountType: Map[String, JsValue] => Option[AccountTypes.Value] = (sessionData: Map[String, JsValue]) =>
-    sessionData.get(ACCOUNT_TYPE).map(_.as[AccountTypes.Value])
-  val optRedirectUrl: Map[String, JsValue] => Option[String] = (sessionData: Map[String, JsValue]) =>
-    sessionData.get(REDIRECT_URL).map(_.as[String])
+  val optAccountType: String => Option[AccountTypes.Value] = (accountType: String) =>
+    Some(AccountTypes.withName(accountType))
 }

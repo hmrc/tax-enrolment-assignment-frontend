@@ -17,41 +17,43 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.services
 
 import cats.data.EitherT
-import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.UsersGroupsSearchConnector
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.DataRequest
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.accountDetailsForCredential
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.pages.AccountDetailsForCredentialPage
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.JourneyCacheRepository
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class UsersGroupsSearchService @Inject() (
   usersGroupsSearchConnector: UsersGroupsSearchConnector,
-  sessionCache: TEASessionCache
+  journeyCacheRepository: JourneyCacheRepository
 )(implicit crypto: TENCrypto) {
 
   def getAccountDetails(credId: String)(implicit
     ec: ExecutionContext,
     hc: HeaderCarrier,
-    request: RequestWithUserDetailsFromSessionAndMongo[_]
+    request: DataRequest[_]
   ): TEAFResult[AccountDetails] = EitherT {
-    request.accountDetailsFromMongo.optAccountDetails(credId) match {
+    request.userAnswers.get(AccountDetailsForCredentialPage(credId))(
+      AccountDetails.mongoFormats(crypto.crypto)
+    ) match {
       case Some(entry) =>
         Future.successful(Right(entry))
       case None =>
-        getAccountDetailsFromUsersGroupSearch(credId, accountDetailsForCredential(credId)).value
+        getAccountDetailsFromUsersGroupSearch(credId).value
     }
   }
 
-  private def getAccountDetailsFromUsersGroupSearch(credId: String, key: String)(implicit
+  private def getAccountDetailsFromUsersGroupSearch(credId: String)(implicit
     ec: ExecutionContext,
     hc: HeaderCarrier,
-    request: RequestWithUserDetailsFromSessionAndMongo[_]
+    request: DataRequest[_]
   ): TEAFResult[AccountDetails] = EitherT {
     usersGroupsSearchConnector
       .getUserDetails(credId)
@@ -67,8 +69,12 @@ class UsersGroupsSearchService @Inject() (
             AccountDetails.additionalFactorsToMFADetails(userDetails.additionalFactors),
             None
           )
-          sessionCache
-            .save[AccountDetails](key, accountDetails)(request, AccountDetails.mongoFormats(crypto.crypto))
+          journeyCacheRepository
+            .set(
+              request.userAnswers.setOrException(AccountDetailsForCredentialPage(credId), accountDetails)(
+                AccountDetails.mongoFormats(crypto.crypto)
+              )
+            )
             .map(_ => Right(accountDetails))
         case Left(error) => Future.successful(Left(error))
       }

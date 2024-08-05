@@ -18,45 +18,40 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthAction
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthJourney
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TEAFrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logUserSigninAgain
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REDIRECT_URL
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.pages.RedirectUrlPage
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.JourneyCacheRepository
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 
 @Singleton
 class SignOutController @Inject() (
-  authAction: AuthAction,
   mcc: MessagesControllerComponents,
   appConfig: AppConfig,
-  sessionCache: TEASessionCache,
-  val logger: EventLoggerService
-)(implicit ec: ExecutionContext)
-    extends TEAFrontendController(mcc) {
+  val logger: EventLoggerService,
+  authJourney: AuthJourney,
+  journeyCacheRepository: JourneyCacheRepository
+) extends TEAFrontendController(mcc) {
 
-  def signOut: Action[AnyContent] = authAction.async { implicit request =>
-    sessionCache.fetch().map { cacheData =>
-      val optRedirectUrl = cacheData.fold[Option[String]](None)(
-        _.data
-          .get(
-            REDIRECT_URL
-          )
-          .map(_.as[String])
-      )
-      sessionCache.removeRecord
-      logger.logEvent(logUserSigninAgain(request.userDetails.credId))
-      optRedirectUrl match {
-        case Some(redirectUrl) =>
+  def signOut: Action[AnyContent] = authJourney.authWithDataRetrieval.async { implicit request =>
+    val optRedirectUrl = request.userAnswers.get(RedirectUrlPage)
+    journeyCacheRepository.clear(request.userAnswers.sessionId, request.userAnswers.nino)
+    logger.logEvent(logUserSigninAgain(request.userDetails.credId))
+    optRedirectUrl match {
+      case Some(redirectUrl) =>
+        Future.successful(
           Redirect(appConfig.signOutUrl, Map("continue" -> Seq(redirectUrl)))
             .removingFromSession("X-Request-ID", "Session-Id")
-        case None =>
+        )
+      case None =>
+        Future.successful(
           Redirect(appConfig.signOutUrl)
             .removingFromSession("X-Request-ID", "Session-Id")
-      }
+        )
     }
   }
 }

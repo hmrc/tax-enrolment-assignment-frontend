@@ -18,77 +18,81 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators
 
 import cats.data.{EitherT, OptionT}
 import cats.implicits._
-
-import javax.inject.{Inject, Singleton}
 import play.api.Logger
+import play.api.mvc.AnyContent
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.cache.client.CacheMap
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_OR_MULTIPLE_ACCOUNTS}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSession}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_OR_MULTIPLE_ACCOUNTS}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, DataRequest}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{logAnotherAccountAlreadyHasPTEnrolment, logAnotherAccountHasSAEnrolment, logCurrentUserAlreadyHasPTEnrolment, logCurrentUserHasSAEnrolment, logCurrentUserhasOneOrMultipleAccounts}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.pages.{AccountTypePage, RedirectUrlPage, UserAssignedPtaEnrolmentPage, UserAssignedSaEnrolmentPage}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.JourneyCacheRepository
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.EACDService
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class AccountCheckOrchestrator @Inject() (
   eacdService: EACDService,
   logger: EventLoggerService,
-  sessionCache: TEASessionCache
+  journeyCacheRepository: JourneyCacheRepository
 ) {
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
-  def getAccountType(implicit
+  def getAccountType(redirectUrl: Option[String])(implicit
     ec: ExecutionContext,
     hc: HeaderCarrier,
-    requestWithUserDetails: RequestWithUserDetailsFromSession[_]
+    request: DataRequest[AnyContent]
   ): EitherT[Future, TaxEnrolmentAssignmentErrors, AccountTypes.Value] = EitherT {
+
     getOptAccountTypeFromCache.foldF {
+      val usersAssignedPtaEnrolmentResult = eacdService.getUsersAssignedPTEnrolment
       val hmrcPtOnOtherAccountFuture =
-        eacdService.getUsersAssignedPTEnrolment.map { userAssignedEnrolment: UsersAssignedEnrolment =>
+        usersAssignedPtaEnrolmentResult.map { userAssignedEnrolment: UsersAssignedEnrolment =>
           userAssignedEnrolment.enrolledCredential match {
-            case Some(requestWithUserDetails.userDetails.credId) => None
-            case Some(credId)                                    => Some(credId)
-            case None                                            => None
+            case Some(request.userDetails.credId) => None
+            case Some(credId)                     => Some(credId)
+            case None                             => None
           }
 
         }
 
-      val irSaOnOtherAccountFuture = eacdService.getUsersAssignedSAEnrolment.map {
+      val usersAssignedSAEnrolmentResult = eacdService.getUsersAssignedSAEnrolment
+      val irSaOnOtherAccountFuture = usersAssignedSAEnrolmentResult.map {
         userAssignedEnrolment: UsersAssignedEnrolment =>
           userAssignedEnrolment.enrolledCredential match {
-            case Some(requestWithUserDetails.userDetails.credId) => None
-            case Some(credId)                                    => Some(credId)
-            case None                                            => None
+            case Some(request.userDetails.credId) => None
+            case Some(credId)                     => Some(credId)
+            case None                             => None
           }
       }
 
-      val hmrcPt = requestWithUserDetails.userDetails.hasPTEnrolment
-      val irSa = requestWithUserDetails.userDetails.hasSAEnrolment
+      val hmrcPt = request.userDetails.hasPTEnrolment
+      val irSa = request.userDetails.hasSAEnrolment
 
       (for {
-        hmrcPtOnOtherAccount <- hmrcPtOnOtherAccountFuture
-        irSaOnOtherAccount   <- irSaOnOtherAccountFuture
+        usersAssignedSAEnrolmentValue  <- usersAssignedSAEnrolmentResult
+        usersAssignedPtaEnrolmentValue <- usersAssignedPtaEnrolmentResult
+        hmrcPtOnOtherAccount           <- hmrcPtOnOtherAccountFuture
+        irSaOnOtherAccount             <- irSaOnOtherAccountFuture
         accountType = {
           (hmrcPtOnOtherAccount, irSaOnOtherAccount, hmrcPt, irSa) match {
             case (None, _, true, _) =>
               logger.logEvent(
                 logCurrentUserAlreadyHasPTEnrolment(
-                  requestWithUserDetails.userDetails.credId
+                  request.userDetails.credId
                 )
               )
               PT_ASSIGNED_TO_CURRENT_USER
             case (Some(credId), _, false, _) =>
               logger.logEvent(
                 logAnotherAccountAlreadyHasPTEnrolment(
-                  requestWithUserDetails.userDetails.credId,
+                  request.userDetails.credId,
                   credId
                 )
               )
@@ -97,13 +101,13 @@ class AccountCheckOrchestrator @Inject() (
               throw new RuntimeException("HMRC-PT enrolment cannot be on both the current and an other account")
             case (_, None, _, true) =>
               logger.logEvent(
-                logCurrentUserHasSAEnrolment(requestWithUserDetails.userDetails.credId)
+                logCurrentUserHasSAEnrolment(request.userDetails.credId)
               )
               SA_ASSIGNED_TO_CURRENT_USER
             case (_, Some(credId), _, false) =>
               logger.logEvent(
                 logAnotherAccountHasSAEnrolment(
-                  requestWithUserDetails.userDetails.credId,
+                  request.userDetails.credId,
                   credId
                 )
               )
@@ -111,29 +115,29 @@ class AccountCheckOrchestrator @Inject() (
             case (_, Some(_), _, true) =>
               throw new RuntimeException("IR-SA enrolment cannot be on both the current and an other account")
             case _ =>
-              logger.logEvent(logCurrentUserhasOneOrMultipleAccounts(requestWithUserDetails.userDetails.credId))
+              logger.logEvent(logCurrentUserhasOneOrMultipleAccounts(request.userDetails.credId))
               SINGLE_OR_MULTIPLE_ACCOUNTS
           }
         }
-        _ <-
-          EitherT[Future, TaxEnrolmentAssignmentErrors, CacheMap](
-            sessionCache.save[AccountTypes.Value](ACCOUNT_TYPE, accountType).map(Right(_))
-          )
+        _ =
+          journeyCacheRepository
+            .set(
+              request.userAnswers
+                .setOrException(AccountTypePage, accountType.toString)
+                .setOrException(RedirectUrlPage, redirectUrl.getOrElse(""))
+                .setOrException(UserAssignedSaEnrolmentPage, usersAssignedSAEnrolmentValue)
+                .setOrException(UserAssignedPtaEnrolmentPage, usersAssignedPtaEnrolmentValue)
+            )
+            .map(Right(_))
       } yield accountType).value
 
     }(account => Future.successful(Right(account)))
   }
 
   private def getOptAccountTypeFromCache(implicit
-    request: RequestWithUserDetailsFromSession[_],
-    ec: ExecutionContext
+    request: DataRequest[AnyContent]
   ): OptionT[Future, AccountTypes.Value] =
-    OptionT(sessionCache.fetch().map { optCachedMap =>
-      optCachedMap
-        .fold[Option[AccountTypes.Value]](
-          None
-        ) { cachedMap =>
-          AccountDetailsFromMongo.optAccountType(cachedMap.data)
-        }
-    })
+    OptionT(
+      Future.successful(request.userAnswers.get(AccountTypePage).map(AccountDetailsFromMongo.optAccountType(_).get))
+    )
 }

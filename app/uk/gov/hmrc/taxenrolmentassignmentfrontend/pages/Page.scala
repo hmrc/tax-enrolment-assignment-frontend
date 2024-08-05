@@ -14,19 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.pages
 
-import play.api.mvc.{ActionBuilder, AnyContent}
+import scala.language.implicitConversions
 
-import javax.inject.Inject
+trait Page
 
-class AuthJourney @Inject() (
-  authAction: AuthAction,
-  identifierAction: IdentifierAction,
-  dataRetrievalAction: DataRetrievalAction
-) {
-  val authJourney: ActionBuilder[RequestWithUserDetailsFromSession, AnyContent] = authAction
+object Page {
 
-  val authWithDataRetrieval: ActionBuilder[DataRequest, AnyContent] =
-    authJourney andThen identifierAction andThen dataRetrievalAction
+  implicit def toString(page: Page): String =
+    page.toString
 }

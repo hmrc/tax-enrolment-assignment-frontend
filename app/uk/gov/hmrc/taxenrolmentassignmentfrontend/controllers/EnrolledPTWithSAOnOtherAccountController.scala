@@ -17,14 +17,14 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthJourney}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.GetSACredentialIfNotFraudReturnedNone
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logRedirectingToReturnUrl
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.JourneyCacheRepository
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTWithSAOnOtherAccount
 
 import javax.inject.{Inject, Singleton}
@@ -32,19 +32,19 @@ import scala.concurrent.ExecutionContext
 
 @Singleton
 class EnrolledPTWithSAOnOtherAccountController @Inject() (
-  authAction: AuthAction,
   accountMongoDetailsAction: AccountMongoDetailsAction,
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
   mcc: MessagesControllerComponents,
   enrolledForPTPage: EnrolledForPTWithSAOnOtherAccount,
   val logger: EventLoggerService,
   errorHandler: ErrorHandler,
-  teaSessionCache: TEASessionCache
+  authJourney: AuthJourney,
+  journeyCacheRepository: JourneyCacheRepository
 )(implicit ec: ExecutionContext)
     extends TEAFrontendController(mcc) {
 
   def view: Action[AnyContent] =
-    authAction.andThen(accountMongoDetailsAction).async { implicit request =>
+    authJourney.authWithDataRetrieval.andThen(accountMongoDetailsAction).async { implicit request =>
       val res = for {
         currentAccount <- multipleAccountsOrchestrator.getDetailsForEnrolledPTWithSAOnOtherAccount
         optSAAccount   <- multipleAccountsOrchestrator.getSACredentialIfNotFraud
@@ -68,14 +68,15 @@ class EnrolledPTWithSAOnOtherAccountController @Inject() (
     }
 
   def continue: Action[AnyContent] =
-    authAction.andThen(accountMongoDetailsAction).async { implicit request =>
+    authJourney.authWithDataRetrieval.andThen(accountMongoDetailsAction).async { implicit request =>
       logger.logEvent(
         logRedirectingToReturnUrl(
           request.userDetails.credId,
           "[EnrolledWithSAOnOtherAccountController][continue]"
         )
       )
-      teaSessionCache.removeRecord(request).map(_ => Redirect(request.accountDetailsFromMongo.redirectUrl))
+      journeyCacheRepository
+        .clear(request.userAnswers.sessionId, request.userAnswers.nino)
+        .map(_ => Redirect(request.requestWithUserDetailsFromSessionAndMongo.get.accountDetailsFromMongo.redirectUrl))
     }
-
 }

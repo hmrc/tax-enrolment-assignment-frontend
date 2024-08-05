@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import org.jsoup.Jsoup
 import play.api.Application
-import play.api.inject.bind
+import play.api.inject.{Binding, bind}
 import play.api.mvc.{AnyContent, BodyParsers}
 import play.api.test.Helpers.{status, _}
 import uk.gov.hmrc.auth.core.authorise.Predicate
@@ -27,29 +27,30 @@ import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, Enrolments}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.DataRequest
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, UnexpectedPTEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{ControllersBaseSpec, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditHandler
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{SilentAssignmentService}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.JourneyCacheRepository
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SABlueInterrupt
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class SABlueInterruptControllerSpec extends ControllersBaseSpec {
 
-  lazy val mockSilentAssignmentService = mock[SilentAssignmentService]
-  lazy val mockAccountCheckOrchestrator = mock[AccountCheckOrchestrator]
-  lazy val mockAuditHandler = mock[AuditHandler]
+  lazy val mockSilentAssignmentService: SilentAssignmentService = mock[SilentAssignmentService]
+  lazy val mockAccountCheckOrchestrator: AccountCheckOrchestrator = mock[AccountCheckOrchestrator]
+  lazy val mockAuditHandler: AuditHandler = mock[AuditHandler]
 
   lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
-  lazy val mockMultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
+  lazy val mockMultipleAccountsOrchestrator: MultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
+  lazy val mockRepository: JourneyCacheRepository = mock[JourneyCacheRepository]
 
-  override lazy val overrides = Seq(
-    bind[TEASessionCache].toInstance(mockTeaSessionCache)
+  override lazy val overrides: Seq[Binding[JourneyCacheRepository]] = Seq(
+    bind[JourneyCacheRepository].toInstance(mockRepository)
   )
 
   override implicit lazy val app: Application = localGuiceApplicationBuilder()
@@ -63,7 +64,7 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
     )
     .build()
 
-  lazy val controller = app.injector.instanceOf[SABlueInterruptController]
+  lazy val controller: SABlueInterruptController = app.injector.instanceOf[SABlueInterruptController]
 
   val blueSAView: SABlueInterrupt =
     inject[SABlueInterrupt]
@@ -77,7 +78,7 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
               .authorise(
                 _: Predicate,
                 _: Retrieval[
-                  ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                     String
                   ] ~ Option[AffinityGroup] ~ Option[String]
                 ]
@@ -91,7 +92,7 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
 
           (mockMultipleAccountsOrchestrator
             .checkAccessAllowedForPage(_: List[AccountTypes.Value])(
-              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
+              _: DataRequest[AnyContent]
             ))
             .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
             .returning(Right(SA_ASSIGNED_TO_OTHER_USER))
@@ -131,7 +132,7 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
               .authorise(
                 _: Predicate,
                 _: Retrieval[
-                  ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                  Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                     String
                   ] ~ Option[AffinityGroup] ~ Option[String]
                 ]
@@ -145,7 +146,7 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
 
           (mockMultipleAccountsOrchestrator
             .checkAccessAllowedForPage(_: List[AccountTypes.Value])(
-              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
+              _: DataRequest[AnyContent]
             ))
             .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
             .returning(Left(UnexpectedPTEnrolment(SA_ASSIGNED_TO_OTHER_USER)))
@@ -167,7 +168,7 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
             .authorise(
               _: Predicate,
               _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                   String
                 ] ~ Option[AffinityGroup] ~ Option[String]
               ]
@@ -196,7 +197,7 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
             .authorise(
               _: Predicate,
               _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                   String
                 ] ~ Option[AffinityGroup] ~ Option[String]
               ]
@@ -210,7 +211,7 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
 
         (mockMultipleAccountsOrchestrator
           .checkAccessAllowedForPage(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
+            _: DataRequest[AnyContent]
           ))
           .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
           .returning(
@@ -236,7 +237,7 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
             .authorise(
               _: Predicate,
               _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                   String
                 ] ~ Option[AffinityGroup] ~ Option[String]
               ]
@@ -250,7 +251,7 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
 
         (mockMultipleAccountsOrchestrator
           .checkAccessAllowedForPage(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
+            _: DataRequest[AnyContent]
           ))
           .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
           .returning(Right(SA_ASSIGNED_TO_OTHER_USER))
@@ -273,7 +274,7 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
             .authorise(
               _: Predicate,
               _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                   String
                 ] ~ Option[AffinityGroup] ~ Option[String]
               ]
@@ -302,7 +303,7 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
             .authorise(
               _: Predicate,
               _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                   String
                 ] ~ Option[AffinityGroup] ~ Option[String]
               ]
@@ -316,7 +317,7 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
 
         (mockMultipleAccountsOrchestrator
           .checkAccessAllowedForPage(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
+            _: DataRequest[AnyContent]
           ))
           .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
           .returning(

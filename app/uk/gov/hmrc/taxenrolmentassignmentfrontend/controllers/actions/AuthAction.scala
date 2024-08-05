@@ -19,10 +19,10 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions
 import play.api.Logger
 import play.api.mvc.Results._
 import play.api.mvc._
-import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, AuthProviders, AuthorisationException, AuthorisedFunctions, ConfidenceLevel, Enrolments, NoActiveSession}
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals._
 import uk.gov.hmrc.auth.core.retrieve.~
+import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, AuthProviders, AuthorisationException, AuthorisedFunctions, ConfidenceLevel, Enrolments, NoActiveSession}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
@@ -50,9 +50,7 @@ case class UserDetailsFromSession(
   hasPTEnrolment: Boolean,
   hasSAEnrolment: Boolean
 ) {
-
   val utr: Option[String] = enrolments.getEnrolment(s"$IRSAKey").flatMap(_.getIdentifier("UTR").map(_.value))
-
 }
 
 case class RequestWithUserDetailsFromSession[A](
@@ -119,7 +117,10 @@ class AuthAction @Inject() (
               _ =>
                 Future.successful(
                   errorHandler
-                    .handleErrors(UnexpectedError, "[AuthAction]")(requestWithUserDetailsFromSession, implicitly)
+                    .handleErrorsForUserDetailsRequest(UnexpectedError, "[AuthAction]")(
+                      requestWithUserDetailsFromSession,
+                      implicitly
+                    )
                 ),
               _ => block(requestWithUserDetailsFromSession)
             )

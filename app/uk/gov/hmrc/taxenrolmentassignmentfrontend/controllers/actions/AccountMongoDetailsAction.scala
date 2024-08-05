@@ -16,16 +16,15 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions
 
-import javax.inject.Inject
 import play.api.Logger
 import play.api.mvc._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.ErrorHandler
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.{EventLoggerService, LoggingEvent}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.TENCrypto
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.pages.{AccountTypePage, KeepAccessToSAThroughPTAPage, RedirectUrlPage, ReportedFraudPage, UserAssignedPtaEnrolmentPage, UserAssignedSaEnrolmentPage}
 
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 case class RequestWithUserDetailsFromSessionAndMongo[A](
@@ -47,33 +46,42 @@ object RequestWithUserDetailsFromSessionAndMongo {
     )
 }
 
-trait AccountMongoDetailsActionTrait
-    extends ActionRefiner[RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo]
+trait AccountMongoDetailsActionTrait extends ActionRefiner[DataRequest, DataRequest]
 
 class AccountMongoDetailsAction @Inject() (
-  teaSessionCache: TEASessionCache,
   errorHandler: ErrorHandler,
   val appConfig: AppConfig,
   logger: EventLoggerService
-)(implicit val executionContext: ExecutionContext, crypto: TENCrypto)
+)(implicit val executionContext: ExecutionContext)
     extends AccountMongoDetailsActionTrait with RedirectHelper {
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
   override protected def refine[A](
-    request: RequestWithUserDetailsFromSession[A]
-  ): Future[Either[Result, RequestWithUserDetailsFromSessionAndMongo[A]]] =
+    request: DataRequest[A]
+  ): Future[Either[Result, DataRequest[A]]] =
     getAccountDetailsFromMongoFromCache(request)
       .map {
         case Right(accountDetailsFromMongo) =>
           Right(
-            RequestWithUserDetailsFromSessionAndMongo(
+            DataRequest(
               request.request,
               request.userDetails,
-              request.sessionID,
-              accountDetailsFromMongo
+              request.userAnswers,
+              Some(
+                RequestWithUserDetailsFromSessionAndMongo(
+                  request.request,
+                  request.userDetails,
+                  request.userAnswers.sessionId,
+                  accountDetailsFromMongo
+                )
+              )
             )
           )
         case Left(CacheNotCompleteOrNotCorrect(None, None)) =>
-          logger.logEvent(LoggingEvent.logUserHasNoCacheInMongo(request.userDetails.credId, request.sessionID))
+          println("CacheNotCompleteOrNotCorrect 3")
+          logger.logEvent(
+            LoggingEvent
+              .logUserHasNoCacheInMongo(request.userDetails.credId, request.userAnswers.sessionId)
+          )
           Left(toGGLogin)
         case Left(error) =>
           Left(
@@ -92,27 +100,43 @@ class AccountMongoDetailsAction @Inject() (
       }
 
   private def getAccountDetailsFromMongoFromCache(implicit
-    request: RequestWithUserDetailsFromSession[_]
-  ): Future[Either[TaxEnrolmentAssignmentErrors, AccountDetailsFromMongo]] =
-    teaSessionCache.fetch().map { optCachedMap =>
-      optCachedMap
-        .fold[Either[TaxEnrolmentAssignmentErrors, AccountDetailsFromMongo]](
-          Left(CacheNotCompleteOrNotCorrect(None, None))
-        ) { cachedMap =>
-          (
-            AccountDetailsFromMongo.optAccountType(cachedMap.data),
-            AccountDetailsFromMongo.optRedirectUrl(cachedMap.data)
-          ) match {
-            case (Some(accountType), Some(redirectUrl)) =>
-              Right(
-                AccountDetailsFromMongo(accountType, redirectUrl, cachedMap.data)(crypto.crypto)
+    request: DataRequest[_]
+  ): Future[Either[TaxEnrolmentAssignmentErrors, AccountDetailsFromMongo]] = {
+
+    val optKeepAccessToSAThroughPTA = request.userAnswers.get(KeepAccessToSAThroughPTAPage)
+    val optReportedFraud = request.userAnswers.get(ReportedFraudPage)
+    val optUserAssignedSA = request.userAnswers.get(UserAssignedSaEnrolmentPage)
+    val optUserAssignedPT = request.userAnswers.get(UserAssignedPtaEnrolmentPage)
+
+    val optAccountType = request.userAnswers.get(AccountTypePage)
+    val optRedirectUrl = request.userAnswers.get(RedirectUrlPage)
+    if (optAccountType.isEmpty && optRedirectUrl.isEmpty) {
+      println("CacheNotCompleteOrNotCorrect 1")
+      Future.successful(Left(CacheNotCompleteOrNotCorrect(None, None)))
+    } else {
+      (AccountDetailsFromMongo.optAccountType(optAccountType.get), optRedirectUrl) match {
+        case (Some(accountType), Some(redirectUrl)) =>
+          Future.successful(
+            Right(
+              AccountDetailsFromMongo(
+                accountType,
+                redirectUrl,
+                optKeepAccessToSAThroughPTA,
+                optReportedFraud,
+                optUserAssignedSA,
+                optUserAssignedPT
               )
-            case (optAccountType, optRedirectUrl) =>
-              Left(
-                CacheNotCompleteOrNotCorrect(optRedirectUrl, optAccountType)
-              )
-          }
-        }
+            )
+          )
+        case (optAccountType, optRedirectUrl) =>
+          println("CacheNotCompleteOrNotCorrect 2")
+          Future.successful(
+            Left(
+              CacheNotCompleteOrNotCorrect(optRedirectUrl, optAccountType)
+            )
+          )
+      }
     }
+  }
 
 }

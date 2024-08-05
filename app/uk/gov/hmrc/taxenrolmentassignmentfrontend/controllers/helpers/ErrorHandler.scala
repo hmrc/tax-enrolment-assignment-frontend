@@ -16,22 +16,45 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers
 
-import javax.inject.Inject
 import play.api.Logger
 import play.api.mvc.{MessagesControllerComponents, Result}
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{DataRequest, RequestWithUserDetailsFromSession}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{EnrolmentStoreServiceUnavailable, IncorrectUserType, InvalidRedirectUrl, TaxEnrolmentAssignmentErrors, UnexpectedPTEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logUnexpectedErrorOccurred
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
+import javax.inject.Inject
+
 class ErrorHandler @Inject() (errorView: ErrorTemplate, logger: EventLoggerService, mcc: MessagesControllerComponents)
     extends TEAFrontendController(mcc) {
 
   def handleErrors(error: TaxEnrolmentAssignmentErrors, classAndMethod: String)(implicit
+    request: DataRequest[_],
+    baseLogger: Logger
+  ): Result =
+    error match {
+      case IncorrectUserType(redirectUrl, _) =>
+        Redirect(routes.AccountCheckController.accountCheck(RedirectUrl.apply(redirectUrl)))
+      case UnexpectedPTEnrolment(accountType) if accountType == SA_ASSIGNED_TO_OTHER_USER =>
+        Redirect(routes.EnrolledPTWithSAOnOtherAccountController.view)
+      case InvalidRedirectUrl               => BadRequest(errorView())
+      case EnrolmentStoreServiceUnavailable => InternalServerError(errorView())
+      case _ =>
+        logger.logEvent(
+          logUnexpectedErrorOccurred(
+            request.userDetails.credId,
+            classAndMethod,
+            error
+          )
+        )
+        InternalServerError(errorView())
+    }
+
+  def handleErrorsForUserDetailsRequest(error: TaxEnrolmentAssignmentErrors, classAndMethod: String)(implicit
     request: RequestWithUserDetailsFromSession[_],
     baseLogger: Logger
   ): Result =

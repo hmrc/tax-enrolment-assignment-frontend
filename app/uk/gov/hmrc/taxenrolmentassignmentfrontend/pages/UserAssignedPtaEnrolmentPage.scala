@@ -14,19 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.pages
 
-import play.api.mvc.{ActionBuilder, AnyContent}
+import play.api.libs.json.JsPath
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys
 
-import javax.inject.Inject
+case object UserAssignedPtaEnrolmentPage extends QuestionPage[UsersAssignedEnrolment] {
 
-class AuthJourney @Inject() (
-  authAction: AuthAction,
-  identifierAction: IdentifierAction,
-  dataRetrievalAction: DataRetrievalAction
-) {
-  val authJourney: ActionBuilder[RequestWithUserDetailsFromSession, AnyContent] = authAction
+  override def path: JsPath = JsPath \ toString
 
-  val authWithDataRetrieval: ActionBuilder[DataRequest, AnyContent] =
-    authJourney andThen identifierAction andThen dataRetrievalAction
+  override def toString: String = SessionKeys.USER_ASSIGNED_PT_ENROLMENT
 }

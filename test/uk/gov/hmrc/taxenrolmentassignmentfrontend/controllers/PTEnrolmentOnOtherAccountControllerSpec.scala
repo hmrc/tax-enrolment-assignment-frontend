@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import play.api.Application
 import play.api.http.Status.OK
-import play.api.inject.bind
+import play.api.inject.{Binding, bind}
 import play.api.mvc.{AnyContent, BodyParsers}
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.authorise.Predicate
@@ -26,13 +26,13 @@ import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
 import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, Enrolments}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.PT_ASSIGNED_TO_OTHER_USER
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.DataRequest
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{ControllersBaseSpec, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.JourneyCacheRepository
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnotherAccount
 
@@ -40,15 +40,16 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
-  lazy val mockSilentAssignmentService = mock[SilentAssignmentService]
-  lazy val mockAccountCheckOrchestrator = mock[AccountCheckOrchestrator]
-  lazy val mockAuditHandler = mock[AuditHandler]
+  lazy val mockSilentAssignmentService: SilentAssignmentService = mock[SilentAssignmentService]
+  lazy val mockAccountCheckOrchestrator: AccountCheckOrchestrator = mock[AccountCheckOrchestrator]
+  lazy val mockAuditHandler: AuditHandler = mock[AuditHandler]
 
   lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
-  lazy val mockMultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
+  lazy val mockMultipleAccountsOrchestrator: MultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
+  lazy val mockRepository: JourneyCacheRepository = mock[JourneyCacheRepository]
 
-  override lazy val overrides = Seq(
-    bind[TEASessionCache].toInstance(mockTeaSessionCache)
+  override lazy val overrides: Seq[Binding[JourneyCacheRepository]] = Seq(
+    bind[JourneyCacheRepository].toInstance(mockRepository)
   )
 
   override implicit lazy val app: Application = localGuiceApplicationBuilder()
@@ -62,7 +63,8 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
     )
     .build()
 
-  lazy val controller = app.injector.instanceOf[PTEnrolmentOnOtherAccountController]
+  lazy val controller: PTEnrolmentOnOtherAccountController =
+    app.injector.instanceOf[PTEnrolmentOnOtherAccountController]
 
   val view: PTEnrolmentOnAnotherAccount =
     app.injector.instanceOf[PTEnrolmentOnAnotherAccount]
@@ -76,7 +78,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
             .authorise(
               _: Predicate,
               _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                   String
                 ] ~ Option[AffinityGroup] ~ Option[String]
               ]
@@ -91,7 +93,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
         (
           mockMultipleAccountsOrchestrator
             .getCurrentAndPTAAndSAIfExistsForUser(
-              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+              _: DataRequest[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             )
@@ -102,7 +104,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
           accountDetailsWithPT.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM"))
-        )(requestWithAccountType(randomAccountType), messagesApi)
+        )(requestWithGivenMongoData(requestWithAccountType(randomAccountType)), messagesApi)
 
         (mockAuditHandler
           .audit(_: AuditEvent)(_: HeaderCarrier))
@@ -141,7 +143,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
             .authorise(
               _: Predicate,
               _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                   String
                 ] ~ Option[AffinityGroup] ~ Option[String]
               ]
@@ -158,7 +160,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
         (
           mockMultipleAccountsOrchestrator
             .getCurrentAndPTAAndSAIfExistsForUser(
-              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+              _: DataRequest[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             )
@@ -169,7 +171,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
           accountDetailsWithPT.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM"))
-        )(requestWithAccountType(randomAccountType), messagesApi)
+        )(requestWithGivenMongoData(requestWithAccountType(randomAccountType)), messagesApi)
 
         (mockAuditHandler
           .audit(_: AuditEvent)(_: HeaderCarrier))
@@ -207,7 +209,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
             .authorise(
               _: Predicate,
               _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                   String
                 ] ~ Option[AffinityGroup] ~ Option[String]
               ]
@@ -224,7 +226,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
         (
           mockMultipleAccountsOrchestrator
             .getCurrentAndPTAAndSAIfExistsForUser(
-              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+              _: DataRequest[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             )
@@ -235,7 +237,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
           accountDetailsWithPT.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM"))
-        )(requestWithAccountType(randomAccountType), messagesApi)
+        )(requestWithGivenMongoData(requestWithAccountType(randomAccountType)), messagesApi)
 
         (mockAuditHandler
           .audit(_: AuditEvent)(_: HeaderCarrier))
@@ -273,7 +275,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
             .authorise(
               _: Predicate,
               _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                   String
                 ] ~ Option[AffinityGroup] ~ Option[String]
               ]
@@ -290,7 +292,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
         (
           mockMultipleAccountsOrchestrator
             .getCurrentAndPTAAndSAIfExistsForUser(
-              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+              _: DataRequest[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             )
@@ -301,7 +303,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
           accountDetailsWithPT.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM"))
-        )(requestWithAccountType(randomAccountType), messagesApi)
+        )(requestWithGivenMongoData(requestWithAccountType(randomAccountType)), messagesApi)
 
         (mockAuditHandler
           .audit(_: AuditEvent)(_: HeaderCarrier))
@@ -339,7 +341,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
             .authorise(
               _: Predicate,
               _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                   String
                 ] ~ Option[AffinityGroup] ~ Option[String]
               ]
@@ -356,7 +358,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
         (
           mockMultipleAccountsOrchestrator
             .getCurrentAndPTAAndSAIfExistsForUser(
-              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+              _: DataRequest[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             )
@@ -367,7 +369,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
           accountDetailsWithPT.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM"))
-        )(requestWithAccountType(randomAccountType), messagesApi)
+        )(requestWithGivenMongoData(requestWithAccountType(randomAccountType)), messagesApi)
 
         (mockAuditHandler
           .audit(_: AuditEvent)(_: HeaderCarrier))
@@ -402,7 +404,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
             .authorise(
               _: Predicate,
               _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                   String
                 ] ~ Option[AffinityGroup] ~ Option[String]
               ]
@@ -417,7 +419,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
         (
           mockMultipleAccountsOrchestrator
             .getCurrentAndPTAAndSAIfExistsForUser(
-              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+              _: DataRequest[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             )
@@ -444,7 +446,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
             .authorise(
               _: Predicate,
               _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                   String
                 ] ~ Option[AffinityGroup] ~ Option[String]
               ]
@@ -461,7 +463,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
         (
           mockMultipleAccountsOrchestrator
             .getCurrentAndPTAAndSAIfExistsForUser(
-              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+              _: DataRequest[AnyContent],
               _: HeaderCarrier,
               _: ExecutionContext
             )
@@ -484,7 +486,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
             .authorise(
               _: Predicate,
               _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
+                Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[
                   String
                 ] ~ Option[AffinityGroup] ~ Option[String]
               ]

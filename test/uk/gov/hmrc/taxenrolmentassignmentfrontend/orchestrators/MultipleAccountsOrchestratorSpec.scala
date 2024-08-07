@@ -28,8 +28,8 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{BaseSpec, UrlPaths}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{UserAnswers, UsersAssignedEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{UserAnswers, UsersAssignedEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.JourneyCacheRepository
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM, REPORTED_FRAUD}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, SilentAssignmentService, UsersGroupsSearchService}
@@ -45,7 +45,6 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
   lazy val mockMultipleAccountsOrchestrator: MultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
   lazy val mockUsersGroupService: UsersGroupsSearchService = mock[UsersGroupsSearchService]
   lazy val mockRepository: JourneyCacheRepository = mock[JourneyCacheRepository]
-
 
   override lazy val overrides: Seq[Binding[JourneyCacheRepository]] = Seq(
     bind[JourneyCacheRepository].toInstance(mockRepository)
@@ -74,7 +73,11 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
             .expects(CREDENTIAL_ID, *, *, *)
             .returning(createInboundResult(accountDetails))
 
-          val res = orchestrator.getDetailsForEnrolledPT(requestWithGivenMongoData(requestWithAccountType(accountType)), implicitly, implicitly)
+          val res = orchestrator.getDetailsForEnrolledPT(
+            requestWithGivenMongoData(requestWithAccountType(accountType)),
+            implicitly,
+            implicitly
+          )
           whenReady(res.value) { result =>
             result shouldBe Right(
               accountDetails
@@ -91,7 +94,11 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
     ).foreach { accountType =>
       s"the accountType is $accountType" should {
         s"return the $IncorrectUserType containing redirectUrl" in {
-          val res = orchestrator.getDetailsForEnrolledPT(requestWithGivenMongoData(requestWithAccountType(accountType)), implicitly, implicitly)
+          val res = orchestrator.getDetailsForEnrolledPT(
+            requestWithGivenMongoData(requestWithAccountType(accountType)),
+            implicitly,
+            implicitly
+          )
           whenReady(res.value) { result =>
             result shouldBe Left(IncorrectUserType(UrlPaths.returnUrl, accountType))
           }
@@ -179,7 +186,7 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
           request.sessionID,
           generateNino.nino,
           Json.obj(
-            REPORTED_FRAUD -> true
+            additionalCacheData
           )
         )
 

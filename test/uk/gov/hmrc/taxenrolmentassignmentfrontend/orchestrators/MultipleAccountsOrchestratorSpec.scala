@@ -17,6 +17,8 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators
 
 import cats.data.EitherT
+import org.mockito.ArgumentMatchers
+import org.mockito.MockitoSugar.{mock, when}
 import play.api.Application
 import play.api.inject.bind
 import play.api.libs.json.{Format, JsBoolean, Json}
@@ -65,14 +67,16 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
     List(SINGLE_OR_MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER).foreach { accountType =>
       s"the account type is correct for $accountType" should {
         "return the userdetails for the account" in {
-          (mockUsersGroupService
-            .getAccountDetails(_: String)(
-              _: ExecutionContext,
-              _: HeaderCarrier,
-              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
-            ))
-            .expects(CREDENTIAL_ID, *, *, *)
-            .returning(createInboundResult(accountDetails))
+
+          when(
+            mockUsersGroupService.getAccountDetails(
+              ArgumentMatchers.eq(CREDENTIAL_ID)
+            )(
+              ArgumentMatchers.any[ExecutionContext],
+              ArgumentMatchers.any[HeaderCarrier],
+              ArgumentMatchers.any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+            )
+          ).thenReturn(createInboundResult(accountDetails))
 
           val res = orchestrator.getDetailsForEnrolledPT(requestWithAccountType(accountType), implicitly, implicitly)
           whenReady(res.value) { result =>
@@ -103,14 +107,15 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
   s"getDetailsForEnrolledPTWithSAOnOtherAccount" when {
     s"the accountType $SA_ASSIGNED_TO_OTHER_USER " should {
       "return the userdetails for the account" in {
-        (mockUsersGroupService
-          .getAccountDetails(_: String)(
-            _: ExecutionContext,
-            _: HeaderCarrier,
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
-          ))
-          .expects(CREDENTIAL_ID, *, *, *)
-          .returning(createInboundResult(accountDetails))
+        when(
+          mockUsersGroupService.getAccountDetails(
+            ArgumentMatchers.eq(CREDENTIAL_ID)
+          )(
+            ArgumentMatchers.any[ExecutionContext],
+            ArgumentMatchers.any[HeaderCarrier],
+            ArgumentMatchers.any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+          )
+        ).thenReturn(createInboundResult(accountDetails))
 
         val res = orchestrator.getDetailsForEnrolledPTWithSAOnOtherAccount(
           requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER),
@@ -148,32 +153,34 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
       "return a PTEnrolmentOtherAccountViewModel for the account details" in {
 
         val additionalCacheData = Map("USER_ASSIGNED_PT_ENROLMENT" -> Json.toJson(UsersAssignedEnrolment1))
-        (mockUsersGroupService
-          .getAccountDetails(_: String)(
-            _: ExecutionContext,
-            _: HeaderCarrier,
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
-          ))
-          .expects(CREDENTIAL_ID, *, *, *)
-          .returning(createInboundResult(accountDetails))
 
-        (mockUsersGroupService
-          .getAccountDetails(_: String)(
-            _: ExecutionContext,
-            _: HeaderCarrier,
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
-          ))
-          .expects(CREDENTIAL_ID_1, *, *, *)
-          .returning(createInboundResult(accountDetailsWithPT.copy(hasSA = None)))
+        when(
+          mockUsersGroupService.getAccountDetails(
+            ArgumentMatchers.eq(CREDENTIAL_ID)
+          )(
+            ArgumentMatchers.any[ExecutionContext],
+            ArgumentMatchers.any[HeaderCarrier],
+            ArgumentMatchers.any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+          )
+        ).thenReturn(createInboundResult(accountDetails))
 
-        (mockEacdService
-          .getUsersAssignedSAEnrolment(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
-          .expects(*, *, *)
-          .returning(createInboundResult(UsersAssignedEnrolment(None)))
+        when(
+          mockUsersGroupService.getAccountDetails(
+            ArgumentMatchers.eq(CREDENTIAL_ID_1)
+          )(
+            ArgumentMatchers.any[ExecutionContext],
+            ArgumentMatchers.any[HeaderCarrier],
+            ArgumentMatchers.any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+          )
+        ).thenReturn(createInboundResult(accountDetailsWithPT.copy(hasSA = None)))
+
+        when(
+          mockEacdService.getUsersAssignedSAEnrolment(
+            ArgumentMatchers.any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]],
+              ArgumentMatchers.any[ExecutionContext],
+            ArgumentMatchers.any[HeaderCarrier],
+          )
+        ).thenReturn(createInboundResult(UsersAssignedEnrolment(None)))
 
         val res = orchestrator
           .getCurrentAndPTAAndSAIfExistsForUser(
@@ -191,32 +198,33 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
       "return a PTEnrolmentOtherAccountViewModel for the account details" in {
         val additionalCacheData = Map("USER_ASSIGNED_PT_ENROLMENT" -> Json.toJson(UsersAssignedEnrolment1))
 
-        (mockUsersGroupService
-          .getAccountDetails(_: String)(
-            _: ExecutionContext,
-            _: HeaderCarrier,
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
-          ))
-          .expects(CREDENTIAL_ID, *, *, *)
-          .returning(createInboundResult(accountDetails))
+        when(
+          mockUsersGroupService.getAccountDetails(
+            ArgumentMatchers.eq(CREDENTIAL_ID)
+          )(
+            ArgumentMatchers.any[ExecutionContext],
+            ArgumentMatchers.any[HeaderCarrier],
+            ArgumentMatchers.any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+          )
+        ).thenReturn(createInboundResult(accountDetails))
 
-        (mockUsersGroupService
-          .getAccountDetails(_: String)(
-            _: ExecutionContext,
-            _: HeaderCarrier,
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
-          ))
-          .expects(CREDENTIAL_ID_1, *, *, *)
-          .returning(createInboundResult(accountDetailsWithPT))
+        when(
+          mockUsersGroupService.getAccountDetails(
+            ArgumentMatchers.eq(CREDENTIAL_ID_1)
+          )(
+            ArgumentMatchers.any[ExecutionContext],
+            ArgumentMatchers.any[HeaderCarrier],
+            ArgumentMatchers.any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+          )
+        ).thenReturn(createInboundResult(accountDetailsWithPT))
 
-        (mockEacdService
-          .getUsersAssignedSAEnrolment(
-            _: RequestWithUserDetailsFromSession[AnyContent],
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
-          .expects(*, *, *)
-          .returning(createInboundResult(UsersAssignedEnrolment(Some(CREDENTIAL_ID))))
+        when(
+          mockEacdService.getUsersAssignedSAEnrolment(
+            ArgumentMatchers.any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]],
+            ArgumentMatchers.any[ExecutionContext],
+            ArgumentMatchers.any[HeaderCarrier],
+          )
+        ).thenReturn(createInboundResult(UsersAssignedEnrolment(Some(CREDENTIAL_ID))))
 
         val res = orchestrator.getCurrentAndPTAAndSAIfExistsForUser(
           requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData),

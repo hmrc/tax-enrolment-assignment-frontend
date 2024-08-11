@@ -17,38 +17,35 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import org.jsoup.Jsoup
+import org.mockito.ArgumentMatchers.any
+import org.mockito.MockitoSugar.{mock, when}
 import play.api.Application
-import play.api.inject.bind
-import play.api.mvc.{AnyContent, BodyParsers}
+import play.api.inject.{Binding, bind}
+import play.api.mvc.BodyParsers
 import play.api.test.Helpers.{status, _}
-import uk.gov.hmrc.auth.core.authorise.Predicate
-import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
-import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, Enrolments}
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
+import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, UnexpectedPTEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{ControllersBaseSpec, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditHandler
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{SilentAssignmentService}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SABlueInterrupt
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 class SABlueInterruptControllerSpec extends ControllersBaseSpec {
 
-  lazy val mockSilentAssignmentService = mock[SilentAssignmentService]
-  lazy val mockAccountCheckOrchestrator = mock[AccountCheckOrchestrator]
-  lazy val mockAuditHandler = mock[AuditHandler]
+  lazy val mockSilentAssignmentService: SilentAssignmentService = mock[SilentAssignmentService]
+  lazy val mockAccountCheckOrchestrator: AccountCheckOrchestrator = mock[AccountCheckOrchestrator]
+  lazy val mockAuditHandler: AuditHandler = mock[AuditHandler]
 
   lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
-  lazy val mockMultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
+  lazy val mockMultipleAccountsOrchestrator: MultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
 
-  override lazy val overrides = Seq(
+  override lazy val overrides: Seq[Binding[TEASessionCache]] = Seq(
     bind[TEASessionCache].toInstance(mockTeaSessionCache)
   )
 
@@ -63,7 +60,7 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
     )
     .build()
 
-  lazy val controller = app.injector.instanceOf[SABlueInterruptController]
+  lazy val controller: SABlueInterruptController = app.injector.instanceOf[SABlueInterruptController]
 
   val blueSAView: SABlueInterrupt =
     inject[SABlueInterrupt]
@@ -72,29 +69,13 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
     "a user has SA on another account" should {
       "render the SABlueInterrupt page" when {
         "the user has not already been assigned a PT enrolment" in {
-          (
-            mockAuthConnector
-              .authorise(
-                _: Predicate,
-                _: Retrieval[
-                  ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                    String
-                  ] ~ Option[AffinityGroup] ~ Option[String]
-                ]
-              )(
-                _: HeaderCarrier,
-                _: ExecutionContext
-              )
-            )
-            .expects(predicates, retrievals, *, *)
-            .returning(Future.successful(retrievalResponse()))
 
-          (mockMultipleAccountsOrchestrator
-            .checkAccessAllowedForPage(_: List[AccountTypes.Value])(
-              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
-            ))
-            .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
-            .returning(Right(SA_ASSIGNED_TO_OTHER_USER))
+          when(mockAuthConnector.authorise(predicates, retrievals))
+            .thenReturn(Future.successful(retrievalResponse()))
+
+          when(mockMultipleAccountsOrchestrator.checkAccessAllowedForPage(List(SA_ASSIGNED_TO_OTHER_USER))(any()))
+            .thenReturn(Right(SA_ASSIGNED_TO_OTHER_USER))
+
           mockGetDataFromCacheForActionSuccess(randomAccountType)
 
           val result = controller
@@ -126,29 +107,12 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
 
       s"redirect to ${UrlPaths.enrolledPTSAOnOtherAccountPath}" when {
         "the user has already been assigned a PT enrolment already" in {
-          (
-            mockAuthConnector
-              .authorise(
-                _: Predicate,
-                _: Retrieval[
-                  ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                    String
-                  ] ~ Option[AffinityGroup] ~ Option[String]
-                ]
-              )(
-                _: HeaderCarrier,
-                _: ExecutionContext
-              )
-            )
-            .expects(predicates, retrievals, *, *)
-            .returning(Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly)))
+          when(mockAuthConnector.authorise(predicates, retrievals))
+            .thenReturn(Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly)))
 
-          (mockMultipleAccountsOrchestrator
-            .checkAccessAllowedForPage(_: List[AccountTypes.Value])(
-              _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
-            ))
-            .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
-            .returning(Left(UnexpectedPTEnrolment(SA_ASSIGNED_TO_OTHER_USER)))
+          when(mockMultipleAccountsOrchestrator.checkAccessAllowedForPage(List(SA_ASSIGNED_TO_OTHER_USER))(any()))
+            .thenReturn(Left(UnexpectedPTEnrolment(SA_ASSIGNED_TO_OTHER_USER)))
+
           mockGetDataFromCacheForActionSuccess(randomAccountType)
 
           val result = controller
@@ -162,22 +126,9 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
     }
     s"the cache no redirectUrl" should {
       "render the error page" in {
-        (
-          mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.successful(retrievalResponse()))
+        when(mockAuthConnector.authorise(predicates, retrievals))
+          .thenReturn(Future.successful(retrievalResponse()))
+
         mockGetDataFromCacheForActionNoRedirectUrl
 
         val result = controller
@@ -191,31 +142,12 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
 
     s"the user does not have an account type of $SA_ASSIGNED_TO_OTHER_USER" should {
       s"redirect to ${UrlPaths.accountCheckPath}" in {
-        (
-          mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.successful(retrievalResponse()))
+        when(mockAuthConnector.authorise(predicates, retrievals))
+          .thenReturn(Future.successful(retrievalResponse()))
 
-        (mockMultipleAccountsOrchestrator
-          .checkAccessAllowedForPage(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
-          ))
-          .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
-          .returning(
-            Left(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
-          )
+        when(mockMultipleAccountsOrchestrator.checkAccessAllowedForPage(List(SA_ASSIGNED_TO_OTHER_USER))(any()))
+          .thenReturn(Left(IncorrectUserType(UrlPaths.returnUrl, randomAccountType)))
+
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
         val result = controller
@@ -231,29 +163,12 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
   "continue" when {
     "a user has SA on another account" should {
       s"redirect to ${UrlPaths.saOnOtherAccountKeepAccessToSAPath}" in {
-        (
-          mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.successful(retrievalResponse()))
+        when(mockAuthConnector.authorise(predicates, retrievals))
+          .thenReturn(Future.successful(retrievalResponse()))
 
-        (mockMultipleAccountsOrchestrator
-          .checkAccessAllowedForPage(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
-          ))
-          .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
-          .returning(Right(SA_ASSIGNED_TO_OTHER_USER))
+        when(mockMultipleAccountsOrchestrator.checkAccessAllowedForPage(List(SA_ASSIGNED_TO_OTHER_USER))(any()))
+          .thenReturn(Right(SA_ASSIGNED_TO_OTHER_USER))
+
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
         val result = controller
@@ -268,22 +183,8 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
     }
     s"the cache no redirectUrl" should {
       "render the error page" in {
-        (
-          mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.successful(retrievalResponse()))
+        when(mockAuthConnector.authorise(predicates, retrievals))
+          .thenReturn(Future.successful(retrievalResponse()))
         mockGetDataFromCacheForActionNoRedirectUrl
 
         val result = controller
@@ -297,31 +198,12 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
 
     s"the user does not have an account type of $SA_ASSIGNED_TO_OTHER_USER" should {
       s"redirect to ${UrlPaths.accountCheckPath}" in {
-        (
-          mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.successful(retrievalResponse()))
+        when(mockAuthConnector.authorise(predicates, retrievals))
+          .thenReturn(Future.successful(retrievalResponse()))
 
-        (mockMultipleAccountsOrchestrator
-          .checkAccessAllowedForPage(_: List[AccountTypes.Value])(
-            _: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
-          ))
-          .expects(List(SA_ASSIGNED_TO_OTHER_USER), *)
-          .returning(
-            Left(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
-          )
+        when(mockMultipleAccountsOrchestrator.checkAccessAllowedForPage(List(SA_ASSIGNED_TO_OTHER_USER))(any()))
+          .thenReturn(Left(IncorrectUserType(UrlPaths.returnUrl, randomAccountType)))
+
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
         val result = controller

@@ -16,20 +16,20 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting
 
-import org.scalamock.matchers.ArgCapture.CaptureOne
+import org.mockito.ArgumentCaptor
+import org.mockito.MockitoSugar.{mock, when}
 import play.api.Application
 import play.api.inject.bind
 import play.api.libs.json.{JsObject, JsString}
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.audit.http.connector.{AuditConnector, AuditResult}
 import uk.gov.hmrc.play.audit.model.ExtendedDataEvent
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 class AuditHandlerSpec extends BaseSpec {
 
-  val appname = "appname"
+  val appName = "appname"
   val auditType = "type"
   val transactionName = "txName"
 
@@ -40,15 +40,15 @@ class AuditHandlerSpec extends BaseSpec {
       bind[AuditConnector].toInstance(mockAuditConnector)
     )
     .configure(
-      "appName" -> appname
+      "appName" -> appName
     )
     .build()
 
-  val auditHandler = app.injector.instanceOf[AuditHandler]
+  val auditHandler: AuditHandler = app.injector.instanceOf[AuditHandler]
 
-  val detail = JsObject(Seq("detail1" -> JsString("detailValue1")))
+  val detail: JsObject = JsObject(Seq("detail1" -> JsString("detailValue1")))
 
-  val event = AuditEvent(
+  val event: AuditEvent = AuditEvent(
     auditType = auditType,
     transactionName = transactionName,
     detail = detail
@@ -57,17 +57,15 @@ class AuditHandlerSpec extends BaseSpec {
   "AuditHandler" should {
     "audit with the correct audit event" in {
 
-      val eventCapture: CaptureOne[ExtendedDataEvent] = CaptureOne[ExtendedDataEvent]()
-      (mockAuditConnector
-        .sendExtendedEvent(_: ExtendedDataEvent)(_: HeaderCarrier, _: ExecutionContext))
-        .expects(capture(eventCapture), hc, *)
-        .returns(Future.successful(AuditResult.Success))
+      val eventCapture: ArgumentCaptor[ExtendedDataEvent] = ArgumentCaptor.forClass(classOf[ExtendedDataEvent])
+      when(mockAuditConnector.sendExtendedEvent(eventCapture.capture()))
+        .thenReturn(Future.successful(AuditResult.Success))
 
       auditHandler.audit(event)
 
-      val e = eventCapture.value
+      val e = eventCapture.getAllValues.get(0)
 
-      e.auditSource shouldBe appname
+      e.auditSource shouldBe appName
       e.auditType shouldBe auditType
       e.detail shouldBe detail
 

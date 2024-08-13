@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.services
 
+import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
 import org.mockito.MockitoSugar.{mock, when}
 import uk.gov.hmrc.http.cache.client.CacheMap
@@ -44,7 +45,12 @@ class EACDServiceSpec extends BaseSpec {
         when(mockEacdConnector.getUsersWithPTEnrolment(NINO))
           .thenReturn(createInboundResult(UsersAssignedEnrolment1))
 
-        when(mockTeaSessionCache.save(USER_ASSIGNED_PT_ENROLMENT, UsersAssignedEnrolment1)(any(), any()))
+        when(
+          mockTeaSessionCache.save(
+            ArgumentMatchers.eq(USER_ASSIGNED_PT_ENROLMENT),
+            ArgumentMatchers.eq(UsersAssignedEnrolment1)
+          )(any(), any())
+        )
           .thenReturn(Future(CacheMap(request.sessionID, Map())))
 
         val result = service.getUsersAssignedPTEnrolment
@@ -78,7 +84,12 @@ class EACDServiceSpec extends BaseSpec {
         when(mockEacdConnector.getUsersWithSAEnrolment(UTR))
           .thenReturn(createInboundResult(UsersAssignedEnrolment1))
 
-        when(mockTeaSessionCache.save(USER_ASSIGNED_SA_ENROLMENT, UsersAssignedEnrolment1)(any(), any()))
+        when(
+          mockTeaSessionCache.save(
+            ArgumentMatchers.eq(USER_ASSIGNED_SA_ENROLMENT),
+            ArgumentMatchers.eq(UsersAssignedEnrolment1)
+          )(any(), any())
+        )
           .thenReturn(Future(CacheMap(request.sessionID, Map())))
 
         val result = service.getUsersAssignedSAEnrolment
@@ -94,7 +105,12 @@ class EACDServiceSpec extends BaseSpec {
         when(mockEacdConnector.queryKnownFactsByNinoVerifier(NINO))
           .thenReturn(createInboundResult(None))
 
-        when(mockTeaSessionCache.save(USER_ASSIGNED_SA_ENROLMENT, UsersAssignedEnrolmentEmpty)(any(), any()))
+        when(
+          mockTeaSessionCache.save(
+            ArgumentMatchers.eq(USER_ASSIGNED_SA_ENROLMENT),
+            ArgumentMatchers.eq(UsersAssignedEnrolmentEmpty)
+          )(any(), any())
+        )
           .thenReturn(Future(CacheMap(request.sessionID, Map())))
 
         val result = service.getUsersAssignedSAEnrolment

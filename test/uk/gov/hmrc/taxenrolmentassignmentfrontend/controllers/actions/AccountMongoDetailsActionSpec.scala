@@ -94,7 +94,7 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
             Ok(requestWithUserDetailsFromSessionAndMongo.toString())
           )
 
-      when(mockTeaSessionCache.fetch())
+      when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))
         .thenReturn(Future.successful(Some(CacheMap("id", exampleMongoSessionData))))
 
       val res = accountMongoDetailsAction.invokeBlock(
@@ -127,7 +127,7 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
               Ok(requestWithUserDetailsFromSessionAndMongo.toString())
             )
 
-        when(mockTeaSessionCache.fetch())
+        when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))
           .thenReturn(Future.successful(None))
 
         val res = accountMongoDetailsAction.invokeBlock(
@@ -168,7 +168,7 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
               Ok(requestWithUserDetailsFromSessionAndMongo.toString())
             )
 
-        when(mockTeaSessionCache.fetch())
+        when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))
           .thenReturn(Future.successful(Some(CacheMap("id", exampleMongoSessionData))))
 
         val res = accountMongoDetailsAction.invokeBlock(
@@ -204,7 +204,7 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
               Ok(requestWithUserDetailsFromSessionAndMongo.toString())
             )
 
-        when(mockTeaSessionCache.fetch())
+        when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))
           .thenReturn(Future.successful(Some(CacheMap("id", exampleMongoSessionData))))
 
         val res = accountMongoDetailsAction.invokeBlock(
@@ -239,7 +239,7 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
             Ok(requestWithUserDetailsFromSessionAndMongo.toString())
           )
 
-      when(mockTeaSessionCache.fetch())
+      when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))
         .thenReturn(Future.failed(exception = new Exception("uh oh")))
 
       val res = accountMongoDetailsAction.invokeBlock(

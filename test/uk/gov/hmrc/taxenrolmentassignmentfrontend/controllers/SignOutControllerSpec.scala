@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
-import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.{any, eq => ameq}
 import org.mockito.MockitoSugar.{mock, when}
 import play.api.Application
 import play.api.inject.{Binding, bind}
@@ -25,7 +25,9 @@ import play.api.mvc.{AnyContentAsEmpty, BodyParsers}
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.cache.client.CacheMap
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{predicates, retrievalResponse, retrievals}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{ControllersBaseSpec, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
@@ -35,7 +37,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
 
 import java.net.URLEncoder
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class SignOutControllerSpec extends ControllersBaseSpec {
 
@@ -74,10 +76,10 @@ class SignOutControllerSpec extends ControllersBaseSpec {
     "the session contains a redirectUrl" should {
       "clear down the user's data and redirect to signOut with continueUrl" in {
 
-        when(mockAuthConnector.authorise(predicates, retrievals))
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
 
-        when(mockTeaSessionCache.fetch())
+        when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))
           .thenReturn(Future.successful(Some(CacheMap("id", Map(REDIRECT_URL -> JsString(UrlPaths.returnUrl))))))
 
         when(mockTeaSessionCache.removeRecord(any())).thenReturn(Future.successful(true))
@@ -94,10 +96,10 @@ class SignOutControllerSpec extends ControllersBaseSpec {
 
     "the session exists but does not contain the redirectUrl" should {
       "clear down the user's data and redirect to signOut without continueUrl" in {
-        when(mockAuthConnector.authorise(predicates, retrievals))
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
 
-        when(mockTeaSessionCache.fetch())
+        when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))
           .thenReturn(Future.successful(Some(CacheMap("id", Map()))))
 
         when(mockTeaSessionCache.removeRecord(any())).thenReturn(Future.successful(true))
@@ -114,11 +116,10 @@ class SignOutControllerSpec extends ControllersBaseSpec {
 
     "the session does not exists" should {
       "redirect to signOut without continueUrl" in {
-        when(mockAuthConnector.authorise(predicates, retrievals))
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
 
-        when(mockTeaSessionCache.fetch())
-          .thenReturn(Future.successful(None))
+        when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]])).thenReturn(Future.successful(None))
 
         when(mockTeaSessionCache.removeRecord(any())).thenReturn(Future.successful(true))
 

@@ -28,8 +28,10 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.ControllersBaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{predicates, retrievalResponse, retrievals}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.TimedOutView
+import org.mockito.ArgumentMatchers.{any, eq => ameq}
+import uk.gov.hmrc.http.HeaderCarrier
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class TimeOutControllerSpec extends ControllersBaseSpec {
 
@@ -56,7 +58,7 @@ class TimeOutControllerSpec extends ControllersBaseSpec {
 
   "keepAlive" should {
     "extend the session and return no content" in {
-      when(mockAuthConnector.authorise(predicates, retrievals))
+      when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(retrievalResponse()))
 
       when(mockTeaSessionCache.extendSession())

@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
-import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.{any, eq => ameq}
 import org.mockito.MockitoSugar.{mock, times, verify, when}
 import play.api.Application
 import play.api.inject.{Binding, bind}
@@ -24,6 +24,7 @@ import play.api.libs.json.Json
 import play.api.mvc.BodyParsers
 import play.api.test.Helpers.{status, _}
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, NoSAEnrolmentWhenOneExpected, UnexpectedPTEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
@@ -36,7 +37,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SignInWithSAAccount
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class SignInAgainPageControllerSpec extends ControllersBaseSpec {
 
@@ -70,13 +71,15 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
     "a user has SA on another account" should {
       "render the signInWithSAAccount page" when {
         "the user has not already been assigned the PT enrolment" in {
-          when(mockAuthConnector.authorise(predicates, retrievals))
+          when(
+            mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext])
+          )
             .thenReturn(Future.successful(retrievalResponse()))
 
           when(mockMultipleAccountsOrchestrator.getDetailsForEnrolledPTWithSAOnOtherAccount(any(), any(), any()))
             .thenReturn(createInboundResult(accountDetails))
 
-          when(mockMultipleAccountsOrchestrator.checkAccessAllowedForPage(List(SA_ASSIGNED_TO_OTHER_USER))(any()))
+          when(mockMultipleAccountsOrchestrator.checkAccessAllowedForPage(ameq(List(SA_ASSIGNED_TO_OTHER_USER)))(any()))
             .thenReturn(Right(SA_ASSIGNED_TO_OTHER_USER))
 
           when(mockMultipleAccountsOrchestrator.getSACredentialDetails(any(), any(), any()))
@@ -94,13 +97,15 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
       }
       s"redirect to ${UrlPaths.enrolledPTSAOnOtherAccountPath}" when {
         "the user has already been assigned the PT enrolment" in {
-          when(mockAuthConnector.authorise(predicates, retrievals))
+          when(
+            mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext])
+          )
             .thenReturn(Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly)))
 
           when(mockMultipleAccountsOrchestrator.getDetailsForEnrolledPTWithSAOnOtherAccount(any(), any(), any()))
             .thenReturn(createInboundResult(accountDetails))
 
-          when(mockMultipleAccountsOrchestrator.checkAccessAllowedForPage(List(SA_ASSIGNED_TO_OTHER_USER))(any()))
+          when(mockMultipleAccountsOrchestrator.checkAccessAllowedForPage(ameq(List(SA_ASSIGNED_TO_OTHER_USER)))(any()))
             .thenReturn(Left(UnexpectedPTEnrolment(SA_ASSIGNED_TO_OTHER_USER)))
 
           mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
@@ -116,7 +121,7 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
     }
     s"the cache no redirectUrl" should {
       "render the error page" in {
-        when(mockAuthConnector.authorise(predicates, retrievals))
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
         mockGetDataFromCacheForActionNoRedirectUrl
 
@@ -131,13 +136,13 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
 
     s"the user does not have an account type of $SA_ASSIGNED_TO_OTHER_USER" should {
       s"redirect to ${UrlPaths.accountCheckPath}" in {
-        when(mockAuthConnector.authorise(predicates, retrievals))
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
 
         when(mockMultipleAccountsOrchestrator.getDetailsForEnrolledPTWithSAOnOtherAccount(any(), any(), any()))
           .thenReturn(createInboundResult(accountDetails))
 
-        when(mockMultipleAccountsOrchestrator.checkAccessAllowedForPage(List(SA_ASSIGNED_TO_OTHER_USER))(any()))
+        when(mockMultipleAccountsOrchestrator.checkAccessAllowedForPage(ameq(List(SA_ASSIGNED_TO_OTHER_USER)))(any()))
           .thenReturn(Left(IncorrectUserType(UrlPaths.returnUrl, randomAccountType)))
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
@@ -153,10 +158,10 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
     "the current user has a no SA enrolment on other account but session says it is other account" should {
       "render the error page" in {
 
-        when(mockAuthConnector.authorise(predicates, retrievals))
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
 
-        when(mockMultipleAccountsOrchestrator.checkAccessAllowedForPage(List(SA_ASSIGNED_TO_OTHER_USER))(any()))
+        when(mockMultipleAccountsOrchestrator.checkAccessAllowedForPage(ameq(List(SA_ASSIGNED_TO_OTHER_USER)))(any()))
           .thenReturn(Right(SA_ASSIGNED_TO_OTHER_USER))
 
         when(mockMultipleAccountsOrchestrator.getDetailsForEnrolledPTWithSAOnOtherAccount(any(), any(), any()))
@@ -185,7 +190,7 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
         )
       )
 
-      when(mockAuthConnector.authorise(predicates, retrievals))
+      when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(retrievalResponse()))
 
       mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData)
@@ -198,7 +203,7 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
         messagesApi
       )
 
-      when(mockAuditHandler.audit(auditEvent)).thenReturn(Future.successful((): Unit))
+      when(mockAuditHandler.audit(ameq(auditEvent))(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
 
       val res = controller
         .continue()
@@ -207,12 +212,12 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
       status(res) shouldBe SEE_OTHER
       redirectLocation(res) shouldBe
         Some(UrlPaths.logoutPath)
-      verify(mockAuditHandler, times(1)).audit(auditEvent)
+      verify(mockAuditHandler, times(1)).audit(ameq(auditEvent))(any[HeaderCarrier])
 
     }
 
     "render the error page when redirect url not in cache" in {
-      when(mockAuthConnector.authorise(predicates, retrievals))
+      when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(retrievalResponse()))
       mockGetDataFromCacheForActionNoRedirectUrl
 

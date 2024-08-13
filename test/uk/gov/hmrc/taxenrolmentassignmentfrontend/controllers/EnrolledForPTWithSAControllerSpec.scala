@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
-import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.{any, eq => ameq}
 import org.mockito.MockitoSugar.{mock, when}
 import play.api.Application
 import play.api.http.Status.OK
@@ -24,6 +24,7 @@ import play.api.inject.{Binding, bind}
 import play.api.mvc.BodyParsers
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_CURRENT_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{ControllersBaseSpec, UrlPaths}
@@ -33,7 +34,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTPage
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class EnrolledForPTWithSAControllerSpec extends ControllersBaseSpec {
 
@@ -68,10 +69,10 @@ class EnrolledForPTWithSAControllerSpec extends ControllersBaseSpec {
     "the user has multiple accounts, is signed in with one with SA then" should {
       "see the Enrolled to PT with SA page" in {
 
-        when(mockAuthConnector.authorise(predicates, retrievals))
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse(enrolments = saEnrolmentOnly)))
 
-        when(mockMultipleAccountsOrchestrator.getDetailsForEnrolledPTWithSAOnOtherAccount(any(), any(), any()))
+        when(mockMultipleAccountsOrchestrator.getDetailsForEnrolledPT(any(), any(), any()))
           .thenReturn(createInboundResult(accountDetails))
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
@@ -93,7 +94,7 @@ class EnrolledForPTWithSAControllerSpec extends ControllersBaseSpec {
     "the user has multiple accounts, is signed in with one with SA then" should {
       s"redirect to ${UrlPaths.returnUrl}" in {
 
-        when(mockAuthConnector.authorise(predicates, retrievals))
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse(enrolments = saEnrolmentOnly)))
         mockDeleteDataFromCacheWhen
         mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_CURRENT_USER, UrlPaths.returnUrl)

@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.controllers
 
 import cats.data.EitherT
-import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.{any, eq => ameq}
 import org.mockito.MockitoSugar.{mock, when}
 import org.scalatest.matchers.must.Matchers._
 import play.api.Application
@@ -27,6 +27,7 @@ import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{defaultAwaitTimeout, status}
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{TaxEnrolmentAssignmentErrors, UnexpectedError}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{UsersAssignedEnrolmentCurrentCred, buildFakeRequestWithSessionId, predicates, retrievalResponse, retrievals}
@@ -36,7 +37,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.{AccountDetail
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.services.EnrolmentStoreServiceTestOnly
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.utils.AccountUtilsTestOnly
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Success
 
 class TestOnlyControllerSpec extends BaseSpec {
@@ -109,10 +110,10 @@ class TestOnlyControllerSpec extends BaseSpec {
            |""".stripMargin
       val account = Json.parse(requestBody).as[AccountDetailsTestOnly]
 
-      when(mockAccountUtilsTestOnly.deleteAccountDetails(account))
+      when(mockAccountUtilsTestOnly.deleteAccountDetails(ameq(account))(any()))
         .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
-      when(mockAccountUtilsTestOnly.insertAccountDetails(account))
+      when(mockAccountUtilsTestOnly.insertAccountDetails(ameq(account))(any()))
         .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
       val request = FakeRequest()
@@ -187,10 +188,10 @@ class TestOnlyControllerSpec extends BaseSpec {
       val accounts = Json.parse(requestBody).as[List[AccountDetailsTestOnly]]
 
       accounts.foreach { account =>
-        when(mockAccountUtilsTestOnly.deleteAccountDetails(account))
+        when(mockAccountUtilsTestOnly.deleteAccountDetails(ameq(account))(any()))
           .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
-        when(mockAccountUtilsTestOnly.insertAccountDetails(account))
+        when(mockAccountUtilsTestOnly.insertAccountDetails(ameq(account))(any()))
           .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
       }
 
@@ -265,7 +266,7 @@ class TestOnlyControllerSpec extends BaseSpec {
 
       val accounts = Json.parse(requestBody).as[List[AccountDetailsTestOnly]]
       accounts.foreach { account =>
-        when(mockAccountUtilsTestOnly.deleteAccountDetails(account))
+        when(mockAccountUtilsTestOnly.deleteAccountDetails(ameq(account))(any()))
           .thenReturn(EitherT.leftT[Future, Unit].apply(UnexpectedError))
       }
 
@@ -313,10 +314,10 @@ class TestOnlyControllerSpec extends BaseSpec {
       when(mockFileHelper.loadFile(s"${nino.nino}.json"))
         .thenReturn(Success(Json.toJson(account)))
 
-      when(mockAccountUtilsTestOnly.deleteAccountDetails(account))
+      when(mockAccountUtilsTestOnly.deleteAccountDetails(ameq(account))(any()))
         .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
-      when(mockAccountUtilsTestOnly.insertAccountDetails(account))
+      when(mockAccountUtilsTestOnly.insertAccountDetails(ameq(account))(any()))
         .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
       val result = sut.insertTestData.apply(request)
@@ -346,10 +347,10 @@ class TestOnlyControllerSpec extends BaseSpec {
       when(mockFileHelper.loadFile(s"${nino.nino}.json"))
         .thenReturn(Success(Json.toJson(account)))
 
-      when(mockAccountUtilsTestOnly.deleteAccountDetails(account))
+      when(mockAccountUtilsTestOnly.deleteAccountDetails(ameq(account))(any()))
         .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
-      when(mockAccountUtilsTestOnly.insertAccountDetails(account))
+      when(mockAccountUtilsTestOnly.insertAccountDetails(ameq(account))(any()))
         .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
       val result = sut.insertTestData.apply(request)
@@ -388,10 +389,10 @@ class TestOnlyControllerSpec extends BaseSpec {
       when(mockFileHelper.loadFile(s"${nino.nino}.json"))
         .thenReturn(Success(Json.toJson(account)))
 
-      when(mockAccountUtilsTestOnly.deleteAccountDetails(account))
+      when(mockAccountUtilsTestOnly.deleteAccountDetails(ameq(account))(any()))
         .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
-      when(mockAccountUtilsTestOnly.insertAccountDetails(account))
+      when(mockAccountUtilsTestOnly.insertAccountDetails(ameq(account))(any()))
         .thenReturn(EitherT.leftT[Future, Unit].apply(UnexpectedError))
 
       val result = sut.insertTestData.apply(request)
@@ -479,7 +480,7 @@ class TestOnlyControllerSpec extends BaseSpec {
            |""".stripMargin
       val account = Json.parse(requestBody).as[AccountDetailsTestOnly]
 
-      when(mockAccountUtilsTestOnly.deleteAccountDetails(account))
+      when(mockAccountUtilsTestOnly.deleteAccountDetails(ameq(account))(any()))
         .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
       val request = FakeRequest()
@@ -554,10 +555,10 @@ class TestOnlyControllerSpec extends BaseSpec {
       val accounts = Json.parse(requestBody).as[List[AccountDetailsTestOnly]]
 
       accounts.foreach { account =>
-        when(mockAccountUtilsTestOnly.deleteAccountDetails(account))
+        when(mockAccountUtilsTestOnly.deleteAccountDetails(ameq(account))(any()))
           .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
-        when(mockAccountUtilsTestOnly.insertAccountDetails(account))
+        when(mockAccountUtilsTestOnly.insertAccountDetails(ameq(account))(any()))
           .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
       }
 
@@ -633,7 +634,7 @@ class TestOnlyControllerSpec extends BaseSpec {
 
       val accounts = Json.parse(requestBody).as[List[AccountDetailsTestOnly]]
       accounts.foreach { account =>
-        when(mockAccountUtilsTestOnly.deleteAccountDetails(account))
+        when(mockAccountUtilsTestOnly.deleteAccountDetails(ameq(account))(any()))
           .thenReturn(EitherT.leftT[Future, Unit].apply(UnexpectedError))
       }
 
@@ -673,10 +674,10 @@ class TestOnlyControllerSpec extends BaseSpec {
         )
         .build()
 
-      when(mockAuthConnector.authorise(predicates, retrievals))
+      when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(retrievalResponse()))
 
-      when(mockEacdService.getUsersAssignedPTEnrolment)
+      when(mockEacdService.getUsersAssignedPTEnrolment(any(), any(), any()))
         .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](UsersAssignedEnrolmentCurrentCred))
 
       lazy val controller: TestOnlyController = app.injector.instanceOf[TestOnlyController]
@@ -697,10 +698,10 @@ class TestOnlyControllerSpec extends BaseSpec {
         )
         .build()
 
-      when(mockAuthConnector.authorise(predicates, retrievals))
+      when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(retrievalResponse()))
 
-      when(mockEnrolmentStoreService.getUsersAssignedPTEnrolmentFromStub(any()))
+      when(mockEnrolmentStoreService.getUsersAssignedPTEnrolmentFromStub(any())(any()))
         .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](UsersAssignedEnrolmentCurrentCred))
 
       lazy val controller: TestOnlyController = app.injector.instanceOf[TestOnlyController]

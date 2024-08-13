@@ -17,13 +17,14 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import org.jsoup.Jsoup
-import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.{any, eq => ameq}
 import org.mockito.MockitoSugar.{mock, when}
 import play.api.Application
 import play.api.inject.{Binding, bind}
 import play.api.mvc.BodyParsers
 import play.api.test.Helpers.{status, _}
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, UnexpectedPTEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
@@ -34,7 +35,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SABlueInterrupt
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class SABlueInterruptControllerSpec extends ControllersBaseSpec {
 
@@ -70,10 +71,12 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
       "render the SABlueInterrupt page" when {
         "the user has not already been assigned a PT enrolment" in {
 
-          when(mockAuthConnector.authorise(predicates, retrievals))
+          when(
+            mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext])
+          )
             .thenReturn(Future.successful(retrievalResponse()))
 
-          when(mockMultipleAccountsOrchestrator.checkAccessAllowedForPage(List(SA_ASSIGNED_TO_OTHER_USER))(any()))
+          when(mockMultipleAccountsOrchestrator.checkAccessAllowedForPage(ameq(List(SA_ASSIGNED_TO_OTHER_USER)))(any()))
             .thenReturn(Right(SA_ASSIGNED_TO_OTHER_USER))
 
           mockGetDataFromCacheForActionSuccess(randomAccountType)
@@ -107,10 +110,12 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
 
       s"redirect to ${UrlPaths.enrolledPTSAOnOtherAccountPath}" when {
         "the user has already been assigned a PT enrolment already" in {
-          when(mockAuthConnector.authorise(predicates, retrievals))
+          when(
+            mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext])
+          )
             .thenReturn(Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly)))
 
-          when(mockMultipleAccountsOrchestrator.checkAccessAllowedForPage(List(SA_ASSIGNED_TO_OTHER_USER))(any()))
+          when(mockMultipleAccountsOrchestrator.checkAccessAllowedForPage(ameq(List(SA_ASSIGNED_TO_OTHER_USER)))(any()))
             .thenReturn(Left(UnexpectedPTEnrolment(SA_ASSIGNED_TO_OTHER_USER)))
 
           mockGetDataFromCacheForActionSuccess(randomAccountType)
@@ -126,7 +131,7 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
     }
     s"the cache no redirectUrl" should {
       "render the error page" in {
-        when(mockAuthConnector.authorise(predicates, retrievals))
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
 
         mockGetDataFromCacheForActionNoRedirectUrl
@@ -142,10 +147,10 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
 
     s"the user does not have an account type of $SA_ASSIGNED_TO_OTHER_USER" should {
       s"redirect to ${UrlPaths.accountCheckPath}" in {
-        when(mockAuthConnector.authorise(predicates, retrievals))
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
 
-        when(mockMultipleAccountsOrchestrator.checkAccessAllowedForPage(List(SA_ASSIGNED_TO_OTHER_USER))(any()))
+        when(mockMultipleAccountsOrchestrator.checkAccessAllowedForPage(ameq(List(SA_ASSIGNED_TO_OTHER_USER)))(any()))
           .thenReturn(Left(IncorrectUserType(UrlPaths.returnUrl, randomAccountType)))
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
@@ -163,10 +168,10 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
   "continue" when {
     "a user has SA on another account" should {
       s"redirect to ${UrlPaths.saOnOtherAccountKeepAccessToSAPath}" in {
-        when(mockAuthConnector.authorise(predicates, retrievals))
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
 
-        when(mockMultipleAccountsOrchestrator.checkAccessAllowedForPage(List(SA_ASSIGNED_TO_OTHER_USER))(any()))
+        when(mockMultipleAccountsOrchestrator.checkAccessAllowedForPage(ameq(List(SA_ASSIGNED_TO_OTHER_USER)))(any()))
           .thenReturn(Right(SA_ASSIGNED_TO_OTHER_USER))
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
@@ -183,7 +188,7 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
     }
     s"the cache no redirectUrl" should {
       "render the error page" in {
-        when(mockAuthConnector.authorise(predicates, retrievals))
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
         mockGetDataFromCacheForActionNoRedirectUrl
 
@@ -198,10 +203,10 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
 
     s"the user does not have an account type of $SA_ASSIGNED_TO_OTHER_USER" should {
       s"redirect to ${UrlPaths.accountCheckPath}" in {
-        when(mockAuthConnector.authorise(predicates, retrievals))
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
 
-        when(mockMultipleAccountsOrchestrator.checkAccessAllowedForPage(List(SA_ASSIGNED_TO_OTHER_USER))(any()))
+        when(mockMultipleAccountsOrchestrator.checkAccessAllowedForPage(ameq(List(SA_ASSIGNED_TO_OTHER_USER)))(any()))
           .thenReturn(Left(IncorrectUserType(UrlPaths.returnUrl, randomAccountType)))
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)

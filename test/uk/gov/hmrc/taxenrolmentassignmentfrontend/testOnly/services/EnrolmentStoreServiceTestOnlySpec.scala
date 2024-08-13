@@ -394,10 +394,16 @@ class EnrolmentStoreServiceTestOnlySpec extends BaseSpec {
   "deleteAllKnownFactsForNino" must {
     "delete all known IR-SA and HMRC-PT known facts" in {
 
-      when(mockEnrolmentStoreConnectorTestOnly.queryKnownFactsByVerifiers(ArgumentMatchers.eq("IR-SA"), any()))
+      when(
+        mockEnrolmentStoreConnectorTestOnly
+          .queryKnownFactsByVerifiers(ArgumentMatchers.eq("IR-SA"), any())(any(), any())
+      )
         .thenReturn(createInboundResult(List("enrolmentKey1", "enrolmentKey2")))
 
-      when(mockEnrolmentStoreConnectorTestOnly.queryKnownFactsByVerifiers(ArgumentMatchers.eq("HMRC-PT"), any()))
+      when(
+        mockEnrolmentStoreConnectorTestOnly
+          .queryKnownFactsByVerifiers(ArgumentMatchers.eq("HMRC-PT"), any())(any(), any())
+      )
         .thenReturn(createInboundResult(List("enrolmentKey3")))
 
       List("enrolmentKey1", "enrolmentKey2", "enrolmentKey3").foreach { enrolmentKey =>

@@ -17,6 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting
 
 import org.mockito.ArgumentCaptor
+import org.mockito.ArgumentMatchers.any
 import org.mockito.MockitoSugar.{mock, when}
 import play.api.Application
 import play.api.inject.bind
@@ -58,7 +59,7 @@ class AuditHandlerSpec extends BaseSpec {
     "audit with the correct audit event" in {
 
       val eventCapture: ArgumentCaptor[ExtendedDataEvent] = ArgumentCaptor.forClass(classOf[ExtendedDataEvent])
-      when(mockAuditConnector.sendExtendedEvent(eventCapture.capture()))
+      when(mockAuditConnector.sendExtendedEvent(eventCapture.capture())(any(), any()))
         .thenReturn(Future.successful(AuditResult.Success))
 
       auditHandler.audit(event)

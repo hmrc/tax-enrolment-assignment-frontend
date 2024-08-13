@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import org.jsoup.Jsoup
-import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.{any, eq => ameq}
 import org.mockito.MockitoSugar.{mock, when}
 import play.api.Application
 import play.api.http.Status.OK
@@ -25,6 +25,8 @@ import play.api.inject.{Binding, bind}
 import play.api.mvc.BodyParsers
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, UnexpectedResponseFromUsersGroupsSearch}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{ControllersBaseSpec, UrlPaths}
@@ -34,7 +36,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTWithSAOnOtherAccount
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
@@ -71,10 +73,27 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
     "the user has enrolled for PT after choosing to have SA separate" should {
       "render the EnrolledForPTWithSAOnOtherAccount page with SA details" in {
 
-        when(mockAuthConnector.authorise(predicates, retrievals))
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse(enrolments = saEnrolmentOnly)))
 
-        when(mockMultipleAccountsOrchestrator.getDetailsForEnrolledPTWithSAOnOtherAccount(any(), any(), any()))
+        when(
+          mockMultipleAccountsOrchestrator.getDetailsForEnrolledPTWithSAOnOtherAccount(
+            any[RequestWithUserDetailsFromSessionAndMongo[_]],
+            any[HeaderCarrier],
+            any[ExecutionContext]
+          )
+        )
+          .thenReturn(
+            createInboundResult(accountDetails)
+          )
+
+        when(
+          mockMultipleAccountsOrchestrator.getSACredentialIfNotFraud(
+            any[RequestWithUserDetailsFromSessionAndMongo[_]],
+            any[HeaderCarrier],
+            any[ExecutionContext]
+          )
+        )
           .thenReturn(
             createInboundResult(
               Some(accountDetails.copy(userId = "********1234"))
@@ -101,7 +120,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
     "the user has enrolled for PT after reporting fraud" should {
       "return INTERNAL_SERVER_ERROR the EnrolledForPTWithSAOnOtherAccount page without SA" in { // Check this as new status is different
-        when(mockAuthConnector.authorise(predicates, retrievals))
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse(enrolments = saEnrolmentOnly)))
 
         when(mockMultipleAccountsOrchestrator.getDetailsForEnrolledPTWithSAOnOtherAccount(any(), any(), any()))
@@ -121,7 +140,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
     "the user is the wrong usertype" should {
       s"redirect to the ${UrlPaths.accountCheckPath} page" in {
-        when(mockAuthConnector.authorise(predicates, retrievals))
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
 
         when(mockMultipleAccountsOrchestrator.getDetailsForEnrolledPTWithSAOnOtherAccount(any(), any(), any()))
@@ -141,7 +160,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
     }
     "no redirectUrl stored in session" should {
       "render the error view" in {
-        when(mockAuthConnector.authorise(predicates, retrievals))
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
 
         mockGetDataFromCacheForActionNoRedirectUrl
@@ -157,7 +176,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
     "the call to users-group-search fails" should {
       "render error view" in {
-        when(mockAuthConnector.authorise(predicates, retrievals))
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
 
         when(mockMultipleAccountsOrchestrator.getDetailsForEnrolledPTWithSAOnOtherAccount(any(), any(), any()))
@@ -174,7 +193,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
   }
   "continue" when {
     "the call to continue deletes user data and redirects to their redirectURL" in {
-      when(mockAuthConnector.authorise(predicates, retrievals))
+      when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(retrievalResponse()))
 
       mockGetDataFromCacheForActionSuccess(accountType = randomAccountType, redirectUrl = "redirect")

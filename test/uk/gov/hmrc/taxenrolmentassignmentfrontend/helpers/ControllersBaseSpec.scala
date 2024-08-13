@@ -23,6 +23,7 @@ import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.ACCOUNT_TYPE
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
@@ -38,7 +39,7 @@ trait ControllersBaseSpec extends BaseSpec {
     val data = Map(ACCOUNT_TYPE -> Json.toJson(randomAccountType))
     val cacheMap = CacheMap("id", data)
 
-    when(mockTeaSessionCache.fetch())
+    when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))
       .thenReturn(Future.successful(Some(cacheMap)))
   }
 
@@ -50,7 +51,7 @@ trait ControllersBaseSpec extends BaseSpec {
     val data = generateBasicCacheData(accountType, redirectUrl) ++ additionCacheData
     val cacheMap = CacheMap("id", data)
 
-    when(mockTeaSessionCache.fetch())
+    when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))
       .thenReturn(Future.successful(Some(cacheMap)))
   }
 

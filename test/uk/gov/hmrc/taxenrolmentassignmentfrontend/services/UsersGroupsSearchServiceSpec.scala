@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.services
 
+import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
 import org.mockito.MockitoSugar.{mock, when}
 import play.api.Application
@@ -72,7 +73,10 @@ class UsersGroupsSearchServiceSpec extends BaseSpec {
 
         when(
           mockTeaSessionCache
-            .save(s"AccountDetailsFor$CREDENTIAL_ID", accountDetails.copy(userId = "********6037"))(any(), any())
+            .save(
+              ArgumentMatchers.eq(s"AccountDetailsFor$CREDENTIAL_ID"),
+              ArgumentMatchers.eq(accountDetails.copy(userId = "********6037"))
+            )(any(), any())
         )
           .thenReturn(Future(CacheMap(request.sessionID, Map())))
 

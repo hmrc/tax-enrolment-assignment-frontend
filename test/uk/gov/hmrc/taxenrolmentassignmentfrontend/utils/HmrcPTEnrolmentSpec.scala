@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.utils
 
 import cats.data.EitherT
 import org.mockito.ArgumentMatchers
-import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.{any, anyString}
 import org.mockito.MockitoSugar.{mock, times, verify, when}
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
@@ -37,14 +37,14 @@ class HmrcPTEnrolmentSpec extends BaseSpec {
   "findAndDeleteWrongPTEnrolment" when {
     "There is no enrolment" should {
       "not call eacdService" in {
-        when(mockTaxEnrolmentsConnector.deallocateEnrolment(any(), any()))
+        when(mockTaxEnrolmentsConnector.deallocateEnrolment(anyString(), any())(any(), any()))
           .thenReturn(EitherT.rightT(HttpResponse(OK, "")))
 
         val result = service.findAndDeleteWrongPTEnrolment(NINO, Enrolments(Set.empty: Set[Enrolment]), "groupId")
         whenReady(result.value) { res =>
           res shouldBe Right(())
         }
-        verify(mockTaxEnrolmentsConnector, times(0)).deallocateEnrolment(any(), any())
+        verify(mockTaxEnrolmentsConnector, times(0)).deallocateEnrolment(anyString(), any())(any(), any())
       }
     }
 
@@ -52,14 +52,14 @@ class HmrcPTEnrolmentSpec extends BaseSpec {
       "not call eacdService" in {
         val enrolments = Set(Enrolment("key", Seq(EnrolmentIdentifier("key", "value")), "activated"))
 
-        when(mockTaxEnrolmentsConnector.deallocateEnrolment(any(), any()))
+        when(mockTaxEnrolmentsConnector.deallocateEnrolment(anyString(), any())(any(), any()))
           .thenReturn(EitherT.rightT(HttpResponse(OK, "")))
 
         val result = service.findAndDeleteWrongPTEnrolment(NINO, Enrolments(enrolments), "groupId")
         whenReady(result.value) { res =>
           res shouldBe Right(())
         }
-        verify(mockTaxEnrolmentsConnector, times(0)).deallocateEnrolment(any(), any())
+        verify(mockTaxEnrolmentsConnector, times(0)).deallocateEnrolment(anyString(), any())(any(), any())
       }
     }
 
@@ -67,7 +67,7 @@ class HmrcPTEnrolmentSpec extends BaseSpec {
       "not call eacdService" in {
         val enrolments = Set(Enrolment("HMRC-PT", Seq(EnrolmentIdentifier("NINO", NINO.nino)), "activated"))
 
-        when(mockTaxEnrolmentsConnector.deallocateEnrolment(any(), any()))
+        when(mockTaxEnrolmentsConnector.deallocateEnrolment(anyString(), any())(any(), any()))
           .thenReturn(EitherT.rightT(HttpResponse(OK, "")))
 
         val result = service.findAndDeleteWrongPTEnrolment(NINO, Enrolments(enrolments), "groupId")
@@ -75,7 +75,7 @@ class HmrcPTEnrolmentSpec extends BaseSpec {
           res shouldBe Right(())
         }
 
-        verify(mockTaxEnrolmentsConnector, times(0)).deallocateEnrolment(any(), any())
+        verify(mockTaxEnrolmentsConnector, times(0)).deallocateEnrolment(anyString(), any())(any(), any())
       }
     }
 
@@ -84,7 +84,8 @@ class HmrcPTEnrolmentSpec extends BaseSpec {
         val enrolments = Set(Enrolment("HMRC-PT", Seq(EnrolmentIdentifier("NINO", secondNino.nino)), "activated"))
 
         when(
-          mockTaxEnrolmentsConnector.deallocateEnrolment(any(), ArgumentMatchers.eq(s"HMRC-PT~NINO~${secondNino.nino}"))
+          mockTaxEnrolmentsConnector
+            .deallocateEnrolment(anyString(), ArgumentMatchers.eq(s"HMRC-PT~NINO~${secondNino.nino}"))(any(), any())
         )
           .thenReturn(EitherT.rightT(HttpResponse(OK, "")))
 
@@ -93,7 +94,7 @@ class HmrcPTEnrolmentSpec extends BaseSpec {
           res shouldBe Right(())
         }
         verify(mockTaxEnrolmentsConnector, times(1))
-          .deallocateEnrolment(any(), ArgumentMatchers.eq(s"HMRC-PT~NINO~${secondNino.nino}"))
+          .deallocateEnrolment(anyString(), ArgumentMatchers.eq(s"HMRC-PT~NINO~${secondNino.nino}"))(any(), any())
       }
     }
 
@@ -109,24 +110,33 @@ class HmrcPTEnrolmentSpec extends BaseSpec {
         )
 
         when(
-          mockTaxEnrolmentsConnector.deallocateEnrolment(any(), ArgumentMatchers.eq(s"HMRC-PT~NINO~${secondNino.nino}"))
+          mockTaxEnrolmentsConnector
+            .deallocateEnrolment(anyString(), ArgumentMatchers.eq(s"HMRC-PT~NINO~${secondNino.nino}"))(any(), any())
         )
           .thenReturn(EitherT.rightT(HttpResponse(OK, "")))
 
         when(
-          mockTaxEnrolmentsConnector.deallocateEnrolment(any(), ArgumentMatchers.eq(s"HMRC-PT~NINO~${thirdNino.nino}"))
+          mockTaxEnrolmentsConnector
+            .deallocateEnrolment(anyString(), ArgumentMatchers.eq(s"HMRC-PT~NINO~${thirdNino.nino}"))(any(), any())
         )
-          .thenReturn(EitherT.rightT(HttpResponse(OK, "")))
-
-        when(mockTaxEnrolmentsConnector.deallocateEnrolment(any(), ArgumentMatchers.eq(s"HMRC-PT~NINO~${NINO.nino}")))
           .thenReturn(EitherT.rightT(HttpResponse(OK, "")))
 
         when(
-          mockTaxEnrolmentsConnector.deallocateEnrolment(any(), ArgumentMatchers.eq(s"FAKE~NINO~${secondNino.nino}"))
+          mockTaxEnrolmentsConnector
+            .deallocateEnrolment(anyString(), ArgumentMatchers.eq(s"HMRC-PT~NINO~${NINO.nino}"))(any(), any())
         )
           .thenReturn(EitherT.rightT(HttpResponse(OK, "")))
 
-        when(mockTaxEnrolmentsConnector.deallocateEnrolment(any(), ArgumentMatchers.eq(s"IR-SA~UTR~000000")))
+        when(
+          mockTaxEnrolmentsConnector
+            .deallocateEnrolment(anyString(), ArgumentMatchers.eq(s"FAKE~NINO~${secondNino.nino}"))(any(), any())
+        )
+          .thenReturn(EitherT.rightT(HttpResponse(OK, "")))
+
+        when(
+          mockTaxEnrolmentsConnector
+            .deallocateEnrolment(anyString(), ArgumentMatchers.eq(s"IR-SA~UTR~000000"))(any(), any())
+        )
           .thenReturn(EitherT.rightT(HttpResponse(OK, "")))
 
         val result = service.findAndDeleteWrongPTEnrolment(NINO, Enrolments(enrolments), "groupId")
@@ -134,15 +144,15 @@ class HmrcPTEnrolmentSpec extends BaseSpec {
           res shouldBe Right(())
         }
         verify(mockTaxEnrolmentsConnector, times(1))
-          .deallocateEnrolment(any(), ArgumentMatchers.eq(s"HMRC-PT~NINO~${secondNino.nino}"))
+          .deallocateEnrolment(anyString(), ArgumentMatchers.eq(s"HMRC-PT~NINO~${secondNino.nino}"))(any(), any())
         verify(mockTaxEnrolmentsConnector, times(1))
-          .deallocateEnrolment(any(), ArgumentMatchers.eq(s"HMRC-PT~NINO~${thirdNino.nino}"))
+          .deallocateEnrolment(anyString(), ArgumentMatchers.eq(s"HMRC-PT~NINO~${thirdNino.nino}"))(any(), any())
         verify(mockTaxEnrolmentsConnector, times(0))
-          .deallocateEnrolment(any(), ArgumentMatchers.eq(s"HMRC-PT~NINO~${NINO.nino}"))
+          .deallocateEnrolment(anyString(), ArgumentMatchers.eq(s"HMRC-PT~NINO~${NINO.nino}"))(any(), any())
         verify(mockTaxEnrolmentsConnector, times(0))
-          .deallocateEnrolment(any(), ArgumentMatchers.eq(s"FAKE~NINO~${secondNino.nino}"))
+          .deallocateEnrolment(anyString(), ArgumentMatchers.eq(s"FAKE~NINO~${secondNino.nino}"))(any(), any())
         verify(mockTaxEnrolmentsConnector, times(0))
-          .deallocateEnrolment(any(), ArgumentMatchers.eq(s"IR-SA~UTR~000000"))
+          .deallocateEnrolment(anyString(), ArgumentMatchers.eq(s"IR-SA~UTR~000000"))(any(), any())
       }
     }
 
@@ -151,7 +161,8 @@ class HmrcPTEnrolmentSpec extends BaseSpec {
         val enrolments = Set(Enrolment("HMRC-PT", Seq(EnrolmentIdentifier("NINO", secondNino.nino)), "activated"))
 
         when(
-          mockTaxEnrolmentsConnector.deallocateEnrolment(any(), ArgumentMatchers.eq(s"HMRC-PT~NINO~${secondNino.nino}"))
+          mockTaxEnrolmentsConnector
+            .deallocateEnrolment(anyString(), ArgumentMatchers.eq(s"HMRC-PT~NINO~${secondNino.nino}"))(any(), any())
         )
           .thenReturn(EitherT.leftT(UpstreamErrorResponse("error", INTERNAL_SERVER_ERROR)))
 
@@ -160,7 +171,7 @@ class HmrcPTEnrolmentSpec extends BaseSpec {
           res shouldBe a[Left[UpstreamErrorResponse, _]]
         }
         verify(mockTaxEnrolmentsConnector, times(1))
-          .deallocateEnrolment(any(), ArgumentMatchers.eq(s"HMRC-PT~NINO~${secondNino.nino}"))
+          .deallocateEnrolment(anyString(), ArgumentMatchers.eq(s"HMRC-PT~NINO~${secondNino.nino}"))(any(), any())
       }
     }
   }

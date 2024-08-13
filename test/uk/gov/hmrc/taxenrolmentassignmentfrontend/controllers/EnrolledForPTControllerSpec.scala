@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 import org.jsoup.Jsoup
-import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.{any, eq => ameq}
 import org.mockito.MockitoSugar.{mock, when}
 import play.api.Application
 import play.api.http.Status.OK
@@ -24,6 +24,7 @@ import play.api.inject.{Binding, bind}
 import play.api.mvc.BodyParsers
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.ControllersBaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
@@ -33,7 +34,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTPage
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class EnrolledForPTControllerSpec extends ControllersBaseSpec {
 
@@ -67,7 +68,7 @@ class EnrolledForPTControllerSpec extends ControllersBaseSpec {
   "view" when {
     "the user has multiple accounts and none have SA" should {
       "render the landing page" in {
-        when(mockAuthConnector.authorise(predicates, retrievals))
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
 
         when(mockMultipleAccountsOrchestrator.getDetailsForEnrolledPT(any(), any(), any()))
@@ -89,7 +90,7 @@ class EnrolledForPTControllerSpec extends ControllersBaseSpec {
     "the user is not a  multiple accounts usertype and has redirectUrl stored in session" should {
       "redirect to accountCheck" in {
 
-        when(mockAuthConnector.authorise(predicates, retrievals))
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
 
         when(mockMultipleAccountsOrchestrator.getDetailsForEnrolledPT(any(), any(), any()))
@@ -117,7 +118,7 @@ class EnrolledForPTControllerSpec extends ControllersBaseSpec {
     "the user is not a  multiple accounts usertype and has no redirectUrl stored in session" should {
       "render the error page" in {
 
-        when(mockAuthConnector.authorise(predicates, retrievals))
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
 
         mockGetDataFromCacheForActionNoRedirectUrl
@@ -133,7 +134,7 @@ class EnrolledForPTControllerSpec extends ControllersBaseSpec {
     "the call to users-group-search fails" should {
       "render the error view" in {
 
-        when(mockAuthConnector.authorise(predicates, retrievals))
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
 
         when(mockMultipleAccountsOrchestrator.getDetailsForEnrolledPT(any(), any(), any()))

@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
-import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.{any, eq => ameq}
 import org.mockito.MockitoSugar.{mock, times, verify, when}
 import play.api.Application
 import play.api.http.Status.OK
@@ -24,6 +24,7 @@ import play.api.inject.{Binding, bind}
 import play.api.mvc.BodyParsers
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.PT_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
@@ -34,7 +35,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnotherAccount
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
@@ -71,7 +72,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
       "render the pt on another page with no Access SA text" in {
         val ptEnrolmentDataModelNone = ptEnrolmentDataModel(None)
 
-        when(mockAuthConnector.authorise(predicates, retrievals))
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
 
         when(mockMultipleAccountsOrchestrator.getCurrentAndPTAAndSAIfExistsForUser(any(), any(), any()))
@@ -83,7 +84,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
           accountDetailsWithPT.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM"))
         )(requestWithAccountType(randomAccountType), messagesApi)
 
-        when(mockAuditHandler.audit(auditEvent)).thenReturn(Future.successful((): Unit))
+        when(mockAuditHandler.audit(ameq(auditEvent))(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -103,8 +104,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
           fakeRequest,
           messages
         ).toString
-        verify(mockAuditHandler, times(1)).audit(auditEvent)
-
+        verify(mockAuditHandler, times(1)).audit(ameq(auditEvent))(any[HeaderCarrier])
       }
     }
 
@@ -113,7 +113,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
         val ptEnrolmentModel = ptEnrolmentDataModel(Some(USER_ID))
 
-        when(mockAuthConnector.authorise(predicates, retrievals))
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse(enrolments = saEnrolmentOnly)))
 
         when(mockMultipleAccountsOrchestrator.getCurrentAndPTAAndSAIfExistsForUser(any(), any(), any()))
@@ -125,7 +125,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
           accountDetailsWithPT.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM"))
         )(requestWithAccountType(randomAccountType), messagesApi)
 
-        when(mockAuditHandler.audit(auditEvent)).thenReturn(Future.successful((): Unit))
+        when(mockAuditHandler.audit(ameq(auditEvent))(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -144,7 +144,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
           fakeRequest,
           messages
         ).toString
-        verify(mockAuditHandler, times(1)).audit(auditEvent)
+        verify(mockAuditHandler, times(1)).audit(ameq(auditEvent))(any[HeaderCarrier])
       }
     }
 
@@ -153,7 +153,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
         val ptEnrolmentModel = ptEnrolmentDataModel(Some(USER_ID))
 
-        when(mockAuthConnector.authorise(predicates, retrievals))
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse(enrolments = saEnrolmentOnly)))
 
         when(mockMultipleAccountsOrchestrator.getCurrentAndPTAAndSAIfExistsForUser(any(), any(), any()))
@@ -165,7 +165,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
           accountDetailsWithPT.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM"))
         )(requestWithAccountType(randomAccountType), messagesApi)
 
-        when(mockAuditHandler.audit(auditEvent)).thenReturn(Future.successful((): Unit))
+        when(mockAuditHandler.audit(ameq(auditEvent))(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -184,7 +184,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
           fakeRequest,
           messages
         ).toString
-        verify(mockAuditHandler, times(1)).audit(auditEvent)
+        verify(mockAuditHandler, times(1)).audit(ameq(auditEvent))(any[HeaderCarrier])
       }
     }
 
@@ -193,7 +193,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
         val ptEnrolmentModel = ptEnrolmentDataModel(Some(PT_USER_ID))
 
-        when(mockAuthConnector.authorise(predicates, retrievals))
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse(enrolments = saEnrolmentOnly)))
 
         when(mockMultipleAccountsOrchestrator.getCurrentAndPTAAndSAIfExistsForUser(any(), any(), any()))
@@ -205,7 +205,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
           accountDetailsWithPT.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM"))
         )(requestWithAccountType(randomAccountType), messagesApi)
 
-        when(mockAuditHandler.audit(auditEvent)).thenReturn(Future.successful((): Unit))
+        when(mockAuditHandler.audit(ameq(auditEvent))(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -224,7 +224,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
           fakeRequest,
           messages
         ).toString
-        verify(mockAuditHandler, times(1)).audit(auditEvent)
+        verify(mockAuditHandler, times(1)).audit(ameq(auditEvent))(any[HeaderCarrier])
       }
     }
 
@@ -233,7 +233,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
         val ptEnrolmentModel = ptEnrolmentDataModel(Some("8764"))
 
-        when(mockAuthConnector.authorise(predicates, retrievals))
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse(enrolments = saEnrolmentOnly)))
 
         when(mockMultipleAccountsOrchestrator.getCurrentAndPTAAndSAIfExistsForUser(any(), any(), any()))
@@ -245,7 +245,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
           accountDetailsWithPT.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM"))
         )(requestWithAccountType(randomAccountType), messagesApi)
 
-        when(mockAuditHandler.audit(auditEvent)).thenReturn(Future.successful((): Unit))
+        when(mockAuditHandler.audit(ameq(auditEvent))(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -264,13 +264,13 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
           fakeRequest,
           messages
         ).toString
-        verify(mockAuditHandler, times(1)).audit(auditEvent)
+        verify(mockAuditHandler, times(1)).audit(ameq(auditEvent))(any[HeaderCarrier])
       }
     }
 
     s"the user does not have an account type of $PT_ASSIGNED_TO_OTHER_USER" should {
       s"redirect to ${UrlPaths.accountCheckPath}" in {
-        when(mockAuthConnector.authorise(predicates, retrievals))
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
 
         when(mockMultipleAccountsOrchestrator.getCurrentAndPTAAndSAIfExistsForUser(any(), any(), any()))
@@ -289,7 +289,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
     "the current user has a no PT enrolment on other account but session says it is other account" should {
       "render the error page" in {
 
-        when(mockAuthConnector.authorise(predicates, retrievals))
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse(enrolments = saEnrolmentOnly)))
 
         when(mockMultipleAccountsOrchestrator.getCurrentAndPTAAndSAIfExistsForUser(any(), any(), any()))
@@ -306,7 +306,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
     }
     "no redirect url in cache" should {
       "render the error page" in {
-        when(mockAuthConnector.authorise(predicates, retrievals))
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
 
         mockGetDataFromCacheForActionNoRedirectUrl

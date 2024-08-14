@@ -16,37 +16,36 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
+import org.mockito.ArgumentMatchers.{any, eq => ameq}
+import org.mockito.MockitoSugar.{mock, when}
 import play.api.Application
 import play.api.http.Status.OK
-import play.api.inject.bind
+import play.api.inject.{Binding, bind}
 import play.api.mvc.BodyParsers
 import play.api.test.Helpers._
-import uk.gov.hmrc.auth.core.authorise.Predicate
-import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
-import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, Enrolments}
+import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_CURRENT_USER
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{ControllersBaseSpec, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditHandler
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{SilentAssignmentService}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTPage
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class EnrolledForPTWithSAControllerSpec extends ControllersBaseSpec {
 
-  lazy val mockSilentAssignmentService = mock[SilentAssignmentService]
-  lazy val mockAccountCheckOrchestrator = mock[AccountCheckOrchestrator]
-  lazy val mockAuditHandler = mock[AuditHandler]
+  lazy val mockSilentAssignmentService: SilentAssignmentService = mock[SilentAssignmentService]
+  lazy val mockAccountCheckOrchestrator: AccountCheckOrchestrator = mock[AccountCheckOrchestrator]
+  lazy val mockAuditHandler: AuditHandler = mock[AuditHandler]
 
   lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
-  lazy val mockMultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
+  lazy val mockMultipleAccountsOrchestrator: MultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
 
-  override lazy val overrides = Seq(
+  override lazy val overrides: Seq[Binding[TEASessionCache]] = Seq(
     bind[TEASessionCache].toInstance(mockTeaSessionCache)
   )
 
@@ -61,7 +60,7 @@ class EnrolledForPTWithSAControllerSpec extends ControllersBaseSpec {
     )
     .build()
 
-  lazy val controller = app.injector.instanceOf[EnrolledForPTWithSAController]
+  lazy val controller: EnrolledForPTWithSAController = app.injector.instanceOf[EnrolledForPTWithSAController]
 
   val view: EnrolledForPTPage =
     app.injector.instanceOf[EnrolledForPTPage]
@@ -69,38 +68,17 @@ class EnrolledForPTWithSAControllerSpec extends ControllersBaseSpec {
   "view" when {
     "the user has multiple accounts, is signed in with one with SA then" should {
       "see the Enrolled to PT with SA page" in {
-        (
-          mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
-          .expects(predicates, retrievals, *, *)
-          .returning(
-            Future.successful(retrievalResponse(enrolments = saEnrolmentOnly))
-          )
 
-        (mockMultipleAccountsOrchestrator
-          .getDetailsForEnrolledPT(
-            _: RequestWithUserDetailsFromSessionAndMongo[_],
-            _: HeaderCarrier,
-            _: ExecutionContext
-          ))
-          .expects(*, *, *)
-          .returning(createInboundResult(accountDetails))
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
+          .thenReturn(Future.successful(retrievalResponse(enrolments = saEnrolmentOnly)))
+
+        when(mockMultipleAccountsOrchestrator.getDetailsForEnrolledPT(any(), any(), any()))
+          .thenReturn(createInboundResult(accountDetails))
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
         val result = controller.view
-          .apply(buildFakeRequestWithSessionId("", ""))
+          .apply(buildFakeRequestWithSessionId(""))
 
         status(result) shouldBe OK
 
@@ -115,33 +93,21 @@ class EnrolledForPTWithSAControllerSpec extends ControllersBaseSpec {
   "continue" when {
     "the user has multiple accounts, is signed in with one with SA then" should {
       s"redirect to ${UrlPaths.returnUrl}" in {
-        (
-          mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.successful(retrievalResponse(enrolments = saEnrolmentOnly)))
-        mockDeleteDataFromCache
+
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
+          .thenReturn(Future.successful(retrievalResponse(enrolments = saEnrolmentOnly)))
+        mockDeleteDataFromCacheWhen
         mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_CURRENT_USER, UrlPaths.returnUrl)
 
         val result = controller
           .continue()
-          .apply(buildFakeRequestWithSessionId("", ""))
+          .apply(buildFakeRequestWithSessionId(""))
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some(
           UrlPaths.returnUrl
         )
+        mockDeleteDataFromCacheVerify
       }
     }
   }

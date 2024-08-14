@@ -17,11 +17,11 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.utils
 
 import cats.data.EitherT
+import org.mockito.MockitoSugar.{mock, when}
 import org.scalatest.matchers.must.Matchers._
 import play.api.Application
 import play.api.inject.bind
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AdditonalFactors, IdentifiersOrVerifiers}
@@ -73,65 +73,43 @@ class AccountUtilsTestOnlySpec extends BaseSpec {
     )
 
     "delete all details" in {
-      (mockBasStubsConnectorTestOnly
-        .putAccount(_: AccountDetailsTestOnly)(_: HeaderCarrier))
-        .expects(account, *)
-        .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+      when(mockBasStubsConnectorTestOnly.putAccount(account))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
-      (mockBasStubsConnectorTestOnly
-        .deleteAccount(_: AccountDetailsTestOnly)(_: HeaderCarrier))
-        .expects(account, *)
-        .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+      when(mockBasStubsConnectorTestOnly.deleteAccount(account))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
-      (mockIdentityVerificationConnectorTestOnly
-        .deleteCredId(_: String)(_: HeaderCarrier))
-        .expects(credId, *)
-        .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+      when(mockIdentityVerificationConnectorTestOnly.deleteCredId(credId))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
       account.enrolments.foreach { enrolment =>
-        (mockEnrolmentStoreServiceTestOnly
-          .deallocateEnrolmentFromGroups(_: EnrolmentDetailsTestOnly)(_: HeaderCarrier))
-          .expects(enrolment, *)
-          .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
-        (mockEnrolmentStoreServiceTestOnly
-          .deallocateEnrolmentFromUsers(_: EnrolmentDetailsTestOnly)(_: HeaderCarrier))
-          .expects(enrolment, *)
-          .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
-        (mockEnrolmentStoreServiceTestOnly
-          .deleteEnrolment(_: EnrolmentDetailsTestOnly)(_: HeaderCarrier))
-          .expects(enrolment, *)
-          .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+        when(mockEnrolmentStoreServiceTestOnly.deallocateEnrolmentFromGroups(enrolment))
+          .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+
+        when(mockEnrolmentStoreServiceTestOnly.deallocateEnrolmentFromUsers(enrolment))
+          .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+
+        when(mockEnrolmentStoreServiceTestOnly.deleteEnrolment(enrolment))
+          .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
       }
 
-      (mockEnrolmentStoreServiceTestOnly
-        .deleteAllKnownFactsForNino(_: Nino)(_: HeaderCarrier))
-        .expects(nino, *)
-        .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+      when(mockEnrolmentStoreServiceTestOnly.deleteAllKnownFactsForNino(nino))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
-      (mockEnrolmentStoreServiceTestOnly
-        .deleteGroup(_: String)(_: HeaderCarrier))
-        .expects(groupId, *)
-        .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+      when(mockEnrolmentStoreServiceTestOnly.deleteGroup(groupId))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
-      (mockEnrolmentStoreServiceTestOnly
-        .deleteAccount(_: String)(_: HeaderCarrier))
-        .expects(groupId, *)
-        .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+      when(mockEnrolmentStoreServiceTestOnly.deleteAccount(groupId))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
-      (mockEnrolmentStoreServiceTestOnly
-        .deallocateEnrolmentsFromGroup(_: String)(_: HeaderCarrier))
-        .expects(groupId, *)
-        .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+      when(mockEnrolmentStoreServiceTestOnly.deallocateEnrolmentsFromGroup(groupId))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
-      (mockEnrolmentStoreServiceTestOnly
-        .deallocateEnrolmentsFromUser(_: String)(_: HeaderCarrier))
-        .expects(credId, *)
-        .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+      when(mockEnrolmentStoreServiceTestOnly.deallocateEnrolmentsFromUser(credId))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
-      (mockBasStubsConnectorTestOnly
-        .deleteAdditionalFactors(_: String)(_: HeaderCarrier))
-        .expects(credId, *)
-        .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+      when(mockBasStubsConnectorTestOnly.deleteAdditionalFactors(credId))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
       val result = sut.deleteAccountDetails(account).value.futureValue
 
@@ -164,38 +142,25 @@ class AccountUtilsTestOnlySpec extends BaseSpec {
 
     "insert all details" in {
 
-      (mockEnrolmentStoreServiceTestOnly
-        .insertAccount(_: AccountDetailsTestOnly)(_: HeaderCarrier))
-        .expects(account, *)
-        .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+      when(mockEnrolmentStoreServiceTestOnly.insertAccount(account))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
       account.enrolments.foreach { enrolment =>
-        (mockEnrolmentStoreServiceTestOnly
-          .upsertEnrolment(_: EnrolmentDetailsTestOnly)(_: HeaderCarrier))
-          .expects(enrolment, *)
-          .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+        when(mockEnrolmentStoreServiceTestOnly.upsertEnrolment(enrolment))
+          .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
-        (mockEnrolmentStoreServiceTestOnly
-          .addEnrolmentToGroup(_: String, _: String, _: EnrolmentDetailsTestOnly)(_: HeaderCarrier))
-          .expects(groupId, credId, enrolment, *)
-          .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
-
+        when(mockEnrolmentStoreServiceTestOnly.addEnrolmentToGroup(groupId, credId, enrolment))
+          .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
       }
 
-      (mockIdentityVerificationConnectorTestOnly
-        .insertCredId(_: String, _: Nino)(_: HeaderCarrier))
-        .expects(credId, nino, *)
-        .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+      when(mockIdentityVerificationConnectorTestOnly.insertCredId(credId, nino))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
-      (mockBasStubsConnectorTestOnly
-        .putAccount(_: AccountDetailsTestOnly)(_: HeaderCarrier))
-        .expects(account, *)
-        .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+      when(mockBasStubsConnectorTestOnly.putAccount(account))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
-      (mockBasStubsConnectorTestOnly
-        .putAdditionalFactors(_: AccountDetailsTestOnly)(_: HeaderCarrier))
-        .expects(account, *)
-        .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+      when(mockBasStubsConnectorTestOnly.putAdditionalFactors(account))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
       val result = sut.insertAccountDetails(account).value.futureValue
 

@@ -17,17 +17,15 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions
 
 import cats.data.EitherT
-import org.scalamock.handlers.CallHandler1
+import org.mockito.ArgumentMatchers.{any, anyString, eq => ameq}
+import org.mockito.MockitoSugar.{mock, times, verify, when}
 import org.scalatest.Assertion
 import play.api.Application
-import play.api.inject.bind
+import play.api.inject.{Binding, bind}
 import play.api.mvc.{Result, Results}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsString, redirectLocation, status, _}
 import uk.gov.hmrc.auth.core._
-import uk.gov.hmrc.auth.core.authorise.Predicate
-import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
-import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
@@ -38,18 +36,11 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class AuthActionSpec extends BaseSpec {
 
-  def mockDeleteDataFromCache: CallHandler1[RequestWithUserDetailsFromSession[_], Future[Boolean]] =
-    (mockTeaSessionCache
-      .removeRecord(_: RequestWithUserDetailsFromSession[_]))
-      .expects(*)
-      .returning(Future.successful(true))
-      .once()
+  lazy val mockTeaSessionCache: TEASessionCache = mock[TEASessionCache]
+  lazy val mockAuthConnector: AuthConnector = mock[AuthConnector]
+  lazy val mockHmrcPTEnrolment: HmrcPTEnrolment = mock[HmrcPTEnrolment]
 
-  lazy val mockTeaSessionCache = mock[TEASessionCache]
-  lazy val mockAuthConnector = mock[AuthConnector]
-  lazy val mockHmrcPTEnrolment = mock[HmrcPTEnrolment]
-
-  override lazy val overrides = Seq(
+  override lazy val overrides: Seq[Binding[TEASessionCache]] = Seq(
     bind[TEASessionCache].toInstance(mockTeaSessionCache)
   )
 
@@ -60,7 +51,7 @@ class AuthActionSpec extends BaseSpec {
     )
     .build()
 
-  lazy val authAction = app.injector.instanceOf[AuthAction]
+  lazy val authAction: AuthAction = app.injector.instanceOf[AuthAction]
 
   def defaultAsyncBody(
     requestTestCase: RequestWithUserDetailsFromSession[_] => Assertion
@@ -72,28 +63,14 @@ class AuthActionSpec extends BaseSpec {
   "AuthAction" when {
     "the session contains nino, credential and no enrolments" should {
       "return OK and the userDetails" in {
-        (
-          mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.successful(retrievalResponse()))
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
+          .thenReturn(Future.successful(retrievalResponse()))
 
-        (mockHmrcPTEnrolment
-          .findAndDeleteWrongPTEnrolment(_: Nino, _: Enrolments, _: String)(_: HeaderCarrier, _: ExecutionContext))
-          .expects(*, *, *, *, *)
-          .returning(EitherT.rightT(()))
-          .once()
+        when(
+          mockHmrcPTEnrolment
+            .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
+        )
+          .thenReturn(EitherT.rightT(()))
 
         val result: Future[Result] = authAction(
           defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
@@ -101,35 +78,22 @@ class AuthActionSpec extends BaseSpec {
 
         status(result) shouldBe OK
         contentAsString(result) shouldBe "Successful"
+        verify(mockHmrcPTEnrolment, times(1))
+          .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
       }
     }
 
     "the session contains nino, credential and IR-SA enrolments" should {
       "return OK and the userDetails" in {
-        (
-          mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
-          .expects(predicates, retrievals, *, *)
-          .returning(
-            Future.successful(retrievalResponse(enrolments = saEnrolmentOnly))
-          )
 
-        (mockHmrcPTEnrolment
-          .findAndDeleteWrongPTEnrolment(_: Nino, _: Enrolments, _: String)(_: HeaderCarrier, _: ExecutionContext))
-          .expects(*, *, *, *, *)
-          .returning(EitherT.rightT(()))
-          .once()
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
+          .thenReturn(Future.successful(retrievalResponse(enrolments = saEnrolmentOnly)))
+
+        when(
+          mockHmrcPTEnrolment
+            .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
+        )
+          .thenReturn(EitherT.rightT(()))
 
         val result: Future[Result] = authAction(
           defaultAsyncBody(_.userDetails shouldBe userDetailsWithSAEnrolment)
@@ -137,35 +101,22 @@ class AuthActionSpec extends BaseSpec {
 
         status(result) shouldBe OK
         contentAsString(result) shouldBe "Successful"
+        verify(mockHmrcPTEnrolment, times(1))
+          .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
       }
     }
 
     "the session contains nino, credential and PT enrolments" should {
       "return OK and the userDetails" in {
-        (
-          mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
-          .expects(predicates, retrievals, *, *)
-          .returning(
-            Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly))
-          )
 
-        (mockHmrcPTEnrolment
-          .findAndDeleteWrongPTEnrolment(_: Nino, _: Enrolments, _: String)(_: HeaderCarrier, _: ExecutionContext))
-          .expects(*, *, *, *, *)
-          .returning(EitherT.rightT(()))
-          .once()
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
+          .thenReturn(Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly)))
+
+        when(
+          mockHmrcPTEnrolment
+            .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
+        )
+          .thenReturn(EitherT.rightT(()))
 
         val result: Future[Result] = authAction(
           defaultAsyncBody(_.userDetails shouldBe userDetailsWithPTEnrolment)
@@ -173,35 +124,21 @@ class AuthActionSpec extends BaseSpec {
 
         status(result) shouldBe OK
         contentAsString(result) shouldBe "Successful"
+        verify(mockHmrcPTEnrolment, times(1))
+          .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
       }
     }
 
     "the session contains nino, credential and IR-SA and PT enrolments" should {
       "return OK and the userDetails" in {
-        (
-          mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
-          .expects(predicates, retrievals, *, *)
-          .returning(
-            Future.successful(retrievalResponse(enrolments = saAndptEnrolments))
-          )
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
+          .thenReturn(Future.successful(retrievalResponse(enrolments = saAndptEnrolments)))
 
-        (mockHmrcPTEnrolment
-          .findAndDeleteWrongPTEnrolment(_: Nino, _: Enrolments, _: String)(_: HeaderCarrier, _: ExecutionContext))
-          .expects(*, *, *, *, *)
-          .returning(EitherT.rightT(()))
-          .once()
+        when(
+          mockHmrcPTEnrolment
+            .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
+        )
+          .thenReturn(EitherT.rightT(()))
 
         val result: Future[Result] = authAction(
           defaultAsyncBody(
@@ -211,35 +148,21 @@ class AuthActionSpec extends BaseSpec {
 
         status(result) shouldBe OK
         contentAsString(result) shouldBe "Successful"
+        verify(mockHmrcPTEnrolment, times(1))
+          .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
       }
     }
 
     "the session contains nino, but no credential" should {
       "return Unauthorised" in {
-        (
-          mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
-          .expects(predicates, retrievals, *, *)
-          .returning(
-            Future.successful(retrievalResponse(optCredentials = None))
-          )
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
+          .thenReturn(Future.successful(retrievalResponse(optCredentials = None)))
 
-        (mockHmrcPTEnrolment
-          .findAndDeleteWrongPTEnrolment(_: Nino, _: Enrolments, _: String)(_: HeaderCarrier, _: ExecutionContext))
-          .expects(*, *, *, *, *)
-          .returning(EitherT.rightT(()))
-          .never()
+        when(
+          mockHmrcPTEnrolment
+            .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
+        )
+          .thenReturn(EitherT.rightT(()))
 
         val result: Future[Result] = authAction(
           defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
@@ -247,33 +170,21 @@ class AuthActionSpec extends BaseSpec {
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some("/protect-tax-info/unauthorised")
+        verify(mockHmrcPTEnrolment, times(0))
+          .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
       }
     }
 
     "the session contains no nino, but credential" should {
       "return Unauthorised" in {
-        (
-          mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.successful(retrievalResponse(optNino = None)))
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
+          .thenReturn(Future.successful(retrievalResponse(optNino = None)))
 
-        (mockHmrcPTEnrolment
-          .findAndDeleteWrongPTEnrolment(_: Nino, _: Enrolments, _: String)(_: HeaderCarrier, _: ExecutionContext))
-          .expects(*, *, *, *, *)
-          .returning(EitherT.rightT(()))
-          .never()
+        when(
+          mockHmrcPTEnrolment
+            .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
+        )
+          .thenReturn(EitherT.rightT(()))
 
         val result: Future[Result] = authAction(
           defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
@@ -281,37 +192,25 @@ class AuthActionSpec extends BaseSpec {
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some("/protect-tax-info/unauthorised")
+        verify(mockHmrcPTEnrolment, times(0))
+          .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
       }
     }
 
     "the session contains no nino or credential" should {
       "return Unauthorised" in {
-        (
-          mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
-          .expects(predicates, retrievals, *, *)
-          .returning(
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
+          .thenReturn(
             Future.successful(
               retrievalResponse(optNino = None, optCredentials = None)
             )
           )
 
-        (mockHmrcPTEnrolment
-          .findAndDeleteWrongPTEnrolment(_: Nino, _: Enrolments, _: String)(_: HeaderCarrier, _: ExecutionContext))
-          .expects(*, *, *, *, *)
-          .returning(EitherT.rightT(()))
-          .never()
+        when(
+          mockHmrcPTEnrolment
+            .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
+        )
+          .thenReturn(EitherT.rightT(()))
 
         val result: Future[Result] = authAction(
           defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
@@ -319,33 +218,21 @@ class AuthActionSpec extends BaseSpec {
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some("/protect-tax-info/unauthorised")
+        verify(mockHmrcPTEnrolment, times(0))
+          .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
       }
     }
 
     "the session cannot be found" should {
       "redirect to the login page" in {
-        (
-          mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.failed(SessionRecordNotFound("FAILED")))
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
+          .thenReturn(Future.failed(SessionRecordNotFound("FAILED")))
 
-        (mockHmrcPTEnrolment
-          .findAndDeleteWrongPTEnrolment(_: Nino, _: Enrolments, _: String)(_: HeaderCarrier, _: ExecutionContext))
-          .expects(*, *, *, *, *)
-          .returning(EitherT.rightT(()))
-          .never()
+        when(
+          mockHmrcPTEnrolment
+            .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
+        )
+          .thenReturn(EitherT.rightT(()))
 
         val result: Future[Result] = authAction(
           defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
@@ -356,33 +243,21 @@ class AuthActionSpec extends BaseSpec {
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some(loginUrl)
+        verify(mockHmrcPTEnrolment, times(0))
+          .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
       }
     }
 
     "the session is from an unsupported auth provider" should {
       "return Unauthorised" in {
-        (
-          mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.failed(UnsupportedAuthProvider("FAILED")))
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
+          .thenReturn(Future.failed(UnsupportedAuthProvider("FAILED")))
 
-        (mockHmrcPTEnrolment
-          .findAndDeleteWrongPTEnrolment(_: Nino, _: Enrolments, _: String)(_: HeaderCarrier, _: ExecutionContext))
-          .expects(*, *, *, *, *)
-          .returning(EitherT.rightT(()))
-          .never()
+        when(
+          mockHmrcPTEnrolment
+            .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
+        )
+          .thenReturn(EitherT.rightT(()))
 
         val result: Future[Result] = authAction(
           defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
@@ -390,33 +265,21 @@ class AuthActionSpec extends BaseSpec {
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some("/protect-tax-info/unauthorised")
+        verify(mockHmrcPTEnrolment, times(0))
+          .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
       }
     }
 
     "the session is at an insufficient confidence level" should {
       "return Unauthorised" in {
-        (
-          mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.failed(InsufficientConfidenceLevel("FAILED")))
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
+          .thenReturn(Future.failed(InsufficientConfidenceLevel("FAILED")))
 
-        (mockHmrcPTEnrolment
-          .findAndDeleteWrongPTEnrolment(_: Nino, _: Enrolments, _: String)(_: HeaderCarrier, _: ExecutionContext))
-          .expects(*, *, *, *, *)
-          .returning(EitherT.rightT(()))
-          .never()
+        when(
+          mockHmrcPTEnrolment
+            .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
+        )
+          .thenReturn(EitherT.rightT(()))
 
         val result: Future[Result] = authAction(
           defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
@@ -424,43 +287,30 @@ class AuthActionSpec extends BaseSpec {
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some("/protect-tax-info/unauthorised")
+        verify(mockHmrcPTEnrolment, times(0))
+          .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
       }
     }
   }
 
   "The call checking invalid enrolments fails" should {
     "return an error page" in {
-      (
-        mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[
-              ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                String
-              ] ~ Option[AffinityGroup] ~ Option[String]
-            ]
-          )(
-            _: HeaderCarrier,
-            _: ExecutionContext
-          )
-        )
-        .expects(predicates, retrievals, *, *)
-        .returning(
-          Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly))
-        )
+      when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly)))
 
-      (mockHmrcPTEnrolment
-        .findAndDeleteWrongPTEnrolment(_: Nino, _: Enrolments, _: String)(_: HeaderCarrier, _: ExecutionContext))
-        .expects(*, *, *, *, *)
-        .returning(EitherT.leftT(UpstreamErrorResponse("error", INTERNAL_SERVER_ERROR)))
-        .once()
+      when(
+        mockHmrcPTEnrolment
+          .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
+      )
+        .thenReturn(EitherT.leftT(UpstreamErrorResponse("error", INTERNAL_SERVER_ERROR)))
 
       val result: Future[Result] = authAction(
         defaultAsyncBody(_.userDetails shouldBe userDetailsWithPTEnrolment)
       )(FakeRequest())
 
       status(result) shouldBe INTERNAL_SERVER_ERROR
+      verify(mockHmrcPTEnrolment, times(1))
+        .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
     }
   }
-
 }

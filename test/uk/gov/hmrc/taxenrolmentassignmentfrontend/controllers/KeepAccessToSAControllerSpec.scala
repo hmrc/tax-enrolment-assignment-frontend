@@ -17,18 +17,18 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import org.jsoup.Jsoup
+import org.mockito.ArgumentMatchers
+import org.mockito.ArgumentMatchers.{any, eq => ameq}
+import org.mockito.MockitoSugar.{mock, times, verify, when}
 import play.api.Application
 import play.api.http.Status.OK
-import play.api.inject.bind
+import play.api.inject.{Binding, bind}
 import play.api.libs.json.Json
 import play.api.mvc.BodyParsers
 import play.api.test.Helpers._
-import uk.gov.hmrc.auth.core.authorise.Predicate
-import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
-import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, Enrolments}
+import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, UnexpectedPTEnrolment, UnexpectedResponseFromTaxEnrolments}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm.keepAccessToSAThroughPTAForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
@@ -38,21 +38,21 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrc
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_ASSIGNED_SA_ENROLMENT, accountDetailsForCredential}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{SilentAssignmentService}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.KeepAccessToSA
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
 
-  lazy val mockSilentAssignmentService = mock[SilentAssignmentService]
-  lazy val mockAccountCheckOrchestrator = mock[AccountCheckOrchestrator]
-  lazy val mockAuditHandler = mock[AuditHandler]
+  lazy val mockSilentAssignmentService: SilentAssignmentService = mock[SilentAssignmentService]
+  lazy val mockAccountCheckOrchestrator: AccountCheckOrchestrator = mock[AccountCheckOrchestrator]
+  lazy val mockAuditHandler: AuditHandler = mock[AuditHandler]
 
   lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
-  lazy val mockMultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
+  lazy val mockMultipleAccountsOrchestrator: MultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
 
-  override lazy val overrides = Seq(
+  override lazy val overrides: Seq[Binding[TEASessionCache]] = Seq(
     bind[TEASessionCache].toInstance(mockTeaSessionCache)
   )
 
@@ -67,39 +67,19 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
     )
     .build()
 
-  lazy val controller = app.injector.instanceOf[KeepAccessToSAController]
+  lazy val controller: KeepAccessToSAController = app.injector.instanceOf[KeepAccessToSAController]
 
   val view: KeepAccessToSA = app.injector.instanceOf[KeepAccessToSA]
 
   "view" when {
     "the user has multiple accounts, is signed in with one without SA and has no form data in cache" should {
       "render the keep access to sa page with radio buttons unchecked" in {
-        (
-          mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
-          .expects(predicates, retrievals, *, *)
-          .returning(
-            Future.successful(retrievalResponse())
-          )
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
+          .thenReturn(Future.successful(retrievalResponse()))
 
-        (mockMultipleAccountsOrchestrator
-          .getDetailsForKeepAccessToSA(
-            _: RequestWithUserDetailsFromSessionAndMongo[_],
-            _: ExecutionContext
-          ))
-          .expects(*, *)
-          .returning(createInboundResult(keepAccessToSAThroughPTAForm))
+        when(mockMultipleAccountsOrchestrator.getDetailsForKeepAccessToSA(any(), any()))
+          .thenReturn(createInboundResult(keepAccessToSAThroughPTAForm))
+
         mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
 
         val result = controller.view
@@ -121,36 +101,17 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
 
     "the user has multiple accounts, is signed in with one without SA and has previously selected Yes" should {
       "render the keep access to sa page with Yes checked" in {
-        (
-          mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
-          .expects(predicates, retrievals, *, *)
-          .returning(
-            Future.successful(retrievalResponse())
-          )
 
-        (mockMultipleAccountsOrchestrator
-          .getDetailsForKeepAccessToSA(
-            _: RequestWithUserDetailsFromSessionAndMongo[_],
-            _: ExecutionContext
-          ))
-          .expects(*, *)
-          .returning(
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
+          .thenReturn(Future.successful(retrievalResponse()))
+
+        when(mockMultipleAccountsOrchestrator.getDetailsForKeepAccessToSA(any(), any()))
+          .thenReturn(
             createInboundResult(
               keepAccessToSAThroughPTAForm.fill(KeepAccessToSAThroughPTA(true))
             )
           )
+
         mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
 
         val result = controller.view
@@ -172,36 +133,17 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
 
     "the user has multiple accounts including one with SA, is signed in with one without SA and has previously selected No" should {
       "render the keep access to sa page with No checked" in {
-        (
-          mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
-          .expects(predicates, retrievals, *, *)
-          .returning(
-            Future.successful(retrievalResponse())
-          )
 
-        (mockMultipleAccountsOrchestrator
-          .getDetailsForKeepAccessToSA(
-            _: RequestWithUserDetailsFromSessionAndMongo[_],
-            _: ExecutionContext
-          ))
-          .expects(*, *)
-          .returning(
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
+          .thenReturn(Future.successful(retrievalResponse()))
+
+        when(mockMultipleAccountsOrchestrator.getDetailsForKeepAccessToSA(any(), any()))
+          .thenReturn(
             createInboundResult(
               keepAccessToSAThroughPTAForm.fill(KeepAccessToSAThroughPTA(false))
             )
           )
+
         mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
 
         val result = controller.view
@@ -223,32 +165,13 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
 
     "the user has multiple accounts, is signed in with one without SA and has already been enrolled for PT" should {
       s"redirect to ${UrlPaths.enrolledPTSAOnOtherAccountPath}" in {
-        (
-          mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
-          .expects(predicates, retrievals, *, *)
-          .returning(
-            Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly))
-          )
 
-        (mockMultipleAccountsOrchestrator
-          .getDetailsForKeepAccessToSA(
-            _: RequestWithUserDetailsFromSessionAndMongo[_],
-            _: ExecutionContext
-          ))
-          .expects(*, *)
-          .returning(createInboundResultError(UnexpectedPTEnrolment(SA_ASSIGNED_TO_OTHER_USER)))
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
+          .thenReturn(Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly)))
+
+        when(mockMultipleAccountsOrchestrator.getDetailsForKeepAccessToSA(any(), any()))
+          .thenReturn(createInboundResultError(UnexpectedPTEnrolment(SA_ASSIGNED_TO_OTHER_USER)))
+
         mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
 
         val result = controller.view
@@ -261,32 +184,13 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
 
     "the user does not have SA on another account" should {
       s"redirect to ${UrlPaths.accountCheckPath}" in {
-        (
-          mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.successful(retrievalResponse()))
 
-        (mockMultipleAccountsOrchestrator
-          .getDetailsForKeepAccessToSA(
-            _: RequestWithUserDetailsFromSessionAndMongo[_],
-            _: ExecutionContext
-          ))
-          .expects(*, *)
-          .returning(
-            createInboundResultError(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))
-          )
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
+          .thenReturn(Future.successful(retrievalResponse()))
+
+        when(mockMultipleAccountsOrchestrator.getDetailsForKeepAccessToSA(any(), any()))
+          .thenReturn(createInboundResultError(IncorrectUserType(UrlPaths.returnUrl, randomAccountType)))
+
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
         val result = controller.view
@@ -298,22 +202,9 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
     }
     "the user has no redirectUrl stored in session" should {
       "render the error page" in {
-        (
-          mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.successful(retrievalResponse()))
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
+          .thenReturn(Future.successful(retrievalResponse()))
+
         mockGetDataFromCacheForActionNoRedirectUrl
         val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -328,33 +219,18 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
     "the user has selected Yes" should {
       s"redirect to ${UrlPaths.saOnOtherAccountSigninAgainPath}" when {
         "they have SA on another account" in {
-          (
-            mockAuthConnector
-              .authorise(
-                _: Predicate,
-                _: Retrieval[
-                  ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                    String
-                  ] ~ Option[AffinityGroup] ~ Option[String]
-                ]
-              )(
-                _: HeaderCarrier,
-                _: ExecutionContext
-              )
-            )
-            .expects(predicates, retrievals, *, *)
-            .returning(Future.successful(retrievalResponse()))
+          when(
+            mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext])
+          )
+            .thenReturn(Future.successful(retrievalResponse()))
 
-          (
-            mockMultipleAccountsOrchestrator
-              .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
-                _: RequestWithUserDetailsFromSessionAndMongo[_],
-                _: HeaderCarrier,
-                _: ExecutionContext
-              )
-            )
-            .expects(KeepAccessToSAThroughPTA(true), *, *, *)
-            .returning(createInboundResult(true))
+          when(
+            mockMultipleAccountsOrchestrator.handleKeepAccessToSAChoice(
+              ArgumentMatchers.eq(KeepAccessToSAThroughPTA(true))
+            )(any(), any(), any())
+          )
+            .thenReturn(createInboundResult(true))
+
           mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
           val res = controller.continue
             .apply(
@@ -372,33 +248,18 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
 
       s"redirect to ${UrlPaths.enrolledPTSAOnOtherAccountPath}" when {
         "they have SA on another account" in {
-          (
-            mockAuthConnector
-              .authorise(
-                _: Predicate,
-                _: Retrieval[
-                  ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                    String
-                  ] ~ Option[AffinityGroup] ~ Option[String]
-                ]
-              )(
-                _: HeaderCarrier,
-                _: ExecutionContext
-              )
-            )
-            .expects(predicates, retrievals, *, *)
-            .returning(Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly)))
+          when(
+            mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext])
+          )
+            .thenReturn(Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly)))
 
-          (
-            mockMultipleAccountsOrchestrator
-              .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
-                _: RequestWithUserDetailsFromSessionAndMongo[_],
-                _: HeaderCarrier,
-                _: ExecutionContext
-              )
-            )
-            .expects(KeepAccessToSAThroughPTA(true), *, *, *)
-            .returning(createInboundResultError(UnexpectedPTEnrolment(SA_ASSIGNED_TO_OTHER_USER)))
+          when(
+            mockMultipleAccountsOrchestrator.handleKeepAccessToSAChoice(
+              ArgumentMatchers.eq(KeepAccessToSAThroughPTA(true))
+            )(any(), any(), any())
+          )
+            .thenReturn(createInboundResultError(UnexpectedPTEnrolment(SA_ASSIGNED_TO_OTHER_USER)))
+
           mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
 
           val res = controller.continue
@@ -416,32 +277,18 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
       }
       s"redirect to ${UrlPaths.accountCheckPath}" when {
         "they don't have SA on another account" in {
-          (
-            mockAuthConnector
-              .authorise(
-                _: Predicate,
-                _: Retrieval[
-                  ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                    String
-                  ] ~ Option[AffinityGroup] ~ Option[String]
-                ]
-              )(
-                _: HeaderCarrier,
-                _: ExecutionContext
-              )
-            )
-            .expects(predicates, retrievals, *, *)
-            .returning(Future.successful(retrievalResponse()))
-          (
-            mockMultipleAccountsOrchestrator
-              .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
-                _: RequestWithUserDetailsFromSessionAndMongo[_],
-                _: HeaderCarrier,
-                _: ExecutionContext
-              )
-            )
-            .expects(KeepAccessToSAThroughPTA(true), *, *, *)
-            .returning(
+
+          when(
+            mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext])
+          )
+            .thenReturn(Future.successful(retrievalResponse()))
+
+          when(
+            mockMultipleAccountsOrchestrator.handleKeepAccessToSAChoice(
+              ArgumentMatchers.eq(KeepAccessToSAThroughPTA(true))
+            )(any(), any(), any())
+          )
+            .thenReturn(
               createInboundResultError(
                 IncorrectUserType(UrlPaths.returnUrl, randomAccountType)
               )
@@ -468,35 +315,22 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
             USER_ASSIGNED_SA_ENROLMENT                   -> Json.toJson(UsersAssignedEnrolment1),
             accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetails)
           )
-          (
-            mockAuthConnector
-              .authorise(
-                _: Predicate,
-                _: Retrieval[
-                  ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                    String
-                  ] ~ Option[AffinityGroup] ~ Option[String]
-                ]
-              )(
-                _: HeaderCarrier,
-                _: ExecutionContext
-              )
-            )
-            .expects(predicates, retrievals, *, *)
-            .returning(Future.successful(retrievalResponse()))
-          (
-            mockMultipleAccountsOrchestrator
-              .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
-                _: RequestWithUserDetailsFromSessionAndMongo[_],
-                _: HeaderCarrier,
-                _: ExecutionContext
-              )
-            )
-            .expects(KeepAccessToSAThroughPTA(false), *, *, *)
-            .returning(createInboundResult(false))
+
+          when(
+            mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext])
+          )
+            .thenReturn(Future.successful(retrievalResponse()))
+
+          when(
+            mockMultipleAccountsOrchestrator.handleKeepAccessToSAChoice(
+              ArgumentMatchers.eq(KeepAccessToSAThroughPTA(false))
+            )(any(), any(), any())
+          )
+            .thenReturn(createInboundResult(false))
+
           mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData)
 
-          val auditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(false)(
+          val auditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount()(
             requestWithAccountType(
               SA_ASSIGNED_TO_OTHER_USER,
               UrlPaths.returnUrl,
@@ -504,11 +338,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
             ),
             messagesApi
           )
-          (mockAuditHandler
-            .audit(_: AuditEvent)(_: HeaderCarrier))
-            .expects(auditEvent, *)
-            .returning(Future.successful((): Unit))
-            .once()
+          when(mockAuditHandler.audit(ameq(auditEvent))(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
 
           val res = controller.continue
             .apply(
@@ -521,6 +351,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
           redirectLocation(res) shouldBe Some(
             UrlPaths.enrolledPTSAOnOtherAccountPath
           )
+          verify(mockAuditHandler, times(1)).audit(ameq(auditEvent))(any[HeaderCarrier])
         }
       }
 
@@ -530,32 +361,18 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
             USER_ASSIGNED_SA_ENROLMENT                   -> Json.toJson(UsersAssignedEnrolment1),
             accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetails)
           )
-          (
-            mockAuthConnector
-              .authorise(
-                _: Predicate,
-                _: Retrieval[
-                  ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                    String
-                  ] ~ Option[AffinityGroup] ~ Option[String]
-                ]
-              )(
-                _: HeaderCarrier,
-                _: ExecutionContext
-              )
-            )
-            .expects(predicates, retrievals, *, *)
-            .returning(Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly)))
-          (
-            mockMultipleAccountsOrchestrator
-              .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
-                _: RequestWithUserDetailsFromSessionAndMongo[_],
-                _: HeaderCarrier,
-                _: ExecutionContext
-              )
-            )
-            .expects(KeepAccessToSAThroughPTA(false), *, *, *)
-            .returning(createInboundResultError(UnexpectedPTEnrolment(SA_ASSIGNED_TO_OTHER_USER)))
+
+          when(
+            mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext])
+          )
+            .thenReturn(Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly)))
+
+          when(
+            mockMultipleAccountsOrchestrator.handleKeepAccessToSAChoice(
+              ArgumentMatchers.eq(KeepAccessToSAThroughPTA(false))
+            )(any(), any(), any())
+          )
+            .thenReturn(createInboundResultError(UnexpectedPTEnrolment(SA_ASSIGNED_TO_OTHER_USER)))
           mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData)
 
           val res = controller.continue
@@ -574,36 +391,22 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
 
       s"redirect to ${UrlPaths.accountCheckPath}" when {
         "they don't have SA on another account" in {
-          (
-            mockAuthConnector
-              .authorise(
-                _: Predicate,
-                _: Retrieval[
-                  ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                    String
-                  ] ~ Option[AffinityGroup] ~ Option[String]
-                ]
-              )(
-                _: HeaderCarrier,
-                _: ExecutionContext
-              )
-            )
-            .expects(predicates, retrievals, *, *)
-            .returning(Future.successful(retrievalResponse()))
-          (
-            mockMultipleAccountsOrchestrator
-              .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
-                _: RequestWithUserDetailsFromSessionAndMongo[_],
-                _: HeaderCarrier,
-                _: ExecutionContext
-              )
-            )
-            .expects(KeepAccessToSAThroughPTA(false), *, *, *)
-            .returning(
+          when(
+            mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext])
+          )
+            .thenReturn(Future.successful(retrievalResponse()))
+
+          when(
+            mockMultipleAccountsOrchestrator.handleKeepAccessToSAChoice(
+              ArgumentMatchers.eq(KeepAccessToSAThroughPTA(false))
+            )(any(), any(), any())
+          )
+            .thenReturn(
               createInboundResultError(
                 IncorrectUserType(UrlPaths.returnUrl, randomAccountType)
               )
             )
+
           mockGetDataFromCacheForActionSuccess(randomAccountType)
 
           val res = controller.continue
@@ -620,34 +423,18 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
 
       "render the error page" when {
         "enrolling for PT fails" in {
-          (
-            mockAuthConnector
-              .authorise(
-                _: Predicate,
-                _: Retrieval[
-                  ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                    String
-                  ] ~ Option[AffinityGroup] ~ Option[String]
-                ]
-              )(
-                _: HeaderCarrier,
-                _: ExecutionContext
-              )
-            )
-            .expects(predicates, retrievals, *, *)
-            .returning(Future.successful(retrievalResponse()))
-          (
-            mockMultipleAccountsOrchestrator
-              .handleKeepAccessToSAChoice(_: KeepAccessToSAThroughPTA)(
-                _: RequestWithUserDetailsFromSessionAndMongo[_],
-                _: HeaderCarrier,
-                _: ExecutionContext
-              )
-            )
-            .expects(KeepAccessToSAThroughPTA(false), *, *, *)
-            .returning(
-              createInboundResultError(UnexpectedResponseFromTaxEnrolments)
-            )
+          when(
+            mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext])
+          )
+            .thenReturn(Future.successful(retrievalResponse()))
+
+          when(
+            mockMultipleAccountsOrchestrator.handleKeepAccessToSAChoice(
+              ArgumentMatchers.eq(KeepAccessToSAThroughPTA(false))
+            )(any(), any(), any())
+          )
+            .thenReturn(createInboundResultError(UnexpectedResponseFromTaxEnrolments))
+
           mockGetDataFromCacheForActionSuccess(randomAccountType)
 
           val res = controller.continue
@@ -664,22 +451,9 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
     }
     "a form error occurs" should {
       "render the keepAccessToSA page with error summary" in {
-        (
-          mockAuthConnector
-            .authorise(
-              _: Predicate,
-              _: Retrieval[
-                ((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[
-                  String
-                ] ~ Option[AffinityGroup] ~ Option[String]
-              ]
-            )(
-              _: HeaderCarrier,
-              _: ExecutionContext
-            )
-          )
-          .expects(predicates, retrievals, *, *)
-          .returning(Future.successful(retrievalResponse()))
+        when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
+          .thenReturn(Future.successful(retrievalResponse()))
+
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
         val res = controller.continue

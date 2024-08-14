@@ -20,10 +20,10 @@ import play.api.mvc.{AnyContentAsEmpty, AnyContentAsFormUrlEncoded}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.auth.core.AffinityGroup.Individual
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
-import uk.gov.hmrc.auth.core.{AffinityGroup, AuthProviders, ConfidenceLevel, Enrolment, EnrolmentIdentifier, Enrolments}
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals._
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
+import uk.gov.hmrc.auth.core.{AffinityGroup, AuthProviders, ConfidenceLevel, Enrolment, EnrolmentIdentifier, Enrolments}
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
@@ -45,9 +45,9 @@ object TestData {
 
   val CREDENTIAL_ID_2 = "6102202884164542"
   val UTR = "123456789"
-  val creds = Credentials(CREDENTIAL_ID, GovernmentGateway.toString)
-  val noEnrolments = Enrolments(Set.empty[Enrolment])
-  val saEnrolmentOnly = Enrolments(
+  val creds: Credentials = Credentials(CREDENTIAL_ID, GovernmentGateway.toString)
+  val noEnrolments: Enrolments = Enrolments(Set.empty[Enrolment])
+  val saEnrolmentOnly: Enrolments = Enrolments(
     Set(
       Enrolment(
         "IR-SA",
@@ -57,7 +57,7 @@ object TestData {
       )
     )
   )
-  val ptEnrolmentOnly = Enrolments(
+  val ptEnrolmentOnly: Enrolments = Enrolments(
     Set(
       Enrolment(
         "HMRC-PT",
@@ -67,7 +67,7 @@ object TestData {
       )
     )
   )
-  val saAndptEnrolments = Enrolments(
+  val saAndptEnrolments: Enrolments = Enrolments(
     Set(
       Enrolment(
         "HMRC-PT",
@@ -101,9 +101,9 @@ object TestData {
     optGroupId: Option[String] = Some(GROUP_ID),
     optAffinityGroup: Option[AffinityGroup] = Some(Individual),
     email: Option[String] = Some(CURRENT_USER_EMAIL)
-  ): (((((Option[String] ~ Option[Credentials]) ~ Enrolments) ~ Option[String]) ~ Option[AffinityGroup]) ~ Option[
+  ): Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String] ~ Option[AffinityGroup] ~ Option[
     String
-  ]) =
+  ] =
     new ~(
       new ~(
         new ~(new ~(new ~(optNino, optCredentials), enrolments), optGroupId),
@@ -112,7 +112,7 @@ object TestData {
       email
     )
 
-  def userDetails(hmrcPt: Boolean, irSa: Boolean) =
+  def userDetails(hmrcPt: Boolean, irSa: Boolean): UserDetailsFromSession =
     UserDetailsFromSession(
       CREDENTIAL_ID,
       NINO,
@@ -124,7 +124,7 @@ object TestData {
       hasSAEnrolment = irSa
     )
 
-  val userDetailsNoEnrolments =
+  val userDetailsNoEnrolments: UserDetailsFromSession =
     UserDetailsFromSession(
       CREDENTIAL_ID,
       NINO,
@@ -135,7 +135,7 @@ object TestData {
       hasPTEnrolment = false,
       hasSAEnrolment = false
     )
-  val userDetailsWithPTEnrolment =
+  val userDetailsWithPTEnrolment: UserDetailsFromSession =
     UserDetailsFromSession(
       CREDENTIAL_ID,
       NINO,
@@ -146,7 +146,7 @@ object TestData {
       hasPTEnrolment = true,
       hasSAEnrolment = false
     )
-  val userDetailsWithSAEnrolment =
+  val userDetailsWithSAEnrolment: UserDetailsFromSession =
     UserDetailsFromSession(
       CREDENTIAL_ID,
       NINO,
@@ -157,7 +157,7 @@ object TestData {
       hasPTEnrolment = false,
       hasSAEnrolment = true
     )
-  val userDetailsWithPTAndSAEnrolment =
+  val userDetailsWithPTAndSAEnrolment: UserDetailsFromSession =
     UserDetailsFromSession(
       CREDENTIAL_ID,
       NINO,
@@ -169,11 +169,11 @@ object TestData {
       hasSAEnrolment = true
     )
 
-  val UsersAssignedEnrolmentCurrentCred =
+  val UsersAssignedEnrolmentCurrentCred: UsersAssignedEnrolment =
     UsersAssignedEnrolment(Some(CREDENTIAL_ID))
-  val UsersAssignedEnrolment1 =
+  val UsersAssignedEnrolment1: UsersAssignedEnrolment =
     UsersAssignedEnrolment(Some(CREDENTIAL_ID_1))
-  val UsersAssignedEnrolmentEmpty =
+  val UsersAssignedEnrolmentEmpty: UsersAssignedEnrolment =
     UsersAssignedEnrolment(None)
 
   val accountDetails: AccountDetails = AccountDetails(
@@ -213,7 +213,7 @@ object TestData {
     saUserCred = saUserCred
   )
 
-  val usersGroupSearchResponse = UsersGroupResponse(
+  val usersGroupSearchResponse: UsersGroupResponse = UsersGroupResponse(
     identityProviderType = SCP,
     obfuscatedUserId = Some("********6037"),
     email = Some("email1@test.com"),
@@ -221,12 +221,12 @@ object TestData {
     additionalFactors = Some(List(AdditonalFactors("sms", Some("07783924321"))))
   )
 
-  val identifierTxNum = IdentifiersOrVerifiers("TaxOfficeNumber", "123")
-  val identifierTxRef =
+  val identifierTxNum: IdentifiersOrVerifiers = IdentifiersOrVerifiers("TaxOfficeNumber", "123")
+  val identifierTxRef: IdentifiersOrVerifiers =
     IdentifiersOrVerifiers("TaxOfficeReference", "XYZ9876543")
-  val identifierUTR = IdentifiersOrVerifiers("UTR", "1234567890")
+  val identifierUTR: IdentifiersOrVerifiers = IdentifiersOrVerifiers("UTR", "1234567890")
 
-  val userEnrolmentIRSA = UserEnrolment(
+  val userEnrolmentIRSA: UserEnrolment = UserEnrolment(
     service = "IR-SA",
     state = "NotYetActivated",
     friendlyName = "",
@@ -234,7 +234,7 @@ object TestData {
     identifiers = Seq(identifierUTR)
   )
 
-  val userEnrolmentIRPAYE = UserEnrolment(
+  val userEnrolmentIRPAYE: UserEnrolment = UserEnrolment(
     service = "IR-PAYE",
     state = "Activated",
     friendlyName = "Something",
@@ -267,7 +267,7 @@ object TestData {
       hasSAEnrolment = false
     )
 
-  val all_account_types = List(
+  val all_account_types: Seq[AccountTypes.Value] = List(
     PT_ASSIGNED_TO_OTHER_USER,
     PT_ASSIGNED_TO_CURRENT_USER,
     SINGLE_OR_MULTIPLE_ACCOUNTS,

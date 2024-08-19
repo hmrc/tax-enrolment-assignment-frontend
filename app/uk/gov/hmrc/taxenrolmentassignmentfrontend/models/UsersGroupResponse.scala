@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 
-import play.api.libs.json.{Format, Json}
+import play.api.libs.functional.syntax.toFunctionalBuilderOps
+import play.api.libs.json.{Format, JsPath, JsValue, Json, Reads, Writes}
 
 case class AdditonalFactors(factorType: String, phoneNumber: Option[String] = None, name: Option[String] = None) {
   val FIVE = 5
@@ -24,14 +25,14 @@ case class AdditonalFactors(factorType: String, phoneNumber: Option[String] = No
 }
 
 case class UsersGroupResponse(
-  identityProviderType: String,
+  identityProviderType: IdentityProviderType,
   obfuscatedUserId: Option[String],
   email: Option[String],
   lastAccessedTimestamp: Option[String],
   additionalFactors: Option[List[AdditonalFactors]]
 ) {
-  def isIdentityProviderSCP: Boolean = identityProviderType == "SCP"
-  def isIdentityProviderOneLogin: Boolean = identityProviderType == "ONE_LOGIN"
+  def isIdentityProviderSCP: Boolean = identityProviderType == SCP
+  def isIdentityProviderOneLogin: Boolean = identityProviderType == ONE_LOGIN
 }
 
 object AdditonalFactors {
@@ -39,6 +40,26 @@ object AdditonalFactors {
 }
 
 object UsersGroupResponse {
+  implicit val reads: Reads[UsersGroupResponse] = (
+    (JsPath \ "identityProviderType")
+      .readNullable[JsValue]
+      .map(_.fold(SCP: IdentityProviderType)(_.as[IdentityProviderType](IdentityProviderTypeFormat.reads))) and
+      (JsPath \ "obfuscatedUserId").readNullable[String] and
+      (JsPath \ "email").readNullable[String] and
+      (JsPath \ "lastAccessedTimestamp").readNullable[String] and
+      (JsPath \ "additionalFactors").readNullable[List[AdditonalFactors]]
+  )(UsersGroupResponse.apply _)
+
+  implicit val writes: Writes[UsersGroupResponse] = new Writes[UsersGroupResponse] {
+    override def writes(o: UsersGroupResponse): JsValue =
+      Json.obj(
+        "identityProviderType"  -> Json.toJson(o.identityProviderType)(IdentityProviderTypeFormat.writes),
+        "obfuscatedUserId"      -> o.obfuscatedUserId,
+        "email"                 -> o.email,
+        "lastAccessedTimestamp" -> o.lastAccessedTimestamp,
+        "additionalFactors"     -> o.additionalFactors
+      )
+  }
   implicit val format: Format[UsersGroupResponse] =
-    Json.format[UsersGroupResponse]
+    Format(reads, writes)
 }

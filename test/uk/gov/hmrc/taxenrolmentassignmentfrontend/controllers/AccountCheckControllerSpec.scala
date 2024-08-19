@@ -17,31 +17,31 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import cats.data.EitherT
-import org.scalamock.handlers.{CallHandler1, CallHandler2, CallHandler3, CallHandler4}
+import org.mockito.ArgumentMatchers.{any, eq => ameq}
+import org.mockito.MockitoSugar.{mock, times, verify, when}
+import org.mockito.stubbing.ScalaOngoingStubbing
 import org.scalatest.OneInstancePerTest
 import play.api.Application
 import play.api.http.Status.SEE_OTHER
 import play.api.i18n.MessagesApi
 import play.api.inject.{Binding, bind}
-import play.api.mvc.{AnyContent, BodyParsers, Result}
+import play.api.mvc.{BodyParsers, Result}
 import play.api.test.Helpers._
-import uk.gov.hmrc.auth.core.authorise.Predicate
-import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
+import uk.gov.hmrc.auth.core.retrieve.{Credentials, ~}
 import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, Enrolments}
-import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.DataRequest
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{TaxEnrolmentAssignmentErrors, UnexpectedResponseFromIV, UnexpectedResponseFromTaxEnrolments}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{BaseSpec, UrlPaths}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UserAnswers
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.AccountCheckOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.JourneyCacheRepository
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.utils.HmrcPTEnrolment
 
@@ -49,32 +49,17 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
 
-  lazy val mockRepository: JourneyCacheRepository = mock[JourneyCacheRepository]
-
-  def mockDeleteDataFromCache: CallHandler2[String, String, Future[Boolean]] =
-    (mockRepository
-      .clear(_: String, _: String))
-      .expects(*, *)
-      .returning(Future.successful(true))
-      .once()
-
-  def mockSaveDataToCache: CallHandler1[UserAnswers, Future[Boolean]] =
-    (mockRepository
-      .set(_: UserAnswers))
-      .expects(*)
-      .returning(Future.successful(true))
-      .once()
-
   lazy val mockSilentAssignmentService: SilentAssignmentService = mock[SilentAssignmentService]
   lazy val mockAccountCheckOrchestrator: AccountCheckOrchestrator = mock[AccountCheckOrchestrator]
   lazy val mockAuditHandler: AuditHandler = mock[AuditHandler]
 
   lazy val mockAuthConnector: AuthConnector = mock[AuthConnector]
   lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
+  lazy val mockTeaSessionCache: TEASessionCache = mock[TEASessionCache]
   lazy val mockHmrcPTEnrolment: HmrcPTEnrolment = mock[HmrcPTEnrolment]
 
-  override lazy val overrides: Seq[Binding[JourneyCacheRepository]] = Seq(
-    bind[JourneyCacheRepository].toInstance(mockRepository)
+  override lazy val overrides: Seq[Binding[TEASessionCache]] = Seq(
+    bind[TEASessionCache].toInstance(mockTeaSessionCache)
   )
 
   override implicit lazy val app: Application = localGuiceApplicationBuilder()
@@ -90,11 +75,14 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    (mockHmrcPTEnrolment
-      .findAndDeleteWrongPTEnrolment(_: Nino, _: Enrolments, _: String)(_: HeaderCarrier, _: ExecutionContext))
-      .expects(*, *, *, *, *)
-      .returning(EitherT.rightT(()))
-      .once()
+    when(mockHmrcPTEnrolment.findAndDeleteWrongPTEnrolment(any(), any(), any())(any(), any()))
+      .thenReturn(EitherT.rightT(()))
+  }
+
+  override def afterEach(): Unit = {
+    super.afterEach()
+    verify(mockHmrcPTEnrolment, times(1)).findAndDeleteWrongPTEnrolment(any(), any(), any())(any(), any())
+
   }
 
   lazy val controller: AccountCheckController = app.injector.instanceOf[AccountCheckController]
@@ -108,16 +96,11 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
       s"silently assign the HMRC-PT Enrolment and redirect to users redirect url" when {
         "the user has not been assigned the enrolment already" in new TestHelper {
           mockAuthCall()
-          mockSaveDataToCache
+          when(mockTeaSessionCache.save(any(), any())(any(), any()))
+            .thenReturn(Future.successful(CacheMap("FAKE_SESSION_ID", Map.empty)))
           mockAccountCheckSuccess(SINGLE_OR_MULTIPLE_ACCOUNTS)
           mockSilentEnrolSuccess
-          mockAuditPTEnrolled(SINGLE_OR_MULTIPLE_ACCOUNTS, requestWithUserDetails(), messagesApi)
-
-          (mockRepository
-            .clear(_: String, _: String))
-            .expects(*, *)
-            .returning(Future.successful(true))
-            .never()
+          mockAuditPTEnrolledWhen(SINGLE_OR_MULTIPLE_ACCOUNTS, requestWithUserDetails(), messagesApi)
 
           val result: Future[Result] = controller
             .accountCheck(returnUrl)
@@ -125,23 +108,25 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
 
           status(result) shouldBe SEE_OTHER
           redirectLocation(result) shouldBe Some("/protect-tax-info/enrol-pt/enrolment-success-no-sa")
+          verify(mockTeaSessionCache, times(0)).removeRecord(any())
+          verify(mockTeaSessionCache, times(1)).save(any(), any())(any(), any())
+          mockAuditPTEnrolledVerify(SINGLE_OR_MULTIPLE_ACCOUNTS, requestWithUserDetails(), messagesApi)
+
         }
       }
 
       s"not silently assign the HMRC-PT Enrolment and redirect to users redirect url" when {
         "the user has been assigned the enrolment already" in new TestHelper {
           mockAuthCallWithPT()
-          mockSaveDataToCache
+          when(mockTeaSessionCache.save(any(), any())(any(), any()))
+            .thenReturn(Future.successful(CacheMap("FAKE_SESSION_ID", Map.empty)))
+
           mockAccountCheckSuccess(PT_ASSIGNED_TO_CURRENT_USER)
 
           // removeRecord is called twice.
           // - Once in enrolForPTIfRequired
           // - Once in handleNoneThrottledUsers
-          (mockRepository
-            .clear(_: String, _: String))
-            .expects(*, *)
-            .returning(Future.successful(true))
-            .twice()
+          when(mockTeaSessionCache.removeRecord(any())).thenReturn(Future.successful(true))
 
           val result: Future[Result] = controller
             .accountCheck(returnUrl)
@@ -149,12 +134,16 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
 
           status(result) shouldBe SEE_OTHER
           redirectLocation(result) shouldBe Some(returnUrlValue)
+          verify(mockTeaSessionCache, times(1)).save(any(), any())(any(), any())
+          verify(mockTeaSessionCache, times(2)).removeRecord(any())
+
         }
       }
 
       "return an error page if there was an error assigning the enrolment" in new TestHelper {
         mockAuthCall()
-        mockSaveDataToCache
+        when(mockTeaSessionCache.save(any(), any())(any(), any()))
+          .thenReturn(Future.successful(CacheMap("FAKE_SESSION_ID", Map.empty)))
         mockAccountCheckSuccess(SINGLE_OR_MULTIPLE_ACCOUNTS)
         mockSilentEnrolFailure
 
@@ -164,6 +153,8 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) should include(messages("enrolmentError.heading"))
+        verify(mockTeaSessionCache, times(1)).save(any(), any())(any(), any())
+
       }
 
     }
@@ -171,9 +162,14 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
     "a single credential exists for a given nino that is already enrolled for PT" should {
       s"redirect to ${UrlPaths.returnUrl}" in new TestHelper {
         mockAuthCall()
-        mockSaveDataToCache
+        when(mockTeaSessionCache.save(any(), any())(any(), any()))
+          .thenReturn(Future.successful(CacheMap("FAKE_SESSION_ID", Map.empty)))
+
         mockAccountCheckSuccess(PT_ASSIGNED_TO_CURRENT_USER)
-        mockDeleteDataFromCache
+        when(
+          mockTeaSessionCache
+            .removeRecord(any())
+        ).thenReturn(Future.successful(true))
 
         val result: Future[Result] = controller
           .accountCheck(returnUrl)
@@ -181,13 +177,17 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some(UrlPaths.returnUrl)
+        verify(mockTeaSessionCache, times(1)).removeRecord(any())
+        verify(mockTeaSessionCache, times(1)).save(any(), any())(any(), any())
+
       }
     }
 
     "a PT enrolment exists on another users account" should {
       s"redirect to ${UrlPaths.ptOnOtherAccountPath}" in new TestHelper {
         mockAuthCall()
-        mockSaveDataToCache
+        when(mockTeaSessionCache.save(any(), any())(any(), any()))
+          .thenReturn(Future.successful(CacheMap("FAKE_SESSION_ID", Map.empty)))
         mockAccountCheckSuccess(PT_ASSIGNED_TO_OTHER_USER)
 
         val result: Future[Result] = controller
@@ -196,6 +196,8 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some("/protect-tax-info/no-pt-enrolment")
+        verify(mockTeaSessionCache, times(1)).save(any(), any())(any(), any())
+
       }
     }
 
@@ -203,10 +205,12 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
       s"enrol for PT and redirect to ${UrlPaths.enrolledPTNoSAOnAnyAccountPath}" when {
         "the user has not already been assigned the PT enrolment" in new TestHelper {
           mockAuthCall()
-          mockSaveDataToCache
+          when(mockTeaSessionCache.save(any(), any())(any(), any()))
+            .thenReturn(Future.successful(CacheMap("FAKE_SESSION_ID", Map.empty)))
+
           mockAccountCheckSuccess(SINGLE_OR_MULTIPLE_ACCOUNTS)
           mockSilentEnrolSuccess
-          mockAuditPTEnrolled(SINGLE_OR_MULTIPLE_ACCOUNTS, requestWithUserDetails(), messagesApi)
+          mockAuditPTEnrolledWhen(SINGLE_OR_MULTIPLE_ACCOUNTS, requestWithUserDetails(), messagesApi)
 
           val result: Future[Result] = controller
             .accountCheck(returnUrl)
@@ -216,15 +220,22 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
           redirectLocation(result) shouldBe Some(
             "/protect-tax-info/enrol-pt/enrolment-success-no-sa"
           )
+          verify(mockTeaSessionCache, times(1)).save(any(), any())(any(), any())
+          mockAuditPTEnrolledVerify(SINGLE_OR_MULTIPLE_ACCOUNTS, requestWithUserDetails(), messagesApi)
+
         }
       }
 
       s"not enrol for PT and redirect to ${UrlPaths.enrolledPTNoSAOnAnyAccountPath}" when {
         "the user has already been assigned the PT enrolment" in new TestHelper {
           mockAuthCallWithPT()
-          mockSaveDataToCache
+          when(mockTeaSessionCache.save(any(), any())(any(), any()))
+            .thenReturn(Future.successful(CacheMap("FAKE_SESSION_ID", Map.empty)))
           mockAccountCheckSuccess(SINGLE_OR_MULTIPLE_ACCOUNTS)
-          mockDeleteDataFromCache
+          when(
+            mockTeaSessionCache
+              .removeRecord(any())
+          ).thenReturn(Future.successful(true))
 
           val result: Future[Result] = controller
             .accountCheck(returnUrl)
@@ -234,6 +245,9 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
           redirectLocation(result) shouldBe Some(
             "/protect-tax-info/enrol-pt/enrolment-success-no-sa"
           )
+          verify(mockTeaSessionCache, times(1)).removeRecord(any())
+          verify(mockTeaSessionCache, times(1)).save(any(), any())(any(), any())
+
         }
       }
     }
@@ -242,10 +256,11 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
       s"enrol for PT and redirect to ${UrlPaths.enrolledPTWithSAAccountPath}" when {
         "the current user hasn't already been assigned a PT enrolment" in new TestHelper {
           mockAuthCallWithSA()
-          mockSaveDataToCache
+          when(mockTeaSessionCache.save(any(), any())(any(), any()))
+            .thenReturn(Future.successful(CacheMap("FAKE_SESSION_ID", Map.empty)))
           mockAccountCheckSuccess(SA_ASSIGNED_TO_CURRENT_USER)
           mockSilentEnrolSuccess
-          mockAuditPTEnrolled(
+          mockAuditPTEnrolledWhen(
             SA_ASSIGNED_TO_CURRENT_USER,
             requestWithUserDetails(userDetailsWithSAEnrolment),
             messagesApi
@@ -259,6 +274,12 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
           redirectLocation(result) shouldBe Some(
             "/protect-tax-info/enrol-pt/enrolment-success-sa-user-id"
           )
+          verify(mockTeaSessionCache, times(1)).save(any(), any())(any(), any())
+          mockAuditPTEnrolledVerify(
+            SA_ASSIGNED_TO_CURRENT_USER,
+            requestWithUserDetails(userDetailsWithSAEnrolment),
+            messagesApi
+          )
         }
       }
     }
@@ -267,14 +288,9 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
       s"redirect ${UrlPaths.saOnOtherAccountInterruptPath}" when {
         "the PT enrolment has not already been assigned" in new TestHelper {
           mockAuthCall()
-          mockSaveDataToCache
+          when(mockTeaSessionCache.save(any(), any())(any(), any()))
+            .thenReturn(Future.successful(CacheMap("FAKE_SESSION_ID", Map.empty)))
           mockAccountCheckSuccess(SA_ASSIGNED_TO_OTHER_USER)
-
-          (mockRepository
-            .clear(_: String, _: String))
-            .expects(*, *)
-            .returning(Future.successful(true))
-            .never()
 
           val result: Future[Result] = controller
             .accountCheck(returnUrl)
@@ -284,15 +300,22 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
           redirectLocation(result) shouldBe Some(
             "/protect-tax-info/enrol-pt/more-than-one-user-id"
           )
+          verify(mockTeaSessionCache, times(1)).save(any(), any())(any(), any())
+          verify(mockTeaSessionCache, times(0)).removeRecord(any())
+
         }
       }
 
       s"redirect ${UrlPaths.enrolledPTSAOnOtherAccountPath}" when {
         "the PT enrolment has not already been assigned" in new TestHelper {
           mockAuthCallWithPT()
-          mockSaveDataToCache
+          when(mockTeaSessionCache.save(any(), any())(any(), any()))
+            .thenReturn(Future.successful(CacheMap("FAKE_SESSION_ID", Map.empty)))
           mockAccountCheckSuccess(SA_ASSIGNED_TO_OTHER_USER)
-          mockDeleteDataFromCache
+          when(
+            mockTeaSessionCache
+              .removeRecord(any())
+          ).thenReturn(Future.successful(true))
 
           val result: Future[Result] = controller
             .accountCheck(returnUrl)
@@ -302,6 +325,8 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
           redirectLocation(result) shouldBe Some(
             "/protect-tax-info/enrol-pt/choose-two-user-ids"
           )
+          verify(mockTeaSessionCache, times(1)).removeRecord(any())
+          verify(mockTeaSessionCache, times(1)).save(any(), any())(any(), any())
         }
       }
     }
@@ -309,7 +334,9 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
     "a no credentials exists in IV for a given nino" should {
       "render the error page" in new TestHelper {
         mockAuthCall()
-        mockSaveDataToCache
+        when(mockTeaSessionCache.save(any(), any())(any(), any()))
+          .thenReturn(Future.successful(CacheMap("FAKE_SESSION_ID", Map.empty)))
+
         mockGetAccountTypeFailure(UnexpectedResponseFromIV)
 
         val res: Future[Result] = controller
@@ -318,144 +345,73 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
 
         status(res) shouldBe INTERNAL_SERVER_ERROR
         contentAsString(res) should include(messages("enrolmentError.heading"))
+        verify(mockTeaSessionCache, times(1)).save(any(), any())(any(), any())
       }
     }
   }
 
   class TestHelper {
-
-    def mockAuthCall(): CallHandler4[Predicate, Retrieval[
-      Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String] ~ Option[AffinityGroup] ~ Option[String]
-    ], HeaderCarrier, ExecutionContext, Future[
+    def mockAuthCall(): ScalaOngoingStubbing[Future[
       Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String] ~ Option[AffinityGroup] ~ Option[String]
     ]] =
-      (
-        mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String] ~ Option[
-              AffinityGroup
-            ] ~ Option[String]]
-          )(
-            _: HeaderCarrier,
-            _: ExecutionContext
-          )
-        )
-        .expects(predicates, retrievals, *, *)
-        .returning(Future.successful(retrievalResponse()))
+      when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(retrievalResponse()))
 
-    def mockAuthCallWithSA(): CallHandler4[Predicate, Retrieval[
-      Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String] ~ Option[AffinityGroup] ~ Option[String]
-    ], HeaderCarrier, ExecutionContext, Future[
+    def mockAuthCallWithSA(): ScalaOngoingStubbing[Future[
       Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String] ~ Option[AffinityGroup] ~ Option[String]
     ]] =
-      (
-        mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String] ~ Option[
-              AffinityGroup
-            ] ~ Option[String]]
-          )(
-            _: HeaderCarrier,
-            _: ExecutionContext
-          )
-        )
-        .expects(predicates, retrievals, *, *)
-        .returning(Future.successful(retrievalResponse(enrolments = saEnrolmentOnly)))
+      when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(retrievalResponse(enrolments = saEnrolmentOnly)))
 
-    def mockAuthCallWithPT(hasSA: Boolean = false): CallHandler4[Predicate, Retrieval[
-      Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String] ~ Option[AffinityGroup] ~ Option[String]
-    ], HeaderCarrier, ExecutionContext, Future[
+    def mockAuthCallWithPT(hasSA: Boolean = false): ScalaOngoingStubbing[Future[
       Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String] ~ Option[AffinityGroup] ~ Option[String]
     ]] = {
       val enrolments = if (hasSA) saAndptEnrolments else ptEnrolmentOnly
-      (
-        mockAuthConnector
-          .authorise(
-            _: Predicate,
-            _: Retrieval[Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String] ~ Option[
-              AffinityGroup
-            ] ~ Option[String]]
-          )(
-            _: HeaderCarrier,
-            _: ExecutionContext
-          )
-        )
-        .expects(predicates, retrievals, *, *)
-        .returning(Future.successful(retrievalResponse(enrolments = enrolments)))
+      when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
+        .thenReturn(Future.successful(retrievalResponse(enrolments = enrolments)))
     }
 
     def mockGetAccountTypeFailure(
-      error: TaxEnrolmentAssignmentErrors
-    ): CallHandler4[Option[String], ExecutionContext, HeaderCarrier, DataRequest[AnyContent], EitherT[
-      Future,
-      TaxEnrolmentAssignmentErrors,
-      AccountTypes.Value
-    ]] =
-      (mockAccountCheckOrchestrator
-        .getAccountType(_: Option[String])(
-          _: ExecutionContext,
-          _: HeaderCarrier,
-          _: DataRequest[AnyContent]
-        ))
-        .expects(*, *, *, *)
-        .returning(createInboundResultError(error))
+                                   error: TaxEnrolmentAssignmentErrors
+                                 ): ScalaOngoingStubbing[EitherT[Future, TaxEnrolmentAssignmentErrors, AccountTypes.Value]] =
+      when(mockAccountCheckOrchestrator.getAccountType(any(), any(), any())).thenReturn(createInboundResultError(error))
 
     def mockAccountCheckSuccess(
-      accountType: AccountTypes.Value
-    ): CallHandler4[Option[String], ExecutionContext, HeaderCarrier, DataRequest[AnyContent], EitherT[
-      Future,
-      TaxEnrolmentAssignmentErrors,
-      AccountTypes.Value
-    ]] =
-      (mockAccountCheckOrchestrator
-        .getAccountType(_: Option[String])(
-          _: ExecutionContext,
-          _: HeaderCarrier,
-          _: DataRequest[AnyContent]
-        ))
-        .expects(*, *, *, *)
-        .returning(createInboundResult(accountType))
+                                 accountType: AccountTypes.Value
+                               ): ScalaOngoingStubbing[EitherT[Future, TaxEnrolmentAssignmentErrors, AccountTypes.Value]] =
+      when(mockAccountCheckOrchestrator.getAccountType(any(), any(), any()))
+        .thenReturn(createInboundResult(accountType))
 
-    def mockSilentEnrolSuccess: CallHandler3[DataRequest[_], HeaderCarrier, ExecutionContext, TEAFResult[Unit]] =
-      (mockSilentAssignmentService
-        .enrolUser()(
-          _: DataRequest[_],
-          _: HeaderCarrier,
-          _: ExecutionContext
-        ))
-        .expects(*, *, *)
-        .returning(
-          EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(()))
-        )
+    def mockSilentEnrolSuccess: ScalaOngoingStubbing[TEAFResult[Unit]] =
+      when(mockSilentAssignmentService.enrolUser()(any(), any(), any()))
+        .thenReturn(EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(())))
 
-    def mockSilentEnrolFailure: CallHandler3[DataRequest[_], HeaderCarrier, ExecutionContext, TEAFResult[Unit]] =
-      (mockSilentAssignmentService
-        .enrolUser()(
-          _: DataRequest[_],
-          _: HeaderCarrier,
-          _: ExecutionContext
-        ))
-        .expects(*, *, *)
-        .returning(
-          createInboundResultError(UnexpectedResponseFromTaxEnrolments)
-        )
+    def mockSilentEnrolFailure: ScalaOngoingStubbing[TEAFResult[Unit]] =
+      when(mockSilentAssignmentService.enrolUser()(any(), any(), any()))
+        .thenReturn(createInboundResultError(UnexpectedResponseFromTaxEnrolments))
 
-    def mockAuditPTEnrolled(
-      accountType: AccountTypes.Value,
-      requestWithUserDetailsFromSession: DataRequest[_],
-      messagesApi: MessagesApi
-    ): CallHandler2[AuditEvent, HeaderCarrier, Future[Unit]] = {
+    def mockAuditPTEnrolledWhen(
+                                 accountType: AccountTypes.Value,
+                                 requestWithUserDetailsFromSession: RequestWithUserDetailsFromSession[_],
+                                 messagesApi: MessagesApi
+                               ): ScalaOngoingStubbing[Future[Unit]] = {
       val expectedAudit = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(accountType)(
         requestWithUserDetailsFromSession,
         messagesApi
       )
-      (mockAuditHandler
-        .audit(_: AuditEvent)(_: HeaderCarrier))
-        .expects(expectedAudit, *)
-        .returning(Future.successful((): Unit))
-        .once()
+      when(mockAuditHandler.audit(ameq(expectedAudit))(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
+    }
+
+    def mockAuditPTEnrolledVerify(
+                                   accountType: AccountTypes.Value,
+                                   requestWithUserDetailsFromSession: RequestWithUserDetailsFromSession[_],
+                                   messagesApi: MessagesApi
+                                 ): Future[Unit] = {
+      val expectedAudit = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(accountType)(
+        requestWithUserDetailsFromSession,
+        messagesApi
+      )
+      verify(mockAuditHandler, times(1)).audit(ameq(expectedAudit))(any[HeaderCarrier])
     }
   }
 }

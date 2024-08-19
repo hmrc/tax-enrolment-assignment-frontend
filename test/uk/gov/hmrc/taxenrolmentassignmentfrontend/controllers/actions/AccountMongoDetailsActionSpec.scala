@@ -16,9 +16,11 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions
 
-import org.scalamock.handlers.CallHandler1
+import org.mockito.ArgumentMatchers.any
+import org.mockito.MockitoSugar.{mock, times, verify, when}
+import org.mockito.stubbing.ScalaOngoingStubbing
 import play.api.Application
-import play.api.inject.bind
+import play.api.inject.{Binding, bind}
 import play.api.libs.json.{JsString, Json}
 import play.api.mvc.Results.Ok
 import play.api.test.FakeRequest
@@ -36,23 +38,23 @@ import scala.concurrent.Future
 
 class AccountMongoDetailsActionSpec extends BaseSpec {
 
-  def mockDeleteDataFromCache: CallHandler1[RequestWithUserDetailsFromSession[_], Future[Boolean]] =
-    (mockTeaSessionCache
-      .removeRecord(_: RequestWithUserDetailsFromSession[_]))
-      .expects(*)
-      .returning(Future.successful(true))
-      .once()
+  def mockDeleteDataFromCacheWhen: ScalaOngoingStubbing[Future[Boolean]] =
+    when(mockTeaSessionCache.removeRecord(any()))
+      .thenReturn(Future.successful(true))
 
-  lazy val mockTeaSessionCache = mock[TEASessionCache]
+  def mockDeleteDataFromCacheVerify: Future[Boolean] =
+    verify(mockTeaSessionCache, times(1)).removeRecord(any())
 
-  override lazy val overrides = Seq(
+  lazy val mockTeaSessionCache: TEASessionCache = mock[TEASessionCache]
+
+  override lazy val overrides: Seq[Binding[TEASessionCache]] = Seq(
     bind[TEASessionCache].toInstance(mockTeaSessionCache)
   )
 
   override implicit lazy val app: Application = localGuiceApplicationBuilder()
     .build()
 
-  lazy val accountMongoDetailsAction = app.injector.instanceOf[AccountMongoDetailsAction]
+  lazy val accountMongoDetailsAction: AccountMongoDetailsAction = app.injector.instanceOf[AccountMongoDetailsAction]
 
   val nino: Nino = new Generator().nextNino
 
@@ -69,8 +71,8 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
           Some(CURRENT_USER_EMAIL),
           Individual,
           Enrolments(Set.empty[Enrolment]),
-          true,
-          true
+          hasPTEnrolment = true,
+          hasSAEnrolment = true
         ),
         "foo"
       )
@@ -90,10 +92,8 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
             Ok(requestWithUserDetailsFromSessionAndMongo.toString())
           )
 
-      (mockTeaSessionCache
-        .fetch()(_: RequestWithUserDetailsFromSession[_]))
-        .expects(*)
-        .returning(Future.successful(Some(CacheMap("id", exampleMongoSessionData))))
+      when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))
+        .thenReturn(Future.successful(Some(CacheMap("id", exampleMongoSessionData))))
 
       val res = accountMongoDetailsAction.invokeBlock(
         requestWithUserDetailsFromSession,
@@ -112,8 +112,8 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
             Some(CURRENT_USER_EMAIL),
             Individual,
             Enrolments(Set.empty[Enrolment]),
-            true,
-            true
+            hasPTEnrolment = true,
+            hasSAEnrolment = true
           ),
           "foo"
         )
@@ -125,10 +125,8 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
               Ok(requestWithUserDetailsFromSessionAndMongo.toString())
             )
 
-        (mockTeaSessionCache
-          .fetch()(_: RequestWithUserDetailsFromSession[_]))
-          .expects(*)
-          .returning(Future.successful(None))
+        when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))
+          .thenReturn(Future.successful(None))
 
         val res = accountMongoDetailsAction.invokeBlock(
           requestWithUserDetailsFromSession,
@@ -154,8 +152,8 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
               Some(CURRENT_USER_EMAIL),
               Individual,
               Enrolments(Set.empty[Enrolment]),
-              true,
-              true
+              hasPTEnrolment = true,
+              hasSAEnrolment = true
             ),
             "foo"
           )
@@ -168,10 +166,8 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
               Ok(requestWithUserDetailsFromSessionAndMongo.toString())
             )
 
-        (mockTeaSessionCache
-          .fetch()(_: RequestWithUserDetailsFromSession[_]))
-          .expects(*)
-          .returning(Future.successful(Some(CacheMap("id", exampleMongoSessionData))))
+        when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))
+          .thenReturn(Future.successful(Some(CacheMap("id", exampleMongoSessionData))))
 
         val res = accountMongoDetailsAction.invokeBlock(
           requestWithUserDetailsFromSession,
@@ -192,8 +188,8 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
               Some(CURRENT_USER_EMAIL),
               Individual,
               Enrolments(Set.empty[Enrolment]),
-              true,
-              true
+              hasPTEnrolment = true,
+              hasSAEnrolment = true
             ),
             "foo"
           )
@@ -206,10 +202,8 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
               Ok(requestWithUserDetailsFromSessionAndMongo.toString())
             )
 
-        (mockTeaSessionCache
-          .fetch()(_: RequestWithUserDetailsFromSession[_]))
-          .expects(*)
-          .returning(Future.successful(Some(CacheMap("id", exampleMongoSessionData))))
+        when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))
+          .thenReturn(Future.successful(Some(CacheMap("id", exampleMongoSessionData))))
 
         val res = accountMongoDetailsAction.invokeBlock(
           requestWithUserDetailsFromSession,
@@ -230,8 +224,8 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
           Some(CURRENT_USER_EMAIL),
           Individual,
           Enrolments(Set.empty[Enrolment]),
-          true,
-          true
+          hasPTEnrolment = true,
+          hasSAEnrolment = true
         ),
         "foo"
       )
@@ -243,10 +237,8 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
             Ok(requestWithUserDetailsFromSessionAndMongo.toString())
           )
 
-      (mockTeaSessionCache
-        .fetch()(_: RequestWithUserDetailsFromSession[_]))
-        .expects(*)
-        .returning(Future.failed(exception = new Exception("uh oh")))
+      when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))
+        .thenReturn(Future.failed(exception = new Exception("uh oh")))
 
       val res = accountMongoDetailsAction.invokeBlock(
         requestWithUserDetailsFromSession,
@@ -268,8 +260,8 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
           Some(CURRENT_USER_EMAIL),
           Individual,
           Enrolments(Set.empty[Enrolment]),
-          true,
-          true
+          hasPTEnrolment = true,
+          hasSAEnrolment = true
         ),
         "foo"
       )

@@ -17,11 +17,12 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.services
 
 import cats.data.EitherT
+import org.mockito.ArgumentMatchers
+import org.mockito.ArgumentMatchers.any
+import org.mockito.MockitoSugar.{mock, when}
 import org.scalatest.matchers.must.Matchers._
 import play.api.Application
 import play.api.inject.bind
-import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{InvalidRedirectUrl, TaxEnrolmentAssignmentErrors, UnexpectedError, UnexpectedResponseFromEACD}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{NINO, UsersAssignedEnrolment1}
@@ -29,7 +30,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.IdentifiersOrVerifiers
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.connectors.{EnrolmentStoreConnectorTestOnly, EnrolmentStoreStubConnectorTestOnly}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.{AccountDetailsTestOnly, EnrolmentDetailsTestOnly, UserTestOnly}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 class EnrolmentStoreServiceTestOnlySpec extends BaseSpec {
 
@@ -60,10 +61,8 @@ class EnrolmentStoreServiceTestOnlySpec extends BaseSpec {
     val groupId = "groupId"
 
     "delete account" in {
-      (mockEnrolmentStoreStubConnectorTestOnly
-        .deleteStubAccount(_: String)(_: HeaderCarrier))
-        .expects(groupId, *)
-        .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+      when(mockEnrolmentStoreStubConnectorTestOnly.deleteStubAccount(groupId))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
       val result = sut.deleteAccount(groupId).value.futureValue
 
@@ -71,10 +70,8 @@ class EnrolmentStoreServiceTestOnlySpec extends BaseSpec {
     }
 
     "return Left" in {
-      (mockEnrolmentStoreStubConnectorTestOnly
-        .deleteStubAccount(_: String)(_: HeaderCarrier))
-        .expects(groupId, *)
-        .returning(EitherT.leftT[Future, Unit](InvalidRedirectUrl))
+      when(mockEnrolmentStoreStubConnectorTestOnly.deleteStubAccount(groupId))
+        .thenReturn(EitherT.leftT[Future, Unit](InvalidRedirectUrl))
 
       val result = sut.deleteAccount(groupId).value.futureValue
 
@@ -86,10 +83,9 @@ class EnrolmentStoreServiceTestOnlySpec extends BaseSpec {
     val groupId = "groupId"
 
     "delete group" in {
-      (mockEnrolmentStoreConnectorTestOnly
-        .deleteGroup(_: String)(_: HeaderCarrier))
-        .expects(groupId, *)
-        .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+
+      when(mockEnrolmentStoreConnectorTestOnly.deleteGroup(groupId))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
       val result = sut.deleteGroup(groupId).value.futureValue
 
@@ -97,10 +93,8 @@ class EnrolmentStoreServiceTestOnlySpec extends BaseSpec {
     }
 
     "return Left" in {
-      (mockEnrolmentStoreConnectorTestOnly
-        .deleteGroup(_: String)(_: HeaderCarrier))
-        .expects(groupId, *)
-        .returning(EitherT.leftT[Future, Unit](InvalidRedirectUrl))
+      when(mockEnrolmentStoreConnectorTestOnly.deleteGroup(groupId))
+        .thenReturn(EitherT.leftT[Future, Unit](InvalidRedirectUrl))
 
       val result = sut.deleteGroup(groupId).value.futureValue
 
@@ -110,10 +104,8 @@ class EnrolmentStoreServiceTestOnlySpec extends BaseSpec {
 
   "insertAccount" must {
     "insert account" in {
-      (mockEnrolmentStoreStubConnectorTestOnly
-        .addStubAccount(_: AccountDetailsTestOnly)(_: HeaderCarrier))
-        .expects(accountDetailsTestOnly, *)
-        .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+      when(mockEnrolmentStoreStubConnectorTestOnly.addStubAccount(accountDetailsTestOnly))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
       val result = sut.insertAccount(accountDetailsTestOnly).value.futureValue
 
@@ -121,10 +113,8 @@ class EnrolmentStoreServiceTestOnlySpec extends BaseSpec {
     }
 
     "return Left" in {
-      (mockEnrolmentStoreStubConnectorTestOnly
-        .addStubAccount(_: AccountDetailsTestOnly)(_: HeaderCarrier))
-        .expects(accountDetailsTestOnly, *)
-        .returning(EitherT.leftT[Future, Unit](InvalidRedirectUrl))
+      when(mockEnrolmentStoreStubConnectorTestOnly.addStubAccount(accountDetailsTestOnly))
+        .thenReturn(EitherT.leftT[Future, Unit](InvalidRedirectUrl))
 
       val result = sut.insertAccount(accountDetailsTestOnly).value.futureValue
 
@@ -144,20 +134,14 @@ class EnrolmentStoreServiceTestOnlySpec extends BaseSpec {
 
     "deallocate enrolment" in {
       val enrolmentKey = s"${enrolment.serviceName}~${enrolment.identifiers.key}~${enrolment.identifiers.value}"
-      (mockEnrolmentStoreConnectorTestOnly
-        .getGroupsFromEnrolment(_: String)(_: HeaderCarrier))
-        .expects(enrolmentKey, *)
-        .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](List("a", "b")))
+      when(mockEnrolmentStoreConnectorTestOnly.getGroupsFromEnrolment(enrolmentKey))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](List("a", "b")))
 
-      (mockEnrolmentStoreConnectorTestOnly
-        .deleteEnrolmentFromGroup(_: String, _: String)(_: HeaderCarrier))
-        .expects(enrolmentKey, "a", *)
-        .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+      when(mockEnrolmentStoreConnectorTestOnly.deleteEnrolmentFromGroup(enrolmentKey, "a"))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
-      (mockEnrolmentStoreConnectorTestOnly
-        .deleteEnrolmentFromGroup(_: String, _: String)(_: HeaderCarrier))
-        .expects(enrolmentKey, "b", *)
-        .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+      when(mockEnrolmentStoreConnectorTestOnly.deleteEnrolmentFromGroup(enrolmentKey, "b"))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
       val result = sut.deallocateEnrolmentFromGroups(enrolment).value.futureValue
 
@@ -167,20 +151,15 @@ class EnrolmentStoreServiceTestOnlySpec extends BaseSpec {
     "return Left" when {
       "deleteEnrolmentFromGroup is failing" in {
         val enrolmentKey = s"${enrolment.serviceName}~${enrolment.identifiers.key}~${enrolment.identifiers.value}"
-        (mockEnrolmentStoreConnectorTestOnly
-          .getGroupsFromEnrolment(_: String)(_: HeaderCarrier))
-          .expects(enrolmentKey, *)
-          .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](List("a", "b")))
 
-        (mockEnrolmentStoreConnectorTestOnly
-          .deleteEnrolmentFromGroup(_: String, _: String)(_: HeaderCarrier))
-          .expects(enrolmentKey, "a", *)
-          .returning(EitherT.leftT[Future, Unit](UnexpectedResponseFromEACD))
+        when(mockEnrolmentStoreConnectorTestOnly.getGroupsFromEnrolment(enrolmentKey))
+          .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](List("a", "b")))
 
-        (mockEnrolmentStoreConnectorTestOnly
-          .deleteEnrolmentFromGroup(_: String, _: String)(_: HeaderCarrier))
-          .expects(enrolmentKey, "b", *)
-          .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+        when(mockEnrolmentStoreConnectorTestOnly.deleteEnrolmentFromGroup(enrolmentKey, "a"))
+          .thenReturn(EitherT.leftT[Future, Unit](UnexpectedResponseFromEACD))
+
+        when(mockEnrolmentStoreConnectorTestOnly.deleteEnrolmentFromGroup(enrolmentKey, "b"))
+          .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
         val result = sut.deallocateEnrolmentFromGroups(enrolment).value.futureValue
 
@@ -189,10 +168,9 @@ class EnrolmentStoreServiceTestOnlySpec extends BaseSpec {
 
       "getGroupsFromEnrolment is failing" in {
         val enrolmentKey = s"${enrolment.serviceName}~${enrolment.identifiers.key}~${enrolment.identifiers.value}"
-        (mockEnrolmentStoreConnectorTestOnly
-          .getGroupsFromEnrolment(_: String)(_: HeaderCarrier))
-          .expects(enrolmentKey, *)
-          .returning(EitherT.leftT[Future, List[String]](UnexpectedResponseFromEACD))
+
+        when(mockEnrolmentStoreConnectorTestOnly.getGroupsFromEnrolment(enrolmentKey))
+          .thenReturn(EitherT.leftT[Future, List[String]](UnexpectedResponseFromEACD))
 
         val result = sut.deallocateEnrolmentFromGroups(enrolment).value.futureValue
 
@@ -213,20 +191,15 @@ class EnrolmentStoreServiceTestOnlySpec extends BaseSpec {
 
     "deallocate enrolment" in {
       val enrolmentKey = s"${enrolment.serviceName}~${enrolment.identifiers.key}~${enrolment.identifiers.value}"
-      (mockEnrolmentStoreConnectorTestOnly
-        .getUsersFromEnrolment(_: String)(_: HeaderCarrier))
-        .expects(enrolmentKey, *)
-        .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](List("a", "b")))
 
-      (mockEnrolmentStoreConnectorTestOnly
-        .deleteEnrolmentFromUser(_: String, _: String)(_: HeaderCarrier))
-        .expects(enrolmentKey, "a", *)
-        .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+      when(mockEnrolmentStoreConnectorTestOnly.getUsersFromEnrolment(enrolmentKey))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](List("a", "b")))
 
-      (mockEnrolmentStoreConnectorTestOnly
-        .deleteEnrolmentFromUser(_: String, _: String)(_: HeaderCarrier))
-        .expects(enrolmentKey, "b", *)
-        .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+      when(mockEnrolmentStoreConnectorTestOnly.deleteEnrolmentFromUser(enrolmentKey, "a"))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+
+      when(mockEnrolmentStoreConnectorTestOnly.deleteEnrolmentFromUser(enrolmentKey, "b"))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
       val result = sut.deallocateEnrolmentFromUsers(enrolment).value.futureValue
 
@@ -236,20 +209,15 @@ class EnrolmentStoreServiceTestOnlySpec extends BaseSpec {
     "return Left" when {
       "deleteEnrolmentFromUser is failing" in {
         val enrolmentKey = s"${enrolment.serviceName}~${enrolment.identifiers.key}~${enrolment.identifiers.value}"
-        (mockEnrolmentStoreConnectorTestOnly
-          .getUsersFromEnrolment(_: String)(_: HeaderCarrier))
-          .expects(enrolmentKey, *)
-          .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](List("a", "b")))
 
-        (mockEnrolmentStoreConnectorTestOnly
-          .deleteEnrolmentFromUser(_: String, _: String)(_: HeaderCarrier))
-          .expects(enrolmentKey, "a", *)
-          .returning(EitherT.leftT[Future, Unit](UnexpectedResponseFromEACD))
+        when(mockEnrolmentStoreConnectorTestOnly.getUsersFromEnrolment(enrolmentKey))
+          .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](List("a", "b")))
 
-        (mockEnrolmentStoreConnectorTestOnly
-          .deleteEnrolmentFromUser(_: String, _: String)(_: HeaderCarrier))
-          .expects(enrolmentKey, "b", *)
-          .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+        when(mockEnrolmentStoreConnectorTestOnly.deleteEnrolmentFromUser(enrolmentKey, "a"))
+          .thenReturn(EitherT.leftT[Future, Unit](UnexpectedResponseFromEACD))
+
+        when(mockEnrolmentStoreConnectorTestOnly.deleteEnrolmentFromUser(enrolmentKey, "b"))
+          .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
         val result = sut.deallocateEnrolmentFromUsers(enrolment).value.futureValue
 
@@ -258,10 +226,9 @@ class EnrolmentStoreServiceTestOnlySpec extends BaseSpec {
 
       "getUsersFromEnrolment is failing" in {
         val enrolmentKey = s"${enrolment.serviceName}~${enrolment.identifiers.key}~${enrolment.identifiers.value}"
-        (mockEnrolmentStoreConnectorTestOnly
-          .getUsersFromEnrolment(_: String)(_: HeaderCarrier))
-          .expects(enrolmentKey, *)
-          .returning(EitherT.leftT[Future, List[String]](UnexpectedResponseFromEACD))
+
+        when(mockEnrolmentStoreConnectorTestOnly.getUsersFromEnrolment(enrolmentKey))
+          .thenReturn(EitherT.leftT[Future, List[String]](UnexpectedResponseFromEACD))
 
         val result = sut.deallocateEnrolmentFromUsers(enrolment).value.futureValue
 
@@ -274,20 +241,14 @@ class EnrolmentStoreServiceTestOnlySpec extends BaseSpec {
     val credId = "credId"
 
     "deallocate enrolments" in {
-      (mockEnrolmentStoreConnectorTestOnly
-        .getEnrolmentsFromUser(_: String)(_: HeaderCarrier))
-        .expects(credId, *)
-        .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](List("a", "b")))
+      when(mockEnrolmentStoreConnectorTestOnly.getEnrolmentsFromUser(credId))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](List("a", "b")))
 
-      (mockEnrolmentStoreConnectorTestOnly
-        .deleteEnrolmentFromUser(_: String, _: String)(_: HeaderCarrier))
-        .expects("a", credId, *)
-        .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+      when(mockEnrolmentStoreConnectorTestOnly.deleteEnrolmentFromUser("a", credId))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
-      (mockEnrolmentStoreConnectorTestOnly
-        .deleteEnrolmentFromUser(_: String, _: String)(_: HeaderCarrier))
-        .expects("b", credId, *)
-        .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+      when(mockEnrolmentStoreConnectorTestOnly.deleteEnrolmentFromUser("b", credId))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
       val result = sut.deallocateEnrolmentsFromUser(credId).value.futureValue
 
@@ -296,20 +257,15 @@ class EnrolmentStoreServiceTestOnlySpec extends BaseSpec {
 
     "return Left" when {
       "deleteEnrolmentFromUser is failing" in {
-        (mockEnrolmentStoreConnectorTestOnly
-          .getEnrolmentsFromUser(_: String)(_: HeaderCarrier))
-          .expects(credId, *)
-          .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](List("a", "b")))
 
-        (mockEnrolmentStoreConnectorTestOnly
-          .deleteEnrolmentFromUser(_: String, _: String)(_: HeaderCarrier))
-          .expects("a", credId, *)
-          .returning(EitherT.leftT[Future, Unit](UnexpectedResponseFromEACD))
+        when(mockEnrolmentStoreConnectorTestOnly.getEnrolmentsFromUser(credId))
+          .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](List("a", "b")))
 
-        (mockEnrolmentStoreConnectorTestOnly
-          .deleteEnrolmentFromUser(_: String, _: String)(_: HeaderCarrier))
-          .expects("b", credId, *)
-          .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+        when(mockEnrolmentStoreConnectorTestOnly.deleteEnrolmentFromUser("a", credId))
+          .thenReturn(EitherT.leftT[Future, Unit](UnexpectedResponseFromEACD))
+
+        when(mockEnrolmentStoreConnectorTestOnly.deleteEnrolmentFromUser("b", credId))
+          .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
         val result = sut.deallocateEnrolmentsFromUser(credId).value.futureValue
 
@@ -317,10 +273,9 @@ class EnrolmentStoreServiceTestOnlySpec extends BaseSpec {
       }
 
       "getEnrolmentsFromUser is failing" in {
-        (mockEnrolmentStoreConnectorTestOnly
-          .getEnrolmentsFromUser(_: String)(_: HeaderCarrier))
-          .expects(credId, *)
-          .returning(EitherT.leftT[Future, List[String]](UnexpectedResponseFromEACD))
+
+        when(mockEnrolmentStoreConnectorTestOnly.getEnrolmentsFromUser(credId))
+          .thenReturn(EitherT.leftT[Future, List[String]](UnexpectedResponseFromEACD))
 
         val result = sut.deallocateEnrolmentsFromUser(credId).value.futureValue
 
@@ -333,20 +288,15 @@ class EnrolmentStoreServiceTestOnlySpec extends BaseSpec {
     val groupId = "groupId"
 
     "deallocate enrolments" in {
-      (mockEnrolmentStoreConnectorTestOnly
-        .getEnrolmentsFromGroup(_: String)(_: HeaderCarrier))
-        .expects(groupId, *)
-        .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](List("a", "b")))
 
-      (mockEnrolmentStoreConnectorTestOnly
-        .deleteEnrolmentFromGroup(_: String, _: String)(_: HeaderCarrier))
-        .expects("a", groupId, *)
-        .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+      when(mockEnrolmentStoreConnectorTestOnly.getEnrolmentsFromGroup(groupId))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](List("a", "b")))
 
-      (mockEnrolmentStoreConnectorTestOnly
-        .deleteEnrolmentFromGroup(_: String, _: String)(_: HeaderCarrier))
-        .expects("b", groupId, *)
-        .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+      when(mockEnrolmentStoreConnectorTestOnly.deleteEnrolmentFromGroup("a", groupId))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+
+      when(mockEnrolmentStoreConnectorTestOnly.deleteEnrolmentFromGroup("b", groupId))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
       val result = sut.deallocateEnrolmentsFromGroup(groupId).value.futureValue
 
@@ -355,20 +305,14 @@ class EnrolmentStoreServiceTestOnlySpec extends BaseSpec {
 
     "return Left" when {
       "deleteEnrolmentFromGroup is failing" in {
-        (mockEnrolmentStoreConnectorTestOnly
-          .getEnrolmentsFromGroup(_: String)(_: HeaderCarrier))
-          .expects(groupId, *)
-          .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](List("a", "b")))
+        when(mockEnrolmentStoreConnectorTestOnly.getEnrolmentsFromGroup(groupId))
+          .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](List("a", "b")))
 
-        (mockEnrolmentStoreConnectorTestOnly
-          .deleteEnrolmentFromGroup(_: String, _: String)(_: HeaderCarrier))
-          .expects("a", groupId, *)
-          .returning(EitherT.leftT[Future, Unit](UnexpectedResponseFromEACD))
+        when(mockEnrolmentStoreConnectorTestOnly.deleteEnrolmentFromGroup("a", groupId))
+          .thenReturn(EitherT.leftT[Future, Unit](UnexpectedResponseFromEACD))
 
-        (mockEnrolmentStoreConnectorTestOnly
-          .deleteEnrolmentFromGroup(_: String, _: String)(_: HeaderCarrier))
-          .expects("b", groupId, *)
-          .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+        when(mockEnrolmentStoreConnectorTestOnly.deleteEnrolmentFromGroup("b", groupId))
+          .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
         val result = sut.deallocateEnrolmentsFromGroup(groupId).value.futureValue
 
@@ -376,10 +320,9 @@ class EnrolmentStoreServiceTestOnlySpec extends BaseSpec {
       }
 
       "getEnrolmentsFromUser is failing" in {
-        (mockEnrolmentStoreConnectorTestOnly
-          .getEnrolmentsFromGroup(_: String)(_: HeaderCarrier))
-          .expects(groupId, *)
-          .returning(EitherT.leftT[Future, List[String]](UnexpectedResponseFromEACD))
+
+        when(mockEnrolmentStoreConnectorTestOnly.getEnrolmentsFromGroup(groupId))
+          .thenReturn(EitherT.leftT[Future, List[String]](UnexpectedResponseFromEACD))
 
         val result = sut.deallocateEnrolmentsFromGroup(groupId).value.futureValue
 
@@ -400,10 +343,9 @@ class EnrolmentStoreServiceTestOnlySpec extends BaseSpec {
     val enrolmentKey = s"${enrolment.serviceName}~${enrolment.identifiers.key}~${enrolment.identifiers.value}"
 
     "delete enrolment" in {
-      (mockEnrolmentStoreConnectorTestOnly
-        .deleteEnrolment(_: String)(_: HeaderCarrier))
-        .expects(enrolmentKey, *)
-        .returning(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+
+      when(mockEnrolmentStoreConnectorTestOnly.deleteEnrolment(enrolmentKey))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
       val result = sut.deleteEnrolment(enrolment).value.futureValue
 
@@ -411,10 +353,9 @@ class EnrolmentStoreServiceTestOnlySpec extends BaseSpec {
     }
 
     "return Left" in {
-      (mockEnrolmentStoreConnectorTestOnly
-        .deleteEnrolment(_: String)(_: HeaderCarrier))
-        .expects(enrolmentKey, *)
-        .returning(EitherT.leftT[Future, Unit](UnexpectedError))
+
+      when(mockEnrolmentStoreConnectorTestOnly.deleteEnrolment(enrolmentKey))
+        .thenReturn(EitherT.leftT[Future, Unit](UnexpectedError))
 
       val result = sut.deleteEnrolment(enrolment).value.futureValue
 
@@ -425,10 +366,9 @@ class EnrolmentStoreServiceTestOnlySpec extends BaseSpec {
   "getUsersAssignedPTEnrolmentFromStub" when {
     "the a PT enrolment has been assigned for the nino" should {
       "call the EACD, save to cache and return the account details" in {
-        (mockEnrolmentStoreStubConnectorTestOnly
-          .getUsersWithPTEnrolment(_: Nino)(_: HeaderCarrier))
-          .expects(NINO, *)
-          .returning(createInboundResult(UsersAssignedEnrolment1))
+
+        when(mockEnrolmentStoreStubConnectorTestOnly.getUsersWithPTEnrolment(NINO))
+          .thenReturn(createInboundResult(UsersAssignedEnrolment1))
 
         val result = sut.getUsersAssignedPTEnrolmentFromStub(NINO)
         whenReady(result.value) { res =>
@@ -439,12 +379,9 @@ class EnrolmentStoreServiceTestOnlySpec extends BaseSpec {
 
     "EACD returns an error" should {
       "return an error" in {
-        (mockEnrolmentStoreStubConnectorTestOnly
-          .getUsersWithPTEnrolment(_: Nino)(
-            _: HeaderCarrier
-          ))
-          .expects(NINO, *)
-          .returning(createInboundResultError(UnexpectedResponseFromEACD))
+
+        when(mockEnrolmentStoreStubConnectorTestOnly.getUsersWithPTEnrolment(NINO))
+          .thenReturn(createInboundResultError(UnexpectedResponseFromEACD))
 
         val result = sut.getUsersAssignedPTEnrolmentFromStub(NINO)
         whenReady(result.value) { res =>
@@ -456,68 +393,22 @@ class EnrolmentStoreServiceTestOnlySpec extends BaseSpec {
 
   "deleteAllKnownFactsForNino" must {
     "delete all known IR-SA and HMRC-PT known facts" in {
-      /* val irSaResponseBody =
-        """
-          |{
-          |  "service": "IR-SA",
-          |  "enrolments": [
-          |    {
-          |      "identifiers": [
-          |        {
-          |          "key": "UTR",
-          |          "value": "1"
-          |        }
-          |      ],
-          |      "verifiers": [
-          |        {
-          |          "key": "Postcode",
-          |          "value": "postcode"
-          |        },
-          |        {
-          |          "key": "NINO",
-          |          "value": "nino1"
-          |        }
-          |      ]
-          |    },
-          |    {
-          |      "identifiers": [
-          |        {
-          |          "key": "UTR",
-          |          "value": "2"
-          |        }
-          |      ],
-          |      "verifiers": [
-          |        {
-          |          "key": "Postcode",
-          |          "value": "postcode"
-          |        },
-          |        {
-          |          "key": "NINO",
-          |          "value": "nino2"
-          |        }
-          |      ]
-          |    }
-          |  ]
-          |}
-          |""".stripMargin
 
-       */
+      when(
+        mockEnrolmentStoreConnectorTestOnly
+          .queryKnownFactsByVerifiers(ArgumentMatchers.eq("IR-SA"), any())(any(), any())
+      )
+        .thenReturn(createInboundResult(List("enrolmentKey1", "enrolmentKey2")))
 
-      (mockEnrolmentStoreConnectorTestOnly
-        .queryKnownFactsByVerifiers(_: String, _: List[IdentifiersOrVerifiers])(_: ExecutionContext, _: HeaderCarrier))
-        .expects("IR-SA", *, *, *)
-        .returning(createInboundResult(List("enrolmentKey1", "enrolmentKey2")))
-
-      (mockEnrolmentStoreConnectorTestOnly
-        .queryKnownFactsByVerifiers(_: String, _: List[IdentifiersOrVerifiers])(_: ExecutionContext, _: HeaderCarrier))
-        .expects("HMRC-PT", *, *, *)
-        .returning(createInboundResult(List("enrolmentKey3")))
+      when(
+        mockEnrolmentStoreConnectorTestOnly
+          .queryKnownFactsByVerifiers(ArgumentMatchers.eq("HMRC-PT"), any())(any(), any())
+      )
+        .thenReturn(createInboundResult(List("enrolmentKey3")))
 
       List("enrolmentKey1", "enrolmentKey2", "enrolmentKey3").foreach { enrolmentKey =>
-        (mockEnrolmentStoreConnectorTestOnly
-          .deleteEnrolment(_: String)(_: HeaderCarrier))
-          .expects(enrolmentKey, *)
-          .returning(createInboundResult(()))
+        when(mockEnrolmentStoreConnectorTestOnly.deleteEnrolment(enrolmentKey))
+          .thenReturn(createInboundResult(()))
       }
 
       val result = sut.deleteAllKnownFactsForNino(NINO).value.futureValue

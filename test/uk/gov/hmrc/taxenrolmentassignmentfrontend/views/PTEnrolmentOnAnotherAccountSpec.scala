@@ -21,7 +21,7 @@ import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.PTEnrolmentOtherAccountMesages
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails, SCP}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnotherAccount
 
 class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
@@ -51,7 +51,7 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
   )
 
   val testAccountDetails = AccountDetails(
-    identityProviderType = "SCP",
+    identityProviderType = SCP,
     "credId",
     userId = USER_ID,
     email = Some(SensitiveString("email.otherUser@test.com")),
@@ -59,7 +59,7 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
     mfaDetails
   )
   val testAccountDetailsWithSA = AccountDetails(
-    identityProviderType = "SCP",
+    identityProviderType = SCP,
     "credId",
     userId = PT_USER_ID,
     email = Some(SensitiveString("email.otherUser@test.com")),
@@ -69,7 +69,7 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
   )
 
   val accountDetailsWithNoEmail: AccountDetails = AccountDetails(
-    identityProviderType = "SCP",
+    identityProviderType = SCP,
     "credId",
     userId = "9871",
     email = None,

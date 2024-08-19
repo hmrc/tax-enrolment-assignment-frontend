@@ -7,22 +7,22 @@ object AppDependencies {
   val playVersion = "play-30"
 
   val compile = Seq(
-    "uk.gov.hmrc"         %%  s"bootstrap-frontend-$playVersion"  % bootstrapVersion,
-    "uk.gov.hmrc"         %%  s"play-frontend-hmrc-$playVersion"  % "9.0.0",
-    "org.typelevel"       %%  "cats-core"                         % "2.12.0",
-    "uk.gov.hmrc"         %%  s"domain-$playVersion"              % "9.0.0",
-    "uk.gov.hmrc.mongo"   %%  s"hmrc-mongo-$playVersion"          % hmrcMongoVersion,
-    "uk.gov.hmrc"         %% s"crypto-json-$playVersion"          % "8.0.0"
+    "uk.gov.hmrc"       %% s"bootstrap-frontend-$playVersion"  % bootstrapVersion,
+    "uk.gov.hmrc"       %% s"play-frontend-hmrc-$playVersion"  % "9.0.0",
+    "org.typelevel"     %% "cats-core"                         % "2.12.0",
+    "uk.gov.hmrc"       %% s"domain-$playVersion"              % "9.0.0",
+    "uk.gov.hmrc"       %% s"http-caching-client-$playVersion" % "11.2.0",
+    "uk.gov.hmrc.mongo" %% s"hmrc-mongo-$playVersion"          % hmrcMongoVersion
   )
 
   val test = Seq(
-    "uk.gov.hmrc"             %%  s"bootstrap-test-$playVersion" %  bootstrapVersion,
-    "org.mockito"             %%  "mockito-scala-scalatest"       % "1.17.37",
-    "org.scalatest"           %%  "scalatest"                 %  "3.2.19",
-    "org.jsoup"               %   "jsoup"                     %  "1.18.1",
-    "org.scalamock"           %%  "scalamock"                 %  "6.0.0",
-    "uk.gov.hmrc.mongo"       %%  s"hmrc-mongo-test-$playVersion" % hmrcMongoVersion
-  ).map(_  % "test")
+    "uk.gov.hmrc"       %% s"bootstrap-test-$playVersion"  % bootstrapVersion,
+    "org.mockito"       %% "mockito-scala-scalatest"       % "1.17.37",
+    "org.scalatest"     %% "scalatest"                     % "3.2.19",
+    "org.scalatestplus" %% "scalacheck-1-17"               % "3.2.18.0",
+    "org.jsoup"          % "jsoup"                         % "1.18.1",
+    "uk.gov.hmrc.mongo" %% s"hmrc-mongo-test-$playVersion" % hmrcMongoVersion
+  ).map(_ % "test")
 
   val all: Seq[ModuleID] = compile ++ test
 }

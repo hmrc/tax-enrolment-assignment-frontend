@@ -16,59 +16,49 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers
 
-import org.scalamock.handlers.{CallHandler1, CallHandler2}
-import play.api.libs.json.{JsObject, JsValue, Json}
+import org.mockito.ArgumentMatchers.any
+import org.mockito.MockitoSugar.{mock, times, verify, when}
+import org.mockito.stubbing.ScalaOngoingStubbing
+import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UserAnswers
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.JourneyCacheRepository
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.ACCOUNT_TYPE
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 
 import scala.concurrent.Future
 
 trait ControllersBaseSpec extends BaseSpec {
 
   lazy val mockAuthConnector: AuthConnector = mock[AuthConnector]
-  lazy val mockRepository: JourneyCacheRepository = mock[JourneyCacheRepository]
+  lazy val mockTeaSessionCache: TEASessionCache = mock[TEASessionCache]
 
-  def mockGetDataFromCacheForActionNoRedirectUrl: CallHandler1[UserAnswers, Future[Boolean]] = {
+  def mockGetDataFromCacheForActionNoRedirectUrl: ScalaOngoingStubbing[Future[Option[CacheMap]]] = {
     val data = Map(ACCOUNT_TYPE -> Json.toJson(randomAccountType))
-    val userAnswers: UserAnswers = UserAnswers(
-      request.sessionID,
-      generateNino.nino,
-      Json.toJson(data).as[JsObject]
-    )
-    (mockRepository
-      .set(_: UserAnswers))
-      .expects(userAnswers)
-      .returning(Future.successful(true))
-      .once()
+    val cacheMap = CacheMap("id", data)
+
+    when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))
+      .thenReturn(Future.successful(Some(cacheMap)))
   }
 
   def mockGetDataFromCacheForActionSuccess(
     accountType: AccountTypes.Value,
     redirectUrl: String = "foo",
     additionCacheData: Map[String, JsValue] = Map()
-  ): CallHandler1[UserAnswers, Future[Boolean]] = {
+  ): ScalaOngoingStubbing[Future[Option[CacheMap]]] = {
     val data = generateBasicCacheData(accountType, redirectUrl) ++ additionCacheData
-    val userAnswers: UserAnswers = UserAnswers(
-      request.sessionID,
-      generateNino.nino,
-      Json.toJson(data).as[JsObject]
-    )
+    val cacheMap = CacheMap("id", data)
 
-    (mockRepository
-      .set(_: UserAnswers))
-      .expects(userAnswers)
-      .returning(Future.successful(true))
-
+    when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))
+      .thenReturn(Future.successful(Some(cacheMap)))
   }
 
-  def mockDeleteDataFromCache: CallHandler2[String, String, Future[Boolean]] =
-    (mockRepository
-      .clear(_: String, _: String))
-      .expects(*, *)
-      .returning(Future.successful(true))
-      .once()
+  def mockDeleteDataFromCacheWhen: ScalaOngoingStubbing[Future[Boolean]] =
+    when(mockTeaSessionCache.removeRecord(any()))
+      .thenReturn(Future.successful(true))
+
+  def mockDeleteDataFromCacheVerify: Future[Boolean] =
+    verify(mockTeaSessionCache, times(1)).removeRecord(any())
 }

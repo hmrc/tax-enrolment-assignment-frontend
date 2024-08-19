@@ -18,7 +18,6 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers
 
 import cats.data.EitherT
 import org.apache.pekko.stream.Materializer
-import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.{IntegrationPatience, PatienceConfiguration, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -50,7 +49,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait BaseSpec
     extends AnyWordSpec with GuiceOneAppPerSuite with Matchers with PatienceConfiguration with BeforeAndAfterEach
-    with MockFactory with OneInstancePerTest with ScalaFutures with Injecting with IntegrationPatience {
+    with OneInstancePerTest with ScalaFutures with Injecting with IntegrationPatience {
   this: Suite =>
 
   def generateNino: Nino = new NinoGenerator().nextNino

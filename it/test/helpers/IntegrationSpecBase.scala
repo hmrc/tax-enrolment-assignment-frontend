@@ -17,33 +17,38 @@
 package helpers
 
 import helpers.TestITData._
+import org.mockito.MockitoSugar.mock
+import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.{IntegrationPatience, PatienceConfiguration, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.Application
 import play.api.i18n.{Lang, Messages, MessagesApi}
+import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsString, JsValue, Json}
 import play.api.mvc.{AnyContent, Request}
 import play.api.test.{FakeRequest, Injecting}
-import play.api.Application
+import uk.gov.hmrc.domain.{Nino, Generator => NinoGenerator}
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSessionAndMongo}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.TENCrypto
-import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.domain.{Generator => NinoGenerator}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, DataRequest, RequestWithUserDetailsFromSessionAndMongo}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.userDetailsNoEnrolments
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UserAnswers
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.pages.{KeepAccessToSAThroughPTAPage, ReportedFraudPage, UserAssignedPtaEnrolmentPage, UserAssignedSaEnrolmentPage}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.JourneyCacheRepository
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.TENCrypto
 
 import scala.concurrent.ExecutionContext
 
 trait IntegrationSpecBase
     extends AnyWordSpec with GuiceOneAppPerSuite with Matchers with PatienceConfiguration with BeforeAndAfterEach
-    with ScalaFutures with Injecting with IntegrationPatience with SessionCacheOperations with WireMockHelper {
+    with ScalaFutures with Injecting with IntegrationPatience with WireMockHelper {
 
   def generateNino: Nino = new NinoGenerator().nextNino
   def secondGenerateNino: Nino = new NinoGenerator().nextNino
@@ -65,6 +70,8 @@ trait IntegrationSpecBase
   )
   lazy val crypto: TENCrypto = app.injector.instanceOf[TENCrypto]
 
+  val mockJourneyCacheRepository: JourneyCacheRepository = mock[JourneyCacheRepository]
+
   lazy val config: Map[String, Any] = Map(
     "play.filters.csrf.header.bypassHeaders.Csrf-Token"            -> "nocheck",
     "auditing.enabled"                                             -> true,
@@ -78,18 +85,18 @@ trait IntegrationSpecBase
     "microservice.services.bas-stubs.port"                         -> server.port(),
     "microservice.services.identity-provider-account-context.port" -> server.port(),
     "play.http.router"                                             -> "testOnlyDoNotUseInAppConf.Routes",
-    "throttle.percentage"                                          -> "3",
-    "mongodb.uri"                                                  -> mongoUri
+    "throttle.percentage"                                          -> "3"
   )
 
   protected def localGuiceApplicationBuilder: GuiceApplicationBuilder =
     GuiceApplicationBuilder()
       .configure(config)
 
-  override implicit lazy val app: Application =
-    localGuiceApplicationBuilder
-      .build()
-
+  override implicit lazy val app: Application = localGuiceApplicationBuilder
+    .overrides(
+      bind[JourneyCacheRepository].toInstance(mockJourneyCacheRepository)
+    )
+    .build()
   lazy val returnUrl: String = "http://localhost:1234/redirect/url"
 
   lazy val accountCheckPath: String =
@@ -102,14 +109,45 @@ trait IntegrationSpecBase
 
   def requestWithAccountType(
     accountType: AccountTypes.Value,
-    redirectUrl: String = returnUrl,
-    mongoCacheData: Map[String, JsValue] = exampleMongoSessionData
-  ): RequestWithUserDetailsFromSessionAndMongo[_] =
+    redirectUrl: String = returnUrl
+  ): RequestWithUserDetailsFromSessionAndMongo[AnyContent] =
     RequestWithUserDetailsFromSessionAndMongo(
       FakeRequest().asInstanceOf[Request[AnyContent]],
       userDetailsNoEnrolments,
       sessionId,
-      AccountDetailsFromMongo(accountType, redirectUrl, mongoCacheData)(crypto.crypto)
+      AccountDetailsFromMongo(accountType, redirectUrl, None, None, None, None)
+    )
+
+  def requestWithGivenMongoDataAndUserAnswers(
+    requestWithMongo: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+    userAnswers: UserAnswers
+  ): DataRequest[AnyContent] = {
+    val updatedRequestWithMongoData = requestWithMongo.copy(accountDetailsFromMongo =
+      requestWithMongo.accountDetailsFromMongo.copy(
+        optKeepAccessToSAThroughPTA = userAnswers.get(KeepAccessToSAThroughPTAPage),
+        optReportedFraud = userAnswers.get(ReportedFraudPage),
+        optUserAssignedSAParam = userAnswers.get(UserAssignedSaEnrolmentPage),
+        optUserAssignedPTParam = userAnswers.get(UserAssignedPtaEnrolmentPage)
+      )
+    )
+    userAnswers.get(UserAssignedSaEnrolmentPage)
+
+    new DataRequest[AnyContent](
+      FakeRequest().asInstanceOf[Request[AnyContent]],
+      updatedRequestWithMongoData.userDetails,
+      userAnswers,
+      Some(updatedRequestWithMongoData)
+    )
+  }
+
+  def requestWithGivenMongoData(
+    requestWithMongo: RequestWithUserDetailsFromSessionAndMongo[AnyContent]
+  ): DataRequest[AnyContent] =
+    new DataRequest[AnyContent](
+      FakeRequest().asInstanceOf[Request[AnyContent]],
+      userDetailsNoEnrolments,
+      UserAnswers("sessionId", generateNino.nino),
+      Some(requestWithMongo)
     )
 
   def messagesApi: MessagesApi =

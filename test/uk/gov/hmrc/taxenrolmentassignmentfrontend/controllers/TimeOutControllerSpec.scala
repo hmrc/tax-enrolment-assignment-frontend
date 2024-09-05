@@ -17,6 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import org.jsoup.Jsoup
+import org.mockito.ArgumentMatchers.{any, eq => ameq}
 import org.mockito.MockitoSugar.when
 import play.api.Application
 import play.api.inject.{Binding, bind}
@@ -24,19 +25,18 @@ import play.api.mvc.AnyContentAsEmpty
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.ControllersBaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{predicates, retrievalResponse, retrievals}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.JourneyCacheRepository
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.TimedOutView
-import org.mockito.ArgumentMatchers.{any, eq => ameq}
-import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class TimeOutControllerSpec extends ControllersBaseSpec {
 
-  override lazy val overrides: Seq[Binding[TEASessionCache]] = Seq(
-    bind[TEASessionCache].toInstance(mockTeaSessionCache)
+  override lazy val overrides: Seq[Binding[JourneyCacheRepository]] = Seq(
+    bind[JourneyCacheRepository].toInstance(mockJourneyCacheRepository)
   )
 
   override implicit lazy val app: Application = localGuiceApplicationBuilder()
@@ -61,8 +61,8 @@ class TimeOutControllerSpec extends ControllersBaseSpec {
       when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(retrievalResponse()))
 
-      when(mockTeaSessionCache.extendSession())
-        .thenReturn(Future.successful(true))
+      when(mockJourneyCacheRepository.get(any(), any()))
+        .thenReturn(Future.successful(None))
 
       val result = controller.keepAlive().apply(fakeReq("GET"))
 

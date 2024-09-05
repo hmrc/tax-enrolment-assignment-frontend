@@ -77,7 +77,6 @@ class AccountMongoDetailsAction @Inject() (
             )
           )
         case Left(CacheNotCompleteOrNotCorrect(None, None)) =>
-          println("CacheNotCompleteOrNotCorrect 3")
           logger.logEvent(
             LoggingEvent
               .logUserHasNoCacheInMongo(request.userDetails.credId, request.userAnswers.sessionId)
@@ -110,8 +109,13 @@ class AccountMongoDetailsAction @Inject() (
 
     val optAccountType = request.userAnswers.get(AccountTypePage)
     val optRedirectUrl = request.userAnswers.get(RedirectUrlPage)
-    if (optAccountType.isEmpty && optRedirectUrl.isEmpty) {
-      println("CacheNotCompleteOrNotCorrect 1")
+    if (optAccountType.isEmpty && optRedirectUrl.isDefined) {
+      Future.successful(
+        Left(
+          CacheNotCompleteOrNotCorrect(optRedirectUrl, None)
+        )
+      )
+    } else if (optAccountType.isEmpty && optRedirectUrl.isEmpty) {
       Future.successful(Left(CacheNotCompleteOrNotCorrect(None, None)))
     } else {
       (AccountDetailsFromMongo.optAccountType(optAccountType.get), optRedirectUrl) match {
@@ -129,7 +133,6 @@ class AccountMongoDetailsAction @Inject() (
             )
           )
         case (optAccountType, optRedirectUrl) =>
-          println("CacheNotCompleteOrNotCorrect 2")
           Future.successful(
             Left(
               CacheNotCompleteOrNotCorrect(optRedirectUrl, optAccountType)

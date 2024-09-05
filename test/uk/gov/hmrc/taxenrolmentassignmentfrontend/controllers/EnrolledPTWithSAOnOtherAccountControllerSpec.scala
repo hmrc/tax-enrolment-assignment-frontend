@@ -26,13 +26,15 @@ import play.api.mvc.BodyParsers
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.DataRequest
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, UnexpectedResponseFromUsersGroupsSearch}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{ControllersBaseSpec, UrlPaths}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UserAnswers
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.pages.{AccountTypePage, RedirectUrlPage}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditHandler
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.JourneyCacheRepository
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTWithSAOnOtherAccount
 
@@ -47,8 +49,8 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
   lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
   lazy val mockMultipleAccountsOrchestrator: MultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
 
-  override lazy val overrides: Seq[Binding[TEASessionCache]] = Seq(
-    bind[TEASessionCache].toInstance(mockTeaSessionCache)
+  override lazy val overrides: Seq[Binding[JourneyCacheRepository]] = Seq(
+    bind[JourneyCacheRepository].toInstance(mockJourneyCacheRepository)
   )
 
   override implicit lazy val app: Application = localGuiceApplicationBuilder()
@@ -78,7 +80,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
         when(
           mockMultipleAccountsOrchestrator.getDetailsForEnrolledPTWithSAOnOtherAccount(
-            any[RequestWithUserDetailsFromSessionAndMongo[_]],
+            any[DataRequest[_]],
             any[HeaderCarrier],
             any[ExecutionContext]
           )
@@ -89,7 +91,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
         when(
           mockMultipleAccountsOrchestrator.getSACredentialIfNotFraud(
-            any[RequestWithUserDetailsFromSessionAndMongo[_]],
+            any[DataRequest[_]],
             any[HeaderCarrier],
             any[ExecutionContext]
           )
@@ -100,7 +102,10 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
             )
           )
 
-        mockGetDataFromCacheForActionSuccess(randomAccountType)
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(AccountTypePage, randomAccountType.toString)
+          .setOrException(RedirectUrlPage, "foo")
+        mockGetDataFromCacheForActionSuccess(mockUserAnswers)
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
@@ -129,7 +134,10 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
         when(mockMultipleAccountsOrchestrator.getSACredentialIfNotFraud(any(), any(), any()))
           .thenReturn(createInboundResult(None))
 
-        mockGetDataFromCacheForActionSuccess(randomAccountType)
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(AccountTypePage, randomAccountType.toString)
+          .setOrException(RedirectUrlPage, "foo")
+        mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -150,7 +158,10 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
             )
           )
 
-        mockGetDataFromCacheForActionSuccess(randomAccountType)
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(AccountTypePage, randomAccountType.toString)
+          .setOrException(RedirectUrlPage, "foo")
+        mockGetDataFromCacheForActionSuccess(mockUserAnswers)
         val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
@@ -182,7 +193,10 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
         when(mockMultipleAccountsOrchestrator.getDetailsForEnrolledPTWithSAOnOtherAccount(any(), any(), any()))
           .thenReturn(createInboundResultError(UnexpectedResponseFromUsersGroupsSearch))
 
-        mockGetDataFromCacheForActionSuccess(randomAccountType)
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(AccountTypePage, randomAccountType.toString)
+          .setOrException(RedirectUrlPage, "foo")
+        mockGetDataFromCacheForActionSuccess(mockUserAnswers)
         val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
@@ -193,10 +207,13 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
   }
   "continue" when {
     "the call to continue deletes user data and redirects to their redirectURL" in {
+      val mockUserAnswers = UserAnswers("id", generateNino.nino)
+        .setOrException(AccountTypePage, randomAccountType.toString)
+        .setOrException(RedirectUrlPage, "redirect")
       when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(retrievalResponse()))
 
-      mockGetDataFromCacheForActionSuccess(accountType = randomAccountType, redirectUrl = "redirect")
+      mockGetDataFromCacheForActionSuccess(mockUserAnswers)
       mockDeleteDataFromCacheWhen
       val res = controller.continue
         .apply(buildFakeRequestWithSessionId(""))

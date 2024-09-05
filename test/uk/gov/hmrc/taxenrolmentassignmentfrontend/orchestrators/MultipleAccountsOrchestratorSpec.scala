@@ -21,20 +21,18 @@ import org.mockito.ArgumentMatchers.{any, eq => ameq}
 import org.mockito.MockitoSugar.{mock, when}
 import play.api.Application
 import play.api.inject.{Binding, bind}
-import play.api.libs.json.{JsBoolean, Json}
-import play.api.mvc.{AnyContent, BodyParsers}
+import play.api.mvc.BodyParsers
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.DataRequest
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{BaseSpec, UrlPaths}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{UserAnswers, UsersAssignedEnrolment}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.pages.{AccountTypePage, KeepAccessToSAThroughPTAPage, RedirectUrlPage, ReportedFraudPage, UserAssignedPtaEnrolmentPage, UserAssignedSaEnrolmentPage}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.JourneyCacheRepository
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, SilentAssignmentService, UsersGroupsSearchService}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -43,14 +41,14 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
 
   lazy val mockSilentAssignmentService: SilentAssignmentService = mock[SilentAssignmentService]
   lazy val mockEacdService: EACDService = mock[EACDService]
-  lazy val mockTeaSessionCache: TEASessionCache = mock[TEASessionCache]
+  override val mockJourneyCacheRepository: JourneyCacheRepository = mock[JourneyCacheRepository]
 
   lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
   lazy val mockMultipleAccountsOrchestrator: MultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
   lazy val mockUsersGroupService: UsersGroupsSearchService = mock[UsersGroupsSearchService]
 
-  override lazy val overrides: Seq[Binding[TEASessionCache]] = Seq(
-    bind[TEASessionCache].toInstance(mockTeaSessionCache)
+  override lazy val overrides: Seq[Binding[JourneyCacheRepository]] = Seq(
+    bind[JourneyCacheRepository].toInstance(mockJourneyCacheRepository)
   )
 
   override implicit lazy val app: Application = localGuiceApplicationBuilder()
@@ -74,11 +72,15 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
             )(
               any[ExecutionContext],
               any[HeaderCarrier],
-              any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+              any[DataRequest[_]]
             )
           ).thenReturn(createInboundResult(accountDetails))
 
-          val res = orchestrator.getDetailsForEnrolledPT(requestWithAccountType(accountType), implicitly, implicitly)
+          val res = orchestrator.getDetailsForEnrolledPT(
+            requestWithGivenMongoData(requestWithAccountType(accountType)),
+            implicitly,
+            implicitly
+          )
           whenReady(res.value) { result =>
             result shouldBe Right(
               accountDetails
@@ -95,7 +97,11 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
     ).foreach { accountType =>
       s"the accountType is $accountType" should {
         s"return the $IncorrectUserType containing redirectUrl" in {
-          val res = orchestrator.getDetailsForEnrolledPT(requestWithAccountType(accountType), implicitly, implicitly)
+          val res = orchestrator.getDetailsForEnrolledPT(
+            requestWithGivenMongoData(requestWithAccountType(accountType)),
+            implicitly,
+            implicitly
+          )
           whenReady(res.value) { result =>
             result shouldBe Left(IncorrectUserType(UrlPaths.returnUrl, accountType))
           }
@@ -113,12 +119,12 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
           )(
             any[ExecutionContext],
             any[HeaderCarrier],
-            any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+            any[DataRequest[_]]
           )
         ).thenReturn(createInboundResult(accountDetails))
 
         val res = orchestrator.getDetailsForEnrolledPTWithSAOnOtherAccount(
-          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER),
+          requestWithGivenMongoData(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER)),
           implicitly,
           implicitly
         )
@@ -136,7 +142,7 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
       s"the accountType is $accountType" should {
         s"return the $IncorrectUserType" in {
           val res = orchestrator.getDetailsForEnrolledPTWithSAOnOtherAccount(
-            requestWithAccountType(accountType),
+            requestWithGivenMongoData(requestWithAccountType(accountType)),
             implicitly,
             implicitly
           )
@@ -152,7 +158,8 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
     s"the accountType $PT_ASSIGNED_TO_OTHER_USER, no SA associated to the account" should {
       "return a PTEnrolmentOtherAccountViewModel for the account details" in {
 
-        val additionalCacheData = Map("USER_ASSIGNED_PT_ENROLMENT" -> Json.toJson(UsersAssignedEnrolment1))
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(UserAssignedPtaEnrolmentPage, UsersAssignedEnrolment1)
 
         when(
           mockUsersGroupService.getAccountDetails(
@@ -160,7 +167,7 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
           )(
             any[ExecutionContext],
             any[HeaderCarrier],
-            any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+            any[DataRequest[_]]
           )
         ).thenReturn(createInboundResult(accountDetails))
 
@@ -170,13 +177,13 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
           )(
             any[ExecutionContext],
             any[HeaderCarrier],
-            any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+            any[DataRequest[_]]
           )
         ).thenReturn(createInboundResult(accountDetailsWithPT.copy(hasSA = None)))
 
         when(
           mockEacdService.getUsersAssignedSAEnrolment(
-            any[RequestWithUserDetailsFromSession[AnyContent]],
+            any[DataRequest[_]],
             any[HeaderCarrier],
             any[ExecutionContext]
           )
@@ -184,7 +191,7 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
 
         val res = orchestrator
           .getCurrentAndPTAAndSAIfExistsForUser(
-            requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData),
+            requestWithGivenMongoDataAndUserAnswers(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), mockUserAnswers),
             implicitly,
             implicitly
           )
@@ -196,7 +203,9 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
 
     s"the accountType $PT_ASSIGNED_TO_OTHER_USER, account has SA in the current session" should {
       "return a PTEnrolmentOtherAccountViewModel for the account details" in {
-        val additionalCacheData = Map("USER_ASSIGNED_PT_ENROLMENT" -> Json.toJson(UsersAssignedEnrolment1))
+
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(UserAssignedPtaEnrolmentPage, UsersAssignedEnrolment1)
 
         when(
           mockUsersGroupService.getAccountDetails(
@@ -204,7 +213,7 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
           )(
             any[ExecutionContext],
             any[HeaderCarrier],
-            any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+            any[DataRequest[_]]
           )
         ).thenReturn(createInboundResult(accountDetails))
 
@@ -214,23 +223,24 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
           )(
             any[ExecutionContext],
             any[HeaderCarrier],
-            any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+            any[DataRequest[_]]
           )
         ).thenReturn(createInboundResult(accountDetailsWithPT))
 
         when(
           mockEacdService.getUsersAssignedSAEnrolment(
-            any[RequestWithUserDetailsFromSession[AnyContent]],
+            any[DataRequest[_]],
             any[HeaderCarrier],
             any[ExecutionContext]
           )
         ).thenReturn(createInboundResult(UsersAssignedEnrolment(Some(CREDENTIAL_ID))))
 
         val res = orchestrator.getCurrentAndPTAAndSAIfExistsForUser(
-          requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData),
+          requestWithGivenMongoDataAndUserAnswers(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), mockUserAnswers),
           implicitly,
           implicitly
         )
+
         whenReady(res.value) { result =>
           result shouldBe Right(ptEnrolmentDataModel(Some(USER_ID)))
         }
@@ -239,7 +249,9 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
 
     s"the accountType $PT_ASSIGNED_TO_OTHER_USER, account has SA on the another account that also has PT" should {
       "return a PTEnrolmentOtherAccountViewModel for the account details" in {
-        val additionalCacheData = Map("USER_ASSIGNED_PT_ENROLMENT" -> Json.toJson(UsersAssignedEnrolment1))
+
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(UserAssignedPtaEnrolmentPage, UsersAssignedEnrolment1)
 
         when(
           mockUsersGroupService.getAccountDetails(
@@ -247,7 +259,7 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
           )(
             any[ExecutionContext],
             any[HeaderCarrier],
-            any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+            any[DataRequest[_]]
           )
         ).thenReturn(createInboundResult(accountDetails))
 
@@ -257,23 +269,24 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
           )(
             any[ExecutionContext],
             any[HeaderCarrier],
-            any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+            any[DataRequest[_]]
           )
         ).thenReturn(createInboundResult(accountDetailsWithPT))
 
         when(
           mockEacdService.getUsersAssignedSAEnrolment(
-            any[RequestWithUserDetailsFromSession[AnyContent]],
+            any[DataRequest[_]],
             any[HeaderCarrier],
             any[ExecutionContext]
           )
         ).thenReturn(createInboundResult(UsersAssignedEnrolment(Some(CREDENTIAL_ID_1))))
 
         val res = orchestrator.getCurrentAndPTAAndSAIfExistsForUser(
-          requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData),
+          requestWithGivenMongoDataAndUserAnswers(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), mockUserAnswers),
           implicitly,
           implicitly
         )
+
         whenReady(res.value) { result =>
           result shouldBe Right(ptEnrolmentDataModel(Some(PT_USER_ID)))
         }
@@ -282,7 +295,9 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
 
     s"the accountType $PT_ASSIGNED_TO_OTHER_USER, the account has SA on another account with a third account that holds the PT enrolment" should {
       "return a PTEnrolmentOtherAccountViewModel for the account details" in {
-        val additionalCacheData = Map("USER_ASSIGNED_PT_ENROLMENT" -> Json.toJson(UsersAssignedEnrolment1))
+
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(UserAssignedPtaEnrolmentPage, UsersAssignedEnrolment1)
 
         when(
           mockUsersGroupService.getAccountDetails(
@@ -290,7 +305,7 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
           )(
             any[ExecutionContext],
             any[HeaderCarrier],
-            any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+            any[DataRequest[_]]
           )
         ).thenReturn(createInboundResult(accountDetails))
 
@@ -300,13 +315,13 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
           )(
             any[ExecutionContext],
             any[HeaderCarrier],
-            any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+            any[DataRequest[_]]
           )
         ).thenReturn(createInboundResult(accountDetailsWithPT))
 
         when(
           mockEacdService.getUsersAssignedSAEnrolment(
-            any[RequestWithUserDetailsFromSession[AnyContent]],
+            any[DataRequest[_]],
             any[HeaderCarrier],
             any[ExecutionContext]
           )
@@ -318,15 +333,16 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
           )(
             any[ExecutionContext],
             any[HeaderCarrier],
-            any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+            any[DataRequest[_]]
           )
         ).thenReturn(createInboundResult(accountDetails.copy(userId = CREDENTIAL_ID_2)))
 
         val res = orchestrator.getCurrentAndPTAAndSAIfExistsForUser(
-          requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData),
+          requestWithGivenMongoDataAndUserAnswers(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), mockUserAnswers),
           implicitly,
           implicitly
         )
+
         whenReady(res.value) { result =>
           result shouldBe Right(ptEnrolmentDataModel(Some(CREDENTIAL_ID_2)))
         }
@@ -343,7 +359,7 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
         s"return the $IncorrectUserType containing redirectUrl" in {
 
           val res = orchestrator.getCurrentAndPTAAndSAIfExistsForUser(
-            requestWithAccountType(accountType),
+            requestWithGivenMongoData(requestWithAccountType(accountType)),
             implicitly,
             implicitly
           )
@@ -364,7 +380,7 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
 
               when(
                 mockSilentAssignmentService.enrolUser()(
-                  any[RequestWithUserDetailsFromSession[_]],
+                  any[DataRequest[_]],
                   any[HeaderCarrier],
                   any[ExecutionContext]
                 )
@@ -376,7 +392,7 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
 
               val res = orchestrator.checkValidAccountTypeAndEnrolForPT(
                 inputAccountType
-              )(requestWithAccountType(sessionAccountType), implicitly, implicitly)
+              )(requestWithGivenMongoData(requestWithAccountType(sessionAccountType)), implicitly, implicitly)
 
               whenReady(res.value) { result =>
                 result shouldBe Right(())
@@ -387,7 +403,7 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
 
               val res = orchestrator.checkValidAccountTypeAndEnrolForPT(
                 inputAccountType
-              )(requestWithAccountType(sessionAccountType), implicitly, implicitly)
+              )(requestWithGivenMongoData(requestWithAccountType(sessionAccountType)), implicitly, implicitly)
 
               whenReady(res.value) { result =>
                 result shouldBe Left(IncorrectUserType(UrlPaths.returnUrl, sessionAccountType))
@@ -400,10 +416,11 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
   "getSACredentialIfNotFraud" when {
     "the user has reported fraud" should {
       "return None" in {
-        val additionalCacheData = Map("reportedFraud" -> JsBoolean(true))
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(ReportedFraudPage, true)
 
         val res = orchestrator.getSACredentialIfNotFraud(
-          requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData),
+          requestWithGivenMongoDataAndUserAnswers(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), mockUserAnswers),
           implicitly,
           implicitly
         )
@@ -416,7 +433,8 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
     "the user has not reported fraud" should {
       "return the account details for the SA user" when {
         "the sa user is available in the cache" in {
-          val additionalCacheData = Map("USER_ASSIGNED_SA_ENROLMENT" -> Json.toJson(UsersAssignedEnrolment1))
+          val mockUserAnswers = UserAnswers("id", generateNino.nino)
+            .setOrException(UserAssignedSaEnrolmentPage, UsersAssignedEnrolment1)
 
           when(
             mockUsersGroupService.getAccountDetails(
@@ -424,12 +442,12 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
             )(
               any[ExecutionContext],
               any[HeaderCarrier],
-              any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+              any[DataRequest[_]]
             )
           ).thenReturn(createInboundResult(accountDetails))
 
           val res = orchestrator.getSACredentialIfNotFraud(
-            requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData),
+            requestWithGivenMongoDataAndUserAnswers(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), mockUserAnswers),
             implicitly,
             implicitly
           )
@@ -444,15 +462,16 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
         "the sa user in the cache is empty" in {
           when(
             mockEacdService.getUsersAssignedSAEnrolment(
-              any[RequestWithUserDetailsFromSession[_]],
+              any[DataRequest[_]],
               any[HeaderCarrier],
               any[ExecutionContext]
             )
           ).thenReturn(createInboundResult(UsersAssignedEnrolmentEmpty))
-          val additionalCacheData = Map("USER_ASSIGNED_SA_ENROLMENT" -> Json.toJson(UsersAssignedEnrolmentEmpty))
+          val mockUserAnswers = UserAnswers("id", generateNino.nino)
+            .setOrException(UserAssignedPtaEnrolmentPage, UsersAssignedEnrolmentEmpty)
 
           val res = orchestrator.getSACredentialIfNotFraud(
-            requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData),
+            requestWithGivenMongoDataAndUserAnswers(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), mockUserAnswers),
             implicitly,
             implicitly
           )
@@ -465,14 +484,21 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
         "the cache is empty" in {
           when(
             mockEacdService.getUsersAssignedSAEnrolment(
-              any[RequestWithUserDetailsFromSession[_]],
+              any[DataRequest[_]],
               any[HeaderCarrier],
               any[ExecutionContext]
             )
           ).thenReturn(createInboundResult(UsersAssignedEnrolmentEmpty))
 
+          val mockUserAnswers = UserAnswers("id", generateNino.nino)
+            .setOrException(UserAssignedPtaEnrolmentPage, UsersAssignedEnrolmentEmpty)
+
           val res =
-            orchestrator.getSACredentialIfNotFraud(requestWithAccountType(randomAccountType), implicitly, implicitly)
+            orchestrator.getSACredentialIfNotFraud(
+              requestWithGivenMongoDataAndUserAnswers(requestWithAccountType(randomAccountType), mockUserAnswers),
+              implicitly,
+              implicitly
+            )
 
           whenReady(res.value) { result =>
             result shouldBe Left(NoSAEnrolmentWhenOneExpected)
@@ -485,7 +511,8 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
   "getPTCredentialDetails" when {
     "a pt enrolment exists for a different credential" should {
       "return the account details for the PT user" in {
-        val additionalCacheData = Map("USER_ASSIGNED_PT_ENROLMENT" -> Json.toJson(UsersAssignedEnrolment1))
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(UserAssignedPtaEnrolmentPage, UsersAssignedEnrolment1)
 
         when(
           mockUsersGroupService.getAccountDetails(
@@ -493,12 +520,12 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
           )(
             any[ExecutionContext],
             any[HeaderCarrier],
-            any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+            any[DataRequest[_]]
           )
         ).thenReturn(createInboundResult(accountDetails))
 
         val res = orchestrator.getPTCredentialDetails(
-          requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData),
+          requestWithGivenMongoDataAndUserAnswers(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), mockUserAnswers),
           implicitly,
           implicitly
         )
@@ -511,10 +538,11 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
 
     "a pt enrolment exists for the signed in credential" should {
       "return NoPTEnrolmentWhenOneExpected" in {
-        val additionalCacheData = Map("USER_ASSIGNED_PT_ENROLMENT" -> Json.toJson(UsersAssignedEnrolmentCurrentCred))
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(UserAssignedPtaEnrolmentPage, UsersAssignedEnrolmentCurrentCred)
 
         val res = orchestrator.getPTCredentialDetails(
-          requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData),
+          requestWithGivenMongoDataAndUserAnswers(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), mockUserAnswers),
           implicitly,
           implicitly
         )
@@ -527,10 +555,11 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
 
     "no pt enrolment exists" should {
       "return NoPTEnrolmentWhenOneExpected" in {
-        val additionalCacheData = Map("USER_ASSIGNED_PT_ENROLMENT" -> Json.toJson(UsersAssignedEnrolmentEmpty))
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(UserAssignedPtaEnrolmentPage, UsersAssignedEnrolmentEmpty)
 
         val res = orchestrator.getPTCredentialDetails(
-          requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData),
+          requestWithGivenMongoDataAndUserAnswers(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), mockUserAnswers),
           implicitly,
           implicitly
         )
@@ -544,7 +573,11 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
     "the cache is empty" should {
       "return NoPTEnrolmentWhenOneExpected" in {
 
-        val res = orchestrator.getPTCredentialDetails(requestWithAccountType(randomAccountType), implicitly, implicitly)
+        val res = orchestrator.getPTCredentialDetails(
+          requestWithGivenMongoData(requestWithAccountType(randomAccountType)),
+          implicitly,
+          implicitly
+        )
 
         whenReady(res.value) { result =>
           result shouldBe Left(NoPTEnrolmentWhenOneExpected)
@@ -560,7 +593,10 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
           "return an empty form" when {
             "there is no form stored in session" in {
 
-              val res = orchestrator.getDetailsForKeepAccessToSA(requestWithAccountType(accountType), implicitly)
+              val res = orchestrator.getDetailsForKeepAccessToSA(
+                requestWithGivenMongoData(requestWithAccountType(accountType)),
+                implicitly
+              )
 
               whenReady(res.value) { result =>
                 result shouldBe Right(
@@ -571,11 +607,16 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
           }
           "return a populated form" when {
             "there is form data stored in session" in {
-              val additionalCacheData =
-                Map("KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM" -> Json.toJson(KeepAccessToSAThroughPTA(true)))
+              val mockUserAnswers = UserAnswers("id", generateNino.nino)
+                .setOrException(KeepAccessToSAThroughPTAPage, true)
+                .setOrException(AccountTypePage, SINGLE_OR_MULTIPLE_ACCOUNTS.toString)
+                .setOrException(RedirectUrlPage, UrlPaths.returnUrl)
 
               val res = orchestrator.getDetailsForKeepAccessToSA(
-                requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData),
+                requestWithGivenMongoDataAndUserAnswers(
+                  requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER),
+                  mockUserAnswers
+                ),
                 implicitly
               )
               whenReady(res.value) { result =>
@@ -588,7 +629,10 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
           }
         } else {
           s"return $IncorrectUserType error" in {
-            val res = orchestrator.getDetailsForKeepAccessToSA(requestWithAccountType(accountType), implicitly)
+            val res = orchestrator.getDetailsForKeepAccessToSA(
+              requestWithGivenMongoData(requestWithAccountType(accountType)),
+              implicitly
+            )
 
             whenReady(res.value) { result =>
               result shouldBe Left(IncorrectUserType(UrlPaths.returnUrl, accountType))
@@ -605,15 +649,19 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
         if (accountType == SA_ASSIGNED_TO_OTHER_USER) {
           "not enrol for PT and save form to cache" when {
             "the user choose to keep SA and PT together" in {
-              when(
-                mockTeaSessionCache
-                  .save(ameq(KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM), ameq(KeepAccessToSAThroughPTA(true)))(any(), any())
-              )
-                .thenReturn(Future.successful(CacheMap(request.sessionID, Map())))
+
+              val mockUserAnswers = UserAnswers("id", generateNino.nino)
+                .setOrException(KeepAccessToSAThroughPTAPage, true)
+
+              when(mockJourneyCacheRepository.set(any[UserAnswers])) thenReturn Future.successful(true)
 
               val res = orchestrator.handleKeepAccessToSAChoice(
                 KeepAccessToSAThroughPTA(true)
-              )(requestWithAccountType(accountType), implicitly, implicitly)
+              )(
+                requestWithGivenMongoDataAndUserAnswers(requestWithAccountType(accountType), mockUserAnswers),
+                implicitly,
+                implicitly
+              )
 
               whenReady(res.value) { result =>
                 result shouldBe Right(true)
@@ -624,7 +672,7 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
             "the user chooses to have PT and SA separate" in {
               when(
                 mockSilentAssignmentService.enrolUser()(
-                  any[RequestWithUserDetailsFromSession[_]],
+                  any[DataRequest[_]],
                   any[HeaderCarrier],
                   any[ExecutionContext]
                 )
@@ -634,15 +682,21 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
                 )
               )
 
-              when(
-                mockTeaSessionCache
-                  .save(ameq(KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM), ameq(KeepAccessToSAThroughPTA(false)))(any(), any())
-              )
-                .thenReturn(Future.successful(CacheMap(request.sessionID, Map())))
+              val mockUserAnswers = UserAnswers("id", generateNino.nino)
+                .setOrException(KeepAccessToSAThroughPTAPage, false)
+
+              when(mockJourneyCacheRepository.set(any[UserAnswers])) thenReturn Future.successful(true)
 
               val res = orchestrator.handleKeepAccessToSAChoice(
                 KeepAccessToSAThroughPTA(false)
-              )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER), implicitly, implicitly)
+              )(
+                requestWithGivenMongoDataAndUserAnswers(
+                  requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER),
+                  mockUserAnswers
+                ),
+                implicitly,
+                implicitly
+              )
 
               whenReady(res.value) { result =>
                 result shouldBe Right(false)
@@ -651,7 +705,10 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
           }
         } else {
           s"return $IncorrectUserType error" in {
-            val res = orchestrator.getDetailsForKeepAccessToSA(requestWithAccountType(accountType), implicitly)
+            val res = orchestrator.getDetailsForKeepAccessToSA(
+              requestWithGivenMongoData(requestWithAccountType(accountType)),
+              implicitly
+            )
 
             whenReady(res.value) { result =>
               result shouldBe Left(IncorrectUserType(UrlPaths.returnUrl, accountType))

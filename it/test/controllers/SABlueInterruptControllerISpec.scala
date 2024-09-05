@@ -16,17 +16,21 @@
 
 package controllers
 
-import helpers.{IntegrationSpecBase, ItUrlPaths}
 import helpers.TestITData._
-import play.api.test.Helpers.{GET, POST, await, contentAsString, defaultAwaitTimeout, redirectLocation}
-import play.api.test.Helpers.{route, status, writeableOf_AnyContentAsEmpty, writeableOf_AnyContentAsJson}
 import helpers.messages._
+import helpers.{IntegrationSpecBase, ItUrlPaths}
 import org.jsoup.Jsoup
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.when
 import play.api.http.Status
 import play.api.libs.json.Json
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import play.api.test.FakeRequest
+import play.api.test.Helpers.{GET, POST, contentAsString, defaultAwaitTimeout, redirectLocation, route, status, writeableOf_AnyContentAsEmpty, writeableOf_AnyContentAsJson}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UserAnswers
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.pages.{AccountTypePage, RedirectUrlPage}
+
+import scala.concurrent.Future
 
 class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
   val urlPath: String = ItUrlPaths.saOnOtherAccountInterruptPath
@@ -35,14 +39,14 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
     "the session cache has a credential for SA enrolment that is not the signed in account" should {
       s"render the report blue interrupt page" when {
         "the user has not been assigned a PT enrolment" in {
-          await(save[String](sessionId, "redirectURL", returnUrl))
-          await(
-            save[AccountTypes.Value](
-              sessionId,
-              "ACCOUNT_TYPE",
-              SA_ASSIGNED_TO_OTHER_USER
-            )
-          )
+
+          val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+            .setOrException(AccountTypePage, SA_ASSIGNED_TO_OTHER_USER.toString)
+            .setOrException(RedirectUrlPage, returnUrl)
+
+          when(mockJourneyCacheRepository.get(any(), any()))
+            .thenReturn(Future.successful(Some(mockUserAnswers)))
+
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -71,14 +75,13 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
 
       s"redirect to ${ItUrlPaths.enrolledPTSAOnOtherAccountPath}" when {
         "the user has been assigned a PT enrolment already" in {
-          await(save[String](sessionId, "redirectURL", returnUrl))
-          await(
-            save[AccountTypes.Value](
-              sessionId,
-              "ACCOUNT_TYPE",
-              SA_ASSIGNED_TO_OTHER_USER
-            )
-          )
+          val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+            .setOrException(AccountTypePage, SA_ASSIGNED_TO_OTHER_USER.toString)
+            .setOrException(RedirectUrlPage, returnUrl)
+
+          when(mockJourneyCacheRepository.get(any(), any()))
+            .thenReturn(Future.successful(Some(mockUserAnswers)))
+
           val authResponse = authoriseResponseWithPTEnrolment()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -104,10 +107,13 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
     ).foreach { accountType =>
       s"the session cache has a credential with account type ${accountType.toString}" should {
         s"redirect to /protect-tax-info" in {
-          await(save[String](sessionId, "redirectURL", returnUrl))
-          await(
-            save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", accountType)
-          )
+          val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+            .setOrException(AccountTypePage, accountType.toString)
+            .setOrException(RedirectUrlPage, returnUrl)
+
+          when(mockJourneyCacheRepository.get(any(), any()))
+            .thenReturn(Future.successful(Some(mockUserAnswers)))
+
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -126,9 +132,12 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
 
     "the session cache has no redirectUrl" should {
       s"return $INTERNAL_SERVER_ERROR" in {
-        await(
-          save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", SINGLE_OR_MULTIPLE_ACCOUNTS)
-        )
+        val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+          .setOrException(AccountTypePage, SINGLE_OR_MULTIPLE_ACCOUNTS.toString)
+
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(Some(mockUserAnswers)))
+
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -146,7 +155,11 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
     "an authorised user with no credential uses the service" should {
       s"return $INTERNAL_SERVER_ERROR" in {
         val authResponse = authoriseResponseJson()
-        await(save[String](sessionId, "redirectURL", returnUrl))
+        val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+          .setOrException(RedirectUrlPage, returnUrl)
+
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(Some(mockUserAnswers)))
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGetWithQueryParam(
@@ -169,7 +182,11 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
     "an authorised user but IV returns internal error" should {
       s"render the error page" in {
         val authResponse = authoriseResponseJson()
-        await(save[String](sessionId, "redirectURL", returnUrl))
+        val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+          .setOrException(RedirectUrlPage, returnUrl)
+
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(Some(mockUserAnswers)))
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGetWithQueryParam(
@@ -254,14 +271,13 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
     "the session cache has a credential for SA enrolment that is not the signed in account" should {
       s"redirect to ${ItUrlPaths.saOnOtherAccountKeepAccessToSAPath}" when {
         "the user has not already been assigned PT enrolment" in {
-          await(save[String](sessionId, "redirectURL", returnUrl))
-          await(
-            save[AccountTypes.Value](
-              sessionId,
-              "ACCOUNT_TYPE",
-              SA_ASSIGNED_TO_OTHER_USER
-            )
-          )
+          val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+            .setOrException(AccountTypePage, SA_ASSIGNED_TO_OTHER_USER.toString)
+            .setOrException(RedirectUrlPage, returnUrl)
+
+          when(mockJourneyCacheRepository.get(any(), any()))
+            .thenReturn(Future.successful(Some(mockUserAnswers)))
+
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -280,14 +296,14 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
 
       s"redirect to ${ItUrlPaths.enrolledPTSAOnOtherAccountPath}" when {
         "the user has not already been assigned PT enrolment" in {
-          await(save[String](sessionId, "redirectURL", returnUrl))
-          await(
-            save[AccountTypes.Value](
-              sessionId,
-              "ACCOUNT_TYPE",
-              SA_ASSIGNED_TO_OTHER_USER
-            )
-          )
+
+          val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+            .setOrException(AccountTypePage, SA_ASSIGNED_TO_OTHER_USER.toString)
+            .setOrException(RedirectUrlPage, returnUrl)
+
+          when(mockJourneyCacheRepository.get(any(), any()))
+            .thenReturn(Future.successful(Some(mockUserAnswers)))
+
           val authResponse = authoriseResponseWithPTEnrolment()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -314,10 +330,12 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
     ).foreach { accountType =>
       s"the session cache has a credential with account type ${accountType.toString}" should {
         s"redirect to /protect-tax-info" in {
-          await(save[String](sessionId, "redirectURL", returnUrl))
-          await(
-            save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", accountType)
-          )
+          val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+            .setOrException(AccountTypePage, accountType.toString)
+            .setOrException(RedirectUrlPage, returnUrl)
+
+          when(mockJourneyCacheRepository.get(any(), any()))
+            .thenReturn(Future.successful(Some(mockUserAnswers)))
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")

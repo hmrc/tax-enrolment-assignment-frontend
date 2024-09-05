@@ -17,19 +17,21 @@
 package controllers
 
 import helpers.TestITData._
-import play.api.test.Helpers.{GET, POST, await, contentAsString, defaultAwaitTimeout, redirectLocation, route}
-import play.api.test.Helpers.{status, writeableOf_AnyContentAsEmpty}
 import helpers.messages._
 import helpers.{IntegrationSpecBase, ItUrlPaths}
 import org.jsoup.Jsoup
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.when
 import play.api.http.Status
-import play.api.libs.json.{JsString, Json}
 import play.api.test.FakeRequest
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
+import play.api.test.Helpers.{GET, POST, contentAsString, defaultAwaitTimeout, redirectLocation, route, status, writeableOf_AnyContentAsEmpty}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_OR_MULTIPLE_ACCOUNTS}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.accountDetails
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, UserAnswers}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.pages.{AccountDetailsForCredentialPage, AccountTypePage, KeepAccessToSAThroughPTAPage, RedirectUrlPage, UserAssignedSaEnrolmentPage}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys._
+
+import scala.concurrent.Future
 
 class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
 
@@ -38,14 +40,14 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
   s"GET $urlPath" when {
     s"the session cache contains Account type of $SA_ASSIGNED_TO_OTHER_USER and no page data" should {
       s"render the KeepAccessToSA page with radio buttons unchecked" in {
-        await(save[String](sessionId, "redirectURL", returnUrl))
-        await(
-          save[AccountTypes.Value](
-            sessionId,
-            "ACCOUNT_TYPE",
-            SA_ASSIGNED_TO_OTHER_USER
-          )
-        )
+
+        val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+          .setOrException(AccountTypePage, SA_ASSIGNED_TO_OTHER_USER.toString)
+          .setOrException(RedirectUrlPage, returnUrl)
+
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(Some(mockUserAnswers)))
+
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -68,21 +70,14 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
 
     s"the session cache contains Account type of $SA_ASSIGNED_TO_OTHER_USER and user has previously selected yes" should {
       s"render the KeepAccessToSA page with radio buttons unchecked" in {
-        await(save[String](sessionId, "redirectURL", returnUrl))
-        await(
-          save[AccountTypes.Value](
-            sessionId,
-            "ACCOUNT_TYPE",
-            SA_ASSIGNED_TO_OTHER_USER
-          )
-        )
-        await(
-          save[KeepAccessToSAThroughPTA](
-            sessionId,
-            KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM,
-            KeepAccessToSAThroughPTA(true)
-          )
-        )
+
+        val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+          .setOrException(AccountTypePage, SA_ASSIGNED_TO_OTHER_USER.toString)
+          .setOrException(RedirectUrlPage, returnUrl)
+          .setOrException(KeepAccessToSAThroughPTAPage, true)
+
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(Some(mockUserAnswers)))
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -105,21 +100,15 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
 
     s"the session cache contains Account type of $SA_ASSIGNED_TO_OTHER_USER and user has previously selected no" should {
       s"render the KeepAccessToSA page with radio buttons unchecked" in {
-        await(save[String](sessionId, "redirectURL", returnUrl))
-        await(
-          save[AccountTypes.Value](
-            sessionId,
-            "ACCOUNT_TYPE",
-            SA_ASSIGNED_TO_OTHER_USER
-          )
-        )
-        await(
-          save[KeepAccessToSAThroughPTA](
-            sessionId,
-            KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM,
-            KeepAccessToSAThroughPTA(false)
-          )
-        )
+
+        val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+          .setOrException(AccountTypePage, SA_ASSIGNED_TO_OTHER_USER.toString)
+          .setOrException(RedirectUrlPage, returnUrl)
+          .setOrException(KeepAccessToSAThroughPTAPage, false)
+
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(Some(mockUserAnswers)))
+
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -143,21 +132,14 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
 
     s"the session cache contains Account type of $SA_ASSIGNED_TO_OTHER_USER and auth contains a ptEnrolment" should {
       s"redirect to ${ItUrlPaths.enrolledPTSAOnOtherAccountPath}" in {
-        await(save[String](sessionId, "redirectURL", returnUrl))
-        await(
-          save[AccountTypes.Value](
-            sessionId,
-            "ACCOUNT_TYPE",
-            SA_ASSIGNED_TO_OTHER_USER
-          )
-        )
-        await(
-          save[KeepAccessToSAThroughPTA](
-            sessionId,
-            KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM,
-            KeepAccessToSAThroughPTA(false)
-          )
-        )
+        val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+          .setOrException(AccountTypePage, SA_ASSIGNED_TO_OTHER_USER.toString)
+          .setOrException(RedirectUrlPage, returnUrl)
+          .setOrException(KeepAccessToSAThroughPTAPage, false)
+
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(Some(mockUserAnswers)))
+
         val authResponse = authoriseResponseWithPTEnrolment()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -185,10 +167,13 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
     ).foreach { accountType =>
       s"the session cache has Account type of $accountType" should {
         s"redirect to /protect-tax-info" in {
-          await(save[String](sessionId, "redirectURL", returnUrl))
-          await(
-            save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", accountType)
-          )
+          val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+            .setOrException(AccountTypePage, accountType.toString)
+            .setOrException(RedirectUrlPage, returnUrl)
+
+          when(mockJourneyCacheRepository.get(any(), any()))
+            .thenReturn(Future.successful(Some(mockUserAnswers)))
+
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -283,14 +268,12 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
     s"the session cache contains Account type of $SA_ASSIGNED_TO_OTHER_USER" should {
       s"redirect to the ${ItUrlPaths.saOnOtherAccountSigninAgainPath}" when {
         "the user selects yes and has not already been assigned a PT enrolment" in {
-          await(save[String](sessionId, "redirectURL", returnUrl))
-          await(
-            save[AccountTypes.Value](
-              sessionId,
-              "ACCOUNT_TYPE",
-              SA_ASSIGNED_TO_OTHER_USER
-            )
-          )
+          val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+            .setOrException(AccountTypePage, SA_ASSIGNED_TO_OTHER_USER.toString)
+            .setOrException(RedirectUrlPage, returnUrl)
+
+          when(mockJourneyCacheRepository.get(any(), any()))
+            .thenReturn(Future.successful(Some(mockUserAnswers)))
 
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())
@@ -310,14 +293,12 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
 
       s"redirect to the ${ItUrlPaths.enrolledPTSAOnOtherAccountPath}" when {
         "the user selects yes and has already been assigned a PT enrolment" in {
-          await(save[String](sessionId, "redirectURL", returnUrl))
-          await(
-            save[AccountTypes.Value](
-              sessionId,
-              "ACCOUNT_TYPE",
-              SA_ASSIGNED_TO_OTHER_USER
-            )
-          )
+          val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+            .setOrException(AccountTypePage, SA_ASSIGNED_TO_OTHER_USER.toString)
+            .setOrException(RedirectUrlPage, returnUrl)
+
+          when(mockJourneyCacheRepository.get(any(), any()))
+            .thenReturn(Future.successful(Some(mockUserAnswers)))
 
           val authResponse = authoriseResponseWithPTEnrolment()
           stubAuthorizePost(OK, authResponse.toString())
@@ -337,13 +318,17 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
 
       s"enrol the user for PT and redirect to ${ItUrlPaths.enrolledPTSAOnOtherAccountPath} url" when {
         "the user selects no" in {
-          val cacheData = Map(
-            ACCOUNT_TYPE                                 -> Json.toJson(SA_ASSIGNED_TO_OTHER_USER),
-            REDIRECT_URL                                 -> JsString(returnUrl),
-            USER_ASSIGNED_SA_ENROLMENT                   -> Json.toJson(saUsers),
-            accountDetailsForCredential(CREDENTIAL_ID_2) -> Json.toJson(accountDetails)
-          )
-          await(save(sessionId, cacheData))
+
+          val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+            .setOrException(AccountTypePage, SA_ASSIGNED_TO_OTHER_USER.toString)
+            .setOrException(RedirectUrlPage, returnUrl)
+            .setOrException(UserAssignedSaEnrolmentPage, saUsers)
+            .setOrException(AccountDetailsForCredentialPage(CREDENTIAL_ID_2), accountDetails)(
+              AccountDetails.mongoFormats(crypto.crypto)
+            )
+
+          when(mockJourneyCacheRepository.get(any(), any()))
+            .thenReturn(Future.successful(Some(mockUserAnswers)))
 
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())
@@ -365,20 +350,28 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
           )
 
           val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(
-          )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, mongoCacheData = cacheData), messagesApi)
+          )(
+            requestWithGivenMongoDataAndUserAnswers(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER), mockUserAnswers),
+            messagesApi,
+            crypto
+          )
           verifyAuditEventSent(expectedAuditEvent)
         }
       }
 
       s"not enrol the user again for PT and redirect to ${ItUrlPaths.enrolledPTSAOnOtherAccountPath} url" when {
         "the user selects no and has already been assigned a PT enrolment" in {
-          val cacheData = Map(
-            ACCOUNT_TYPE                                 -> Json.toJson(SA_ASSIGNED_TO_OTHER_USER),
-            REDIRECT_URL                                 -> JsString(returnUrl),
-            USER_ASSIGNED_SA_ENROLMENT                   -> Json.toJson(saUsers),
-            accountDetailsForCredential(CREDENTIAL_ID_2) -> Json.toJson(accountDetails)
-          )
-          await(save(sessionId, cacheData))
+
+          val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+            .setOrException(AccountTypePage, SA_ASSIGNED_TO_OTHER_USER.toString)
+            .setOrException(RedirectUrlPage, returnUrl)
+            .setOrException(UserAssignedSaEnrolmentPage, saUsers)
+            .setOrException(AccountDetailsForCredentialPage(CREDENTIAL_ID_2), accountDetails)(
+              AccountDetails.mongoFormats(crypto.crypto)
+            )
+
+          when(mockJourneyCacheRepository.get(any(), any()))
+            .thenReturn(Future.successful(Some(mockUserAnswers)))
 
           val authResponse = authoriseResponseWithPTEnrolment()
           stubAuthorizePost(OK, authResponse.toString())
@@ -398,14 +391,12 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
 
       "render the error page if enrolment fails" when {
         "the use selected no" in {
-          await(save[String](sessionId, "redirectURL", returnUrl))
-          await(
-            save[AccountTypes.Value](
-              sessionId,
-              "ACCOUNT_TYPE",
-              SA_ASSIGNED_TO_OTHER_USER
-            )
-          )
+          val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+            .setOrException(AccountTypePage, SA_ASSIGNED_TO_OTHER_USER.toString)
+            .setOrException(RedirectUrlPage, returnUrl)
+
+          when(mockJourneyCacheRepository.get(any(), any()))
+            .thenReturn(Future.successful(Some(mockUserAnswers)))
 
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())
@@ -437,10 +428,13 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
       s"the session cache has Account type of $accountType" should {
         s"redirect to /protect-tax-info" when {
           "yes is selected" in {
-            await(save[String](sessionId, "redirectURL", returnUrl))
-            await(
-              save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", accountType)
-            )
+            val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+              .setOrException(AccountTypePage, accountType.toString)
+              .setOrException(RedirectUrlPage, returnUrl)
+
+            when(mockJourneyCacheRepository.get(any(), any()))
+              .thenReturn(Future.successful(Some(mockUserAnswers)))
+
             val authResponse = authoriseResponseJson()
             stubAuthorizePost(OK, authResponse.toString())
             stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -454,10 +448,14 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
             redirectLocation(result).get should include(accountCheckPath)
           }
           "no is selected" in {
-            await(save[String](sessionId, "redirectURL", returnUrl))
-            await(
-              save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", accountType)
-            )
+
+            val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+              .setOrException(AccountTypePage, accountType.toString)
+              .setOrException(RedirectUrlPage, returnUrl)
+
+            when(mockJourneyCacheRepository.get(any(), any()))
+              .thenReturn(Future.successful(Some(mockUserAnswers)))
+
             val authResponse = authoriseResponseJson()
             stubAuthorizePost(OK, authResponse.toString())
             stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -480,9 +478,12 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
-          await(
-            save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", SA_ASSIGNED_TO_CURRENT_USER)
-          )
+
+          val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+            .setOrException(AccountTypePage, SA_ASSIGNED_TO_CURRENT_USER.toString)
+
+          when(mockJourneyCacheRepository.get(any(), any()))
+            .thenReturn(Future.successful(Some(mockUserAnswers)))
 
           val request = FakeRequest(POST, "/protect-tax-info" + urlPath)
             .withSession(xAuthToken, xSessionId)
@@ -497,9 +498,12 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
-          await(
-            save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", SA_ASSIGNED_TO_CURRENT_USER)
-          )
+
+          val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+            .setOrException(AccountTypePage, SA_ASSIGNED_TO_CURRENT_USER.toString)
+
+          when(mockJourneyCacheRepository.get(any(), any()))
+            .thenReturn(Future.successful(Some(mockUserAnswers)))
 
           val request = FakeRequest(POST, "/protect-tax-info" + urlPath)
             .withSession(xAuthToken, xSessionId)
@@ -516,8 +520,14 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
       "render the keepAccessToSA page with errors" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
-        await(save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", SA_ASSIGNED_TO_CURRENT_USER))
-        await(save[String](sessionId, "redirectURL", returnUrl))
+
+        val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+          .setOrException(AccountTypePage, SA_ASSIGNED_TO_CURRENT_USER.toString)
+          .setOrException(RedirectUrlPage, returnUrl)
+
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(Some(mockUserAnswers)))
+
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
         val request = FakeRequest(POST, "/protect-tax-info" + urlPath)

@@ -23,7 +23,6 @@ import org.mockito.MockitoSugar.{mock, times, verify, when}
 import play.api.Application
 import play.api.http.Status.OK
 import play.api.inject.{Binding, bind}
-import play.api.libs.json.Json
 import play.api.mvc.BodyParsers
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
@@ -34,10 +33,11 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTA
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{ControllersBaseSpec, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, UserAnswers}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.pages.{AccountDetailsForCredentialPage, AccountTypePage, RedirectUrlPage, UserAssignedSaEnrolmentPage}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_ASSIGNED_SA_ENROLMENT, accountDetailsForCredential}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.JourneyCacheRepository
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.KeepAccessToSA
 
@@ -52,8 +52,8 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
   lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
   lazy val mockMultipleAccountsOrchestrator: MultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
 
-  override lazy val overrides: Seq[Binding[TEASessionCache]] = Seq(
-    bind[TEASessionCache].toInstance(mockTeaSessionCache)
+  override lazy val overrides: Seq[Binding[JourneyCacheRepository]] = Seq(
+    bind[JourneyCacheRepository].toInstance(mockJourneyCacheRepository)
   )
 
   override implicit lazy val app: Application = localGuiceApplicationBuilder()
@@ -74,13 +74,17 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
   "view" when {
     "the user has multiple accounts, is signed in with one without SA and has no form data in cache" should {
       "render the keep access to sa page with radio buttons unchecked" in {
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(AccountTypePage, SA_ASSIGNED_TO_OTHER_USER.toString)
+          .setOrException(RedirectUrlPage, "foo")
+
         when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
 
         when(mockMultipleAccountsOrchestrator.getDetailsForKeepAccessToSA(any(), any()))
           .thenReturn(createInboundResult(keepAccessToSAThroughPTAForm))
 
-        mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
+        mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -112,7 +116,10 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
             )
           )
 
-        mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(AccountTypePage, SA_ASSIGNED_TO_OTHER_USER.toString)
+          .setOrException(RedirectUrlPage, "foo")
+        mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -144,7 +151,10 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
             )
           )
 
-        mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(AccountTypePage, SA_ASSIGNED_TO_OTHER_USER.toString)
+          .setOrException(RedirectUrlPage, "foo")
+        mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -172,7 +182,10 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
         when(mockMultipleAccountsOrchestrator.getDetailsForKeepAccessToSA(any(), any()))
           .thenReturn(createInboundResultError(UnexpectedPTEnrolment(SA_ASSIGNED_TO_OTHER_USER)))
 
-        mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(AccountTypePage, SA_ASSIGNED_TO_OTHER_USER.toString)
+          .setOrException(RedirectUrlPage, "foo")
+        mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -191,7 +204,10 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
         when(mockMultipleAccountsOrchestrator.getDetailsForKeepAccessToSA(any(), any()))
           .thenReturn(createInboundResultError(IncorrectUserType(UrlPaths.returnUrl, randomAccountType)))
 
-        mockGetDataFromCacheForActionSuccess(randomAccountType)
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(AccountTypePage, randomAccountType.toString)
+          .setOrException(RedirectUrlPage, "foo")
+        mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -231,7 +247,10 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
           )
             .thenReturn(createInboundResult(true))
 
-          mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
+          val mockUserAnswers = UserAnswers("id", generateNino.nino)
+            .setOrException(AccountTypePage, SA_ASSIGNED_TO_OTHER_USER.toString)
+            .setOrException(RedirectUrlPage, "foo")
+          mockGetDataFromCacheForActionSuccess(mockUserAnswers)
           val res = controller.continue
             .apply(
               buildFakePOSTRequestWithSessionId(
@@ -260,7 +279,10 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
           )
             .thenReturn(createInboundResultError(UnexpectedPTEnrolment(SA_ASSIGNED_TO_OTHER_USER)))
 
-          mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
+          val mockUserAnswers = UserAnswers("id", generateNino.nino)
+            .setOrException(AccountTypePage, SA_ASSIGNED_TO_OTHER_USER.toString)
+            .setOrException(RedirectUrlPage, "foo")
+          mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
           val res = controller.continue
             .apply(
@@ -293,7 +315,11 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
                 IncorrectUserType(UrlPaths.returnUrl, randomAccountType)
               )
             )
-          mockGetDataFromCacheForActionSuccess(randomAccountType)
+
+          val mockUserAnswers = UserAnswers("id", generateNino.nino)
+            .setOrException(AccountTypePage, randomAccountType.toString)
+            .setOrException(RedirectUrlPage, "foo")
+          mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
           val res = controller.continue
             .apply(
@@ -311,10 +337,6 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
     "the user has selected No" should {
       s"be enrolled for PT and redirect to ${UrlPaths.enrolledPTSAOnOtherAccountPath}" when {
         "they have SA on another account" in {
-          val additionalCacheData = Map(
-            USER_ASSIGNED_SA_ENROLMENT                   -> Json.toJson(UsersAssignedEnrolment1),
-            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetails)
-          )
 
           when(
             mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext])
@@ -328,15 +350,26 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
           )
             .thenReturn(createInboundResult(false))
 
-          mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData)
+          val mockUserAnswers = UserAnswers("id", generateNino.nino)
+            .setOrException(AccountTypePage, SA_ASSIGNED_TO_OTHER_USER.toString)
+            .setOrException(RedirectUrlPage, UrlPaths.returnUrl)
+            .setOrException(UserAssignedSaEnrolmentPage, UsersAssignedEnrolment1)
+            .setOrException(AccountDetailsForCredentialPage(CREDENTIAL_ID_1), accountDetails)(
+              AccountDetails.mongoFormats(crypto.crypto)
+            )
+
+          mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
           val auditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount()(
-            requestWithAccountType(
-              SA_ASSIGNED_TO_OTHER_USER,
-              UrlPaths.returnUrl,
-              additionalCacheData = additionalCacheData
+            requestWithGivenMongoDataAndUserAnswers(
+              requestWithAccountType(
+                SA_ASSIGNED_TO_OTHER_USER,
+                UrlPaths.returnUrl
+              ),
+              mockUserAnswers
             ),
-            messagesApi
+            messagesApi,
+            crypto
           )
           when(mockAuditHandler.audit(ameq(auditEvent))(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
 
@@ -357,10 +390,14 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
 
       s"not be enrolled for PT and redirect to ${UrlPaths.enrolledPTSAOnOtherAccountPath}" when {
         "they have already been assigned PT enrolment" in {
-          val additionalCacheData = Map(
-            USER_ASSIGNED_SA_ENROLMENT                   -> Json.toJson(UsersAssignedEnrolment1),
-            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetails)
-          )
+
+          val mockUserAnswers = UserAnswers("id", generateNino.nino)
+            .setOrException(AccountTypePage, SA_ASSIGNED_TO_OTHER_USER.toString)
+            .setOrException(RedirectUrlPage, UrlPaths.returnUrl)
+            .setOrException(UserAssignedSaEnrolmentPage, UsersAssignedEnrolment1)
+            .setOrException(AccountDetailsForCredentialPage(CREDENTIAL_ID_1), accountDetails)(
+              AccountDetails.mongoFormats(crypto.crypto)
+            )
 
           when(
             mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext])
@@ -373,7 +410,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
             )(any(), any(), any())
           )
             .thenReturn(createInboundResultError(UnexpectedPTEnrolment(SA_ASSIGNED_TO_OTHER_USER)))
-          mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData)
+          mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
           val res = controller.continue
             .apply(
@@ -407,7 +444,11 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
               )
             )
 
-          mockGetDataFromCacheForActionSuccess(randomAccountType)
+          val mockUserAnswers = UserAnswers("id", generateNino.nino)
+            .setOrException(AccountTypePage, randomAccountType.toString)
+            .setOrException(RedirectUrlPage, "foo")
+
+          mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
           val res = controller.continue
             .apply(
@@ -435,7 +476,10 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
           )
             .thenReturn(createInboundResultError(UnexpectedResponseFromTaxEnrolments))
 
-          mockGetDataFromCacheForActionSuccess(randomAccountType)
+          val mockUserAnswers = UserAnswers("id", generateNino.nino)
+            .setOrException(AccountTypePage, randomAccountType.toString)
+            .setOrException(RedirectUrlPage, "foo")
+          mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
           val res = controller.continue
             .apply(
@@ -454,7 +498,11 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
         when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
 
-        mockGetDataFromCacheForActionSuccess(randomAccountType)
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(AccountTypePage, randomAccountType.toString)
+          .setOrException(RedirectUrlPage, "foo")
+
+        mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
         val res = controller.continue
           .apply(

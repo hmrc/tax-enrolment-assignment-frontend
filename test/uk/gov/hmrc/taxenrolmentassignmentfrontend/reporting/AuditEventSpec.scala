@@ -23,12 +23,12 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_O
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSessionAndMongo}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails, SCP}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_ASSIGNED_SA_ENROLMENT, accountDetailsForCredential}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails, SCP, UserAnswers}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.pages.{AccountDetailsForCredentialPage, UserAssignedSaEnrolmentPage}
 
 class AuditEventSpec extends BaseSpec {
 
-  val accountDetailsWithOneMFADetails = AccountDetails(
+  val accountDetailsWithOneMFADetails: AccountDetails = AccountDetails(
     identityProviderType = SCP,
     credId = CREDENTIAL_ID_1,
     userId = "6037",
@@ -142,7 +142,7 @@ class AuditEventSpec extends BaseSpec {
     )
   }
 
-  def getExpectedAuditForSigninWithSA(saAccountDetails: Option[JsObject]) = {
+  def getExpectedAuditForSigninWithSA(saAccountDetails: Option[JsObject]): AuditEvent = {
     val currentAccountDetails = Json.obj(
       ("credentialId", JsString(CREDENTIAL_ID)),
       ("type", JsString(SA_ASSIGNED_TO_OTHER_USER.toString)),
@@ -189,21 +189,21 @@ class AuditEventSpec extends BaseSpec {
     "return an audit event with the expected details" when {
       "the reported account has email and one mfaDetails" in {
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsWithOneMFADetails, true)
+          getExpectedAuditEvent(accountDetailsWithOneMFADetails, isSA = true)
 
         AuditEvent.auditReportSuspiciousSAAccount(
           accountDetailsWithOneMFADetails
-        )(requestWithMongoAndAccountType, messagesApi) shouldEqual expectedAuditEvent
+        )(requestWithGivenMongoData(requestWithMongoAndAccountType), messagesApi) shouldEqual expectedAuditEvent
       }
 
       "the reported account has no email or mfaDetails" in {
         val accountDetailsNoEmailOrMFA = accountDetailsWithOneMFADetails
           .copy(email = None, mfaDetails = Seq.empty)
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsNoEmailOrMFA, true)
+          getExpectedAuditEvent(accountDetailsNoEmailOrMFA, isSA = true)
 
         AuditEvent.auditReportSuspiciousSAAccount(accountDetailsNoEmailOrMFA)(
-          requestWithMongoAndAccountType,
+          requestWithGivenMongoData(requestWithMongoAndAccountType),
           messagesApi
         ) shouldEqual expectedAuditEvent
       }
@@ -212,10 +212,10 @@ class AuditEventSpec extends BaseSpec {
         val accountDetailsNoEmail = accountDetailsWithOneMFADetails
           .copy(email = None)
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsNoEmail, true)
+          getExpectedAuditEvent(accountDetailsNoEmail, isSA = true)
 
         AuditEvent.auditReportSuspiciousSAAccount(accountDetailsNoEmail)(
-          requestWithMongoAndAccountType,
+          requestWithGivenMongoData(requestWithMongoAndAccountType),
           messagesApi
         ) shouldEqual expectedAuditEvent
       }
@@ -224,10 +224,10 @@ class AuditEventSpec extends BaseSpec {
         val accountDetailsNoMFA = accountDetailsWithOneMFADetails
           .copy(mfaDetails = Seq.empty)
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsNoMFA, true)
+          getExpectedAuditEvent(accountDetailsNoMFA, isSA = true)
 
         AuditEvent.auditReportSuspiciousSAAccount(accountDetailsNoMFA)(
-          requestWithMongoAndAccountType,
+          requestWithGivenMongoData(requestWithMongoAndAccountType),
           messagesApi
         ) shouldEqual expectedAuditEvent
       }
@@ -242,32 +242,32 @@ class AuditEventSpec extends BaseSpec {
             )
           )
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsWithThreeMFADetails, true)
+          getExpectedAuditEvent(accountDetailsWithThreeMFADetails, isSA = true)
 
         AuditEvent.auditReportSuspiciousSAAccount(
           accountDetailsWithThreeMFADetails
-        )(requestWithMongoAndAccountType, messagesApi) shouldEqual expectedAuditEvent
+        )(requestWithGivenMongoData(requestWithMongoAndAccountType), messagesApi) shouldEqual expectedAuditEvent
       }
     }
 
-    "return an audit event with the expected details and transalation" when {
+    "return an audit event with the expected details and translation" when {
       "the reported account has email and one mfaDetails and lang is welsh" in {
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsWithOneMFADetails, true, true)
+          getExpectedAuditEvent(accountDetailsWithOneMFADetails, isSA = true, isWelsh = true)
 
         AuditEvent.auditReportSuspiciousSAAccount(
           accountDetailsWithOneMFADetails
-        )(requestWithMongoAndAccountTypeLangCY, messagesApi) shouldEqual expectedAuditEvent
+        )(requestWithGivenMongoData(requestWithMongoAndAccountTypeLangCY), messagesApi) shouldEqual expectedAuditEvent
       }
 
       "the reported account has no email or mfaDetails" in {
         val accountDetailsNoEmailOrMFA = accountDetailsWithOneMFADetails
           .copy(email = None, mfaDetails = Seq.empty)
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsNoEmailOrMFA, true, true)
+          getExpectedAuditEvent(accountDetailsNoEmailOrMFA, isSA = true, isWelsh = true)
 
         AuditEvent.auditReportSuspiciousSAAccount(accountDetailsNoEmailOrMFA)(
-          requestWithMongoAndAccountTypeLangCY,
+          requestWithGivenMongoData(requestWithMongoAndAccountTypeLangCY),
           messagesApi
         ) shouldEqual expectedAuditEvent
       }
@@ -276,10 +276,10 @@ class AuditEventSpec extends BaseSpec {
         val accountDetailsNoEmail = accountDetailsWithOneMFADetails
           .copy(email = None)
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsNoEmail, true, true)
+          getExpectedAuditEvent(accountDetailsNoEmail, isSA = true, isWelsh = true)
 
         AuditEvent.auditReportSuspiciousSAAccount(accountDetailsNoEmail)(
-          requestWithMongoAndAccountTypeLangCY,
+          requestWithGivenMongoData(requestWithMongoAndAccountTypeLangCY),
           messagesApi
         ) shouldEqual expectedAuditEvent
       }
@@ -288,10 +288,10 @@ class AuditEventSpec extends BaseSpec {
         val accountDetailsNoMFA = accountDetailsWithOneMFADetails
           .copy(mfaDetails = Seq.empty)
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsNoMFA, true, true)
+          getExpectedAuditEvent(accountDetailsNoMFA, isSA = true, isWelsh = true)
 
         AuditEvent.auditReportSuspiciousSAAccount(accountDetailsNoMFA)(
-          requestWithMongoAndAccountTypeLangCY,
+          requestWithGivenMongoData(requestWithMongoAndAccountTypeLangCY),
           messagesApi
         ) shouldEqual expectedAuditEvent
       }
@@ -306,11 +306,11 @@ class AuditEventSpec extends BaseSpec {
             )
           )
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsWithThreeMFADetails, true, true)
+          getExpectedAuditEvent(accountDetailsWithThreeMFADetails, isSA = true, isWelsh = true)
 
         AuditEvent.auditReportSuspiciousSAAccount(
           accountDetailsWithThreeMFADetails
-        )(requestWithMongoAndAccountTypeLangCY, messagesApi) shouldEqual expectedAuditEvent
+        )(requestWithGivenMongoData(requestWithMongoAndAccountTypeLangCY), messagesApi) shouldEqual expectedAuditEvent
       }
     }
   }
@@ -324,21 +324,21 @@ class AuditEventSpec extends BaseSpec {
     "return an audit event with the expected details" when {
       "the reported account has email and one mfaDetails" in {
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsWithOneMFADetails, false)
+          getExpectedAuditEvent(accountDetailsWithOneMFADetails, isSA = false)
 
         AuditEvent.auditReportSuspiciousPTAccount(
           accountDetailsWithOneMFADetails
-        )(requestWithMongoAndAccountType, messagesApi) shouldEqual expectedAuditEvent
+        )(requestWithGivenMongoData(requestWithMongoAndAccountType), messagesApi) shouldEqual expectedAuditEvent
       }
 
       "the reported account has no email or mfaDetails" in {
         val accountDetailsNoEmailOrMFA = accountDetailsWithOneMFADetails
           .copy(email = None, mfaDetails = Seq.empty)
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsNoEmailOrMFA, false)
+          getExpectedAuditEvent(accountDetailsNoEmailOrMFA, isSA = false)
 
         AuditEvent.auditReportSuspiciousPTAccount(accountDetailsNoEmailOrMFA)(
-          requestWithMongoAndAccountType,
+          requestWithGivenMongoData(requestWithMongoAndAccountType),
           messagesApi
         ) shouldEqual expectedAuditEvent
       }
@@ -347,10 +347,10 @@ class AuditEventSpec extends BaseSpec {
         val accountDetailsNoEmail = accountDetailsWithOneMFADetails
           .copy(email = None)
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsNoEmail, false)
+          getExpectedAuditEvent(accountDetailsNoEmail, isSA = false)
 
         AuditEvent.auditReportSuspiciousPTAccount(accountDetailsNoEmail)(
-          requestWithMongoAndAccountType,
+          requestWithGivenMongoData(requestWithMongoAndAccountType),
           messagesApi
         ) shouldEqual expectedAuditEvent
       }
@@ -359,10 +359,10 @@ class AuditEventSpec extends BaseSpec {
         val accountDetailsNoMFA = accountDetailsWithOneMFADetails
           .copy(mfaDetails = Seq.empty)
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsNoMFA, false)
+          getExpectedAuditEvent(accountDetailsNoMFA, isSA = false)
 
         AuditEvent.auditReportSuspiciousPTAccount(accountDetailsNoMFA)(
-          requestWithMongoAndAccountType,
+          requestWithGivenMongoData(requestWithMongoAndAccountType),
           messagesApi
         ) shouldEqual expectedAuditEvent
       }
@@ -377,32 +377,32 @@ class AuditEventSpec extends BaseSpec {
             )
           )
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsWithThreeMFADetails, false)
+          getExpectedAuditEvent(accountDetailsWithThreeMFADetails, isSA = false)
 
         AuditEvent.auditReportSuspiciousPTAccount(
           accountDetailsWithThreeMFADetails
-        )(requestWithMongoAndAccountType, messagesApi) shouldEqual expectedAuditEvent
+        )(requestWithGivenMongoData(requestWithMongoAndAccountType), messagesApi) shouldEqual expectedAuditEvent
       }
     }
 
     "return an audit event with the expected details and translation" when {
       "the reported account has email and one mfaDetails and language set to welsh" in {
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsWithOneMFADetails, false, true)
+          getExpectedAuditEvent(accountDetailsWithOneMFADetails, isSA = false, isWelsh = true)
 
         AuditEvent.auditReportSuspiciousPTAccount(
           accountDetailsWithOneMFADetails
-        )(requestWithMongoAndAccountTypeLangCY, messagesApi) shouldEqual expectedAuditEvent
+        )(requestWithGivenMongoData(requestWithMongoAndAccountTypeLangCY), messagesApi) shouldEqual expectedAuditEvent
       }
 
       "the reported account has no email or mfaDetails and language set to welsh" in {
         val accountDetailsNoEmailOrMFA = accountDetailsWithOneMFADetails
           .copy(email = None, mfaDetails = Seq.empty)
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsNoEmailOrMFA, false, true)
+          getExpectedAuditEvent(accountDetailsNoEmailOrMFA, isSA = false, isWelsh = true)
 
         AuditEvent.auditReportSuspiciousPTAccount(accountDetailsNoEmailOrMFA)(
-          requestWithMongoAndAccountTypeLangCY,
+          requestWithGivenMongoData(requestWithMongoAndAccountTypeLangCY),
           messagesApi
         ) shouldEqual expectedAuditEvent
       }
@@ -411,10 +411,10 @@ class AuditEventSpec extends BaseSpec {
         val accountDetailsNoEmail = accountDetailsWithOneMFADetails
           .copy(email = None)
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsNoEmail, false, true)
+          getExpectedAuditEvent(accountDetailsNoEmail, isSA = false, isWelsh = true)
 
         AuditEvent.auditReportSuspiciousPTAccount(accountDetailsNoEmail)(
-          requestWithMongoAndAccountTypeLangCY,
+          requestWithGivenMongoData(requestWithMongoAndAccountTypeLangCY),
           messagesApi
         ) shouldEqual expectedAuditEvent
       }
@@ -423,10 +423,10 @@ class AuditEventSpec extends BaseSpec {
         val accountDetailsNoMFA = accountDetailsWithOneMFADetails
           .copy(mfaDetails = Seq.empty)
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsNoMFA, false, true)
+          getExpectedAuditEvent(accountDetailsNoMFA, isSA = false, isWelsh = true)
 
         AuditEvent.auditReportSuspiciousPTAccount(accountDetailsNoMFA)(
-          requestWithMongoAndAccountTypeLangCY,
+          requestWithGivenMongoData(requestWithMongoAndAccountTypeLangCY),
           messagesApi
         ) shouldEqual expectedAuditEvent
       }
@@ -442,11 +442,11 @@ class AuditEventSpec extends BaseSpec {
           )
 
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsWithThreeMFADetails, false, true)
+          getExpectedAuditEvent(accountDetailsWithThreeMFADetails, isSA = false, isWelsh = true)
 
         AuditEvent.auditReportSuspiciousPTAccount(
           accountDetailsWithThreeMFADetails
-        )(requestWithMongoAndAccountTypeLangCY, messagesApi) shouldEqual expectedAuditEvent
+        )(requestWithGivenMongoData(requestWithMongoAndAccountTypeLangCY), messagesApi) shouldEqual expectedAuditEvent
       }
     }
   }
@@ -528,12 +528,6 @@ class AuditEventSpec extends BaseSpec {
   "auditSuccessfullyEnrolledPTWhenSAOnOtherAccount" when {
     "email does not exist in user details session" should {
       "return an audit that does not contain the email" in {
-        val additionalCacheData = Map(
-          USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsSA)(
-            AccountDetails.mongoFormats(crypto.crypto)
-          )
-        )
         val requestForAudit =
           RequestWithUserDetailsFromSessionAndMongo(
             request.request.withTransientLang("en"),
@@ -542,33 +536,50 @@ class AuditEventSpec extends BaseSpec {
             AccountDetailsFromMongo(
               SA_ASSIGNED_TO_OTHER_USER,
               "foo",
-              generateBasicCacheData(SA_ASSIGNED_TO_OTHER_USER, "foo") ++ additionalCacheData
-            )(crypto.crypto)
+              None,
+              None,
+              Some(UsersAssignedEnrolment1),
+              None
+            )
           )
+
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(UserAssignedSaEnrolmentPage, UsersAssignedEnrolment1)
+          .setOrException(AccountDetailsForCredentialPage(CREDENTIAL_ID_1), accountDetailsSA)(
+            AccountDetails.mongoFormats(crypto.crypto)
+          )
+
         val expectedAuditEvent =
           getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_OTHER_USER, None, Some(CREDENTIAL_ID_1), withEmail = Some("-"))
 
-        AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(
-          false
-        )(requestForAudit, messagesApi) shouldEqual expectedAuditEvent
+        AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = false)(
+          requestWithGivenMongoDataAndUserAnswers(requestForAudit, mockUserAnswers),
+          messagesApi,
+          crypto
+        ) shouldEqual expectedAuditEvent
       }
     }
     "the user has enrolled after choosing to keep PT and SA separate" should {
       "return an audit event with the expected details" in {
-        val additionalCacheData = Map(
-          USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsSA)(
+
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(UserAssignedSaEnrolmentPage, UsersAssignedEnrolment1)
+          .setOrException(AccountDetailsForCredentialPage(CREDENTIAL_ID_1), accountDetailsSA)(
             AccountDetails.mongoFormats(crypto.crypto)
           )
-        )
+
         val requestForAudit =
-          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
+          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER)
         val expectedAuditEvent =
           getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_OTHER_USER, None, Some(CREDENTIAL_ID_1))
 
         AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(
-          false
-        )(requestForAudit, messagesApi) shouldEqual expectedAuditEvent
+          enrolledAfterReportingFraud = false
+        )(
+          requestWithGivenMongoDataAndUserAnswers(requestForAudit, mockUserAnswers),
+          messagesApi,
+          crypto
+        ) shouldEqual expectedAuditEvent
       }
     }
 
@@ -586,18 +597,19 @@ class AuditEventSpec extends BaseSpec {
               Some(CREDENTIAL_ID_1)
             )
 
-          val additionalCacheData = Map(
-            USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmailOrMFA)(
+          val mockUserAnswers = UserAnswers("id", generateNino.nino)
+            .setOrException(UserAssignedSaEnrolmentPage, UsersAssignedEnrolment1)
+            .setOrException(AccountDetailsForCredentialPage(CREDENTIAL_ID_1), accountDetailsNoEmailOrMFA)(
               AccountDetails.mongoFormats(crypto.crypto)
             )
-          )
-          val requestForAudit =
-            requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
-          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(
-            requestForAudit,
-            messagesApi
+          val requestForAudit =
+            requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER)
+
+          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
+            requestWithGivenMongoDataAndUserAnswers(requestForAudit, mockUserAnswers),
+            messagesApi,
+            crypto
           ) shouldEqual expectedAuditEvent
         }
 
@@ -613,18 +625,19 @@ class AuditEventSpec extends BaseSpec {
               Some(CREDENTIAL_ID_1)
             )
 
-          val additionalCacheData = Map(
-            USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmail)(
+          val mockUserAnswers = UserAnswers("id", generateNino.nino)
+            .setOrException(UserAssignedSaEnrolmentPage, UsersAssignedEnrolment1)
+            .setOrException(AccountDetailsForCredentialPage(CREDENTIAL_ID_1), accountDetailsNoEmail)(
               AccountDetails.mongoFormats(crypto.crypto)
             )
-          )
-          val requestForAudit =
-            requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
-          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(
-            requestForAudit,
-            messagesApi
+          val requestForAudit =
+            requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER)
+
+          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
+            requestWithGivenMongoDataAndUserAnswers(requestForAudit, mockUserAnswers),
+            messagesApi,
+            crypto
           ) shouldEqual expectedAuditEvent
         }
 
@@ -639,18 +652,20 @@ class AuditEventSpec extends BaseSpec {
               Some(reportedAccountDetails),
               Some(CREDENTIAL_ID_1)
             )
-          val additionalCacheData = Map(
-            USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoMFA)(
+
+          val mockUserAnswers = UserAnswers("id", generateNino.nino)
+            .setOrException(UserAssignedSaEnrolmentPage, UsersAssignedEnrolment1)
+            .setOrException(AccountDetailsForCredentialPage(CREDENTIAL_ID_1), accountDetailsNoMFA)(
               AccountDetails.mongoFormats(crypto.crypto)
             )
-          )
-          val requestForAudit =
-            requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
-          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(
-            requestForAudit,
-            messagesApi
+          val requestForAudit =
+            requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER)
+
+          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
+            requestWithGivenMongoDataAndUserAnswers(requestForAudit, mockUserAnswers),
+            messagesApi,
+            crypto
           ) shouldEqual expectedAuditEvent
         }
 
@@ -672,18 +687,19 @@ class AuditEventSpec extends BaseSpec {
               Some(CREDENTIAL_ID_1)
             )
 
-          val additionalCacheData = Map(
-            USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsWithThreeMFADetails)(
+          val mockUserAnswers = UserAnswers("id", generateNino.nino)
+            .setOrException(UserAssignedSaEnrolmentPage, UsersAssignedEnrolment1)
+            .setOrException(AccountDetailsForCredentialPage(CREDENTIAL_ID_1), accountDetailsWithThreeMFADetails)(
               AccountDetails.mongoFormats(crypto.crypto)
             )
-          )
-          val requestForAudit =
-            requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
-          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(
-            requestForAudit,
-            messagesApi
+          val requestForAudit =
+            requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER)
+
+          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
+            requestWithGivenMongoDataAndUserAnswers(requestForAudit, mockUserAnswers),
+            messagesApi,
+            crypto
           ) shouldEqual expectedAuditEvent
         }
       }
@@ -696,8 +712,8 @@ class AuditEventSpec extends BaseSpec {
             .copy(email = None, mfaDetails = Seq.empty)
           val reportedAccountDetails =
             Json.obj(
-              ("reportedAccount", getReportedAccountJson(accountDetailsNoEmailOrMFA, true)),
-              (("reportedAccountEN", getReportedAccountJson(accountDetailsNoEmailOrMFA)))
+              ("reportedAccount", getReportedAccountJson(accountDetailsNoEmailOrMFA, isWelsh = true)),
+              ("reportedAccountEN", getReportedAccountJson(accountDetailsNoEmailOrMFA))
             )
           val expectedAuditEvent =
             getExpectedAuditForPTEnrolled(
@@ -706,22 +722,22 @@ class AuditEventSpec extends BaseSpec {
               Some(CREDENTIAL_ID_1)
             )
 
-          val additionalCacheData = Map(
-            USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmailOrMFA)(
+          val mockUserAnswers = UserAnswers("id", generateNino.nino)
+            .setOrException(UserAssignedSaEnrolmentPage, UsersAssignedEnrolment1)
+            .setOrException(AccountDetailsForCredentialPage(CREDENTIAL_ID_1), accountDetailsNoEmailOrMFA)(
               AccountDetails.mongoFormats(crypto.crypto)
             )
-          )
+
           val requestForAudit =
             requestWithAccountType(
               SA_ASSIGNED_TO_OTHER_USER,
-              additionalCacheData = additionalCacheData,
               langCode = "cy"
             )
 
-          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(
-            requestForAudit,
-            messagesApi
+          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
+            requestWithGivenMongoDataAndUserAnswers(requestForAudit, mockUserAnswers),
+            messagesApi,
+            crypto
           ) shouldEqual expectedAuditEvent
         }
 
@@ -730,8 +746,8 @@ class AuditEventSpec extends BaseSpec {
             .copy(email = None)
           val reportedAccountDetails =
             Json.obj(
-              ("reportedAccount", getReportedAccountJson(accountDetailsNoEmail, true)),
-              (("reportedAccountEN", getReportedAccountJson(accountDetailsNoEmail)))
+              ("reportedAccount", getReportedAccountJson(accountDetailsNoEmail, isWelsh = true)),
+              ("reportedAccountEN", getReportedAccountJson(accountDetailsNoEmail))
             )
           val expectedAuditEvent =
             getExpectedAuditForPTEnrolled(
@@ -740,22 +756,22 @@ class AuditEventSpec extends BaseSpec {
               Some(CREDENTIAL_ID_1)
             )
 
-          val additionalCacheData = Map(
-            USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmail)(
+          val mockUserAnswers = UserAnswers("id", generateNino.nino)
+            .setOrException(UserAssignedSaEnrolmentPage, UsersAssignedEnrolment1)
+            .setOrException(AccountDetailsForCredentialPage(CREDENTIAL_ID_1), accountDetailsNoEmail)(
               AccountDetails.mongoFormats(crypto.crypto)
             )
-          )
+
           val requestForAudit =
             requestWithAccountType(
               SA_ASSIGNED_TO_OTHER_USER,
-              additionalCacheData = additionalCacheData,
               langCode = "cy"
             )
 
-          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(
-            requestForAudit,
-            messagesApi
+          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
+            requestWithGivenMongoDataAndUserAnswers(requestForAudit, mockUserAnswers),
+            messagesApi,
+            crypto
           ) shouldEqual expectedAuditEvent
         }
 
@@ -763,8 +779,8 @@ class AuditEventSpec extends BaseSpec {
           val accountDetailsNoMFA = accountDetailsWithOneMFADetails
             .copy(mfaDetails = Seq.empty)
           val reportedAccountDetails = Json.obj(
-            ("reportedAccount", getReportedAccountJson(accountDetailsNoMFA, true)),
-            (("reportedAccountEN", getReportedAccountJson(accountDetailsNoMFA)))
+            ("reportedAccount", getReportedAccountJson(accountDetailsNoMFA, isWelsh = true)),
+            ("reportedAccountEN", getReportedAccountJson(accountDetailsNoMFA))
           )
           val expectedAuditEvent =
             getExpectedAuditForPTEnrolled(
@@ -772,22 +788,23 @@ class AuditEventSpec extends BaseSpec {
               Some(reportedAccountDetails),
               Some(CREDENTIAL_ID_1)
             )
-          val additionalCacheData = Map(
-            USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoMFA)(
+
+          val mockUserAnswers = UserAnswers("id", generateNino.nino)
+            .setOrException(UserAssignedSaEnrolmentPage, UsersAssignedEnrolment1)
+            .setOrException(AccountDetailsForCredentialPage(CREDENTIAL_ID_1), accountDetailsNoMFA)(
               AccountDetails.mongoFormats(crypto.crypto)
             )
-          )
+
           val requestForAudit =
             requestWithAccountType(
               SA_ASSIGNED_TO_OTHER_USER,
-              additionalCacheData = additionalCacheData,
               langCode = "cy"
             )
 
-          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(
-            requestForAudit,
-            messagesApi
+          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
+            requestWithGivenMongoDataAndUserAnswers(requestForAudit, mockUserAnswers),
+            messagesApi,
+            crypto
           ) shouldEqual expectedAuditEvent
         }
 
@@ -802,8 +819,8 @@ class AuditEventSpec extends BaseSpec {
             )
           val reportedAccountDetails =
             Json.obj(
-              ("reportedAccount", getReportedAccountJson(accountDetailsWithThreeMFADetails, true)),
-              (("reportedAccountEN", getReportedAccountJson(accountDetailsWithThreeMFADetails)))
+              ("reportedAccount", getReportedAccountJson(accountDetailsWithThreeMFADetails, isWelsh = true)),
+              ("reportedAccountEN", getReportedAccountJson(accountDetailsWithThreeMFADetails))
             )
           val expectedAuditEvent =
             getExpectedAuditForPTEnrolled(
@@ -812,22 +829,22 @@ class AuditEventSpec extends BaseSpec {
               Some(CREDENTIAL_ID_1)
             )
 
-          val additionalCacheData = Map(
-            USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-            accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsWithThreeMFADetails)(
+          val mockUserAnswers = UserAnswers("id", generateNino.nino)
+            .setOrException(UserAssignedSaEnrolmentPage, UsersAssignedEnrolment1)
+            .setOrException(AccountDetailsForCredentialPage(CREDENTIAL_ID_1), accountDetailsWithThreeMFADetails)(
               AccountDetails.mongoFormats(crypto.crypto)
             )
-          )
+
           val requestForAudit =
             requestWithAccountType(
               SA_ASSIGNED_TO_OTHER_USER,
-              additionalCacheData = additionalCacheData,
               langCode = "cy"
             )
 
-          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(
-            requestForAudit,
-            messagesApi
+          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
+            requestWithGivenMongoDataAndUserAnswers(requestForAudit, mockUserAnswers),
+            messagesApi,
+            crypto
           ) shouldEqual expectedAuditEvent
         }
       }
@@ -844,18 +861,19 @@ class AuditEventSpec extends BaseSpec {
         val expectedAuditEvent =
           getExpectedAuditForSigninWithSA(Some(saAccountDetails))
 
-        val additionalCacheData = Map(
-          USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmailOrMFA)(
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(UserAssignedSaEnrolmentPage, UsersAssignedEnrolment1)
+          .setOrException(AccountDetailsForCredentialPage(CREDENTIAL_ID_1), accountDetailsNoEmailOrMFA)(
             AccountDetails.mongoFormats(crypto.crypto)
           )
-        )
+
         val requestForAudit =
-          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
+          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER)
 
         AuditEvent.auditSigninAgainWithSACredential()(
-          requestForAudit,
-          messagesApi
+          requestWithGivenMongoDataAndUserAnswers(requestForAudit, mockUserAnswers),
+          messagesApi,
+          crypto
         ) shouldEqual expectedAuditEvent
       }
 
@@ -867,18 +885,19 @@ class AuditEventSpec extends BaseSpec {
         val expectedAuditEvent =
           getExpectedAuditForSigninWithSA(Some(saAccountDetails))
 
-        val additionalCacheData = Map(
-          USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmail)(
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(UserAssignedSaEnrolmentPage, UsersAssignedEnrolment1)
+          .setOrException(AccountDetailsForCredentialPage(CREDENTIAL_ID_1), accountDetailsNoEmail)(
             AccountDetails.mongoFormats(crypto.crypto)
           )
-        )
+
         val requestForAudit =
-          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
+          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER)
 
         AuditEvent.auditSigninAgainWithSACredential()(
-          requestForAudit,
-          messagesApi
+          requestWithGivenMongoDataAndUserAnswers(requestForAudit, mockUserAnswers),
+          messagesApi,
+          crypto
         ) shouldEqual expectedAuditEvent
       }
 
@@ -888,18 +907,19 @@ class AuditEventSpec extends BaseSpec {
         val saAccountDetails = Json.obj(("saAccount", getReportedAccountJson(accountDetailsNoMFA)))
         val expectedAuditEvent =
           getExpectedAuditForSigninWithSA(Some(saAccountDetails))
-        val additionalCacheData = Map(
-          USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoMFA)(
+        val requestForAudit =
+          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER)
+
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(UserAssignedSaEnrolmentPage, UsersAssignedEnrolment1)
+          .setOrException(AccountDetailsForCredentialPage(CREDENTIAL_ID_1), accountDetailsNoMFA)(
             AccountDetails.mongoFormats(crypto.crypto)
           )
-        )
-        val requestForAudit =
-          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
         AuditEvent.auditSigninAgainWithSACredential()(
-          requestForAudit,
-          messagesApi
+          requestWithGivenMongoDataAndUserAnswers(requestForAudit, mockUserAnswers),
+          messagesApi,
+          crypto
         ) shouldEqual expectedAuditEvent
       }
 
@@ -917,18 +937,19 @@ class AuditEventSpec extends BaseSpec {
         val expectedAuditEvent =
           getExpectedAuditForSigninWithSA(Some(saAccountDetails))
 
-        val additionalCacheData = Map(
-          USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsWithThreeMFADetails)(
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(UserAssignedSaEnrolmentPage, UsersAssignedEnrolment1)
+          .setOrException(AccountDetailsForCredentialPage(CREDENTIAL_ID_1), accountDetailsWithThreeMFADetails)(
             AccountDetails.mongoFormats(crypto.crypto)
           )
-        )
+
         val requestForAudit =
-          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
+          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER)
 
         AuditEvent.auditSigninAgainWithSACredential()(
-          requestForAudit,
-          messagesApi
+          requestWithGivenMongoDataAndUserAnswers(requestForAudit, mockUserAnswers),
+          messagesApi,
+          crypto
         ) shouldEqual expectedAuditEvent
       }
 
@@ -940,8 +961,9 @@ class AuditEventSpec extends BaseSpec {
           requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER)
 
         AuditEvent.auditSigninAgainWithSACredential()(
-          requestForAudit,
-          messagesApi
+          requestWithGivenMongoData(requestForAudit),
+          messagesApi,
+          crypto
         ) shouldEqual expectedAuditEvent
       }
     }
@@ -952,24 +974,25 @@ class AuditEventSpec extends BaseSpec {
           .copy(email = None, mfaDetails = Seq.empty)
         val saAccountDetails =
           Json.obj(
-            ("saAccount", getReportedAccountJson(accountDetailsNoEmailOrMFA, true)),
+            ("saAccount", getReportedAccountJson(accountDetailsNoEmailOrMFA, isWelsh = true)),
             ("saAccountEN", getReportedAccountJson(accountDetailsNoEmailOrMFA))
           )
         val expectedAuditEvent =
           getExpectedAuditForSigninWithSA(Some(saAccountDetails))
 
-        val additionalCacheData = Map(
-          USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmailOrMFA)(
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(UserAssignedSaEnrolmentPage, UsersAssignedEnrolment1)
+          .setOrException(AccountDetailsForCredentialPage(CREDENTIAL_ID_1), accountDetailsNoEmailOrMFA)(
             AccountDetails.mongoFormats(crypto.crypto)
           )
-        )
+
         val requestForAudit =
-          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData, langCode = "cy")
+          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, langCode = "cy")
 
         AuditEvent.auditSigninAgainWithSACredential()(
-          requestForAudit,
-          messagesApi
+          requestWithGivenMongoDataAndUserAnswers(requestForAudit, mockUserAnswers),
+          messagesApi,
+          crypto
         ) shouldEqual expectedAuditEvent
       }
 
@@ -978,24 +1001,25 @@ class AuditEventSpec extends BaseSpec {
           .copy(email = None)
         val saAccountDetails =
           Json.obj(
-            ("saAccount", getReportedAccountJson(accountDetailsNoEmail, true)),
+            ("saAccount", getReportedAccountJson(accountDetailsNoEmail, isWelsh = true)),
             ("saAccountEN", getReportedAccountJson(accountDetailsNoEmail))
           )
         val expectedAuditEvent =
           getExpectedAuditForSigninWithSA(Some(saAccountDetails))
 
-        val additionalCacheData = Map(
-          USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmail)(
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(UserAssignedSaEnrolmentPage, UsersAssignedEnrolment1)
+          .setOrException(AccountDetailsForCredentialPage(CREDENTIAL_ID_1), accountDetailsNoEmail)(
             AccountDetails.mongoFormats(crypto.crypto)
           )
-        )
+
         val requestForAudit =
-          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData, langCode = "cy")
+          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, langCode = "cy")
 
         AuditEvent.auditSigninAgainWithSACredential()(
-          requestForAudit,
-          messagesApi
+          requestWithGivenMongoDataAndUserAnswers(requestForAudit, mockUserAnswers),
+          messagesApi,
+          crypto
         ) shouldEqual expectedAuditEvent
       }
 
@@ -1004,27 +1028,30 @@ class AuditEventSpec extends BaseSpec {
           .copy(mfaDetails = Seq.empty)
         val saAccountDetails =
           Json.obj(
-            ("saAccount", getReportedAccountJson(accountDetailsNoMFA, true)),
+            ("saAccount", getReportedAccountJson(accountDetailsNoMFA, isWelsh = true)),
             ("saAccountEN", getReportedAccountJson(accountDetailsNoMFA))
           )
         val expectedAuditEvent =
           getExpectedAuditForSigninWithSA(Some(saAccountDetails))
-        val additionalCacheData = Map(
-          USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoMFA)(
+
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(UserAssignedSaEnrolmentPage, UsersAssignedEnrolment1)
+          .setOrException(AccountDetailsForCredentialPage(CREDENTIAL_ID_1), accountDetailsNoMFA)(
             AccountDetails.mongoFormats(crypto.crypto)
           )
-        )
+
         val requestForAudit =
-          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData, langCode = "cy")
+          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, langCode = "cy")
 
         AuditEvent.auditSigninAgainWithSACredential()(
-          requestForAudit,
-          messagesApi
+          requestWithGivenMongoDataAndUserAnswers(requestForAudit, mockUserAnswers),
+          messagesApi,
+          crypto
         ) shouldEqual expectedAuditEvent
       }
 
       "the reported account has email and three mfaDetails" in {
+
         val accountDetailsWithThreeMFADetails = accountDetailsWithOneMFADetails
           .copy(
             mfaDetails = Seq(
@@ -1033,26 +1060,28 @@ class AuditEventSpec extends BaseSpec {
               MFADetails("mfaDetails.totp", "TEST")
             )
           )
+
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(UserAssignedSaEnrolmentPage, UsersAssignedEnrolment1)
+          .setOrException(AccountDetailsForCredentialPage(CREDENTIAL_ID_1), accountDetailsWithThreeMFADetails)(
+            AccountDetails.mongoFormats(crypto.crypto)
+          )
+
         val saAccountDetails =
           Json.obj(
-            ("saAccount", getReportedAccountJson(accountDetailsWithThreeMFADetails, true)),
+            ("saAccount", getReportedAccountJson(accountDetailsWithThreeMFADetails, isWelsh = true)),
             ("saAccountEN", getReportedAccountJson(accountDetailsWithThreeMFADetails))
           )
         val expectedAuditEvent =
           getExpectedAuditForSigninWithSA(Some(saAccountDetails))
 
-        val additionalCacheData = Map(
-          USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsWithThreeMFADetails)(
-            AccountDetails.mongoFormats(crypto.crypto)
-          )
-        )
         val requestForAudit =
-          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData, langCode = "cy")
+          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, langCode = "cy")
 
         AuditEvent.auditSigninAgainWithSACredential()(
-          requestForAudit,
-          messagesApi
+          requestWithGivenMongoDataAndUserAnswers(requestForAudit, mockUserAnswers),
+          messagesApi,
+          crypto
         ) shouldEqual expectedAuditEvent
       }
 
@@ -1064,8 +1093,9 @@ class AuditEventSpec extends BaseSpec {
           requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, langCode = "cy")
 
         AuditEvent.auditSigninAgainWithSACredential()(
-          requestForAudit,
-          messagesApi
+          requestWithGivenMongoData(requestForAudit),
+          messagesApi,
+          crypto
         ) shouldEqual expectedAuditEvent
       }
     }

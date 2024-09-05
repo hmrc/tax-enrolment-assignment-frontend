@@ -17,20 +17,22 @@
 package controllers
 
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
-import helpers.{IntegrationSpecBase, ItUrlPaths}
 import helpers.TestITData._
-import play.api.test.Helpers.{GET, await, contentAsString, defaultAwaitTimeout, redirectLocation, route}
-import play.api.test.Helpers.{status, writeableOf_AnyContentAsEmpty}
 import helpers.messages._
+import helpers.{IntegrationSpecBase, ItUrlPaths}
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.when
+import org.mockito.stubbing.OngoingStubbing
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK, SEE_OTHER}
-import play.api.libs.json.{JsString, Json}
 import play.api.mvc.{AnyContentAsEmpty, Result}
 import play.api.test.FakeRequest
+import play.api.test.Helpers.{GET, contentAsString, defaultAwaitTimeout, redirectLocation, route, status, writeableOf_AnyContentAsEmpty}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_OR_MULTIPLE_ACCOUNTS}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{UserAnswers, UsersAssignedEnrolment}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.pages.{AccountTypePage, RedirectUrlPage, UserAssignedPtaEnrolmentPage, UserAssignedSaEnrolmentPage}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_ASSIGNED_PT_ENROLMENT, USER_ASSIGNED_SA_ENROLMENT}
 
@@ -72,7 +74,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
 
         val expectedAuditEvent: AuditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
           accountDetailsUserFriendly(CREDENTIAL_ID_2)
-        )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
+        )(requestWithGivenMongoData(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER)), messagesApi)
 
         verifyAuditEventSent(expectedAuditEvent)
       }
@@ -109,7 +111,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
 
         val expectedAuditEvent: AuditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
           accountDetailsUserFriendly(CREDENTIAL_ID_2, "1234")
-        )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
+        )(requestWithGivenMongoData(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER)), messagesApi)
 
         verifyAuditEventSent(expectedAuditEvent)
 
@@ -148,7 +150,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
 
         val expectedAuditEvent: AuditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
           accountDetailsUserFriendly(CREDENTIAL_ID_2)
-        )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
+        )(requestWithGivenMongoData(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER)), messagesApi)
 
         verifyAuditEventSent(expectedAuditEvent)
 
@@ -176,7 +178,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
 
         val expectedAuditEvent: AuditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
           accountDetailsUserFriendly(CREDENTIAL_ID_2)
-        )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
+        )(requestWithGivenMongoData(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER)), messagesApi)
 
         verifyAuditEventSent(expectedAuditEvent)
 
@@ -254,7 +256,13 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
 
     "the session cache has no redirectUrl" should {
       "render the error page" in new DataAndMockSetup {
-        await(save[AccountTypes.Value](xSessionId._2, "ACCOUNT_TYPE", PT_ASSIGNED_TO_CURRENT_USER))
+
+        val mockUserAnswers: UserAnswers = UserAnswers(sessionId, generateNino.nino)
+          .setOrException(AccountTypePage, PT_ASSIGNED_TO_CURRENT_USER.toString)
+
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(Some(mockUserAnswers)))
+
         stubAuthoriseSuccess()
 
         val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/protect-tax-info" + urlPath)
@@ -377,18 +385,16 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
       accountType: AccountTypes.Value = PT_ASSIGNED_TO_OTHER_USER,
       optPTEnrolledCredential: Option[String] = Some(CREDENTIAL_ID_2),
       optSAEnrolledCredential: Option[String]
-    ): Boolean = {
-      val dataMap = Map(
-        "redirectURL"  -> JsString(returnUrl),
-        "ACCOUNT_TYPE" -> JsString(accountType.toString),
-        USER_ASSIGNED_PT_ENROLMENT -> Json.toJson(
-          UsersAssignedEnrolment(optPTEnrolledCredential)
-        ),
-        USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(
-          UsersAssignedEnrolment(optSAEnrolledCredential)
-        )
-      )
-      await(save(xSessionId._2, dataMap))
+    ): OngoingStubbing[Future[Option[UserAnswers]]] = {
+
+      val mockUserAnswers = UserAnswers(xSessionId._2, generateNino.nino)
+        .setOrException(AccountTypePage, accountType.toString)
+        .setOrException(RedirectUrlPage, returnUrl)
+        .setOrException(UserAssignedSaEnrolmentPage, UsersAssignedEnrolment(optSAEnrolledCredential))
+        .setOrException(UserAssignedPtaEnrolmentPage, UsersAssignedEnrolment(optPTEnrolledCredential))
+
+      when(mockJourneyCacheRepository.get(any(), any()))
+        .thenReturn(Future.successful(Some(mockUserAnswers)))
     }
 
     def stubAuthoriseSuccess(hasSAEnrolment: Boolean = false): StubMapping = {

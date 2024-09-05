@@ -18,6 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers
 
 import cats.data.EitherT
 import org.apache.pekko.stream.Materializer
+import org.mockito.MockitoSugar.mock
 import org.scalatest.concurrent.{IntegrationPatience, PatienceConfiguration, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -36,11 +37,11 @@ import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SINGLE_OR_MULTIPLE_ACCOUNTS
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.SessionModule
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, DataRequest, RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo, UserDetailsFromSession}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{userDetails, userDetailsNoEnrolments}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UserAnswers
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.pages.{KeepAccessToSAThroughPTAPage, ReportedFraudPage, UserAssignedPtaEnrolmentPage, UserAssignedSaEnrolmentPage}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.JourneyCacheRepository
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.TENCrypto
@@ -56,7 +57,7 @@ trait BaseSpec
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  private val mockJourneyCacheRepository = mock[JourneyCacheRepository]
+  val mockJourneyCacheRepository: JourneyCacheRepository = mock[JourneyCacheRepository]
 
   lazy val configValues: Map[String, AnyVal] =
     Map(
@@ -70,7 +71,6 @@ trait BaseSpec
 
   protected def localGuiceApplicationBuilder(): GuiceApplicationBuilder =
     GuiceApplicationBuilder()
-      .disable[SessionModule]
       .overrides(overrides)
       .configure(configValues)
 
@@ -113,6 +113,28 @@ trait BaseSpec
       Some(requestWithMongo)
     )
 
+  def requestWithGivenMongoDataAndUserAnswers(
+    requestWithMongo: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+    userAnswers: UserAnswers
+  ): DataRequest[AnyContent] = {
+    val updatedRequestWithMongoData = requestWithMongo.copy(accountDetailsFromMongo =
+      requestWithMongo.accountDetailsFromMongo.copy(
+        optKeepAccessToSAThroughPTA = userAnswers.get(KeepAccessToSAThroughPTAPage),
+        optReportedFraud = userAnswers.get(ReportedFraudPage),
+        optUserAssignedSAParam = userAnswers.get(UserAssignedSaEnrolmentPage),
+        optUserAssignedPTParam = userAnswers.get(UserAssignedPtaEnrolmentPage)
+      )
+    )
+    userAnswers.get(UserAssignedSaEnrolmentPage)
+
+    new DataRequest[AnyContent](
+      FakeRequest().asInstanceOf[Request[AnyContent]],
+      updatedRequestWithMongoData.userDetails,
+      userAnswers,
+      Some(updatedRequestWithMongoData)
+    )
+  }
+
   def createInboundResult[T](result: T): TEAFResult[T] =
     EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(result))
 
@@ -127,6 +149,18 @@ trait BaseSpec
       "sessionId"
     )
 
+  implicit val dataRequest: DataRequest[AnyContent] =
+    new DataRequest[AnyContent](
+      RequestWithUserDetailsFromSession[AnyContent](
+        FakeRequest().asInstanceOf[Request[AnyContent]],
+        userDetailsNoEnrolments,
+        "sessionId"
+      ),
+      userDetailsNoEnrolments,
+      UserAnswers("sessionId", generateNino.nino),
+      None
+    )
+
   def requestWithEnrolments(hmrcPt: Boolean, irSa: Boolean): RequestWithUserDetailsFromSession[AnyContent] =
     new RequestWithUserDetailsFromSession[AnyContent](
       FakeRequest().asInstanceOf[Request[AnyContent]],
@@ -139,8 +173,19 @@ trait BaseSpec
   ): DataRequest[AnyContent] =
     new DataRequest[AnyContent](
       requestWithSession,
-      userDetailsNoEnrolments,
+      requestWithSession.userDetails,
       UserAnswers("sessionId", generateNino.nino),
+      None
+    )
+
+  def requestWithGivenSessionDataAndUserAnswers(
+    requestWithSession: RequestWithUserDetailsFromSession[AnyContent],
+    userAnswers: UserAnswers
+  ): DataRequest[AnyContent] =
+    new DataRequest[AnyContent](
+      requestWithSession,
+      requestWithSession.userDetails,
+      userAnswers,
       None
     )
 
@@ -153,7 +198,7 @@ trait BaseSpec
     langCode: String = "en"
   ): RequestWithUserDetailsFromSessionAndMongo[AnyContent] =
     RequestWithUserDetailsFromSessionAndMongo(
-      request.request.withTransientLang(langCode),
+      request.withTransientLang(langCode),
       request.userDetails,
       request.sessionID,
       AccountDetailsFromMongo(

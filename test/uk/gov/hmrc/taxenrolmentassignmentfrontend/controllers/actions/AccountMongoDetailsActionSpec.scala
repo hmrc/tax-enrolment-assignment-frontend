@@ -16,12 +16,12 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions
 
-import org.mockito.ArgumentMatchers.any
-import org.mockito.MockitoSugar.{mock, times, verify, when}
+import org.mockito.ArgumentMatchers.{any, anyString}
+import org.mockito.MockitoSugar.{times, verify, when}
 import org.mockito.stubbing.ScalaOngoingStubbing
 import play.api.Application
 import play.api.inject.{Binding, bind}
-import play.api.libs.json.{JsString, Json}
+import play.api.mvc.AnyContent
 import play.api.mvc.Results.Ok
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
@@ -32,23 +32,22 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_C
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo.requestConversion
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.CURRENT_USER_EMAIL
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UserAnswers
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.pages.{AccountTypePage, RedirectUrlPage}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.JourneyCacheRepository
 
 import scala.concurrent.Future
 
 class AccountMongoDetailsActionSpec extends BaseSpec {
 
   def mockDeleteDataFromCacheWhen: ScalaOngoingStubbing[Future[Boolean]] =
-    when(mockTeaSessionCache.removeRecord(any()))
-      .thenReturn(Future.successful(true))
+    when(mockJourneyCacheRepository.clear(anyString(), anyString())) thenReturn Future.successful(true)
 
   def mockDeleteDataFromCacheVerify: Future[Boolean] =
-    verify(mockTeaSessionCache, times(1)).removeRecord(any())
+    verify(mockJourneyCacheRepository, times(1)).clear(anyString(), anyString())
 
-  lazy val mockTeaSessionCache: TEASessionCache = mock[TEASessionCache]
-
-  override lazy val overrides: Seq[Binding[TEASessionCache]] = Seq(
-    bind[TEASessionCache].toInstance(mockTeaSessionCache)
+  override lazy val overrides: Seq[Binding[JourneyCacheRepository]] = Seq(
+    bind[JourneyCacheRepository].toInstance(mockJourneyCacheRepository)
   )
 
   override implicit lazy val app: Application = localGuiceApplicationBuilder()
@@ -60,50 +59,12 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
 
   "invoke" should {
     "return updated request when orchestrator returns success Some for both account type and redirect url" in {
-      val exampleMongoSessionData =
-        Map(ACCOUNT_TYPE -> Json.toJson(PT_ASSIGNED_TO_CURRENT_USER), REDIRECT_URL -> JsString("foo"))
-      val requestWithUserDetailsFromSession = RequestWithUserDetailsFromSession(
-        FakeRequest(),
-        UserDetailsFromSession(
-          "foo",
-          nino,
-          "wizz",
-          Some(CURRENT_USER_EMAIL),
-          Individual,
-          Enrolments(Set.empty[Enrolment]),
-          hasPTEnrolment = true,
-          hasSAEnrolment = true
-        ),
-        "foo"
-      )
+      val mockUserAnswers = UserAnswers("id", generateNino.nino)
+        .setOrException(AccountTypePage, PT_ASSIGNED_TO_CURRENT_USER.toString)
+        .setOrException(RedirectUrlPage, "foo")
 
-      val expectedConversion = RequestWithUserDetailsFromSessionAndMongo(
-        requestWithUserDetailsFromSession.request,
-        requestWithUserDetailsFromSession.userDetails,
-        requestWithUserDetailsFromSession.sessionID,
-        AccountDetailsFromMongo(PT_ASSIGNED_TO_CURRENT_USER, "foo", exampleMongoSessionData)(crypto.crypto)
-      )
-
-      val function =
-        (requestWithUserDetailsFromSessionAndMongo: RequestWithUserDetailsFromSessionAndMongo[
-          _
-        ]) =>
-          Future.successful(
-            Ok(requestWithUserDetailsFromSessionAndMongo.toString())
-          )
-
-      when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))
-        .thenReturn(Future.successful(Some(CacheMap("id", exampleMongoSessionData))))
-
-      val res = accountMongoDetailsAction.invokeBlock(
-        requestWithUserDetailsFromSession,
-        function
-      )
-      contentAsString(res) shouldBe expectedConversion.toString()
-    }
-    s"Redirect to login" when {
-      "the cache is empty" in {
-        val requestWithUserDetailsFromSession = RequestWithUserDetailsFromSession(
+      val requestWithUserDetailsFromSession: RequestWithUserDetailsFromSession[AnyContent] =
+        RequestWithUserDetailsFromSession(
           FakeRequest(),
           UserDetailsFromSession(
             "foo",
@@ -117,19 +78,64 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
           ),
           "foo"
         )
+
+      val expectedConversion = requestWithGivenMongoDataAndUserAnswers(
+        RequestWithUserDetailsFromSessionAndMongo(
+          requestWithUserDetailsFromSession.request,
+          requestWithUserDetailsFromSession.userDetails,
+          requestWithUserDetailsFromSession.sessionID,
+          AccountDetailsFromMongo(PT_ASSIGNED_TO_CURRENT_USER, "foo", None, None, None, None)
+        ),
+        mockUserAnswers
+      )
+
+      val function =
+        (requestWithUserDetailsFromSessionAndMongo: DataRequest[
+          _
+        ]) =>
+          Future.successful(
+            Ok(requestWithUserDetailsFromSessionAndMongo.toString())
+          )
+
+      when(mockJourneyCacheRepository.get(any(), any()))
+        .thenReturn(Future.successful(Some(mockUserAnswers)))
+
+      val res = accountMongoDetailsAction.invokeBlock(
+        requestWithGivenSessionDataAndUserAnswers(requestWithUserDetailsFromSession, mockUserAnswers),
+        function
+      )
+      contentAsString(res) shouldBe expectedConversion.toString()
+    }
+    s"Redirect to login" when {
+      "the cache is empty" in {
+        val requestWithUserDetailsFromSession: RequestWithUserDetailsFromSession[AnyContent] =
+          RequestWithUserDetailsFromSession(
+            FakeRequest(),
+            UserDetailsFromSession(
+              "foo",
+              nino,
+              "wizz",
+              Some(CURRENT_USER_EMAIL),
+              Individual,
+              Enrolments(Set.empty[Enrolment]),
+              hasPTEnrolment = true,
+              hasSAEnrolment = true
+            ),
+            "foo"
+          )
         val function =
-          (requestWithUserDetailsFromSessionAndMongo: RequestWithUserDetailsFromSessionAndMongo[
+          (requestWithUserDetailsFromSessionAndMongo: DataRequest[
             _
           ]) =>
             Future.successful(
               Ok(requestWithUserDetailsFromSessionAndMongo.toString())
             )
 
-        when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))
+        when(mockJourneyCacheRepository.get(any(), any()))
           .thenReturn(Future.successful(None))
 
         val res = accountMongoDetailsAction.invokeBlock(
-          requestWithUserDetailsFromSession,
+          requestWithGivenSessionData(requestWithUserDetailsFromSession),
           function
         )
         val loginUrl = "http://localhost:9553/bas-gateway/sign-in?continue_url=http%3A%2F%2Flocalhost%3A9232%2F" +
@@ -141,8 +147,9 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
     }
     s"Return $INTERNAL_SERVER_ERROR" when {
       s"the session cache contains the redirectUrl but no the accountType" in {
-        val exampleMongoSessionData = Map(REDIRECT_URL -> JsString("foo"))
-        val requestWithUserDetailsFromSession =
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(RedirectUrlPage, "foo")
+        val requestWithUserDetailsFromSession: RequestWithUserDetailsFromSession[AnyContent] =
           RequestWithUserDetailsFromSession(
             FakeRequest(),
             UserDetailsFromSession(
@@ -159,26 +166,27 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
           )
 
         val function =
-          (requestWithUserDetailsFromSessionAndMongo: RequestWithUserDetailsFromSessionAndMongo[
+          (requestWithUserDetailsFromSessionAndMongo: DataRequest[
             _
           ]) =>
             Future.successful(
               Ok(requestWithUserDetailsFromSessionAndMongo.toString())
             )
 
-        when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))
-          .thenReturn(Future.successful(Some(CacheMap("id", exampleMongoSessionData))))
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(Some(mockUserAnswers)))
 
         val res = accountMongoDetailsAction.invokeBlock(
-          requestWithUserDetailsFromSession,
+          requestWithGivenSessionDataAndUserAnswers(requestWithUserDetailsFromSession, mockUserAnswers),
           function
         )
         status(res) shouldBe INTERNAL_SERVER_ERROR
         contentAsString(res) should include(messages("enrolmentError.heading"))
       }
       "the session cache contains the account type but not the redirect url" in {
-        val exampleMongoSessionData = Map(ACCOUNT_TYPE -> Json.toJson(PT_ASSIGNED_TO_CURRENT_USER))
-        val requestWithUserDetailsFromSession =
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(AccountTypePage, PT_ASSIGNED_TO_CURRENT_USER.toString)
+        val requestWithUserDetailsFromSession: RequestWithUserDetailsFromSession[AnyContent] =
           RequestWithUserDetailsFromSession(
             FakeRequest(),
             UserDetailsFromSession(
@@ -195,58 +203,23 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
           )
 
         val function =
-          (requestWithUserDetailsFromSessionAndMongo: RequestWithUserDetailsFromSessionAndMongo[
+          (requestWithUserDetailsFromSessionAndMongo: DataRequest[
             _
           ]) =>
             Future.successful(
               Ok(requestWithUserDetailsFromSessionAndMongo.toString())
             )
 
-        when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))
-          .thenReturn(Future.successful(Some(CacheMap("id", exampleMongoSessionData))))
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(Some(mockUserAnswers)))
 
         val res = accountMongoDetailsAction.invokeBlock(
-          requestWithUserDetailsFromSession,
+          requestWithGivenSessionDataAndUserAnswers(requestWithUserDetailsFromSession, mockUserAnswers),
           function
         )
         status(res) shouldBe INTERNAL_SERVER_ERROR
         contentAsString(res) should include(messages("enrolmentError.heading"))
       }
-    }
-
-    "when reading from cache returns an exception" in {
-      val requestWithUserDetailsFromSession = RequestWithUserDetailsFromSession(
-        FakeRequest(),
-        UserDetailsFromSession(
-          "foo",
-          nino,
-          "wizz",
-          Some(CURRENT_USER_EMAIL),
-          Individual,
-          Enrolments(Set.empty[Enrolment]),
-          hasPTEnrolment = true,
-          hasSAEnrolment = true
-        ),
-        "foo"
-      )
-      val function =
-        (requestWithUserDetailsFromSessionAndMongo: RequestWithUserDetailsFromSessionAndMongo[
-          _
-        ]) =>
-          Future.successful(
-            Ok(requestWithUserDetailsFromSessionAndMongo.toString())
-          )
-
-      when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))
-        .thenReturn(Future.failed(exception = new Exception("uh oh")))
-
-      val res = accountMongoDetailsAction.invokeBlock(
-        requestWithUserDetailsFromSession,
-        function
-      )
-      status(res) shouldBe INTERNAL_SERVER_ERROR
-      contentAsString(res) should include(messages("enrolmentError.heading"))
-
     }
   }
   "RequestWithUserDetailsFromSessionAndMongo.requestConversion" should {
@@ -271,7 +244,7 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
           requestWithUserDetailsFromSession.request,
           requestWithUserDetailsFromSession.userDetails,
           requestWithUserDetailsFromSession.sessionID,
-          AccountDetailsFromMongo(SINGLE_OR_MULTIPLE_ACCOUNTS, "redirect", Map())(crypto.crypto)
+          AccountDetailsFromMongo(SINGLE_OR_MULTIPLE_ACCOUNTS, "redirect", None, None, None, None)
         )
       ) shouldBe requestWithUserDetailsFromSession
     }

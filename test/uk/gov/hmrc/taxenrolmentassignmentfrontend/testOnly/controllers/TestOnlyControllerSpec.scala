@@ -22,7 +22,7 @@ import org.mockito.MockitoSugar.{mock, when}
 import org.scalatest.matchers.must.Matchers._
 import play.api.Application
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK}
-import play.api.inject.bind
+import play.api.inject.{Binding, bind}
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{defaultAwaitTimeout, status}
@@ -32,6 +32,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{TaxEnrolmentAssignment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{UsersAssignedEnrolmentCurrentCred, buildFakeRequestWithSessionId, predicates, retrievalResponse, retrievals}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AdditonalFactors, IdentifiersOrVerifiers}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.JourneyCacheRepository
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.EACDService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.{AccountDetailsTestOnly, EnrolmentDetailsTestOnly, UserTestOnly}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.services.EnrolmentStoreServiceTestOnly
@@ -51,6 +52,10 @@ class TestOnlyControllerSpec extends BaseSpec {
       bind[FileHelper].toInstance(mockFileHelper)
     )
     .build()
+
+  override lazy val overrides: Seq[Binding[JourneyCacheRepository]] = Seq(
+    bind[JourneyCacheRepository].toInstance(mockJourneyCacheRepository)
+  )
 
   lazy val sut: TestOnlyController = app.injector.instanceOf[TestOnlyController]
 
@@ -677,6 +682,9 @@ class TestOnlyControllerSpec extends BaseSpec {
       when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(retrievalResponse()))
 
+      when(mockJourneyCacheRepository.get(any(), any()))
+        .thenReturn(Future.successful(None))
+
       when(mockEacdService.getUsersAssignedPTEnrolment(any(), any(), any()))
         .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](UsersAssignedEnrolmentCurrentCred))
 
@@ -697,6 +705,9 @@ class TestOnlyControllerSpec extends BaseSpec {
           "testOnly.environment" -> "Staging"
         )
         .build()
+
+      when(mockJourneyCacheRepository.get(any(), any()))
+        .thenReturn(Future.successful(None))
 
       when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(retrievalResponse()))

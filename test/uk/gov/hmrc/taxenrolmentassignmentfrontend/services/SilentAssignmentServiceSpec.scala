@@ -23,16 +23,16 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{EACDConnector, Tax
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UserEnrolmentsListResponse
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.JourneyCacheRepository
 
 class SilentAssignmentServiceSpec extends BaseSpec {
 
   lazy val mockTaxEnrolmentsConnector: TaxEnrolmentsConnector = mock[TaxEnrolmentsConnector]
   lazy val mockEacdConnector: EACDConnector = mock[EACDConnector]
-  lazy val mockTeaSessionCache: TEASessionCache = mock[TEASessionCache]
+  override val mockJourneyCacheRepository: JourneyCacheRepository = mock[JourneyCacheRepository]
 
-  override lazy val overrides: Seq[Binding[TEASessionCache]] = Seq(
-    bind[TEASessionCache].toInstance(mockTeaSessionCache)
+  override lazy val overrides: Seq[Binding[JourneyCacheRepository]] = Seq(
+    bind[JourneyCacheRepository].toInstance(mockJourneyCacheRepository)
   )
 
   override implicit lazy val app: Application = localGuiceApplicationBuilder()

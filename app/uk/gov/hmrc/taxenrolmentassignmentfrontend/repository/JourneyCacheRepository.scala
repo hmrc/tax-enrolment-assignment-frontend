@@ -95,8 +95,9 @@ class JourneyCacheRepository @Inject() (
       .map(_ => true)
   }
 
-  def clear(id: String, nino: String): Future[Boolean] = {
-    println(id + ":" + nino)
-    Future.successful(true)
-  }
+  def clear(id: String, nino: String): Future[Boolean] =
+    collection
+      .deleteOne(byIdAndNino(id, nino))
+      .toFuture()
+      .map(_ => true)
 }

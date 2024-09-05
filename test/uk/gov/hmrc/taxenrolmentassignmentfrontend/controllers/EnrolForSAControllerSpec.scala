@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
-import org.mockito.ArgumentMatchers.{any, eq => ameq}
+import org.mockito.ArgumentMatchers.{any, anyString, eq => ameq}
 import org.mockito.MockitoSugar.{mock, when}
 import play.api.Application
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, SEE_OTHER}
@@ -24,13 +24,15 @@ import play.api.inject.{Binding, bind}
 import play.api.mvc.BodyParsers
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UserAnswers
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.AccountCheckOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditHandler
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.JourneyCacheRepository
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -45,10 +47,11 @@ class EnrolForSAControllerSpec extends BaseSpec {
 
   lazy val mockAuthConnector: AuthConnector = mock[AuthConnector]
   lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
-  lazy val mockTeaSessionCache: TEASessionCache = mock[TEASessionCache]
+  override val mockJourneyCacheRepository: JourneyCacheRepository = mock[JourneyCacheRepository]
+  val nino: Nino = generateNino
 
-  override lazy val overrides: Seq[Binding[TEASessionCache]] = Seq(
-    bind[TEASessionCache].toInstance(mockTeaSessionCache)
+  override lazy val overrides: Seq[Binding[JourneyCacheRepository]] = Seq(
+    bind[JourneyCacheRepository].toInstance(mockJourneyCacheRepository)
   )
 
   override implicit lazy val app: Application = localGuiceApplicationBuilder()
@@ -68,7 +71,12 @@ class EnrolForSAControllerSpec extends BaseSpec {
       when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(retrievalResponse(enrolments = saEnrolmentOnly)))
 
-      when(mockTeaSessionCache.removeRecord(any())).thenReturn(Future.successful(true))
+      val mockUserAnswers: UserAnswers = UserAnswers("FAKE_SESSION_ID", nino.nino)
+
+      when(mockJourneyCacheRepository.get(any(), any()))
+        .thenReturn(Future.successful(Some(mockUserAnswers)))
+
+      when(mockJourneyCacheRepository.clear(anyString(), anyString())) thenReturn Future.successful(true)
 
       val res = controller.enrolForSA.apply(buildFakeRequestWithSessionId("GET"))
 
@@ -82,6 +90,11 @@ class EnrolForSAControllerSpec extends BaseSpec {
     "users has does not have SA enrolment and PT assigned to other cred that they logged in with and wants to access sa from ten's kick out page " in {
       when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(retrievalResponse()))
+
+      val mockUserAnswers: UserAnswers = UserAnswers("FAKE_SESSION_ID", nino.nino)
+
+      when(mockJourneyCacheRepository.get(any(), any()))
+        .thenReturn(Future.successful(Some(mockUserAnswers)))
 
       val res = controller.enrolForSA.apply(buildFakeRequestWithSessionId("GET"))
 

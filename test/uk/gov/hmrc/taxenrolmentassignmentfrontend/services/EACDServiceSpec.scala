@@ -16,42 +16,35 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.services
 
-import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
 import org.mockito.MockitoSugar.{mock, when}
-import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.EACDConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromEACD
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_ASSIGNED_PT_ENROLMENT, USER_ASSIGNED_SA_ENROLMENT}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UserAnswers
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.JourneyCacheRepository
 
 import scala.concurrent.Future
 
 class EACDServiceSpec extends BaseSpec {
 
   lazy val mockEacdConnector: EACDConnector = mock[EACDConnector]
-  lazy val mockTeaSessionCache: TEASessionCache = mock[TEASessionCache]
+  override val mockJourneyCacheRepository: JourneyCacheRepository = mock[JourneyCacheRepository]
 
-  val service = new EACDService(mockEacdConnector, mockTeaSessionCache)
+  val service = new EACDService(mockEacdConnector, mockJourneyCacheRepository)
 
   "getUsersAssignedPTEnrolment" when {
     "the a PT enrolment has been assigned for the nino" should {
       "call the EACD, save to cache and return the account details" in {
-        when(mockEacdConnector.getUsersWithPTEnrolment(NINO))
-          .thenReturn(createInboundResult(UsersAssignedEnrolment1))
 
         when(mockEacdConnector.getUsersWithPTEnrolment(NINO))
           .thenReturn(createInboundResult(UsersAssignedEnrolment1))
 
-        when(
-          mockTeaSessionCache.save(
-            ArgumentMatchers.eq(USER_ASSIGNED_PT_ENROLMENT),
-            ArgumentMatchers.eq(UsersAssignedEnrolment1)
-          )(any(), any())
-        )
-          .thenReturn(Future(CacheMap(request.sessionID, Map())))
+        when(mockEacdConnector.getUsersWithPTEnrolment(NINO))
+          .thenReturn(createInboundResult(UsersAssignedEnrolment1))
+
+        when(mockJourneyCacheRepository.set(any[UserAnswers])) thenReturn Future.successful(true)
 
         val result = service.getUsersAssignedPTEnrolment
         whenReady(result.value) { res =>
@@ -84,13 +77,7 @@ class EACDServiceSpec extends BaseSpec {
         when(mockEacdConnector.getUsersWithSAEnrolment(UTR))
           .thenReturn(createInboundResult(UsersAssignedEnrolment1))
 
-        when(
-          mockTeaSessionCache.save(
-            ArgumentMatchers.eq(USER_ASSIGNED_SA_ENROLMENT),
-            ArgumentMatchers.eq(UsersAssignedEnrolment1)
-          )(any(), any())
-        )
-          .thenReturn(Future(CacheMap(request.sessionID, Map())))
+        when(mockJourneyCacheRepository.set(any[UserAnswers])) thenReturn Future.successful(true)
 
         val result = service.getUsersAssignedSAEnrolment
         whenReady(result.value) { res =>
@@ -105,13 +92,7 @@ class EACDServiceSpec extends BaseSpec {
         when(mockEacdConnector.queryKnownFactsByNinoVerifier(NINO))
           .thenReturn(createInboundResult(None))
 
-        when(
-          mockTeaSessionCache.save(
-            ArgumentMatchers.eq(USER_ASSIGNED_SA_ENROLMENT),
-            ArgumentMatchers.eq(UsersAssignedEnrolmentEmpty)
-          )(any(), any())
-        )
-          .thenReturn(Future(CacheMap(request.sessionID, Map())))
+        when(mockJourneyCacheRepository.set(any[UserAnswers])) thenReturn Future.successful(true)
 
         val result = service.getUsersAssignedSAEnrolment
         whenReady(result.value) { res =>

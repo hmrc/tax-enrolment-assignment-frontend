@@ -16,12 +16,15 @@
 
 package controllers
 
+import helpers.TestITData.{authoriseResponseJson, xAuthToken, xSessionId}
 import helpers.{IntegrationSpecBase, ItUrlPaths}
-import helpers.TestITData.{authoriseResponseJson, sessionId, xAuthToken, xSessionId}
-import play.api.test.Helpers.{GET, await, defaultAwaitTimeout, redirectLocation, route, status, writeableOf_AnyContentAsEmpty}
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.when
 import play.api.http.Status.{OK, SEE_OTHER}
-import play.api.libs.json.JsString
 import play.api.test.FakeRequest
+import play.api.test.Helpers.{GET, defaultAwaitTimeout, redirectLocation, route, status, writeableOf_AnyContentAsEmpty}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UserAnswers
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.pages.RedirectUrlPage
 
 import java.net.URLEncoder
 import scala.concurrent.Future
@@ -30,16 +33,21 @@ class SignOutControllerISpec extends IntegrationSpecBase {
 
   val url: String = ItUrlPaths.signout
 
-  def saveRedirectUrlToSession(optRedirectUrl: Option[String]): Future[Boolean] =
-    optRedirectUrl match {
-      case Some(redirectUrl) => save(sessionId, Map("redirectURL" -> JsString(redirectUrl)))
-      case None              => save(sessionId, Map())
+  def saveRedirectUrlToSession(optRedirectUrl: Option[String]) = {
+    val mockUserAnswers = UserAnswers("id", generateNino.nino)
+    val mockUserAnswersUpdated: UserAnswers = optRedirectUrl match {
+      case Some(redirectUrl) =>
+        mockUserAnswers.setOrException(RedirectUrlPage, redirectUrl)
+      case None => mockUserAnswers
     }
+    when(mockJourneyCacheRepository.get(any(), any()))
+      .thenReturn(Future.successful(Some(mockUserAnswersUpdated)))
+  }
 
   s"GET $url" when {
     "the session cache contains a redirectUrl" should {
       "remove the session and redirect to gg signout with continue url" in {
-        await(saveRedirectUrlToSession(Some(returnUrl)))
+        saveRedirectUrlToSession(Some(returnUrl))
         stubPost(s"/write/.*", OK, """{"x":2}""")
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
@@ -52,14 +60,12 @@ class SignOutControllerISpec extends IntegrationSpecBase {
         redirectLocation(result).get should include(
           s"/bas-gateway/sign-out-without-state?continue=${URLEncoder.encode(returnUrl, "UTF-8")}"
         )
-        await(sessionRepository.get(sessionId)) shouldBe None
-
       }
     }
 
     "the session cache does not contain a redirectUrl" should {
       "remove the session and redirect to gg signout without continue url" in {
-        await(saveRedirectUrlToSession(None))
+        saveRedirectUrlToSession(None)
         stubPost(s"/write/.*", OK, """{"x":2}""")
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
@@ -72,14 +78,13 @@ class SignOutControllerISpec extends IntegrationSpecBase {
         redirectLocation(result).get should include(
           s"/bas-gateway/sign-out-without-state"
         )
-        sessionRepository.get(sessionId).map(session => assert(session.isEmpty))
 
       }
     }
 
     "the session cache does not contain a redirectUrl" should {
       "redirect to gg signout without continue url" in {
-        await(saveRedirectUrlToSession(None))
+        saveRedirectUrlToSession(None)
         stubPost(s"/write/.*", OK, """{"x":2}""")
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())

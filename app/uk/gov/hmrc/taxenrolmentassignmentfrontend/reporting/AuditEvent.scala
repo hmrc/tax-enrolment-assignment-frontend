@@ -295,7 +295,19 @@ object AuditEvent {
     }
 
   private def getLang(implicit request: DataRequest[_], messagesApi: MessagesApi): Lang =
-    messagesApi.preferred(request.request).lang
+    if (request.requestWithUserDetailsFromSessionAndMongo.isDefined) {
+      messagesApi
+        .preferred(
+          request.requestWithUserDetailsFromSessionAndMongo.get.request
+        )
+        .lang
+    } else {
+      messagesApi
+        .preferred(
+          request.request
+        )
+        .lang
+    }
 
   private def translationRequired(implicit lang: Lang): Boolean =
     lang.locale != Locale.ENGLISH

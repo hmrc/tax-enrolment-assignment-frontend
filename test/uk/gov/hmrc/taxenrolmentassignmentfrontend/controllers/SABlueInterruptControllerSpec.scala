@@ -29,9 +29,11 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OT
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, UnexpectedPTEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{ControllersBaseSpec, UrlPaths}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UserAnswers
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.pages.{AccountTypePage, RedirectUrlPage}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditHandler
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.JourneyCacheRepository
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SABlueInterrupt
 
@@ -46,8 +48,8 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
   lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
   lazy val mockMultipleAccountsOrchestrator: MultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
 
-  override lazy val overrides: Seq[Binding[TEASessionCache]] = Seq(
-    bind[TEASessionCache].toInstance(mockTeaSessionCache)
+  override lazy val overrides: Seq[Binding[JourneyCacheRepository]] = Seq(
+    bind[JourneyCacheRepository].toInstance(mockJourneyCacheRepository)
   )
 
   override implicit lazy val app: Application = localGuiceApplicationBuilder()
@@ -71,6 +73,10 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
       "render the SABlueInterrupt page" when {
         "the user has not already been assigned a PT enrolment" in {
 
+          val mockUserAnswers = UserAnswers("id", generateNino.nino)
+            .setOrException(AccountTypePage, randomAccountType.toString)
+            .setOrException(RedirectUrlPage, "foo")
+
           when(
             mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext])
           )
@@ -79,7 +85,7 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
           when(mockMultipleAccountsOrchestrator.checkAccessAllowedForPage(ameq(List(SA_ASSIGNED_TO_OTHER_USER)))(any()))
             .thenReturn(Right(SA_ASSIGNED_TO_OTHER_USER))
 
-          mockGetDataFromCacheForActionSuccess(randomAccountType)
+          mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
           val result = controller
             .view()
@@ -110,6 +116,11 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
 
       s"redirect to ${UrlPaths.enrolledPTSAOnOtherAccountPath}" when {
         "the user has already been assigned a PT enrolment already" in {
+
+          val mockUserAnswers = UserAnswers("id", generateNino.nino)
+            .setOrException(AccountTypePage, randomAccountType.toString)
+            .setOrException(RedirectUrlPage, "foo")
+
           when(
             mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext])
           )
@@ -118,7 +129,7 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
           when(mockMultipleAccountsOrchestrator.checkAccessAllowedForPage(ameq(List(SA_ASSIGNED_TO_OTHER_USER)))(any()))
             .thenReturn(Left(UnexpectedPTEnrolment(SA_ASSIGNED_TO_OTHER_USER)))
 
-          mockGetDataFromCacheForActionSuccess(randomAccountType)
+          mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
           val result = controller
             .view()
@@ -147,13 +158,17 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
 
     s"the user does not have an account type of $SA_ASSIGNED_TO_OTHER_USER" should {
       s"redirect to ${UrlPaths.accountCheckPath}" in {
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(AccountTypePage, randomAccountType.toString)
+          .setOrException(RedirectUrlPage, "foo")
+
         when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
 
         when(mockMultipleAccountsOrchestrator.checkAccessAllowedForPage(ameq(List(SA_ASSIGNED_TO_OTHER_USER)))(any()))
           .thenReturn(Left(IncorrectUserType(UrlPaths.returnUrl, randomAccountType)))
 
-        mockGetDataFromCacheForActionSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
         val result = controller
           .view()
@@ -168,13 +183,17 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
   "continue" when {
     "a user has SA on another account" should {
       s"redirect to ${UrlPaths.saOnOtherAccountKeepAccessToSAPath}" in {
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(AccountTypePage, randomAccountType.toString)
+          .setOrException(RedirectUrlPage, "foo")
+
         when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
 
         when(mockMultipleAccountsOrchestrator.checkAccessAllowedForPage(ameq(List(SA_ASSIGNED_TO_OTHER_USER)))(any()))
           .thenReturn(Right(SA_ASSIGNED_TO_OTHER_USER))
 
-        mockGetDataFromCacheForActionSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
         val result = controller
           .continue()
@@ -203,13 +222,17 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
 
     s"the user does not have an account type of $SA_ASSIGNED_TO_OTHER_USER" should {
       s"redirect to ${UrlPaths.accountCheckPath}" in {
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(AccountTypePage, randomAccountType.toString)
+          .setOrException(RedirectUrlPage, "foo")
+
         when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
 
         when(mockMultipleAccountsOrchestrator.checkAccessAllowedForPage(ameq(List(SA_ASSIGNED_TO_OTHER_USER)))(any()))
           .thenReturn(Left(IncorrectUserType(UrlPaths.returnUrl, randomAccountType)))
 
-        mockGetDataFromCacheForActionSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
         val result = controller
           .continue()

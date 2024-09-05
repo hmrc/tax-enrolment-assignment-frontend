@@ -42,6 +42,7 @@ lazy val microservice = Project(appName, file("."))
       "-Wconf:cat=unused&src=.*Routes\\.scala:s",
       "-Wconf:cat=unused&src=.*ReverseRoutes\\.scala:s",
       "-Wconf:cat=deprecation&src=views/.*:s", // should be removed after the UI is upgraded to use HmrcStandardPage
+      "-Wconf:src=test/.*&msg=a type was inferred to be `Object`:s", // silence warnings from mockito reset
       "-Wconf:msg=\\.*match may not be exhaustive.\\.*:s"
     )
   )

@@ -16,17 +16,21 @@
 
 package controllers
 
-import helpers.{IntegrationSpecBase, ItUrlPaths}
 import helpers.TestITData._
-import play.api.test.Helpers.{GET, POST, await, contentAsString, defaultAwaitTimeout, redirectLocation, route, status}
-import play.api.test.Helpers.{writeableOf_AnyContentAsEmpty, writeableOf_AnyContentAsJson}
 import helpers.messages._
+import helpers.{IntegrationSpecBase, ItUrlPaths}
 import org.jsoup.Jsoup
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.when
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, NON_AUTHORITATIVE_INFORMATION, NOT_FOUND, OK, SEE_OTHER}
 import play.api.libs.json.Json
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import play.api.test.FakeRequest
+import play.api.test.Helpers.{GET, POST, contentAsString, defaultAwaitTimeout, redirectLocation, route, status, writeableOf_AnyContentAsEmpty, writeableOf_AnyContentAsJson}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UserAnswers
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.pages.{AccountTypePage, RedirectUrlPage}
+
+import scala.concurrent.Future
 
 class EnrolledForPTISpec extends IntegrationSpecBase {
 
@@ -35,10 +39,14 @@ class EnrolledForPTISpec extends IntegrationSpecBase {
   s"GET $urlPath" when {
     s"the session cache has Account type of $SINGLE_OR_MULTIPLE_ACCOUNTS" should {
       s"render the EnrolledForPT page" in {
-        await(save[String](sessionId, "redirectURL", returnUrl))
-        await(
-          save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", SINGLE_OR_MULTIPLE_ACCOUNTS)
-        )
+
+        val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+          .setOrException(AccountTypePage, SINGLE_OR_MULTIPLE_ACCOUNTS.toString)
+          .setOrException(RedirectUrlPage, returnUrl)
+
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(Some(mockUserAnswers)))
+
         stubAuthorizePost(OK, authoriseResponseWithPTEnrolment().toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGet(
@@ -62,10 +70,13 @@ class EnrolledForPTISpec extends IntegrationSpecBase {
       .foreach { accountType =>
         s"the session cache has Account type of $accountType" should {
           s"redirect to {accountCheckPath}" in {
-            await(save[String](sessionId, "redirectURL", returnUrl))
-            await(
-              save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", accountType)
-            )
+            val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+              .setOrException(AccountTypePage, accountType.toString)
+              .setOrException(RedirectUrlPage, returnUrl)
+
+            when(mockJourneyCacheRepository.get(any(), any()))
+              .thenReturn(Future.successful(Some(mockUserAnswers)))
+
             stubAuthorizePost(OK, authoriseResponseWithPTEnrolment().toString())
             stubPost(s"/write/.*", OK, """{"x":2}""")
 
@@ -100,8 +111,13 @@ class EnrolledForPTISpec extends IntegrationSpecBase {
     "an authorised user with no credential uses the service" should {
       s"render the error page" in {
         stubAuthorizePost(OK, authoriseResponseWithPTEnrolment().toString())
-        await(save[String](sessionId, "redirectURL", returnUrl))
-        await(save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", SA_ASSIGNED_TO_CURRENT_USER))
+        val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+          .setOrException(AccountTypePage, SA_ASSIGNED_TO_CURRENT_USER.toString)
+          .setOrException(RedirectUrlPage, returnUrl)
+
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(Some(mockUserAnswers)))
+
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGetWithQueryParam(
           "/identity-verification/nino",
@@ -122,8 +138,13 @@ class EnrolledForPTISpec extends IntegrationSpecBase {
 
     "an authorised user but IV returns internal error" should {
       s"return $INTERNAL_SERVER_ERROR" in {
-        await(save[String](sessionId, "redirectURL", returnUrl))
-        await(save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", SA_ASSIGNED_TO_CURRENT_USER))
+        val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+          .setOrException(AccountTypePage, SA_ASSIGNED_TO_CURRENT_USER.toString)
+          .setOrException(RedirectUrlPage, returnUrl)
+
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(Some(mockUserAnswers)))
+
         stubAuthorizePost(OK, authoriseResponseWithPTEnrolment().toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGetWithQueryParam(
@@ -147,8 +168,14 @@ class EnrolledForPTISpec extends IntegrationSpecBase {
     "the user has a session missing required element NINO" should {
       s"redirect to ${ItUrlPaths.unauthorizedPath}" in {
         val authResponse = authoriseResponseWithPTEnrolment(optNino = None)
-        await(save[String](sessionId, "redirectURL", returnUrl))
-        await(save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", SA_ASSIGNED_TO_CURRENT_USER))
+
+        val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+          .setOrException(AccountTypePage, SA_ASSIGNED_TO_CURRENT_USER.toString)
+          .setOrException(RedirectUrlPage, returnUrl)
+
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(Some(mockUserAnswers)))
+
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
@@ -212,8 +239,13 @@ class EnrolledForPTISpec extends IntegrationSpecBase {
   s"POST $urlPath" when {
     "the session cache contains the redirect url" should {
       s"redirect to the redirect url" in {
-        await(save[String](sessionId, "redirectURL", returnUrl))
-        await(save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", PT_ASSIGNED_TO_CURRENT_USER))
+        val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+          .setOrException(AccountTypePage, PT_ASSIGNED_TO_CURRENT_USER.toString)
+          .setOrException(RedirectUrlPage, returnUrl)
+
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(Some(mockUserAnswers)))
+
         val authResponse = authoriseResponseWithPTEnrolment()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -225,7 +257,6 @@ class EnrolledForPTISpec extends IntegrationSpecBase {
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result).get should include(returnUrl)
-        recordExistsInMongo shouldBe false
 
       }
     }

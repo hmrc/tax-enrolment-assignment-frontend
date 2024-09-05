@@ -28,9 +28,11 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.ControllersBaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UserAnswers
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.pages.{AccountTypePage, RedirectUrlPage}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditHandler
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.JourneyCacheRepository
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTPage
 
@@ -45,8 +47,8 @@ class EnrolledForPTControllerSpec extends ControllersBaseSpec {
   lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
   lazy val mockMultipleAccountsOrchestrator: MultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
 
-  override lazy val overrides: Seq[Binding[TEASessionCache]] = Seq(
-    bind[TEASessionCache].toInstance(mockTeaSessionCache)
+  override lazy val overrides: Seq[Binding[JourneyCacheRepository]] = Seq(
+    bind[JourneyCacheRepository].toInstance(mockJourneyCacheRepository)
   )
 
   override implicit lazy val app: Application = localGuiceApplicationBuilder()
@@ -68,13 +70,17 @@ class EnrolledForPTControllerSpec extends ControllersBaseSpec {
   "view" when {
     "the user has multiple accounts and none have SA" should {
       "render the landing page" in {
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(AccountTypePage, randomAccountType.toString)
+          .setOrException(RedirectUrlPage, "foo")
+
         when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
 
         when(mockMultipleAccountsOrchestrator.getDetailsForEnrolledPT(any(), any(), any()))
           .thenReturn(createInboundResult(accountDetails))
 
-        mockGetDataFromCacheForActionSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -90,6 +96,9 @@ class EnrolledForPTControllerSpec extends ControllersBaseSpec {
     "the user is not a  multiple accounts usertype and has redirectUrl stored in session" should {
       "redirect to accountCheck" in {
 
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(AccountTypePage, randomAccountType.toString)
+          .setOrException(RedirectUrlPage, "foo")
         when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
 
@@ -103,7 +112,7 @@ class EnrolledForPTControllerSpec extends ControllersBaseSpec {
             )
           )
 
-        mockGetDataFromCacheForActionSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -134,13 +143,17 @@ class EnrolledForPTControllerSpec extends ControllersBaseSpec {
     "the call to users-group-search fails" should {
       "render the error view" in {
 
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(AccountTypePage, randomAccountType.toString)
+          .setOrException(RedirectUrlPage, "foo")
+
         when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
 
         when(mockMultipleAccountsOrchestrator.getDetailsForEnrolledPT(any(), any(), any()))
           .thenReturn(createInboundResultError(UnexpectedResponseFromUsersGroupsSearch))
 
-        mockGetDataFromCacheForActionSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
         val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))

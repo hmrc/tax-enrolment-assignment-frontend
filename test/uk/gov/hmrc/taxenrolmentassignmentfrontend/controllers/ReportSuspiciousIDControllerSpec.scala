@@ -21,21 +21,19 @@ import org.mockito.MockitoSugar.{mock, times, verify, when}
 import play.api.Application
 import play.api.http.Status.OK
 import play.api.inject.{Binding, bind}
-import play.api.libs.json.Json
 import play.api.mvc.BodyParsers
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_OTHER_USER}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{ControllersBaseSpec, UrlPaths}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, UserAnswers}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.pages.{AccountDetailsForCredentialPage, AccountTypePage, RedirectUrlPage, UserAssignedSaEnrolmentPage}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{REPORTED_FRAUD, USER_ASSIGNED_SA_ENROLMENT, accountDetailsForCredential}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.JourneyCacheRepository
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.ReportSuspiciousID
 
@@ -50,8 +48,8 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
   lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
   lazy val mockMultipleAccountsOrchestrator: MultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
 
-  override lazy val overrides: Seq[Binding[TEASessionCache]] = Seq(
-    bind[TEASessionCache].toInstance(mockTeaSessionCache)
+  override lazy val overrides: Seq[Binding[JourneyCacheRepository]] = Seq(
+    bind[JourneyCacheRepository].toInstance(mockJourneyCacheRepository)
   )
 
   override implicit lazy val app: Application = localGuiceApplicationBuilder()
@@ -74,6 +72,10 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
     "a user has PT on another account" should {
       "render the ReportSuspiciousID page" in {
 
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(AccountTypePage, PT_ASSIGNED_TO_OTHER_USER.toString)
+          .setOrException(RedirectUrlPage, "foo")
+
         when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
 
@@ -84,11 +86,14 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
           .thenReturn(
             createInboundResult(accountDetails)
           )
-        mockGetDataFromCacheForActionSuccess(PT_ASSIGNED_TO_OTHER_USER)
+        mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
         val auditEvent = AuditEvent.auditReportSuspiciousPTAccount(
           accountDetails.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM"))
-        )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
+        )(
+          requestWithGivenMongoDataAndUserAnswers(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), mockUserAnswers),
+          messagesApi
+        )
 
         when(mockAuditHandler.audit(ameq(auditEvent))(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
 
@@ -106,13 +111,17 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
     "the user does not have an account type of PT_ASSIGNED_TO_OTHER_USER" should {
       s"redirect to ${UrlPaths.accountCheckPath}" in {
 
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(AccountTypePage, PT_ASSIGNED_TO_OTHER_USER.toString)
+          .setOrException(RedirectUrlPage, "foo")
+
         when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
 
         when(mockMultipleAccountsOrchestrator.checkValidAccountType(ameq(List(PT_ASSIGNED_TO_OTHER_USER)))(any()))
           .thenReturn(Left(IncorrectUserType(UrlPaths.returnUrl, randomAccountType)))
 
-        mockGetDataFromCacheForActionSuccess(PT_ASSIGNED_TO_OTHER_USER)
+        mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
         val result = controller
           .viewNoSA()
@@ -125,6 +134,9 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
     "the current user has a no PT enrolment on other account but session says it is other account" should {
       "render the error page" in {
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(AccountTypePage, randomAccountType.toString)
+
         when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse(enrolments = saEnrolmentOnly)))
 
@@ -136,7 +148,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
             createInboundResultError(NoPTEnrolmentWhenOneExpected)
           )
 
-        mockGetDataFromCacheForActionSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
         val res = controller
           .viewNoSA()
@@ -146,7 +158,6 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
         contentAsString(res) should include(messages("enrolmentError.heading"))
       }
     }
-
   }
 
   "viewSA" when {
@@ -154,6 +165,10 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
     "a user has SA on another account" should {
       "render the ReportSuspiciousID page" when {
         "the user hasn't already been assigned a PT enrolment" in {
+
+          val mockUserAnswers = UserAnswers("id", generateNino.nino)
+            .setOrException(AccountTypePage, SA_ASSIGNED_TO_OTHER_USER.toString)
+            .setOrException(RedirectUrlPage, "foo")
 
           when(
             mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext])
@@ -166,11 +181,14 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
           when(mockMultipleAccountsOrchestrator.getSACredentialDetails(any(), any(), any()))
             .thenReturn(createInboundResult(accountDetails))
 
-          mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
+          mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
           val auditEvent = AuditEvent.auditReportSuspiciousSAAccount(
             accountDetails.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM"))
-          )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER), messagesApi)
+          )(
+            requestWithGivenMongoDataAndUserAnswers(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER), mockUserAnswers),
+            messagesApi
+          )
 
           when(mockAuditHandler.audit(ameq(auditEvent))(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
 
@@ -185,6 +203,10 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
         "the user has already been assigned a PT enrolment" in {
 
+          val mockUserAnswers = UserAnswers("id", generateNino.nino)
+            .setOrException(AccountTypePage, SA_ASSIGNED_TO_OTHER_USER.toString)
+            .setOrException(RedirectUrlPage, "foo")
+
           when(
             mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext])
           )
@@ -196,7 +218,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
           when(mockMultipleAccountsOrchestrator.getSACredentialDetails(any(), any(), any()))
             .thenReturn(createInboundResult(accountDetails))
 
-          mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
+          mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
           val result = controller
             .viewSA()
@@ -225,13 +247,18 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
     s"the user does not have an account type of $SA_ASSIGNED_TO_OTHER_USER" should {
       s"redirect to ${UrlPaths.accountCheckPath}" in {
+
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(AccountTypePage, randomAccountType.toString)
+          .setOrException(RedirectUrlPage, "foo")
+
         when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
 
         when(mockMultipleAccountsOrchestrator.checkValidAccountType(ameq(List(SA_ASSIGNED_TO_OTHER_USER)))(any()))
           .thenReturn(Left(IncorrectUserType(UrlPaths.returnUrl, randomAccountType)))
 
-        mockGetDataFromCacheForActionSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
         val result = controller
           .viewSA()
@@ -244,6 +271,10 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
     "the current user has a no SA enrolment on other account but session says it is other account" should {
       "render the error page" in {
+
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(AccountTypePage, randomAccountType.toString)
+
         when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
 
@@ -253,7 +284,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
         when(mockMultipleAccountsOrchestrator.getSACredentialDetails(any(), any(), any()))
           .thenReturn(createInboundResultError(NoSAEnrolmentWhenOneExpected))
 
-        mockGetDataFromCacheForActionSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
         val res = controller
           .viewSA()
@@ -268,19 +299,22 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
   "continue" when {
     "the user has SA assigned to another user and not already enrolled for PT" should {
       s"enrol for PT and redirect to ${UrlPaths.enrolledPTSAOnOtherAccountPath}" in {
-        val additionalCacheData = Map(
-          USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetails)(
+
+        val mockUserAnswers = UserAnswers(request.sessionID, generateNino.nino)
+          .setOrException(AccountTypePage, SA_ASSIGNED_TO_OTHER_USER.toString)
+          .setOrException(UserAssignedSaEnrolmentPage, UsersAssignedEnrolment1)
+          .setOrException(RedirectUrlPage, UrlPaths.returnUrl)
+          .setOrException(AccountDetailsForCredentialPage(CREDENTIAL_ID_1), accountDetails)(
             AccountDetails.mongoFormats(crypto.crypto)
           )
-        )
-        val sessionData = generateBasicCacheData(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl) ++ additionalCacheData
 
         when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
 
-        when(mockTeaSessionCache.save(REPORTED_FRAUD, true))
-          .thenReturn(Future(CacheMap(request.sessionID, sessionData)))
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(Some(mockUserAnswers)))
+
+        when(mockJourneyCacheRepository.set(any[UserAnswers])) thenReturn Future.successful(true)
 
         when(
           mockMultipleAccountsOrchestrator
@@ -288,15 +322,18 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
         )
           .thenReturn(createInboundResult((): Unit))
 
-        mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData)
+        mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
         val auditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
-          requestWithAccountType(
-            SA_ASSIGNED_TO_OTHER_USER,
-            UrlPaths.returnUrl,
-            additionalCacheData = additionalCacheData
+          requestWithGivenMongoDataAndUserAnswers(
+            requestWithAccountType(
+              SA_ASSIGNED_TO_OTHER_USER,
+              UrlPaths.returnUrl
+            ),
+            mockUserAnswers
           ),
-          messagesApi
+          messagesApi,
+          crypto
         )
 
         when(mockAuditHandler.audit(ameq(auditEvent))(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
@@ -315,17 +352,19 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
     "the user has SA assigned to another user and has already been enrolled for PT" should {
       s"not enrol for PT again and redirect to ${UrlPaths.enrolledPTSAOnOtherAccountPath}" in {
-        val additionalCacheData = Map(
-          USER_ASSIGNED_SA_ENROLMENT                   -> Json.toJson(UsersAssignedEnrolment1),
-          accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetails)
-        )
-        val sessionData = generateBasicCacheData(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl) ++ additionalCacheData
+
+        val mockUserAnswers = UserAnswers(request.sessionID, generateNino.nino)
+          .setOrException(AccountTypePage, SA_ASSIGNED_TO_OTHER_USER.toString)
+          .setOrException(UserAssignedSaEnrolmentPage, UsersAssignedEnrolment1)
+          .setOrException(RedirectUrlPage, UrlPaths.returnUrl)
+          .setOrException(AccountDetailsForCredentialPage(CREDENTIAL_ID_1), accountDetails)(
+            AccountDetails.mongoFormats(crypto.crypto)
+          )
 
         when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly)))
 
-        when(mockTeaSessionCache.save(ameq(REPORTED_FRAUD), ameq(true))(any(), any()))
-          .thenReturn(Future(CacheMap(request.sessionID, sessionData)))
+        when(mockJourneyCacheRepository.set(any[UserAnswers])) thenReturn Future.successful(true)
 
         when(
           mockMultipleAccountsOrchestrator
@@ -333,7 +372,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
         )
           .thenReturn(createInboundResultError(UnexpectedPTEnrolment(SA_ASSIGNED_TO_OTHER_USER)))
 
-        mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData)
+        mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
         val res = controller
           .continue()
@@ -363,11 +402,15 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
     "the user has not got SA assigned to another user" should {
       s"redirect to ${UrlPaths.accountCheckPath}" in {
+
+        val mockUserAnswers = UserAnswers(request.sessionID, generateNino.nino)
+          .setOrException(AccountTypePage, randomAccountType.toString)
+          .setOrException(RedirectUrlPage, UrlPaths.returnUrl)
+
         when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
 
-        when(mockTeaSessionCache.save(REPORTED_FRAUD, true))
-          .thenReturn(Future(CacheMap(request.sessionID, Map())))
+        when(mockJourneyCacheRepository.set(any[UserAnswers])) thenReturn Future.successful(true)
 
         when(
           mockMultipleAccountsOrchestrator
@@ -375,7 +418,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
         )
           .thenReturn(createInboundResultError(IncorrectUserType(UrlPaths.returnUrl, randomAccountType)))
 
-        mockGetDataFromCacheForActionSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
         val res = controller
           .continue()
@@ -389,11 +432,15 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
     "the user has SA assigned to another user but enrolment to PT is unsuccessful" should {
       "render the error view" in {
+
+        val mockUserAnswers = UserAnswers(request.sessionID, generateNino.nino)
+          .setOrException(AccountTypePage, randomAccountType.toString)
+          .setOrException(RedirectUrlPage, UrlPaths.returnUrl)
+
         when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
 
-        when(mockTeaSessionCache.save(ameq(REPORTED_FRAUD), ameq(true))(any(), any()))
-          .thenReturn(Future(CacheMap(request.sessionID, Map())))
+        when(mockJourneyCacheRepository.set(any[UserAnswers])) thenReturn Future.successful(true)
 
         when(
           mockMultipleAccountsOrchestrator
@@ -401,7 +448,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
         )
           .thenReturn(createInboundResultError(UnexpectedResponseFromTaxEnrolments))
 
-        mockGetDataFromCacheForActionSuccess(randomAccountType)
+        mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
         val res = controller
           .continue()

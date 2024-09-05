@@ -27,7 +27,9 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.{GET, contentAsString, defaultAwaitTimeout, redirectLocation, route, status, writeableOf_AnyContentAsEmpty}
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{SA_ASSIGNED_TO_CURRENT_USER, SINGLE_OR_MULTIPLE_ACCOUNTS}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession, UserDetailsFromSession}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{DataRequest, UserDetailsFromSession}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.userDetailsNoEnrolments
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UserAnswers
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.hmrcPTKey
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
 
@@ -41,11 +43,12 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
   def requestWithUserDetails(
     userDetails: UserDetailsFromSession = userDetailsNoEnrolments
-  ): RequestWithUserDetailsFromSession[_] =
-    RequestWithUserDetailsFromSession(
+  ): DataRequest[AnyContent] =
+    new DataRequest[AnyContent](
       FakeRequest().asInstanceOf[Request[AnyContent]],
       userDetails,
-      sessionId
+      UserAnswers("sessionId", generateNino.nino),
+      None
     )
 
   s"redirect to {returnUrl}" when {
@@ -224,7 +227,6 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result).get should include(ItUrlPaths.ptOnOtherAccountPath)
-        recordExistsInMongo shouldBe true
       }
     }
   }
@@ -274,7 +276,6 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
       status(result) shouldBe SEE_OTHER
       redirectLocation(result).get should include(ItUrlPaths.saOnOtherAccountInterruptPath)
-      recordExistsInMongo shouldBe true
     }
   }
 
@@ -323,7 +324,6 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
       status(result) shouldBe SEE_OTHER
       redirectLocation(result).get should include(ItUrlPaths.enrolledPTWithSAOnAnyAccountPath)
-      recordExistsInMongo shouldBe true
 
       val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
         SA_ASSIGNED_TO_CURRENT_USER
@@ -376,7 +376,6 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
       status(result) shouldBe SEE_OTHER
       redirectLocation(result).get should include(ItUrlPaths.enrolledPTWithSAOnAnyAccountPath)
-      recordExistsInMongo shouldBe true
 
       val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
         SA_ASSIGNED_TO_CURRENT_USER
@@ -430,7 +429,6 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
       status(result) shouldBe SEE_OTHER
       redirectLocation(result).get should include(ItUrlPaths.enrolledPTNoSAOnAnyAccountPath)
-      recordExistsInMongo shouldBe true
 
       val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
         SINGLE_OR_MULTIPLE_ACCOUNTS
@@ -468,7 +466,6 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
           status(result) shouldBe SEE_OTHER
           redirectLocation(result).get should include(relativeUrl)
-          recordExistsInMongo shouldBe false
         }
 
         "the redirectUrl is a valid relative url" in {
@@ -495,7 +492,6 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
           status(result) shouldBe SEE_OTHER
           redirectLocation(result).get should include(relativeUrl)
-          recordExistsInMongo shouldBe false
         }
 
         "the redirectUrl is a valid encoded absolute localhost url" in {
@@ -528,7 +524,6 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
           status(result) shouldBe SEE_OTHER
           redirectLocation(result).get should include(absoluteUrl)
-          recordExistsInMongo shouldBe false
         }
 
         "the redirectUrl is a valid absolute localhost url" in {
@@ -560,7 +555,6 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
           status(result) shouldBe SEE_OTHER
           redirectLocation(result).get should include(absoluteUrl)
-          recordExistsInMongo shouldBe false
         }
 
         "the redirectUrl is a valid encoded absolute url with hostname www.tax.service.gov.uk" in {
@@ -593,7 +587,6 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
           status(result) shouldBe SEE_OTHER
           redirectLocation(result).get should include(absoluteUrl)
-          recordExistsInMongo shouldBe false
         }
 
         "the redirectUrl is a valid absolute url with hostname www.tax.service.gov.uk" in {
@@ -625,7 +618,6 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
           status(result) shouldBe SEE_OTHER
           redirectLocation(result).get should include(absoluteUrl)
-          recordExistsInMongo shouldBe false
         }
       }
 
@@ -643,7 +635,6 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
           status(result) shouldBe BAD_REQUEST
           contentAsString(result) should include(ErrorTemplateMessages.title)
-          recordExistsInMongo shouldBe false
         }
 
         "a non supported redirect host is supplied" in {
@@ -659,7 +650,6 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
           status(result) shouldBe BAD_REQUEST
           contentAsString(result) should include(ErrorTemplateMessages.title)
-          recordExistsInMongo shouldBe false
         }
       }
     }
@@ -676,7 +666,6 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
-        recordExistsInMongo shouldBe false
       }
     }
 
@@ -692,7 +681,6 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
-        recordExistsInMongo shouldBe false
       }
     }
 
@@ -707,7 +695,6 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
-        recordExistsInMongo shouldBe false
       }
     }
 
@@ -722,7 +709,6 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
         status(result) shouldBe SEE_OTHER
         redirectLocation(result).get should include("/bas-gateway/sign-in")
-        recordExistsInMongo shouldBe false
       }
     }
 

@@ -29,9 +29,11 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.PT_ASSIGNED_TO_OT
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{ControllersBaseSpec, UrlPaths}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UserAnswers
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.pages.{AccountTypePage, RedirectUrlPage}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.JourneyCacheRepository
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnotherAccount
 
@@ -46,8 +48,8 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
   lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
   lazy val mockMultipleAccountsOrchestrator: MultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
 
-  override lazy val overrides: Seq[Binding[TEASessionCache]] = Seq(
-    bind[TEASessionCache].toInstance(mockTeaSessionCache)
+  override lazy val overrides: Seq[Binding[JourneyCacheRepository]] = Seq(
+    bind[JourneyCacheRepository].toInstance(mockJourneyCacheRepository)
   )
 
   override implicit lazy val app: Application = localGuiceApplicationBuilder()
@@ -78,11 +80,14 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
         when(mockMultipleAccountsOrchestrator.getCurrentAndPTAAndSAIfExistsForUser(any(), any(), any()))
           .thenReturn(createInboundResult(ptEnrolmentDataModelNone))
 
-        mockGetDataFromCacheForActionSuccess(randomAccountType)
+        val mockUserAnswers: UserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(AccountTypePage, randomAccountType.toString)
+          .setOrException(RedirectUrlPage, "foo")
+        mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
           accountDetailsWithPT.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM"))
-        )(requestWithAccountType(randomAccountType), messagesApi)
+        )(requestWithGivenMongoData(requestWithAccountType(randomAccountType)), messagesApi)
 
         when(mockAuditHandler.audit(ameq(auditEvent))(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
 
@@ -119,11 +124,14 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
         when(mockMultipleAccountsOrchestrator.getCurrentAndPTAAndSAIfExistsForUser(any(), any(), any()))
           .thenReturn(createInboundResult(ptEnrolmentModel))
 
-        mockGetDataFromCacheForActionSuccess(randomAccountType)
+        val mockUserAnswers: UserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(AccountTypePage, randomAccountType.toString)
+          .setOrException(RedirectUrlPage, "foo")
+        mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
           accountDetailsWithPT.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM"))
-        )(requestWithAccountType(randomAccountType), messagesApi)
+        )(requestWithGivenMongoData(requestWithAccountType(randomAccountType)), messagesApi)
 
         when(mockAuditHandler.audit(ameq(auditEvent))(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
 
@@ -159,11 +167,14 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
         when(mockMultipleAccountsOrchestrator.getCurrentAndPTAAndSAIfExistsForUser(any(), any(), any()))
           .thenReturn(createInboundResult(ptEnrolmentModel))
 
-        mockGetDataFromCacheForActionSuccess(randomAccountType)
+        val mockUserAnswers: UserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(AccountTypePage, randomAccountType.toString)
+          .setOrException(RedirectUrlPage, "foo")
+        mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
           accountDetailsWithPT.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM"))
-        )(requestWithAccountType(randomAccountType), messagesApi)
+        )(requestWithGivenMongoData(requestWithAccountType(randomAccountType)), messagesApi)
 
         when(mockAuditHandler.audit(ameq(auditEvent))(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
 
@@ -199,11 +210,14 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
         when(mockMultipleAccountsOrchestrator.getCurrentAndPTAAndSAIfExistsForUser(any(), any(), any()))
           .thenReturn(createInboundResult(ptEnrolmentModel))
 
-        mockGetDataFromCacheForActionSuccess(randomAccountType)
+        val mockUserAnswers: UserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(AccountTypePage, randomAccountType.toString)
+          .setOrException(RedirectUrlPage, "foo")
+        mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
           accountDetailsWithPT.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM"))
-        )(requestWithAccountType(randomAccountType), messagesApi)
+        )(requestWithGivenMongoData(requestWithAccountType(randomAccountType)), messagesApi)
 
         when(mockAuditHandler.audit(ameq(auditEvent))(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
 
@@ -239,11 +253,14 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
         when(mockMultipleAccountsOrchestrator.getCurrentAndPTAAndSAIfExistsForUser(any(), any(), any()))
           .thenReturn(createInboundResult(ptEnrolmentModel))
 
-        mockGetDataFromCacheForActionSuccess(randomAccountType)
+        val mockUserAnswers: UserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(AccountTypePage, randomAccountType.toString)
+          .setOrException(RedirectUrlPage, "foo")
+        mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
           accountDetailsWithPT.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM"))
-        )(requestWithAccountType(randomAccountType), messagesApi)
+        )(requestWithGivenMongoData(requestWithAccountType(randomAccountType)), messagesApi)
 
         when(mockAuditHandler.audit(ameq(auditEvent))(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
 
@@ -276,7 +293,10 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
         when(mockMultipleAccountsOrchestrator.getCurrentAndPTAAndSAIfExistsForUser(any(), any(), any()))
           .thenReturn(createInboundResultError(IncorrectUserType(UrlPaths.returnUrl, randomAccountType)))
 
-        mockGetDataFromCacheForActionSuccess(randomAccountType)
+        val mockUserAnswers: UserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(AccountTypePage, randomAccountType.toString)
+          .setOrException(RedirectUrlPage, "foo")
+        mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -295,7 +315,10 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
         when(mockMultipleAccountsOrchestrator.getCurrentAndPTAAndSAIfExistsForUser(any(), any(), any()))
           .thenReturn(createInboundResultError(NoPTEnrolmentWhenOneExpected))
 
-        mockGetDataFromCacheForActionSuccess(randomAccountType)
+        val mockUserAnswers: UserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(AccountTypePage, randomAccountType.toString)
+          .setOrException(RedirectUrlPage, "foo")
+        mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
         val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))

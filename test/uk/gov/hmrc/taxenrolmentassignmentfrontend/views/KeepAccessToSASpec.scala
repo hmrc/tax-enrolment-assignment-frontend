@@ -71,7 +71,6 @@ class KeepAccessToSASpec extends ViewSpecHelper {
       "have radio buttons" that {
         val radioButtons = document.getElementsByClass(Selectors.radios)
         "have the option to select Yes and is unchecked" in {
-          print(document.outerHtml())
           val radioButton1 = radioButtons
             .get(0)
           radioButton1

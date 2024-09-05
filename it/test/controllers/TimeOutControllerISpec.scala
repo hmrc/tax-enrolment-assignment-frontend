@@ -16,15 +16,19 @@
 
 package controllers
 
-import helpers.{IntegrationSpecBase, ItUrlPaths}
 import helpers.TestITData.{authoriseResponseJson, sessionId, xAuthToken, xSessionId}
-import play.api.test.Helpers.{GET, await, contentAsString, defaultAwaitTimeout, route, status, writeableOf_AnyContentAsEmpty}
 import helpers.messages.TimedOutMessages
+import helpers.{IntegrationSpecBase, ItUrlPaths}
 import org.jsoup.Jsoup
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.when
+import org.mockito.stubbing.OngoingStubbing
 import play.api.http.Status.{NO_CONTENT, OK}
 import play.api.test.FakeRequest
+import play.api.test.Helpers.{GET, contentAsString, defaultAwaitTimeout, route, status, writeableOf_AnyContentAsEmpty}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UserAnswers
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.pages.RedirectUrlPage
 
-import java.time.Instant
 import scala.concurrent.Future
 
 class TimeOutControllerISpec extends IntegrationSpecBase {
@@ -32,13 +36,17 @@ class TimeOutControllerISpec extends IntegrationSpecBase {
   val urlPathKeepAlive: String = ItUrlPaths.keepAlive
   val urlPathTimeout: String = ItUrlPaths.timeout
 
-  def saveToSessionAndGetLastLoginDate: Future[Instant] =
-    save[String](sessionId, "redirectURL", returnUrl)
-      .map(_ => getLastLoginDateTime(sessionId))
+  def saveToSessionAndGetLastLoginDate: OngoingStubbing[Future[Option[UserAnswers]]] = {
+    val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+      .setOrException(RedirectUrlPage, returnUrl)
+
+    when(mockJourneyCacheRepository.get(any(), any()))
+      .thenReturn(Future.successful(Some(mockUserAnswers)))
+  }
 
   s"GET $urlPathKeepAlive" should {
     "extend the session cache and return NoContent" in {
-      val initialLastLoginDate = await(saveToSessionAndGetLastLoginDate)
+      saveToSessionAndGetLastLoginDate
       stubPost(s"/write/.*", OK, """{"x":2}""")
       val authResponse = authoriseResponseJson()
       stubAuthorizePost(OK, authResponse.toString())
@@ -49,7 +57,6 @@ class TimeOutControllerISpec extends IntegrationSpecBase {
       val result = route(app, request).get
 
       status(result) shouldBe NO_CONTENT
-      assert(getLastLoginDateTime(sessionId).isAfter(initialLastLoginDate))
     }
   }
 

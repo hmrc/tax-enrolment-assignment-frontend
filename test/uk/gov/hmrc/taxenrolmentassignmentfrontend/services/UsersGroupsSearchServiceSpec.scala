@@ -16,29 +16,29 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.services
 
-import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
 import org.mockito.MockitoSugar.{mock, when}
 import play.api.Application
 import play.api.inject.{Binding, bind}
-import play.api.libs.json.Json
-import uk.gov.hmrc.http.cache.client.CacheMap
+import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.UsersGroupsSearchConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromUsersGroupsSearch
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, UserAnswers}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.pages.AccountDetailsForCredentialPage
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.JourneyCacheRepository
 
 import scala.concurrent.Future
 
 class UsersGroupsSearchServiceSpec extends BaseSpec {
 
   lazy val mockUsersGroupsSearchConnector: UsersGroupsSearchConnector = mock[UsersGroupsSearchConnector]
-  lazy val mockTeaSessionCache: TEASessionCache = mock[TEASessionCache]
+  override val mockJourneyCacheRepository: JourneyCacheRepository = mock[JourneyCacheRepository]
+  val nino: Nino = generateNino
 
-  override lazy val overrides: Seq[Binding[TEASessionCache]] = Seq(
-    bind[TEASessionCache].toInstance(mockTeaSessionCache)
+  override lazy val overrides: Seq[Binding[JourneyCacheRepository]] = Seq(
+    bind[JourneyCacheRepository].toInstance(mockJourneyCacheRepository)
   )
 
   override implicit lazy val app: Application = localGuiceApplicationBuilder()
@@ -52,13 +52,19 @@ class UsersGroupsSearchServiceSpec extends BaseSpec {
   "getAccountDetails" when {
     "the account details are already in the cache" should {
       "not call the users-groups-search and return value from cache" in {
-        val additionCacheData = Map(
-          s"AccountDetailsFor$CREDENTIAL_ID" -> Json.toJson(accountDetails)(AccountDetails.mongoFormats(crypto.crypto))
-        )
+
+        val mockUserAnswers: UserAnswers = UserAnswers("FAKE_SESSION_ID", nino.nino)
+          .setOrException(AccountDetailsForCredentialPage(CREDENTIAL_ID), accountDetails)(
+            AccountDetails.mongoFormats(crypto.crypto)
+          )
+
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(Some(mockUserAnswers)))
+
         val result = service.getAccountDetails(CREDENTIAL_ID)(
           implicitly,
           implicitly,
-          requestWithAccountType(additionalCacheData = additionCacheData)
+          requestWithGivenMongoDataAndUserAnswers(requestWithAccountType(), mockUserAnswers)
         )
         whenReady(result.value) { res =>
           res shouldBe Right(accountDetails)
@@ -71,16 +77,13 @@ class UsersGroupsSearchServiceSpec extends BaseSpec {
         when(mockUsersGroupsSearchConnector.getUserDetails(CREDENTIAL_ID))
           .thenReturn(createInboundResult(usersGroupSearchResponse))
 
-        when(
-          mockTeaSessionCache
-            .save(
-              ArgumentMatchers.eq(s"AccountDetailsFor$CREDENTIAL_ID"),
-              ArgumentMatchers.eq(accountDetails.copy(userId = "********6037"))
-            )(any(), any())
-        )
-          .thenReturn(Future(CacheMap(request.sessionID, Map())))
+        when(mockJourneyCacheRepository.set(any[UserAnswers])) thenReturn Future.successful(true)
 
-        val result = service.getAccountDetails(CREDENTIAL_ID)(implicitly, implicitly, requestWithAccountType())
+        val result = service.getAccountDetails(CREDENTIAL_ID)(
+          implicitly,
+          implicitly,
+          requestWithGivenMongoData(requestWithAccountType())
+        )
         whenReady(result.value) { res =>
           res shouldBe Right(accountDetails.copy(userId = "********6037"))
         }
@@ -92,7 +95,11 @@ class UsersGroupsSearchServiceSpec extends BaseSpec {
         when(mockUsersGroupsSearchConnector.getUserDetails(CREDENTIAL_ID))
           .thenReturn(createInboundResultError(UnexpectedResponseFromUsersGroupsSearch))
 
-        val result = service.getAccountDetails(CREDENTIAL_ID)(implicitly, implicitly, requestWithAccountType())
+        val result = service.getAccountDetails(CREDENTIAL_ID)(
+          implicitly,
+          implicitly,
+          requestWithGivenMongoData(requestWithAccountType())
+        )
         whenReady(result.value) { res =>
           res shouldBe Left(UnexpectedResponseFromUsersGroupsSearch)
         }

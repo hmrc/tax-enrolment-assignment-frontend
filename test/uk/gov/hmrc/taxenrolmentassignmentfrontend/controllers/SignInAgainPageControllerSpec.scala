@@ -20,7 +20,6 @@ import org.mockito.ArgumentMatchers.{any, eq => ameq}
 import org.mockito.MockitoSugar.{mock, times, verify, when}
 import play.api.Application
 import play.api.inject.{Binding, bind}
-import play.api.libs.json.Json
 import play.api.mvc.BodyParsers
 import play.api.test.Helpers.{status, _}
 import uk.gov.hmrc.auth.core.AuthConnector
@@ -29,11 +28,11 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OT
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, NoSAEnrolmentWhenOneExpected, UnexpectedPTEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{ControllersBaseSpec, UrlPaths}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, UserAnswers}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.pages.{AccountDetailsForCredentialPage, AccountTypePage, RedirectUrlPage, UserAssignedSaEnrolmentPage}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_ASSIGNED_SA_ENROLMENT, accountDetailsForCredential}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.JourneyCacheRepository
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SignInWithSAAccount
 
@@ -48,8 +47,8 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
   lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
   lazy val mockMultipleAccountsOrchestrator: MultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
 
-  override lazy val overrides: Seq[Binding[TEASessionCache]] = Seq(
-    bind[TEASessionCache].toInstance(mockTeaSessionCache)
+  override lazy val overrides: Seq[Binding[JourneyCacheRepository]] = Seq(
+    bind[JourneyCacheRepository].toInstance(mockJourneyCacheRepository)
   )
 
   override implicit lazy val app: Application = localGuiceApplicationBuilder()
@@ -85,7 +84,11 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
           when(mockMultipleAccountsOrchestrator.getSACredentialDetails(any(), any(), any()))
             .thenReturn(createInboundResult(accountDetails))
 
-          mockGetDataFromCacheForActionSuccess(randomAccountType)
+          val mockUserAnswers = UserAnswers("id", generateNino.nino)
+            .setOrException(AccountTypePage, randomAccountType.toString)
+            .setOrException(RedirectUrlPage, "foo")
+
+          mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
           val result = controller
             .view()
@@ -108,7 +111,10 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
           when(mockMultipleAccountsOrchestrator.checkAccessAllowedForPage(ameq(List(SA_ASSIGNED_TO_OTHER_USER)))(any()))
             .thenReturn(Left(UnexpectedPTEnrolment(SA_ASSIGNED_TO_OTHER_USER)))
 
-          mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
+          val mockUserAnswers = UserAnswers("id", generateNino.nino)
+            .setOrException(AccountTypePage, SA_ASSIGNED_TO_OTHER_USER.toString)
+            .setOrException(RedirectUrlPage, "foo")
+          mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
           val result = controller
             .view()
@@ -145,7 +151,10 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
         when(mockMultipleAccountsOrchestrator.checkAccessAllowedForPage(ameq(List(SA_ASSIGNED_TO_OTHER_USER)))(any()))
           .thenReturn(Left(IncorrectUserType(UrlPaths.returnUrl, randomAccountType)))
 
-        mockGetDataFromCacheForActionSuccess(randomAccountType)
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(AccountTypePage, randomAccountType.toString)
+          .setOrException(RedirectUrlPage, "foo")
+        mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -170,7 +179,10 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
         when(mockMultipleAccountsOrchestrator.getSACredentialDetails(any(), any(), any()))
           .thenReturn(createInboundResultError(NoSAEnrolmentWhenOneExpected))
 
-        mockGetDataFromCacheForActionSuccess(randomAccountType)
+        val mockUserAnswers = UserAnswers("id", generateNino.nino)
+          .setOrException(AccountTypePage, randomAccountType.toString)
+          .setOrException(RedirectUrlPage, "foo")
+        mockGetDataFromCacheForActionSuccess(mockUserAnswers)
 
         val res = controller
           .view()
@@ -183,24 +195,29 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
   }
   "continue" should {
     s"redirect to ${UrlPaths.logoutPath}" in {
-      val additionalCacheData = Map(
-        USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
-        accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetails)(
+
+      val mockUserAnswers = UserAnswers("id", generateNino.nino)
+        .setOrException(AccountTypePage, SA_ASSIGNED_TO_OTHER_USER.toString)
+        .setOrException(UserAssignedSaEnrolmentPage, UsersAssignedEnrolment1)
+        .setOrException(RedirectUrlPage, UrlPaths.returnUrl)
+        .setOrException(AccountDetailsForCredentialPage(CREDENTIAL_ID_1), accountDetails)(
           AccountDetails.mongoFormats(crypto.crypto)
         )
-      )
 
       when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(retrievalResponse()))
 
-      mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData)
+      mockGetDataFromCacheForActionSuccess(mockUserAnswers)
       val auditEvent = AuditEvent.auditSigninAgainWithSACredential()(
-        requestWithAccountType(
-          SA_ASSIGNED_TO_OTHER_USER,
-          UrlPaths.returnUrl,
-          additionalCacheData = additionalCacheData
+        requestWithGivenMongoDataAndUserAnswers(
+          requestWithAccountType(
+            SA_ASSIGNED_TO_OTHER_USER,
+            UrlPaths.returnUrl
+          ),
+          mockUserAnswers
         ),
-        messagesApi
+        messagesApi,
+        crypto
       )
 
       when(mockAuditHandler.audit(ameq(auditEvent))(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))

@@ -16,23 +16,25 @@
 
 package controllers
 
-import helpers.{IntegrationSpecBase, ItUrlPaths}
 import helpers.TestITData._
-import play.api.test.Helpers.{GET, POST, await, contentAsString, defaultAwaitTimeout, redirectLocation}
-import play.api.test.Helpers.{route, status, writeableOf_AnyContentAsEmpty, writeableOf_AnyContentAsJson}
-import play.api.http.Status.{INTERNAL_SERVER_ERROR, NON_AUTHORITATIVE_INFORMATION, OK, SEE_OTHER}
 import helpers.messages._
+import helpers.{IntegrationSpecBase, ItUrlPaths}
 import org.jsoup.Jsoup
-import org.mongodb.scala.bson.BsonDocument
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.when
 import play.api.http.Status
+import play.api.http.Status.{INTERNAL_SERVER_ERROR, NON_AUTHORITATIVE_INFORMATION, OK, SEE_OTHER}
 import play.api.i18n.Lang
-import play.api.libs.json.{JsString, Json}
+import play.api.libs.json.Json
 import play.api.test.FakeRequest
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
+import play.api.test.Helpers.{GET, POST, contentAsString, defaultAwaitTimeout, redirectLocation, route, status, writeableOf_AnyContentAsEmpty, writeableOf_AnyContentAsJson}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, UsersAssignedEnrolment}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{CREDENTIAL_ID, accountDetails}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, UserAnswers, UsersAssignedEnrolment}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.pages.{AccountDetailsForCredentialPage, AccountTypePage, RedirectUrlPage, UserAssignedPtaEnrolmentPage, UserAssignedSaEnrolmentPage}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
+
+import scala.concurrent.Future
 
 class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
@@ -42,21 +44,14 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
   s"GET $urlPathSa" should {
     "the session cache has a credential for SA enrolment that is not the signed in account" when {
       s"render the report suspiciousId page with a continue button" in {
-        await(save[String](sessionId, "redirectURL", returnUrl))
-        await(
-          save[AccountTypes.Value](
-            sessionId,
-            "ACCOUNT_TYPE",
-            SA_ASSIGNED_TO_OTHER_USER
-          )
-        )
-        await(
-          save[UsersAssignedEnrolment](
-            sessionId,
-            USER_ASSIGNED_SA_ENROLMENT,
-            UsersAssignedEnrolment(Some(CREDENTIAL_ID_2))
-          )
-        )
+        val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+          .setOrException(AccountTypePage, SA_ASSIGNED_TO_OTHER_USER.toString)
+          .setOrException(RedirectUrlPage, returnUrl)
+          .setOrException(UserAssignedSaEnrolmentPage, UsersAssignedEnrolment(Some(CREDENTIAL_ID_2)))
+
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(Some(mockUserAnswers)))
+
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -77,27 +72,20 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
         val expectedAuditEvent = AuditEvent.auditReportSuspiciousSAAccount(
           accountDetailsUserFriendly(CREDENTIAL_ID_2)
-        )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER), messagesApi)
+        )(requestWithGivenMongoData(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER)), messagesApi)
 
         verifyAuditEventSent(expectedAuditEvent)
       }
 
       s"render the report suspiciousId page with a continue button, and translate if the user is Welsh" in {
-        await(save[String](sessionId, "redirectURL", returnUrl))
-        await(
-          save[AccountTypes.Value](
-            sessionId,
-            "ACCOUNT_TYPE",
-            SA_ASSIGNED_TO_OTHER_USER
-          )
-        )
-        await(
-          save[UsersAssignedEnrolment](
-            sessionId,
-            USER_ASSIGNED_SA_ENROLMENT,
-            UsersAssignedEnrolment(Some(CREDENTIAL_ID_2))
-          )
-        )
+        val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+          .setOrException(AccountTypePage, SA_ASSIGNED_TO_OTHER_USER.toString)
+          .setOrException(RedirectUrlPage, returnUrl)
+          .setOrException(UserAssignedSaEnrolmentPage, UsersAssignedEnrolment(Some(CREDENTIAL_ID_2)))
+
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(Some(mockUserAnswers)))
+
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -122,21 +110,15 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
     "the session cache has a credential for SA enrolment that is not the signed in account" when {
       s"still render the report suspiciousId page with a continue button" when {
         "the current user has been assigned a PT enrolment" in {
-          await(save[String](sessionId, "redirectURL", returnUrl))
-          await(
-            save[AccountTypes.Value](
-              sessionId,
-              "ACCOUNT_TYPE",
-              SA_ASSIGNED_TO_OTHER_USER
-            )
-          )
-          await(
-            save[UsersAssignedEnrolment](
-              sessionId,
-              USER_ASSIGNED_SA_ENROLMENT,
-              UsersAssignedEnrolment(Some(CREDENTIAL_ID_2))
-            )
-          )
+
+          val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+            .setOrException(AccountTypePage, SA_ASSIGNED_TO_OTHER_USER.toString)
+            .setOrException(RedirectUrlPage, returnUrl)
+            .setOrException(UserAssignedSaEnrolmentPage, UsersAssignedEnrolment(Some(CREDENTIAL_ID_2)))
+
+          when(mockJourneyCacheRepository.get(any(), any()))
+            .thenReturn(Future.successful(Some(mockUserAnswers)))
+
           val authResponse = authoriseResponseWithPTEnrolment()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -166,10 +148,14 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
     ).foreach { accountType =>
       s"the session cache has a credential with account type ${accountType.toString}" when {
         s"redirect to /protect-tax-info" in {
-          await(save[String](sessionId, "redirectURL", returnUrl))
-          await(
-            save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", accountType)
-          )
+
+          val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+            .setOrException(AccountTypePage, accountType.toString)
+            .setOrException(RedirectUrlPage, returnUrl)
+
+          when(mockJourneyCacheRepository.get(any(), any()))
+            .thenReturn(Future.successful(Some(mockUserAnswers)))
+
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -188,21 +174,14 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
     s"the session cache has a credential for SA enrolment that is the signed in account" when {
       s"render the error page" in {
-        await(save[String](sessionId, "redirectURL", returnUrl))
-        await(
-          save[AccountTypes.Value](
-            sessionId,
-            "ACCOUNT_TYPE",
-            SA_ASSIGNED_TO_OTHER_USER
-          )
-        )
-        await(
-          save[UsersAssignedEnrolment](
-            sessionId,
-            USER_ASSIGNED_SA_ENROLMENT,
-            UsersAssignedEnrolment(Some(CREDENTIAL_ID))
-          )
-        )
+        val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+          .setOrException(AccountTypePage, SA_ASSIGNED_TO_OTHER_USER.toString)
+          .setOrException(RedirectUrlPage, returnUrl)
+          .setOrException(UserAssignedSaEnrolmentPage, UsersAssignedEnrolment(Some(CREDENTIAL_ID)))
+
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(Some(mockUserAnswers)))
+
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -219,23 +198,18 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
     s"the session cache has no credentials with SA enrolment" when {
       s"render the error page" in {
-        await(save[String](sessionId, "redirectURL", returnUrl))
-        await(
-          save[AccountTypes.Value](
-            sessionId,
-            "ACCOUNT_TYPE",
-            SA_ASSIGNED_TO_OTHER_USER
-          )
-        )
+
+        val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+          .setOrException(AccountTypePage, SA_ASSIGNED_TO_OTHER_USER.toString)
+          .setOrException(RedirectUrlPage, returnUrl)
+          .setOrException(UserAssignedSaEnrolmentPage, UsersAssignedEnrolment(None))
+
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(Some(mockUserAnswers)))
+
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
-        await(
-          save[UsersAssignedEnrolment](
-            sessionId,
-            USER_ASSIGNED_SA_ENROLMENT,
-            UsersAssignedEnrolment(None)
-          )
-        )
+
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
         val request = FakeRequest(GET, "/protect-tax-info" + urlPathSa)
@@ -266,21 +240,14 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
     "users group search returns an error" when {
       "render the error page" in {
-        await(save[String](sessionId, "redirectURL", returnUrl))
-        await(
-          save[AccountTypes.Value](
-            sessionId,
-            "ACCOUNT_TYPE",
-            SA_ASSIGNED_TO_OTHER_USER
-          )
-        )
-        await(
-          save[UsersAssignedEnrolment](
-            sessionId,
-            USER_ASSIGNED_SA_ENROLMENT,
-            UsersAssignedEnrolment(Some(CREDENTIAL_ID_2))
-          )
-        )
+        val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+          .setOrException(AccountTypePage, SA_ASSIGNED_TO_OTHER_USER.toString)
+          .setOrException(RedirectUrlPage, returnUrl)
+          .setOrException(UserAssignedSaEnrolmentPage, UsersAssignedEnrolment(Some(CREDENTIAL_ID_2)))
+
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(Some(mockUserAnswers)))
+
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -304,14 +271,14 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
       s"render the error page" in {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
-        await(save[String](sessionId, "redirectURL", returnUrl))
-        await(
-          save[AccountTypes.Value](
-            sessionId,
-            "ACCOUNT_TYPE",
-            SA_ASSIGNED_TO_OTHER_USER
-          )
-        )
+
+        val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+          .setOrException(AccountTypePage, SA_ASSIGNED_TO_OTHER_USER.toString)
+          .setOrException(RedirectUrlPage, returnUrl)
+
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(Some(mockUserAnswers)))
+
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGetWithQueryParam(
           "/identity-verification/nino",
@@ -333,14 +300,13 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
     "an authorised user but IV returns internal error" when {
       s"return $INTERNAL_SERVER_ERROR" in {
-        await(save[String](sessionId, "redirectURL", returnUrl))
-        await(
-          save[AccountTypes.Value](
-            sessionId,
-            "ACCOUNT_TYPE",
-            SA_ASSIGNED_TO_OTHER_USER
-          )
-        )
+        val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+          .setOrException(AccountTypePage, SA_ASSIGNED_TO_OTHER_USER.toString)
+          .setOrException(RedirectUrlPage, returnUrl)
+
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(Some(mockUserAnswers)))
+
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -428,21 +394,14 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
   s"GET $urlPathPT" when {
     "the session cache has a credential for PT enrolment that is not the signed in account" when {
       s"render the report suspiciousId page with no continue button" in {
-        await(save[String](sessionId, "redirectURL", returnUrl))
-        await(
-          save[AccountTypes.Value](
-            sessionId,
-            "ACCOUNT_TYPE",
-            PT_ASSIGNED_TO_OTHER_USER
-          )
-        )
-        await(
-          save[UsersAssignedEnrolment](
-            sessionId,
-            USER_ASSIGNED_PT_ENROLMENT,
-            UsersAssignedEnrolment(Some(CREDENTIAL_ID_2))
-          )
-        )
+        val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+          .setOrException(AccountTypePage, PT_ASSIGNED_TO_OTHER_USER.toString)
+          .setOrException(RedirectUrlPage, returnUrl)
+          .setOrException(UserAssignedPtaEnrolmentPage, UsersAssignedEnrolment(Some(CREDENTIAL_ID_2)))
+
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(Some(mockUserAnswers)))
+
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -463,7 +422,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
         val expectedAuditEvent = AuditEvent.auditReportSuspiciousPTAccount(
           accountDetailsUserFriendly(CREDENTIAL_ID_2)
-        )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
+        )(requestWithGivenMongoData(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER)), messagesApi)
         verifyAuditEventSent(expectedAuditEvent)
 
       }
@@ -477,10 +436,13 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
     ).foreach { accountType =>
       s"the session cache has a credential with account type ${accountType.toString}" when {
         s"redirect to /protect-tax-info" in {
-          await(save[String](sessionId, "redirectURL", returnUrl))
-          await(
-            save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", accountType)
-          )
+          val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+            .setOrException(AccountTypePage, PT_ASSIGNED_TO_OTHER_USER.toString)
+            .setOrException(RedirectUrlPage, returnUrl)
+
+          when(mockJourneyCacheRepository.get(any(), any()))
+            .thenReturn(Future.successful(Some(mockUserAnswers)))
+
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -500,21 +462,14 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
     s"the session cache has a credential for PT enrolment that is the signed in account" when {
       s"render the error page" in {
-        await(save[String](sessionId, "redirectURL", returnUrl))
-        await(
-          save[AccountTypes.Value](
-            sessionId,
-            "ACCOUNT_TYPE",
-            PT_ASSIGNED_TO_OTHER_USER
-          )
-        )
-        await(
-          save[UsersAssignedEnrolment](
-            sessionId,
-            USER_ASSIGNED_PT_ENROLMENT,
-            UsersAssignedEnrolment(Some(CREDENTIAL_ID))
-          )
-        )
+        val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+          .setOrException(AccountTypePage, PT_ASSIGNED_TO_OTHER_USER.toString)
+          .setOrException(RedirectUrlPage, returnUrl)
+          .setOrException(UserAssignedPtaEnrolmentPage, UsersAssignedEnrolment(Some(CREDENTIAL_ID)))
+
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(Some(mockUserAnswers)))
+
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -531,23 +486,14 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
     s"the session cache has no credentials with PT enrolment" when {
       s"render the error page" in {
-        await(save[String](sessionId, "redirectURL", returnUrl))
-        await(
-          save[AccountTypes.Value](
-            sessionId,
-            "ACCOUNT_TYPE",
-            PT_ASSIGNED_TO_OTHER_USER
-          )
-        )
-        val authResponse = authoriseResponseJson()
-        stubAuthorizePost(OK, authResponse.toString())
-        await(
-          save[UsersAssignedEnrolment](
-            sessionId,
-            USER_ASSIGNED_PT_ENROLMENT,
-            UsersAssignedEnrolment(None)
-          )
-        )
+        val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+          .setOrException(AccountTypePage, PT_ASSIGNED_TO_OTHER_USER.toString)
+          .setOrException(RedirectUrlPage, returnUrl)
+          .setOrException(UserAssignedPtaEnrolmentPage, UsersAssignedEnrolment(None))
+
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(Some(mockUserAnswers)))
+
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
         val request = FakeRequest(GET, "/protect-tax-info" + urlPathPT)
@@ -562,13 +508,12 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
     "the session cache has no redirectUrl" when {
       s"return $INTERNAL_SERVER_ERROR" in {
-        await(
-          save[AccountTypes.Value](
-            sessionId,
-            "ACCOUNT_TYPE",
-            PT_ASSIGNED_TO_OTHER_USER
-          )
-        )
+        val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+          .setOrException(AccountTypePage, PT_ASSIGNED_TO_OTHER_USER.toString)
+
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(Some(mockUserAnswers)))
+
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -585,21 +530,14 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
     "users group search returns an error" when {
       "render the error page" in {
-        await(save[String](sessionId, "redirectURL", returnUrl))
-        await(
-          save[AccountTypes.Value](
-            sessionId,
-            "ACCOUNT_TYPE",
-            PT_ASSIGNED_TO_OTHER_USER
-          )
-        )
-        await(
-          save[UsersAssignedEnrolment](
-            sessionId,
-            USER_ASSIGNED_PT_ENROLMENT,
-            UsersAssignedEnrolment(Some(CREDENTIAL_ID_2))
-          )
-        )
+        val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+          .setOrException(AccountTypePage, PT_ASSIGNED_TO_OTHER_USER.toString)
+          .setOrException(RedirectUrlPage, returnUrl)
+          .setOrException(UserAssignedPtaEnrolmentPage, UsersAssignedEnrolment(Some(CREDENTIAL_ID_2)))
+
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(Some(mockUserAnswers)))
+
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -621,15 +559,15 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
     "an authorised user with no credential uses the service" when {
       s"render the error page" in {
+
+        val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+          .setOrException(AccountTypePage, PT_ASSIGNED_TO_OTHER_USER.toString)
+          .setOrException(RedirectUrlPage, returnUrl)
+
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(Some(mockUserAnswers)))
         val authResponse = authoriseResponseJson()
-        await(save[String](sessionId, "redirectURL", returnUrl))
-        await(
-          save[AccountTypes.Value](
-            sessionId,
-            "ACCOUNT_TYPE",
-            PT_ASSIGNED_TO_OTHER_USER
-          )
-        )
+
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGetWithQueryParam(
@@ -652,14 +590,14 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
     "an authorised user but IV returns internal error" when {
       s"render the error page" in {
         val authResponse = authoriseResponseJson()
-        await(save[String](sessionId, "redirectURL", returnUrl))
-        await(
-          save[AccountTypes.Value](
-            sessionId,
-            "ACCOUNT_TYPE",
-            PT_ASSIGNED_TO_OTHER_USER
-          )
-        )
+
+        val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+          .setOrException(AccountTypePage, PT_ASSIGNED_TO_OTHER_USER.toString)
+          .setOrException(RedirectUrlPage, returnUrl)
+
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(Some(mockUserAnswers)))
+
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGetWithQueryParam(
@@ -746,15 +684,18 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
     "the user has account type of SA_ASSIGNED_TO_OTHER_USER" when {
       s"enrol the user for PT and redirect to the EnroledAfterReportingFraud" when {
         "the user hasn't already been assigned a PT enrolment" in {
-          val cacheData = Map(
-            ACCOUNT_TYPE               -> Json.toJson(SA_ASSIGNED_TO_OTHER_USER),
-            REDIRECT_URL               -> JsString(returnUrl),
-            USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(saUsers),
-            accountDetailsForCredential(CREDENTIAL_ID_2) -> Json.toJson(accountDetails)(
+
+          val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+            .setOrException(AccountTypePage, SA_ASSIGNED_TO_OTHER_USER.toString)
+            .setOrException(RedirectUrlPage, returnUrl)
+            .setOrException(UserAssignedSaEnrolmentPage, saUsers)
+            .setOrException(AccountDetailsForCredentialPage(CREDENTIAL_ID_2), accountDetails)(
               AccountDetails.mongoFormats(crypto.crypto)
             )
-          )
-          await(save(sessionId, cacheData))
+
+          when(mockJourneyCacheRepository.get(any(), any()))
+            .thenReturn(Future.successful(Some(mockUserAnswers)))
+
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -775,23 +716,31 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
           )
           val expectedAuditEvent =
             AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
-              requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, mongoCacheData = cacheData),
-              messagesApi
+              requestWithGivenMongoDataAndUserAnswers(
+                requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER),
+                mockUserAnswers
+              ),
+              messagesApi,
+              crypto
             )
           verifyAuditEventSent(expectedAuditEvent)
-
         }
       }
 
       s"not enrol the user for PT and redirect to the EnroledAfterReportingFraud" when {
         "the user has already been assigned a PT enrolment" in {
-          val cacheData = Map(
-            ACCOUNT_TYPE                                 -> Json.toJson(SA_ASSIGNED_TO_OTHER_USER),
-            REDIRECT_URL                                 -> JsString(returnUrl),
-            USER_ASSIGNED_SA_ENROLMENT                   -> Json.toJson(saUsers),
-            accountDetailsForCredential(CREDENTIAL_ID_2) -> Json.toJson(accountDetails)
-          )
-          await(save(sessionId, cacheData))
+
+          val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+            .setOrException(AccountTypePage, SA_ASSIGNED_TO_OTHER_USER.toString)
+            .setOrException(RedirectUrlPage, returnUrl)
+            .setOrException(UserAssignedSaEnrolmentPage, saUsers)
+            .setOrException(AccountDetailsForCredentialPage(CREDENTIAL_ID_2), accountDetails)(
+              AccountDetails.mongoFormats(crypto.crypto)
+            )
+
+          when(mockJourneyCacheRepository.get(any(), any()))
+            .thenReturn(Future.successful(Some(mockUserAnswers)))
+
           val authResponse = authoriseResponseWithPTEnrolment()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -812,14 +761,13 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
     "the user has account type of SA_ASSIGNED_TO_OTHER_USER but silent enrolment fails" when {
       s"render the error page" in {
-        await(save[String](sessionId, "redirectURL", returnUrl))
-        await(
-          save[AccountTypes.Value](
-            sessionId,
-            "ACCOUNT_TYPE",
-            SA_ASSIGNED_TO_OTHER_USER
-          )
-        )
+        val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+          .setOrException(AccountTypePage, SA_ASSIGNED_TO_OTHER_USER.toString)
+          .setOrException(RedirectUrlPage, returnUrl)
+
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(Some(mockUserAnswers)))
+
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -848,10 +796,13 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
     ).foreach { accountType =>
       s"the session cache has Account type of $accountType" when {
         s"redirect to accountCheck" in {
-          await(save[String](sessionId, "redirectURL", returnUrl))
-          await(
-            save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", accountType)
-          )
+          val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
+            .setOrException(AccountTypePage, accountType.toString)
+            .setOrException(RedirectUrlPage, returnUrl)
+
+          when(mockJourneyCacheRepository.get(any(), any()))
+            .thenReturn(Future.successful(Some(mockUserAnswers)))
+
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -872,7 +823,10 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
     "the session cache is empty" when {
       s"redirect to login" in {
-        await(sessionRepository.collection.deleteMany(BsonDocument()).toFuture())
+
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(None))
+
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")

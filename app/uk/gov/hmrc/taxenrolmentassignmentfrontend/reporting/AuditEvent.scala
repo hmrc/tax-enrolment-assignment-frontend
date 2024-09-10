@@ -184,6 +184,7 @@ object AuditEvent {
   )(implicit request: DataRequest[_], messagesApi: MessagesApi, lang: Lang): JsObject = {
 
     val userDetails: UserDetailsFromSession = request.userDetails
+    println("sandeep" + userDetails)
     val optSACredIdJson: JsObject =
       optSACredentialId.fold(Json.obj())(credId => Json.obj("saAccountCredentialId" -> credId))
     val optReportedAccountJson: JsObject = suspiciousAccountDetails.fold(Json.obj()) { accountDetails =>

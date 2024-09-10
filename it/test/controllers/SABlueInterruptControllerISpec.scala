@@ -355,6 +355,8 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
 
     "the session cache is empty" should {
       s"redirect to login" in {
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(None))
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")

@@ -20,6 +20,8 @@ import com.github.tomakehurst.wiremock.client.WireMock.{deleteRequestedFor, urlE
 import helpers.TestITData._
 import helpers.messages._
 import helpers.{IntegrationSpecBase, ItUrlPaths}
+import org.mockito.ArgumentMatchers.{any, anyString}
+import org.mockito.Mockito.{reset, when}
 import play.api.http.Status
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NO_CONTENT, OK, SEE_OTHER}
 import play.api.mvc.{AnyContent, Request}
@@ -27,13 +29,14 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.{GET, contentAsString, defaultAwaitTimeout, redirectLocation, route, status, writeableOf_AnyContentAsEmpty}
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{SA_ASSIGNED_TO_CURRENT_USER, SINGLE_OR_MULTIPLE_ACCOUNTS}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{DataRequest, UserDetailsFromSession}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, DataRequest, RequestWithUserDetailsFromSessionAndMongo, UserDetailsFromSession}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.userDetailsNoEnrolments
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UserAnswers
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.hmrcPTKey
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
 
 import java.net.URLEncoder
+import scala.concurrent.Future
 
 class AccountCheckControllerISpec extends IntegrationSpecBase {
 
@@ -48,12 +51,27 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
       FakeRequest().asInstanceOf[Request[AnyContent]],
       userDetails,
       UserAnswers("sessionId", generateNino.nino),
-      None
+      Some(
+        RequestWithUserDetailsFromSessionAndMongo(
+          FakeRequest().asInstanceOf[Request[AnyContent]],
+          userDetails,
+          "sessionId",
+          AccountDetailsFromMongo(SINGLE_OR_MULTIPLE_ACCOUNTS, "foo", None, None, None, None)
+        )
+      )
     )
 
   s"redirect to {returnUrl}" when {
     "a user has one credential associated with their nino" that {
       "has a PT enrolment in the session" in {
+
+        when(mockJourneyCacheRepository.clear(anyString(), anyString())).thenReturn(Future.successful(true))
+
+        when(mockJourneyCacheRepository.set(any[UserAnswers])).thenReturn(Future.successful(true))
+
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(None))
+
         val authResponse = authoriseResponseJson(enrolments = ptEnrolmentOnly)
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -77,6 +95,13 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
       }
 
       "has PT enrolment in EACD but not the session" in {
+
+        reset(mockJourneyCacheRepository)
+
+        //when(mockJourneyCacheRepository.set(any[UserAnswers])).thenReturn(Future.successful(true))
+
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(None))
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -108,6 +133,11 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
   s"silently enrol for PT and redirect to users redirect url" when {
     "the user is a single account holder with no PT enrolment in session or EACD" in {
+      reset(mockJourneyCacheRepository)
+      /*when(mockJourneyCacheRepository.set(any[UserAnswers])).thenReturn(Future.successful(true))
+
+      when(mockJourneyCacheRepository.get(any(), any()))
+        .thenReturn(Future.successful(None))*/
       val authResponse = authoriseResponseJson()
       stubAuthorizePost(OK, authResponse.toString())
       stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -151,6 +181,12 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
     }
 
     "the user is a single account holder with an invalid PT enrolment in session or EACD" in {
+
+      reset(mockJourneyCacheRepository)
+      /*when(mockJourneyCacheRepository.set(any[UserAnswers])).thenReturn(Future.successful(true))
+
+      when(mockJourneyCacheRepository.get(any(), any()))
+        .thenReturn(Future.successful(None))*/
       val authResponse = authoriseResponseJson(enrolments = mismatchPtEnrolmentOnly)
       stubAuthorizePost(OK, authResponse.toString())
       stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -208,6 +244,10 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
   s"redirect to ${ItUrlPaths.ptOnOtherAccountPath}" when {
     "a user has other credentials associated with their NINO" that {
       "includes one with a PT enrolment" in {
+        when(mockJourneyCacheRepository.set(any[UserAnswers])).thenReturn(Future.successful(true))
+
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(None))
         stubAuthorizePost(OK, authoriseResponseJson().toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGet(
@@ -233,6 +273,10 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
   s"redirect to ${ItUrlPaths.saOnOtherAccountInterruptPath}" when {
     "the user has SA enrolment on an other account" in {
+      when(mockJourneyCacheRepository.set(any[UserAnswers])).thenReturn(Future.successful(true))
+
+      when(mockJourneyCacheRepository.get(any(), any()))
+        .thenReturn(Future.successful(None))
       val authResponse = authoriseResponseJson()
       stubAuthorizePost(OK, authResponse.toString())
       stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -281,6 +325,15 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
   s"redirect to ${ItUrlPaths.enrolledPTWithSAOnAnyAccountPath}" when {
     "the user has no PT enrolments but current credential has SA enrolment in session" in {
+      reset(mockJourneyCacheRepository)
+      /*when(mockJourneyCacheRepository.clear(anyString(), anyString())).thenReturn(Future.successful(true))
+
+      when(mockJourneyCacheRepository.clear(anyString(), anyString())).thenReturn(Future.successful(true))*/
+
+      when(mockJourneyCacheRepository.set(any[UserAnswers])).thenReturn(Future.successful(true))
+
+      when(mockJourneyCacheRepository.get(any(), any()))
+        .thenReturn(Future.successful(None))
       val authResponse = authoriseResponseJson(enrolments = saEnrolmentOnly)
       stubAuthorizePost(OK, authResponse.toString())
       stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -334,6 +387,11 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
   s"redirect to ${ItUrlPaths.enrolledPTWithSAOnAnyAccountPath}" when {
     "the user has no PT enrolments but current credential has SA enrolment in EACD" in {
+      reset(mockJourneyCacheRepository)
+      when(mockJourneyCacheRepository.set(any[UserAnswers])).thenReturn(Future.successful(true))
+
+      when(mockJourneyCacheRepository.get(any(), any()))
+        .thenReturn(Future.successful(None))
       val authResponse = authoriseResponseJson(enrolments = saEnrolmentOnly)
       stubAuthorizePost(OK, authResponse.toString())
       stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -386,6 +444,14 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
   s"redirect to ${ItUrlPaths.enrolledPTNoSAOnAnyAccountPath}" when {
     "the user has no PT or SA enrolments" in {
+      reset(mockJourneyCacheRepository)
+      when(mockJourneyCacheRepository.clear(anyString(), anyString())).thenReturn(Future.successful(true))
+
+      when(mockJourneyCacheRepository.get(any(), any()))
+        .thenReturn(Future.successful(None))
+
+      when(mockJourneyCacheRepository.set(any[UserAnswers])).thenReturn(Future.successful(true))
+
       val authResponse = authoriseResponseJson()
       stubAuthorizePost(OK, authResponse.toString())
       stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -442,6 +508,12 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
     s"the user has pt enrolment in session" should {
       "redirect to the return url" when {
         "the redirectUrl is a valid encoded relative url" in {
+          when(mockJourneyCacheRepository.clear(anyString(), anyString())).thenReturn(Future.successful(true))
+
+          when(mockJourneyCacheRepository.set(any[UserAnswers])).thenReturn(Future.successful(true))
+
+          when(mockJourneyCacheRepository.get(any(), any()))
+            .thenReturn(Future.successful(None))
           val relativeUrl = "/redirect/url"
           val encodedUrl = URLEncoder.encode(relativeUrl, "UTF-8")
           val urlPath = s"/protect-tax-info?redirectUrl=$encodedUrl"
@@ -469,6 +541,12 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
         }
 
         "the redirectUrl is a valid relative url" in {
+          when(mockJourneyCacheRepository.clear(anyString(), anyString())).thenReturn(Future.successful(true))
+
+          when(mockJourneyCacheRepository.set(any[UserAnswers])).thenReturn(Future.successful(true))
+
+          when(mockJourneyCacheRepository.get(any(), any()))
+            .thenReturn(Future.successful(None))
           val relativeUrl = "/redirect/url"
           val urlPath = s"/protect-tax-info?redirectUrl=$relativeUrl"
 
@@ -495,6 +573,12 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
         }
 
         "the redirectUrl is a valid encoded absolute localhost url" in {
+          when(mockJourneyCacheRepository.clear(anyString(), anyString())).thenReturn(Future.successful(true))
+
+          when(mockJourneyCacheRepository.set(any[UserAnswers])).thenReturn(Future.successful(true))
+
+          when(mockJourneyCacheRepository.get(any(), any()))
+            .thenReturn(Future.successful(None))
           val absoluteUrl = "http://localhost:1234/redirect/url"
           val encodedUrl = URLEncoder.encode(absoluteUrl, "UTF-8")
           val urlPath = s"/protect-tax-info?redirectUrl=$encodedUrl"
@@ -527,6 +611,12 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
         }
 
         "the redirectUrl is a valid absolute localhost url" in {
+          when(mockJourneyCacheRepository.clear(anyString(), anyString())).thenReturn(Future.successful(true))
+
+          when(mockJourneyCacheRepository.set(any[UserAnswers])).thenReturn(Future.successful(true))
+
+          when(mockJourneyCacheRepository.get(any(), any()))
+            .thenReturn(Future.successful(None))
           val absoluteUrl = "http://localhost:1234/redirect/url"
           val urlPath = s"/protect-tax-info?redirectUrl=$absoluteUrl"
 
@@ -558,6 +648,12 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
         }
 
         "the redirectUrl is a valid encoded absolute url with hostname www.tax.service.gov.uk" in {
+          when(mockJourneyCacheRepository.clear(anyString(), anyString())).thenReturn(Future.successful(true))
+
+          when(mockJourneyCacheRepository.set(any[UserAnswers])).thenReturn(Future.successful(true))
+
+          when(mockJourneyCacheRepository.get(any(), any()))
+            .thenReturn(Future.successful(None))
           val absoluteUrl = "https://www.tax.service.gov.uk/redirect/url"
           val encodedUrl = URLEncoder.encode(absoluteUrl, "UTF-8")
           val urlPath = s"/protect-tax-info?redirectUrl=$encodedUrl"
@@ -590,6 +686,13 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
         }
 
         "the redirectUrl is a valid absolute url with hostname www.tax.service.gov.uk" in {
+          when(mockJourneyCacheRepository.clear(anyString(), anyString())).thenReturn(Future.successful(true))
+
+          when(mockJourneyCacheRepository.set(any[UserAnswers])).thenReturn(Future.successful(true))
+
+          when(mockJourneyCacheRepository.get(any(), any()))
+            .thenReturn(Future.successful(None))
+
           val absoluteUrl = "https://www.tax.service.gov.uk/redirect/url"
           val urlPath = s"/protect-tax-info?redirectUrl=$absoluteUrl"
 
@@ -623,6 +726,8 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
       "render the error page" when {
         "an invalid redirectUrl supplied" in {
+          when(mockJourneyCacheRepository.get(any(), any()))
+            .thenReturn(Future.successful(None))
           val urlPath = s"/protect-tax-info?redirectUrl=not-a-url"
 
           val authResponse = authoriseResponseJson(enrolments = ptEnrolmentOnly)
@@ -638,6 +743,8 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
         }
 
         "a non supported redirect host is supplied" in {
+          when(mockJourneyCacheRepository.get(any(), any()))
+            .thenReturn(Future.successful(None))
           val urlPath = s"/protect-tax-info?redirectUrl=https://notSupportedHost.com/test"
 
           val authResponse = authoriseResponseJson(enrolments = ptEnrolmentOnly)
@@ -656,6 +763,8 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
     "the user has a session missing required element NINO" should {
       s"redirect to ${ItUrlPaths.unauthorizedPath}" in {
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(None))
         val authResponse = authoriseResponseJson(optNino = None)
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -671,6 +780,8 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
     "the user has a session missing required element Credentials" should {
       s"redirect to ${ItUrlPaths.unauthorizedPath}" in {
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(None))
         val authResponse = authoriseResponseJson(optCreds = None)
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -686,6 +797,8 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
     "the user has a insufficient confidence level" should {
       s"redirect to ${ItUrlPaths.unauthorizedPath}" in {
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(None))
         stubAuthorizePostUnauthorised(insufficientConfidenceLevel)
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
@@ -700,6 +813,8 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
     "the user has no active session" should {
       s"redirect to login" in {
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(None))
         stubAuthorizePostUnauthorised(sessionNotFound)
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
@@ -716,6 +831,8 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
       val url =
         s"/tax-enrolments/groups/$GROUP_ID/enrolments/HMRC-PT~NINO~${mismatchNino.nino}"
       "return technical difficulty when enrolment deletion is failing" in {
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(None))
         val authResponse = authoriseResponseJson(enrolments = mismatchPtEnrolmentOnly)
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")

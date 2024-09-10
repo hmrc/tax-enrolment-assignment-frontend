@@ -21,7 +21,7 @@ import helpers.messages._
 import helpers.{IntegrationSpecBase, ItUrlPaths}
 import org.jsoup.Jsoup
 import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.when
+import org.mockito.Mockito.{reset, when}
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, NON_AUTHORITATIVE_INFORMATION, NOT_FOUND, OK, SEE_OTHER}
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
@@ -35,6 +35,13 @@ import scala.concurrent.Future
 class EnrolledForPTISpec extends IntegrationSpecBase {
 
   val urlPath: String = ItUrlPaths.enrolledPTNoSAOnAnyAccountPath
+
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    reset(mockJourneyCacheRepository)
+    when(mockJourneyCacheRepository.set(any[UserAnswers])).thenReturn(Future.successful(true))
+    when(mockJourneyCacheRepository.clear(any(), any())).thenReturn(Future.successful(true))
+  }
 
   s"GET $urlPath" when {
     s"the session cache has Account type of $SINGLE_OR_MULTIPLE_ACCOUNTS" should {
@@ -95,6 +102,10 @@ class EnrolledForPTISpec extends IntegrationSpecBase {
 
     "the session cache is empty" should {
       s"redirect to login" in {
+
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(None))
+
         stubAuthorizePost(OK, authoriseResponseWithPTEnrolment().toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
@@ -263,6 +274,10 @@ class EnrolledForPTISpec extends IntegrationSpecBase {
 
     "the session cache is empty" should {
       s"redirect to login" in {
+
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(None))
+
         val authResponse = authoriseResponseWithPTEnrolment()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")

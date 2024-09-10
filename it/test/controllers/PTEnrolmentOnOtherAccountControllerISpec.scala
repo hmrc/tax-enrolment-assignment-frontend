@@ -23,7 +23,7 @@ import helpers.{IntegrationSpecBase, ItUrlPaths}
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.when
+import org.mockito.Mockito.{reset, when}
 import org.mockito.stubbing.OngoingStubbing
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK, SEE_OTHER}
 import play.api.mvc.{AnyContentAsEmpty, Result}
@@ -42,6 +42,13 @@ import scala.jdk.CollectionConverters._
 class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
 
   val urlPath: String = ItUrlPaths.ptOnOtherAccountPath
+
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    reset(mockJourneyCacheRepository)
+    when(mockJourneyCacheRepository.set(any[UserAnswers])).thenReturn(Future.successful(true))
+    when(mockJourneyCacheRepository.clear(any(), any())).thenReturn(Future.successful(true))
+  }
 
   s"GET $urlPath" when {
     "the signed in user has SA enrolment in session and PT enrolment on another account" should {

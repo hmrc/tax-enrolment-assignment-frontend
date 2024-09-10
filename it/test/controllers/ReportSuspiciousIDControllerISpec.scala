@@ -21,7 +21,7 @@ import helpers.messages._
 import helpers.{IntegrationSpecBase, ItUrlPaths}
 import org.jsoup.Jsoup
 import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.when
+import org.mockito.Mockito.{reset, when}
 import play.api.http.Status
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, NON_AUTHORITATIVE_INFORMATION, OK, SEE_OTHER}
 import play.api.i18n.Lang
@@ -40,6 +40,13 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
   val urlPathSa: String = ItUrlPaths.reportFraudSAAccountPath
   val urlPathPT: String = ItUrlPaths.reportFraudPTAccountPath
+
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    reset(mockJourneyCacheRepository)
+    when(mockJourneyCacheRepository.set(any[UserAnswers])).thenReturn(Future.successful(true))
+    when(mockJourneyCacheRepository.clear(any(), any())).thenReturn(Future.successful(true))
+  }
 
   s"GET $urlPathSa" should {
     "the session cache has a credential for SA enrolment that is not the signed in account" when {
@@ -72,7 +79,10 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
         val expectedAuditEvent = AuditEvent.auditReportSuspiciousSAAccount(
           accountDetailsUserFriendly(CREDENTIAL_ID_2)
-        )(requestWithGivenMongoData(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER)), messagesApi)
+        )(
+          requestWithGivenMongoDataAndUserAnswers(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER), mockUserAnswers),
+          messagesApi
+        )
 
         verifyAuditEventSent(expectedAuditEvent)
       }
@@ -437,7 +447,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
       s"the session cache has a credential with account type ${accountType.toString}" when {
         s"redirect to /protect-tax-info" in {
           val mockUserAnswers = UserAnswers(sessionId, generateNino.nino)
-            .setOrException(AccountTypePage, PT_ASSIGNED_TO_OTHER_USER.toString)
+            .setOrException(AccountTypePage, accountType.toString)
             .setOrException(RedirectUrlPage, returnUrl)
 
           when(mockJourneyCacheRepository.get(any(), any()))
@@ -494,6 +504,8 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
         when(mockJourneyCacheRepository.get(any(), any()))
           .thenReturn(Future.successful(Some(mockUserAnswers)))
 
+        val authResponse = authoriseResponseJson()
+        stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
         val request = FakeRequest(GET, "/protect-tax-info" + urlPathPT)

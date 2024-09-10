@@ -190,6 +190,8 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
 
     "the session cache is empty" should {
       s"redirect to login" in {
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(None))
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -275,6 +277,8 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
           when(mockJourneyCacheRepository.get(any(), any()))
             .thenReturn(Future.successful(Some(mockUserAnswers)))
 
+          when(mockJourneyCacheRepository.set(any[UserAnswers])).thenReturn(Future.successful(true))
+
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -329,6 +333,8 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
 
           when(mockJourneyCacheRepository.get(any(), any()))
             .thenReturn(Future.successful(Some(mockUserAnswers)))
+
+          when(mockJourneyCacheRepository.set(any[UserAnswers])).thenReturn(Future.successful(true))
 
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())

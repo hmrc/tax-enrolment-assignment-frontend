@@ -20,7 +20,7 @@ import helpers.TestITData._
 import helpers.messages._
 import helpers.{IntegrationSpecBase, ItUrlPaths}
 import org.jsoup.Jsoup
-import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.{any, anyString}
 import org.mockito.Mockito.when
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, NON_AUTHORITATIVE_INFORMATION, NOT_FOUND, OK, SEE_OTHER}
 import play.api.libs.json.Json
@@ -45,6 +45,8 @@ class EnrolledForPTWithSAISpec extends IntegrationSpecBase {
 
         when(mockJourneyCacheRepository.get(any(), any()))
           .thenReturn(Future.successful(Some(mockUserAnswers)))
+
+        when(mockJourneyCacheRepository.set(any[UserAnswers])).thenReturn(Future.successful(true))
 
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
@@ -96,6 +98,8 @@ class EnrolledForPTWithSAISpec extends IntegrationSpecBase {
 
     "the session cache is empty" should {
       s"redirect to login" in {
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(None))
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -245,6 +249,8 @@ class EnrolledForPTWithSAISpec extends IntegrationSpecBase {
         when(mockJourneyCacheRepository.get(any(), any()))
           .thenReturn(Future.successful(Some(mockUserAnswers)))
 
+        when(mockJourneyCacheRepository.clear(anyString(), anyString())).thenReturn(Future.successful(true))
+
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -261,6 +267,8 @@ class EnrolledForPTWithSAISpec extends IntegrationSpecBase {
 
     "the session cache is empty" should {
       s"redirect to login" in {
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(None))
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")

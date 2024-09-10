@@ -197,10 +197,13 @@ object AuditEvent {
       }
     }
 
-    Json.obj(
+    val jsonto = Json.obj(
       "NINO"           -> userDetails.nino.nino,
       "currentAccount" -> getCurrentAccountJson(userDetails, accountType, withCurrentEmail = true)
     ) ++ optSACredIdJson ++ optReportedAccountJson
+
+    print("sandeepjson:" + jsonto)
+    jsonto
   }
 
   private def getDetailsForSigninAgainSA(implicit

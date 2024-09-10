@@ -29,10 +29,10 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.{GET, contentAsString, defaultAwaitTimeout, redirectLocation, route, status, writeableOf_AnyContentAsEmpty}
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{SA_ASSIGNED_TO_CURRENT_USER, SINGLE_OR_MULTIPLE_ACCOUNTS}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, DataRequest, RequestWithUserDetailsFromSessionAndMongo, UserDetailsFromSession}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.userDetailsNoEnrolments
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{DataRequest, UserDetailsFromSession}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UserAnswers
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.hmrcPTKey
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.pages.{AccountTypePage, RedirectUrlPage}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
 
 import java.net.URLEncoder
@@ -51,14 +51,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
       FakeRequest().asInstanceOf[Request[AnyContent]],
       userDetails,
       UserAnswers("sessionId", generateNino.nino),
-      Some(
-        RequestWithUserDetailsFromSessionAndMongo(
-          FakeRequest().asInstanceOf[Request[AnyContent]],
-          userDetails,
-          "sessionId",
-          AccountDetailsFromMongo(SINGLE_OR_MULTIPLE_ACCOUNTS, "foo", None, None, None, None)
-        )
-      )
+      None
     )
 
   s"redirect to {returnUrl}" when {
@@ -98,7 +91,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
         reset(mockJourneyCacheRepository)
 
-        //when(mockJourneyCacheRepository.set(any[UserAnswers])).thenReturn(Future.successful(true))
+        when(mockJourneyCacheRepository.set(any[UserAnswers])).thenReturn(Future.successful(true))
 
         when(mockJourneyCacheRepository.get(any(), any()))
           .thenReturn(Future.successful(None))
@@ -134,10 +127,10 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
   s"silently enrol for PT and redirect to users redirect url" when {
     "the user is a single account holder with no PT enrolment in session or EACD" in {
       reset(mockJourneyCacheRepository)
-      /*when(mockJourneyCacheRepository.set(any[UserAnswers])).thenReturn(Future.successful(true))
+      when(mockJourneyCacheRepository.set(any[UserAnswers])).thenReturn(Future.successful(true))
 
       when(mockJourneyCacheRepository.get(any(), any()))
-        .thenReturn(Future.successful(None))*/
+        .thenReturn(Future.successful(None))
       val authResponse = authoriseResponseJson()
       stubAuthorizePost(OK, authResponse.toString())
       stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -183,10 +176,10 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
     "the user is a single account holder with an invalid PT enrolment in session or EACD" in {
 
       reset(mockJourneyCacheRepository)
-      /*when(mockJourneyCacheRepository.set(any[UserAnswers])).thenReturn(Future.successful(true))
+      when(mockJourneyCacheRepository.set(any[UserAnswers])).thenReturn(Future.successful(true))
 
       when(mockJourneyCacheRepository.get(any(), any()))
-        .thenReturn(Future.successful(None))*/
+        .thenReturn(Future.successful(None))
       val authResponse = authoriseResponseJson(enrolments = mismatchPtEnrolmentOnly)
       stubAuthorizePost(OK, authResponse.toString())
       stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -446,9 +439,12 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
     "the user has no PT or SA enrolments" in {
       reset(mockJourneyCacheRepository)
       when(mockJourneyCacheRepository.clear(anyString(), anyString())).thenReturn(Future.successful(true))
+      val ninoVal = nino.nino
+      val mockUserAnswers: UserAnswers = UserAnswers(xSessionId._2, ninoVal)
+        .setOrException(RedirectUrlPage, returnUrl)
+        .setOrException(AccountTypePage, SINGLE_OR_MULTIPLE_ACCOUNTS.toString)
 
-      when(mockJourneyCacheRepository.get(any(), any()))
-        .thenReturn(Future.successful(None))
+      when(mockJourneyCacheRepository.get(any(), any())).thenReturn(Future.successful(Some(mockUserAnswers)))
 
       when(mockJourneyCacheRepository.set(any[UserAnswers])).thenReturn(Future.successful(true))
 
@@ -456,14 +452,14 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
       stubAuthorizePost(OK, authResponse.toString())
       stubPost(s"/write/.*", OK, """{"x":2}""")
       stubGet(
-        s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/users",
+        s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$ninoVal/users",
         OK,
         es0ResponseNoRecordCred
       )
       stubGetWithQueryParam(
         "/identity-verification/nino",
         "nino",
-        NINO.nino,
+        ninoVal,
         OK,
         ivResponseMultiCredsJsonString
       )
@@ -490,7 +486,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
       )
 
       val request = FakeRequest(GET, urlPath)
-        .withSession(xAuthToken)
+        .withSession(xAuthToken, xSessionId)
       val result = route(app, request).get
 
       status(result) shouldBe SEE_OTHER

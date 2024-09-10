@@ -19,10 +19,15 @@ package controllers
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import helpers.TestITData._
 import helpers.{IntegrationSpecBase, ItUrlPaths}
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.when
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK, SEE_OTHER}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{GET, defaultAwaitTimeout, redirectLocation, route, status, writeableOf_AnyContentAsEmpty}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UserAnswers
+
+import scala.concurrent.Future
 
 class EnrolForSAControllerISpec extends IntegrationSpecBase {
 
@@ -33,6 +38,13 @@ class EnrolForSAControllerISpec extends IntegrationSpecBase {
 
     s"return $SEE_OTHER and redirect user to the business-tax-account when SA enrolment found" when {
       s"User hasSA == true" in {
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(None))
+
+        when(mockJourneyCacheRepository.clear(any(), any()))
+          .thenReturn(Future.successful(true))
+
+        when(mockJourneyCacheRepository.set(any[UserAnswers])).thenReturn(Future.successful(true))
         stubAuthoriseSuccess(hasSAEnrolment = true)
 
         val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
@@ -47,6 +59,11 @@ class EnrolForSAControllerISpec extends IntegrationSpecBase {
 
     s"return $INTERNAL_SERVER_ERROR and when No SA enrolment found" when {
       s"User hasSA == false" in {
+        when(mockJourneyCacheRepository.get(any(), any()))
+          .thenReturn(Future.successful(None))
+
+        when(mockJourneyCacheRepository.set(any[UserAnswers])).thenReturn(Future.successful(true))
+        stubAuthoriseSuccess(hasSAEnrolment = true)
         stubAuthoriseSuccess()
 
         val request = FakeRequest(GET, "/protect-tax-info" + urlPath)

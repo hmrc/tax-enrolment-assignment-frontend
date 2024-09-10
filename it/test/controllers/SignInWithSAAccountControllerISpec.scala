@@ -27,7 +27,6 @@ import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{GET, POST, contentAsString, defaultAwaitTimeout, redirectLocation, route, status, writeableOf_AnyContentAsEmpty, writeableOf_AnyContentAsJson}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.accountDetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, UserAnswers, UsersAssignedEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.pages.{AccountDetailsForCredentialPage, AccountTypePage, RedirectUrlPage, UserAssignedSaEnrolmentPage}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
@@ -201,6 +200,7 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
 
         when(mockJourneyCacheRepository.set(any[UserAnswers])).thenReturn(Future.successful(true))
         val authResponse = authoriseResponseJson()
+        stubAuthorizePost(OK, authResponse.toString())
 
         stubPost(s"/write/.*", OK, """{"x":2}""")
 

@@ -29,7 +29,7 @@ class BasStubsConnectorTestOnlyISpec extends IntegrationSpecBase {
   "putAccount" should {
 
     val account = AccountDetailsTestOnly(
-      "SCP",
+      "SomeThing",
       "groupId",
       generateNino,
       "Individual",
@@ -81,7 +81,7 @@ class BasStubsConnectorTestOnlyISpec extends IntegrationSpecBase {
 
   "putAdditionalFactors" should {
     val account = AccountDetailsTestOnly(
-      "SCP",
+      "ONE_LOGIN",
       "groupId",
       generateNino,
       "Individual",

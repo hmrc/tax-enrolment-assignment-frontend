@@ -11,7 +11,7 @@ ThisBuild / scalafmtOnCompile := true
 lazy val scoverageSettings: Seq[Setting[?]] = {
   import scoverage.ScoverageKeys
   Seq(
-    ScoverageKeys.coverageExcludedPackages := "<empty>;Reverse.*;models/.data/..*;view.*;models.*;config.*;.*(BuildInfo|Routes).*;controllers.testOnly.*;uk.gov.hmrc.taxenrolmentassignmentfrontend.models.RichJsValue.scala;uk.gov.hmrc.taxenrolmentassignmentfrontend.models.RichJsObject.scala;uk.gov.hmrc.taxenrolmentassignmentfrontend.pages.Page.scala",
+    ScoverageKeys.coverageExcludedPackages := "<empty>;Reverse.*;models/.data/..*;view.*;models.*;config.*;.*(BuildInfo|Routes).*;controllers.testOnly.*;*RichJsValue.*;*RichJsObject.*",
     ScoverageKeys.coverageMinimumStmtTotal := 89,
     ScoverageKeys.coverageFailOnMinimum := true,
     ScoverageKeys.coverageHighlighting := true

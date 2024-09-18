@@ -25,7 +25,7 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AdditonalFactors, IdentifiersOrVerifiers}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.connectors.{BasStubsConnectorTestOnly, IdentityVerificationConnectorTestOnly}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.connectors.{BasStubsConnectorTestOnly, IdentityProviderAccountContextConnectorTestOnly, IdentityVerificationConnectorTestOnly}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.{AccountDetailsTestOnly, EnrolmentDetailsTestOnly, UserTestOnly}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.services.EnrolmentStoreServiceTestOnly
 
@@ -38,11 +38,16 @@ class AccountUtilsTestOnlySpec extends BaseSpec {
     mock[IdentityVerificationConnectorTestOnly]
   lazy val mockBasStubsConnectorTestOnly: BasStubsConnectorTestOnly = mock[BasStubsConnectorTestOnly]
 
+  lazy val mockIdentityProviderAccountContextConnectorTestOnly: IdentityProviderAccountContextConnectorTestOnly =
+    mock[IdentityProviderAccountContextConnectorTestOnly]
+
   override implicit lazy val app: Application = localGuiceApplicationBuilder()
     .overrides(
       bind[EnrolmentStoreServiceTestOnly].toInstance(mockEnrolmentStoreServiceTestOnly),
       bind[IdentityVerificationConnectorTestOnly].toInstance(mockIdentityVerificationConnectorTestOnly),
-      bind[BasStubsConnectorTestOnly].toInstance(mockBasStubsConnectorTestOnly)
+      bind[BasStubsConnectorTestOnly].toInstance(mockBasStubsConnectorTestOnly),
+      bind[IdentityProviderAccountContextConnectorTestOnly]
+        .toInstance(mockIdentityProviderAccountContextConnectorTestOnly)
     )
     .build()
 
@@ -161,6 +166,54 @@ class AccountUtilsTestOnlySpec extends BaseSpec {
 
       when(mockBasStubsConnectorTestOnly.putAdditionalFactors(account))
         .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+
+      val result = sut.insertAccountDetails(account).value.futureValue
+
+      result mustBe Right(())
+    }
+
+  }
+
+  "insertAccountDetails for OneLogin" must {
+    val credId = "credId"
+    val groupId = "groupId"
+    val identityProviderType = "ONE_LOGIN"
+    val enrolment = EnrolmentDetailsTestOnly(
+      "serviceName",
+      IdentifiersOrVerifiers("KEY", "VALUE"),
+      List(IdentifiersOrVerifiers("KEY2", "VALUE2")),
+      "enrolmentFriendlyName",
+      "state",
+      "enrolmentType"
+    )
+    val account = AccountDetailsTestOnly(
+      identityProviderType,
+      groupId,
+      nino,
+      "Individual",
+      UserTestOnly(credId, "name", "email"),
+      List(enrolment),
+      List(AdditonalFactors("factorType"))
+    )
+
+    "insert all details" in {
+
+      when(mockEnrolmentStoreServiceTestOnly.insertAccount(account))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+
+      account.enrolments.foreach { enrolment =>
+        when(mockEnrolmentStoreServiceTestOnly.upsertEnrolment(enrolment))
+          .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+
+        when(mockEnrolmentStoreServiceTestOnly.addEnrolmentToGroup(groupId, credId, enrolment))
+          .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+      }
+
+      when(mockIdentityProviderAccountContextConnectorTestOnly.postAccount(account))
+        .thenReturn(createInboundResult("uuid"))
+
+      when(mockIdentityProviderAccountContextConnectorTestOnly.postIndividual(account, "uuid"))
+        .thenReturn(EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(())))
 
       val result = sut.insertAccountDetails(account).value.futureValue
 

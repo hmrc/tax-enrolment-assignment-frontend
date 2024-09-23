@@ -109,7 +109,7 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
             val value = (identifier \ "value").as[String]
             s"$service~$key~$value"
           })
-
+        case Left(upstreamError) if upstreamError.statusCode == NOT_FOUND => Right(List.empty)
         case Left(upstreamError) =>
           logger.error(upstreamError.message)
           Left(UpstreamError(upstreamError))
@@ -132,7 +132,7 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
             val value = (identifier \ "value").as[String]
             s"$service~$key~$value"
           })
-
+        case Left(upstreamError) if upstreamError.statusCode == NOT_FOUND => Right(List.empty)
         case Left(upstreamError) =>
           logger.error(upstreamError.message)
           Left(UpstreamError(upstreamError))

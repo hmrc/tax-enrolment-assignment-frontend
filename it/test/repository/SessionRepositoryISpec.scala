@@ -21,7 +21,7 @@ import java.util.UUID
 import helpers.IntegrationSpecBase
 import org.mongodb.scala.model.Filters
 import play.api.libs.json.JsString
-import uk.gov.hmrc.http.cache.client.CacheMap
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.DatedCacheMap
 
 class SessionRepositoryISpec extends IntegrationSpecBase {

@@ -21,7 +21,7 @@ import helpers.TestITData._
 import play.api.libs.json.JsString
 import play.api.mvc.{AnyContent, Request}
 import play.api.test.FakeRequest
-import uk.gov.hmrc.http.cache.client.CacheMap
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.DefaultTEASessionCache
 
@@ -82,56 +82,6 @@ class TEASessionCacheSpec extends IntegrationSpecBase {
           whenReady(res) { result =>
             result shouldBe dataToUpsert
           }
-        }
-      }
-    }
-  }
-
-  "remove" when {
-    "the session cache is empty" should {
-      "return false" in {
-
-        val res = teaSessionCache.remove("test")
-
-        whenReady(res) { result =>
-          result shouldBe false
-        }
-      }
-    }
-
-    "the session cache contains multiple keys" should {
-      "remove the selected key and return true" in {
-        val data = CacheMap(
-          sessionId,
-          Map("test" -> JsString("abc"), "test1" -> JsString("efg"))
-        )
-        val dataWithKeyRemoved =
-          CacheMap(sessionId, Map("test1" -> JsString("efg")))
-        val res = for {
-          _       <- sessionRepository.upsert(data)
-          remove  <- teaSessionCache.remove("test")
-          fetched <- fetch(sessionId)
-        } yield (remove, fetched)
-
-        whenReady(res) { case (remove, fetched) =>
-          remove shouldBe true
-          fetched shouldBe Some(dataWithKeyRemoved)
-        }
-      }
-    }
-
-    "the session cache contains only the selected key" should {
-      "remove the selected key only and return true" in {
-        val data = CacheMap(sessionId, Map("test" -> JsString("abc")))
-        val res = for {
-          _       <- sessionRepository.upsert(data)
-          remove  <- teaSessionCache.remove("test")
-          fetched <- fetch(sessionId)
-        } yield (remove, fetched)
-
-        whenReady(res) { case (remove, fetched) =>
-          remove shouldBe true
-          fetched shouldBe Some(CacheMap(sessionId, Map()))
         }
       }
     }

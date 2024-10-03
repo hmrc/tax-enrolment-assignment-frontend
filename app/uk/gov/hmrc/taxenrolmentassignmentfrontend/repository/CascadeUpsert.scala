@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.repository
 
 import javax.inject.Singleton
 import play.api.libs.json._
-import uk.gov.hmrc.http.cache.client.CacheMap
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.CacheMap
 
 @Singleton
 class CascadeUpsert {

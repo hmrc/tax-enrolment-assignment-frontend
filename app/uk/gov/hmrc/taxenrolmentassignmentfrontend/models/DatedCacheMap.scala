@@ -32,9 +32,6 @@ case class DatedCacheMap(id: String, data: Map[String, JsValue], lastUpdated: In
 }
 
 object DatedCacheMap {
-  def apply(cacheMap: CacheMap): DatedCacheMap =
-    DatedCacheMap(cacheMap.id, cacheMap.data)
-
   implicit val dateFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
   implicit val formats: OFormat[DatedCacheMap] = Json.format[DatedCacheMap]
 }

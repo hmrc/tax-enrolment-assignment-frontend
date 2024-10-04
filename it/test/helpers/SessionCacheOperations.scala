@@ -18,10 +18,9 @@ package helpers
 
 import org.mongodb.scala.bson.BsonDocument
 import org.mongodb.scala.model.Filters
-import play.api.libs.json.{Format, JsString, JsValue}
-import uk.gov.hmrc.http.cache.client.CacheMap
+import play.api.libs.json.{Format, JsValue}
 import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.DatedCacheMap
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{CacheMap, DatedCacheMap}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.{CascadeUpsert, DefaultTEASessionCache}
 
 import java.time.Instant
@@ -65,18 +64,8 @@ trait SessionCacheOperations extends DefaultPlayMongoRepositorySupport[DatedCach
   def save(sessionId: String, dataMap: Map[String, JsValue]): Future[Boolean] =
     sessionRepository.upsert(CacheMap(sessionId, dataMap))
 
-  def removeAll(sessionID: String): Future[Boolean] =
-    sessionRepository.upsert(CacheMap(sessionID, Map("" -> JsString(""))))
-
   def fetch(sessionID: String): Future[Option[CacheMap]] =
     sessionRepository.get(sessionID)
-
-  def getEntry[A](sessionID: String, key: String)(implicit fmt: Format[A]): Future[Option[A]] =
-    fetch(sessionID).map { optionalCacheMap =>
-      optionalCacheMap.flatMap { cacheMap =>
-        cacheMap.getEntry(key)
-      }
-    }
 
   def getLastLoginDateTime(sessionID: String): Instant =
     sessionRepository.collection

@@ -32,7 +32,7 @@ import play.api.test.CSRFTokenHelper._
 import play.api.test.{FakeRequest, Injecting}
 import play.api.{Application, Configuration}
 import uk.gov.hmrc.domain.{Nino, Generator => NinoGenerator}
-import uk.gov.hmrc.http.cache.client.CacheMap
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.CacheMap
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
@@ -147,10 +147,6 @@ trait BaseSpec
       fmt: Format[A]
     ): Future[CacheMap] = Future(CacheMap(request.sessionID, Map()))
 
-    override def remove(key: String)(implicit
-      request: RequestWithUserDetailsFromSession[_]
-    ): Future[Boolean] = ???
-
     override def removeRecord(implicit
       request: RequestWithUserDetailsFromSession[_]
     ): Future[Boolean] = ???
@@ -166,9 +162,9 @@ trait BaseSpec
     ): Future[Boolean] = Future.successful(true)
 
     def collectionDeleteOne(id: String): Future[Boolean] = ???
-    def get(id: String): scala.concurrent.Future[Option[uk.gov.hmrc.http.cache.client.CacheMap]] = ???
+    def get(id: String): scala.concurrent.Future[Option[CacheMap]] = ???
     def updateLastUpdated(id: String): scala.concurrent.Future[Boolean] = ???
-    def upsert(cm: uk.gov.hmrc.http.cache.client.CacheMap): scala.concurrent.Future[Boolean] = ???
+    def upsert(cm: CacheMap): scala.concurrent.Future[Boolean] = ???
 
   }
 

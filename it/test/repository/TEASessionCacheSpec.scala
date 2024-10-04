@@ -21,8 +21,8 @@ import helpers.TestITData._
 import play.api.libs.json.JsString
 import play.api.mvc.{AnyContent, Request}
 import play.api.test.FakeRequest
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.DefaultTEASessionCache
 
 class TEASessionCacheSpec extends IntegrationSpecBase {

@@ -16,13 +16,13 @@
 
 package repository
 
-import java.time.{Duration, Instant}
-import java.util.UUID
 import helpers.IntegrationSpecBase
 import org.mongodb.scala.model.Filters
 import play.api.libs.json.JsString
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.CacheMap
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.DatedCacheMap
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{CacheMap, DatedCacheMap}
+
+import java.time.{Duration, Instant}
+import java.util.UUID
 
 class SessionRepositoryISpec extends IntegrationSpecBase {
 

@@ -18,10 +18,9 @@ package helpers
 
 import org.mongodb.scala.bson.BsonDocument
 import org.mongodb.scala.model.Filters
-import play.api.libs.json.{Format, JsString, JsValue}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.CacheMap
+import play.api.libs.json.{Format, JsValue}
 import uk.gov.hmrc.mongo.test.DefaultPlayMongoRepositorySupport
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.DatedCacheMap
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{CacheMap, DatedCacheMap}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.{CascadeUpsert, DefaultTEASessionCache}
 
 import java.time.Instant

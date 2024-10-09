@@ -34,11 +34,15 @@
     <h1 class="govuk-heading-l">@messages("signInAgain.heading1")</h1>
     <h2 class="govuk-heading-s">@messages("signInAgain.subheading")</h2>
     <dl class="govuk-summary-list">
-        @summaryRow("common.userId", saAccountDetails.userId)
+        @if(saAccountDetails.isIdentityProviderSCP) {
+            @summaryRow("common.userId", saAccountDetails.userId)
+        }
         @if(saAccountDetails.emailDecrypted.isDefined) {
             @summaryRow("signInAgain.email", saAccountDetails.emailDecrypted.get)
         }
-        @summaryRow("signInAgain.lastLoginDate", saAccountDetails.lastLoginDate.getOrElse(""))
+        @for(lastLogin <- saAccountDetails.lastLoginDate) {
+            @summaryRow("signInAgain.lastLoginDate", lastLogin)
+        }
         @for(mfaDetail <- saAccountDetails.mfaDetails) {
             @summaryRow(mfaDetail.factorNameKey, mfaDetail.factorValue)
         }
@@ -51,18 +55,42 @@
     </p>
 
     <h2 class="govuk-heading-m">@messages("signInAgain.heading2")</h2>
-    <p class="govuk-body">@messages("signInAgain.paragraph1", userId)</p>
+    @if(saAccountDetails.isIdentityProviderOneLogin) {
+      @for(email <- saAccountDetails.emailDecrypted) {
+<p class="govuk-body">@messages("signInAgain.paragraph1.ol", email)</p>
+      }
+    } else {
+      <p class="govuk-body">@messages("signInAgain.paragraph1.gg", userId)</p>
+    }
+
     <p class="govuk-body">@messages("signInAgain.paragraph2")</p>
     <ul class="govuk-list govuk-list--bullet">
         <li>@messages("signInAgain.listItem1")</li>
-        <li>@messages("signInAgain.listItem2", saAccountDetails.userId)</li>
+        @if(saAccountDetails.isIdentityProviderOneLogin) {
+          @for(email <- saAccountDetails.emailDecrypted) {
+            <li>@messages("signInAgain.listItem2.ol", email)</li>
+          }
+        } else {
+          <li>@messages("signInAgain.listItem2.gg", saAccountDetails.userId)</li>
+        }
     </ul>
 
-    @govukWarningText(
-        WarningText(
-            content = Text(messages("signInAgain.exclamation", saAccountDetails.userId))
+    @if(saAccountDetails.isIdentityProviderOneLogin) {
+        @for(email <- saAccountDetails.emailDecrypted) {
+            @govukWarningText(
+                WarningText(
+                content =  Text(messages("signInAgain.exclamation.ol", email))
+            )
         )
-    )
+
+        }
+    } else {
+        @govukWarningText(
+            WarningText(
+               content =  Text(messages("signInAgain.exclamation.gg", saAccountDetails.userId))
+            )
+        )
+    }
 
     @formHelper(action = routes.SignInWithSAAccountController.continue) {
         @govukButton(Button(

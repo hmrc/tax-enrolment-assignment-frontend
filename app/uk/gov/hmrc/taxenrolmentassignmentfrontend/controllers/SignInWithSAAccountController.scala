@@ -27,6 +27,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SignInWithSAAccount
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.templates.ErrorTemplate
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -40,7 +41,8 @@ class SignInWithSAAccountController @Inject() (
   signInWithSAAccount: SignInWithSAAccount,
   val logger: EventLoggerService,
   auditHandler: AuditHandler,
-  errorHandler: ErrorHandler
+  errorHandler: ErrorHandler,
+  errorView: ErrorTemplate
 )(implicit ec: ExecutionContext)
     extends TEAFrontendController(mcc) {
 
@@ -60,7 +62,13 @@ class SignInWithSAAccountController @Inject() (
 
       res.value.map {
         case Right((currentAccount, saAccount)) =>
-          Ok(signInWithSAAccount(currentAccount, AccountDetails.userFriendlyAccountDetails(saAccount)))
+          if (saAccount.isIdentityProviderOneLogin && saAccount.emailDecrypted.isEmpty) {
+            logger
+              .logEvent(logOneLoginEmailIsMissing)
+            InternalServerError(errorView())
+          } else {
+            Ok(signInWithSAAccount(currentAccount, AccountDetails.userFriendlyAccountDetails(saAccount)))
+          }
         case Left(error) =>
           errorHandler.handleErrors(error, "[SignInWithSAAccountController][view]")(request, implicitly)
       }

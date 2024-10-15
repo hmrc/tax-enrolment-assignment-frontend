@@ -29,7 +29,7 @@ class IdentityProviderAccountContextConnectorTestOnlyISpec extends IntegrationSp
 
   "postAccount" must {
     val credId = "credId"
-    val apiUrl = "/identity-provider-account-context/test-only/accounts"
+    val apiUrl = "/identity-provider-account-context/test-only/test/accounts"
     val account = AccountDetailsTestOnly(
       "SCP",
       "groupId",
@@ -44,14 +44,14 @@ class IdentityProviderAccountContextConnectorTestOnlyISpec extends IntegrationSp
       "response is OK" in {
         val requestBody = Json
           .obj(
-            "action"               -> "create",
+            "eacdUserId"           -> credId,
             "identityProviderId"   -> credId,
             "identityProviderType" -> "SCP",
             "email"                -> "email"
           )
           .toString()
 
-        stubPost(apiUrl, requestBody, Status.CREATED, """{"caUserId": "uuid"}""")
+        stubPost(apiUrl, requestBody, Status.CREATED, """{"centralAuthUser": { "_id": "uuid"}}""")
         whenReady(connector.postAccount(account).value) { response =>
           response shouldBe Right("uuid")
         }
@@ -61,7 +61,7 @@ class IdentityProviderAccountContextConnectorTestOnlyISpec extends IntegrationSp
     "return an UpstreamUnexpected2XX error" in {
       val requestBody = Json
         .obj(
-          "action"               -> "create",
+          "eacdUserId"           -> credId,
           "identityProviderId"   -> credId,
           "identityProviderType" -> "SCP",
           "email"                -> "email"
@@ -77,7 +77,7 @@ class IdentityProviderAccountContextConnectorTestOnlyISpec extends IntegrationSp
     "return an UpstreamError error" in {
       val requestBody = Json
         .obj(
-          "action"               -> "create",
+          "eacdUserId"           -> credId,
           "identityProviderId"   -> credId,
           "identityProviderType" -> "SCP",
           "email"                -> "email"

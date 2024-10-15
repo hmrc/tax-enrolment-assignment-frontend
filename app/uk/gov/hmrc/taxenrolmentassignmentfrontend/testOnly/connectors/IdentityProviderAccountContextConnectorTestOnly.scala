@@ -39,7 +39,7 @@ class IdentityProviderAccountContextConnectorTestOnly @Inject() (
 ) extends Logging {
   def postAccount(account: AccountDetailsTestOnly)(implicit hc: HeaderCarrier): TEAFResult[String] = {
     val url =
-      s"${appConfigTestOnly.identityProviderAccountContextBaseUrl}/identity-provider-account-context/test-only/accounts"
+      s"${appConfigTestOnly.identityProviderAccountContextBaseUrl}/identity-provider-account-context/test-only/test/accounts"
 
     EitherT(
       httpClient.POST[JsObject, Either[UpstreamErrorResponse, HttpResponse]](
@@ -50,7 +50,7 @@ class IdentityProviderAccountContextConnectorTestOnly @Inject() (
       .transform {
         case Right(response) if response.status == CREATED =>
           Right(
-            (response.json \ "caUserId").as[String]
+            (response.json \ "centralAuthUser" \ "_id").as[String]
           )
         case Right(response) =>
           val ex = new RuntimeException(s"Unexpected ${response.status} status")

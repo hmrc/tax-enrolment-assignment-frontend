@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.connectors
 
 import cats.data.EitherT
 import play.api.Logging
-import play.api.http.Status.{CONFLICT, CREATED}
+import play.api.http.Status.{CONFLICT, CREATED, OK}
 import play.api.libs.json.JsObject
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, UpstreamErrorResponse}
 import uk.gov.hmrc.service.TEAFResult
@@ -39,7 +39,7 @@ class IdentityProviderAccountContextConnectorTestOnly @Inject() (
 ) extends Logging {
   def postAccount(account: AccountDetailsTestOnly)(implicit hc: HeaderCarrier): TEAFResult[String] = {
     val url =
-      s"${appConfigTestOnly.identityProviderAccountContextBaseUrl}/identity-provider-account-context/test-only/test/accounts"
+      s"${appConfigTestOnly.oneLoginStubBaseUrl}/one-login-stub/test/accounts"
 
     EitherT(
       httpClient.POST[JsObject, Either[UpstreamErrorResponse, HttpResponse]](
@@ -66,7 +66,7 @@ class IdentityProviderAccountContextConnectorTestOnly @Inject() (
     hc: HeaderCarrier
   ): TEAFResult[Unit] = {
     val url =
-      s"${appConfigTestOnly.identityProviderAccountContextBaseUrl}/identity-provider-account-context/contexts/individual"
+      s"${appConfigTestOnly.oneLoginStubBaseUrl}/one-login-stub/individual"
 
     EitherT(
       httpClient.POST[JsObject, Either[UpstreamErrorResponse, HttpResponse]](
@@ -85,6 +85,27 @@ class IdentityProviderAccountContextConnectorTestOnly @Inject() (
           logger.error(upstreamError.message)
           Left(UpstreamError(upstreamError))
       }
+  }
+
+  def deleteIndividual(caUserId: String)(implicit hc: HeaderCarrier): TEAFResult[Unit] = {
+    val url =
+      s"${appConfigTestOnly.oneLoginStubBaseUrl}/one-login-stub/test/accounts/$caUserId"
+
+    EitherT(
+      httpClient.DELETE[Either[UpstreamErrorResponse, HttpResponse]](
+        url
+      )
+    ).transform {
+      case Right(response) if response.status == OK => Right(())
+      case Right(response) =>
+        val ex = new RuntimeException(s"Unexpected ${response.status} status")
+        logger.error(ex.getMessage, ex)
+        Left(UpstreamUnexpected2XX(response.body, response.status))
+      case Left(upstreamError) =>
+        logger.error(upstreamError.message)
+        Left(UpstreamError(upstreamError))
+
+    }
   }
 
 }

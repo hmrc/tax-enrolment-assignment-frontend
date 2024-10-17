@@ -54,6 +54,7 @@ class AccountUtilsTestOnly @Inject() (
       // delete bas-stub data - The users accounts
       _ <- basStubsConnectorTestOnly.deleteAdditionalFactors(account.user.credId)
       _ <- basStubsConnectorTestOnly.deleteAccount(account)
+      _ <- identityProviderAccountContextConnectorTestOnly.deleteIndividual(account.user.credId)
     } yield ()
 
   def insertAccountDetails(account: AccountDetailsTestOnly)(implicit hc: HeaderCarrier): TEAFResult[Unit] =

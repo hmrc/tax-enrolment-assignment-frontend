@@ -66,7 +66,7 @@ class IdentityProviderAccountContextConnectorTestOnly @Inject() (
     hc: HeaderCarrier
   ): TEAFResult[Unit] = {
     val url =
-      s"${appConfigTestOnly.oneLoginStubBaseUrl}/one-login-stub/individual"
+      s"${appConfigTestOnly.identityProviderAccountContextBaseUrl}/identity-provider-account-context/contexts/individual"
 
     EitherT(
       httpClient.POST[JsObject, Either[UpstreamErrorResponse, HttpResponse]](

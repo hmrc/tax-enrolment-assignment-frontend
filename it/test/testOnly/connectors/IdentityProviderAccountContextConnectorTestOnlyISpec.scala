@@ -30,7 +30,7 @@ class IdentityProviderAccountContextConnectorTestOnlyISpec extends IntegrationSp
 
   "postAccount" must {
     val credId = "credId"
-    val apiUrl = "/identity-provider-account-context/test-only/test/accounts"
+    val apiUrl = "/one-login-stub/test/accounts"
     val account = AccountDetailsTestOnly(
       "SCP",
       "groupId",
@@ -153,7 +153,7 @@ class IdentityProviderAccountContextConnectorTestOnlyISpec extends IntegrationSp
 
   "delete individual" must {
     val eacdUserId = "eacdUserId"
-    val apiUrl = s"/identity-provider-account-context/test-only/test/accounts/$eacdUserId"
+    val apiUrl = s"/one-login-stub/test/accounts/$eacdUserId"
     "delete the account and return OK" in {
 
       stubDelete(apiUrl, Status.OK)

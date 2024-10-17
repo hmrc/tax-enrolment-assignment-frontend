@@ -77,6 +77,7 @@ trait IntegrationSpecBase
     "microservice.services.users-groups-search.port"               -> server.port(),
     "microservice.services.bas-stubs.port"                         -> server.port(),
     "microservice.services.identity-provider-account-context.port" -> server.port(),
+    "microservice.services.one-login-stub.port"                    -> server.port(),
     "play.http.router"                                             -> "testOnlyDoNotUseInAppConf.Routes",
     "throttle.percentage"                                          -> "3",
     "mongodb.uri"                                                  -> mongoUri

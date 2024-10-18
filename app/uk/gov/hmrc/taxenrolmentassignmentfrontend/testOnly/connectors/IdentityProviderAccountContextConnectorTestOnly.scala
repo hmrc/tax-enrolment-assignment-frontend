@@ -39,7 +39,7 @@ class IdentityProviderAccountContextConnectorTestOnly @Inject() (
 ) extends Logging {
   def postAccount(account: AccountDetailsTestOnly)(implicit hc: HeaderCarrier): TEAFResult[String] = {
     val url =
-      s"${appConfigTestOnly.oneLoginStubBaseUrl}/one-login-stub/test/accounts"
+      s"${appConfigTestOnly.identityProviderAccountContextBaseUrl}/identity-provider-account-context/test-only/test/accounts"
 
     EitherT(
       httpClient.POST[JsObject, Either[UpstreamErrorResponse, HttpResponse]](
@@ -89,7 +89,7 @@ class IdentityProviderAccountContextConnectorTestOnly @Inject() (
 
   def deleteIndividual(caUserId: String)(implicit hc: HeaderCarrier): TEAFResult[Unit] = {
     val url =
-      s"${appConfigTestOnly.oneLoginStubBaseUrl}/one-login-stub/test/accounts/$caUserId"
+      s"${appConfigTestOnly.identityProviderAccountContextBaseUrl}/identity-provider-account-context/test-only/test/accounts/$caUserId"
 
     EitherT(
       httpClient.DELETE[Either[UpstreamErrorResponse, HttpResponse]](

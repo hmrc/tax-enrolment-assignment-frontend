@@ -45,26 +45,20 @@ class EnrolledPTWithSAOnOtherAccountController @Inject() (
 
   def view: Action[AnyContent] =
     authAction.andThen(accountMongoDetailsAction).async { implicit request =>
-      val res = for {
+      (for {
         currentAccount <- multipleAccountsOrchestrator.getDetailsForEnrolledPTWithSAOnOtherAccount
         optSAAccount   <- multipleAccountsOrchestrator.getSACredentialIfNotFraud
 
-      } yield (
-        AccountDetails.userFriendlyAccountDetails(currentAccount).userId,
-        optSAAccount
-      )
-
-      res.value.map {
-        case Right((currentUserId, Some(optSAAccount))) =>
-          Ok(enrolledForPTPage(currentUserId, optSAAccount))
-        case Right((_, None)) =>
-          errorHandler.handleErrors(
-            GetSACredentialIfNotFraudReturnedNone,
-            "[EnrolledPTWithSAOnOtherAccountController][view]"
-          )(request, implicitly)
-        case Left(error) =>
-          errorHandler.handleErrors(error, "[EnrolledPTWithSAOnOtherAccountController][view]")(request, implicitly)
-      }
+      } yield optSAAccount.fold {
+        errorHandler.handleErrors(
+          GetSACredentialIfNotFraudReturnedNone,
+          "[EnrolledPTWithSAOnOtherAccountController][view]"
+        )(request, implicitly)
+      } { error =>
+        Ok(enrolledForPTPage(error, currentAccount))
+      })
+        .leftMap(errorHandler.handleErrors(_, "[EnrolledPTWithSAOnOtherAccountController][view]")(request, implicitly))
+        .merge
     }
 
   def continue: Action[AnyContent] =

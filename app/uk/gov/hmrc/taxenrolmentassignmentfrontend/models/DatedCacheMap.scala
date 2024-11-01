@@ -17,10 +17,11 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 
 import play.api.libs.json.{Format, JsValue, Json, OFormat}
-import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.mongo.play.json.formats.{MongoFormats, MongoJavatimeFormats}
 
 import java.time.Instant
+
+case class CacheMap(id: String, data: Map[String, JsValue])
 
 case class DatedCacheMap(id: String, data: Map[String, JsValue], lastUpdated: Instant = Instant.now())
     extends MongoFormats {
@@ -31,9 +32,6 @@ case class DatedCacheMap(id: String, data: Map[String, JsValue], lastUpdated: In
 }
 
 object DatedCacheMap {
-  def apply(cacheMap: CacheMap): DatedCacheMap =
-    DatedCacheMap(cacheMap.id, cacheMap.data)
-
   implicit val dateFormat: Format[Instant] = MongoJavatimeFormats.instantFormat
   implicit val formats: OFormat[DatedCacheMap] = Json.format[DatedCacheMap]
 }

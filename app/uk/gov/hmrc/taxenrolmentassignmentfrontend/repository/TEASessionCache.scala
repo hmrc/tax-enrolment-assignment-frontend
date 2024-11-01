@@ -22,11 +22,10 @@ import org.mongodb.scala.model.Updates.set
 import org.mongodb.scala.model.{IndexModel, IndexOptions, Indexes, ReplaceOptions}
 import play.api.Configuration
 import play.api.libs.json.Format
-import uk.gov.hmrc.http.cache.client.CacheMap
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.DatedCacheMap
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{CacheMap, DatedCacheMap}
 
 import java.time.{LocalDateTime, ZoneId}
 import java.util.concurrent.TimeUnit
@@ -111,16 +110,6 @@ class DefaultTEASessionCache @Inject() (
       }
     }
 
-  def remove(
-    key: String
-  )(implicit request: RequestWithUserDetailsFromSession[_]): Future[Boolean] =
-    get(request.sessionID).flatMap { optionalCacheMap =>
-      optionalCacheMap.fold(Future(false)) { cacheMap =>
-        val newCacheMap = cacheMap copy (data = cacheMap.data - key)
-        upsert(newCacheMap)
-      }
-    }
-
   def removeRecord(implicit
     request: RequestWithUserDetailsFromSession[_]
   ): Future[Boolean] =
@@ -150,10 +139,6 @@ trait TEASessionCache {
     request: RequestWithUserDetailsFromSession[_],
     fmt: Format[A]
   ): Future[CacheMap]
-
-  def remove(
-    key: String
-  )(implicit request: RequestWithUserDetailsFromSession[_]): Future[Boolean]
 
   def removeRecord(implicit
     request: RequestWithUserDetailsFromSession[_]

@@ -105,16 +105,6 @@ class IdentityProviderAccountContextConnectorTestOnlyISpec extends IntegrationSp
     )
     val caUserId = "caUserId"
 
-    val requestBody =
-      s"""
-         |{
-         |  "credId": "$credId",
-         |  "nino": "${nino.nino}",
-         |  "confidenceLevel": 200
-         |}
-         |""".stripMargin
-    val responseBody = ""
-
     "insert nino" when {
       "response is OK" in {
         val requestBody = Json

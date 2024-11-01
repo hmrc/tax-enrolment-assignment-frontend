@@ -170,6 +170,13 @@ class EnrolmentStoreConnectorTestOnlyISpec extends IntegrationSpecBase {
           response shouldBe Right(List(enrolment1.toString, enrolment2.toString))
         }
       }
+
+      "response is Not Found" in {
+        stubGet(apiUrl, Status.NOT_FOUND, "{}")
+        whenReady(connector.getEnrolmentsFromGroup(groupId).value) { response =>
+          response shouldBe Right(List.empty)
+        }
+      }
     }
 
     "return an UpstreamError error" in {
@@ -241,6 +248,13 @@ class EnrolmentStoreConnectorTestOnlyISpec extends IntegrationSpecBase {
         stubGet(apiUrl, Status.OK, responseBody)
         whenReady(connector.getEnrolmentsFromUser(credId).value) { response =>
           response shouldBe Right(List(enrolment1.toString, enrolment2.toString))
+        }
+      }
+
+      "response is Not Found" in {
+        stubGet(apiUrl, Status.NOT_FOUND, "{}")
+        whenReady(connector.getEnrolmentsFromUser(credId).value) { response =>
+          response shouldBe Right(List.empty)
         }
       }
     }

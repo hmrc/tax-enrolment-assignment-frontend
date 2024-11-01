@@ -18,7 +18,6 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers
 
 import cats.data.EitherT
 import org.apache.pekko.stream.Materializer
-import org.scalamock.scalatest.MockFactory
 import org.scalatest.concurrent.{IntegrationPatience, PatienceConfiguration, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -33,7 +32,7 @@ import play.api.test.CSRFTokenHelper._
 import play.api.test.{FakeRequest, Injecting}
 import play.api.{Application, Configuration}
 import uk.gov.hmrc.domain.{Nino, Generator => NinoGenerator}
-import uk.gov.hmrc.http.cache.client.CacheMap
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.CacheMap
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
@@ -50,7 +49,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait BaseSpec
     extends AnyWordSpec with GuiceOneAppPerSuite with Matchers with PatienceConfiguration with BeforeAndAfterEach
-    with MockFactory with OneInstancePerTest with ScalaFutures with Injecting with IntegrationPatience {
+    with OneInstancePerTest with ScalaFutures with Injecting with IntegrationPatience {
   this: Suite =>
 
   def generateNino: Nino = new NinoGenerator().nextNino
@@ -148,10 +147,6 @@ trait BaseSpec
       fmt: Format[A]
     ): Future[CacheMap] = Future(CacheMap(request.sessionID, Map()))
 
-    override def remove(key: String)(implicit
-      request: RequestWithUserDetailsFromSession[_]
-    ): Future[Boolean] = ???
-
     override def removeRecord(implicit
       request: RequestWithUserDetailsFromSession[_]
     ): Future[Boolean] = ???
@@ -167,9 +162,9 @@ trait BaseSpec
     ): Future[Boolean] = Future.successful(true)
 
     def collectionDeleteOne(id: String): Future[Boolean] = ???
-    def get(id: String): scala.concurrent.Future[Option[uk.gov.hmrc.http.cache.client.CacheMap]] = ???
+    def get(id: String): scala.concurrent.Future[Option[CacheMap]] = ???
     def updateLastUpdated(id: String): scala.concurrent.Future[Boolean] = ???
-    def upsert(cm: uk.gov.hmrc.http.cache.client.CacheMap): scala.concurrent.Future[Boolean] = ???
+    def upsert(cm: CacheMap): scala.concurrent.Future[Boolean] = ???
 
   }
 

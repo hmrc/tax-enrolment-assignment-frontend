@@ -24,17 +24,11 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, UpstreamErrorR
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{UpstreamError, UpstreamUnexpected2XX}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.config.AppConfigTestOnly
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.AccountDetailsTestOnly
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.{AccountDetailsTestOnly, Creds}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
-
-case class Creds(caUserId: String, role: String)
-
-object Creds {
-  implicit val credsFormat = Json.format[Creds]
-}
 
 @Singleton
 class IdentityProviderAccountContextConnectorTestOnly @Inject() (
@@ -130,9 +124,8 @@ class IdentityProviderAccountContextConnectorTestOnly @Inject() (
         Right(listOfCreds.map { x =>
           x.caUserId
         })
-      case Left(error) =>
+      case Left(_) =>
         logger.warn(s"No contexts found for nino $nino")
-        println(s"No contexts found for nino $nino " + error.message)
         Right(List.empty)
     }
   }

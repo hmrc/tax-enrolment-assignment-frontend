@@ -19,7 +19,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.connectors
 import cats.data.EitherT
 import play.api.Logging
 import play.api.http.Status.{CONFLICT, CREATED, OK}
-import play.api.libs.json.{JsArray, JsObject, Json}
+import play.api.libs.json.JsObject
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, UpstreamErrorResponse}
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{UpstreamError, UpstreamUnexpected2XX}
@@ -121,9 +121,7 @@ class IdentityProviderAccountContextConnectorTestOnly @Inject() (
         val listOfCreds: List[Creds] =
           (response.json \ "credentials").as[List[Creds]]
 
-        Right(listOfCreds.map { x =>
-          x.caUserId
-        })
+        Right(listOfCreds.map(_.caUserId))
       case Left(_) =>
         logger.warn(s"No contexts found for nino $nino")
         Right(List.empty)

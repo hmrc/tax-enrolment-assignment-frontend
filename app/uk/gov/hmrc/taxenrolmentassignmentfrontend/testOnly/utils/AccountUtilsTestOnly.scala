@@ -60,8 +60,10 @@ class AccountUtilsTestOnly @Inject() (
     if (account.identityProviderType == "ONE_LOGIN") {
       for {
         // Insert enrolment-store data
-        _ <- enrolmentStoreServiceTestOnly.insertAccount(account)
-        _ <- account.enrolments.map(enrolment => enrolmentStoreServiceTestOnly.upsertEnrolment(enrolment)).sequence
+        eacdIds <- identityProviderAccountContextConnectorTestOnly.getEacdIds(account.nino.nino)
+        _       <- eacdIds.map(id => identityProviderAccountContextConnectorTestOnly.deleteIndividual(id)).sequence
+        _       <- enrolmentStoreServiceTestOnly.insertAccount(account)
+        _       <- account.enrolments.map(enrolment => enrolmentStoreServiceTestOnly.upsertEnrolment(enrolment)).sequence
         _ <-
           account.enrolments
             .map(enrolment =>

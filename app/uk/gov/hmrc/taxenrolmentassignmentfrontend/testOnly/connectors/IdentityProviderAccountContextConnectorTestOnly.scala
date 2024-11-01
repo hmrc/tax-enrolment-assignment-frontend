@@ -108,4 +108,23 @@ class IdentityProviderAccountContextConnectorTestOnly @Inject() (
     }
   }
 
+  def getEacdIds(nino: String)(implicit hc: HeaderCarrier): TEAFResult[List[String]] = {
+    val url =
+      s"${appConfigTestOnly.identityProviderAccountContextBaseUrl}/identity-provider-account-context/contexts/individuals/$nino"
+
+    EitherT(
+      httpClient.GET[Either[UpstreamErrorResponse, HttpResponse]](
+        url
+      )
+    ).transform {
+      case Right(response) =>
+        Right(
+          (response.json \ "credentials").as[List[String]]
+        )
+      case Left(_) =>
+        logger.warn(s"No contexts found for nino $nino")
+        Right(List.empty)
+    }
+  }
+
 }

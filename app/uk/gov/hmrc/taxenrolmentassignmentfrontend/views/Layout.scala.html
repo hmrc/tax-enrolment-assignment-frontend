@@ -19,6 +19,7 @@
 @import views.html.helper.CSPNonce
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.backlink.BackLink
+@import play.api.mvc.RequestHeader
 @this(
         appConfig: AppConfig,
         hmrcLayout: HmrcLayout,
@@ -31,7 +32,7 @@
   mainLayout: Option[Html => Html] = Some(defaultMainContent(_)),
   displaySignout: Boolean = true,
   hasError: Boolean = false,
-  scripts: Option[Html] = None)(contentBlock: Html)(implicit request: Request[_], messages: Messages)
+  scripts: Option[Html] = None)(contentBlock: Html)(implicit request: RequestHeader, messages: Messages)
 
 @headBlock = {
 @if(displaySignout) {

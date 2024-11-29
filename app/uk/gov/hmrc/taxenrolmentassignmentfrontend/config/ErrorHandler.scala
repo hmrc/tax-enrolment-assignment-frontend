@@ -34,5 +34,5 @@ class ErrorHandler @Inject() (errorTemplate: ErrorTemplate, val messagesApi: Mes
   override def standardErrorTemplate(@unused pageTitle: String, @unused heading: String, @unused message: String)(
     implicit request: RequestHeader
   ): Future[Html] =
-    Future.successful(errorTemplate()(request.withBody(""), implicitly))
+    Future.successful(errorTemplate()(request, implicitly))
 }

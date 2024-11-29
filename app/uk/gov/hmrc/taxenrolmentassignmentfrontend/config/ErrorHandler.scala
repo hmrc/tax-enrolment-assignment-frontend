@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.config
 
-import play.api.i18n.{Messages, MessagesApi}
+import play.api.i18n.MessagesApi
 import play.api.mvc.RequestHeader
 import play.twirl.api.Html
 import uk.gov.hmrc.play.bootstrap.frontend.http.FrontendErrorHandler
@@ -33,8 +33,6 @@ class ErrorHandler @Inject() (errorTemplate: ErrorTemplate, val messagesApi: Mes
 
   override def standardErrorTemplate(@unused pageTitle: String, @unused heading: String, @unused message: String)(
     implicit request: RequestHeader
-  ): Future[Html] = {
-    Messages.apply("")
+  ): Future[Html] =
     Future.successful(errorTemplate()(request.withBody(""), implicitly))
-  }
 }

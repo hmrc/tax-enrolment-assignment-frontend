@@ -66,7 +66,7 @@ case class AccountDetailsTestOnly(
     )
   def identityProviderAccountContextRequestBody: JsObject =
     Json.obj(
-      "action"               -> "create",
+      "eacdUserId"           -> user.credId,
       "identityProviderId"   -> user.credId,
       "identityProviderType" -> identityProviderType,
       "email"                -> user.email

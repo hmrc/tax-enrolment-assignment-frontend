@@ -31,7 +31,8 @@ class AccountUtilsTestOnly @Inject() (
   enrolmentStoreServiceTestOnly: EnrolmentStoreServiceTestOnly,
   identityVerificationConnectorTestOnly: IdentityVerificationConnectorTestOnly,
   basStubsConnectorTestOnly: BasStubsConnectorTestOnly,
-  identityProviderAccountContextConnectorTestOnly: IdentityProviderAccountContextConnectorTestOnly
+  identityProviderAccountContextConnectorTestOnly: IdentityProviderAccountContextConnectorTestOnly,
+  oneLoginStubConnectorTestOnly: OneLoginStubConnectorTestOnly
 )(implicit ec: ExecutionContext) {
   def deleteAccountDetails(account: AccountDetailsTestOnly)(implicit hc: HeaderCarrier): TEAFResult[Unit] =
     for {
@@ -60,15 +61,17 @@ class AccountUtilsTestOnly @Inject() (
     if (account.identityProviderType == "ONE_LOGIN") {
       for {
         // Insert enrolment-store data
-        _ <- enrolmentStoreServiceTestOnly.insertAccount(account)
-        _ <- account.enrolments.map(enrolment => enrolmentStoreServiceTestOnly.upsertEnrolment(enrolment)).sequence
+        eacdIds <- identityProviderAccountContextConnectorTestOnly.getEacdIds(account.nino.nino)
+        _       <- eacdIds.map(id => oneLoginStubConnectorTestOnly.deleteAccount(id)).sequence
+        _       <- enrolmentStoreServiceTestOnly.insertAccount(account)
+        _       <- account.enrolments.map(enrolment => enrolmentStoreServiceTestOnly.upsertEnrolment(enrolment)).sequence
         _ <-
           account.enrolments
             .map(enrolment =>
               enrolmentStoreServiceTestOnly.addEnrolmentToGroup(account.groupId, account.user.credId, enrolment)
             )
             .sequence
-        caUserId <- identityProviderAccountContextConnectorTestOnly.postAccount(account)
+        caUserId <- oneLoginStubConnectorTestOnly.postAccount(account)
         _        <- identityProviderAccountContextConnectorTestOnly.postIndividual(account, caUserId)
       } yield ()
     } else {

@@ -205,7 +205,9 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
     )
       .transform {
         case Left(response) if response.statusCode == NOT_FOUND => Right(())
-        case Right(response) if response.status == NO_CONTENT   => Right(())
+        case Left(response) if response.statusCode == BAD_REQUEST && response.message.contains("INVALID_SERVICE") =>
+          Right(())
+        case Right(response) if response.status == NO_CONTENT => Right(())
         case Right(response) =>
           val ex = new RuntimeException(s"Unexpected ${response.status} status")
           logger.error(ex.getMessage, ex)

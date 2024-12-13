@@ -45,7 +45,7 @@ class AccountUtilsTestOnly @Inject() (
       _ <- account.enrolments.map(enrolmentStoreServiceTestOnly.deallocateEnrolmentFromGroups(_)).sequence
       _ <- account.enrolments.map(enrolmentStoreServiceTestOnly.deallocateEnrolmentFromUsers(_)).sequence
       _ <- account.enrolments.map(enrolmentStoreServiceTestOnly.deleteEnrolment(_)).sequence
-      // Search and delete other known facts that might remains after the step above
+      // Search and delete other known facts that might remain after the step above
       _ <- enrolmentStoreServiceTestOnly.deleteAllKnownFactsForNino(account.nino)
       _ <- enrolmentStoreServiceTestOnly.deleteGroup(account.groupId)
       _ <- enrolmentStoreServiceTestOnly.deleteAccount(account.groupId)

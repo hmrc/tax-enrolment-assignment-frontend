@@ -30,6 +30,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{CacheMap, UsersAssigne
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.EACDService
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.utils.HmrcPTEnrolment
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -38,7 +39,8 @@ import scala.concurrent.{ExecutionContext, Future}
 class AccountCheckOrchestrator @Inject() (
   eacdService: EACDService,
   logger: EventLoggerService,
-  sessionCache: TEASessionCache
+  sessionCache: TEASessionCache,
+  hmrcPTEnrolment: HmrcPTEnrolment
 ) {
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
@@ -50,13 +52,22 @@ class AccountCheckOrchestrator @Inject() (
   ): EitherT[Future, TaxEnrolmentAssignmentErrors, AccountTypes.Value] = EitherT {
     getOptAccountTypeFromCache.foldF {
       val hmrcPtOnOtherAccountFuture =
-        eacdService.getUsersAssignedPTEnrolment.map { userAssignedEnrolment: UsersAssignedEnrolment =>
+        eacdService.getUsersAssignedPTEnrolment.flatMap { userAssignedEnrolment: UsersAssignedEnrolment =>
           userAssignedEnrolment.enrolledCredential match {
-            case Some(requestWithUserDetails.userDetails.credId) => None
-            case Some(credId)                                    => Some(credId)
-            case None                                            => None
+            case Some(requestWithUserDetails.userDetails.credId) =>
+              EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](None: Option[String])
+            case Some(credId) => EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](Some(credId): Option[String])
+            case None =>
+              println(s"aaaaaaaa")
+              hmrcPTEnrolment.findAndDeleteGroupsWithPTEnrolment.transform {
+                case Left(error) =>
+                  println("bbbbbb")
+                  Left(error: TaxEnrolmentAssignmentErrors)
+                case Right(_) =>
+                  println("ccccc")
+                  Right(None: Option[String])
+              }
           }
-
         }
 
       val irSaOnOtherAccountFuture = eacdService.getUsersAssignedSAEnrolment.map {

@@ -23,7 +23,8 @@ import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.EACDConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{GroupsAssignedEnrolment, UsersAssignedEnrolment}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.hmrcPTKey
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_ASSIGNED_PT_ENROLMENT, USER_ASSIGNED_SA_ENROLMENT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 
@@ -72,4 +73,11 @@ class EACDService @Inject() (eacdConnector: EACDConnector, sessionCache: TEASess
              )
            )
     } yield usersWithSAEnrolment
+
+  def getGroupsAssignedPTEnrolment(implicit
+    requestWithUserDetails: RequestWithUserDetailsFromSession[_],
+    hc: HeaderCarrier,
+    ec: ExecutionContext
+  ): TEAFResult[GroupsAssignedEnrolment] =
+    eacdConnector.getGroupsFromEnrolment(s"$hmrcPTKey~NINO~${requestWithUserDetails.userDetails.nino}")
 }

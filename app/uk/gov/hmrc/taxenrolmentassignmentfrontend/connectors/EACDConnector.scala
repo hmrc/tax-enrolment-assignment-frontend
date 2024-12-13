@@ -21,14 +21,14 @@ import play.api.Logger
 import play.api.http.Status._
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, UpstreamErrorResponse}
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromEACD
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{UnexpectedResponseFromEACD, UpstreamError}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{logES2ErrorFromEACD, logUnexpectedResponseFromEACD, logUnexpectedResponseFromEACDQueryKnownFacts}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{logES1ErrorFromEACD, logES2ErrorFromEACD, logUnexpectedResponseFromEACD, logUnexpectedResponseFromEACDQueryKnownFacts}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.{IRSAKey, hmrcPTKey}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{KnownFactQueryForNINO, KnownFactResponseForNINO, UserEnrolmentsListResponse, UsersAssignedEnrolment}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{GroupsAssignedEnrolment, KnownFactQueryForNINO, KnownFactResponseForNINO, UserEnrolmentsListResponse, UsersAssignedEnrolment}
 
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext
@@ -131,4 +131,24 @@ class EACDConnector @Inject() (httpClient: HttpClient, logger: EventLoggerServic
         }
       )
   }
+
+  //ES1
+  def getGroupsFromEnrolment(
+    enrolmentKey: String
+  )(implicit hc: HeaderCarrier, ec: ExecutionContext): TEAFResult[GroupsAssignedEnrolment] =
+    EitherT(
+      httpClient.GET[Either[UpstreamErrorResponse, HttpResponse]](
+        s"${appConfig.EACD_BASE_URL}/enrolment-store/enrolments/$enrolmentKey/groups"
+      )
+    )
+      .transform {
+        case Right(response) if response.status == NO_CONTENT => Right(GroupsAssignedEnrolment(List.empty))
+        case Right(response) =>
+          Right(response.json.as[GroupsAssignedEnrolment](GroupsAssignedEnrolment.reads))
+
+        case Left(upstreamError) =>
+          logger.logEvent(logES1ErrorFromEACD(enrolmentKey, upstreamError.message))
+          Left(UpstreamError(upstreamError))
+      }
+
 }

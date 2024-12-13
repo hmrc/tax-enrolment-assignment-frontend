@@ -22,12 +22,15 @@ import uk.gov.hmrc.auth.core.{EnrolmentIdentifier, Enrolments}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.TaxEnrolmentsConnector
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.hmrcPTKey
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.EACDService
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class HmrcPTEnrolment @Inject() (taxEnrolmentsConnector: TaxEnrolmentsConnector) {
+class HmrcPTEnrolment @Inject() (taxEnrolmentsConnector: TaxEnrolmentsConnector, eacdService: EACDService) {
   def findAndDeleteWrongPTEnrolment(nino: Nino, enrolments: Enrolments, groupId: String)(implicit
     hc: HeaderCarrier,
     ec: ExecutionContext
@@ -46,4 +49,17 @@ class HmrcPTEnrolment @Inject() (taxEnrolmentsConnector: TaxEnrolmentsConnector)
       .sequence
       .map(_ => ())
   }
+
+  def findAndDeleteGroupsWithPTEnrolment(implicit
+    requestWithUserDetails: RequestWithUserDetailsFromSession[_],
+    hc: HeaderCarrier,
+    ec: ExecutionContext
+  ): EitherT[Future, TaxEnrolmentAssignmentErrors, Unit] =
+    eacdService.getGroupsAssignedPTEnrolment.map { groupIds =>
+      println(s"ddddd $groupIds")
+      groupIds.groupIds.foreach { id =>
+        println(s"eeeeee $id")
+        taxEnrolmentsConnector.deallocateEnrolment(id, s"$hmrcPTKey~NINO~${requestWithUserDetails.userDetails.nino}")
+      }
+    }
 }

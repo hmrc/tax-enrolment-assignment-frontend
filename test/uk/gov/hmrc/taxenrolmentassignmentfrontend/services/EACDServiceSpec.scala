@@ -133,4 +133,30 @@ class EACDServiceSpec extends BaseSpec {
       }
     }
   }
+
+  "getGroupsAssignedPTEnrolment" when {
+    "the a PT enrolment has been assigned for the nino" should {
+      "call the EACD, save to cache and return the group ids with the enrolment" in {
+        when(mockEacdConnector.getGroupsFromEnrolment(s"HMRC-PT~NINO~$NINO"))
+          .thenReturn(createInboundResult(GroupsAssignedEnrolment3Groups))
+
+        val result = service.getGroupsAssignedPTEnrolment
+        whenReady(result.value) { res =>
+          res shouldBe Right(GroupsAssignedEnrolment3Groups)
+        }
+      }
+    }
+
+    "EACD returns an error" should {
+      "return an error" in {
+        when(mockEacdConnector.getGroupsFromEnrolment(s"HMRC-PT~NINO~$NINO"))
+          .thenReturn(createInboundResultError(UnexpectedResponseFromEACD))
+
+        val result = service.getGroupsAssignedPTEnrolment
+        whenReady(result.value) { res =>
+          res shouldBe Left(UnexpectedResponseFromEACD)
+        }
+      }
+    }
+  }
 }

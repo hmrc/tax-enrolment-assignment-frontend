@@ -53,12 +53,13 @@ class AccountCheckOrchestrator @Inject() (
     getOptAccountTypeFromCache.foldF {
       val hmrcPtOnOtherAccountFuture =
         eacdService.getUsersAssignedPTEnrolment.flatMap { userAssignedEnrolment: UsersAssignedEnrolment =>
-          userAssignedEnrolment.enrolledCredential match {
+          val y = userAssignedEnrolment.enrolledCredential match {
             case Some(requestWithUserDetails.userDetails.credId) =>
               EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](None: Option[String])
             case Some(credId) => EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](Some(credId): Option[String])
             case None =>
-              println(s"aaaaaaaa")
+              println("NO ENROLMENTS")
+              EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](None: Option[String])
               hmrcPTEnrolment.findAndDeleteGroupsWithPTEnrolment.transform {
                 case Left(error) =>
                   println("bbbbbb")
@@ -68,6 +69,8 @@ class AccountCheckOrchestrator @Inject() (
                   Right(None: Option[String])
               }
           }
+          println(s"lllll $y")
+          y
         }
 
       val irSaOnOtherAccountFuture = eacdService.getUsersAssignedSAEnrolment.map {

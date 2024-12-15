@@ -54,12 +54,12 @@ class HmrcPTEnrolment @Inject() (taxEnrolmentsConnector: TaxEnrolmentsConnector,
     requestWithUserDetails: RequestWithUserDetailsFromSession[_],
     hc: HeaderCarrier,
     ec: ExecutionContext
-  ): EitherT[Future, TaxEnrolmentAssignmentErrors, Unit] =
+  ): EitherT[Future, TaxEnrolmentAssignmentErrors, Unit] = {
+    println("FINDING GROUPS")
     eacdService.getGroupsAssignedPTEnrolment.map { groupIds =>
-      println(s"ddddd $groupIds")
       groupIds.groupIds.foreach { id =>
-        println(s"eeeeee $id")
         taxEnrolmentsConnector.deallocateEnrolment(id, s"$hmrcPTKey~NINO~${requestWithUserDetails.userDetails.nino}")
       }
     }
+  }
 }

@@ -17,20 +17,20 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators
 
 import org.mockito.ArgumentMatchers.{any, eq => ameq}
-import org.mockito.MockitoSugar.{mock, when}
+import org.mockito.MockitoSugar.{mock, times, verify, when}
 import play.api.Application
 import play.api.inject.{Binding, bind}
 import play.api.mvc.BodyParsers
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.TaxEnrolmentsConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.ACCOUNT_TYPE
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, SilentAssignmentService}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.utils.HmrcPTEnrolment
 
 import scala.concurrent.Future
 
@@ -42,7 +42,7 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
   lazy val mockSilentAssignmentService: SilentAssignmentService = mock[SilentAssignmentService]
   lazy val mockEacdService: EACDService = mock[EACDService]
   lazy val mockTeaSessionCache: TEASessionCache = mock[TEASessionCache]
-  lazy val mockHmrcPtEnrolment: HmrcPTEnrolment = mock[HmrcPTEnrolment]
+  lazy val mockTaxEnrolmentConnector: TaxEnrolmentsConnector = mock[TaxEnrolmentsConnector]
 
   lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
   lazy val mockMultipleAccountsOrchestrator: MultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
@@ -54,11 +54,20 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
   override implicit lazy val app: Application = localGuiceApplicationBuilder()
     .overrides(
       bind[SilentAssignmentService].toInstance(mockSilentAssignmentService),
-      bind[EACDService].toInstance(mockEacdService)
+      bind[EACDService].toInstance(mockEacdService),
+      bind[TaxEnrolmentsConnector].toInstance(mockTaxEnrolmentConnector)
     )
     .build()
 
   val orchestrator: AccountCheckOrchestrator = app.injector.instanceOf[AccountCheckOrchestrator]
+
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+
+    when(mockEacdService.getGroupsAssignedPTEnrolment(any(), any(), any())).thenReturn(
+      createInboundResult(GroupsAssignedEnrolmentEmpty)
+    )
+  }
 
   s"getAccountType" when {
     "the accountType is available in the cache" should {
@@ -89,7 +98,7 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
             .thenReturn(Future.successful(CacheMap(request.sessionID, Map())))
 
           when(mockEacdService.getGroupsAssignedPTEnrolment).thenReturn(
-            createInboundResult(GroupsAssignedEnrolment3Groups)
+            createInboundResult(GroupsAssignedEnrolmentEmpty)
           )
 
           val res = orchestrator.getAccountType
@@ -116,7 +125,7 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
             .thenReturn(createInboundResult(UsersAssignedEnrolmentCurrentCred))
 
           when(mockEacdService.getGroupsAssignedPTEnrolment).thenReturn(
-            createInboundResult(GroupsAssignedEnrolment3Groups)
+            createInboundResult(GroupsAssignedEnrolmentEmpty)
           )
 
           val res = orchestrator.getAccountType(
@@ -146,7 +155,7 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
             .thenReturn(Future(CacheMap(request.sessionID, Map())))
 
           when(mockEacdService.getGroupsAssignedPTEnrolment).thenReturn(
-            createInboundResult(GroupsAssignedEnrolment3Groups)
+            createInboundResult(GroupsAssignedEnrolmentEmpty)
           )
 
           val res =
@@ -176,7 +185,7 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
             .thenReturn(Future(CacheMap(request.sessionID, Map())))
 
           when(mockEacdService.getGroupsAssignedPTEnrolment).thenReturn(
-            createInboundResult(GroupsAssignedEnrolment3Groups)
+            createInboundResult(GroupsAssignedEnrolmentEmpty)
           )
 
           val res = orchestrator.getAccountType
@@ -203,7 +212,7 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
             .thenReturn(Future(CacheMap(request.sessionID, Map())))
 
           when(mockEacdService.getGroupsAssignedPTEnrolment).thenReturn(
-            createInboundResult(GroupsAssignedEnrolment3Groups)
+            createInboundResult(GroupsAssignedEnrolmentEmpty)
           )
 
           val res = orchestrator.getAccountType
@@ -230,7 +239,7 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
             .thenReturn(Future(CacheMap(request.sessionID, Map())))
 
           when(mockEacdService.getGroupsAssignedPTEnrolment).thenReturn(
-            createInboundResult(GroupsAssignedEnrolment3Groups)
+            createInboundResult(GroupsAssignedEnrolmentEmpty)
           )
 
           val res = orchestrator.getAccountType(
@@ -259,10 +268,6 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
           when(mockTeaSessionCache.save(ameq(ACCOUNT_TYPE), ameq(SA_ASSIGNED_TO_CURRENT_USER))(any(), any()))
             .thenReturn(Future(CacheMap(request.sessionID, Map())))
 
-          when(mockEacdService.getGroupsAssignedPTEnrolment).thenReturn(
-            createInboundResult(GroupsAssignedEnrolment3Groups)
-          )
-
           val res =
             orchestrator.getAccountType(implicitly, implicitly, requestWithEnrolments(hmrcPt = false, irSa = true))
 
@@ -288,7 +293,7 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
             .thenReturn(Future(CacheMap(request.sessionID, Map())))
 
           when(mockEacdService.getGroupsAssignedPTEnrolment).thenReturn(
-            createInboundResult(GroupsAssignedEnrolment3Groups)
+            createInboundResult(GroupsAssignedEnrolmentEmpty)
           )
 
           val res = orchestrator.getAccountType
@@ -315,7 +320,7 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
             .thenReturn(Future(CacheMap(request.sessionID, Map())))
 
           when(mockEacdService.getGroupsAssignedPTEnrolment).thenReturn(
-            createInboundResult(GroupsAssignedEnrolment3Groups)
+            createInboundResult(GroupsAssignedEnrolmentEmpty)
           )
 
           val res = orchestrator.getAccountType
@@ -324,6 +329,35 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
             result shouldBe Right(SA_ASSIGNED_TO_OTHER_USER)
           }
         }
+      }
+    }
+    "there are no user credentials with the enrolment" should {
+      "find any groups with the assignment and deallocate them from each" in {
+
+        when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))
+          .thenReturn(Future.successful(None))
+
+        when(mockEacdService.getUsersAssignedPTEnrolment(any(), any(), any()))
+          .thenReturn(createInboundResult(UsersAssignedEnrolmentEmpty))
+
+        when(mockEacdService.getUsersAssignedSAEnrolment(any(), any(), any()))
+          .thenReturn(createInboundResult(UsersAssignedEnrolment1))
+
+        when(mockTeaSessionCache.save(ameq(ACCOUNT_TYPE), ameq(SA_ASSIGNED_TO_OTHER_USER))(any(), any()))
+          .thenReturn(Future(CacheMap(request.sessionID, Map())))
+
+        when(mockEacdService.getGroupsAssignedPTEnrolment).thenReturn(
+          createInboundResult(GroupsAssignedEnrolment3Groups)
+        )
+
+        val res = orchestrator.getAccountType
+
+        whenReady(res.value) { result =>
+          result shouldBe Right(SA_ASSIGNED_TO_OTHER_USER)
+        }
+
+        verify(mockEacdService, times(1)).getGroupsAssignedPTEnrolment(any(), any(), any())
+        verify(mockTaxEnrolmentConnector, times(3)).deallocateEnrolment(any(), any())(any(), any())
       }
     }
   }

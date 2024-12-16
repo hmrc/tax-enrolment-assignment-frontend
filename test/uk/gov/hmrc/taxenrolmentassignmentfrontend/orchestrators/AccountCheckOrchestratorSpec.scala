@@ -64,6 +64,9 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
   override def beforeEach(): Unit = {
     super.beforeEach()
 
+    when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))
+      .thenReturn(Future.successful(None))
+
     when(mockEacdService.getGroupsAssignedPTEnrolment(any(), any(), any())).thenReturn(
       createInboundResult(GroupsAssignedEnrolmentEmpty)
     )
@@ -85,8 +88,6 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
     "a user has one credential associated with their nino" that {
       "has no PT enrolment in session or EACD" should {
         s"return SINGLE_ACCOUNT" in {
-          when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))
-            .thenReturn(Future.successful(None))
 
           when(mockEacdService.getUsersAssignedPTEnrolment(any(), any(), any()))
             .thenReturn(createInboundResult(UsersAssignedEnrolmentEmpty))
@@ -111,9 +112,6 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
 
       "has a PT enrolment in the session" should {
         s"return PT_ASSIGNED_TO_CURRENT_USER" in {
-
-          when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))
-            .thenReturn(Future.successful(None))
 
           when(mockTeaSessionCache.save(ameq(ACCOUNT_TYPE), ameq(PT_ASSIGNED_TO_CURRENT_USER))(any(), any()))
             .thenReturn(Future(CacheMap(request.sessionID, Map())))
@@ -142,8 +140,6 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
 
       "has PT enrolment in EACD but not the session" should {
         s"return PT_ASSIGNED_TO_CURRENT_USER" in {
-          when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))
-            .thenReturn(Future.successful(None))
 
           when(mockEacdService.getUsersAssignedPTEnrolment(any(), any(), any()))
             .thenReturn(createInboundResult(UsersAssignedEnrolmentCurrentCred))
@@ -172,9 +168,6 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
       "includes one with a PT enrolment" should {
         "return PT_ASSIGNED_TO_OTHER_USER" in {
 
-          when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))
-            .thenReturn(Future.successful(None))
-
           when(mockEacdService.getUsersAssignedPTEnrolment(any(), any(), any()))
             .thenReturn(createInboundResult(UsersAssignedEnrolment1))
 
@@ -199,9 +192,6 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
       "includes a credential (not signed in) with SA enrolment" should {
         "return SA_ASSIGNED_TO_OTHER_USER" in {
 
-          when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))
-            .thenReturn(Future.successful(None))
-
           when(mockEacdService.getUsersAssignedPTEnrolment(any(), any(), any()))
             .thenReturn(createInboundResult(UsersAssignedEnrolmentEmpty))
 
@@ -225,9 +215,6 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
 
       "have no enrolments but the signed in credential has SA in request" should {
         "return SA_ASSIGNED_TO_CURRENT_USER" in {
-
-          when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))
-            .thenReturn(Future.successful(None))
 
           when(mockEacdService.getUsersAssignedPTEnrolment(any(), any(), any()))
             .thenReturn(createInboundResult(UsersAssignedEnrolmentEmpty))
@@ -256,8 +243,6 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
 
       "have no enrolments but the signed in credential has SA in EACD" should {
         "return SA_ASSIGNED_TO_CURRENT_USER" in {
-          when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))
-            .thenReturn(Future.successful(None))
 
           when(mockEacdService.getUsersAssignedPTEnrolment(any(), any(), any()))
             .thenReturn(createInboundResult(UsersAssignedEnrolmentEmpty))
@@ -279,9 +264,6 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
 
       "have no enrolments" should {
         s"return MULTIPLE_ACCOUNTS" in {
-
-          when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))
-            .thenReturn(Future.successful(None))
 
           when(mockEacdService.getUsersAssignedPTEnrolment(any(), any(), any()))
             .thenReturn(createInboundResult(UsersAssignedEnrolmentEmpty))
@@ -307,9 +289,6 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
       "includes one with a SA enrolment" should {
         "return SA_ASSIGNED_TO_OTHER_USER" in {
 
-          when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))
-            .thenReturn(Future.successful(None))
-
           when(mockEacdService.getUsersAssignedPTEnrolment(any(), any(), any()))
             .thenReturn(createInboundResult(UsersAssignedEnrolmentEmpty))
 
@@ -333,9 +312,6 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
     }
     "there are no user credentials with the enrolment" should {
       "find any groups with the assignment and deallocate them from each" in {
-
-        when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))
-          .thenReturn(Future.successful(None))
 
         when(mockEacdService.getUsersAssignedPTEnrolment(any(), any(), any()))
           .thenReturn(createInboundResult(UsersAssignedEnrolmentEmpty))

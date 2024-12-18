@@ -348,6 +348,22 @@ object TestITData {
       |}
       |""".stripMargin
 
+  val es0GroupsResponseNoRecordCred: String =
+    """
+      |{
+      |    "principalGroupIds": [],
+      |    "delegatedGroupIds": []
+      |}
+      |""".stripMargin
+
+  val es3GroupsResponseRecordCred: String =
+    """
+      |{
+      |    "principalGroupIds": ["ABCDEFG123456"],
+      |    "delegatedGroupIds": ["QWERTYU12346", "POIUYTT09876"]
+      |}
+      |""".stripMargin
+
   val saUsers: UsersAssignedEnrolment = UsersAssignedEnrolment(Some(CREDENTIAL_ID_2))
 
   val underConstructionTruePageTitle =

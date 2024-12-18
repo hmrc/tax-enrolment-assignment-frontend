@@ -22,8 +22,8 @@ import play.api.http.Status
 import play.api.http.Status.OK
 import play.api.libs.json.{JsString, Json}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.EACDConnector
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromEACD
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{UserEnrolmentsListResponse, UsersAssignedEnrolment}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{UnexpectedResponseFromEACD, UpstreamError}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{GroupsAssignedEnrolment, UserEnrolmentsListResponse, UsersAssignedEnrolment}
 
 class EACDConnectorISpec extends IntegrationSpecBase {
 
@@ -257,6 +257,56 @@ class EACDConnectorISpec extends IntegrationSpecBase {
         whenReady(connector.queryEnrolmentsAssignedToUser(USER_ID).value) { response =>
           response shouldBe Left(UnexpectedResponseFromEACD)
         }
+      }
+    }
+  }
+
+  "getGroupsFromEnrolment" should {
+
+    val enrolmentKey = "SERVICE~KEY~VALUE"
+    val responseBody =
+      s"""
+         |{
+         |    "principalGroupIds": [
+         |       "c0506dd9-1feb-400a-bf70-6351e1ff7510"
+         |    ],
+         |    "delegatedGroupIds": [
+         |       "c0506dd9-1feb-400a-bf70-6351e1ff7512",
+         |       "c0506dd9-1feb-400a-bf70-6351e1ff7513"
+         |    ]
+         |}
+         |""".stripMargin
+    val apiUrl =
+      s"/enrolment-store-proxy/enrolment-store/enrolments/$enrolmentKey/groups"
+
+    "get enrolments" when {
+      "response is NO_CONTENT" in {
+        stubGet(apiUrl, Status.NO_CONTENT, "{}")
+        whenReady(connector.getGroupsFromEnrolment(enrolmentKey).value) { response =>
+          response shouldBe Right(GroupsAssignedEnrolment(List.empty))
+        }
+      }
+
+      "response is OK" in {
+        stubGet(apiUrl, Status.OK, responseBody)
+        whenReady(connector.getGroupsFromEnrolment(enrolmentKey).value) { response =>
+          response shouldBe Right(
+            GroupsAssignedEnrolment(
+              List(
+                "c0506dd9-1feb-400a-bf70-6351e1ff7510",
+                "c0506dd9-1feb-400a-bf70-6351e1ff7512",
+                "c0506dd9-1feb-400a-bf70-6351e1ff7513"
+              )
+            )
+          )
+        }
+      }
+    }
+
+    "return an UpstreamError error" in {
+      stubGet(apiUrl, Status.INTERNAL_SERVER_ERROR, "")
+      whenReady(connector.getGroupsFromEnrolment(enrolmentKey).value) { response =>
+        response shouldBe a[Left[UpstreamError, _]]
       }
     }
   }

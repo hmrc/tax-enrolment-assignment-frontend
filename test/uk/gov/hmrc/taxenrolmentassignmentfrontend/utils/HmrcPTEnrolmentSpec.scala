@@ -27,12 +27,14 @@ import uk.gov.hmrc.http.{HttpResponse, UpstreamErrorResponse}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.TaxEnrolmentsConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.EACDService
 
 class HmrcPTEnrolmentSpec extends BaseSpec {
 
   lazy val mockTaxEnrolmentsConnector: TaxEnrolmentsConnector = mock[TaxEnrolmentsConnector]
+  lazy val mockEacdService: EACDService = mock[EACDService]
 
-  val service = new HmrcPTEnrolment(mockTaxEnrolmentsConnector)
+  val service = new HmrcPTEnrolment(mockTaxEnrolmentsConnector, mockEacdService)
 
   "findAndDeleteWrongPTEnrolment" when {
     "There is no enrolment" should {

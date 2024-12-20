@@ -15,10 +15,11 @@
  *@
 
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.Layout
+@import play.api.mvc.RequestHeader
 
 @this(layout: Layout)
 
-@()(implicit request: Request[_], messages: Messages)
+@()(implicit request: RequestHeader, messages: Messages)
 @layout(pageTitle = Some(messages("enrolmentError.title"))) {
 
  <h1 class="govuk-heading-xl">@messages("enrolmentError.heading")</h1>

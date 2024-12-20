@@ -55,6 +55,9 @@ case class AccountDetails(
   mfaDetails: Seq[MFADetails],
   hasSA: Option[Boolean] = None
 ) {
+  def isIdentityProviderOneLogin: Boolean = identityProviderType == ONE_LOGIN
+
+  def isIdentityProviderSCP: Boolean = identityProviderType == SCP
 
   val emailDecrypted: Option[String] = email.map(_.decryptedValue)
 

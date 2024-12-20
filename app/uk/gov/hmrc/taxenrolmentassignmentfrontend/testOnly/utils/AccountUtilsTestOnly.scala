@@ -35,36 +35,41 @@ class AccountUtilsTestOnly @Inject() (
   oneLoginStubConnectorTestOnly: OneLoginStubConnectorTestOnly
 )(implicit ec: ExecutionContext) {
   def deleteAccountDetails(account: AccountDetailsTestOnly)(implicit hc: HeaderCarrier): TEAFResult[Unit] =
-    for {
-      /*  Overwrite the account first
+    if (account.identityProviderType == "ONE_LOGIN") {
+      for {
+        eacdIds <- identityProviderAccountContextConnectorTestOnly.getEacdIds(account.nino.nino)
+        _       <- eacdIds.map(id => oneLoginStubConnectorTestOnly.deleteAccount(id)).sequence
+      } yield ()
+    } else {
+      for {
+        /*  Overwrite the account first
           Sometimes the account is not of type individual causing a later call to fail
-       */
-      _ <- basStubsConnectorTestOnly.putAccount(account)
-      // delete identity-verification data - Link nino / confidence level to account and holds mfa details
-      _ <- identityVerificationConnectorTestOnly.deleteCredId(account.user.credId)
-      // delete enrolment-store data
-      _ <- account.enrolments.map(enrolmentStoreServiceTestOnly.deallocateEnrolmentFromGroups(_)).sequence
-      _ <- account.enrolments.map(enrolmentStoreServiceTestOnly.deallocateEnrolmentFromUsers(_)).sequence
-      _ <- account.enrolments.map(enrolmentStoreServiceTestOnly.deleteEnrolment(_)).sequence
-      // Search and delete other known facts that might remains after the step above
-      _ <- enrolmentStoreServiceTestOnly.deleteAllKnownFactsForNino(account.nino)
-      _ <- enrolmentStoreServiceTestOnly.deleteGroup(account.groupId)
-      _ <- enrolmentStoreServiceTestOnly.deleteAccount(account.groupId)
-      _ <- enrolmentStoreServiceTestOnly.deallocateEnrolmentsFromGroup(account.groupId)
-      _ <- enrolmentStoreServiceTestOnly.deallocateEnrolmentsFromUser(account.user.credId)
-      // delete bas-stub data - The users accounts
-      _ <- basStubsConnectorTestOnly.deleteAdditionalFactors(account.user.credId)
-      _ <- basStubsConnectorTestOnly.deleteAccount(account)
-    } yield ()
+         */
+        _ <- basStubsConnectorTestOnly.putAccount(account)
+        // delete identity-verification data - Link nino / confidence level to account and holds mfa details
+        _ <- identityVerificationConnectorTestOnly.deleteCredId(account.user.credId)
+        // delete enrolment-store data
+        _ <- account.enrolments.map(enrolmentStoreServiceTestOnly.deallocateEnrolmentFromGroups(_)).sequence
+        _ <- account.enrolments.map(enrolmentStoreServiceTestOnly.deallocateEnrolmentFromUsers(_)).sequence
+        _ <- account.enrolments.map(enrolmentStoreServiceTestOnly.deleteEnrolment(_)).sequence
+        // Search and delete other known facts that might remains after the step above
+        _ <- enrolmentStoreServiceTestOnly.deleteAllKnownFactsForNino(account.nino)
+        _ <- enrolmentStoreServiceTestOnly.deleteGroup(account.groupId)
+        _ <- enrolmentStoreServiceTestOnly.deleteAccount(account.groupId)
+        _ <- enrolmentStoreServiceTestOnly.deallocateEnrolmentsFromGroup(account.groupId)
+        _ <- enrolmentStoreServiceTestOnly.deallocateEnrolmentsFromUser(account.user.credId)
+        // delete bas-stub data - The users accounts
+        _ <- basStubsConnectorTestOnly.deleteAdditionalFactors(account.user.credId)
+        _ <- basStubsConnectorTestOnly.deleteAccount(account)
+      } yield ()
+    }
 
   def insertAccountDetails(account: AccountDetailsTestOnly)(implicit hc: HeaderCarrier): TEAFResult[Unit] =
     if (account.identityProviderType == "ONE_LOGIN") {
       for {
         // Insert enrolment-store data
-        eacdIds <- identityProviderAccountContextConnectorTestOnly.getEacdIds(account.nino.nino)
-        _       <- eacdIds.map(id => oneLoginStubConnectorTestOnly.deleteAccount(id)).sequence
-        _       <- enrolmentStoreServiceTestOnly.insertAccount(account)
-        _       <- account.enrolments.map(enrolment => enrolmentStoreServiceTestOnly.upsertEnrolment(enrolment)).sequence
+        _ <- enrolmentStoreServiceTestOnly.insertAccount(account)
+        _ <- account.enrolments.map(enrolment => enrolmentStoreServiceTestOnly.upsertEnrolment(enrolment)).sequence
         _ <-
           account.enrolments
             .map(enrolment =>

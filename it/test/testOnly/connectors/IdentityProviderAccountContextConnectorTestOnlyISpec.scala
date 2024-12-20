@@ -19,6 +19,7 @@ package testOnly.connectors
 import helpers.IntegrationSpecBase
 import play.api.http.Status
 import play.api.libs.json.Json
+import uk.gov.hmrc.http.HttpResponse
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{UpstreamError, UpstreamUnexpected2XX}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.connectors.IdentityProviderAccountContextConnectorTestOnly
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.{AccountDetailsTestOnly, UserTestOnly}
@@ -29,7 +30,7 @@ class IdentityProviderAccountContextConnectorTestOnlyISpec extends IntegrationSp
 
   "postAccount" must {
     val credId = "credId"
-    val apiUrl = "/identity-provider-account-context/test-only/accounts"
+    val apiUrl = "/identity-provider-account-context/test-only/test/accounts"
     val account = AccountDetailsTestOnly(
       "SCP",
       "groupId",
@@ -44,14 +45,14 @@ class IdentityProviderAccountContextConnectorTestOnlyISpec extends IntegrationSp
       "response is OK" in {
         val requestBody = Json
           .obj(
-            "action"               -> "create",
+            "eacdUserId"           -> credId,
             "identityProviderId"   -> credId,
             "identityProviderType" -> "SCP",
             "email"                -> "email"
           )
           .toString()
 
-        stubPost(apiUrl, requestBody, Status.CREATED, """{"caUserId": "uuid"}""")
+        stubPost(apiUrl, requestBody, Status.CREATED, """{"centralAuthUser": { "_id": "uuid"}}""")
         whenReady(connector.postAccount(account).value) { response =>
           response shouldBe Right("uuid")
         }
@@ -61,7 +62,7 @@ class IdentityProviderAccountContextConnectorTestOnlyISpec extends IntegrationSp
     "return an UpstreamUnexpected2XX error" in {
       val requestBody = Json
         .obj(
-          "action"               -> "create",
+          "eacdUserId"           -> credId,
           "identityProviderId"   -> credId,
           "identityProviderType" -> "SCP",
           "email"                -> "email"
@@ -77,7 +78,7 @@ class IdentityProviderAccountContextConnectorTestOnlyISpec extends IntegrationSp
     "return an UpstreamError error" in {
       val requestBody = Json
         .obj(
-          "action"               -> "create",
+          "eacdUserId"           -> credId,
           "identityProviderId"   -> credId,
           "identityProviderType" -> "SCP",
           "email"                -> "email"
@@ -146,6 +147,37 @@ class IdentityProviderAccountContextConnectorTestOnlyISpec extends IntegrationSp
       stubPost(apiUrl, requestBody, Status.INTERNAL_SERVER_ERROR, "Server error")
       whenReady(connector.postIndividual(account, caUserId).value) { response =>
         response shouldBe a[Left[UpstreamError, _]]
+      }
+    }
+  }
+
+  "delete individual" must {
+    val eacdUserId = "eacdUserId"
+    val apiUrl = s"/identity-provider-account-context/test-only/test/accounts/$eacdUserId"
+    "delete the account and return OK" in {
+
+      stubDelete(apiUrl, Status.OK)
+
+      whenReady(connector.deleteIndividual(eacdUserId).value) { response =>
+        response shouldBe Right(())
+
+      }
+    }
+    "return an error when unexpected response is given" in {
+      stubDelete(apiUrl, Status.CREATED)
+
+      whenReady(connector.deleteIndividual(eacdUserId).value) { response =>
+        response shouldBe a[Left[UpstreamError, _]]
+
+      }
+    }
+
+    "return an error when database responds with an error" in {
+      stubDelete(apiUrl, Status.BAD_REQUEST)
+
+      whenReady(connector.deleteIndividual(eacdUserId).value) { response =>
+        response shouldBe a[Left[UpstreamError, _]]
+
       }
     }
   }

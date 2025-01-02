@@ -94,7 +94,6 @@ class TestOnlyController @Inject() (
                   _ => Ok(successPage(accounts, appConfigTestOnly))
                 )
             case Failure(error) =>
-              println(s"aaaaaa $data")
               Future
                 .successful(
                   BadRequest(

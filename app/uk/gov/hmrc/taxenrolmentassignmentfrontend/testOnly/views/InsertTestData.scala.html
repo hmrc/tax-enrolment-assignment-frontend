@@ -24,15 +24,33 @@
     layout: Layout,
     formHelper: FormWithCSRF,
     govukButton: GovukButton,
-    govukTextarea : GovukTextarea
+    govukTextarea : GovukTextarea,
+    govukErrorSummary: GovukErrorSummary
 )
 
-@()(implicit request: Request[AnyRef], messages: Messages)
+@(form: Form[String])(implicit request: Request[AnyRef], messages: Messages)
+
+@formError = @{
+    form.errors.map(_.message).headOption
+}
 
 @layout(pageTitle = Some("Insert Test Data"), displaySignout = false){
 
     <h1 class="govuk-heading-l">Enter Test Data</h1>
     @formHelper(action = routes.TestOnlyController.insertCustomTestData) {
+
+        @if(formError.isDefined) {
+            @govukErrorSummary(ErrorSummary(
+                errorList = Seq(
+                    ErrorLink(
+                        href = Some("#user-data"),
+                        content = Text(messages(formError.get))
+                    )
+                ),
+                title = Text(messages("validation.summary.heading")),
+                attributes = Map("id" -> "errors")
+            ))
+        }
 
         @govukTextarea(Textarea(
             id = "user-data",
@@ -46,72 +64,7 @@
             hint = Some(Hint(
                 content = Text("Example is a single GG user with SA and PT enrolment")
             )),
-            value = Some("""
-                [
-                    {
-                        "groupId": "1B958C76-8F5B-406A-B2D6-CB3B7D92E063",
-                        "affinityGroup": "Individual",
-                        "nino": "JS347435A",
-                        "user": {
-                            "credId": "1358163060829375",
-                            "name": "Firstname Surname",
-                            "email": "email10@test.com",
-                            "userId": "Ending with 9711",
-                            "hasPTEnrolment": true,
-                            "hasSAEnrolment": true
-                        },
-                        "enrolments": [
-                        {
-                            "serviceName": "IR-SA",
-                            "assignedUserCreds": [
-                                "1"
-                            ],
-                            "identifiers": {
-                                "key": "UTR",
-                                "value": "AA543003E"
-                            },
-                            "verifiers": [
-                            {
-                                "key": "Postcode",
-                                "value": "postcode"
-                            },
-                            {
-                                "key": "NINO",
-                                "value": "JS347435A"
-                            }
-                            ],
-                            "enrolmentFriendlyName": "IR-SA Enrolment",
-                            "state": "Activated",
-                            "enrolmentType": "principal",
-                            "assignedToAll": false
-                        },
-                        {
-                            "serviceName": "HMRC-PT",
-                            "identifiers": {
-                                "key": "NINO",
-                                "value": "JS347435A"
-                            },
-                            "verifiers": [
-                                {
-                                    "key": "NINO1",
-                                    "value": "JS347435A"
-                                }
-                            ],
-                            "enrolmentFriendlyName": "HMRC-PT Enrolment",
-                            "state": "Activated",
-                            "enrolmentType": "principal",
-                            "assignedToAll": false
-                            }
-                            ],
-                            "additionalFactors": [
-                            {
-                                "factorType": "totp",
-                                "name": "HMRC App"
-                            }
-                        ]
-                    }
-                ]
-            """)
+            value = Some(form.data("user-data"))
         ))
 
         @govukButton(Button(

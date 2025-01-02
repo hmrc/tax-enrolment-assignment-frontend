@@ -28,7 +28,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.EACDService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.config.AppConfigTestOnly
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.CustomTestDataForm.customDataForm
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.{AccountDetailsTestOnly, TestMocks}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.{AccountDetailsTestOnly, CustomTestDataForm, TestMocks}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.utils.AccountUtilsTestOnly
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.TestDataForm.selectUserForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.services.EnrolmentStoreServiceTestOnly
@@ -60,7 +60,13 @@ class TestOnlyController @Inject() (
   }
 
   def getCustomTestData: Action[AnyContent] = Action { request =>
-    Ok(insertTestDataView()(request, mcc.messagesApi.preferred(request)))
+    val dataToFill = Json.toJson(extractData("singleUserWithSAEnrolment"))
+    Ok(
+      insertTestDataView(CustomTestDataForm.customDataForm.fill(dataToFill.toString()))(
+        request,
+        mcc.messagesApi.preferred(request)
+      )
+    )
   }
   def insertCustomTestData: Action[AnyContent] = Action.async { implicit request =>
     implicit val hc: HeaderCarrier = HeaderCarrier(Some(Authorization("Bearer 1")))
@@ -68,23 +74,41 @@ class TestOnlyController @Inject() (
     customDataForm
       .bindFromRequest()
       .fold(
-        _ =>
+        error =>
           Future
-            .successful(BadRequest(insertTestDataView()(request, mcc.messagesApi.preferred(request)))),
+            .successful(BadRequest(insertTestDataView(error)(request, mcc.messagesApi.preferred(request)))),
         data => {
-          val account = Json.parse(data.trim).as[List[AccountDetailsTestOnly]]
-          account
-            .map { account =>
-              for {
-                _ <- accountUtilsTestOnly.deleteAccountDetails(account)
-                _ <- accountUtilsTestOnly.insertAccountDetails(account)
-              } yield ()
-            }
-            .sequence
-            .fold(
-              error => InternalServerError(error.toString),
-              _ => Ok(successPage(account, appConfigTestOnly))
-            )
+          val json = Try(Json.parse(data.trim).as[List[AccountDetailsTestOnly]])
+          json match {
+            case Success(accounts) =>
+              accounts
+                .map { account =>
+                  for {
+                    _ <- accountUtilsTestOnly.deleteAccountDetails(account)
+                    _ <- accountUtilsTestOnly.insertAccountDetails(account)
+                  } yield ()
+                }
+                .sequence
+                .fold(
+                  error => InternalServerError(error.toString),
+                  _ => Ok(successPage(accounts, appConfigTestOnly))
+                )
+            case Failure(error) =>
+              println(s"aaaaaa $data")
+              Future
+                .successful(
+                  BadRequest(
+                    insertTestDataView(
+                      CustomTestDataForm.customDataForm
+                        .bind(Map("user-data" -> data))
+                        .withError("Parse Error", error.getMessage)
+                    )(
+                      request,
+                      mcc.messagesApi.preferred(request)
+                    )
+                  )
+                )
+          }
         }
       )
   }

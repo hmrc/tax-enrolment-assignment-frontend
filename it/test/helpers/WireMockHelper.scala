@@ -52,7 +52,7 @@ trait WireMockHelper extends Eventually with BeforeAndAfterAll with BeforeAndAft
             .withBody("{}")
         )
     )
-    stubFor(
+    server.stubFor(
       any(anyUrl())
         .atPriority(10)
         .willReturn(

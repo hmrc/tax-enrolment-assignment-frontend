@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.controllers
 
 import cats.implicits.toTraverseOps
 import play.api.libs.json.{JsArray, JsResultException, Json}
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Request}
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthJourney
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TEAFrontendController
@@ -68,6 +68,23 @@ class TestOnlyController @Inject() (
       )
     )
   }
+
+  private def insertAccount(
+    accounts: List[AccountDetailsTestOnly]
+  )(implicit hc: HeaderCarrier, request: Request[AnyRef]) =
+    accounts
+      .map { account =>
+        for {
+          _ <- accountUtilsTestOnly.deleteAccountDetails(account)
+          _ <- accountUtilsTestOnly.insertAccountDetails(account)
+        } yield ()
+      }
+      .sequence
+      .fold(
+        error => InternalServerError(error.toString),
+        _ => Ok(successPage(accounts, appConfigTestOnly)(request, request2Messages))
+      )
+
   def insertCustomTestData: Action[AnyContent] = Action.async { implicit request =>
     implicit val hc: HeaderCarrier = HeaderCarrier(Some(Authorization("Bearer 1")))
 
@@ -79,20 +96,11 @@ class TestOnlyController @Inject() (
             .successful(BadRequest(insertTestDataView(error)(request, mcc.messagesApi.preferred(request)))),
         data => {
           val json = Try(Json.parse(data.trim).as[List[AccountDetailsTestOnly]])
+
           json match {
             case Success(accounts) =>
-              accounts
-                .map { account =>
-                  for {
-                    _ <- accountUtilsTestOnly.deleteAccountDetails(account)
-                    _ <- accountUtilsTestOnly.insertAccountDetails(account)
-                  } yield ()
-                }
-                .sequence
-                .fold(
-                  error => InternalServerError(error.toString),
-                  _ => Ok(successPage(accounts, appConfigTestOnly))
-                )
+              insertAccount(accounts)
+            case Failure(_: JsResultException) => insertAccount(List(Json.parse(data.trim).as[AccountDetailsTestOnly]))
             case Failure(error) =>
               Future
                 .successful(

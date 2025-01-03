@@ -361,6 +361,7 @@ class TestOnlyControllerSpec extends BaseSpec {
 
       val request = FakeRequest()
         .withMethod("POST")
+        .withFormUrlEncodedBody("user-data" -> "")
 
       val result = sut.insertCustomTestData.apply(request)
 
@@ -784,6 +785,24 @@ class TestOnlyControllerSpec extends BaseSpec {
     "return ok response" in {
       val request = FakeRequest()
         .withMethod("GET")
+
+      val nino = generateNino
+      val identityProviderType = "SCP"
+
+      val account = AccountDetailsTestOnly(
+        identityProviderType,
+        "98ADEA51-C0BA-497D-997E-F585FAADBCEH",
+        nino,
+        "Individual",
+        UserTestOnly("5217739547427626", "Firstname Surname", "email@example.com"),
+        List(),
+        List(AdditonalFactors("totp", None, Some("HMRC-APP")))
+      )
+
+      val json = Json.toJson(account)
+
+      when(mockFileHelper.loadFile(s"singleUserWithSAEnrolment.json"))
+        .thenReturn(Success(json))
 
       val result = sut.getCustomTestData.apply(request)
 

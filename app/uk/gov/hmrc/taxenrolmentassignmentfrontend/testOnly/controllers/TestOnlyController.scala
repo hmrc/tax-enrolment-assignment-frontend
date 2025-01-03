@@ -129,21 +129,7 @@ class TestOnlyController @Inject() (
         _ =>
           Future
             .successful(BadRequest(selectTestDataPage(TestMocks.mocks)(request, mcc.messagesApi.preferred(request)))),
-        data => {
-          val account = extractData(data)
-          account
-            .map { account =>
-              for {
-                _ <- accountUtilsTestOnly.deleteAccountDetails(account)
-                _ <- accountUtilsTestOnly.insertAccountDetails(account)
-              } yield ()
-            }
-            .sequence
-            .fold(
-              error => InternalServerError(error.toString),
-              _ => Ok(successPage(account, appConfigTestOnly))
-            )
-        }
+        data => insertAccount(extractData(data))
       )
   }
 

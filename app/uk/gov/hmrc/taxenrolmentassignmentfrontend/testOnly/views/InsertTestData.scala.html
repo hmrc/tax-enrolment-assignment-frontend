@@ -64,7 +64,7 @@
             hint = Some(Hint(
                 content = Text("Example is a single GG user with SA and PT enrolment")
             )),
-            value = Some(form.data("user-data"))
+            value = Some(form.data("user-data").replace(",", ",\n"))
         ))
 
         @govukButton(Button(

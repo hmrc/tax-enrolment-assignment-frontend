@@ -68,7 +68,7 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
       .thenReturn(Future.successful(None))
 
     when(mockEacdService.getGroupsAssignedPTEnrolment(any(), any(), any())).thenReturn(
-      createInboundResult(GroupsAssignedEnrolmentEmpty)
+      createInboundResult(List.empty)
     )
   }
 
@@ -99,7 +99,7 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
             .thenReturn(Future.successful(CacheMap(request.sessionID, Map())))
 
           when(mockEacdService.getGroupsAssignedPTEnrolment).thenReturn(
-            createInboundResult(GroupsAssignedEnrolmentEmpty)
+            createInboundResult(List.empty)
           )
 
           val res = orchestrator.getAccountType
@@ -123,7 +123,7 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
             .thenReturn(createInboundResult(UsersAssignedEnrolmentCurrentCred))
 
           when(mockEacdService.getGroupsAssignedPTEnrolment).thenReturn(
-            createInboundResult(GroupsAssignedEnrolmentEmpty)
+            createInboundResult(List.empty)
           )
 
           val res = orchestrator.getAccountType(
@@ -151,7 +151,7 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
             .thenReturn(Future(CacheMap(request.sessionID, Map())))
 
           when(mockEacdService.getGroupsAssignedPTEnrolment).thenReturn(
-            createInboundResult(GroupsAssignedEnrolmentEmpty)
+            createInboundResult(List.empty)
           )
 
           val res =
@@ -178,7 +178,7 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
             .thenReturn(Future(CacheMap(request.sessionID, Map())))
 
           when(mockEacdService.getGroupsAssignedPTEnrolment).thenReturn(
-            createInboundResult(GroupsAssignedEnrolmentEmpty)
+            createInboundResult(List.empty)
           )
 
           val res = orchestrator.getAccountType
@@ -202,7 +202,7 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
             .thenReturn(Future(CacheMap(request.sessionID, Map())))
 
           when(mockEacdService.getGroupsAssignedPTEnrolment).thenReturn(
-            createInboundResult(GroupsAssignedEnrolmentEmpty)
+            createInboundResult(List.empty)
           )
 
           val res = orchestrator.getAccountType
@@ -226,7 +226,7 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
             .thenReturn(Future(CacheMap(request.sessionID, Map())))
 
           when(mockEacdService.getGroupsAssignedPTEnrolment).thenReturn(
-            createInboundResult(GroupsAssignedEnrolmentEmpty)
+            createInboundResult(List.empty)
           )
 
           val res = orchestrator.getAccountType(
@@ -275,7 +275,7 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
             .thenReturn(Future(CacheMap(request.sessionID, Map())))
 
           when(mockEacdService.getGroupsAssignedPTEnrolment).thenReturn(
-            createInboundResult(GroupsAssignedEnrolmentEmpty)
+            createInboundResult(List.empty)
           )
 
           val res = orchestrator.getAccountType
@@ -299,7 +299,7 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
             .thenReturn(Future(CacheMap(request.sessionID, Map())))
 
           when(mockEacdService.getGroupsAssignedPTEnrolment).thenReturn(
-            createInboundResult(GroupsAssignedEnrolmentEmpty)
+            createInboundResult(List.empty)
           )
 
           val res = orchestrator.getAccountType
@@ -323,7 +323,13 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
           .thenReturn(Future(CacheMap(request.sessionID, Map())))
 
         when(mockEacdService.getGroupsAssignedPTEnrolment).thenReturn(
-          createInboundResult(GroupsAssignedEnrolment3Groups)
+          createInboundResult(
+            List(
+              "c0506dd9-1feb-400a-bf70-6351e1ff7510",
+              "c0506dd9-1feb-400a-bf70-6351e1ff7512",
+              "c0506dd9-1feb-400a-bf70-6351e1ff7513"
+            )
+          )
         )
 
         val res = orchestrator.getAccountType

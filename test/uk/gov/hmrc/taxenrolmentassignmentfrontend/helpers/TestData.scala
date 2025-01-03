@@ -176,18 +176,6 @@ object TestData {
   val UsersAssignedEnrolmentEmpty: UsersAssignedEnrolment =
     UsersAssignedEnrolment(None)
 
-  val GroupsAssignedEnrolmentEmpty: GroupsAssignedEnrolment =
-    GroupsAssignedEnrolment(List.empty)
-
-  val GroupsAssignedEnrolment3Groups: GroupsAssignedEnrolment =
-    GroupsAssignedEnrolment(
-      List(
-        "c0506dd9-1feb-400a-bf70-6351e1ff7510",
-        "c0506dd9-1feb-400a-bf70-6351e1ff7512",
-        "c0506dd9-1feb-400a-bf70-6351e1ff7513"
-      )
-    )
-
   val accountDetails: AccountDetails = AccountDetails(
     identityProviderType = SCP,
     credId = CREDENTIAL_ID,

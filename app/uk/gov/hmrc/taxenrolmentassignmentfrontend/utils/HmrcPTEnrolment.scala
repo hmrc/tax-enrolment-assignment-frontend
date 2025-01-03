@@ -56,7 +56,7 @@ class HmrcPTEnrolment @Inject() (taxEnrolmentsConnector: TaxEnrolmentsConnector,
     ec: ExecutionContext
   ): EitherT[Future, TaxEnrolmentAssignmentErrors, Unit] =
     eacdService.getGroupsAssignedPTEnrolment.map { groupIds =>
-      groupIds.groupIds.foreach { id =>
+      groupIds.foreach { id =>
         taxEnrolmentsConnector.deallocateEnrolment(id, s"$hmrcPTKey~NINO~${requestWithUserDetails.userDetails.nino}")
       }
     }

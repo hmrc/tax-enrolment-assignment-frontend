@@ -78,8 +78,9 @@ trait IntegrationSpecBase
     "microservice.services.bas-stubs.port"                         -> server.port(),
     "microservice.services.identity-provider-account-context.port" -> server.port(),
     "play.http.router"                                             -> "testOnlyDoNotUseInAppConf.Routes",
-    "throttle.percentage"                                          -> "3",
-    "mongodb.uri"                                                  -> mongoUri
+    "mongodb.uri"                                                  -> mongoUri,
+    "play.ws.timeout.request"                                      -> "5000ms",
+    "play.ws.timeout.connection"                                   -> "100ms"
   )
 
   protected def localGuiceApplicationBuilder: GuiceApplicationBuilder =

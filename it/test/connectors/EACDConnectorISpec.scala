@@ -23,7 +23,7 @@ import play.api.http.Status.OK
 import play.api.libs.json.{JsString, Json}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.EACDConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{UnexpectedResponseFromEACD, UpstreamError}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{GroupsAssignedEnrolment, UserEnrolmentsListResponse, UsersAssignedEnrolment}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{UserEnrolmentsListResponse, UsersAssignedEnrolment}
 
 class EACDConnectorISpec extends IntegrationSpecBase {
 
@@ -214,12 +214,12 @@ class EACDConnectorISpec extends IntegrationSpecBase {
   "queryEnrolmentsAssignedToUser" when {
     val USER_ID = "123456"
     val PATH =
-      s"/enrolment-store-proxy/enrolment-store/users/$USER_ID/enrolments?type=principal"
+      s"/enrolment-store-proxy/enrolment-store/users/$USER_ID/enrolments"
 
     s"the user has no enrolments" should {
       "return None" in {
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        stubGetMatching(PATH, Status.NO_CONTENT, "")
+        stubGet(PATH, Status.NO_CONTENT, "")
         whenReady(connector.queryEnrolmentsAssignedToUser(USER_ID).value) { response =>
           response shouldBe Right(None)
         }
@@ -233,7 +233,7 @@ class EACDConnectorISpec extends IntegrationSpecBase {
         )
 
         stubPost(s"/write/.*", OK, """{"x":2}""")
-        stubGetMatching(PATH, Status.OK, Json.toJson(eacdResponse).toString())
+        stubGet(PATH, Status.OK, Json.toJson(eacdResponse).toString())
         whenReady(connector.queryEnrolmentsAssignedToUser(USER_ID).value) { response =>
           response shouldBe Right(Some(eacdResponse))
         }
@@ -283,28 +283,29 @@ class EACDConnectorISpec extends IntegrationSpecBase {
       "response is NO_CONTENT" in {
         stubGet(apiUrl, Status.NO_CONTENT, "{}")
         whenReady(connector.getGroupsFromEnrolment(enrolmentKey).value) { response =>
-          response shouldBe Right(GroupsAssignedEnrolment(List.empty))
+          response.map(_.status) shouldBe Right(Status.NO_CONTENT)
+          response.map(_.body) shouldBe Right("")
         }
       }
 
       "response is OK" in {
         stubGet(apiUrl, Status.OK, responseBody)
         whenReady(connector.getGroupsFromEnrolment(enrolmentKey).value) { response =>
-          response shouldBe Right(
-            GroupsAssignedEnrolment(
-              List(
-                "c0506dd9-1feb-400a-bf70-6351e1ff7510",
-                "c0506dd9-1feb-400a-bf70-6351e1ff7512",
-                "c0506dd9-1feb-400a-bf70-6351e1ff7513"
-              )
-            )
-          )
+          response.map(_.status) shouldBe Right(Status.OK)
+          response.map(_.body) shouldBe Right(responseBody)
         }
       }
     }
 
     "return an UpstreamError error" in {
       stubGet(apiUrl, Status.INTERNAL_SERVER_ERROR, "")
+      whenReady(connector.getGroupsFromEnrolment(enrolmentKey).value) { response =>
+        response shouldBe a[Left[UpstreamError, _]]
+      }
+    }
+
+    "return an UpstreamError error when timing out" in {
+      stubGet(apiUrl, Status.OK, responseBody, delay = 10000)
       whenReady(connector.getGroupsFromEnrolment(enrolmentKey).value) { response =>
         response shouldBe a[Left[UpstreamError, _]]
       }

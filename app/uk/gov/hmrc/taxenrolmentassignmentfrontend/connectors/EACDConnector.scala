@@ -21,17 +21,17 @@ import play.api.Logger
 import play.api.http.Status._
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpException, HttpResponse, UpstreamErrorResponse}
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromEACD
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{UnexpectedResponseFromEACD}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{logES2ErrorFromEACD, logUnexpectedResponseFromEACD, logUnexpectedResponseFromEACDQueryKnownFacts}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{logES1ErrorFromEACD, logES2ErrorFromEACD, logUnexpectedResponseFromEACD, logUnexpectedResponseFromEACDQueryKnownFacts}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.{IRSAKey, hmrcPTKey}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{KnownFactQueryForNINO, KnownFactResponseForNINO, UserEnrolmentsListResponse, UsersAssignedEnrolment}
 
 import javax.inject.Inject
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 class EACDConnector @Inject() (httpClient: HttpClient, logger: EventLoggerService, appConfig: AppConfig) {
 
@@ -131,4 +131,21 @@ class EACDConnector @Inject() (httpClient: HttpClient, logger: EventLoggerServic
         }
       )
   }
+
+  //ES1 Query groups who have an allocated enrolment
+  def getGroupsFromEnrolment(
+    enrolmentKey: String
+  )(implicit hc: HeaderCarrier, ec: ExecutionContext): EitherT[Future, UpstreamErrorResponse, HttpResponse] =
+    EitherT(
+      httpClient
+        .GET[Either[UpstreamErrorResponse, HttpResponse]](
+          s"${appConfig.EACD_BASE_URL}/enrolment-store/enrolments/$enrolmentKey/groups?ignore-assignments=true"
+        )
+        .recover { case exception: HttpException =>
+          Left(UpstreamErrorResponse(exception.message, BAD_GATEWAY, BAD_GATEWAY))
+        }
+    ).leftMap { error =>
+      logger.logEvent(logES1ErrorFromEACD(enrolmentKey, error.message))
+      error
+    }
 }

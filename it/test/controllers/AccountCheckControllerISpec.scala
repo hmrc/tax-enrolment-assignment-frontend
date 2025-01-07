@@ -48,6 +48,11 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
       sessionId
     )
 
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    stubGetMatching("/users-groups-search/users/.*", Status.OK, usergroupsResponseJson().toString())
+  }
+
   s"redirect to {returnUrl}" when {
     "a user has one credential associated with their nino" that {
       "has a PT enrolment in the session" in {
@@ -103,7 +108,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
     }
   }
 
-  s"silently enrol for PT and redirect to users redirect url" when {
+  s"silently enrol for PT, check for and deallocate enrolment from groups, and redirect to users redirect url" when {
     "the user is a single account holder with no PT enrolment in session or EACD" in {
       val authResponse = authoriseResponseJson()
       stubAuthorizePost(OK, authResponse.toString())
@@ -129,6 +134,12 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
       stubPut(
         s"/tax-enrolments/service/HMRC-PT/enrolment",
+        NO_CONTENT,
+        ""
+      )
+
+      stubGet(
+        s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/groups",
         NO_CONTENT,
         ""
       )
@@ -181,6 +192,12 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
         Status.CREATED
       )
 
+      stubGet(
+        s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/groups",
+        NO_CONTENT,
+        ""
+      )
+
       val request = FakeRequest(GET, urlPath)
         .withSession(xAuthToken)
       val result = route(app, request).get
@@ -199,6 +216,65 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
         )
       )
 
+    }
+    "the HMRC-PT enrolment is not assigned to any users but assigned to multiple empty groups" in {
+
+      val authResponse = authoriseResponseJson()
+      stubAuthorizePost(OK, authResponse.toString())
+      stubPost(s"/write/.*", OK, """{"x":2}""")
+      stubGet(
+        s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/users",
+        OK,
+        es0ResponseNoRecordCred
+      )
+      stubGetWithQueryParam(
+        "/identity-verification/nino",
+        "nino",
+        NINO.nino,
+        OK,
+        ivResponseSingleCredsJsonString
+      )
+
+      stubPost(
+        s"/enrolment-store-proxy/enrolment-store/enrolments",
+        NO_CONTENT,
+        ""
+      )
+
+      stubPut(
+        s"/tax-enrolments/service/HMRC-PT/enrolment",
+        NO_CONTENT,
+        ""
+      )
+
+      stubGet(
+        s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/groups",
+        OK,
+        es3GroupsResponseRecordCred
+      )
+
+      List("ABCDEFG123456", "QWERTYU12346", "POIUYTT09876").foreach { id =>
+        stubDelete(
+          s"/tax-enrolments/groups/$id/enrolments/HMRC-PT~NINO~$NINO",
+          NO_CONTENT,
+          es3GroupsResponseRecordCred
+        )
+      }
+
+      val request = FakeRequest(GET, urlPath)
+        .withSession(xAuthToken)
+      val result = route(app, request).get
+
+      status(result) shouldBe SEE_OTHER
+      redirectLocation(result).get should include("/protect-tax-info/enrol-pt/enrolment-success-no-sa")
+      List("ABCDEFG123456", "QWERTYU12346", "POIUYTT09876").foreach { id =>
+        server.verify(
+          1,
+          deleteRequestedFor(
+            urlEqualTo(s"/tax-enrolments/groups/$id/enrolments/HMRC-PT~NINO~$NINO")
+          )
+        )
+      }
     }
   }
 
@@ -268,6 +344,12 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
         es0ResponseNotMatchingCred
       )
 
+      stubGet(
+        s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/groups",
+        NO_CONTENT,
+        es0GroupsResponseNoRecordCred
+      )
+
       val request = FakeRequest(GET, urlPath)
         .withSession(xAuthToken)
       val result = route(app, request).get
@@ -315,6 +397,12 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
         s"/tax-enrolments/service/HMRC-PT/enrolment",
         NO_CONTENT,
         ""
+      )
+
+      stubGet(
+        s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/groups",
+        NO_CONTENT,
+        es0GroupsResponseNoRecordCred
       )
 
       val request = FakeRequest(GET, urlPath)
@@ -368,6 +456,12 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
         s"/tax-enrolments/service/HMRC-PT/enrolment",
         NO_CONTENT,
         ""
+      )
+
+      stubGet(
+        s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/groups",
+        OK,
+        es3GroupsResponseRecordCred
       )
 
       val request = FakeRequest(GET, urlPath)
@@ -424,6 +518,12 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
         ""
       )
 
+      stubGet(
+        s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/groups",
+        NO_CONTENT,
+        es0GroupsResponseNoRecordCred
+      )
+
       val request = FakeRequest(GET, urlPath)
         .withSession(xAuthToken)
       val result = route(app, request).get
@@ -462,6 +562,12 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
             es0ResponseNoRecordCred
           )
 
+          stubGet(
+            s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/groups",
+            NO_CONTENT,
+            es0GroupsResponseNoRecordCred
+          )
+
           val request = FakeRequest(GET, urlPath)
             .withSession(xAuthToken)
           val result = route(app, request).get
@@ -487,6 +593,11 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
             s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/users",
             OK,
             es0ResponseNoRecordCred
+          )
+          stubGet(
+            s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/groups",
+            NO_CONTENT,
+            es0GroupsResponseNoRecordCred
           )
 
           val request = FakeRequest(GET, urlPath)
@@ -522,6 +633,12 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
             es0ResponseNotMatchingCred
           )
 
+          stubGet(
+            s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/groups",
+            NO_CONTENT,
+            es0GroupsResponseNoRecordCred
+          )
+
           val request = FakeRequest(GET, urlPath)
             .withSession(xAuthToken)
           val result = route(app, request).get
@@ -552,6 +669,12 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
             s"/enrolment-store-proxy/enrolment-store/enrolments/IR-SA~UTR~$UTR/users",
             OK,
             es0ResponseNotMatchingCred
+          )
+
+          stubGet(
+            s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/groups",
+            NO_CONTENT,
+            es0GroupsResponseNoRecordCred
           )
 
           val request = FakeRequest(GET, urlPath)
@@ -586,6 +709,11 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
             OK,
             es0ResponseNotMatchingCred
           )
+          stubGet(
+            s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/groups",
+            NO_CONTENT,
+            es0GroupsResponseNoRecordCred
+          )
 
           val request = FakeRequest(GET, urlPath)
             .withSession(xAuthToken)
@@ -617,6 +745,12 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
             s"/enrolment-store-proxy/enrolment-store/enrolments/IR-SA~UTR~$UTR/users",
             OK,
             es0ResponseNotMatchingCred
+          )
+
+          stubGet(
+            s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/groups",
+            OK,
+            es0GroupsResponseNoRecordCred
           )
 
           val request = FakeRequest(GET, urlPath)

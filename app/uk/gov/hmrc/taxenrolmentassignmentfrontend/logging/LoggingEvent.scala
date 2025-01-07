@@ -260,6 +260,18 @@ object LoggingEvent {
         )
       )
     )
+
+  def logES1ErrorFromEACD(enrolmentKey: String, eacdErrorMsg: String = "N/A"): LoggingEvent =
+    Error(
+      Event(
+        "[EACDConnector][queryEnrolmentsAssignedToGroup]",
+        errorDetails = Some(
+          s"EACD returned status when searching for groups with associated enrolment $enrolmentKey." +
+            s"\nError Message: $eacdErrorMsg"
+        )
+      )
+    )
+
   def logUnexpectedErrorFromAuthWhenUsingLegacyEndpoint(httpStatus: Int): LoggingEvent =
     Error(
       Event(

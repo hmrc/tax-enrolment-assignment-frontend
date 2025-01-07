@@ -16,12 +16,15 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.services
 
+import cats.data.EitherT
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
 import org.mockito.MockitoSugar.{mock, when}
+import play.api.http.Status.INTERNAL_SERVER_ERROR
+import uk.gov.hmrc.http.{HttpResponse, UpstreamErrorResponse}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.EACDConnector
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromEACD
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{UnexpectedResponseFromEACD, UpstreamError}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_ASSIGNED_PT_ENROLMENT, USER_ASSIGNED_SA_ENROLMENT}
@@ -129,6 +132,56 @@ class EACDServiceSpec extends BaseSpec {
         val result = service.getUsersAssignedSAEnrolment
         whenReady(result.value) { res =>
           res shouldBe Left(UnexpectedResponseFromEACD)
+        }
+      }
+    }
+  }
+
+  "getGroupsAssignedPTEnrolment" when {
+    "the a PT enrolment has been assigned for the nino" should {
+      "call the EACD, save to cache and return the group ids with the enrolment" in {
+        when(mockEacdConnector.getGroupsFromEnrolment(s"HMRC-PT~NINO~$NINO"))
+          .thenReturn(
+            EitherT.rightT(
+              HttpResponse(
+                200,
+                """
+                  |{
+                  |    "principalGroupIds": [
+                  |       "c0506dd9-1feb-400a-bf70-6351e1ff7510"
+                  |    ],
+                  |    "delegatedGroupIds": [
+                  |       "c0506dd9-1feb-400a-bf70-6351e1ff7512",
+                  |       "c0506dd9-1feb-400a-bf70-6351e1ff7513"
+                  |    ]
+                  |}
+                  |""".stripMargin
+              )
+            )
+          )
+
+        val result = service.getGroupsAssignedPTEnrolment
+        whenReady(result.value) { res =>
+          res shouldBe Right(
+            List(
+              "c0506dd9-1feb-400a-bf70-6351e1ff7510",
+              "c0506dd9-1feb-400a-bf70-6351e1ff7512",
+              "c0506dd9-1feb-400a-bf70-6351e1ff7513"
+            )
+          )
+        }
+      }
+    }
+
+    "EACD returns an error" should {
+      "return an error" in {
+        val error = UpstreamErrorResponse("server error", INTERNAL_SERVER_ERROR)
+        when(mockEacdConnector.getGroupsFromEnrolment(s"HMRC-PT~NINO~$NINO"))
+          .thenReturn(EitherT.leftT(error))
+
+        val result = service.getGroupsAssignedPTEnrolment
+        whenReady(result.value) { res =>
+          res shouldBe Left(UpstreamError(error))
         }
       }
     }

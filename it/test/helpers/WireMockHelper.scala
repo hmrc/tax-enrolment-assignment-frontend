@@ -23,7 +23,7 @@ import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import helpers.TestITData.usergroupsResponseJson
 import org.scalatest.concurrent.Eventually
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
-import play.api.http.Status.{INTERNAL_SERVER_ERROR, NON_AUTHORITATIVE_INFORMATION}
+import play.api.http.Status.{INTERNAL_SERVER_ERROR, NON_AUTHORITATIVE_INFORMATION, OK}
 import play.api.libs.json.{JsString, Json}
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core.{AuthProviders, ConfidenceLevel}
@@ -43,6 +43,23 @@ trait WireMockHelper extends Eventually with BeforeAndAfterAll with BeforeAndAft
   override def beforeEach(): Unit = {
     super.beforeEach()
     server.resetAll()
+    server.stubFor(
+      post(urlMatching("/write/audit/merged"))
+        .willReturn(
+          aResponse()
+            .withStatus(OK)
+            .withHeader("Content-Type", "application/json")
+            .withBody("{}")
+        )
+    )
+    server.stubFor(
+      any(anyUrl())
+        .atPriority(10)
+        .willReturn(
+          aResponse()
+            .withStatus(INTERNAL_SERVER_ERROR)
+        )
+    )
   }
 
   override def afterAll(): Unit = {
@@ -52,7 +69,7 @@ trait WireMockHelper extends Eventually with BeforeAndAfterAll with BeforeAndAft
 
   def stubGetMatching(url: String, status: Integer, responseBody: String): StubMapping =
     server.stubFor(
-      get(urlEqualTo(url))
+      get(urlMatching(url))
         .willReturn(aResponse().withStatus(status).withBody(responseBody))
     )
 
@@ -163,10 +180,15 @@ trait WireMockHelper extends Eventually with BeforeAndAfterAll with BeforeAndAft
         .willReturn(aResponse().withStatus(status).withBody(responseBody))
     )
 
-  def stubGet(url: String, status: Integer, responseBody: String): StubMapping =
+  def stubGet(url: String, status: Integer, responseBody: String, delay: Int = 1): StubMapping =
     server.stubFor(
       get(urlPathEqualTo(url))
-        .willReturn(aResponse().withStatus(status).withBody(responseBody))
+        .willReturn(
+          aResponse()
+            .withStatus(status)
+            .withBody(responseBody)
+            .withFixedDelay(delay)
+        )
     )
 
   def verifyNoPOSTmade(url: String): Unit =

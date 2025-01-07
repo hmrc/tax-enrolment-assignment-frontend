@@ -281,7 +281,7 @@ class EACDConnectorISpec extends IntegrationSpecBase {
 
     "get enrolments" when {
       "response is NO_CONTENT" in {
-        stubGet(apiUrl, Status.NO_CONTENT, "{}")
+        stubGetWithQueryParam(apiUrl, "ignore-assignments", "true", Status.NO_CONTENT, "{}")
         whenReady(connector.getGroupsFromEnrolment(enrolmentKey).value) { response =>
           response.map(_.status) shouldBe Right(Status.NO_CONTENT)
           response.map(_.body) shouldBe Right("")
@@ -289,7 +289,7 @@ class EACDConnectorISpec extends IntegrationSpecBase {
       }
 
       "response is OK" in {
-        stubGet(apiUrl, Status.OK, responseBody)
+        stubGetWithQueryParam(apiUrl, "ignore-assignments", "true", Status.OK, responseBody)
         whenReady(connector.getGroupsFromEnrolment(enrolmentKey).value) { response =>
           response.map(_.status) shouldBe Right(Status.OK)
           response.map(_.body) shouldBe Right(responseBody)

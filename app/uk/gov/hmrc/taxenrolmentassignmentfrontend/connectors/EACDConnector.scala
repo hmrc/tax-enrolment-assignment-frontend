@@ -139,7 +139,7 @@ class EACDConnector @Inject() (httpClient: HttpClient, logger: EventLoggerServic
     EitherT(
       httpClient
         .GET[Either[UpstreamErrorResponse, HttpResponse]](
-          s"${appConfig.EACD_BASE_URL}/enrolment-store/enrolments/$enrolmentKey/groups"
+          s"${appConfig.EACD_BASE_URL}/enrolment-store/enrolments/$enrolmentKey/groups?ignore-assignments=true"
         )
         .recover { case exception: HttpException =>
           Left(UpstreamErrorResponse(exception.message, BAD_GATEWAY, BAD_GATEWAY))

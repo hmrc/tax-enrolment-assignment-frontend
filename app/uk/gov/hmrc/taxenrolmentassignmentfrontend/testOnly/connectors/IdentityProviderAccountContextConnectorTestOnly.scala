@@ -119,7 +119,7 @@ class IdentityProviderAccountContextConnectorTestOnly @Inject() (
     ).transform {
       case Right(response) =>
         Right(Some((response.json \ "caUserId").as[String]))
-      case Left(response) =>
+      case Left(_) =>
         logger.warn(s"No account found for identityProviderId: $identityProviderId")
         Right(None)
     }

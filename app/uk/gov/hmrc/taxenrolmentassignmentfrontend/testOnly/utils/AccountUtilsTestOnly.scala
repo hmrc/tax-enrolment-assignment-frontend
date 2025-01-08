@@ -37,8 +37,12 @@ class AccountUtilsTestOnly @Inject() (
   def deleteAccountDetails(account: AccountDetailsTestOnly)(implicit hc: HeaderCarrier): TEAFResult[Unit] =
     if (account.identityProviderType == "ONE_LOGIN") {
       for {
-        eacdIds <- identityProviderAccountContextConnectorTestOnly.getEacdIds(account.nino.nino)
-        _       <- eacdIds.map(id => oneLoginStubConnectorTestOnly.deleteAccount(id)).sequence
+        // delete enrolment-store data
+        _ <- account.enrolments.map(enrolmentStoreServiceTestOnly.deallocateEnrolmentFromGroups(_)).sequence
+        _ <- account.enrolments.map(enrolmentStoreServiceTestOnly.deleteEnrolment(_)).sequence
+        // delete account from IPAC
+        eacdId <- identityProviderAccountContextConnectorTestOnly.getAccount(account.user.credId)
+        _      <- eacdId.map(id => oneLoginStubConnectorTestOnly.deleteAccount(id)).sequence
       } yield ()
     } else {
       for {
@@ -76,8 +80,7 @@ class AccountUtilsTestOnly @Inject() (
               enrolmentStoreServiceTestOnly.addEnrolmentToGroup(account.groupId, account.user.credId, enrolment)
             )
             .sequence
-        caUserId <- oneLoginStubConnectorTestOnly.postAccount(account)
-        _        <- identityProviderAccountContextConnectorTestOnly.postIndividual(account, caUserId)
+        _ <- oneLoginStubConnectorTestOnly.postAccount(account)
       } yield ()
     } else {
       for {

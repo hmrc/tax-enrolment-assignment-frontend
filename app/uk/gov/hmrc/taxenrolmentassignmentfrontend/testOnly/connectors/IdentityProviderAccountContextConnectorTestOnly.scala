@@ -24,7 +24,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, UpstreamErrorR
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{UpstreamError, UpstreamUnexpected2XX}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.config.AppConfigTestOnly
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.{AccountDetailsTestOnly, Creds}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.AccountDetailsTestOnly
 import uk.gov.hmrc.http.HttpReads.Implicits._
 
 import javax.inject.{Inject, Singleton}
@@ -108,9 +108,9 @@ class IdentityProviderAccountContextConnectorTestOnly @Inject() (
     }
   }
 
-  def getEacdIds(nino: String)(implicit hc: HeaderCarrier): TEAFResult[List[String]] = {
+  def getAccount(identityProviderId: String)(implicit hc: HeaderCarrier): TEAFResult[Option[String]] = {
     val url =
-      s"${appConfigTestOnly.identityProviderAccountContextBaseUrl}/identity-provider-account-context/contexts/individual/$nino"
+      s"${appConfigTestOnly.identityProviderAccountContextBaseUrl}/identity-provider-account-context/accounts?identityProviderId=$identityProviderId&identityProviderType=ONE_LOGIN"
 
     EitherT(
       httpClient.GET[Either[UpstreamErrorResponse, HttpResponse]](
@@ -118,13 +118,10 @@ class IdentityProviderAccountContextConnectorTestOnly @Inject() (
       )
     ).transform {
       case Right(response) =>
-        val listOfCreds: List[Creds] =
-          (response.json \ "credentials").as[List[Creds]]
-
-        Right(listOfCreds.map(_.caUserId))
-      case Left(_) =>
-        logger.warn(s"No contexts found for nino $nino")
-        Right(List.empty)
+        Right(Some((response.json \ "caUserId").as[String]))
+      case Left(response) =>
+        logger.warn(s"No account found for identityProviderId: $identityProviderId")
+        Right(None)
     }
   }
 

@@ -14,7 +14,9 @@
 
 
 GET        /protect-tax-info/test-only/select-user                                                            uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.controllers.TestOnlyController.getTestDataInfo
+GET        /protect-tax-info/test-only/insert-user                                                            uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.controllers.TestOnlyController.getCustomTestData
 POST       /protect-tax-info/test-only/success                                                                uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.controllers.TestOnlyController.insertTestData
+POST       /protect-tax-info/test-only/insert-user                                                            uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.controllers.TestOnlyController.insertCustomTestData
 
 +nocsrf
 POST       /protect-tax-info/test-only/create                                                                 uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.controllers.TestOnlyController.create

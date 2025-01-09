@@ -17,8 +17,8 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.controllers
 
 import cats.implicits.toTraverseOps
-import play.api.libs.json.{JsArray, JsResultException}
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import play.api.libs.json.{JsArray, JsResultException, Json}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Request}
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthJourney
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TEAFrontendController
@@ -27,11 +27,12 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.EACDService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.config.AppConfigTestOnly
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.{AccountDetailsTestOnly, TestMocks}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.CustomTestDataForm.customDataForm
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.{AccountDetailsTestOnly, CustomTestDataForm, TestMocks}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.utils.AccountUtilsTestOnly
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.TestDataForm.selectUserForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.services.EnrolmentStoreServiceTestOnly
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.views.html.{LoginCheckCompleteView, SelectTestData, SuccessView}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.views.html.{InsertTestData, LoginCheckCompleteView, SelectTestData, SuccessView}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -46,6 +47,7 @@ class TestOnlyController @Inject() (
   eacdService: EACDService,
   enrolmentStoreServiceTestOnly: EnrolmentStoreServiceTestOnly,
   selectTestDataPage: SelectTestData,
+  insertTestDataView: InsertTestData,
   successPage: SuccessView,
   loginCheckCompleteView: LoginCheckCompleteView,
   appConfigTestOnly: AppConfigTestOnly,
@@ -57,6 +59,67 @@ class TestOnlyController @Inject() (
     Ok(selectTestDataPage(TestMocks.mocks)(request, mcc.messagesApi.preferred(request)))
   }
 
+  def getCustomTestData: Action[AnyContent] = Action { request =>
+    val dataToFill = Json.toJson(extractData("singleUserWithSAEnrolment"))
+    Ok(
+      insertTestDataView(CustomTestDataForm.customDataForm.fill(dataToFill.toString()))(
+        request,
+        mcc.messagesApi.preferred(request)
+      )
+    )
+  }
+
+  private def insertAccount(
+    accounts: List[AccountDetailsTestOnly]
+  )(implicit hc: HeaderCarrier, request: Request[AnyRef]) =
+    accounts
+      .map { account =>
+        for {
+          _ <- accountUtilsTestOnly.deleteAccountDetails(account)
+          _ <- accountUtilsTestOnly.insertAccountDetails(account)
+        } yield ()
+      }
+      .sequence
+      .fold(
+        error => InternalServerError(error.toString),
+        _ => Ok(successPage(accounts, appConfigTestOnly)(request, request2Messages))
+      )
+
+  def insertCustomTestData: Action[AnyContent] = Action.async { implicit request =>
+    implicit val hc: HeaderCarrier = HeaderCarrier(Some(Authorization("Bearer 1")))
+
+    customDataForm
+      .bindFromRequest()
+      .fold(
+        error =>
+          Future
+            .successful(BadRequest(insertTestDataView(error)(request, mcc.messagesApi.preferred(request)))),
+        data => {
+          val json = Try(Json.parse(data.trim).as[List[AccountDetailsTestOnly]])
+
+          json match {
+            case Success(accounts) =>
+              insertAccount(accounts)
+            case Failure(_: JsResultException) => insertAccount(List(Json.parse(data.trim).as[AccountDetailsTestOnly]))
+            case Failure(error) =>
+              Future
+                .successful(
+                  BadRequest(
+                    insertTestDataView(
+                      CustomTestDataForm.customDataForm
+                        .bind(Map("user-data" -> data))
+                        .withError("Parse Error", error.getMessage)
+                    )(
+                      request,
+                      mcc.messagesApi.preferred(request)
+                    )
+                  )
+                )
+          }
+        }
+      )
+  }
+
   def insertTestData: Action[AnyContent] = Action.async { implicit request =>
     implicit val hc: HeaderCarrier = HeaderCarrier(Some(Authorization("Bearer 1")))
 
@@ -66,21 +129,7 @@ class TestOnlyController @Inject() (
         _ =>
           Future
             .successful(BadRequest(selectTestDataPage(TestMocks.mocks)(request, mcc.messagesApi.preferred(request)))),
-        data => {
-          val account = extractData(data)
-          account
-            .map { account =>
-              for {
-                _ <- accountUtilsTestOnly.deleteAccountDetails(account)
-                _ <- accountUtilsTestOnly.insertAccountDetails(account)
-              } yield ()
-            }
-            .sequence
-            .fold(
-              error => InternalServerError(error.toString),
-              _ => Ok(successPage(account, appConfigTestOnly))
-            )
-        }
+        data => insertAccount(extractData(data))
       )
   }
 

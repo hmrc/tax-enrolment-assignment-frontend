@@ -24,3 +24,8 @@ object TestDataForm {
     "selectUser" -> text
   )
 }
+object CustomTestDataForm {
+  val customDataForm: Form[String] = Form(
+    "user-data" -> text
+  )
+}

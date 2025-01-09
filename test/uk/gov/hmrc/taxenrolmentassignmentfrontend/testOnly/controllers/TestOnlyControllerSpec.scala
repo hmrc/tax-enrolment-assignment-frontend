@@ -281,6 +281,127 @@ class TestOnlyControllerSpec extends BaseSpec {
 
   }
 
+  "insertCustomTestData" must {
+    "create an account with enrolmemts" in {
+      val nino = generateNino
+      val identityProviderType = "SCP"
+
+      val account = AccountDetailsTestOnly(
+        identityProviderType,
+        "98ADEA51-C0BA-497D-997E-F585FAADBCEH",
+        nino,
+        "Individual",
+        UserTestOnly("5217739547427626", "Firstname Surname", "email@example.com"),
+        List(
+          EnrolmentDetailsTestOnly(
+            "IR-SA",
+            IdentifiersOrVerifiers("UTR", "AA543004E"),
+            List(IdentifiersOrVerifiers("postcode", "postcode")),
+            "IR-SA Enrolment",
+            "Activated",
+            "principal"
+          )
+        ),
+        List(AdditonalFactors("totp", None, Some("HMRC-APP")))
+      )
+
+      val request = FakeRequest()
+        .withMethod("POST")
+        .withFormUrlEncodedBody(
+          "user-data" -> Json.toJson(List(account)).toString()
+        )
+
+      when(mockFileHelper.loadFile(s"${nino.nino}.json"))
+        .thenReturn(Success(Json.toJson(account)))
+
+      when(mockAccountUtilsTestOnly.deleteAccountDetails(ameq(account))(any()))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+
+      when(mockAccountUtilsTestOnly.insertAccountDetails(ameq(account))(any()))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+
+      val result = sut.insertCustomTestData.apply(request)
+
+      status(result) mustBe OK
+    }
+    "create an account with no enrolments" in {
+      val nino = generateNino
+      val identityProviderType = "SCP"
+
+      val account = AccountDetailsTestOnly(
+        identityProviderType,
+        "98ADEA51-C0BA-497D-997E-F585FAADBCEH",
+        nino,
+        "Individual",
+        UserTestOnly("5217739547427626", "Firstname Surname", "email@example.com"),
+        List(),
+        List(AdditonalFactors("totp", None, Some("HMRC-APP")))
+      )
+
+      val request = FakeRequest()
+        .withMethod("POST")
+        .withFormUrlEncodedBody(
+          "user-data" -> Json.toJson(List(account)).toString()
+        )
+
+      when(mockFileHelper.loadFile(s"${nino.nino}.json"))
+        .thenReturn(Success(Json.toJson(account)))
+
+      when(mockAccountUtilsTestOnly.deleteAccountDetails(ameq(account))(any()))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+
+      when(mockAccountUtilsTestOnly.insertAccountDetails(ameq(account))(any()))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+
+      val result = sut.insertCustomTestData.apply(request)
+
+      status(result) mustBe OK
+    }
+    "create bad request when given no form data" in {
+
+      val request = FakeRequest()
+        .withMethod("POST")
+        .withFormUrlEncodedBody("user-data" -> "")
+
+      val result = sut.insertCustomTestData.apply(request)
+
+      status(result) mustBe BAD_REQUEST
+    }
+    "give 500 response when API returns an error" in {
+      val nino = generateNino
+      val identityProviderType = "SCP"
+
+      val account = AccountDetailsTestOnly(
+        identityProviderType,
+        "98ADEA51-C0BA-497D-997E-F585FAADBCEH",
+        nino,
+        "Individual",
+        UserTestOnly("5217739547427626", "Firstname Surname", "email@example.com"),
+        List(),
+        List(AdditonalFactors("totp", None, Some("HMRC-APP")))
+      )
+
+      val request = FakeRequest()
+        .withMethod("POST")
+        .withFormUrlEncodedBody(
+          "user-data" -> Json.toJson(List(account)).toString()
+        )
+
+      when(mockFileHelper.loadFile(s"${nino.nino}.json"))
+        .thenReturn(Success(Json.toJson(account)))
+
+      when(mockAccountUtilsTestOnly.deleteAccountDetails(ameq(account))(any()))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+
+      when(mockAccountUtilsTestOnly.insertAccountDetails(ameq(account))(any()))
+        .thenReturn(EitherT.leftT[Future, Unit].apply(UnexpectedError))
+
+      val result = sut.insertCustomTestData.apply(request)
+
+      status(result) mustBe INTERNAL_SERVER_ERROR
+    }
+  }
+
   "insertTestData" must {
     "create an account with enrolmemts" in {
       val nino = generateNino
@@ -655,6 +776,35 @@ class TestOnlyControllerSpec extends BaseSpec {
         .withMethod("GET")
 
       val result = sut.getTestDataInfo.apply(request)
+
+      status(result) mustBe OK
+    }
+  }
+
+  "getCustomTestData" must {
+    "return ok response" in {
+      val request = FakeRequest()
+        .withMethod("GET")
+
+      val nino = generateNino
+      val identityProviderType = "SCP"
+
+      val account = AccountDetailsTestOnly(
+        identityProviderType,
+        "98ADEA51-C0BA-497D-997E-F585FAADBCEH",
+        nino,
+        "Individual",
+        UserTestOnly("5217739547427626", "Firstname Surname", "email@example.com"),
+        List(),
+        List(AdditonalFactors("totp", None, Some("HMRC-APP")))
+      )
+
+      val json = Json.toJson(account)
+
+      when(mockFileHelper.loadFile(s"singleUserWithSAEnrolment.json"))
+        .thenReturn(Success(json))
+
+      val result = sut.getCustomTestData.apply(request)
 
       status(result) mustBe OK
     }

@@ -1,0 +1,76 @@
+@*
+ * Copyright 2024 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.Layout
+@import uk.gov.hmrc.govukfrontend.views.html.components._
+@import uk.gov.hmrc.govukfrontend.views.html.components.implicits._
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.controllers.routes
+@import cats.implicits.toTraverseOps
+
+@this(
+    layout: Layout,
+    formHelper: FormWithCSRF,
+    govukButton: GovukButton,
+    govukTextarea : GovukTextarea,
+    govukErrorSummary: GovukErrorSummary
+)
+
+@(form: Form[String])(implicit request: Request[AnyRef], messages: Messages)
+
+@formError = @{
+    form.errors.map(_.message).headOption
+}
+
+@layout(pageTitle = Some("Insert Test Data"), displaySignout = false){
+
+    <h1 class="govuk-heading-l">Enter Test Data</h1>
+    @formHelper(action = routes.TestOnlyController.insertCustomTestData) {
+
+        @if(formError.isDefined) {
+            @govukErrorSummary(ErrorSummary(
+                errorList = Seq(
+                    ErrorLink(
+                        href = Some("#user-data"),
+                        content = Text(messages(formError.get))
+                    )
+                ),
+                title = Text(messages("validation.summary.heading")),
+                attributes = Map("id" -> "errors")
+            ))
+        }
+
+        @govukTextarea(Textarea(
+            id = "user-data",
+            name = "user-data",
+            rows = 32,
+            label = Label(
+                isPageHeading = true,
+                classes = "govuk-label--l",
+                content = Text("Enter JSON for the user you'd like to add"),
+            ),
+            hint = Some(Hint(
+                content = Text("Example is a single GG user with SA and PT enrolment")
+            )),
+            value = Some(form.data("user-data").replace(",", ",\n"))
+        ))
+
+        @govukButton(Button(
+            preventDoubleClick = Some(true),
+            content = Text(messages("enrolledForPT.continue")),
+            id = Some("submit")
+        ))
+    }
+}

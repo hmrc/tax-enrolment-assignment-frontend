@@ -20,14 +20,14 @@ import org.mockito.ArgumentMatchers.{any, eq => ameq}
 import org.mockito.MockitoSugar.{mock, times, verify, when}
 import play.api.Application
 import play.api.inject.{Binding, bind}
-import play.api.mvc.BodyParsers
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.CacheMap
+import play.api.mvc.{AnyContent, BodyParsers}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.TaxEnrolmentsConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.ACCOUNT_TYPE
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, SilentAssignmentService}
@@ -72,7 +72,7 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
     )
   }
 
-  s"getAccountType" when {
+  "getAccountType" when {
     "the accountType is available in the cache" should {
       "return the accountType" in {
         when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))
@@ -310,6 +310,7 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
         }
       }
     }
+
     "there are no user credentials with the enrolment" should {
       "find any groups with the assignment and deallocate them from each" in {
 
@@ -336,6 +337,41 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
 
         whenReady(res.value) { result =>
           result shouldBe Right(SA_ASSIGNED_TO_OTHER_USER)
+        }
+
+        verify(mockEacdService, times(1)).getGroupsAssignedPTEnrolment(any(), any(), any())
+        verify(mockTaxEnrolmentConnector, times(3)).deallocateEnrolment(any(), any())(any(), any())
+      }
+    }
+
+    "IR-SA enrolment on both the current and an other account" should {
+      "return SA_ASSIGNED_TO_CURRENT_USER" in {
+        implicit val request: RequestWithUserDetailsFromSession[AnyContent] =
+          requestWithEnrolments(hmrcPt = false, irSa = true)
+
+        when(mockEacdService.getUsersAssignedPTEnrolment(any(), any(), any()))
+          .thenReturn(createInboundResult(UsersAssignedEnrolmentEmpty))
+
+        when(mockEacdService.getUsersAssignedSAEnrolment(any(), any(), any()))
+          .thenReturn(createInboundResult(UsersAssignedEnrolment1))
+
+        when(mockTeaSessionCache.save(ameq(ACCOUNT_TYPE), ameq(SA_ASSIGNED_TO_CURRENT_USER))(any(), any()))
+          .thenReturn(Future(CacheMap(request.sessionID, Map())))
+
+        when(mockEacdService.getGroupsAssignedPTEnrolment).thenReturn(
+          createInboundResult(
+            List(
+              "c0506dd9-1feb-400a-bf70-6351e1ff7510",
+              "c0506dd9-1feb-400a-bf70-6351e1ff7512",
+              "c0506dd9-1feb-400a-bf70-6351e1ff7513"
+            )
+          )
+        )
+
+        val res = orchestrator.getAccountType
+
+        whenReady(res.value) { result =>
+          result shouldBe Right(SA_ASSIGNED_TO_CURRENT_USER)
         }
 
         verify(mockEacdService, times(1)).getGroupsAssignedPTEnrolment(any(), any(), any())

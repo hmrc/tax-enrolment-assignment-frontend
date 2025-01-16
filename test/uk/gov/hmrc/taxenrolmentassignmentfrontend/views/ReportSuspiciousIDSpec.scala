@@ -241,7 +241,7 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
         document.getElementsByClass(Selectors.summaryListRow)
       val renderedElements = suspiciousIdDetailsRows.text()
       renderedElements.contains("Email") shouldBe false
-      renderedElements.contains("ast signed in") shouldBe false
+      renderedElements.contains("Last signed in") shouldBe false
     }
   }
 }

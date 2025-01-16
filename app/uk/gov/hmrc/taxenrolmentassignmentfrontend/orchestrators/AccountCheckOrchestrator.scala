@@ -25,7 +25,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_C
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSession}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{logAnotherAccountAlreadyHasPTEnrolment, logAnotherAccountHasSAEnrolment, logCurrentAndAnotherAccountHasSAEnrolment, logCurrentUserAlreadyHasPTEnrolment, logCurrentUserHasSAEnrolment, logCurrentUserhasOneOrMultipleAccounts}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{logAnotherAccountAlreadyHasPTEnrolment, logAnotherAccountHasSAEnrolment, logCurrentUserAlreadyHasPTEnrolment, logCurrentUserHasSAEnrolment, logCurrentUserhasOneOrMultipleAccounts}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{CacheMap, UsersAssignedEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
@@ -123,14 +123,8 @@ class AccountCheckOrchestrator @Inject() (
           )
         )
         SA_ASSIGNED_TO_OTHER_USER
-      case (_, Some(credId), _, true) =>
-        logger.logEvent(
-          logCurrentAndAnotherAccountHasSAEnrolment(
-            requestWithUserDetails.userDetails.credId,
-            credId
-          )
-        )
-        SA_ASSIGNED_TO_CURRENT_USER
+      case (_, Some(_), _, true) =>
+        throw new RuntimeException("IR-SA enrolment cannot be on both the current and an other account")
       case _ =>
         logger.logEvent(logCurrentUserhasOneOrMultipleAccounts(requestWithUserDetails.userDetails.credId))
         SINGLE_OR_MULTIPLE_ACCOUNTS

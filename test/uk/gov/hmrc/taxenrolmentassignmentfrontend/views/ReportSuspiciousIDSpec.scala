@@ -51,13 +51,13 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
       mfaDetails
     )
 
-  val view: HtmlFormat.Appendable =
+  def view(accountDetails: AccountDetails = accountDetails): HtmlFormat.Appendable =
     reportSuspiciousIdView(accountDetails)(FakeRequest(), testMessages)
 
   val viewSA: HtmlFormat.Appendable =
     reportSuspiciousIdView(accountDetails, saOnOtherAccountJourney = true)(FakeRequest(), testMessages)
 
-  val document: Document = doc(view)
+  val document: Document = doc(view())
   val documentSA: Document = doc(viewSA)
 
   "The Report suspicious ID Page" should {
@@ -107,6 +107,7 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
           .getElementsByClass(Selectors.summaryListValue)
           .text() shouldBe accountDetails.emailDecrypted.get
       }
+
       "includes the last signed in date" in {
         suspiciousIdDetailsRows
           .get(2)
@@ -229,6 +230,18 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
       documentSA
         .text()
         .contains(ReportSuspiciousIDMessages.referenceNumberAndHelpdeskTiming) shouldBe true
+    }
+  }
+
+  "The report suspicious ID Page when email and last login date fields are missing" should {
+    "not render the email or last signed in fields" in {
+      val ad = accountDetails.copy(email = None, lastLoginDate = None)
+      val document: Document = doc(view(ad))
+      val suspiciousIdDetailsRows =
+        document.getElementsByClass(Selectors.summaryListRow)
+      val renderedElements = suspiciousIdDetailsRows.text()
+      renderedElements.contains("Email") shouldBe false
+      renderedElements.contains("ast signed in") shouldBe false
     }
   }
 }

@@ -22,20 +22,6 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentE
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.{IRSAKey, hmrcPTKey}
 
 object LoggingEvent {
-
-  def logSingleAccountHolderAssignedEnrolment(
-    credentialId: String,
-    nino: Nino
-  ): LoggingEvent =
-    Info(
-      Event(
-        "[AccountCheckController][silentEnrol]",
-        details = Some(
-          s"$hmrcPTKey enrolment assigned to single account credential $credentialId with nino ${nino.nino}"
-        )
-      )
-    )
-
   def logRedirectingToReturnUrl(credentialId: String, classAndMethod: String): LoggingEvent = Info(
     Event(
       classAndMethod,
@@ -157,16 +143,6 @@ object LoggingEvent {
       Event(
         "[TestOnlyController][successfulCall]",
         Some("Successfully Redirected")
-      )
-    )
-
-  def logUnexpectedResponseFromIV(nino: Nino, statusReturned: Int): LoggingEvent =
-    Error(
-      Event(
-        "[IVConnector][getCredentialsWithNino]",
-        errorDetails = Some(
-          s"Identity Verification return status of $statusReturned for NINO ${nino.nino}"
-        )
       )
     )
 

@@ -124,6 +124,20 @@ object LoggingEvent {
       )
     )
 
+  def logCurrentAndAnotherAccountHasSAEnrolment(
+    credentialId: String,
+    credentialWithSAEnrolment: String
+  ): LoggingEvent =
+    Info(
+      Event(
+        "[AccountCheckOrchestrator][getAccountType]",
+        details = Some(
+          s"Signed in with credential $credentialId has got $IRSAKey enrolment but another " +
+            s"credential $credentialWithSAEnrolment also has SA enrolment. IR-SA enrolment cannot be on both the current and an other account"
+        )
+      )
+    )
+
   def logCurrentUserhasOneOrMultipleAccounts(credentialId: String): LoggingEvent =
     Info(
       Event(

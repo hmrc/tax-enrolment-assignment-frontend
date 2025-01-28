@@ -16,33 +16,30 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.logging
 
-import javax.inject.Singleton
 import play.api.Logger
 import play.api.libs.json.Json
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{Debug, Error, Event, Info, LoggingEvent, Warn}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{Debug, Error, Info, LoggingEvent, Warn}
 
-import scala.language.implicitConversions
+import javax.inject.Singleton
 
 @Singleton
 class EventLoggerService {
 
-  implicit def jsonify(event: Event): String = s"${Json.toJson(event)}"
-
   def logEvent(event: LoggingEvent)(implicit logger: Logger): Unit =
     event match {
-      case Debug(e) => logger.debug(e)
-      case Info(e)  => logger.info(e)
-      case Warn(e)  => logger.warn(e)
-      case Error(e) => logger.error(e)
+      case Debug(e) => logger.debug(s"${Json.toJson(e)}")
+      case Info(e)  => logger.info(s"${Json.toJson(e)}")
+      case Warn(e)  => logger.warn(s"${Json.toJson(e)}")
+      case Error(e) => logger.error(s"${Json.toJson(e)}")
     }
 
   def logEvent(event: LoggingEvent, throwable: Throwable)(implicit
     logger: Logger
   ): Unit = event match {
-    case Debug(e) => logger.debug(e, throwable)
-    case Info(e)  => logger.info(e, throwable)
-    case Warn(e)  => logger.warn(e, throwable)
-    case Error(e) => logger.error(e, throwable)
+    case Debug(e) => logger.debug(s"${Json.toJson(e)}", throwable)
+    case Info(e)  => logger.info(s"${Json.toJson(e)}", throwable)
+    case Warn(e)  => logger.warn(s"${Json.toJson(e)}", throwable)
+    case Error(e) => logger.error(s"${Json.toJson(e)}", throwable)
   }
 
 }

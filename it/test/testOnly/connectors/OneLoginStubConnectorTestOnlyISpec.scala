@@ -19,18 +19,17 @@ package testOnly.connectors
 import helpers.IntegrationSpecBase
 import play.api.http.Status
 import play.api.libs.json.Json
-import uk.gov.hmrc.http.HttpResponse
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{UpstreamError, UpstreamUnexpected2XX}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.connectors.IdentityProviderAccountContextConnectorTestOnly
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.connectors.{IdentityProviderAccountContextConnectorTestOnly, OneLoginStubConnectorTestOnly}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.{AccountDetailsTestOnly, UserTestOnly}
 
-class IdentityProviderAccountContextConnectorTestOnlyISpec extends IntegrationSpecBase {
-  lazy val connector: IdentityProviderAccountContextConnectorTestOnly =
-    app.injector.instanceOf[IdentityProviderAccountContextConnectorTestOnly]
+class OneLoginStubConnectorTestOnlyISpec extends IntegrationSpecBase {
+  lazy val connector: OneLoginStubConnectorTestOnly =
+    app.injector.instanceOf[OneLoginStubConnectorTestOnly]
 
   "postAccount" must {
     val credId = "credId"
-    val apiUrl = "/identity-provider-account-context/test-only/test/accounts"
+    val apiUrl = "/one-login-stub/test/accounts"
     val account = AccountDetailsTestOnly(
       "SCP",
       "groupId",
@@ -92,73 +91,14 @@ class IdentityProviderAccountContextConnectorTestOnlyISpec extends IntegrationSp
     }
   }
 
-  "postIndividual" must {
-    val credId = "credId"
-    val apiUrl = "/identity-provider-account-context/contexts/individual"
-    val account = AccountDetailsTestOnly(
-      "SCP",
-      "groupId",
-      nino,
-      "Individual",
-      UserTestOnly(credId, "name", "email"),
-      List.empty,
-      List.empty
-    )
-    val caUserId = "caUserId"
-
-    "insert nino" when {
-      "response is OK" in {
-        val requestBody = Json
-          .obj(
-            "caUserId" -> caUserId,
-            "nino"     -> nino
-          )
-          .toString()
-
-        stubPost(apiUrl, requestBody, Status.CREATED, "")
-        whenReady(connector.postIndividual(account, caUserId).value) { response =>
-          response shouldBe Right(())
-        }
-      }
-    }
-
-    "return an UpstreamUnexpected2XX error" in {
-      val requestBody = Json
-        .obj(
-          "caUserId" -> caUserId,
-          "nino"     -> nino
-        )
-        .toString()
-
-      stubPost(apiUrl, requestBody, Status.OK, "Invalid 2XX")
-      whenReady(connector.postIndividual(account, caUserId).value) { response =>
-        response shouldBe Left(UpstreamUnexpected2XX("Invalid 2XX", Status.OK))
-      }
-    }
-
-    "return an UpstreamError error" in {
-      val requestBody = Json
-        .obj(
-          "caUserId" -> caUserId,
-          "nino"     -> nino
-        )
-        .toString()
-
-      stubPost(apiUrl, requestBody, Status.INTERNAL_SERVER_ERROR, "Server error")
-      whenReady(connector.postIndividual(account, caUserId).value) { response =>
-        response shouldBe a[Left[UpstreamError, _]]
-      }
-    }
-  }
-
-  "delete individual" must {
+  "delete account" must {
     val eacdUserId = "eacdUserId"
-    val apiUrl = s"/identity-provider-account-context/test-only/test/accounts/$eacdUserId"
+    val apiUrl = s"/one-login-stub/test/accounts/$eacdUserId"
     "delete the account and return OK" in {
 
       stubDelete(apiUrl, Status.OK)
 
-      whenReady(connector.deleteIndividual(eacdUserId).value) { response =>
+      whenReady(connector.deleteAccount(eacdUserId).value) { response =>
         response shouldBe Right(())
 
       }
@@ -166,7 +106,7 @@ class IdentityProviderAccountContextConnectorTestOnlyISpec extends IntegrationSp
     "return an error when unexpected response is given" in {
       stubDelete(apiUrl, Status.CREATED)
 
-      whenReady(connector.deleteIndividual(eacdUserId).value) { response =>
+      whenReady(connector.deleteAccount(eacdUserId).value) { response =>
         response shouldBe a[Left[UpstreamError, _]]
 
       }
@@ -175,7 +115,7 @@ class IdentityProviderAccountContextConnectorTestOnlyISpec extends IntegrationSp
     "return an error when database responds with an error" in {
       stubDelete(apiUrl, Status.BAD_REQUEST)
 
-      whenReady(connector.deleteIndividual(eacdUserId).value) { response =>
+      whenReady(connector.deleteAccount(eacdUserId).value) { response =>
         response shouldBe a[Left[UpstreamError, _]]
 
       }

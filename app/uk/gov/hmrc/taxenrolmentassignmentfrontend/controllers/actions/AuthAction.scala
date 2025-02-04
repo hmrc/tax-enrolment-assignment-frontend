@@ -19,8 +19,8 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions
 import play.api.Logger
 import play.api.mvc.Results._
 import play.api.mvc._
-import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, AuthProviders, AuthorisationException, AuthorisedFunctions, ConfidenceLevel, Enrolments, NoActiveSession}
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
+import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals._
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.domain.Nino
@@ -84,17 +84,11 @@ class AuthAction @Inject() (
   ): Future[Result] = {
     implicit val hc: HeaderCarrier =
       HeaderCarrierConverter.fromRequestAndSession(request, request.session)
-
     authorised(AuthProviders(GovernmentGateway) and ConfidenceLevel.L200)
-      .retrieve(
-        nino and credentials and allEnrolments and groupIdentifier and affinityGroup and email
-      ) {
+      .retrieve(nino and credentials and allEnrolments and groupIdentifier and affinityGroup and email) {
         case Some(nino) ~ Some(credentials) ~ enrolments ~ Some(groupId) ~ Some(affinityGroup) ~ email =>
           implicit val hc: HeaderCarrier = fromRequestAndSession(request, request.session)
           val hasSAEnrolment = enrolments.getEnrolment(s"$IRSAKey").fold(false)(_.isActivated)
-          val hasPTEnrolment =
-            enrolments.getEnrolment(s"$hmrcPTKey").flatMap(_.identifiers.find(_.value == nino)).isDefined
-
           val userDetails = UserDetailsFromSession(
             credentials.providerId,
             Nino(nino),
@@ -102,7 +96,7 @@ class AuthAction @Inject() (
             email,
             affinityGroup,
             enrolments,
-            hasPTEnrolment,
+            enrolments.getEnrolment(s"$hmrcPTKey").flatMap(_.identifiers.find(_.value == nino)).isDefined,
             hasSAEnrolment
           )
 
@@ -125,27 +119,13 @@ class AuthAction @Inject() (
             )
 
         case _ =>
-          logger.logEvent(
-            logAuthenticationFailure(
-              s"session missing credential or NINO field for uri: ${request.uri}"
-            )
-          )
+          logger.logEvent(logAuthenticationFailure(s"session missing credential or NINO field for uri: ${request.uri}"))
           Future.successful(Redirect(routes.AuthorisationController.notAuthorised.url))
       } recover {
-      case er: NoActiveSession =>
-        logger.logEvent(
-          logAuthenticationFailure(
-            s"no active session for uri: ${request.uri} with message: ${er.getMessage}"
-          ),
-          er
-        )
-        toGGLogin
+      case _: NoActiveSession =>
+        toGGLogin // user has come from a gov uk page or a bookmark without authentication - nothing to be done
       case er: AuthorisationException =>
-        logger.logEvent(
-          logAuthenticationFailure(
-            s"Auth exception: ${er.getMessage} for  uri ${request.uri}"
-          )
-        )
+        logger.logEvent(logAuthenticationFailure(s"Auth exception: ${er.getMessage} for  uri ${request.uri}"))
         Redirect(routes.AuthorisationController.notAuthorised.url)
     }
   }

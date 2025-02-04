@@ -68,7 +68,7 @@ class TaxEnrolmentsConnector @Inject() (httpClient: HttpClient, logger: EventLog
             Left(UnexpectedResponseFromTaxEnrolments)
           case status =>
             val exception = new RuntimeException(
-              s"Tax Enrolments return status of $status when allocating $hmrcPTKey enrolment for users with $nino NINO"
+              s"Tax Enrolments return status of $status when allocating $hmrcPTKey enrolment"
             )
             logger
               .logEvent(logUnexpectedResponseFromTaxEnrolmentsKnownFacts(nino, status), exception)

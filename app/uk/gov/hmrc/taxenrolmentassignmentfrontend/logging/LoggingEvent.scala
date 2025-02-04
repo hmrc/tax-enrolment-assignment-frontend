@@ -19,23 +19,10 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.logging
 import play.api.libs.json.{Format, Json}
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{Error, Event, Info, LoggingEvent, Warn}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.{IRSAKey, hmrcPTKey}
 
-object LoggingEvent {
-
-  def logSingleAccountHolderAssignedEnrolment(
-    credentialId: String,
-    nino: Nino
-  ): LoggingEvent =
-    Info(
-      Event(
-        "[AccountCheckController][silentEnrol]",
-        details = Some(
-          s"$hmrcPTKey enrolment assigned to single account credential $credentialId with nino ${nino.nino}"
-        )
-      )
-    )
-
+trait LoggingEventInfo {
   def logRedirectingToReturnUrl(credentialId: String, classAndMethod: String): LoggingEvent = Info(
     Event(
       classAndMethod,
@@ -146,15 +133,24 @@ object LoggingEvent {
       )
     )
 
-  def logNoUserFoundWithPTEnrolment(credentialId: String): LoggingEvent =
-    Error(
+  val logSuccessfulRedirectToReturnUrl: LoggingEvent =
+    Info(
       Event(
-        "[MultipleAccountsOrchestrator][getPTCredentialDetails]",
-        details = Some(
-          s"No $hmrcPTKey enrolment found when user has account type of $hmrcPTKey on other account for credential $credentialId"
-        )
+        "[TestOnlyController][successfulCall]",
+        Some("Successfully Redirected")
       )
     )
+
+  def logUserSigninAgain(credId: String): LoggingEvent =
+    Info(
+      Event(
+        "[SignOutController][signOut]",
+        details = Some(s"User $credId has chosen to sign in with another account")
+      )
+    )
+}
+
+trait LoggingEventWarn {
 
   def logAuthenticationFailure(errorDetails: String): LoggingEvent =
     Warn(Event("[AuthAction][invokeBlock]", errorDetails = Some(errorDetails)))
@@ -166,20 +162,39 @@ object LoggingEvent {
         errorDetails = Some(s"User did not have sessionId, generate sessionId for $credId")
       )
     )
-  val logSuccessfulRedirectToReturnUrl: LoggingEvent =
-    Info(
+
+  def logPTEnrolmentHasAlreadyBeenAssigned(nino: Nino): LoggingEvent =
+    Warn(
       Event(
-        "[TestOnlyController][successfulCall]",
-        Some("Successfully Redirected")
+        "[TaxEnrolmentsConnector][assignPTEnrolmentWithKnownFacts]",
+        details = Some(s"Personal Tax enrolment has already been assigned for ${nino.nino}")
       )
     )
 
-  def logUnexpectedResponseFromIV(nino: Nino, statusReturned: Int): LoggingEvent =
+  def logInvalidRedirectUrl(error: String): LoggingEvent =
+    Warn(
+      Event(
+        "[AccountCheckController][accountCheck]",
+        errorDetails = Some(error)
+      )
+    )
+  def logUserHasNoCacheInMongo(credId: String, sessionId: String): LoggingEvent =
+    Warn(
+      Event(
+        "[AccountMongoDetailsAction]",
+        details = Some(s"User $credId has no record in mongo for $sessionId")
+      )
+    )
+
+}
+
+trait LoggingEventError {
+  def logNoUserFoundWithPTEnrolment(credentialId: String): LoggingEvent =
     Error(
       Event(
-        "[IVConnector][getCredentialsWithNino]",
-        errorDetails = Some(
-          s"Identity Verification return status of $statusReturned for NINO ${nino.nino}"
+        "[MultipleAccountsOrchestrator][getPTCredentialDetails]",
+        details = Some(
+          s"No $hmrcPTKey enrolment found when user has account type of $hmrcPTKey on other account for credential $credentialId"
         )
       )
     )
@@ -229,14 +244,6 @@ object LoggingEvent {
       )
     )
 
-  def logPTEnrolmentHasAlreadyBeenAssigned(nino: Nino): LoggingEvent =
-    Warn(
-      Event(
-        "[TaxEnrolmentsConnector][assignPTEnrolmentWithKnownFacts]",
-        details = Some(s"Personal Tax enrolment has already been assigned for ${nino.nino}")
-      )
-    )
-
   def logUnexpectedResponseFromTaxEnrolmentsKnownFacts(
     nino: Nino,
     statusReturned: Int
@@ -246,20 +253,6 @@ object LoggingEvent {
         "[TaxEnrolmentsConnector][assignPTEnrolmentWithKnownFacts]",
         errorDetails = Some(
           s"Tax Enrolments return status of $statusReturned when allocating $hmrcPTKey enrolment for users with ${nino.nino} NINO"
-        )
-      )
-    )
-
-  def logDetailedUnexpectedResponseFromTaxEnrolmentsKnownFacts(
-    input: String,
-    statusReturned: Int,
-    response: String
-  ): LoggingEvent =
-    Debug(
-      Event(
-        "[TaxEnrolmentsConnector][assignPTEnrolmentWithKnownFacts]",
-        errorDetails = Some(
-          s"Tax Enrolments return status of $statusReturned with response `$response` when allocating $hmrcPTKey enrolment with input `$input`"
         )
       )
     )
@@ -296,29 +289,6 @@ object LoggingEvent {
       )
     )
 
-  def logInvalidRedirectUrl(error: String): LoggingEvent =
-    Warn(
-      Event(
-        "[AccountCheckController][accountCheck]",
-        errorDetails = Some(error)
-      )
-    )
-  def logUserHasNoCacheInMongo(credId: String, sessionId: String): LoggingEvent =
-    Warn(
-      Event(
-        "[AccountMongoDetailsAction]",
-        details = Some(s"User $credId has no record in mongo for $sessionId")
-      )
-    )
-
-  def logUserSigninAgain(credId: String): LoggingEvent =
-    Info(
-      Event(
-        "[SignOutController][signOut]",
-        details = Some(s"User $credId has chosen to sign in with another account")
-      )
-    )
-
   def logES2ErrorFromEACDDelete(groupId: String, statusReturned: Int, message: String): LoggingEvent =
     Error(
       Event(
@@ -337,6 +307,9 @@ object LoggingEvent {
   ): LoggingEvent =
     Error(Event(classAndMethod, details = Some(s"${errorType.toString} for $credentialId")))
 
+}
+
+object LoggingEvent extends LoggingEventWarn with LoggingEventInfo with LoggingEventError {
   implicit val formats: Format[Event] = Json.format[Event]
 
   sealed trait LoggingEvent {
@@ -352,5 +325,19 @@ object LoggingEvent {
   case class Warn(event: Event) extends LoggingEvent
 
   case class Error(event: Event) extends LoggingEvent
+
+  def logDetailedUnexpectedResponseFromTaxEnrolmentsKnownFacts(
+    input: String,
+    statusReturned: Int,
+    response: String
+  ): LoggingEvent =
+    Debug(
+      Event(
+        "[TaxEnrolmentsConnector][assignPTEnrolmentWithKnownFacts]",
+        errorDetails = Some(
+          s"Tax Enrolments return status of $statusReturned with response `$response` when allocating $hmrcPTKey enrolment with input `$input`"
+        )
+      )
+    )
 
 }

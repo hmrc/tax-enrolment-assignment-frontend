@@ -28,7 +28,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_A
 
 class AuditEventSpec extends BaseSpec {
 
-  val accountDetailsWithOneMFADetails = AccountDetails(
+  val accountDetailsWithOneMFADetails: AccountDetails = AccountDetails(
     identityProviderType = SCP,
     credId = CREDENTIAL_ID_1,
     userId = "6037",
@@ -38,6 +38,41 @@ class AuditEventSpec extends BaseSpec {
   )
 
   def getReportedAccountJson(accountDetails: AccountDetails, isWelsh: Boolean = false): JsObject = {
+    val mfaJson = accountDetails.mfaDetails.length match {
+      case 0 => Json.arr()
+      case 1 =>
+        Json.arr(
+          Json.obj(
+            "factorType"  -> getFactorType("text", isWelsh),
+            "factorValue" -> getEndingWith("24321", isWelsh)
+          )
+        )
+      case _ =>
+        Json.arr(
+          Json.obj(
+            "factorType"  -> getFactorType("text", isWelsh),
+            "factorValue" -> getEndingWith("24321", isWelsh)
+          ),
+          Json.obj(
+            "factorType"  -> getFactorType("voice", isWelsh),
+            "factorValue" -> getEndingWith("24322", isWelsh)
+          ),
+          Json.obj(
+            "factorType"  -> getFactorType("totp", isWelsh),
+            "factorValue" -> "TEST"
+          )
+        )
+    }
+    Json.obj(
+      "credentialId" -> accountDetails.credId,
+      "userId"       -> getEndingWith(accountDetails.userId, isWelsh),
+      "email"        -> accountDetails.emailDecrypted.getOrElse("-").toString,
+      "lastSignedIn" -> accountDetails.lastLoginDate,
+      "mfaDetails"   -> mfaJson
+    )
+  }
+
+  def getPresentedAccountJson(accountDetails: AccountDetails, isWelsh: Boolean = false): JsObject = {
     val mfaJson = accountDetails.mfaDetails.length match {
       case 0 => Json.arr()
       case 1 =>
@@ -113,6 +148,43 @@ class AuditEventSpec extends BaseSpec {
     )
   }
 
+  def getExpectedAuditEventPTEnrolmentOnOtherAccount(
+    reportedAccountDetails: AccountDetails,
+    isSA: Boolean,
+    isWelsh: Boolean = false
+  ): AuditEvent = {
+    val currentAccountDetails = Json.obj(
+      ("credentialId", JsString(CREDENTIAL_ID)),
+      (
+        "type",
+        JsString(if (isSA) {
+          SA_ASSIGNED_TO_OTHER_USER.toString
+        } else {
+          PT_ASSIGNED_TO_OTHER_USER.toString
+        })
+      ),
+      ("affinityGroup", JsString("Individual"))
+    )
+
+    val translatedAccountJson = if (isWelsh) {
+      Json.obj(
+        ("enrolledAccountEN", getReportedAccountJson(reportedAccountDetails))
+      )
+    } else {
+      Json.obj()
+    }
+
+    AuditEvent(
+      auditType = "EnrolledOnAnotherAccount",
+      transactionName = "enrolled-on-another-account",
+      detail = Json.obj(
+        ("NINO", JsString(NINO.nino)),
+        ("currentAccount", currentAccountDetails),
+        ("enrolledAccount", getPresentedAccountJson(reportedAccountDetails, isWelsh))
+      ) ++ translatedAccountJson
+    )
+  }
+
   def getExpectedAuditForPTEnrolled(
     accountType: AccountTypes.Value,
     optReportedAccountDetails: Option[JsObject],
@@ -142,7 +214,7 @@ class AuditEventSpec extends BaseSpec {
     )
   }
 
-  def getExpectedAuditForSigninWithSA(saAccountDetails: Option[JsObject]) = {
+  def getExpectedAuditForSigninWithSA(saAccountDetails: Option[JsObject]): AuditEvent = {
     val currentAccountDetails = Json.obj(
       ("credentialId", JsString(CREDENTIAL_ID)),
       ("type", JsString(SA_ASSIGNED_TO_OTHER_USER.toString)),
@@ -445,6 +517,151 @@ class AuditEventSpec extends BaseSpec {
           getExpectedAuditEvent(accountDetailsWithThreeMFADetails, false, true)
 
         AuditEvent.auditReportSuspiciousPTAccount(
+          accountDetailsWithThreeMFADetails
+        )(requestWithMongoAndAccountTypeLangCY, messagesApi) shouldEqual expectedAuditEvent
+      }
+    }
+  }
+
+  "auditPTEnrolmentOnOtherAccount" should {
+    val requestWithMongoAndAccountType =
+      requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER)
+    val requestWithMongoAndAccountTypeLangCY =
+      requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER, langCode = "cy")
+
+    val accountDetailsWithOneMFADetails = AccountDetails(
+      identityProviderType = SCP,
+      credId = CREDENTIAL_ID_1,
+      userId = "6037",
+      email = Some(SensitiveString("test@mail.com")),
+      lastLoginDate = Some("27 February 2022 at 12:00PM"),
+      mfaDetails = Seq(MFADetails("mfaDetails.text", "24321"))
+    )
+
+    "return an audit event with the expected details" when {
+      "the reported account has email and one mfaDetails" in {
+        val expectedAuditEvent =
+          getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsWithOneMFADetails, false)
+
+        AuditEvent.auditPTEnrolmentOnOtherAccount(
+          accountDetailsWithOneMFADetails
+        )(requestWithMongoAndAccountType, messagesApi) shouldEqual expectedAuditEvent
+      }
+
+      "the reported account has no email or mfaDetails" in {
+        val accountDetailsNoEmailOrMFA = accountDetailsWithOneMFADetails
+          .copy(email = None, mfaDetails = Seq.empty)
+        val expectedAuditEvent =
+          getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsNoEmailOrMFA, false)
+
+        AuditEvent.auditPTEnrolmentOnOtherAccount(accountDetailsNoEmailOrMFA)(
+          requestWithMongoAndAccountType,
+          messagesApi
+        ) shouldEqual expectedAuditEvent
+      }
+
+      "the reported account has no email" in {
+        val accountDetailsNoEmail = accountDetailsWithOneMFADetails
+          .copy(email = None)
+        val expectedAuditEvent =
+          getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsNoEmail, false)
+
+        AuditEvent.auditPTEnrolmentOnOtherAccount(accountDetailsNoEmail)(
+          requestWithMongoAndAccountType,
+          messagesApi
+        ) shouldEqual expectedAuditEvent
+      }
+
+      "the reported account has no mfaDetails" in {
+        val accountDetailsNoMFA = accountDetailsWithOneMFADetails
+          .copy(mfaDetails = Seq.empty)
+        val expectedAuditEvent =
+          getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsNoMFA, false)
+
+        AuditEvent.auditPTEnrolmentOnOtherAccount(accountDetailsNoMFA)(
+          requestWithMongoAndAccountType,
+          messagesApi
+        ) shouldEqual expectedAuditEvent
+      }
+
+      "the reported account has email and three mfaDetails" in {
+        val accountDetailsWithThreeMFADetails = accountDetailsWithOneMFADetails
+          .copy(
+            mfaDetails = Seq(
+              MFADetails("mfaDetails.text", "24321"),
+              MFADetails("mfaDetails.voice", "24322"),
+              MFADetails("mfaDetails.totp", "TEST")
+            )
+          )
+        val expectedAuditEvent =
+          getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsWithThreeMFADetails, false)
+
+        AuditEvent.auditPTEnrolmentOnOtherAccount(
+          accountDetailsWithThreeMFADetails
+        )(requestWithMongoAndAccountType, messagesApi) shouldEqual expectedAuditEvent
+      }
+    }
+
+    "return an audit event with the expected details and translation" when {
+      "the reported account has email and one mfaDetails and language set to welsh" in {
+        val expectedAuditEvent =
+          getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsWithOneMFADetails, false, true)
+
+        AuditEvent.auditPTEnrolmentOnOtherAccount(
+          accountDetailsWithOneMFADetails
+        )(requestWithMongoAndAccountTypeLangCY, messagesApi) shouldEqual expectedAuditEvent
+      }
+
+      "the reported account has no email or mfaDetails and language set to welsh" in {
+        val accountDetailsNoEmailOrMFA = accountDetailsWithOneMFADetails
+          .copy(email = None, mfaDetails = Seq.empty)
+        val expectedAuditEvent =
+          getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsNoEmailOrMFA, false, true)
+
+        AuditEvent.auditPTEnrolmentOnOtherAccount(accountDetailsNoEmailOrMFA)(
+          requestWithMongoAndAccountTypeLangCY,
+          messagesApi
+        ) shouldEqual expectedAuditEvent
+      }
+
+      "the reported account has no email and language set to welsh" in {
+        val accountDetailsNoEmail = accountDetailsWithOneMFADetails
+          .copy(email = None)
+        val expectedAuditEvent =
+          getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsNoEmail, false, true)
+
+        AuditEvent.auditPTEnrolmentOnOtherAccount(accountDetailsNoEmail)(
+          requestWithMongoAndAccountTypeLangCY,
+          messagesApi
+        ) shouldEqual expectedAuditEvent
+      }
+
+      "the reported account has no mfaDetails and language set to welsh" in {
+        val accountDetailsNoMFA = accountDetailsWithOneMFADetails
+          .copy(mfaDetails = Seq.empty)
+        val expectedAuditEvent =
+          getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsNoMFA, false, true)
+
+        AuditEvent.auditPTEnrolmentOnOtherAccount(accountDetailsNoMFA)(
+          requestWithMongoAndAccountTypeLangCY,
+          messagesApi
+        ) shouldEqual expectedAuditEvent
+      }
+
+      "the reported account has email and three mfaDetails and language set to welsh" in {
+        val accountDetailsWithThreeMFADetails = accountDetailsWithOneMFADetails
+          .copy(
+            mfaDetails = Seq(
+              MFADetails("mfaDetails.text", "24321"),
+              MFADetails("mfaDetails.voice", "24322"),
+              MFADetails("mfaDetails.totp", "TEST")
+            )
+          )
+
+        val expectedAuditEvent =
+          getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsWithThreeMFADetails, false, true)
+
+        AuditEvent.auditPTEnrolmentOnOtherAccount(
           accountDetailsWithThreeMFADetails
         )(requestWithMongoAndAccountTypeLangCY, messagesApi) shouldEqual expectedAuditEvent
       }

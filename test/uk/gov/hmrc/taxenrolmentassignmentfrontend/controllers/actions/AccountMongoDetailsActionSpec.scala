@@ -32,7 +32,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_CURRENT_USER, SINGLE_OR_MULTIPLE_ACCOUNTS}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo.requestConversion
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.CURRENT_USER_EMAIL
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{CURRENT_USER_EMAIL, PROVIDER_TYPE}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 
@@ -68,7 +68,7 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
         FakeRequest(),
         UserDetailsFromSession(
           "foo",
-          "GovernmentGateway",
+          PROVIDER_TYPE,
           nino,
           "wizz",
           Some(CURRENT_USER_EMAIL),
@@ -110,7 +110,7 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
           FakeRequest(),
           UserDetailsFromSession(
             "foo",
-            "GovernmentGateway",
+            PROVIDER_TYPE,
             nino,
             "wizz",
             Some(CURRENT_USER_EMAIL),
@@ -151,7 +151,7 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
             FakeRequest(),
             UserDetailsFromSession(
               "foo",
-              "GovernmentGateway",
+              PROVIDER_TYPE,
               nino,
               "wizz",
               Some(CURRENT_USER_EMAIL),
@@ -188,7 +188,7 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
             FakeRequest(),
             UserDetailsFromSession(
               "foo",
-              "GovernmentGateway",
+              PROVIDER_TYPE,
               nino,
               "wizz",
               Some(CURRENT_USER_EMAIL),
@@ -225,7 +225,7 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
         FakeRequest(),
         UserDetailsFromSession(
           "foo",
-          "GovernmentGateway",
+          PROVIDER_TYPE,
           nino,
           "wizz",
           Some(CURRENT_USER_EMAIL),
@@ -262,7 +262,7 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
         FakeRequest(),
         UserDetailsFromSession(
           "foo",
-          "GovernmentGateway",
+          PROVIDER_TYPE,
           nino,
           "wizz",
           Some(CURRENT_USER_EMAIL),

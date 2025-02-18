@@ -84,7 +84,7 @@ class AuditEventSpec extends BaseSpec {
           PT_ASSIGNED_TO_OTHER_USER.toString
         })
       ),
-      ("authProvider", JsString("GovernmentGateway")),
+      ("authProvider", JsString(PROVIDER_TYPE)),
       ("affinityGroup", JsString("Individual")),
       ("email", JsString(CURRENT_USER_EMAIL))
     )
@@ -152,7 +152,7 @@ class AuditEventSpec extends BaseSpec {
       .obj(
         ("credentialId", JsString(CREDENTIAL_ID)),
         ("type", JsString(accountType.toString)),
-        ("authProvider", JsString("GovernmentGateway")),
+        ("authProvider", JsString(PROVIDER_TYPE)),
         ("affinityGroup", JsString("Individual")),
         ("email", JsString(CURRENT_USER_EMAIL))
       )
@@ -177,7 +177,7 @@ class AuditEventSpec extends BaseSpec {
       ("credentialId", JsString(CREDENTIAL_ID)),
       ("type", JsString(SA_ASSIGNED_TO_OTHER_USER.toString)),
       ("affinityGroup", JsString("Individual")),
-      ("authProvider", JsString("GovernmentGateway")),
+      ("authProvider", JsString(PROVIDER_TYPE)),
       ("email", JsString(CURRENT_USER_EMAIL))
     )
     val details = Json.obj(

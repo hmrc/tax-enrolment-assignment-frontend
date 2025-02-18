@@ -92,7 +92,7 @@ object TestITData {
       Json.obj(
         "optionalCredentials" -> Json.obj(
           "providerId"   -> JsString(creds.providerId),
-          "providerType" -> JsString("GovernmentGateway")
+          "providerType" -> JsString(PROVIDER_TYPE)
         )
       )
     )

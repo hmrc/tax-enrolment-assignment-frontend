@@ -28,7 +28,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_A
 
 class AuditEventSpec extends BaseSpec {
 
-  val accountDetailsWithOneMFADetails: AccountDetails = AccountDetails(
+  private val accountDetailsWithOneMFADetails: AccountDetails = AccountDetails(
     identityProviderType = SCP,
     credId = CREDENTIAL_ID_1,
     userId = "6037",
@@ -37,7 +37,7 @@ class AuditEventSpec extends BaseSpec {
     mfaDetails = Seq(MFADetails("mfaDetails.text", "24321"))
   )
 
-  def getReportedAccountJson(accountDetails: AccountDetails, isWelsh: Boolean = false): JsObject = {
+  private def getReportedAccountJson(accountDetails: AccountDetails, isWelsh: Boolean = false): JsObject = {
     val mfaJson = accountDetails.mfaDetails.length match {
       case 0 => Json.arr()
       case 1 =>
@@ -72,42 +72,7 @@ class AuditEventSpec extends BaseSpec {
     )
   }
 
-  def getPresentedAccountJson(accountDetails: AccountDetails, isWelsh: Boolean = false): JsObject = {
-    val mfaJson = accountDetails.mfaDetails.length match {
-      case 0 => Json.arr()
-      case 1 =>
-        Json.arr(
-          Json.obj(
-            "factorType"  -> getFactorType("text", isWelsh),
-            "factorValue" -> getEndingWith("24321", isWelsh)
-          )
-        )
-      case _ =>
-        Json.arr(
-          Json.obj(
-            "factorType"  -> getFactorType("text", isWelsh),
-            "factorValue" -> getEndingWith("24321", isWelsh)
-          ),
-          Json.obj(
-            "factorType"  -> getFactorType("voice", isWelsh),
-            "factorValue" -> getEndingWith("24322", isWelsh)
-          ),
-          Json.obj(
-            "factorType"  -> getFactorType("totp", isWelsh),
-            "factorValue" -> "TEST"
-          )
-        )
-    }
-    Json.obj(
-      "credentialId" -> accountDetails.credId,
-      "userId"       -> getEndingWith(accountDetails.userId, isWelsh),
-      "email"        -> accountDetails.emailDecrypted.getOrElse("-").toString,
-      "lastSignedIn" -> accountDetails.lastLoginDate,
-      "mfaDetails"   -> mfaJson
-    )
-  }
-
-  def getExpectedAuditEvent(
+  private def getExpectedAuditEvent(
     reportedAccountDetails: AccountDetails,
     isSA: Boolean,
     isWelsh: Boolean = false
@@ -148,7 +113,7 @@ class AuditEventSpec extends BaseSpec {
     )
   }
 
-  def getExpectedAuditEventPTEnrolmentOnOtherAccount(
+  private def getExpectedAuditEventPTEnrolmentOnOtherAccount(
     reportedAccountDetails: AccountDetails,
     isSA: Boolean,
     isWelsh: Boolean = false
@@ -180,12 +145,12 @@ class AuditEventSpec extends BaseSpec {
       detail = Json.obj(
         ("NINO", JsString(NINO.nino)),
         ("currentAccount", currentAccountDetails),
-        ("enrolledAccount", getPresentedAccountJson(reportedAccountDetails, isWelsh))
+        ("enrolledAccount", getReportedAccountJson(reportedAccountDetails, isWelsh))
       ) ++ translatedAccountJson
     )
   }
 
-  def getExpectedAuditForPTEnrolled(
+  private def getExpectedAuditForPTEnrolled(
     accountType: AccountTypes.Value,
     optReportedAccountDetails: Option[JsObject],
     optSACred: Option[String],
@@ -214,7 +179,7 @@ class AuditEventSpec extends BaseSpec {
     )
   }
 
-  def getExpectedAuditForSigninWithSA(saAccountDetails: Option[JsObject]): AuditEvent = {
+  private def getExpectedAuditForSigninWithSA(saAccountDetails: Option[JsObject]): AuditEvent = {
     val currentAccountDetails = Json.obj(
       ("credentialId", JsString(CREDENTIAL_ID)),
       ("type", JsString(SA_ASSIGNED_TO_OTHER_USER.toString)),

@@ -31,6 +31,8 @@ object TestITData {
 
   val NINO: Nino = new Generator().nextNino
   val mismatchNino: Nino = new Generator().nextNino
+
+  val PROVIDER_TYPE = "GovernmentGateway"
   val CURRENT_USER_EMAIL = "foobarwizz"
   val CREDENTIAL_ID: String = "6902202884164548"
   val CREDENTIAL_ID_2: String = "8316291481001919"
@@ -384,6 +386,7 @@ object TestITData {
   val userDetailsNoEnrolments: UserDetailsFromSession =
     UserDetailsFromSession(
       CREDENTIAL_ID,
+      PROVIDER_TYPE,
       NINO,
       GROUP_ID,
       Some(CURRENT_USER_EMAIL),
@@ -396,6 +399,7 @@ object TestITData {
   val userDetailsWithMismatchNino: UserDetailsFromSession =
     UserDetailsFromSession(
       CREDENTIAL_ID,
+      PROVIDER_TYPE,
       mismatchNino,
       GROUP_ID,
       Some(CURRENT_USER_EMAIL),

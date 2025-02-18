@@ -16,13 +16,14 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting
 
-import java.util.Locale
 import play.api.i18n.{Lang, MessagesApi}
 import play.api.libs.json._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails}
+
+import java.util.Locale
 
 case class AuditEvent(auditType: String, transactionName: String, detail: JsObject)
 
@@ -183,7 +184,7 @@ object AuditEvent {
 
     Json.obj(
       "NINO"           -> userDetails.nino.nino,
-      "currentAccount" -> getCurrentAccountJson(userDetails, accountType, withCurrentEmail = true)
+      "currentAccount" -> getCurrentAccountJson(userDetails, accountType)
     ) ++ optSACredIdJson ++ optReportedAccountJson
   }
 
@@ -217,15 +218,10 @@ object AuditEvent {
 
   private def getCurrentAccountJson(
     userDetails: UserDetailsFromSession,
-    accountType: AccountTypes.Value,
-    withCurrentEmail: Boolean = false
+    accountType: AccountTypes.Value
   ): JsObject = {
 
-    val emailObj = if (withCurrentEmail) {
-      Json.obj("email" -> userDetails.email.getOrElse("-").toString)
-    } else {
-      Json.obj()
-    }
+    val emailObj = Json.obj("email" -> userDetails.email.getOrElse("-").toString)
 
     Json.obj(
       "credentialId" -> userDetails.credId,

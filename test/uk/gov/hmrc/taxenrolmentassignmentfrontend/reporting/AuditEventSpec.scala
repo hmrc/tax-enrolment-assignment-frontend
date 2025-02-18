@@ -85,7 +85,8 @@ class AuditEventSpec extends BaseSpec {
         })
       ),
       ("authProvider", JsString("GovernmentGateway")),
-      ("affinityGroup", JsString("Individual"))
+      ("affinityGroup", JsString("Individual")),
+      ("email", JsString(CURRENT_USER_EMAIL))
     )
 
   private def getExpectedAuditEvent(
@@ -152,7 +153,8 @@ class AuditEventSpec extends BaseSpec {
         ("credentialId", JsString(CREDENTIAL_ID)),
         ("type", JsString(accountType.toString)),
         ("authProvider", JsString("GovernmentGateway")),
-        ("affinityGroup", JsString("Individual"))
+        ("affinityGroup", JsString("Individual")),
+        ("email", JsString(CURRENT_USER_EMAIL))
       )
       .deepMerge(email)
 
@@ -175,7 +177,8 @@ class AuditEventSpec extends BaseSpec {
       ("credentialId", JsString(CREDENTIAL_ID)),
       ("type", JsString(SA_ASSIGNED_TO_OTHER_USER.toString)),
       ("affinityGroup", JsString("Individual")),
-      ("authProvider", JsString("GovernmentGateway"))
+      ("authProvider", JsString("GovernmentGateway")),
+      ("email", JsString(CURRENT_USER_EMAIL))
     )
     val details = Json.obj(
       ("NINO", JsString(NINO.nino)),
@@ -652,7 +655,7 @@ class AuditEventSpec extends BaseSpec {
           requestWithUserDetails(userDetailsNoEnrolments)
 
         val expectedAuditEvent =
-          getExpectedAuditForPTEnrolled(SINGLE_OR_MULTIPLE_ACCOUNTS, None, None)
+          getExpectedAuditForPTEnrolled(SINGLE_OR_MULTIPLE_ACCOUNTS, None, None, withEmail = Some(CURRENT_USER_EMAIL))
 
         AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
           SINGLE_OR_MULTIPLE_ACCOUNTS

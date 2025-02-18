@@ -42,8 +42,6 @@ class AuditHandler @Inject() (
         .toAuditTags() + ("transactionName" -> auditEvent.transactionName)
     )
 
-    println("\n\n************** AUDITING EVENT: " + auditEvent)
-
     auditConnector.sendExtendedEvent(extendedDataEvent).map(_ => (): Unit)
   }
 

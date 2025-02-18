@@ -68,7 +68,8 @@ class AuditEventSpec extends BaseSpec {
       "userId"       -> getEndingWith(accountDetails.userId, isWelsh),
       "email"        -> accountDetails.emailDecrypted.getOrElse("-").toString,
       "lastSignedIn" -> accountDetails.lastLoginDate,
-      "mfaDetails"   -> mfaJson
+      "mfaDetails"   -> mfaJson,
+      "authProvider" -> "SCP"
     )
   }
 
@@ -83,6 +84,7 @@ class AuditEventSpec extends BaseSpec {
           PT_ASSIGNED_TO_OTHER_USER.toString
         })
       ),
+      ("authProvider", JsString("GovernmentGateway")),
       ("affinityGroup", JsString("Individual"))
     )
 
@@ -149,6 +151,7 @@ class AuditEventSpec extends BaseSpec {
       .obj(
         ("credentialId", JsString(CREDENTIAL_ID)),
         ("type", JsString(accountType.toString)),
+        ("authProvider", JsString("GovernmentGateway")),
         ("affinityGroup", JsString("Individual"))
       )
       .deepMerge(email)
@@ -171,7 +174,8 @@ class AuditEventSpec extends BaseSpec {
     val currentAccountDetails = Json.obj(
       ("credentialId", JsString(CREDENTIAL_ID)),
       ("type", JsString(SA_ASSIGNED_TO_OTHER_USER.toString)),
-      ("affinityGroup", JsString("Individual"))
+      ("affinityGroup", JsString("Individual")),
+      ("authProvider", JsString("GovernmentGateway"))
     )
     val details = Json.obj(
       ("NINO", JsString(NINO.nino)),

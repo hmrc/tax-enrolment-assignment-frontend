@@ -68,6 +68,7 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
         FakeRequest(),
         UserDetailsFromSession(
           "foo",
+          "GovernmentGateway",
           nino,
           "wizz",
           Some(CURRENT_USER_EMAIL),
@@ -109,6 +110,7 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
           FakeRequest(),
           UserDetailsFromSession(
             "foo",
+            "GovernmentGateway",
             nino,
             "wizz",
             Some(CURRENT_USER_EMAIL),
@@ -149,6 +151,7 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
             FakeRequest(),
             UserDetailsFromSession(
               "foo",
+              "GovernmentGateway",
               nino,
               "wizz",
               Some(CURRENT_USER_EMAIL),
@@ -185,6 +188,7 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
             FakeRequest(),
             UserDetailsFromSession(
               "foo",
+              "GovernmentGateway",
               nino,
               "wizz",
               Some(CURRENT_USER_EMAIL),
@@ -221,6 +225,7 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
         FakeRequest(),
         UserDetailsFromSession(
           "foo",
+          "GovernmentGateway",
           nino,
           "wizz",
           Some(CURRENT_USER_EMAIL),
@@ -257,6 +262,7 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
         FakeRequest(),
         UserDetailsFromSession(
           "foo",
+          "GovernmentGateway",
           nino,
           "wizz",
           Some(CURRENT_USER_EMAIL),

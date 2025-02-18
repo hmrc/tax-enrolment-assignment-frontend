@@ -31,6 +31,7 @@ class UserDetailsFromSessionSpec extends BaseSpec {
     s"extract correctly if $IRSAKey exists" in {
       UserDetailsFromSession(
         "",
+        "GovernmentGateway",
         nino,
         "",
         Some(CURRENT_USER_EMAIL),
@@ -43,6 +44,7 @@ class UserDetailsFromSessionSpec extends BaseSpec {
     s"return None if $IRSAKey doesnt exist" in {
       UserDetailsFromSession(
         "",
+        "GovernmentGateway",
         nino,
         "",
         Some(CURRENT_USER_EMAIL),

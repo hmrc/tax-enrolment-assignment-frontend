@@ -82,4 +82,21 @@ class OneLoginStubConnectorTestOnly @Inject() (
 
     }
   }
+
+  def getAccount(identityProviderId: String)(implicit hc: HeaderCarrier): TEAFResult[Option[String]] = {
+    val url =
+      s"${appConfigTestOnly.oneLoginStubBaseUrl}/one-login-stub/test/accounts?identityProviderId=$identityProviderId&identityProviderType=ONE_LOGIN"
+
+    EitherT(
+      httpClient.GET[Either[UpstreamErrorResponse, HttpResponse]](
+        url
+      )
+    ).transform {
+      case Right(response) =>
+        Right(Some((response.json \ "caUserId").as[String]))
+      case Left(_) =>
+        logger.warn(s"No account found for identityProviderId: $identityProviderId")
+        Right(None)
+    }
+  }
 }

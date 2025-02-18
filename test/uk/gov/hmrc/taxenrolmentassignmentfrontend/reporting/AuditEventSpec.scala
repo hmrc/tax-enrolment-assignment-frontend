@@ -72,12 +72,8 @@ class AuditEventSpec extends BaseSpec {
     )
   }
 
-  private def getExpectedAuditEvent(
-    reportedAccountDetails: AccountDetails,
-    isSA: Boolean,
-    isWelsh: Boolean = false
-  ): AuditEvent = {
-    val currentAccountDetails = Json.obj(
+  private def currentAccountDetails(isSA: Boolean): JsObject =
+    Json.obj(
       ("credentialId", JsString(CREDENTIAL_ID)),
       (
         "type",
@@ -90,6 +86,11 @@ class AuditEventSpec extends BaseSpec {
       ("affinityGroup", JsString("Individual"))
     )
 
+  private def getExpectedAuditEvent(
+    reportedAccountDetails: AccountDetails,
+    isSA: Boolean,
+    isWelsh: Boolean = false
+  ): AuditEvent = {
     val translatedAccountJson = if (isWelsh) {
       Json.obj(
         ("reportedAccountEN", getReportedAccountJson(reportedAccountDetails))
@@ -107,7 +108,7 @@ class AuditEventSpec extends BaseSpec {
       },
       detail = Json.obj(
         ("NINO", JsString(NINO.nino)),
-        ("currentAccount", currentAccountDetails),
+        ("currentAccount", currentAccountDetails(isSA)),
         ("reportedAccount", getReportedAccountJson(reportedAccountDetails, isWelsh))
       ) ++ translatedAccountJson
     )
@@ -118,19 +119,6 @@ class AuditEventSpec extends BaseSpec {
     isSA: Boolean,
     isWelsh: Boolean = false
   ): AuditEvent = {
-    val currentAccountDetails = Json.obj(
-      ("credentialId", JsString(CREDENTIAL_ID)),
-      (
-        "type",
-        JsString(if (isSA) {
-          SA_ASSIGNED_TO_OTHER_USER.toString
-        } else {
-          PT_ASSIGNED_TO_OTHER_USER.toString
-        })
-      ),
-      ("affinityGroup", JsString("Individual"))
-    )
-
     val translatedAccountJson = if (isWelsh) {
       Json.obj(
         ("enrolledAccountEN", getReportedAccountJson(reportedAccountDetails))
@@ -144,7 +132,7 @@ class AuditEventSpec extends BaseSpec {
       transactionName = "enrolled-on-another-account",
       detail = Json.obj(
         ("NINO", JsString(NINO.nino)),
-        ("currentAccount", currentAccountDetails),
+        ("currentAccount", currentAccountDetails(isSA)),
         ("enrolledAccount", getReportedAccountJson(reportedAccountDetails, isWelsh))
       ) ++ translatedAccountJson
     )
@@ -210,7 +198,7 @@ class AuditEventSpec extends BaseSpec {
         else { "Authenticator app" }
     }
 
-  private def getEndingWith(value: String, isWelsh: Boolean) =
+  private def getEndingWith(value: String, isWelsh: Boolean): String =
     if (isWelsh) {
       s"yn gorffen gyda $value"
     } else {
@@ -226,7 +214,7 @@ class AuditEventSpec extends BaseSpec {
     "return an audit event with the expected details" when {
       "the reported account has email and one mfaDetails" in {
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsWithOneMFADetails, true)
+          getExpectedAuditEvent(accountDetailsWithOneMFADetails, isSA = true)
 
         AuditEvent.auditReportSuspiciousSAAccount(
           accountDetailsWithOneMFADetails
@@ -237,7 +225,7 @@ class AuditEventSpec extends BaseSpec {
         val accountDetailsNoEmailOrMFA = accountDetailsWithOneMFADetails
           .copy(email = None, mfaDetails = Seq.empty)
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsNoEmailOrMFA, true)
+          getExpectedAuditEvent(accountDetailsNoEmailOrMFA, isSA = true)
 
         AuditEvent.auditReportSuspiciousSAAccount(accountDetailsNoEmailOrMFA)(
           requestWithMongoAndAccountType,
@@ -249,7 +237,7 @@ class AuditEventSpec extends BaseSpec {
         val accountDetailsNoEmail = accountDetailsWithOneMFADetails
           .copy(email = None)
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsNoEmail, true)
+          getExpectedAuditEvent(accountDetailsNoEmail, isSA = true)
 
         AuditEvent.auditReportSuspiciousSAAccount(accountDetailsNoEmail)(
           requestWithMongoAndAccountType,
@@ -261,7 +249,7 @@ class AuditEventSpec extends BaseSpec {
         val accountDetailsNoMFA = accountDetailsWithOneMFADetails
           .copy(mfaDetails = Seq.empty)
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsNoMFA, true)
+          getExpectedAuditEvent(accountDetailsNoMFA, isSA = true)
 
         AuditEvent.auditReportSuspiciousSAAccount(accountDetailsNoMFA)(
           requestWithMongoAndAccountType,
@@ -279,7 +267,7 @@ class AuditEventSpec extends BaseSpec {
             )
           )
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsWithThreeMFADetails, true)
+          getExpectedAuditEvent(accountDetailsWithThreeMFADetails, isSA = true)
 
         AuditEvent.auditReportSuspiciousSAAccount(
           accountDetailsWithThreeMFADetails
@@ -290,7 +278,7 @@ class AuditEventSpec extends BaseSpec {
     "return an audit event with the expected details and transalation" when {
       "the reported account has email and one mfaDetails and lang is welsh" in {
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsWithOneMFADetails, true, true)
+          getExpectedAuditEvent(accountDetailsWithOneMFADetails, isSA = true, isWelsh = true)
 
         AuditEvent.auditReportSuspiciousSAAccount(
           accountDetailsWithOneMFADetails
@@ -301,7 +289,7 @@ class AuditEventSpec extends BaseSpec {
         val accountDetailsNoEmailOrMFA = accountDetailsWithOneMFADetails
           .copy(email = None, mfaDetails = Seq.empty)
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsNoEmailOrMFA, true, true)
+          getExpectedAuditEvent(accountDetailsNoEmailOrMFA, isSA = true, isWelsh = true)
 
         AuditEvent.auditReportSuspiciousSAAccount(accountDetailsNoEmailOrMFA)(
           requestWithMongoAndAccountTypeLangCY,
@@ -313,7 +301,7 @@ class AuditEventSpec extends BaseSpec {
         val accountDetailsNoEmail = accountDetailsWithOneMFADetails
           .copy(email = None)
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsNoEmail, true, true)
+          getExpectedAuditEvent(accountDetailsNoEmail, isSA = true, isWelsh = true)
 
         AuditEvent.auditReportSuspiciousSAAccount(accountDetailsNoEmail)(
           requestWithMongoAndAccountTypeLangCY,
@@ -325,7 +313,7 @@ class AuditEventSpec extends BaseSpec {
         val accountDetailsNoMFA = accountDetailsWithOneMFADetails
           .copy(mfaDetails = Seq.empty)
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsNoMFA, true, true)
+          getExpectedAuditEvent(accountDetailsNoMFA, isSA = true, isWelsh = true)
 
         AuditEvent.auditReportSuspiciousSAAccount(accountDetailsNoMFA)(
           requestWithMongoAndAccountTypeLangCY,
@@ -343,7 +331,7 @@ class AuditEventSpec extends BaseSpec {
             )
           )
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsWithThreeMFADetails, true, true)
+          getExpectedAuditEvent(accountDetailsWithThreeMFADetails, isSA = true, isWelsh = true)
 
         AuditEvent.auditReportSuspiciousSAAccount(
           accountDetailsWithThreeMFADetails
@@ -361,7 +349,7 @@ class AuditEventSpec extends BaseSpec {
     "return an audit event with the expected details" when {
       "the reported account has email and one mfaDetails" in {
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsWithOneMFADetails, false)
+          getExpectedAuditEvent(accountDetailsWithOneMFADetails, isSA = false)
 
         AuditEvent.auditReportSuspiciousPTAccount(
           accountDetailsWithOneMFADetails
@@ -372,7 +360,7 @@ class AuditEventSpec extends BaseSpec {
         val accountDetailsNoEmailOrMFA = accountDetailsWithOneMFADetails
           .copy(email = None, mfaDetails = Seq.empty)
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsNoEmailOrMFA, false)
+          getExpectedAuditEvent(accountDetailsNoEmailOrMFA, isSA = false)
 
         AuditEvent.auditReportSuspiciousPTAccount(accountDetailsNoEmailOrMFA)(
           requestWithMongoAndAccountType,
@@ -384,7 +372,7 @@ class AuditEventSpec extends BaseSpec {
         val accountDetailsNoEmail = accountDetailsWithOneMFADetails
           .copy(email = None)
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsNoEmail, false)
+          getExpectedAuditEvent(accountDetailsNoEmail, isSA = false)
 
         AuditEvent.auditReportSuspiciousPTAccount(accountDetailsNoEmail)(
           requestWithMongoAndAccountType,
@@ -396,7 +384,7 @@ class AuditEventSpec extends BaseSpec {
         val accountDetailsNoMFA = accountDetailsWithOneMFADetails
           .copy(mfaDetails = Seq.empty)
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsNoMFA, false)
+          getExpectedAuditEvent(accountDetailsNoMFA, isSA = false)
 
         AuditEvent.auditReportSuspiciousPTAccount(accountDetailsNoMFA)(
           requestWithMongoAndAccountType,
@@ -414,7 +402,7 @@ class AuditEventSpec extends BaseSpec {
             )
           )
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsWithThreeMFADetails, false)
+          getExpectedAuditEvent(accountDetailsWithThreeMFADetails, isSA = false)
 
         AuditEvent.auditReportSuspiciousPTAccount(
           accountDetailsWithThreeMFADetails
@@ -425,7 +413,7 @@ class AuditEventSpec extends BaseSpec {
     "return an audit event with the expected details and translation" when {
       "the reported account has email and one mfaDetails and language set to welsh" in {
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsWithOneMFADetails, false, true)
+          getExpectedAuditEvent(accountDetailsWithOneMFADetails, isSA = false, isWelsh = true)
 
         AuditEvent.auditReportSuspiciousPTAccount(
           accountDetailsWithOneMFADetails
@@ -436,7 +424,7 @@ class AuditEventSpec extends BaseSpec {
         val accountDetailsNoEmailOrMFA = accountDetailsWithOneMFADetails
           .copy(email = None, mfaDetails = Seq.empty)
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsNoEmailOrMFA, false, true)
+          getExpectedAuditEvent(accountDetailsNoEmailOrMFA, isSA = false, isWelsh = true)
 
         AuditEvent.auditReportSuspiciousPTAccount(accountDetailsNoEmailOrMFA)(
           requestWithMongoAndAccountTypeLangCY,
@@ -448,7 +436,7 @@ class AuditEventSpec extends BaseSpec {
         val accountDetailsNoEmail = accountDetailsWithOneMFADetails
           .copy(email = None)
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsNoEmail, false, true)
+          getExpectedAuditEvent(accountDetailsNoEmail, isSA = false, isWelsh = true)
 
         AuditEvent.auditReportSuspiciousPTAccount(accountDetailsNoEmail)(
           requestWithMongoAndAccountTypeLangCY,
@@ -460,7 +448,7 @@ class AuditEventSpec extends BaseSpec {
         val accountDetailsNoMFA = accountDetailsWithOneMFADetails
           .copy(mfaDetails = Seq.empty)
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsNoMFA, false, true)
+          getExpectedAuditEvent(accountDetailsNoMFA, isSA = false, isWelsh = true)
 
         AuditEvent.auditReportSuspiciousPTAccount(accountDetailsNoMFA)(
           requestWithMongoAndAccountTypeLangCY,
@@ -479,7 +467,7 @@ class AuditEventSpec extends BaseSpec {
           )
 
         val expectedAuditEvent =
-          getExpectedAuditEvent(accountDetailsWithThreeMFADetails, false, true)
+          getExpectedAuditEvent(accountDetailsWithThreeMFADetails, isSA = false, isWelsh = true)
 
         AuditEvent.auditReportSuspiciousPTAccount(
           accountDetailsWithThreeMFADetails
@@ -506,7 +494,7 @@ class AuditEventSpec extends BaseSpec {
     "return an audit event with the expected details" when {
       "the reported account has email and one mfaDetails" in {
         val expectedAuditEvent =
-          getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsWithOneMFADetails, false)
+          getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsWithOneMFADetails, isSA = false)
 
         AuditEvent.auditPTEnrolmentOnOtherAccount(
           accountDetailsWithOneMFADetails
@@ -517,7 +505,7 @@ class AuditEventSpec extends BaseSpec {
         val accountDetailsNoEmailOrMFA = accountDetailsWithOneMFADetails
           .copy(email = None, mfaDetails = Seq.empty)
         val expectedAuditEvent =
-          getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsNoEmailOrMFA, false)
+          getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsNoEmailOrMFA, isSA = false)
 
         AuditEvent.auditPTEnrolmentOnOtherAccount(accountDetailsNoEmailOrMFA)(
           requestWithMongoAndAccountType,
@@ -529,7 +517,7 @@ class AuditEventSpec extends BaseSpec {
         val accountDetailsNoEmail = accountDetailsWithOneMFADetails
           .copy(email = None)
         val expectedAuditEvent =
-          getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsNoEmail, false)
+          getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsNoEmail, isSA = false)
 
         AuditEvent.auditPTEnrolmentOnOtherAccount(accountDetailsNoEmail)(
           requestWithMongoAndAccountType,
@@ -541,7 +529,7 @@ class AuditEventSpec extends BaseSpec {
         val accountDetailsNoMFA = accountDetailsWithOneMFADetails
           .copy(mfaDetails = Seq.empty)
         val expectedAuditEvent =
-          getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsNoMFA, false)
+          getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsNoMFA, isSA = false)
 
         AuditEvent.auditPTEnrolmentOnOtherAccount(accountDetailsNoMFA)(
           requestWithMongoAndAccountType,
@@ -559,7 +547,7 @@ class AuditEventSpec extends BaseSpec {
             )
           )
         val expectedAuditEvent =
-          getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsWithThreeMFADetails, false)
+          getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsWithThreeMFADetails, isSA = false)
 
         AuditEvent.auditPTEnrolmentOnOtherAccount(
           accountDetailsWithThreeMFADetails
@@ -570,7 +558,7 @@ class AuditEventSpec extends BaseSpec {
     "return an audit event with the expected details and translation" when {
       "the reported account has email and one mfaDetails and language set to welsh" in {
         val expectedAuditEvent =
-          getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsWithOneMFADetails, false, true)
+          getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsWithOneMFADetails, isSA = false, isWelsh = true)
 
         AuditEvent.auditPTEnrolmentOnOtherAccount(
           accountDetailsWithOneMFADetails
@@ -581,7 +569,7 @@ class AuditEventSpec extends BaseSpec {
         val accountDetailsNoEmailOrMFA = accountDetailsWithOneMFADetails
           .copy(email = None, mfaDetails = Seq.empty)
         val expectedAuditEvent =
-          getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsNoEmailOrMFA, false, true)
+          getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsNoEmailOrMFA, isSA = false, isWelsh = true)
 
         AuditEvent.auditPTEnrolmentOnOtherAccount(accountDetailsNoEmailOrMFA)(
           requestWithMongoAndAccountTypeLangCY,
@@ -593,7 +581,7 @@ class AuditEventSpec extends BaseSpec {
         val accountDetailsNoEmail = accountDetailsWithOneMFADetails
           .copy(email = None)
         val expectedAuditEvent =
-          getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsNoEmail, false, true)
+          getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsNoEmail, isSA = false, isWelsh = true)
 
         AuditEvent.auditPTEnrolmentOnOtherAccount(accountDetailsNoEmail)(
           requestWithMongoAndAccountTypeLangCY,
@@ -605,7 +593,7 @@ class AuditEventSpec extends BaseSpec {
         val accountDetailsNoMFA = accountDetailsWithOneMFADetails
           .copy(mfaDetails = Seq.empty)
         val expectedAuditEvent =
-          getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsNoMFA, false, true)
+          getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsNoMFA, isSA = false, isWelsh = true)
 
         AuditEvent.auditPTEnrolmentOnOtherAccount(accountDetailsNoMFA)(
           requestWithMongoAndAccountTypeLangCY,
@@ -624,7 +612,11 @@ class AuditEventSpec extends BaseSpec {
           )
 
         val expectedAuditEvent =
-          getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsWithThreeMFADetails, false, true)
+          getExpectedAuditEventPTEnrolmentOnOtherAccount(
+            accountDetailsWithThreeMFADetails,
+            isSA = false,
+            isWelsh = true
+          )
 
         AuditEvent.auditPTEnrolmentOnOtherAccount(
           accountDetailsWithThreeMFADetails
@@ -731,7 +723,6 @@ class AuditEventSpec extends BaseSpec {
           getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_OTHER_USER, None, Some(CREDENTIAL_ID_1), withEmail = Some("-"))
 
         AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(
-          false
         )(requestForAudit, messagesApi) shouldEqual expectedAuditEvent
       }
     }
@@ -749,7 +740,6 @@ class AuditEventSpec extends BaseSpec {
           getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_OTHER_USER, None, Some(CREDENTIAL_ID_1))
 
         AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(
-          false
         )(requestForAudit, messagesApi) shouldEqual expectedAuditEvent
       }
     }
@@ -777,7 +767,7 @@ class AuditEventSpec extends BaseSpec {
           val requestForAudit =
             requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
-          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(
+          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
             requestForAudit,
             messagesApi
           ) shouldEqual expectedAuditEvent
@@ -804,7 +794,7 @@ class AuditEventSpec extends BaseSpec {
           val requestForAudit =
             requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
-          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(
+          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
             requestForAudit,
             messagesApi
           ) shouldEqual expectedAuditEvent
@@ -830,7 +820,7 @@ class AuditEventSpec extends BaseSpec {
           val requestForAudit =
             requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
-          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(
+          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
             requestForAudit,
             messagesApi
           ) shouldEqual expectedAuditEvent
@@ -863,7 +853,7 @@ class AuditEventSpec extends BaseSpec {
           val requestForAudit =
             requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
-          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(
+          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
             requestForAudit,
             messagesApi
           ) shouldEqual expectedAuditEvent
@@ -878,8 +868,8 @@ class AuditEventSpec extends BaseSpec {
             .copy(email = None, mfaDetails = Seq.empty)
           val reportedAccountDetails =
             Json.obj(
-              ("reportedAccount", getReportedAccountJson(accountDetailsNoEmailOrMFA, true)),
-              (("reportedAccountEN", getReportedAccountJson(accountDetailsNoEmailOrMFA)))
+              ("reportedAccount", getReportedAccountJson(accountDetailsNoEmailOrMFA, isWelsh = true)),
+              ("reportedAccountEN", getReportedAccountJson(accountDetailsNoEmailOrMFA))
             )
           val expectedAuditEvent =
             getExpectedAuditForPTEnrolled(
@@ -901,7 +891,7 @@ class AuditEventSpec extends BaseSpec {
               langCode = "cy"
             )
 
-          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(
+          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
             requestForAudit,
             messagesApi
           ) shouldEqual expectedAuditEvent
@@ -912,8 +902,8 @@ class AuditEventSpec extends BaseSpec {
             .copy(email = None)
           val reportedAccountDetails =
             Json.obj(
-              ("reportedAccount", getReportedAccountJson(accountDetailsNoEmail, true)),
-              (("reportedAccountEN", getReportedAccountJson(accountDetailsNoEmail)))
+              ("reportedAccount", getReportedAccountJson(accountDetailsNoEmail, isWelsh = true)),
+              ("reportedAccountEN", getReportedAccountJson(accountDetailsNoEmail))
             )
           val expectedAuditEvent =
             getExpectedAuditForPTEnrolled(
@@ -935,7 +925,7 @@ class AuditEventSpec extends BaseSpec {
               langCode = "cy"
             )
 
-          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(
+          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
             requestForAudit,
             messagesApi
           ) shouldEqual expectedAuditEvent
@@ -945,8 +935,8 @@ class AuditEventSpec extends BaseSpec {
           val accountDetailsNoMFA = accountDetailsWithOneMFADetails
             .copy(mfaDetails = Seq.empty)
           val reportedAccountDetails = Json.obj(
-            ("reportedAccount", getReportedAccountJson(accountDetailsNoMFA, true)),
-            (("reportedAccountEN", getReportedAccountJson(accountDetailsNoMFA)))
+            ("reportedAccount", getReportedAccountJson(accountDetailsNoMFA, isWelsh = true)),
+            ("reportedAccountEN", getReportedAccountJson(accountDetailsNoMFA))
           )
           val expectedAuditEvent =
             getExpectedAuditForPTEnrolled(
@@ -967,7 +957,7 @@ class AuditEventSpec extends BaseSpec {
               langCode = "cy"
             )
 
-          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(
+          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
             requestForAudit,
             messagesApi
           ) shouldEqual expectedAuditEvent
@@ -984,7 +974,7 @@ class AuditEventSpec extends BaseSpec {
             )
           val reportedAccountDetails =
             Json.obj(
-              ("reportedAccount", getReportedAccountJson(accountDetailsWithThreeMFADetails, true)),
+              ("reportedAccount", getReportedAccountJson(accountDetailsWithThreeMFADetails, isWelsh = true)),
               (("reportedAccountEN", getReportedAccountJson(accountDetailsWithThreeMFADetails)))
             )
           val expectedAuditEvent =
@@ -1007,7 +997,7 @@ class AuditEventSpec extends BaseSpec {
               langCode = "cy"
             )
 
-          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true)(
+          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
             requestForAudit,
             messagesApi
           ) shouldEqual expectedAuditEvent
@@ -1134,7 +1124,7 @@ class AuditEventSpec extends BaseSpec {
           .copy(email = None, mfaDetails = Seq.empty)
         val saAccountDetails =
           Json.obj(
-            ("saAccount", getReportedAccountJson(accountDetailsNoEmailOrMFA, true)),
+            ("saAccount", getReportedAccountJson(accountDetailsNoEmailOrMFA, isWelsh = true)),
             ("saAccountEN", getReportedAccountJson(accountDetailsNoEmailOrMFA))
           )
         val expectedAuditEvent =
@@ -1160,7 +1150,7 @@ class AuditEventSpec extends BaseSpec {
           .copy(email = None)
         val saAccountDetails =
           Json.obj(
-            ("saAccount", getReportedAccountJson(accountDetailsNoEmail, true)),
+            ("saAccount", getReportedAccountJson(accountDetailsNoEmail, isWelsh = true)),
             ("saAccountEN", getReportedAccountJson(accountDetailsNoEmail))
           )
         val expectedAuditEvent =
@@ -1186,7 +1176,7 @@ class AuditEventSpec extends BaseSpec {
           .copy(mfaDetails = Seq.empty)
         val saAccountDetails =
           Json.obj(
-            ("saAccount", getReportedAccountJson(accountDetailsNoMFA, true)),
+            ("saAccount", getReportedAccountJson(accountDetailsNoMFA, isWelsh = true)),
             ("saAccountEN", getReportedAccountJson(accountDetailsNoMFA))
           )
         val expectedAuditEvent =
@@ -1217,7 +1207,7 @@ class AuditEventSpec extends BaseSpec {
           )
         val saAccountDetails =
           Json.obj(
-            ("saAccount", getReportedAccountJson(accountDetailsWithThreeMFADetails, true)),
+            ("saAccount", getReportedAccountJson(accountDetailsWithThreeMFADetails, isWelsh = true)),
             ("saAccountEN", getReportedAccountJson(accountDetailsWithThreeMFADetails))
           )
         val expectedAuditEvent =

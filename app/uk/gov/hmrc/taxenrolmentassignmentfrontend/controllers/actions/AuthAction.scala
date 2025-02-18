@@ -42,6 +42,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 case class UserDetailsFromSession(
   credId: String,
+  providerType: String,
   nino: Nino,
   groupId: String,
   email: Option[String],
@@ -91,6 +92,7 @@ class AuthAction @Inject() (
           val hasSAEnrolment = enrolments.getEnrolment(s"$IRSAKey").fold(false)(_.isActivated)
           val userDetails = UserDetailsFromSession(
             credentials.providerId,
+            credentials.providerType,
             Nino(nino),
             groupId,
             email,

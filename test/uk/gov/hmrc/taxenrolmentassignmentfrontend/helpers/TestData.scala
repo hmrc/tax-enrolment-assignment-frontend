@@ -23,7 +23,7 @@ import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core.authorise.Predicate
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals._
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
-import uk.gov.hmrc.auth.core.{AffinityGroup, AuthProviders, ConfidenceLevel, Enrolment, EnrolmentIdentifier, Enrolments}
+import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
@@ -37,6 +37,7 @@ object TestData {
   val secondNino: Nino = new Generator().nextNino
   val GROUP_ID = "D37DB2E1-CF03-42E8-B151-E17300FFCF78"
   val CREDENTIAL_ID = "credId123"
+  val PROVIDER_TYPE = "GovernmentGateway"
   val USER_ID = "6037"
   val PT_USER_ID = "2341"
   val NO_EMAIL_USER_ID = "9871"
@@ -45,7 +46,7 @@ object TestData {
 
   val CREDENTIAL_ID_2 = "6102202884164542"
   val UTR = "123456789"
-  val creds: Credentials = Credentials(CREDENTIAL_ID, GovernmentGateway.toString)
+  val creds: Credentials = Credentials(CREDENTIAL_ID, PROVIDER_TYPE)
   val noEnrolments: Enrolments = Enrolments(Set.empty[Enrolment])
   val saEnrolmentOnly: Enrolments = Enrolments(
     Set(
@@ -115,6 +116,7 @@ object TestData {
   def userDetails(hmrcPt: Boolean, irSa: Boolean): UserDetailsFromSession =
     UserDetailsFromSession(
       CREDENTIAL_ID,
+      PROVIDER_TYPE,
       NINO,
       GROUP_ID,
       Some(CURRENT_USER_EMAIL),
@@ -127,6 +129,7 @@ object TestData {
   val userDetailsNoEnrolments: UserDetailsFromSession =
     UserDetailsFromSession(
       CREDENTIAL_ID,
+      PROVIDER_TYPE,
       NINO,
       GROUP_ID,
       Some(CURRENT_USER_EMAIL),
@@ -138,6 +141,7 @@ object TestData {
   val userDetailsWithPTEnrolment: UserDetailsFromSession =
     UserDetailsFromSession(
       CREDENTIAL_ID,
+      PROVIDER_TYPE,
       NINO,
       GROUP_ID,
       Some(CURRENT_USER_EMAIL),
@@ -149,6 +153,7 @@ object TestData {
   val userDetailsWithSAEnrolment: UserDetailsFromSession =
     UserDetailsFromSession(
       CREDENTIAL_ID,
+      PROVIDER_TYPE,
       NINO,
       GROUP_ID,
       Some(CURRENT_USER_EMAIL),
@@ -160,6 +165,7 @@ object TestData {
   val userDetailsWithPTAndSAEnrolment: UserDetailsFromSession =
     UserDetailsFromSession(
       CREDENTIAL_ID,
+      PROVIDER_TYPE,
       NINO,
       GROUP_ID,
       Some(CURRENT_USER_EMAIL),
@@ -258,6 +264,7 @@ object TestData {
   val userDetailsWithMismatchNino: UserDetailsFromSession =
     UserDetailsFromSession(
       CREDENTIAL_ID,
+      PROVIDER_TYPE,
       secondNino,
       GROUP_ID,
       Some(CURRENT_USER_EMAIL),

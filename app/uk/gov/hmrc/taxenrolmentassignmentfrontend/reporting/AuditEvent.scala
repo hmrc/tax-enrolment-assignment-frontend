@@ -219,17 +219,13 @@ object AuditEvent {
   private def getCurrentAccountJson(
     userDetails: UserDetailsFromSession,
     accountType: AccountTypes.Value
-  ): JsObject = {
-
-    val emailObj = Json.obj("email" -> userDetails.email.getOrElse("-").toString)
-
+  ): JsObject =
     Json.obj(
       "credentialId" -> userDetails.credId,
       "type"         -> accountType.toString,
-      "authProvider" -> userDetails.providerType
-    ) ++ userDetails.affinityGroup.toJson.as[JsObject].deepMerge(emailObj)
-
-  }
+      "authProvider" -> userDetails.providerType,
+      "email"        -> userDetails.email.getOrElse[String]("-")
+    ) ++ userDetails.affinityGroup.toJson.as[JsObject]
 
   private def getPresentedAccountJson(
     accountDetails: AccountDetails
@@ -237,8 +233,8 @@ object AuditEvent {
     Json.obj(
       "credentialId" -> accountDetails.credId,
       "userId"       -> messagesApi("common.endingWith", accountDetails.userId),
-      "email"        -> accountDetails.emailDecrypted.getOrElse("-").toString,
-      "lastSignedIn" -> accountDetails.lastLoginDate.getOrElse("").toString,
+      "email"        -> accountDetails.emailDecrypted.getOrElse[String]("-"),
+      "lastSignedIn" -> accountDetails.lastLoginDate.getOrElse[String](""),
       "mfaDetails"   -> mfaDetailsToJson(accountDetails.mfaDetails),
       "authProvider" -> accountDetails.identityProviderType.toString
     )
@@ -248,8 +244,8 @@ object AuditEvent {
     Json.obj(
       "credentialId" -> accountDetails.credId,
       "userId"       -> messagesApi("common.endingWith", accountDetails.userId)(enLang),
-      "email"        -> accountDetails.emailDecrypted.getOrElse("-").toString,
-      "lastSignedIn" -> accountDetails.lastLoginDate.getOrElse("").toString,
+      "email"        -> accountDetails.emailDecrypted.getOrElse[String]("-"),
+      "lastSignedIn" -> accountDetails.lastLoginDate.getOrElse[String](""),
       "mfaDetails"   -> mfaDetailsToJson(accountDetails.mfaDetails)(messagesApi, enLang),
       "authProvider" -> accountDetails.identityProviderType.toString
     )

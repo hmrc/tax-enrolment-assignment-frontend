@@ -85,7 +85,7 @@ class OneLoginStubConnectorTestOnly @Inject() (
 
   def getAccount(identityProviderId: String)(implicit hc: HeaderCarrier): TEAFResult[Option[String]] = {
     val url =
-      s"${appConfigTestOnly.oneLoginStubBaseUrl}/one-login-stub/test/accounts?identityProviderId=$identityProviderId&identityProviderType=ONE_LOGIN"
+      s"${appConfigTestOnly.oneLoginStubBaseUrl}/one-login-stub/test/accounts?identityProviderId=$identityProviderId"
 
     EitherT(
       httpClient.GET[Either[UpstreamErrorResponse, HttpResponse]](

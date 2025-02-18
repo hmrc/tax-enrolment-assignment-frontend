@@ -16,11 +16,12 @@
 
 package testOnly.connectors
 
+import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, get, urlPathEqualTo}
 import helpers.IntegrationSpecBase
 import play.api.http.Status
 import play.api.libs.json.Json
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{UpstreamError, UpstreamUnexpected2XX}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.connectors.{IdentityProviderAccountContextConnectorTestOnly, OneLoginStubConnectorTestOnly}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.connectors.OneLoginStubConnectorTestOnly
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.{AccountDetailsTestOnly, UserTestOnly}
 
 class OneLoginStubConnectorTestOnlyISpec extends IntegrationSpecBase {
@@ -117,6 +118,33 @@ class OneLoginStubConnectorTestOnlyISpec extends IntegrationSpecBase {
 
       whenReady(connector.deleteAccount(eacdUserId).value) { response =>
         response shouldBe a[Left[UpstreamError, _]]
+
+      }
+    }
+  }
+  "get account" must {
+    val identityProviderId = "id"
+    val apiUrl = s"/one-login-stub/test/accounts?identityProviderId=$identityProviderId"
+    "return the account with caUserID and OK status" in {
+      val returnedBody =
+        s"""
+           |{
+           |    "caUserId": "12345"
+           |}
+           |""".stripMargin
+
+      stubGetMatching(apiUrl, Status.OK, returnedBody)
+
+      whenReady(connector.getAccount(identityProviderId).value) { response =>
+        response shouldBe Right(Some("12345"))
+
+      }
+    }
+    "return None when no user is found with matching eacdUserId" in {
+      stubGetMatching(apiUrl, Status.BAD_REQUEST, "")
+
+      whenReady(connector.getAccount(identityProviderId).value) { response =>
+        response shouldBe Right(None)
 
       }
     }

@@ -16,20 +16,21 @@
 
 package testOnly.connectors
 
+import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, get, urlPathEqualTo}
 import helpers.IntegrationSpecBase
 import play.api.http.Status
 import play.api.libs.json.Json
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{UpstreamError, UpstreamUnexpected2XX}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.connectors.IdentityProviderAccountContextConnectorTestOnly
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.connectors.OneLoginStubConnectorTestOnly
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.{AccountDetailsTestOnly, UserTestOnly}
 
-class IdentityProviderAccountContextConnectorTestOnlyISpec extends IntegrationSpecBase {
-  lazy val connector: IdentityProviderAccountContextConnectorTestOnly =
-    app.injector.instanceOf[IdentityProviderAccountContextConnectorTestOnly]
+class OneLoginStubConnectorTestOnlyISpec extends IntegrationSpecBase {
+  lazy val connector: OneLoginStubConnectorTestOnly =
+    app.injector.instanceOf[OneLoginStubConnectorTestOnly]
 
   "postAccount" must {
     val credId = "credId"
-    val apiUrl = "/identity-provider-account-context/test-only/accounts"
+    val apiUrl = "/one-login-stub/test/accounts"
     val account = AccountDetailsTestOnly(
       "SCP",
       "groupId",
@@ -44,14 +45,14 @@ class IdentityProviderAccountContextConnectorTestOnlyISpec extends IntegrationSp
       "response is OK" in {
         val requestBody = Json
           .obj(
-            "action"               -> "create",
+            "eacdUserId"           -> credId,
             "identityProviderId"   -> credId,
             "identityProviderType" -> "SCP",
             "email"                -> "email"
           )
           .toString()
 
-        stubPost(apiUrl, requestBody, Status.CREATED, """{"caUserId": "uuid"}""")
+        stubPost(apiUrl, requestBody, Status.CREATED, """{"centralAuthUser": { "_id": "uuid"}}""")
         whenReady(connector.postAccount(account).value) { response =>
           response shouldBe Right("uuid")
         }
@@ -61,7 +62,7 @@ class IdentityProviderAccountContextConnectorTestOnlyISpec extends IntegrationSp
     "return an UpstreamUnexpected2XX error" in {
       val requestBody = Json
         .obj(
-          "action"               -> "create",
+          "eacdUserId"           -> credId,
           "identityProviderId"   -> credId,
           "identityProviderType" -> "SCP",
           "email"                -> "email"
@@ -77,7 +78,7 @@ class IdentityProviderAccountContextConnectorTestOnlyISpec extends IntegrationSp
     "return an UpstreamError error" in {
       val requestBody = Json
         .obj(
-          "action"               -> "create",
+          "eacdUserId"           -> credId,
           "identityProviderId"   -> credId,
           "identityProviderType" -> "SCP",
           "email"                -> "email"
@@ -91,61 +92,60 @@ class IdentityProviderAccountContextConnectorTestOnlyISpec extends IntegrationSp
     }
   }
 
-  "postIndividual" must {
-    val credId = "credId"
-    val apiUrl = "/identity-provider-account-context/contexts/individual"
-    val account = AccountDetailsTestOnly(
-      "SCP",
-      "groupId",
-      nino,
-      "Individual",
-      UserTestOnly(credId, "name", "email"),
-      List.empty,
-      List.empty
-    )
-    val caUserId = "caUserId"
+  "delete account" must {
+    val eacdUserId = "eacdUserId"
+    val apiUrl = s"/one-login-stub/test/accounts/$eacdUserId"
+    "delete the account and return OK" in {
 
-    "insert nino" when {
-      "response is OK" in {
-        val requestBody = Json
-          .obj(
-            "caUserId" -> caUserId,
-            "nino"     -> nino
-          )
-          .toString()
+      stubDelete(apiUrl, Status.OK)
 
-        stubPost(apiUrl, requestBody, Status.CREATED, "")
-        whenReady(connector.postIndividual(account, caUserId).value) { response =>
-          response shouldBe Right(())
-        }
+      whenReady(connector.deleteAccount(eacdUserId).value) { response =>
+        response shouldBe Right(())
+
       }
     }
+    "return an error when unexpected response is given" in {
+      stubDelete(apiUrl, Status.CREATED)
 
-    "return an UpstreamUnexpected2XX error" in {
-      val requestBody = Json
-        .obj(
-          "caUserId" -> caUserId,
-          "nino"     -> nino
-        )
-        .toString()
-
-      stubPost(apiUrl, requestBody, Status.OK, "Invalid 2XX")
-      whenReady(connector.postIndividual(account, caUserId).value) { response =>
-        response shouldBe Left(UpstreamUnexpected2XX("Invalid 2XX", Status.OK))
-      }
-    }
-
-    "return an UpstreamError error" in {
-      val requestBody = Json
-        .obj(
-          "caUserId" -> caUserId,
-          "nino"     -> nino
-        )
-        .toString()
-
-      stubPost(apiUrl, requestBody, Status.INTERNAL_SERVER_ERROR, "Server error")
-      whenReady(connector.postIndividual(account, caUserId).value) { response =>
+      whenReady(connector.deleteAccount(eacdUserId).value) { response =>
         response shouldBe a[Left[UpstreamError, _]]
+
+      }
+    }
+
+    "return an error when database responds with an error" in {
+      stubDelete(apiUrl, Status.BAD_REQUEST)
+
+      whenReady(connector.deleteAccount(eacdUserId).value) { response =>
+        response shouldBe a[Left[UpstreamError, _]]
+
+      }
+    }
+  }
+  "get account" must {
+    val identityProviderId = "id"
+    val apiUrl = s"/one-login-stub/test/accounts?identityProviderId=$identityProviderId"
+    "return the account with caUserID and OK status" in {
+      val returnedBody =
+        s"""
+           |{
+           |    "caUserId": "12345"
+           |}
+           |""".stripMargin
+
+      stubGetMatching(apiUrl, Status.OK, returnedBody)
+
+      whenReady(connector.getAccount(identityProviderId).value) { response =>
+        response shouldBe Right(Some("12345"))
+
+      }
+    }
+    "return None when no user is found with matching eacdUserId" in {
+      stubGetMatching(apiUrl, Status.BAD_REQUEST, "")
+
+      whenReady(connector.getAccount(identityProviderId).value) { response =>
+        response shouldBe Right(None)
+
       }
     }
   }

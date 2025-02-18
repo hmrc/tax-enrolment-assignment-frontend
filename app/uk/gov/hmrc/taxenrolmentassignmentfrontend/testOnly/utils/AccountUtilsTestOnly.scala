@@ -31,30 +31,42 @@ class AccountUtilsTestOnly @Inject() (
   enrolmentStoreServiceTestOnly: EnrolmentStoreServiceTestOnly,
   identityVerificationConnectorTestOnly: IdentityVerificationConnectorTestOnly,
   basStubsConnectorTestOnly: BasStubsConnectorTestOnly,
-  identityProviderAccountContextConnectorTestOnly: IdentityProviderAccountContextConnectorTestOnly
+  oneLoginStubConnectorTestOnly: OneLoginStubConnectorTestOnly
 )(implicit ec: ExecutionContext) {
   def deleteAccountDetails(account: AccountDetailsTestOnly)(implicit hc: HeaderCarrier): TEAFResult[Unit] =
-    for {
-      /*  Overwrite the account first
+    if (account.identityProviderType == "ONE_LOGIN") {
+      for {
+        // delete enrolment-store data
+        _ <- account.enrolments.map(enrolmentStoreServiceTestOnly.deallocateEnrolmentFromGroups(_)).sequence
+        _ <- account.enrolments.map(enrolmentStoreServiceTestOnly.deleteEnrolment(_)).sequence
+        _ <- enrolmentStoreServiceTestOnly.deleteAccount(account.groupId)
+        // delete account from IPAC
+        eacdId <- oneLoginStubConnectorTestOnly.getAccount(account.user.credId)
+        _      <- eacdId.map(id => oneLoginStubConnectorTestOnly.deleteAccount(id)).sequence
+      } yield ()
+    } else {
+      for {
+        /*  Overwrite the account first
           Sometimes the account is not of type individual causing a later call to fail
-       */
-      _ <- basStubsConnectorTestOnly.putAccount(account)
-      // delete identity-verification data - Link nino / confidence level to account and holds mfa details
-      _ <- identityVerificationConnectorTestOnly.deleteCredId(account.user.credId)
-      // delete enrolment-store data
-      _ <- account.enrolments.map(enrolmentStoreServiceTestOnly.deallocateEnrolmentFromGroups(_)).sequence
-      _ <- account.enrolments.map(enrolmentStoreServiceTestOnly.deallocateEnrolmentFromUsers(_)).sequence
-      _ <- account.enrolments.map(enrolmentStoreServiceTestOnly.deleteEnrolment(_)).sequence
-      // Search and delete other known facts that might remain after the step above
-      _ <- enrolmentStoreServiceTestOnly.deleteAllKnownFactsForNino(account.nino)
-      _ <- enrolmentStoreServiceTestOnly.deleteGroup(account.groupId)
-      _ <- enrolmentStoreServiceTestOnly.deleteAccount(account.groupId)
-      _ <- enrolmentStoreServiceTestOnly.deallocateEnrolmentsFromGroup(account.groupId)
-      _ <- enrolmentStoreServiceTestOnly.deallocateEnrolmentsFromUser(account.user.credId)
-      // delete bas-stub data - The users accounts
-      _ <- basStubsConnectorTestOnly.deleteAdditionalFactors(account.user.credId)
-      _ <- basStubsConnectorTestOnly.deleteAccount(account)
-    } yield ()
+         */
+        _ <- basStubsConnectorTestOnly.putAccount(account)
+        // delete identity-verification data - Link nino / confidence level to account and holds mfa details
+        _ <- identityVerificationConnectorTestOnly.deleteCredId(account.user.credId)
+        // delete enrolment-store data
+        _ <- account.enrolments.map(enrolmentStoreServiceTestOnly.deallocateEnrolmentFromGroups(_)).sequence
+        _ <- account.enrolments.map(enrolmentStoreServiceTestOnly.deallocateEnrolmentFromUsers(_)).sequence
+        _ <- account.enrolments.map(enrolmentStoreServiceTestOnly.deleteEnrolment(_)).sequence
+        // Search and delete other known facts that might remains after the step above
+        _ <- enrolmentStoreServiceTestOnly.deleteAllKnownFactsForNino(account.nino)
+        _ <- enrolmentStoreServiceTestOnly.deleteGroup(account.groupId)
+        _ <- enrolmentStoreServiceTestOnly.deleteAccount(account.groupId)
+        _ <- enrolmentStoreServiceTestOnly.deallocateEnrolmentsFromGroup(account.groupId)
+        _ <- enrolmentStoreServiceTestOnly.deallocateEnrolmentsFromUser(account.user.credId)
+        // delete bas-stub data - The users accounts
+        _ <- basStubsConnectorTestOnly.deleteAdditionalFactors(account.user.credId)
+        _ <- basStubsConnectorTestOnly.deleteAccount(account)
+      } yield ()
+    }
 
   def insertAccountDetails(account: AccountDetailsTestOnly)(implicit hc: HeaderCarrier): TEAFResult[Unit] =
     if (account.identityProviderType == "ONE_LOGIN") {
@@ -68,8 +80,7 @@ class AccountUtilsTestOnly @Inject() (
               enrolmentStoreServiceTestOnly.addEnrolmentToGroup(account.groupId, account.user.credId, enrolment)
             )
             .sequence
-        caUserId <- identityProviderAccountContextConnectorTestOnly.postAccount(account)
-        _        <- identityProviderAccountContextConnectorTestOnly.postIndividual(account, caUserId)
+        _ <- oneLoginStubConnectorTestOnly.postAccount(account)
       } yield ()
     } else {
       for {

@@ -18,20 +18,20 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.connectors
 
 import cats.data.EitherT
 import play.api.Logging
-import play.api.http.Status.{CONFLICT, CREATED}
+import play.api.http.Status.{CREATED, OK}
 import play.api.libs.json.JsObject
+import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, UpstreamErrorResponse}
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{UpstreamError, UpstreamUnexpected2XX}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.config.AppConfigTestOnly
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.AccountDetailsTestOnly
-import uk.gov.hmrc.http.HttpReads.Implicits._
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class IdentityProviderAccountContextConnectorTestOnly @Inject() (
+class OneLoginStubConnectorTestOnly @Inject() (
   httpClient: HttpClient,
   appConfigTestOnly: AppConfigTestOnly
 )(implicit
@@ -39,7 +39,7 @@ class IdentityProviderAccountContextConnectorTestOnly @Inject() (
 ) extends Logging {
   def postAccount(account: AccountDetailsTestOnly)(implicit hc: HeaderCarrier): TEAFResult[String] = {
     val url =
-      s"${appConfigTestOnly.identityProviderAccountContextBaseUrl}/identity-provider-account-context/test-only/accounts"
+      s"${appConfigTestOnly.oneLoginStubBaseUrl}/one-login-stub/test/accounts"
 
     EitherT(
       httpClient.POST[JsObject, Either[UpstreamErrorResponse, HttpResponse]](
@@ -50,7 +50,7 @@ class IdentityProviderAccountContextConnectorTestOnly @Inject() (
       .transform {
         case Right(response) if response.status == CREATED =>
           Right(
-            (response.json \ "caUserId").as[String]
+            (response.json \ "centralAuthUser" \ "_id").as[String]
           )
         case Right(response) =>
           val ex = new RuntimeException(s"Unexpected ${response.status} status")
@@ -62,29 +62,41 @@ class IdentityProviderAccountContextConnectorTestOnly @Inject() (
       }
   }
 
-  def postIndividual(account: AccountDetailsTestOnly, caUserId: String)(implicit
-    hc: HeaderCarrier
-  ): TEAFResult[Unit] = {
+  def deleteAccount(caUserId: String)(implicit hc: HeaderCarrier): TEAFResult[Unit] = {
     val url =
-      s"${appConfigTestOnly.identityProviderAccountContextBaseUrl}/identity-provider-account-context/contexts/individual"
+      s"${appConfigTestOnly.oneLoginStubBaseUrl}/one-login-stub/test/accounts/$caUserId"
 
     EitherT(
-      httpClient.POST[JsObject, Either[UpstreamErrorResponse, HttpResponse]](
-        url,
-        account.individualContextUpdateRequestBody(caUserId)
+      httpClient.DELETE[Either[UpstreamErrorResponse, HttpResponse]](
+        url
       )
-    )
-      .transform {
-        case Right(response) if response.status == CREATED => Right(())
-        case Left(error) if error.statusCode == CONFLICT   => Right(())
-        case Right(response) =>
-          val ex = new RuntimeException(s"Unexpected ${response.status} status")
-          logger.error(ex.getMessage, ex)
-          Left(UpstreamUnexpected2XX(response.body, response.status))
-        case Left(upstreamError) =>
-          logger.error(upstreamError.message)
-          Left(UpstreamError(upstreamError))
-      }
+    ).transform {
+      case Right(response) if response.status == OK => Right(())
+      case Right(response) =>
+        val ex = new RuntimeException(s"Unexpected ${response.status} status")
+        logger.error(ex.getMessage, ex)
+        Left(UpstreamUnexpected2XX(response.body, response.status))
+      case Left(upstreamError) =>
+        logger.error(upstreamError.message)
+        Left(UpstreamError(upstreamError))
+
+    }
   }
 
+  def getAccount(identityProviderId: String)(implicit hc: HeaderCarrier): TEAFResult[Option[String]] = {
+    val url =
+      s"${appConfigTestOnly.oneLoginStubBaseUrl}/one-login-stub/test/accounts?identityProviderId=$identityProviderId"
+
+    EitherT(
+      httpClient.GET[Either[UpstreamErrorResponse, HttpResponse]](
+        url
+      )
+    ).transform {
+      case Right(response) =>
+        Right(Some((response.json \ "caUserId").as[String]))
+      case Left(_) =>
+        logger.warn(s"No account found for identityProviderId: $identityProviderId")
+        Right(None)
+    }
+  }
 }

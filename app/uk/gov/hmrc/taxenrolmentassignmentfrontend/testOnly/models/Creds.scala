@@ -21,10 +21,5 @@ import play.api.libs.json.{Format, Json}
 case class Creds(caUserId: String, role: String)
 
 object Creds {
-  implicit def formats: Format[Creds] =
-    Format(
-      Json.reads[Creds],
-      Json.writes[Creds]
-    )
-
+  implicit def formats: Format[Creds] = Json.format[Creds]
 }

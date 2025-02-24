@@ -28,5 +28,5 @@ class AppConfigTestOnly @Inject() (val config: ServicesConfig) {
   val authLoginStub: String = config.getString("testOnly.loginUrl")
   val environment: String = config.getString("testOnly.environment")
   val tensRedirectUrl: String = config.getString("testOnly.redirectUrl")
-  val identityProviderAccountContextBaseUrl: String = config.baseUrl("identity-provider-account-context")
+  val oneLoginStubBaseUrl: String = config.baseUrl("one-login-stub")
 }

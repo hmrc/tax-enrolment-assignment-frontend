@@ -133,7 +133,7 @@ class OneLoginStubConnectorTestOnlyISpec extends IntegrationSpecBase {
            |}
            |""".stripMargin
 
-      stubGetMatching(apiUrl, Status.OK, returnedBody)
+      stubGetMatching(apiUrl, Status.CREATED, returnedBody)
 
       whenReady(connector.getAccount(identityProviderId).value) { response =>
         response shouldBe Right(Some("12345"))

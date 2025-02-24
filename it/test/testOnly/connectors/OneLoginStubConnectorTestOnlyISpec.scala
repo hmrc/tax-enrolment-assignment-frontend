@@ -16,7 +16,7 @@
 
 package testOnly.connectors
 
-import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, get, urlPathEqualTo}
+import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, get, urlEqualTo}
 import helpers.IntegrationSpecBase
 import play.api.http.Status
 import play.api.libs.json.Json
@@ -133,7 +133,10 @@ class OneLoginStubConnectorTestOnlyISpec extends IntegrationSpecBase {
            |}
            |""".stripMargin
 
-      stubGetMatching(apiUrl, Status.OK, returnedBody)
+      server.stubFor(
+        get(urlEqualTo(apiUrl))
+          .willReturn(aResponse().withStatus(Status.OK).withBody(returnedBody))
+      )
 
       whenReady(connector.getAccount(identityProviderId).value) { response =>
         response shouldBe Right(Some("12345"))

@@ -66,22 +66,21 @@ trait IntegrationSpecBase
   lazy val crypto: TENCrypto = app.injector.instanceOf[TENCrypto]
 
   lazy val config: Map[String, Any] = Map(
-    "play.filters.csrf.header.bypassHeaders.Csrf-Token"            -> "nocheck",
-    "auditing.enabled"                                             -> true,
-    "auditing.consumer.baseUri.port"                               -> server.port(),
-    "microservice.services.auth.port"                              -> server.port(),
-    "microservice.services.identity-verification.port"             -> server.port(),
-    "microservice.services.enrolment-store-proxy.port"             -> server.port(),
-    "microservice.services.enrolment-store-stub.port"              -> server.port(),
-    "microservice.services.tax-enrolments.port"                    -> server.port(),
-    "microservice.services.users-groups-search.port"               -> server.port(),
-    "microservice.services.bas-stubs.port"                         -> server.port(),
-    "microservice.services.identity-provider-account-context.port" -> server.port(),
-    "microservice.services.one-login-stub.port"                    -> server.port(),
-    "play.http.router"                                             -> "testOnlyDoNotUseInAppConf.Routes",
-    "mongodb.uri"                                                  -> mongoUri,
-    "play.ws.timeout.request"                                      -> "5000ms",
-    "play.ws.timeout.connection"                                   -> "100ms"
+    "play.filters.csrf.header.bypassHeaders.Csrf-Token" -> "nocheck",
+    "auditing.enabled"                                  -> true,
+    "auditing.consumer.baseUri.port"                    -> server.port(),
+    "microservice.services.auth.port"                   -> server.port(),
+    "microservice.services.identity-verification.port"  -> server.port(),
+    "microservice.services.enrolment-store-proxy.port"  -> server.port(),
+    "microservice.services.enrolment-store-stub.port"   -> server.port(),
+    "microservice.services.tax-enrolments.port"         -> server.port(),
+    "microservice.services.users-groups-search.port"    -> server.port(),
+    "microservice.services.bas-stubs.port"              -> server.port(),
+    "microservice.services.one-login-stub.port"         -> server.port(),
+    "play.http.router"                                  -> "testOnlyDoNotUseInAppConf.Routes",
+    "mongodb.uri"                                       -> mongoUri,
+    "play.ws.timeout.request"                           -> "5000ms",
+    "play.ws.timeout.connection"                        -> "100ms"
   )
 
   protected def localGuiceApplicationBuilder: GuiceApplicationBuilder =

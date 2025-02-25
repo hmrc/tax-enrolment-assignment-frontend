@@ -125,6 +125,9 @@ class AccountUtilsTestOnlySpec extends BaseSpec {
         when(mockEnrolmentStoreServiceTestOnly.deallocateEnrolmentFromGroups(enrolment))
           .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
+        when(mockEnrolmentStoreServiceTestOnly.deallocateEnrolmentsFromGroup(groupId))
+          .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+
         when(mockEnrolmentStoreServiceTestOnly.deleteEnrolment(enrolment))
           .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
       }
@@ -136,6 +139,15 @@ class AccountUtilsTestOnlySpec extends BaseSpec {
         .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](Some(caUserId)))
 
       when(mockOneLoginStubConnectorTestOnly.deleteAccount(caUserId))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+
+      when(mockEnrolmentStoreServiceTestOnly.deleteAllKnownFactsForNino(nino))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+
+      when(mockEnrolmentStoreServiceTestOnly.deleteGroup(groupId))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+
+      when(mockEnrolmentStoreServiceTestOnly.deallocateEnrolmentsFromUser(credId))
         .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
       val result = sut.deleteAccountDetails(account.copy(identityProviderType = "ONE_LOGIN")).value.futureValue

@@ -5,9 +5,7 @@
     "user": {
         "credId": "4684455594391511",
         "name": "Firstname Surname",
-        "email": "email5@test.com",
-        "userId": "Ending with 3469",
-        "hasPTEnrolment": false
+        "email": "email5@test.com"
     },
     "additionalFactors": [
         {

@@ -77,5 +77,22 @@
                 "name": "Text Messages"
             }
         ]
+    },
+    {
+        "groupId": "E1752CD2-C568-4E29-BF4F-ECDDEB8B10A5",
+        "affinityGroup": "Individual",
+        "nino": "JS271435C",
+        "user": {
+            "credId": "8970021278265987",
+            "name": "Firstname Surname",
+            "email": "email7@test.com"
+        },
+        "additionalFactors": [
+            {
+                "factorType": "voiceCall",
+                "phoneNumber": "07783924122",
+                "name": "voice call"
+            }
+        ]
     }
 ]

@@ -6,9 +6,7 @@
         "credId": "5217739547427623",
         "userId": "Ending with 0805",
         "name": "Firstname Surname",
-        "email": "email9@test.com",
-        "hasSAEnrolment": true,
-        "hasPTEnrolment": false
+        "email": "email9@test.com"
     },
     "enrolments": [
         {

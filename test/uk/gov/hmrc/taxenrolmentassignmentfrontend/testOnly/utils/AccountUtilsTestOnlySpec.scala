@@ -25,7 +25,7 @@ import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AdditonalFactors, IdentifiersOrVerifiers}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.connectors.{BasStubsConnectorTestOnly, IdentityVerificationConnectorTestOnly}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.connectors.{BasStubsConnectorTestOnly, IdentityVerificationConnectorTestOnly, OneLoginStubConnectorTestOnly}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.{AccountDetailsTestOnly, EnrolmentDetailsTestOnly, UserTestOnly}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.services.EnrolmentStoreServiceTestOnly
 
@@ -37,12 +37,14 @@ class AccountUtilsTestOnlySpec extends BaseSpec {
   lazy val mockIdentityVerificationConnectorTestOnly: IdentityVerificationConnectorTestOnly =
     mock[IdentityVerificationConnectorTestOnly]
   lazy val mockBasStubsConnectorTestOnly: BasStubsConnectorTestOnly = mock[BasStubsConnectorTestOnly]
+  lazy val mockOneLoginStubConnectorTestOnly: OneLoginStubConnectorTestOnly = mock[OneLoginStubConnectorTestOnly]
 
   override implicit lazy val app: Application = localGuiceApplicationBuilder()
     .overrides(
       bind[EnrolmentStoreServiceTestOnly].toInstance(mockEnrolmentStoreServiceTestOnly),
       bind[IdentityVerificationConnectorTestOnly].toInstance(mockIdentityVerificationConnectorTestOnly),
-      bind[BasStubsConnectorTestOnly].toInstance(mockBasStubsConnectorTestOnly)
+      bind[BasStubsConnectorTestOnly].toInstance(mockBasStubsConnectorTestOnly),
+      bind[OneLoginStubConnectorTestOnly].toInstance(mockOneLoginStubConnectorTestOnly)
     )
     .build()
 
@@ -71,8 +73,9 @@ class AccountUtilsTestOnlySpec extends BaseSpec {
       List(enrolment),
       List(AdditonalFactors("factorType"))
     )
+    val caUserId = "12345"
 
-    "delete all details" in {
+    "delete all details for GG user" in {
       when(mockBasStubsConnectorTestOnly.putAccount(account))
         .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
@@ -116,6 +119,42 @@ class AccountUtilsTestOnlySpec extends BaseSpec {
       result mustBe Right(())
     }
 
+    "delete all details for OLFG user" in {
+
+      account.enrolments.foreach { enrolment =>
+        when(mockEnrolmentStoreServiceTestOnly.deallocateEnrolmentFromGroups(enrolment))
+          .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+
+        when(mockEnrolmentStoreServiceTestOnly.deallocateEnrolmentsFromGroup(groupId))
+          .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+
+        when(mockEnrolmentStoreServiceTestOnly.deleteEnrolment(enrolment))
+          .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+      }
+
+      when(mockEnrolmentStoreServiceTestOnly.deleteAccount(groupId))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+
+      when(mockOneLoginStubConnectorTestOnly.getAccount(credId))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](Some(caUserId)))
+
+      when(mockOneLoginStubConnectorTestOnly.deleteAccount(caUserId))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+
+      when(mockEnrolmentStoreServiceTestOnly.deleteAllKnownFactsForNino(nino))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+
+      when(mockEnrolmentStoreServiceTestOnly.deleteGroup(groupId))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+
+      when(mockEnrolmentStoreServiceTestOnly.deallocateEnrolmentsFromUser(credId))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+
+      val result = sut.deleteAccountDetails(account.copy(identityProviderType = "ONE_LOGIN")).value.futureValue
+
+      result mustBe Right(())
+    }
+
   }
 
   "insertAccountDetails" must {
@@ -140,7 +179,7 @@ class AccountUtilsTestOnlySpec extends BaseSpec {
       List(AdditonalFactors("factorType"))
     )
 
-    "insert all details" in {
+    "insert all details for GG user" in {
 
       when(mockEnrolmentStoreServiceTestOnly.insertAccount(account))
         .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
@@ -163,6 +202,28 @@ class AccountUtilsTestOnlySpec extends BaseSpec {
         .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
       val result = sut.insertAccountDetails(account).value.futureValue
+
+      result mustBe Right(())
+    }
+
+    "insert all details for OLFG user" in {
+      val olfgAccount = account.copy(identityProviderType = "ONE_LOGIN")
+
+      when(mockEnrolmentStoreServiceTestOnly.insertAccount(olfgAccount))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+
+      account.enrolments.foreach { enrolment =>
+        when(mockEnrolmentStoreServiceTestOnly.upsertEnrolment(enrolment))
+          .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+
+        when(mockEnrolmentStoreServiceTestOnly.addEnrolmentToGroup(groupId, credId, enrolment))
+          .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+      }
+
+      when(mockOneLoginStubConnectorTestOnly.postAccount(olfgAccount))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors]("centralAuthUserId"))
+
+      val result = sut.insertAccountDetails(olfgAccount).value.futureValue
 
       result mustBe Right(())
     }

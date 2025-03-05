@@ -19,9 +19,9 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.connectors
 import cats.data.EitherT
 import play.api.Logging
 import play.api.http.Status.{CREATED, OK}
-import play.api.libs.json.JsObject
 import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, UpstreamErrorResponse}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{UpstreamError, UpstreamUnexpected2XX}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.config.AppConfigTestOnly
@@ -32,7 +32,7 @@ import scala.concurrent.ExecutionContext
 
 @Singleton
 class OneLoginStubConnectorTestOnly @Inject() (
-  httpClient: HttpClient,
+  httpClient: HttpClientV2,
   appConfigTestOnly: AppConfigTestOnly
 )(implicit
   ec: ExecutionContext
@@ -42,10 +42,10 @@ class OneLoginStubConnectorTestOnly @Inject() (
       s"${appConfigTestOnly.oneLoginStubBaseUrl}/one-login-stub/test/accounts"
 
     EitherT(
-      httpClient.POST[JsObject, Either[UpstreamErrorResponse, HttpResponse]](
-        url,
-        account.identityProviderAccountContextRequestBody
-      )
+      httpClient
+        .post(url"$url")
+        .withBody(account.identityProviderAccountContextRequestBody)
+        .execute[Either[UpstreamErrorResponse, HttpResponse]]
     )
       .transform {
         case Right(response) if response.status == CREATED =>
@@ -67,9 +67,7 @@ class OneLoginStubConnectorTestOnly @Inject() (
       s"${appConfigTestOnly.oneLoginStubBaseUrl}/one-login-stub/test/accounts/$caUserId"
 
     EitherT(
-      httpClient.DELETE[Either[UpstreamErrorResponse, HttpResponse]](
-        url
-      )
+      httpClient.delete(url"$url").execute[Either[UpstreamErrorResponse, HttpResponse]]
     ).transform {
       case Right(response) if response.status == OK => Right(())
       case Right(response) =>
@@ -88,9 +86,7 @@ class OneLoginStubConnectorTestOnly @Inject() (
       s"${appConfigTestOnly.oneLoginStubBaseUrl}/one-login-stub/test/accounts?identityProviderId=$identityProviderId"
 
     EitherT(
-      httpClient.GET[Either[UpstreamErrorResponse, HttpResponse]](
-        url
-      )
+      httpClient.get(url"$url").execute[Either[UpstreamErrorResponse, HttpResponse]]
     ).transform {
       case Right(response) =>
         Right(Some((response.json \ "caUserId").as[String]))

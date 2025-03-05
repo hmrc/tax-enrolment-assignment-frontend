@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 
-import play.api.libs.json.{Format, Json}
+import play.api.libs.json.{Format, JsValue, Json, Writes}
+import play.api.libs.ws.BodyWritable
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.IRSAKey
 
@@ -30,4 +31,9 @@ object KnownFactQueryForNINO {
 
   implicit val format: Format[KnownFactQueryForNINO] =
     Json.format[KnownFactQueryForNINO]
+
+  implicit def jsonBodyWritable[T](implicit
+    writes: Writes[T],
+    jsValueBodyWritable: BodyWritable[JsValue]
+  ): BodyWritable[T] = jsValueBodyWritable.map(writes.writes)
 }

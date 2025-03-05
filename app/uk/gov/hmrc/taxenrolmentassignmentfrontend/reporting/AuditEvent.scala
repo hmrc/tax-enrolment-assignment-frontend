@@ -16,13 +16,14 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting
 
-import java.util.Locale
 import play.api.i18n.{Lang, MessagesApi}
 import play.api.libs.json._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails}
+
+import java.util.Locale
 
 case class AuditEvent(auditType: String, transactionName: String, detail: JsObject)
 
@@ -32,7 +33,7 @@ object AuditEvent {
     request: RequestWithUserDetailsFromSessionAndMongo[_],
     messagesApi: MessagesApi
   ): AuditEvent = {
-    implicit val lang = getLang(request, implicitly)
+    implicit val lang: Lang = getLang(request, implicitly)
     AuditEvent(
       auditType = "ReportUnrecognisedAccount",
       transactionName = "reporting-unrecognised-sa-account",
@@ -46,7 +47,7 @@ object AuditEvent {
     request: RequestWithUserDetailsFromSessionAndMongo[_],
     messagesApi: MessagesApi
   ): AuditEvent = {
-    implicit val lang = getLang(request, implicitly)
+    implicit val lang: Lang = getLang(request, implicitly)
     AuditEvent(
       auditType = "ReportUnrecognisedAccount",
       transactionName = "reporting-unrecognised-pt-account",
@@ -60,7 +61,7 @@ object AuditEvent {
     request: RequestWithUserDetailsFromSessionAndMongo[_],
     messagesApi: MessagesApi
   ): AuditEvent = {
-    implicit val lang = getLang(request, implicitly)
+    implicit val lang: Lang = getLang(request, implicitly)
     AuditEvent(
       auditType = "EnrolledOnAnotherAccount",
       transactionName = "enrolled-on-another-account",
@@ -114,7 +115,7 @@ object AuditEvent {
     request: RequestWithUserDetailsFromSessionAndMongo[_],
     messagesApi: MessagesApi
   ): AuditEvent = {
-    implicit val lang = getLang(request, implicitly)
+    implicit val lang: Lang = getLang(request, implicitly)
     AuditEvent(
       auditType = "SignInWithOtherAccount",
       transactionName = "sign-in-with-other-account",
@@ -183,7 +184,7 @@ object AuditEvent {
 
     Json.obj(
       "NINO"           -> userDetails.nino.nino,
-      "currentAccount" -> getCurrentAccountJson(userDetails, accountType, withCurrentEmail = true)
+      "currentAccount" -> getCurrentAccountJson(userDetails, accountType)
     ) ++ optSACredIdJson ++ optReportedAccountJson
   }
 
@@ -217,21 +218,14 @@ object AuditEvent {
 
   private def getCurrentAccountJson(
     userDetails: UserDetailsFromSession,
-    accountType: AccountTypes.Value,
-    withCurrentEmail: Boolean = false
-  ): JsObject = {
-
-    val emailObj = if (withCurrentEmail) {
-      Json.obj("email" -> userDetails.email.getOrElse("-").toString)
-    } else {
-      Json.obj()
-    }
+    accountType: AccountTypes.Value
+  ): JsObject =
     Json.obj(
       "credentialId" -> userDetails.credId,
-      "type"         -> accountType.toString
-    ) ++ userDetails.affinityGroup.toJson.as[JsObject].deepMerge(emailObj)
-
-  }
+      "type"         -> accountType.toString,
+      "authProvider" -> userDetails.providerType,
+      "email"        -> userDetails.email.getOrElse[String]("-")
+    ) ++ userDetails.affinityGroup.toJson.as[JsObject]
 
   private def getPresentedAccountJson(
     accountDetails: AccountDetails
@@ -239,9 +233,10 @@ object AuditEvent {
     Json.obj(
       "credentialId" -> accountDetails.credId,
       "userId"       -> messagesApi("common.endingWith", accountDetails.userId),
-      "email"        -> accountDetails.emailDecrypted.getOrElse("-").toString,
-      "lastSignedIn" -> accountDetails.lastLoginDate.getOrElse("").toString,
-      "mfaDetails"   -> mfaDetailsToJson(accountDetails.mfaDetails)
+      "email"        -> accountDetails.emailDecrypted.getOrElse[String]("-"),
+      "lastSignedIn" -> accountDetails.lastLoginDate.getOrElse[String](""),
+      "mfaDetails"   -> mfaDetailsToJson(accountDetails.mfaDetails),
+      "authProvider" -> accountDetails.identityProviderType.toString
     )
 
   private def getTranslatedAccountJson(accountDetails: AccountDetails)(implicit messagesApi: MessagesApi): JsObject = {
@@ -249,9 +244,10 @@ object AuditEvent {
     Json.obj(
       "credentialId" -> accountDetails.credId,
       "userId"       -> messagesApi("common.endingWith", accountDetails.userId)(enLang),
-      "email"        -> accountDetails.emailDecrypted.getOrElse("-").toString,
-      "lastSignedIn" -> accountDetails.lastLoginDate.getOrElse("").toString,
-      "mfaDetails"   -> mfaDetailsToJson(accountDetails.mfaDetails)(messagesApi, enLang)
+      "email"        -> accountDetails.emailDecrypted.getOrElse[String]("-"),
+      "lastSignedIn" -> accountDetails.lastLoginDate.getOrElse[String](""),
+      "mfaDetails"   -> mfaDetailsToJson(accountDetails.mfaDetails)(messagesApi, enLang),
+      "authProvider" -> accountDetails.identityProviderType.toString
     )
   }
 

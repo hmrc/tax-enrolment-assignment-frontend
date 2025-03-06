@@ -6,9 +6,7 @@
         "user": {
             "credId": "2338687273700201",
             "name": "TwoCreds NoEnrolments1",
-            "email": "twocredsnoemrolemail1@test.com",
-            "userId": "Ending with 0201",
-            "hasPTEnrolment": false
+            "email": "twocredsnoemrolemail1@test.com"
         },
         "additionalFactors": [
             {
@@ -25,9 +23,7 @@
         "user": {
             "credId": "5052110129550202",
             "name": "TwoCreds NoEnrolments2",
-            "email": "twocredsnoemrolemail2@test.com",
-            "userId": "Ending with 0202",
-            "hasPTEnrolment": false
+            "email": "twocredsnoemrolemail2@test.com"
         },
         "additionalFactors": [
             {

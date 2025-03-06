@@ -6,9 +6,7 @@
         "user": {
             "credId": "7705457966903707",
             "name": "Firstname Surname",
-            "email": "email12@test.com",
-            "userId": "Ending with 4144",
-            "hasPTEnrolment": true
+            "email": "email12@test.com"
         },
         "enrolments": [
             {
@@ -43,9 +41,7 @@
         "user": {
             "credId": "1952271597949868",
             "name": "Firstname Surname",
-            "email": "email10@test.com",
-            "userId": "Ending with 6125",
-            "hasPTEnrolment": false
+            "email": "email10@test.com"
         },
         "additionalFactors": [
             {

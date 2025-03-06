@@ -45,7 +45,7 @@ class EventLoggerServiceSpec extends BaseSpec {
     appender.setContext(logger.getLoggerContext)
     appender.start()
     logger.addAppender(appender)
-    logger.setLevel(Level.ALL)
+    logger.setLevel(Level.TRACE)
     logger.setAdditive(true)
     body(appender.list.asScala.toList)
   }

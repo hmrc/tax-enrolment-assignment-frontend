@@ -37,7 +37,7 @@ class LegacyAuthConnectorISpec extends IntegrationSpecBase {
         stubPutWithRequestBody(
           url = "/auth/enrolments",
           status = OK,
-          requestBody = Json.toJson(enrolments)(EnrolmentsFormats.writes).toString,
+          requestBody = Json.toJson(enrolments).toString(),
           responseBody = ""
         )
 

@@ -16,7 +16,8 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.{JsValue, Json, OFormat, Writes}
+import play.api.libs.ws.BodyWritable
 
 case class AssignHMRCPTRequest(
   identifiers: Seq[IdentifiersOrVerifiers],
@@ -25,4 +26,8 @@ case class AssignHMRCPTRequest(
 
 object AssignHMRCPTRequest {
   implicit val format: OFormat[AssignHMRCPTRequest] = Json.format[AssignHMRCPTRequest]
+  implicit def jsonBodyWritable[T](implicit
+    writes: Writes[T],
+    jsValueBodyWritable: BodyWritable[JsValue]
+  ): BodyWritable[T] = jsValueBodyWritable.map(writes.writes)
 }

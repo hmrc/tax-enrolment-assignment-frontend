@@ -21,7 +21,8 @@ import play.api.Logging
 import play.api.http.Status.{BAD_REQUEST, CREATED, NOT_FOUND, NO_CONTENT, OK}
 import play.api.libs.json.{JsArray, JsObject, Json}
 import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, UpstreamErrorResponse}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{UpstreamError, UpstreamUnexpected2XX}
@@ -32,15 +33,16 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConfig: AppConfig)(implicit
+class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClientV2, appConfig: AppConfig)(implicit
   ec: ExecutionContext
 ) extends Logging {
   //ES0
-  def deleteGroup(groupId: String)(implicit hc: HeaderCarrier): TEAFResult[Unit] =
+  def deleteGroup(groupId: String)(implicit hc: HeaderCarrier): TEAFResult[Unit] = {
+    val url = s"${appConfig.EACD_BASE_URL_TESTONLY}/enrolment-store/data/$groupId"
     EitherT(
-      httpClient.DELETE[Either[UpstreamErrorResponse, HttpResponse]](
-        s"${appConfig.EACD_BASE_URL_TESTONLY}/enrolment-store/data/$groupId"
-      )
+      httpClient
+        .delete(url"$url")
+        .execute[Either[UpstreamErrorResponse, HttpResponse]]
     )
       .transform {
         case Right(response) if response.status == NO_CONTENT => Right(())
@@ -53,13 +55,15 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
           logger.error(upstreamError.message)
           Left(UpstreamError(upstreamError))
       }
+  }
 
   //ES0
-  def getUsersFromEnrolment(enrolmentKey: String)(implicit hc: HeaderCarrier): TEAFResult[List[String]] =
+  def getUsersFromEnrolment(enrolmentKey: String)(implicit hc: HeaderCarrier): TEAFResult[List[String]] = {
+    val url = s"${appConfig.EACD_BASE_URL}/enrolment-store/enrolments/$enrolmentKey/users"
     EitherT(
-      httpClient.GET[Either[UpstreamErrorResponse, HttpResponse]](
-        s"${appConfig.EACD_BASE_URL}/enrolment-store/enrolments/$enrolmentKey/users"
-      )
+      httpClient
+        .get(url"$url")
+        .execute[Either[UpstreamErrorResponse, HttpResponse]]
     )
       .transform {
         case Right(response) if response.status == NO_CONTENT => Right(List.empty)
@@ -72,13 +76,13 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
           logger.error(upstreamError.message)
           Left(UpstreamError(upstreamError))
       }
+  }
 
   //ES1
-  def getGroupsFromEnrolment(enrolmentKey: String)(implicit hc: HeaderCarrier): TEAFResult[List[String]] =
+  def getGroupsFromEnrolment(enrolmentKey: String)(implicit hc: HeaderCarrier): TEAFResult[List[String]] = {
+    val url = s"${appConfig.EACD_BASE_URL}/enrolment-store/enrolments/$enrolmentKey/groups"
     EitherT(
-      httpClient.GET[Either[UpstreamErrorResponse, HttpResponse]](
-        s"${appConfig.EACD_BASE_URL}/enrolment-store/enrolments/$enrolmentKey/groups"
-      )
+      httpClient.get(url"$url").execute[Either[UpstreamErrorResponse, HttpResponse]]
     )
       .transform {
         case Right(response) if response.status == NO_CONTENT => Right(List.empty)
@@ -91,13 +95,13 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
           logger.error(upstreamError.message)
           Left(UpstreamError(upstreamError))
       }
+  }
 
   //ES2
-  def getEnrolmentsFromUser(credId: String)(implicit hc: HeaderCarrier): TEAFResult[List[String]] =
+  def getEnrolmentsFromUser(credId: String)(implicit hc: HeaderCarrier): TEAFResult[List[String]] = {
+    val url = s"${appConfig.EACD_BASE_URL}/enrolment-store/users/$credId/enrolments"
     EitherT(
-      httpClient.GET[Either[UpstreamErrorResponse, HttpResponse]](
-        s"${appConfig.EACD_BASE_URL}/enrolment-store/users/$credId/enrolments"
-      )
+      httpClient.get(url"$url").execute[Either[UpstreamErrorResponse, HttpResponse]]
     )
       .transform {
         case Right(response) if response.status == NO_CONTENT => Right(List.empty)
@@ -114,13 +118,13 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
           logger.error(upstreamError.message)
           Left(UpstreamError(upstreamError))
       }
+  }
 
   //ES3
-  def getEnrolmentsFromGroup(groupId: String)(implicit hc: HeaderCarrier): TEAFResult[List[String]] =
+  def getEnrolmentsFromGroup(groupId: String)(implicit hc: HeaderCarrier): TEAFResult[List[String]] = {
+    val url = s"${appConfig.EACD_BASE_URL}/enrolment-store/groups/$groupId/enrolments"
     EitherT(
-      httpClient.GET[Either[UpstreamErrorResponse, HttpResponse]](
-        s"${appConfig.EACD_BASE_URL}/enrolment-store/groups/$groupId/enrolments"
-      )
+      httpClient.get(url"$url").execute[Either[UpstreamErrorResponse, HttpResponse]]
     )
       .transform {
         case Right(response) if response.status == NO_CONTENT => Right(List.empty)
@@ -137,6 +141,7 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
           logger.error(upstreamError.message)
           Left(UpstreamError(upstreamError))
       }
+  }
 
   //ES6
   def upsertEnrolment(enrolment: EnrolmentDetailsTestOnly)(implicit hc: HeaderCarrier): TEAFResult[Unit] = {
@@ -147,11 +152,11 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
     val identifierKey = enrolment.identifiers.key
     val identifierValue = enrolment.identifiers.value
 
+    val url =
+      s"${appConfig.EACD_BASE_URL}/enrolment-store/enrolments/${enrolment.serviceName}~$identifierKey~$identifierValue"
+
     EitherT(
-      httpClient.PUT[JsObject, Either[UpstreamErrorResponse, HttpResponse]](
-        s"${appConfig.EACD_BASE_URL}/enrolment-store/enrolments/${enrolment.serviceName}~$identifierKey~$identifierValue",
-        verifiers
-      )
+      httpClient.put(url"$url").withBody(verifiers).execute[Either[UpstreamErrorResponse, HttpResponse]]
     )
       .transform {
         case Right(response) if response.status == NO_CONTENT => Right(())
@@ -178,11 +183,14 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
     val identifierKey = enrolment.identifiers.key
     val identifierValue = enrolment.identifiers.value
 
+    val url =
+      s"${appConfig.EACD_BASE_URL}/enrolment-store/groups/$groupId/enrolments/${enrolment.serviceName}~$identifierKey~$identifierValue"
+
     EitherT(
-      httpClient.POST[JsObject, Either[UpstreamErrorResponse, HttpResponse]](
-        s"${appConfig.EACD_BASE_URL}/enrolment-store/groups/$groupId/enrolments/${enrolment.serviceName}~$identifierKey~$identifierValue",
-        payload
-      )
+      httpClient
+        .post(url"$url")
+        .withBody(payload)
+        .execute[Either[UpstreamErrorResponse, HttpResponse]]
     )
       .transform {
         case Right(response) if response.status == CREATED => Right(())
@@ -197,11 +205,10 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
   }
 
   //ES9
-  def deleteEnrolmentFromGroup(enrolmentKey: String, groupId: String)(implicit hc: HeaderCarrier): TEAFResult[Unit] =
+  def deleteEnrolmentFromGroup(enrolmentKey: String, groupId: String)(implicit hc: HeaderCarrier): TEAFResult[Unit] = {
+    val url = s"${appConfig.EACD_BASE_URL}/enrolment-store/groups/$groupId/enrolments/$enrolmentKey"
     EitherT(
-      httpClient.DELETE[Either[UpstreamErrorResponse, HttpResponse]](
-        s"${appConfig.EACD_BASE_URL}/enrolment-store/groups/$groupId/enrolments/$enrolmentKey"
-      )
+      httpClient.delete(url"$url").execute[Either[UpstreamErrorResponse, HttpResponse]]
     )
       .transform {
         case Left(response) if response.statusCode == NOT_FOUND => Right(())
@@ -216,13 +223,17 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
           logger.error(upstreamError.message)
           Left(UpstreamError(upstreamError))
       }
+  }
 
   //ES12
-  def deleteEnrolmentFromUser(enrolmentKey: String, credId: String)(implicit hc: HeaderCarrier): TEAFResult[Unit] =
+  def deleteEnrolmentFromUser(enrolmentKey: String, credId: String)(implicit hc: HeaderCarrier): TEAFResult[Unit] = {
+    val url = s"${appConfig.EACD_BASE_URL}/enrolment-store/users/$credId/enrolments/$enrolmentKey"
     EitherT(
-      httpClient.DELETE[Either[UpstreamErrorResponse, HttpResponse]](
-        s"${appConfig.EACD_BASE_URL}/enrolment-store/users/$credId/enrolments/$enrolmentKey"
-      )
+      httpClient
+        .delete(
+          url"$url"
+        )
+        .execute[Either[UpstreamErrorResponse, HttpResponse]]
     )
       .transform {
         case Left(response) if response.statusCode == NOT_FOUND => Right(())
@@ -239,13 +250,13 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
           logger.error(upstreamError.message)
           Left(UpstreamError(upstreamError))
       }
+  }
 
   //ES7
-  def deleteEnrolment(enrolmentKey: String)(implicit hc: HeaderCarrier): TEAFResult[Unit] =
+  def deleteEnrolment(enrolmentKey: String)(implicit hc: HeaderCarrier): TEAFResult[Unit] = {
+    val url = s"${appConfig.EACD_BASE_URL}/enrolment-store/enrolments/$enrolmentKey"
     EitherT(
-      httpClient.DELETE[Either[UpstreamErrorResponse, HttpResponse]](
-        s"${appConfig.EACD_BASE_URL}/enrolment-store/enrolments/$enrolmentKey"
-      )
+      httpClient.delete(url"$url").execute[Either[UpstreamErrorResponse, HttpResponse]]
     )
       .transform {
         case Left(response) if response.statusCode == NOT_FOUND => Right(())
@@ -258,6 +269,7 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
           logger.error(upstreamError.message)
           Left(UpstreamError(upstreamError))
       }
+  }
 
   //ES20 Query known facts that match the supplied query parameters
   def queryKnownFactsByVerifiers(service: String, identifiersOrVerifiers: List[IdentifiersOrVerifiers])(implicit
@@ -273,7 +285,9 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClient, appConf
 
     EitherT(
       httpClient
-        .POST[JsObject, Either[UpstreamErrorResponse, HttpResponse]](url, requestBody)
+        .post(url"$url")
+        .withBody(requestBody)
+        .execute[Either[UpstreamErrorResponse, HttpResponse]]
     )
       .transform {
         case Right(response) if response.status == OK =>

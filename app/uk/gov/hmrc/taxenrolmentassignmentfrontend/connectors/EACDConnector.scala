@@ -21,10 +21,11 @@ import play.api.Logger
 import play.api.http.Status._
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpException, HttpResponse, UpstreamErrorResponse}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpException, HttpResponse, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{UnexpectedResponseFromEACD}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromEACD
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{logES1ErrorFromEACD, logES2ErrorFromEACD, logUnexpectedResponseFromEACD, logUnexpectedResponseFromEACDQueryKnownFacts}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.{IRSAKey, hmrcPTKey}
@@ -33,7 +34,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{KnownFactQueryForNINO,
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class EACDConnector @Inject() (httpClient: HttpClient, logger: EventLoggerService, appConfig: AppConfig) {
+class EACDConnector @Inject() (httpClient: HttpClientV2, logger: EventLoggerService, appConfig: AppConfig) {
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
@@ -60,7 +61,8 @@ class EACDConnector @Inject() (httpClient: HttpClient, logger: EventLoggerServic
     val url =
       s"${appConfig.EACD_BASE_URL}/enrolment-store/enrolments/$enrolmentKey/users"
     httpClient
-      .GET[HttpResponse](url)
+      .get(url"$url")
+      .execute[HttpResponse]
       .map(httpResponse =>
         httpResponse.status match {
           case OK =>
@@ -90,7 +92,9 @@ class EACDConnector @Inject() (httpClient: HttpClient, logger: EventLoggerServic
     val url = s"${appConfig.EACD_BASE_URL}/enrolment-store/enrolments"
     val request = KnownFactQueryForNINO(nino)
     httpClient
-      .POST[KnownFactQueryForNINO, HttpResponse](url, request)
+      .post(url"$url")
+      .withBody(request)
+      .execute[HttpResponse]
       .map(httpResponse =>
         httpResponse.status match {
           case OK =>
@@ -117,7 +121,8 @@ class EACDConnector @Inject() (httpClient: HttpClient, logger: EventLoggerServic
       s"${appConfig.EACD_BASE_URL}/enrolment-store/users/$userId/enrolments?type=principal"
 
     httpClient
-      .GET[HttpResponse](url)
+      .get(url"$url")
+      .execute[HttpResponse]
       .map(httpResponse =>
         httpResponse.status match {
           case OK =>
@@ -135,12 +140,14 @@ class EACDConnector @Inject() (httpClient: HttpClient, logger: EventLoggerServic
   //ES1 Query groups who have an allocated enrolment
   def getGroupsFromEnrolment(
     enrolmentKey: String
-  )(implicit hc: HeaderCarrier, ec: ExecutionContext): EitherT[Future, UpstreamErrorResponse, HttpResponse] =
+  )(implicit hc: HeaderCarrier, ec: ExecutionContext): EitherT[Future, UpstreamErrorResponse, HttpResponse] = {
+    val url = s"${appConfig.EACD_BASE_URL}/enrolment-store/enrolments/$enrolmentKey/groups?ignore-assignments=true"
     EitherT(
       httpClient
-        .GET[Either[UpstreamErrorResponse, HttpResponse]](
-          s"${appConfig.EACD_BASE_URL}/enrolment-store/enrolments/$enrolmentKey/groups?ignore-assignments=true"
+        .get(
+          url"$url"
         )
+        .execute[Either[UpstreamErrorResponse, HttpResponse]]
         .recover { case exception: HttpException =>
           Left(UpstreamErrorResponse(exception.message, BAD_GATEWAY, BAD_GATEWAY))
         }
@@ -148,4 +155,5 @@ class EACDConnector @Inject() (httpClient: HttpClient, logger: EventLoggerServic
       logger.logEvent(logES1ErrorFromEACD(enrolmentKey, error.message))
       error
     }
+  }
 }

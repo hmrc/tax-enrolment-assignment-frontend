@@ -19,10 +19,10 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.connectors
 import cats.data.EitherT
 import play.api.{Logger, Logging}
 import play.api.http.Status.{NOT_FOUND, NO_CONTENT, OK}
-import play.api.libs.json.JsObject
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, UpstreamErrorResponse}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{UnexpectedResponseFromEACD, UpstreamError, UpstreamUnexpected2XX}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
@@ -38,7 +38,7 @@ import scala.concurrent.ExecutionContext
 @Singleton
 class EnrolmentStoreStubConnectorTestOnly @Inject() (
   appConfig: AppConfigTestOnly,
-  httpClient: HttpClient,
+  httpClient: HttpClientV2,
   eventLogger: EventLoggerService
 )(implicit
   val executionContext: ExecutionContext
@@ -51,10 +51,9 @@ class EnrolmentStoreStubConnectorTestOnly @Inject() (
 
     EitherT(
       httpClient
-        .POST[JsObject, Either[UpstreamErrorResponse, HttpResponse]](
-          url,
-          account.enrolmentStoreStubAccountDetailsRequestBody(account.user.credId)
-        )
+        .post(url"$url")
+        .withBody(account.enrolmentStoreStubAccountDetailsRequestBody(account.user.credId))
+        .execute[Either[UpstreamErrorResponse, HttpResponse]]
     )
       .transform {
         case Right(response) if response.status == NO_CONTENT => Right(())
@@ -71,7 +70,7 @@ class EnrolmentStoreStubConnectorTestOnly @Inject() (
   def deleteStubAccount(groupId: String)(implicit hc: HeaderCarrier): TEAFResult[Unit] = {
     val url = s"${appConfig.enrolmentStoreStub}/data/group/$groupId"
 
-    EitherT(httpClient.DELETE[Either[UpstreamErrorResponse, HttpResponse]](url)).transform {
+    EitherT(httpClient.delete(url"$url").execute[Either[UpstreamErrorResponse, HttpResponse]]).transform {
       case Right(response) if response.status == NO_CONTENT => Right(())
       case Left(error) if error.statusCode == NOT_FOUND     => Right(())
       case Right(response) =>
@@ -91,7 +90,8 @@ class EnrolmentStoreStubConnectorTestOnly @Inject() (
       s"${appConfig.enrolmentStoreStub}/enrolment-store-proxy/enrolment-store/enrolments/$enrolmentKey/users"
 
     httpClient
-      .GET[HttpResponse](url)
+      .get(url"$url")
+      .execute[HttpResponse]
       .map(httpResponse =>
         httpResponse.status match {
           case OK =>

@@ -24,7 +24,8 @@ import play.api.http.Status._
 import play.api.libs.json.Json
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, UpstreamErrorResponse}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromTaxEnrolments
@@ -36,7 +37,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AssignHMRCPTRequest, I
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class TaxEnrolmentsConnector @Inject() (httpClient: HttpClient, logger: EventLoggerService, appConfig: AppConfig) {
+class TaxEnrolmentsConnector @Inject() (httpClient: HttpClientV2, logger: EventLoggerService, appConfig: AppConfig) {
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
@@ -51,7 +52,9 @@ class TaxEnrolmentsConnector @Inject() (httpClient: HttpClient, logger: EventLog
     )
     val url = s"${appConfig.TAX_ENROLMENTS_BASE_URL}/service/$hmrcPTKey/enrolment"
     httpClient
-      .PUT[AssignHMRCPTRequest, HttpResponse](url, request)
+      .put(url"$url")
+      .withBody(request)
+      .execute[HttpResponse]
       .map(httpResponse =>
         httpResponse.status match {
           case NO_CONTENT => Right(())
@@ -92,7 +95,8 @@ class TaxEnrolmentsConnector @Inject() (httpClient: HttpClient, logger: EventLog
       s"${appConfig.TAX_ENROLMENTS_BASE_URL}/groups/$groupId/enrolments/$enrolmentKey"
     EitherT(
       httpClient
-        .DELETE[Either[UpstreamErrorResponse, HttpResponse]](url)
+        .delete(url"$url")
+        .execute[Either[UpstreamErrorResponse, HttpResponse]]
     ).leftMap {
       case error if error.statusCode >= 499 =>
         logger.logEvent(

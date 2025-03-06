@@ -17,11 +17,13 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors
 
 import cats.data.EitherT
+
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.http.Status.NON_AUTHORITATIVE_INFORMATION
 import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromUsersGroupsSearch
@@ -32,7 +34,11 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersGroupResponse
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class UsersGroupsSearchConnector @Inject() (httpClient: HttpClient, logger: EventLoggerService, appConfig: AppConfig) {
+class UsersGroupsSearchConnector @Inject() (
+  httpClient: HttpClientV2,
+  logger: EventLoggerService,
+  appConfig: AppConfig
+) {
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
@@ -43,7 +49,8 @@ class UsersGroupsSearchConnector @Inject() (httpClient: HttpClient, logger: Even
     val url = s"${appConfig.usersGroupsSearchBaseURL}/users/$credId"
 
     httpClient
-      .GET[HttpResponse](url)
+      .get(url"$url")
+      .execute[HttpResponse]
       .map(httpResponse =>
         httpResponse.status match {
           case NON_AUTHORITATIVE_INFORMATION =>

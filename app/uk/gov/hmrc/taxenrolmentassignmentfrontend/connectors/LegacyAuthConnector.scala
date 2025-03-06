@@ -21,30 +21,29 @@ import play.api.Logger
 import play.api.http.Status._
 import uk.gov.hmrc.auth.core.Enrolment
 import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseAssigningTemporaryPTAEnrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.{EventLoggerService, LoggingEvent}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.formats.EnrolmentsFormats
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.formats.EnrolmentsFormats.jsonBodyWritable
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class LegacyAuthConnector @Inject() (httpClient: HttpClient, logger: EventLoggerService, appConfig: AppConfig) {
+class LegacyAuthConnector @Inject() (httpClient: HttpClientV2, logger: EventLoggerService, appConfig: AppConfig) {
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
   def updateEnrolments(enrolments: Set[Enrolment])(implicit ec: ExecutionContext, hc: HeaderCarrier): TEAFResult[Unit] =
     EitherT {
+      val url = s"${appConfig.AUTH_BASE_URL}/enrolments"
       httpClient
-        .PUT[Set[Enrolment], HttpResponse](s"${appConfig.AUTH_BASE_URL}/enrolments", enrolments)(
-          wts = EnrolmentsFormats.writes,
-          implicitly,
-          implicitly,
-          implicitly
-        )
+        .put(url"$url")
+        .withBody(enrolments)
+        .execute[HttpResponse]
         .map(httpResponse =>
           httpResponse.status match {
             case OK => Right(())

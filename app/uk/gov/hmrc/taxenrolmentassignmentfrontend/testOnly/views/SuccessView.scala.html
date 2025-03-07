@@ -76,6 +76,7 @@
         <input name="redirectionUrl" value="@appConfig.tensRedirectUrl" class="govuk-visually-hidden"/>
         <input name="confidenceLevel" value="200" class="govuk-visually-hidden"/>
         <input name="nino" value="@account.nino" class="govuk-visually-hidden"/>
+        <input name="email" value="@account.user.email" class="govuk-visually-hidden"/>
         @account.enrolments.mapWithIndex{ (enrolment, enrolmentIndex) =>
             <input name="enrolment[@enrolmentIndex].name" value="@enrolment.serviceName" class="govuk-visually-hidden"/>
             <input name="enrolment[@enrolmentIndex].taxIdentifier[0].name" value="@enrolment.identifiers.key" class="govuk-visually-hidden"/>

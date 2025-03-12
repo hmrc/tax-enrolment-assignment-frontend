@@ -19,9 +19,9 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.connectors
 import cats.data.EitherT
 import play.api.Logging
 import play.api.http.Status.{CREATED, NOT_FOUND, NO_CONTENT}
-import play.api.libs.json.JsObject
 import uk.gov.hmrc.http.HttpReads.Implicits._
-import uk.gov.hmrc.http.{HeaderCarrier, HttpClient, HttpResponse, UpstreamErrorResponse}
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{UpstreamError, UpstreamUnexpected2XX}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.config.AppConfigTestOnly
@@ -31,17 +31,17 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class BasStubsConnectorTestOnly @Inject() (httpClient: HttpClient, appConfigTestOnly: AppConfigTestOnly)(implicit
+class BasStubsConnectorTestOnly @Inject() (httpClient: HttpClientV2, appConfigTestOnly: AppConfigTestOnly)(implicit
   ec: ExecutionContext
 ) extends Logging {
   def putAccount(account: AccountDetailsTestOnly)(implicit hc: HeaderCarrier): TEAFResult[Unit] = {
     val url = s"${appConfigTestOnly.basStubsBaseUrl}/bas-stubs/account"
 
     EitherT(
-      httpClient.PUT[JsObject, Either[UpstreamErrorResponse, HttpResponse]](
-        url,
-        account.basStubAccountDetailsRequestBody
-      )
+      httpClient
+        .put(url"$url")
+        .withBody(account.basStubAccountDetailsRequestBody)
+        .execute[Either[UpstreamErrorResponse, HttpResponse]]
     )
       .transform {
         case Right(response) if response.status == CREATED => Right(())
@@ -59,9 +59,9 @@ class BasStubsConnectorTestOnly @Inject() (httpClient: HttpClient, appConfigTest
     val url = s"${appConfigTestOnly.basStubsBaseUrl}/bas-stubs/account/${account.user.credId}"
 
     EitherT(
-      httpClient.DELETE[Either[UpstreamErrorResponse, HttpResponse]](
-        url
-      )
+      httpClient
+        .delete(url"$url")
+        .execute[Either[UpstreamErrorResponse, HttpResponse]]
     )
       .transform {
         case Right(response) if response.status == NO_CONTENT => Right(())
@@ -77,7 +77,12 @@ class BasStubsConnectorTestOnly @Inject() (httpClient: HttpClient, appConfigTest
 
   def putAdditionalFactors(account: AccountDetailsTestOnly)(implicit hc: HeaderCarrier): TEAFResult[Unit] = {
     val url = s"${appConfigTestOnly.basStubsBaseUrl}/bas-stubs/credentials/factors"
-    EitherT(httpClient.PUT[JsObject, Either[UpstreamErrorResponse, HttpResponse]](url, account.mfaAccountRequestBody))
+    EitherT(
+      httpClient
+        .put(url"$url")
+        .withBody(account.mfaAccountRequestBody)
+        .execute[Either[UpstreamErrorResponse, HttpResponse]]
+    )
       .transform {
         case Right(response) if response.status == CREATED => Right(())
         case Right(response) =>
@@ -92,7 +97,7 @@ class BasStubsConnectorTestOnly @Inject() (httpClient: HttpClient, appConfigTest
 
   def deleteAdditionalFactors(credId: String)(implicit hc: HeaderCarrier): TEAFResult[Unit] = {
     val url = s"${appConfigTestOnly.basStubsBaseUrl}/bas-stubs/credentials/$credId/factors/additionalfactors"
-    EitherT(httpClient.DELETE[Either[UpstreamErrorResponse, HttpResponse]](url))
+    EitherT(httpClient.delete(url"$url").execute[Either[UpstreamErrorResponse, HttpResponse]])
       .transform {
         case Left(error) if error.statusCode == NOT_FOUND     => Right(())
         case Right(response) if response.status == NO_CONTENT => Right(())

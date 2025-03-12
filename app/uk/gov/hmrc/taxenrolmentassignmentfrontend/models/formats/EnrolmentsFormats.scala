@@ -16,10 +16,15 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.models.formats
 
-import play.api.libs.json.{Json, Writes}
+import play.api.libs.json.{JsValue, Json, Writes}
+import play.api.libs.ws.BodyWritable
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier}
 
 object EnrolmentsFormats {
   private implicit val enrolmentIdentifierWrites: Writes[EnrolmentIdentifier] = Json.writes[EnrolmentIdentifier]
   implicit val writes: Writes[Set[Enrolment]] = Writes.set(Json.writes[Enrolment])
+  implicit def jsonBodyWritable[T](implicit
+    writes: Writes[T],
+    jsValueBodyWritable: BodyWritable[JsValue]
+  ): BodyWritable[T] = jsValueBodyWritable.map(writes.writes)
 }

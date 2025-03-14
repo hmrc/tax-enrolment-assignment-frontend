@@ -17,10 +17,12 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import cats.data.EitherT
+
 import javax.inject.{Inject, Singleton}
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_OTHER_USER}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction, RequestWithUserDetailsFromSessionAndMongo}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logAssignedEnrolmentAfterReportingFraud
@@ -29,7 +31,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccounts
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REPORTED_FRAUD
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.ReportSuspiciousID
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{ReportSuspiciousIDGateway, ReportSuspiciousIDOneLogin}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -40,12 +42,23 @@ class ReportSuspiciousIDController @Inject() (
   sessionCache: TEASessionCache,
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
   mcc: MessagesControllerComponents,
-  reportSuspiciousID: ReportSuspiciousID,
+  reportSuspiciousIDGateway: ReportSuspiciousIDGateway,
+  reportSuspiciousIDOneLogin: ReportSuspiciousIDOneLogin,
   val logger: EventLoggerService,
   auditHandler: AuditHandler,
-  errorHandler: ErrorHandler
+  errorHandler: ErrorHandler,
+  appConfig: AppConfig
 )(implicit ec: ExecutionContext)
     extends TEAFrontendController(mcc) {
+
+  private def identityProviderPage(
+    accountDetails: AccountDetails
+  )(implicit request: RequestWithUserDetailsFromSessionAndMongo[AnyContent]): Result =
+    if (accountDetails.identityProviderType.toString == "ONE_LOGIN") {
+      Ok(reportSuspiciousIDOneLogin(accountDetails, appConfig))
+    } else {
+      Ok(reportSuspiciousIDGateway(accountDetails, appConfig))
+    }
 
   def viewNoSA: Action[AnyContent] =
     authAction.andThen(accountMongoDetailsAction).async { implicit request =>
@@ -63,7 +76,7 @@ class ReportSuspiciousIDController @Inject() (
         case Right(ptAccount) =>
           auditHandler
             .audit(AuditEvent.auditReportSuspiciousPTAccount(ptAccount))
-          Ok(reportSuspiciousID(ptAccount))
+          identityProviderPage(ptAccount)
         case Left(error) =>
           errorHandler.handleErrors(
             error,
@@ -90,7 +103,7 @@ class ReportSuspiciousIDController @Inject() (
             auditHandler
               .audit(AuditEvent.auditReportSuspiciousSAAccount(saAccount))
           }
-          Ok(reportSuspiciousID(saAccount, true))
+          identityProviderPage(saAccount)
         case Left(error) =>
           errorHandler.handleErrors(
             error,

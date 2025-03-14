@@ -1,0 +1,53 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.helpers.CreateSummaryRow
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
+
+@this(
+        layout: Layout,
+        summaryRow: CreateSummaryRow
+)
+
+@(ptAccountDetails: AccountDetails, appConfig: AppConfig)(implicit request: Request[_], messages: Messages)
+
+
+@layout(
+    pageTitle = Some(messages("ReportSuspiciousID.title")), backLinkEnabled = true) {
+
+    <h1 class="govuk-heading-xl">@{
+        messages(s"ReportSuspiciousID.heading")
+    }</h1>
+
+    <p class="govuk-body">
+        @messages("ReportSuspiciousID.gg.text1")
+    </p>
+
+    <dl class="govuk-summary-list">
+        @summaryRow("common.userId", ptAccountDetails.userId)
+        @ptAccountDetails.emailDecrypted.map(email=>summaryRow("ReportSuspiciousID.email", email))
+        @ptAccountDetails.lastLoginDate.map(lld=>summaryRow("ReportSuspiciousID.lastLoginDate", lld))
+        @for(mfaDetail <- ptAccountDetails.mfaDetails) {
+            @summaryRow(mfaDetail.factorNameKey, mfaDetail.factorValue)
+        }
+    </dl>
+
+    <p class="govuk-body">
+        <a href="@appConfig.contactGGFraud" class="govuk-link--no-visited-state">@messages("ReportSuspiciousID.gg.linkText")</a> @messages("ReportSuspiciousID.gg.postLinkText")
+    </p>
+}

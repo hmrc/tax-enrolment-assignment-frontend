@@ -21,69 +21,78 @@
 
 @this(
 layout: Layout,
-summaryRow: CreateSummaryRow,
-govukInsetText : GovukInsetText
+summaryRow: CreateSummaryRow
 )
 
 @(ptEnrolmentOtherAccountViewModel: PTEnrolmentOnOtherAccount)(implicit request: Request[AnyRef], messages: Messages)
 
-@content = {
-    <a class = "govuk-link" href=@routes.ReportSuspiciousIDController.viewNoSA>@messages("ptEnrolmentOnOtherAccount.linkText")</a>
+@signInGuidance(bullet2: String) = {
+    @if(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.ptAccountDetails.userId)){
+        <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.sa.signInParagraph")</p>
+    } else {
+        <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.nonSa.signInParagraph")</p>
+    }
+        <ol class="govuk-list govuk-list--number">
+            <li>@messages("ptEnrolmentOnOtherAccount.sa.signInParagraph")</li>
+            <li>@Html(bullet2)</li>
+        </ol>
 }
 
-@layout(
-    pageTitle = Some(messages("ptEnrolmentOnOtherAccount.title")), None) {
+@layout(pageTitle = Some(messages("ptEnrolmentOnOtherAccount.title")), None) {
 
-    <h1 class="govuk-heading-xl">@messages("ptEnrolmentOnOtherAccount.heading")</h1>
-
-    <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.paragraph1", ptEnrolmentOtherAccountViewModel.ptAccountDetails.userId)
-        @messages("ptEnrolmentOnOtherAccount.paragraph2", ptEnrolmentOtherAccountViewModel.currentAccountDetails.userId)</p>
-    <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.text1")
-        <a href="@routes.SignOutController.signOut" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.signInAgain")</a>
-      @messages("ptEnrolmentOnOtherAccount.text2")
-    </p>
-
-    <dl class="govuk-summary-list">
-        @summaryRow("common.userId", ptEnrolmentOtherAccountViewModel.ptAccountDetails.userId)
-        @if(ptEnrolmentOtherAccountViewModel.ptAccountDetails.emailDecrypted.isDefined) {
-          @summaryRow("ptEnrolmentOnOtherAccount.email", ptEnrolmentOtherAccountViewModel.ptAccountDetails.emailDecrypted.get)
+    @if(ptEnrolmentOtherAccountViewModel.currentAccountDetails.identityProviderType.toString == "ONE_LOGIN"){
+        <h1 class="govuk-heading-l">@messages("ptEnrolmentOnOtherAccount.one_login.heading")</h1>
+        @if(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.currentAccountDetails.userId)){
+            <h2 class="govuk-heading-m">@messages("ptEnrolmentOnOtherAccount.saHeading")</h2>
+            <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.one_login.saText")
+                <a href="@routes.EnrolForSAController.enrolForSA" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.saLink")</a>.
+            </p>
+            <h2 class="govuk-heading-m">@messages("ptEnrolmentOnOtherAccount.ptaHeading")</h2>
         }
-        @summaryRow("ptEnrolmentOnOtherAccount.lastLoginDate", ptEnrolmentOtherAccountViewModel.ptAccountDetails.lastLoginDate.getOrElse(""))
-        @for(mfaDetail <- ptEnrolmentOtherAccountViewModel.ptAccountDetails.mfaDetails) {
-        @summaryRow(mfaDetail.factorNameKey, mfaDetail.factorValue)
-        }
-    </dl>
-
-    <div id="inset_text">
-
-        @govukInsetText(InsetText(
-        content = HtmlContent(content)
-        ))
-
-    </div>
-
-    @if(ptEnrolmentOtherAccountViewModel.saUserCred.isDefined){
-
-    <h2 class="govuk-heading-m">@messages("ptEnrolmentOnOtherAccount.saHeading")</h2>
-
-     @if(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.currentAccountDetails.userId)){
-    <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.saText3")
-        <a href="@routes.EnrolForSAController.enrolForSA" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.saLink")</a>.
-    </p>
-
-    } else if(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.ptAccountDetails.userId)){
-
-    <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.saText1")
-        <a href="@routes.SignOutController.signOut" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.signInAgain")</a>
-        @messages("ptEnrolmentOnOtherAccount.saText2")
-    </p>
-    } else{
-        <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.saText4")
-            <a href="@routes.SignOutController.signOut" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.signInAgain")</a>
-            @messages("ptEnrolmentOnOtherAccount.saText5", ptEnrolmentOtherAccountViewModel.saUserCred.get)
+        <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.one_login.paragraph1")</p>
+        <dl class="govuk-summary-list">
+            @if(ptEnrolmentOtherAccountViewModel.ptAccountDetails.emailDecrypted.isDefined) {
+                @summaryRow("ptEnrolmentOnOtherAccount.email", ptEnrolmentOtherAccountViewModel.ptAccountDetails.emailDecrypted.get)
+            }
+            @summaryRow("ptEnrolmentOnOtherAccount.lastLoginDate", ptEnrolmentOtherAccountViewModel.ptAccountDetails.lastLoginDate.getOrElse(""))
+            @for(mfaDetail <- ptEnrolmentOtherAccountViewModel.ptAccountDetails.mfaDetails) {
+                @summaryRow(mfaDetail.factorNameKey, mfaDetail.factorValue)
+            }
+        </dl>
+        <p class="govuk-body">
+            <a class = "govuk-link" href=@routes.ReportSuspiciousIDController.viewNoSA>@messages("ptEnrolmentOnOtherAccount.one_login.linkText")</a>
         </p>
-      }
+    } else {
+        <h1 class="govuk-heading-xl">@messages("ptEnrolmentOnOtherAccount.gg.heading")</h1>
+        @if(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.currentAccountDetails.userId)){
+            <h2 class="govuk-heading-m">@messages("ptEnrolmentOnOtherAccount.saHeading")</h2>
+            <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.one_login.saText")
+                <a href="@routes.EnrolForSAController.enrolForSA" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.saLink")</a>.
+            </p>
+            <h2 class="govuk-heading-m">@messages("ptEnrolmentOnOtherAccount.ptaHeading")</h2>
+        }
+        <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.gg.paragraph1")</p>
+        <dl class="govuk-summary-list">
+            @summaryRow("common.userId", ptEnrolmentOtherAccountViewModel.ptAccountDetails.userId)
+            @if(ptEnrolmentOtherAccountViewModel.ptAccountDetails.emailDecrypted.isDefined) {
+                @summaryRow("ptEnrolmentOnOtherAccount.email", ptEnrolmentOtherAccountViewModel.ptAccountDetails.emailDecrypted.get)
+            }
+            @summaryRow("ptEnrolmentOnOtherAccount.lastLoginDate", ptEnrolmentOtherAccountViewModel.ptAccountDetails.lastLoginDate.getOrElse(""))
+            @for(mfaDetail <- ptEnrolmentOtherAccountViewModel.ptAccountDetails.mfaDetails) {
+                @summaryRow(mfaDetail.factorNameKey, mfaDetail.factorValue)
+            }
+        </dl>
+        <p class="govuk-body">
+            <a class = "govuk-link" href=@routes.ReportSuspiciousIDController.viewNoSA>@messages("ptEnrolmentOnOtherAccount.gg.linkText")</a>
+        </p>
     }
+
+    @if(ptEnrolmentOtherAccountViewModel.currentAccountDetails.identityProviderType.toString == "ONE_LOGIN") {
+        @signInGuidance(messages("ptEnrolmentOnOtherAccount.one_login.signIn", ptEnrolmentOtherAccountViewModel.ptAccountDetails.emailDecrypted.get))
+    } else {
+        @signInGuidance(messages("ptEnrolmentOnOtherAccount.gg.signIn", ptEnrolmentOtherAccountViewModel.ptAccountDetails.userId))
+    }
+
 
 
 }

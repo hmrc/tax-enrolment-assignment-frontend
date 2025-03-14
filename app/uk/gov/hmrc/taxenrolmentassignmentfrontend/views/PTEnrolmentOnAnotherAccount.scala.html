@@ -42,6 +42,11 @@ summaryRow: CreateSummaryRow
 
     @if(ptEnrolmentOtherAccountViewModel.currentAccountDetails.identityProviderType.toString == "ONE_LOGIN"){
         <h1 class="govuk-heading-l">@messages("ptEnrolmentOnOtherAccount.one_login.heading")</h1>
+    } else {
+        <h1 class="govuk-heading-l">@messages("ptEnrolmentOnOtherAccount.gg.heading")</h1>
+    }
+
+    @if(ptEnrolmentOtherAccountViewModel.ptAccountDetails.identityProviderType.toString == "ONE_LOGIN"){
         @if(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.currentAccountDetails.userId)){
             <h2 class="govuk-heading-m">@messages("ptEnrolmentOnOtherAccount.saHeading")</h2>
             <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.one_login.saText")
@@ -63,10 +68,9 @@ summaryRow: CreateSummaryRow
             <a class = "govuk-link" href=@routes.ReportSuspiciousIDController.viewNoSA>@messages("ptEnrolmentOnOtherAccount.one_login.linkText")</a>
         </p>
     } else {
-        <h1 class="govuk-heading-xl">@messages("ptEnrolmentOnOtherAccount.gg.heading")</h1>
         @if(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.currentAccountDetails.userId)){
             <h2 class="govuk-heading-m">@messages("ptEnrolmentOnOtherAccount.saHeading")</h2>
-            <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.one_login.saText")
+            <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.gg.saText")
                 <a href="@routes.EnrolForSAController.enrolForSA" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.saLink")</a>.
             </p>
             <h2 class="govuk-heading-m">@messages("ptEnrolmentOnOtherAccount.ptaHeading")</h2>
@@ -87,7 +91,7 @@ summaryRow: CreateSummaryRow
         </p>
     }
 
-    @if(ptEnrolmentOtherAccountViewModel.currentAccountDetails.identityProviderType.toString == "ONE_LOGIN") {
+    @if(ptEnrolmentOtherAccountViewModel.ptAccountDetails.identityProviderType.toString == "ONE_LOGIN") {
         @signInGuidance(messages("ptEnrolmentOnOtherAccount.one_login.signIn", ptEnrolmentOtherAccountViewModel.ptAccountDetails.emailDecrypted.get))
     } else {
         @signInGuidance(messages("ptEnrolmentOnOtherAccount.gg.signIn", ptEnrolmentOtherAccountViewModel.ptAccountDetails.userId))

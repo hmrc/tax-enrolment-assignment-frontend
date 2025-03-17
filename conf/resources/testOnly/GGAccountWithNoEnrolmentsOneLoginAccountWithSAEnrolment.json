@@ -5,7 +5,7 @@
         "affinityGroup": "Individual",
         "nino": "JS271436A",
         "user": {
-            "credId": "9308587656991700",
+            "credId": "9308587656991702",
             "name": "Firstname Surname",
             "email": "email8@test.com"
         },
@@ -17,7 +17,7 @@
         ]
     },
     {
-        "identityProviderType": "SCP",
+        "identityProviderType": "ONE_LOGIN",
         "groupId": "74A2B44D-BAFC-4D1C-8F62-F54D68C0A94B",
         "affinityGroup": "Individual",
         "nino": "JS271436A",
@@ -34,7 +34,7 @@
                 ],
                 "identifiers": {
                     "key": "UTR",
-                    "value": "AA123003D"
+                    "value": "1234567890"
                 },
                 "verifiers": [
                     {

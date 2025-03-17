@@ -17,13 +17,13 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction, RequestWithUserDetailsFromSessionAndMongo}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, PTEnrolmentOnOtherAccount}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnotherAccount
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{PTEnrolmentOnGGAccountLoggedInGG, PTEnrolmentOnGGAccountLoggedInOL, PTEnrolmentOnOLAccountLoggedInGG, PTEnrolmentOnOLAccountLoggedInOL}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
@@ -34,12 +34,29 @@ class PTEnrolmentOnOtherAccountController @Inject() (
   accountMongoDetailsAction: AccountMongoDetailsAction,
   mcc: MessagesControllerComponents,
   multipleAccountsOrchestrator: MultipleAccountsOrchestrator,
-  ptEnrolmentOnAnotherAccountView: PTEnrolmentOnAnotherAccount,
+  ptOLLoggedInOLView: PTEnrolmentOnOLAccountLoggedInOL,
+  ptOLLoggedInGGView: PTEnrolmentOnOLAccountLoggedInGG,
+  ptGGLoggedInOLView: PTEnrolmentOnGGAccountLoggedInOL,
+  ptGGLoggedInGGView: PTEnrolmentOnGGAccountLoggedInGG,
   val logger: EventLoggerService,
   errorHandler: ErrorHandler,
   auditHandler: AuditHandler
 )(implicit ec: ExecutionContext)
     extends TEAFrontendController(mcc) {
+
+  private def pageHandler(
+    ptAccountDetails: PTEnrolmentOnOtherAccount
+  )(implicit request: RequestWithUserDetailsFromSessionAndMongo[AnyContent]) =
+    (
+      ptAccountDetails.currentAccountDetails.identityProviderType.toString.equals("ONE_LOGIN"),
+      ptAccountDetails.ptAccountDetails.identityProviderType.toString.equals("ONE_LOGIN")
+    ) match {
+      case (true, true)   => ptOLLoggedInOLView(ptAccountDetails)
+      case (true, false)  => ptGGLoggedInOLView(ptAccountDetails)
+      case (false, true)  => ptOLLoggedInGGView(ptAccountDetails)
+      case (false, false) => ptGGLoggedInGGView(ptAccountDetails)
+
+    }
 
   def view: Action[AnyContent] =
     authAction.andThen(accountMongoDetailsAction).async { implicit request =>
@@ -51,7 +68,7 @@ class PTEnrolmentOnOtherAccountController @Inject() (
           auditHandler
             .audit(AuditEvent.auditPTEnrolmentOnOtherAccount(accountFriendlyDetails))
           Ok(
-            ptEnrolmentOnAnotherAccountView(
+            pageHandler(
               PTEnrolmentOnOtherAccount(
                 AccountDetails.userFriendlyAccountDetails(accountDetails.currentAccountDetails),
                 accountFriendlyDetails,

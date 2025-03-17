@@ -30,9 +30,7 @@
 @layout(
     pageTitle = Some(messages("ReportSuspiciousID.title")), backLinkEnabled = true) {
 
-    <h1 class="govuk-heading-l">@{
-        messages(s"ReportSuspiciousID.heading")
-    }</h1>
+    <h1 class="govuk-heading-l">@messages("ReportSuspiciousID.heading")</h1>
 
     <p class="govuk-body">
         @messages("ReportSuspiciousID.one_login.text1")
@@ -47,6 +45,6 @@
     </dl>
 
     <p class="govuk-body">
-        <a href="@appConfig.contactOneLoginFraud" class="govuk-link--no-visited-state" rel="noreferrer noopener" target="_blank">@messages("ReportSuspiciousID.one_login.linkText")</a>.
+        <a href="@appConfig.contactOneLoginFraud" id="reportLink" class="govuk-link--no-visited-state" rel="noreferrer noopener" target="_blank">@messages("ReportSuspiciousID.one_login.linkText")</a>
     </p>
 }

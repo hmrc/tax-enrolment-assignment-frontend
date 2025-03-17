@@ -18,19 +18,18 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.views
 
 import play.api.test.FakeRequest
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.PTEnrolmentOtherAccountMesages
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails, SCP}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnotherAccount
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnGGAccountLoggedInGG
 
 class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
 
-  lazy val view: PTEnrolmentOnAnotherAccount =
-    inject[PTEnrolmentOnAnotherAccount]
+  lazy val view: PTEnrolmentOnGGAccountLoggedInGG =
+    inject[PTEnrolmentOnGGAccountLoggedInGG]
 
   object Selectors {
-    val heading = "govuk-heading-xl"
+    val heading = "govuk-heading-l"
     val body = "govuk-body"
     val summaryListRow = "govuk-summary-list__row"
     val summaryListKey = "govuk-summary-list__key"
@@ -133,13 +132,6 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
       "has the expected text" in {
         textElement.text shouldBe PTEnrolmentOtherAccountMesages.text1
       }
-      "contains a link to signin again" in {
-        documentWithSA
-          .getElementsByClass(Selectors.body)
-          .get(2)
-          .select("a")
-          .attr("href") shouldBe PTEnrolmentOtherAccountMesages.logOut
-      }
     }
     "contain a summary list" that {
       val summaryListRows = documentWithSA
@@ -199,82 +191,14 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
     }
     "contains a link for if userId not recognised" that {
       val textElement = documentWithSA
-        .getElementById("inset_text")
       "has the correct text" in {
-        textElement.text() shouldBe PTEnrolmentOtherAccountMesages.notMyUserId
+        documentWithSA.body.text() should include(PTEnrolmentOtherAccountMesages.notMyUserId)
       }
       "contains a link to report suspicious Id" in {
         textElement
-          .select("a")
-          .attr("href") shouldBe PTEnrolmentOtherAccountMesages.fraudReportingUrl
-      }
-    }
-
-    "contain self-assessment information" when {
-      "another account outside the session holds the PT enrolment session and also has access to SA" that {
-        val textElement = documentOtherAccountWithSA
-          .getElementsByClass(Selectors.body)
+          .select("a.govuk-link")
           .get(2)
-        "has the expected heading" in {
-          documentOtherAccountWithSA
-            .getElementsByClass(Selectors.saHeading)
-            .text() shouldBe PTEnrolmentOtherAccountMesages.saHeading
-        }
-        "has the expected text" in {
-          textElement.text() shouldBe PTEnrolmentOtherAccountMesages.saText
-        }
-        "has a link to log out" in {
-          textElement
-            .select("a")
-            .attr("href") shouldBe PTEnrolmentOtherAccountMesages.logOut
-        }
-      }
-      "the current account has SA (cred matches sa cred) but the PT enrolment is on another account" that {
-        val textElement = documentWithSA
-          .getElementsByClass(Selectors.body)
-          .get(2)
-        "has the expected heading" in {
-          documentWithSA
-            .getElementsByClass(Selectors.saHeading)
-            .text() shouldBe PTEnrolmentOtherAccountMesages.saHeading
-        }
-        "has the expected text" in {
-          textElement.text() shouldBe PTEnrolmentOtherAccountMesages.saText2
-        }
-        "has a link to logout" in {
-          textElement
-            .select("a")
-            .attr("href") shouldBe PTEnrolmentOtherAccountMesages.logOut
-        }
-      }
-
-      "the account in session has access to SA and has the PT enrolment" that {
-        val textElement = documentSignedInWithSA
-          .getElementsByClass(Selectors.body)
-          .get(2)
-        "has the expected heading" in {
-          documentWithSA
-            .getElementsByClass(Selectors.saHeading)
-            .text() shouldBe PTEnrolmentOtherAccountMesages.saHeading
-        }
-        "has the expected text" in {
-          textElement.text() shouldBe PTEnrolmentOtherAccountMesages.saText3
-        }
-        "has a link to self-assessment" in {
-          textElement
-            .select("a")
-            .attr("href") shouldBe routes.EnrolForSAController.enrolForSA.url
-        }
-      }
-    }
-    "not contain self-assessment information" when {
-      "the user does not have an SA enrolment on any associated accounts" in {
-        document
-          .getElementsByClass(Selectors.saHeading)
-          .size() shouldBe 0
-        document
-          .getElementsByClass(Selectors.body)
-          .size() shouldBe 2
+          .attr("href") should include(PTEnrolmentOtherAccountMesages.fraudReportingUrl)
       }
     }
   }

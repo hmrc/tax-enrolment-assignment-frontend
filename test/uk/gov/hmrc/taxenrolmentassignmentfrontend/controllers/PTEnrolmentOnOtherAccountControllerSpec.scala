@@ -33,7 +33,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrc
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnAnotherAccount
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnGGAccountLoggedInGG
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -64,8 +64,8 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
   lazy val controller: PTEnrolmentOnOtherAccountController =
     app.injector.instanceOf[PTEnrolmentOnOtherAccountController]
 
-  val view: PTEnrolmentOnAnotherAccount =
-    app.injector.instanceOf[PTEnrolmentOnAnotherAccount]
+  val view: PTEnrolmentOnGGAccountLoggedInGG =
+    app.injector.instanceOf[PTEnrolmentOnGGAccountLoggedInGG]
 
   "view" when {
     "the user with no SA has another account with PT enrolment" should {

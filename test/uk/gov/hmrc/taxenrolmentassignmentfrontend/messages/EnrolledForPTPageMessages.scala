@@ -20,11 +20,12 @@ object EnrolledForPTPageMessages extends BaseMessage {
   val title =
     "Only your current user ID can access your personal tax account from now on" + defaultTitleSuffix
   val heading =
-    "Only your current user ID can access your personal tax account from now on"
+    "Only this Government Gateway user ID can access your personal tax account from now on"
   val paragraphSA: String =
-    "You are currently signed in with the Government Gateway user ID ending with 3214. This is now the only user ID that can access your personal tax account. Please keep the details of this user ID safe. You also have access to Self Assessment with your current user ID. If you have any other Government Gateway user IDs, they will lose access to your personal tax account."
-  val paragraphNoSA: String =
-    "You are currently signed in with the Government Gateway user ID ending with 3214. This is now the only user ID that can access your personal tax account. Please keep the details of this user ID safe. If you have any other Government Gateway user IDs, they will lose access to your personal tax account."
+    "Use these sign in details to access your personal tax account and Self Assessment."
+  val paragraph: String =
+    "You are signed in with Government Gateway user ID ending with 3214."
+  val paragraph2: String = "Keep these details safe."
   val heading2: String =
     "What has happened to my other Government Gateway user IDs?"
   val button = "Continue"

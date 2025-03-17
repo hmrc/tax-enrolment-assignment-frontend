@@ -20,22 +20,20 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 object PTEnrolmentOtherAccountMesages extends BaseMessage {
 
   val title =
-    "We have found your personal tax account under a different Government Gateway user ID" + defaultTitleSuffix
+    "You cannot access your personal tax account" + defaultTitleSuffix
   val heading =
-    "We have found your personal tax account under a different Government Gateway user ID"
+    "You cannot access your personal tax account with this Government Gateway user ID"
   val text1 =
-    s"To protect your information, access to your personal tax account was limited to the user ID below, ending with $PT_USER_ID. You are currently signed in with the user ID ending with $USER_ID."
+    s"To protect your information, access to your personal tax account was limited to Government Gateway user ID:"
   val signoutUrl = "http://test/signout"
-  val notMyUserId = "The above user ID does not belong to me"
+  val notMyUserId = "This Government Gateway user ID is not mine"
   val fraudReportingUrl =
     "/protect-tax-info/no-pt-enrolment/contact-hmrc-pta"
-  val saHeading = "Access to Self Assessment"
-  val saText =
-    s"To access your Self Assessment you need to sign in again with user ID ending with $PT_USER_ID."
-  val saText2 =
-    "To access your Self Assessment sign in again with the above user ID."
-  val saText3 =
-    "The user ID you are currently signed in with can access Self Assessment."
-  val logOut = "/protect-tax-info/logout"
+  val signInGuidanceParagraph = "To access your personal tax account and Self Assessment:"
+  val signInGuidanceList1 =
+    "Sign out."
+  val signInGuidanceList2 = s"Sign in with Government Gateway user ID ending with ${accountDetailsWithPT.userId}."
+  val saHeading = "Self Assessment"
+  val saText = "You can use this Government Gateway user ID to access your Self Assessment."
 
 }

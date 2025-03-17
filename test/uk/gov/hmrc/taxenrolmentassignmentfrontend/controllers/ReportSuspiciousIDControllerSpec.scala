@@ -37,7 +37,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHa
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{REPORTED_FRAUD, USER_ASSIGNED_SA_ENROLMENT, accountDetailsForCredential}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.ReportSuspiciousID
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{ReportSuspiciousIDGateway}
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -67,7 +67,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
   lazy val controller: ReportSuspiciousIDController = app.injector.instanceOf[ReportSuspiciousIDController]
 
-  val view: ReportSuspiciousID = app.injector.instanceOf[ReportSuspiciousID]
+  val view: ReportSuspiciousIDGateway = app.injector.instanceOf[ReportSuspiciousIDGateway]
 
   "viewNoSA" when {
 

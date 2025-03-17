@@ -1,5 +1,6 @@
 [
     {
+        "identityProviderType": "SCP",
         "groupId": "1B958C76-8F5B-406A-B2D6-CB3B7D92E063",
         "affinityGroup": "Individual",
         "nino": "JS347435A",
@@ -59,6 +60,7 @@
         ]
     },
     {
+        "identityProviderType": "SCP",
         "groupId": "A707606F-BF9C-4469-8234-F72D97E27278",
         "affinityGroup": "Individual",
         "nino": "JS347435A",

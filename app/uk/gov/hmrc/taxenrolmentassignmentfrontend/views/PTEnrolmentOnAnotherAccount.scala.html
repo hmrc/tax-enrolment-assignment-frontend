@@ -42,11 +42,6 @@ summaryRow: CreateSummaryRow
 
     @if(ptEnrolmentOtherAccountViewModel.currentAccountDetails.identityProviderType.toString == "ONE_LOGIN"){
         <h1 class="govuk-heading-l">@messages("ptEnrolmentOnOtherAccount.one_login.heading")</h1>
-    } else {
-        <h1 class="govuk-heading-l">@messages("ptEnrolmentOnOtherAccount.gg.heading")</h1>
-    }
-
-    @if(ptEnrolmentOtherAccountViewModel.ptAccountDetails.identityProviderType.toString == "ONE_LOGIN"){
         @if(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.currentAccountDetails.userId)){
             <h2 class="govuk-heading-m">@messages("ptEnrolmentOnOtherAccount.saHeading")</h2>
             <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.one_login.saText")
@@ -54,6 +49,18 @@ summaryRow: CreateSummaryRow
             </p>
             <h2 class="govuk-heading-m">@messages("ptEnrolmentOnOtherAccount.ptaHeading")</h2>
         }
+    } else {
+        <h1 class="govuk-heading-l">@messages("ptEnrolmentOnOtherAccount.gg.heading")</h1>
+        @if(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.currentAccountDetails.userId)){
+            <h2 class="govuk-heading-m">@messages("ptEnrolmentOnOtherAccount.saHeading")</h2>
+            <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.gg.saText")
+                <a href="@routes.EnrolForSAController.enrolForSA" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.saLink")</a>.
+            </p>
+            <h2 class="govuk-heading-m">@messages("ptEnrolmentOnOtherAccount.ptaHeading")</h2>
+        }
+    }
+
+    @if(ptEnrolmentOtherAccountViewModel.ptAccountDetails.identityProviderType.toString == "ONE_LOGIN"){
         <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.one_login.paragraph1")</p>
         <dl class="govuk-summary-list">
             @if(ptEnrolmentOtherAccountViewModel.ptAccountDetails.emailDecrypted.isDefined) {
@@ -68,13 +75,6 @@ summaryRow: CreateSummaryRow
             <a class = "govuk-link" href=@routes.ReportSuspiciousIDController.viewNoSA>@messages("ptEnrolmentOnOtherAccount.one_login.linkText")</a>
         </p>
     } else {
-        @if(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.currentAccountDetails.userId)){
-            <h2 class="govuk-heading-m">@messages("ptEnrolmentOnOtherAccount.saHeading")</h2>
-            <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.gg.saText")
-                <a href="@routes.EnrolForSAController.enrolForSA" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.saLink")</a>.
-            </p>
-            <h2 class="govuk-heading-m">@messages("ptEnrolmentOnOtherAccount.ptaHeading")</h2>
-        }
         <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.gg.paragraph1")</p>
         <dl class="govuk-summary-list">
             @summaryRow("common.userId", ptEnrolmentOtherAccountViewModel.ptAccountDetails.userId)

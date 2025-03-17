@@ -30,9 +30,7 @@
 @layout(
     pageTitle = Some(messages("ReportSuspiciousID.title")), backLinkEnabled = true) {
 
-    <h1 class="govuk-heading-xl">@{
-        messages(s"ReportSuspiciousID.heading")
-    }</h1>
+    <h1 class="govuk-heading-l">@messages(s"ReportSuspiciousID.heading")</h1>
 
     <p class="govuk-body">
         @messages("ReportSuspiciousID.gg.text1")
@@ -48,6 +46,6 @@
     </dl>
 
     <p class="govuk-body">
-        <a href="@appConfig.contactGGFraud" class="govuk-link--no-visited-state" rel="noreferrer noopener" target="_blank">@messages("ReportSuspiciousID.gg.linkText")</a> @Html(messages("ReportSuspiciousID.gg.postLinkText"))
+        <a href="@appConfig.contactGGFraud" id="reportLink" class="govuk-link--no-visited-state" rel="noreferrer noopener" target="_blank">@messages("ReportSuspiciousID.gg.linkText")</a> @Html(messages("ReportSuspiciousID.gg.postLinkText"))
     </p>
 }

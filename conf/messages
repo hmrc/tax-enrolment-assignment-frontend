@@ -12,13 +12,13 @@ mfaDetails.text = Text message
 enrolledForPT.title = Only your current user ID can access your personal tax account from now on
 enrolledForPT.heading = Only your current user ID can access your personal tax account from now on
 
-enrolledForPT.gg.heading = Only your current user ID can access your personal tax account from now on
+enrolledForPT.gg.heading = Only this Government Gateway user ID can access your personal tax account from now on
 enrolledForPT.one_login.heading = Only this GOV.UK One Login can access your personal tax account from now on
 
-enrolledForPT.gg.paragraph1 = You are currently signed in with the Government Gateway user ID ending with {0}.
+enrolledForPT.gg.paragraph1 = You are signed in with Government Gateway user ID ending with {0}.
 enrolledForPT.one_login.paragraph1 = You are signed in with:
 
-enrolledForPT.paragraphSA = Use these sign in details to access your personal tax account, or Self Assessment.
+enrolledForPT.paragraphSA = Use these sign in details to access your personal tax account and Self Assessment.
 
 enrolledForPT.paragraph2 = Keep these details safe.
 
@@ -110,14 +110,18 @@ enrolledForPTWithSAOnOtherAccount.continue = Continue to personal tax
 timedout.title = For your security, we signed you out
 timedout.heading = For your security, we signed you out
 timedout.signin = Sign in
-ptEnrolmentOnOtherAccount.title = We have found your personal tax account under a different Government Gateway user ID
+ptEnrolmentOnOtherAccount.title = You cannot access your personal tax account
 ptEnrolmentOnOtherAccount.heading = We have found your personal tax account under a different Government Gateway user ID
 
-ptEnrolmentOnOtherAccount.gg.heading = You cannot access your personal tax account with these sign in details
+ptEnrolmentOnOtherAccount.generic.heading = You cannot access your personal tax account with these sign in details
+ptEnrolmentOnOtherAccount.gg.heading = You cannot access your personal tax account with this Government Gateway user ID
 ptEnrolmentOnOtherAccount.one_login.heading = You cannot access your personal tax account with this GOV.UK One Login
 
-ptEnrolmentOnOtherAccount.gg.paragraph1 = To protect your information, access to your personal tax account and Self Assessment was limited to Government Gateway user ID:
-ptEnrolmentOnOtherAccount.one_login.paragraph1 = To protect your information, access to your personal tax account and Self Assessment was limited to GOV.UK One Login:
+ptEnrolmentOnOtherAccount.ggSA.paragraph1 = To protect your information, access to your personal tax account and Self Assessment was limited to Government Gateway user ID:
+ptEnrolmentOnOtherAccount.one_loginSA.paragraph1 = To protect your information, access to your personal tax account and Self Assessment was limited to GOV.UK One Login:
+
+ptEnrolmentOnOtherAccount.ggNoSA.paragraph1 = To protect your information, access to your personal tax account was limited to Government Gateway user ID:
+ptEnrolmentOnOtherAccount.one_loginNoSA.paragraph1 = To protect your information, access to your personal tax account was limited to GOV.UK One Login:
 
 ptEnrolmentOnOtherAccount.gg.linkText = This Government Gateway user ID is not mine
 ptEnrolmentOnOtherAccount.one_login.linkText = This GOV.UK One Login is not mine

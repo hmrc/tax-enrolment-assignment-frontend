@@ -1,25 +1,25 @@
 [
     {
         "identityProviderType": "SCP",
-        "groupId": "7790CEF8-9226-4667-91CC-BE383AC7FF08",
+        "groupId": "6949B2D7-BC9B-4E12-8411-3089E6148F10",
         "affinityGroup": "Individual",
-        "nino": "JS563435A",
+        "nino": "JS271436A",
         "user": {
-            "credId": "7705457966903707",
+            "credId": "9308587656991702",
             "name": "Firstname Surname",
-            "email": "email12@test.com"
+            "email": "email8@test.com"
         },
         "enrolments": [
             {
                 "serviceName": "HMRC-PT",
                 "identifiers": {
                     "key": "NINO",
-                    "value": "JS563435A"
+                    "value": "JS271436A"
                 },
                 "verifiers": [
                     {
                         "key": "NINO1",
-                        "value": "JS563435A"
+                        "value": "JS271436A"
                     }
                 ],
                 "enrolmentFriendlyName": "HMRC-PT Enrolment",
@@ -36,14 +36,14 @@
         ]
     },
     {
-        "identityProviderType": "SCP",
-        "groupId": "B21EDAE7-4112-4EF0-A288-EDD532E37057",
+        "identityProviderType": "ONE_LOGIN",
+        "groupId": "74A2B44D-BAFC-4D1C-8F62-F54D68C0A94B",
         "affinityGroup": "Individual",
-        "nino": "JS563435A",
+        "nino": "JS271436A",
         "user": {
-            "credId": "1952271597949868",
+            "credId": "4334822488849223",
             "name": "Firstname Surname",
-            "email": "email10@test.com"
+            "email": "email9@test.com"
         },
         "additionalFactors": [
             {

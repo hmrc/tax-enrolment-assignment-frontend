@@ -1,0 +1,69 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
+@import uk.gov.hmrc.govukfrontend.views.html.components._
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.helpers.CreateSummaryRow
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.models._
+
+@this(
+layout: Layout,
+summaryRow: CreateSummaryRow
+)
+
+@(ptEnrolmentOtherAccountViewModel: PTEnrolmentOnOtherAccount)(implicit request: Request[AnyRef], messages: Messages)
+
+@signInGuidance(bullet2: String) = {
+    @if(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.ptAccountDetails.userId)){
+        <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.sa.signInParagraph")</p>
+    } else {
+        <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.nonSa.signInParagraph")</p>
+    }
+        <ol class="govuk-list govuk-list--number">
+            <li>@messages("ptEnrolmentOnOtherAccount.sa.signInParagraph")</li>
+            <li>@Html(bullet2)</li>
+        </ol>
+}
+
+@layout(pageTitle = Some(messages("ptEnrolmentOnOtherAccount.title")), None) {
+
+    <h1 class="govuk-heading-l">@messages("ptEnrolmentOnOtherAccount.generic.heading")</h1>
+    @if(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.currentAccountDetails.userId)){
+        <h2 class="govuk-heading-m">@messages("ptEnrolmentOnOtherAccount.saHeading")</h2>
+        <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.gg.saText")
+            <a href="@routes.EnrolForSAController.enrolForSA" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.saLink")</a>.
+        </p>
+        <h2 class="govuk-heading-m">@messages("ptEnrolmentOnOtherAccount.ptaHeading")</h2>
+        <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.one_loginSA.paragraph1")</p>
+    } else {
+        <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.one_loginNoSA.paragraph1")</p>
+    }
+    <dl class="govuk-summary-list">
+        @if(ptEnrolmentOtherAccountViewModel.ptAccountDetails.emailDecrypted.isDefined) {
+            @summaryRow("ptEnrolmentOnOtherAccount.email", ptEnrolmentOtherAccountViewModel.ptAccountDetails.emailDecrypted.get)
+        }
+        @summaryRow("ptEnrolmentOnOtherAccount.lastLoginDate", ptEnrolmentOtherAccountViewModel.ptAccountDetails.lastLoginDate.getOrElse(""))
+        @for(mfaDetail <- ptEnrolmentOtherAccountViewModel.ptAccountDetails.mfaDetails) {
+            @summaryRow(mfaDetail.factorNameKey, mfaDetail.factorValue)
+        }
+    </dl>
+    <p class="govuk-body">
+        <a class = "govuk-link" href=@routes.ReportSuspiciousIDController.viewNoSA>@messages("ptEnrolmentOnOtherAccount.one_login.linkText")</a>
+    </p>
+
+    @signInGuidance(messages("ptEnrolmentOnOtherAccount.one_login.signIn", ptEnrolmentOtherAccountViewModel.ptAccountDetails.emailDecrypted.get))
+
+}

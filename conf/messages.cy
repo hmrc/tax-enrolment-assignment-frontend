@@ -11,9 +11,16 @@ mfaDetails.voice = Rhif ffôn
 mfaDetails.text = Neges destun
 enrolledForPT.title = Dim ond eich ID cyfredol all gael mynediad at eich cyfrif treth personol o hyn allan
 enrolledForPT.heading = Dim ond eich ID cyfredol all gael mynediad at eich cyfrif treth personol o hyn allan
-enrolledForPT.paragraph1 = Ar hyn o bryd, rydych wedi mewngofnodi gyda’ch ID ar gyfer Porth y Llywodraeth, sy’n gorffen gyda {0}.
-enrolledForPT.paragraph2 = Dyma’r unig ID a all gael mynediad at eich cyfrif treth personol erbyn hyn. Cadwch fanylion y ID hwn yn ddiogel.
-enrolledForPT.paragraphSA = Mae gennych hefyd fynediad at Hunanasesiad gyda’ch ID cyfredol.
+enrolledForPT.gg.heading = Only this Government Gateway user ID can access your personal tax account from now on
+enrolledForPT.one_login.heading = Only this GOV.UK One Login can access your personal tax account from now on
+
+enrolledForPT.gg.paragraph1 = You are signed in with Government Gateway user ID ending with {0}.
+enrolledForPT.one_login.paragraph1 = You are signed in with:
+
+enrolledForPT.paragraphSA = Use these sign in details to access your personal tax account and Self Assessment.
+
+enrolledForPT.paragraph2 = Keep these details safe.
+
 enrolledForPT.heading2 = Beth sydd wedi digwydd i’m Dynodyddion Defnyddiwr (ID) eraill ar gyfer Porth y Llywodraeth?
 enrolledForPT.paragraph3 = Os oes gennych unrhyw Ddynodyddion Defnyddiwr (ID) eraill ar gyfer Porth y Llywodraeth, byddant yn colli mynediad at eich cyfrif treth personol.
 enrolledForPT.continue = Yn eich blaen
@@ -22,7 +29,12 @@ ReportSuspiciousID.heading = Mae angen i chi gysylltu â ni
 ReportSuspiciousID.userId = Dynodydd Defnyddiwr (ID)
 ReportSuspiciousID.email = E-bost
 ReportSuspiciousID.lastLoginDate = Mewngofnodwyd ddiwethaf
-ReportSuspiciousID.text1 = Mae hyn er mwyn i ni allu ymchwili’rr ID defnyddiwr hwn.
+ReportSuspiciousID.gg.text1 = Take a note of this Government Gateway user ID as this screen will time out after 15 minutes.
+ReportSuspiciousID.one_login.text1 = Take a note of this GOV.UK One Login as this screen will time out after 15 minutes.
+
+ReportSuspiciousID.gg.linkText = Contact technical support with HMRC online services (opens in new tab)
+ReportSuspiciousID.gg.postLinkText = and quote <strong>PTA951</strong>
+ReportSuspiciousID.one_login.linkText = Contact GOV.UK One Login (opens in new tab)
 ReportSuspiciousID.text2 = Rydym yn argymell eich bod yn nodi’r ID a’r cyfeiriad e-bost isod oherwydd bydd y sgrin yn diflannu ar ôl 15 munud.
 ReportSuspiciousID.telephone.title = Ffôn:
 ReportSuspiciousID.telephone.number = 0300 200 1900
@@ -99,9 +111,33 @@ timedout.heading = Er eich diogelwch, gwnaethom eich allgofnodi
 timedout.signin = Mewngofnodi
 ptEnrolmentOnOtherAccount.title = Rydym wedi dod o hyd i’ch cyfrif treth personol o dan ID gwahanol ar gyfer Porth y Llywodraeth
 ptEnrolmentOnOtherAccount.heading = Rydym wedi dod o hyd i’ch cyfrif treth personol o dan ID gwahanol ar gyfer Porth y Llywodraeth
-ptEnrolmentOnOtherAccount.paragraph1 = Er mwyn diogelu’ch gwybodaeth, cafodd mynediad at eich cyfrif treth personol ei gyfyngu i’r ID isod, sy’n gorffen gyda {0}.
-ptEnrolmentOnOtherAccount.paragraph2 = Ar hyn o bryd, rydych wedi mewngofnodi gyda’r ID sy’n gorffen gyda {0}.
-ptEnrolmentOnOtherAccount.linkText = Nid yw’r ID uchod yn perthyn i mi
+ptEnrolmentOnOtherAccount.generic.heading = You cannot access your personal tax account with these sign in details
+ptEnrolmentOnOtherAccount.gg.heading = You cannot access your personal tax account with this Government Gateway user ID
+ptEnrolmentOnOtherAccount.one_login.heading = You cannot access your personal tax account with this GOV.UK One Login
+
+ptEnrolmentOnOtherAccount.ggSA.paragraph1 = To protect your information, access to your personal tax account and Self Assessment was limited to Government Gateway user ID:
+ptEnrolmentOnOtherAccount.one_loginSA.paragraph1 = To protect your information, access to your personal tax account and Self Assessment was limited to GOV.UK One Login:
+
+ptEnrolmentOnOtherAccount.ggNoSA.paragraph1 = To protect your information, access to your personal tax account was limited to Government Gateway user ID:
+ptEnrolmentOnOtherAccount.one_loginNoSA.paragraph1 = To protect your information, access to your personal tax account was limited to GOV.UK One Login:
+
+ptEnrolmentOnOtherAccount.gg.linkText = This Government Gateway user ID is not mine
+ptEnrolmentOnOtherAccount.one_login.linkText = This GOV.UK One Login is not mine
+
+ptEnrolmentOnOtherAccount.saHeading = Self Assessment
+ptEnrolmentOnOtherAccount.ptaHeading = Personal tax account
+
+ptEnrolmentOnOtherAccount.gg.saText = You can use this Government Gateway user ID to
+ptEnrolmentOnOtherAccount.one_login.saText = You can use this GOV.UK One Login to
+ptEnrolmentOnOtherAccount.saLink = access your Self Assessment
+
+ptEnrolmentOnOtherAccount.sa.signInParagraph = To access your personal tax account and Self Assessment:
+ptEnrolmentOnOtherAccount.nonSa.signInParagraph = To access your personal tax account:
+
+ptEnrolmentOnOtherAccount.gg.signIn = Sign in with Government Gateway user ID ending with <strong>{0}</strong>
+ptEnrolmentOnOtherAccount.one_login.signIn = Sign in with GOV.UK One Login email address <strong>{0}</strong>
+
+ptEnrolmentOnOtherAccount.text1 = To access your personal tax account and Self Assessment:
 ptEnrolmentOnOtherAccount.text1 = I gael mynediad at eich gwybodaeth treth bersonol, mae’n rhaid i chi
 ptEnrolmentOnOtherAccount.signInAgain = fewngofnodi eto
 ptEnrolmentOnOtherAccount.text2 =  gyda’r ID canlynol:
@@ -109,9 +145,4 @@ ptEnrolmentOnOtherAccount.userId = Dynodydd Defnyddiwr (ID)
 ptEnrolmentOnOtherAccount.email =  E-bost
 ptEnrolmentOnOtherAccount.lastLoginDate = Mewngofnodwyd ddiwethaf
 ptEnrolmentOnOtherAccount.saHeading = Cael mynediad at Hunanasesiad
-ptEnrolmentOnOtherAccount.saText1 = I gael mynediad at eich Hunanasesiad
-ptEnrolmentOnOtherAccount.saText2 = gyda’r ID uchod.
-ptEnrolmentOnOtherAccount.saText3 = Gall yr ID yr ydych wedi mewngofnodi gydag ef ar hyn o bryd
 ptEnrolmentOnOtherAccount.saLink = gael mynediad at Hunanasesiad
-ptEnrolmentOnOtherAccount.saText4 = I gael mynediad at eich Hunanasesiad mae angen i chi
-ptEnrolmentOnOtherAccount.saText5 = gyda’r ID sy’n gorffen gyda {0}.

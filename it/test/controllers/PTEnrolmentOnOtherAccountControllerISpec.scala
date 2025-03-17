@@ -78,110 +78,111 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
       }
     }
 
-//    "the signed in user has SA enrolment and a PT enrolment on another account" should {
-//      s"render the pt on another account page" in new DataAndMockSetup {
-//        saveDataToCache(optSAEnrolledCredential = None)
-//        stubAuthoriseSuccess(true)
-//        stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
-//        stubUserGroupSearchSuccess(
-//          CREDENTIAL_ID_2,
-//          usersGroupSearchResponsePTEnrolment(USER_ID)
-//        )
-//
-//        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/protect-tax-info" + urlPath)
-//          .withSession(xAuthToken, xSessionId)
-//        val result: Future[Result] = route(app, request).get
-//        val page: Document = Jsoup.parse(contentAsString(result))
-//
-//        status(result) shouldBe OK
-//        page.title should include(PTEnrolmentOtherAccountMesages.title)
-//        page
-//          .getElementsByClass("govuk-heading-m")
-//          .text() shouldBe PTEnrolmentOtherAccountMesages.saHeading
-//
-//        page
-//          .getElementsByClass("govuk-body")
-//          .asScala
-//          .toList
-//          .map(_.text()) should contain(
-//          PTEnrolmentOtherAccountMesages.saText2
-//        )
-//
-//        val expectedAuditEvent: AuditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-//          accountDetailsUserFriendly(CREDENTIAL_ID_2, "1234")
-//        )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
-//
-//        verifyAuditEventSent(expectedAuditEvent)
-//
-//      }
-//    }
+    "the signed in user has SA enrolment and a PT enrolment on another account" should {
+      s"render the pt on another account page" in new DataAndMockSetup {
+        saveDataToCache(optSAEnrolledCredential = None)
+        stubAuthoriseSuccess(true)
+        stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
+        stubUserGroupSearchSuccess(
+          CREDENTIAL_ID_2,
+          usersGroupSearchResponsePTEnrolment(USER_ID)
+        )
 
-//    "the user signed in has SA enrolment and PT enrolment on two other separate accounts" should {
-//      s"render the pt on another account page" in new DataAndMockSetup {
-//        saveDataToCache(optSAEnrolledCredential = Some(CREDENTIAL_ID_3))
-//        stubAuthoriseSuccess()
-//        stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
-//        stubUserGroupSearchSuccess(
-//          CREDENTIAL_ID_2,
-//          usersGroupSearchResponsePTEnrolment(USER_ID)
-//        )
-//        stubUserGroupSearchSuccess(
-//          CREDENTIAL_ID_3,
-//          usersGroupSearchResponseSAEnrolment
-//        )
-//
-//        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/protect-tax-info" + urlPath)
-//          .withSession(xAuthToken, xSessionId)
-//        val result: Future[Result] = route(app, request).get
-//        val page: Document = Jsoup.parse(contentAsString(result))
-//
-//        status(result) shouldBe OK
-//        page.title should include(PTEnrolmentOtherAccountMesages.title)
-//        page
-//          .getElementsByClass("govuk-heading-m")
-//          .text() shouldBe PTEnrolmentOtherAccountMesages.saHeading
-//        page
-//          .getElementsByClass("govuk-body")
-//          .asScala
-//          .toList
-//          .map(_.text()) should contain(PTEnrolmentOtherAccountMesages.saText)
-//
-//        val expectedAuditEvent: AuditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-//          accountDetailsUserFriendly(CREDENTIAL_ID_2)
-//        )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
-//
-//        verifyAuditEventSent(expectedAuditEvent)
-//
-//      }
-//    }
-//
-//    "the signed in user has no SA on any accounts but has PT enrolment on another account" should {
-//      s"render the pt on another account page" in new DataAndMockSetup {
-//        saveDataToCache(optSAEnrolledCredential = None)
-//        stubAuthoriseSuccess()
-//        stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
-//        stubUserGroupSearchSuccess(
-//          CREDENTIAL_ID_2,
-//          usersGroupSearchResponsePTEnrolment(USER_ID)
-//        )
-//
-//        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/protect-tax-info" + urlPath)
-//          .withSession(xAuthToken, xSessionId)
-//        val result: Future[Result] = route(app, request).get
-//        val page: Document = Jsoup.parse(contentAsString(result))
-//
-//        status(result) shouldBe OK
-//        page.title should include(PTEnrolmentOtherAccountMesages.title)
-//        page.getElementsByClass("govuk-heading-m").text().isEmpty
-//
-//        val expectedAuditEvent: AuditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-//          accountDetailsUserFriendly(CREDENTIAL_ID_2)
-//        )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
-//
-//        verifyAuditEventSent(expectedAuditEvent)
-//
-//      }
-//    }
+        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/protect-tax-info" + urlPath)
+          .withSession(xAuthToken, xSessionId)
+        val result: Future[Result] = route(app, request).get
+        val page: Document = Jsoup.parse(contentAsString(result))
+
+        status(result) shouldBe OK
+        page.title should include(PTEnrolmentOtherAccountMesages.title)
+        page
+          .getElementsByClass("govuk-heading-m")
+          .get(0)
+          .text() shouldBe PTEnrolmentOtherAccountMesages.saHeading
+
+        page
+          .getElementsByClass("govuk-body")
+          .asScala
+          .toList
+          .map(_.text()) should contain(
+          PTEnrolmentOtherAccountMesages.saText2
+        )
+
+        val expectedAuditEvent: AuditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
+          accountDetailsUserFriendly(CREDENTIAL_ID_2, "1234")
+        )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
+
+        verifyAuditEventSent(expectedAuditEvent)
+
+      }
+    }
+
+    "the user signed in has SA enrolment and PT enrolment on two other separate accounts" should {
+      s"render the pt on another account page" in new DataAndMockSetup {
+        saveDataToCache(optSAEnrolledCredential = Some(CREDENTIAL_ID_3))
+        stubAuthoriseSuccess()
+        stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
+        stubUserGroupSearchSuccess(
+          CREDENTIAL_ID_2,
+          usersGroupSearchResponsePTEnrolment(USER_ID)
+        )
+        stubUserGroupSearchSuccess(
+          CREDENTIAL_ID_3,
+          usersGroupSearchResponseSAEnrolment
+        )
+
+        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/protect-tax-info" + urlPath)
+          .withSession(xAuthToken, xSessionId)
+        val result: Future[Result] = route(app, request).get
+        val page: Document = Jsoup.parse(contentAsString(result))
+
+        status(result) shouldBe OK
+        page.title should include(PTEnrolmentOtherAccountMesages.title)
+        page
+          .getElementsByClass("govuk-heading-m")
+          .text() shouldBe PTEnrolmentOtherAccountMesages.saHeading
+        page
+          .getElementsByClass("govuk-body")
+          .asScala
+          .toList
+          .map(_.text()) should contain(PTEnrolmentOtherAccountMesages.saText)
+
+        val expectedAuditEvent: AuditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
+          accountDetailsUserFriendly(CREDENTIAL_ID_2)
+        )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
+
+        verifyAuditEventSent(expectedAuditEvent)
+
+      }
+    }
+
+    "the signed in user has no SA on any accounts but has PT enrolment on another account" should {
+      s"render the pt on another account page" in new DataAndMockSetup {
+        saveDataToCache(optSAEnrolledCredential = None)
+        stubAuthoriseSuccess()
+        stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
+        stubUserGroupSearchSuccess(
+          CREDENTIAL_ID_2,
+          usersGroupSearchResponsePTEnrolment(USER_ID)
+        )
+
+        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/protect-tax-info" + urlPath)
+          .withSession(xAuthToken, xSessionId)
+        val result: Future[Result] = route(app, request).get
+        val page: Document = Jsoup.parse(contentAsString(result))
+
+        status(result) shouldBe OK
+        page.title should include(PTEnrolmentOtherAccountMesages.title)
+        page.getElementsByClass("govuk-heading-m").text().isEmpty
+
+        val expectedAuditEvent: AuditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
+          accountDetailsUserFriendly(CREDENTIAL_ID_2)
+        )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
+
+        verifyAuditEventSent(expectedAuditEvent)
+
+      }
+    }
 
     List(
       PT_ASSIGNED_TO_CURRENT_USER,

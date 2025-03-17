@@ -47,6 +47,8 @@ summaryRow: CreateSummaryRow
             <a href="@routes.EnrolForSAController.enrolForSA" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.saLink")</a>.
         </p>
         <h2 class="govuk-heading-m">@messages("ptEnrolmentOnOtherAccount.ptaHeading")</h2>
+    }
+    @if(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.ptAccountDetails.userId)){
         <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.ggSA.paragraph1")</p>
     } else {
         <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.ggNoSA.paragraph1")</p>

@@ -18,20 +18,21 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models
 
 object TestMocks {
   val mocks: List[(String, String)] = List(
-    "GG Account with No Enrolments, OL with SA Enrolment"                            -> "GGAccountWithNoEnrolmentsOneLoginAccountWithSAEnrolment",
-    "GG Account with PT Enrolment, OL with SA Enrolment"                             -> "GGAccountWithPTEnrolmentOneLoginAccountWithSAEnrolment",
-    "GG Account with SA Enrolment, OL with PT Enrolment"                             -> "GGAccountWithSAEnrolmentOneLoginAccountWithPTEnrolment",
-    "GG Account with PT Enrolment, OL with No Enrolment"                             -> "GGAccountWithPTEnrolmentOneLoginAccountWithNoEnrolment",
-    "GG Account with PT and SA Enrolment, OL with No Enrolment"                      -> "GGAccountWithPTAndSAEnrolmentOneLoginAccountWithNoEnrolment",
-    "GG Account with No Enrolment, OL with PT and SA Enrolment"                      -> "GGAccountWithNoEnrolmentOneLoginAccountWithPTAndSAEnrolment",
-    "Multiple Accounts: No Enrolments"                                               -> "multipleAccountsNoEnrolments",
-    "Multiple Accounts: One with PT and SA Enrolment"                                -> "multipleAccountsOneWithPTAndSAEnrolment",
-    "Multiple Accounts: One with PT Enrolment"                                       -> "multipleAccountsOneWithPTEnrolment",
-    "Multiple Accounts: One with PT Enrolment, another with SA Enrolment"            -> "multipleAccountsOneWithPTEnrolmentOtherWithSA",
-    "Multiple Accounts: One with PT Enrolment, one with SA Enrolment, one with none" -> "multipleAccountsOneWithPTEnrolmentOneWithSAOneWithNone",
-    "Multiple Accounts: One with SA Enrolment"                                       -> "multipleAccountsOneWithSAEnrolment",
-    "Single User: No enrolments"                                                     -> "singleUserNoEnrolments",
-    "Single User: SA Enrolments"                                                     -> "singleUserWithSAEnrolment",
-    "One Login Multiple Accounts: One with SA Enrolment"                             -> "OneLoginMultipleAccountsOneWithSAEnrolment"
+    "Scenario 3: GG Account with No Enrolments, OL with SA Enrolment"                    -> "GGAccountWithNoEnrolmentsOneLoginAccountWithSAEnrolment",
+    "Scenario 5: GG Account with PT and SA Enrolment, OL with No Enrolment"              -> "GGAccountWithPTAndSAEnrolmentOneLoginAccountWithNoEnrolment",
+    "Scenario 5: OL Multiple Accounts: One with PT and SA Enrolment"                     -> "OneLoginMultipleAccountsOneWithPTAndSAEnrolment",
+    "Scenario 5: GG Multiple Accounts: One with PT and SA Enrolment"                     -> "multipleAccountsOneWithPTAndSAEnrolment",
+    "Scenario 5: GG Account with No Enrolment, OL with PT and SA Enrolment"              -> "GGAccountWithNoEnrolmentOneLoginAccountWithPTAndSAEnrolment",
+    "Scenario 6: GG Account with PT Enrolment, OL with No Enrolment"                     -> "GGAccountWithPTEnrolmentOneLoginAccountWithNoEnrolment",
+    "Scenario 7: GG Account with PT Enrolment, OL with SA Enrolment"                     -> "GGAccountWithPTEnrolmentOneLoginAccountWithSAEnrolment",
+    "Scenario 7: GG Account with SA Enrolment, OL with PT Enrolment"                     -> "GGAccountWithSAEnrolmentOneLoginAccountWithPTEnrolment",
+    "Scenario 7: GG Multiple Accounts: One with PT Enrolment, another with SA Enrolment" -> "multipleAccountsOneWithPTEnrolmentOtherWithSA",
+    "Multiple Accounts: No Enrolments"                                                   -> "multipleAccountsNoEnrolments",
+    "Multiple Accounts: One with PT Enrolment"                                           -> "multipleAccountsOneWithPTEnrolment",
+    "Multiple Accounts: One with PT Enrolment, one with SA Enrolment, one with none"     -> "multipleAccountsOneWithPTEnrolmentOneWithSAOneWithNone",
+    "Multiple Accounts: One with SA Enrolment"                                           -> "multipleAccountsOneWithSAEnrolment",
+    "Single User: No enrolments"                                                         -> "singleUserNoEnrolments",
+    "Single User: SA Enrolments"                                                         -> "singleUserWithSAEnrolment",
+    "One Login Multiple Accounts: One with SA Enrolment"                                 -> "OneLoginMultipleAccountsOneWithSAEnrolment"
   )
 }

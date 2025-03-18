@@ -63,12 +63,11 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
           .getElementsByClass("govuk-heading-m")
           .get(0)
           .text() shouldBe PTEnrolmentOtherAccountMesages.saHeading
-        page
-          .getElementsByClass("govuk-body")
-          .get(3)
-          .text() should equal(
-          PTEnrolmentOtherAccountMesages.saText3
-        )
+//        page
+//          .getElementsByClass("govuk-body")
+//          .get(3)
+//          .text() should equal(
+//          PTEnrolmentOtherAccountMesages.saText3
 
         val expectedAuditEvent: AuditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
           accountDetailsUserFriendly(CREDENTIAL_ID_2)

@@ -134,6 +134,8 @@ ptEnrolmentOnOtherAccount.saLink = access your Self Assessment
 ptEnrolmentOnOtherAccount.sa.signInParagraph = To access your personal tax account and Self Assessment:
 ptEnrolmentOnOtherAccount.nonSa.signInParagraph = To access your personal tax account:
 
+ptEnrolmentOnOtherAccount.signOut = Sign out.
+
 ptEnrolmentOnOtherAccount.gg.signIn = Sign in with Government Gateway user ID ending with <strong>{0}</strong>
 ptEnrolmentOnOtherAccount.one_login.signIn = Sign in with GOV.UK One Login email address <strong>{0}</strong>
 

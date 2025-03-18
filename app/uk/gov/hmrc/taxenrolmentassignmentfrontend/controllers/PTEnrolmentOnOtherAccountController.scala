@@ -51,7 +51,7 @@ class PTEnrolmentOnOtherAccountController @Inject() (
       ptAccountDetails.currentAccountDetails.isIdentityProviderOneLogin,
       ptAccountDetails.ptAccountDetails.isIdentityProviderOneLogin
     ) match {
-      case (true, true) => ptOLLoggedInOLView(ptAccountDetails)
+      case (true, true)   => ptOLLoggedInOLView(ptAccountDetails)
       case (true, false)  => ptGGLoggedInOLView(ptAccountDetails)
       case (false, true)  => ptOLLoggedInGGView(ptAccountDetails)
       case (false, false) => ptGGLoggedInGGView(ptAccountDetails)

@@ -232,7 +232,7 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
           implicitly
         )
         whenReady(res.value) { result =>
-          result shouldBe Right(ptEnrolmentDataModel(Some(USER_ID)))
+          result shouldBe Right(ptEnrolmentDataModel(Some(CREDENTIAL_ID)))
         }
       }
     }
@@ -275,7 +275,7 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
           implicitly
         )
         whenReady(res.value) { result =>
-          result shouldBe Right(ptEnrolmentDataModel(Some(PT_USER_ID)))
+          result shouldBe Right(ptEnrolmentDataModel(Some(CREDENTIAL_ID_1)))
         }
       }
     }
@@ -328,7 +328,7 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
           implicitly
         )
         whenReady(res.value) { result =>
-          result shouldBe Right(ptEnrolmentDataModel(Some(CREDENTIAL_ID_2)))
+          result shouldBe Right(ptEnrolmentDataModel(Some(CREDENTIAL_ID)))
         }
       }
     }

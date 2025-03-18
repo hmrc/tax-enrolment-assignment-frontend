@@ -191,8 +191,26 @@ object TestData {
     mfaDetails = List(MFADetails("mfaDetails.text", "24321"))
   )
 
+  val accountDetailsOL: AccountDetails = AccountDetails(
+    identityProviderType = ONE_LOGIN,
+    credId = CREDENTIAL_ID,
+    userId = USER_ID,
+    email = Some(SensitiveString("email1@test.com")),
+    lastLoginDate = Some("2022-02-27T12:00:27Z"),
+    mfaDetails = List(MFADetails("mfaDetails.text", "24321"))
+  )
+
   val accountDetailsSA: AccountDetails = AccountDetails(
     identityProviderType = SCP,
+    credId = CREDENTIAL_ID_1,
+    userId = USER_ID,
+    email = Some(SensitiveString("email1@test.com")),
+    lastLoginDate = Some("27 February 2022 at 12:00PM"),
+    mfaDetails = List(MFADetails("mfaDetails.text", "24321"))
+  )
+
+  val accountDetailsSAOL: AccountDetails = AccountDetails(
+    identityProviderType = ONE_LOGIN,
     credId = CREDENTIAL_ID_1,
     userId = USER_ID,
     email = Some(SensitiveString("email1@test.com")),
@@ -210,11 +228,30 @@ object TestData {
     hasSA = Some(true)
   )
 
+  val accountDetailsWithPTOL: AccountDetails = AccountDetails(
+    identityProviderType = ONE_LOGIN,
+    credId = CREDENTIAL_ID_1,
+    userId = PT_USER_ID,
+    email = Some(SensitiveString("email.otherUser@test.com")),
+    lastLoginDate = Some("2022-02-27T12:00:27Z"),
+    mfaDetails = List(MFADetails("mfaDetails.text", "26543")),
+    hasSA = Some(true)
+  )
+
   def ptEnrolmentDataModel(
     saUserCred: Option[String],
     ptAccountDetails: AccountDetails = accountDetailsWithPT
   ): PTEnrolmentOnOtherAccount = PTEnrolmentOnOtherAccount(
     currentAccountDetails = accountDetails,
+    ptAccountDetails = ptAccountDetails,
+    saUserCred = saUserCred
+  )
+
+  def ptEnrolmentDataModelOL(
+    saUserCred: Option[String],
+    ptAccountDetails: AccountDetails = accountDetailsWithPTOL
+  ): PTEnrolmentOnOtherAccount = PTEnrolmentOnOtherAccount(
+    currentAccountDetails = accountDetailsOL,
     ptAccountDetails = ptAccountDetails,
     saUserCred = saUserCred
   )

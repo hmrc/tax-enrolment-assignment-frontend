@@ -58,10 +58,28 @@ multiplePTE.true.title = Tax Enrolment Assignment Frontend - Enrolment Present
 multiplePTE.true.heading = This user has no PT enrolment
 multiplePTE.true.text =  The current user does not have an assigned PT enrolment
 
-
-selfAssessmentInterrupt.title = Mae gennych fwy nag un Dynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth ar hyn o bryd
 selfAssessmentInterrupt.heading = Mae gennych fwy nag un Dynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth ar hyn o bryd
 selfAssessmentInterrupt.paragraph1 = Dim ond un Dynodydd Defnyddiwr ar gyfer Porth y Llywodraeth rydym yn argymell eich bod yn defnyddio er mwyn cael mynediad at eich gwybodaeth treth bersonol.
+selfAssessmentInterrupt.title = We are changing the way you access your personal tax account
+
+selfAssessmentInterrupt.mixed.heading = You currently have more than one way of signing in
+selfAssessmentInterrupt.gg.heading = You have more than one Government Gateway user ID
+selfAssessmentInterrupt.one_login.heading = You have more than one GOV.UK One Login
+
+selfAssessmentInterrupt.gg.paragraph1 = We recommend you use only one set of sign in details.
+selfAssessmentInterrupt.one_login.paragraph1 = We recommend you use only GOV.UK One Login to access your personal tax information.
+
+selfAssessmentInterrupt.paragraph2 = If you complete Self Assessment, you can choose:
+
+selfAssessmentInterrupt.mixed.listItem1 = the same sign in details to access both your personal tax account and Self Assessment
+selfAssessmentInterrupt.mixed.listItem2 = or separate sign in details for each
+
+selfAssessmentInterrupt.gg.listItem1 = the same Government Gateway user ID to access both your personal tax account and Self Assessment
+selfAssessmentInterrupt.gg.listItem2 = or separate Government Gateway user IDs for each
+
+selfAssessmentInterrupt.one_login.listItem1 = the same sign in details to access both your personal tax account and Self Assessment
+selfAssessmentInterrupt.one_login.listItem2 = or separate sign in details for each
+
 selfAssessmentInterrupt.paragraph2 = Os ydych yn llenwi Ffurflen Dreth Hunanasesiad, gallwch ddewis i wneud y canlynol:
 selfAssessmentInterrupt.listItem1 = defnyddio Dynodydd Defnyddiwr (ID) sengl ar gyfer Treth Bersonol a Hunanasesiad
 selfAssessmentInterrupt.listItem2 = defnyddio Dynodydd Defnyddiwr (ID) ar wahn ond ar gyfer Hunanasesiad
@@ -69,15 +87,22 @@ selfAssessmentInterrupt.paragraph3 = Ar y sgriniau nesaf, byddwn yn gofyn i chi 
 selfAssessmentInterrupt.continue = Yn eich blaen
 
 keepAccessToSA.title = A ydych am gadw mynediad at Hunanasesiad o’ch cyfrif treth personol?
-keepAccessToSA.heading = A ydych am gael un Dynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth ar gyfer gwybodaeth treth bersonol a Hunanasesiad?
+keepAccessToSA.mixed.heading = Do you want to use the same sign in details to access your personal tax account and Self Assessment?
+keepAccessToSA.gg.heading = Do you want to use the same Government Gateway user ID to access your personal tax account and Self Assessment?
+keepAccessToSA.one_login.heading = Do you want to use the same GOV.UK One Login to access your personal tax account and Self Assessment?
 keepAccessToSA.radio.yes = Iawn
 keepAccessToSA.radio.no = Na, rwyf am gadw’r Dynodyddion Defnyddiwr (ID) ar wahn
 keepAccessToSA.noSA = Nid wyf yn llenwi Ffurflenni Treth Hunanasesiad ar-lein
 keepAccessToSA.error.required = Dewiswch ’Iawn’ os ydych am gael un Dynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth ar gyfer gwybodaeth treth bersonol a Hunanasesiad
 
 signInAgain.title = Rydych wedi dewis cael Dynodydd Defnyddiwr (ID) unigol ar gyfer Porth y Llywodraeth
-signInAgain.heading1 = Rydych wedi dewis cael Dynodydd Defnyddiwr (ID) unigol ar gyfer Porth y Llywodraeth
-signInAgain.subheading = Dynodydd Defnyddiwr ar gyfer gwybodaeth treth bersonol a Hunanasesiad
+
+signInAgain.heading1 = You now need to sign in again
+signInAgain.gg.paragraph1 = You have chosen to use the same Government Gateway user ID to access both your personal tax account and Self Assessment.
+signInAgain.gg.paragraph2 = To complete this process, sign in with Government Gateway user ID:
+signInAgain.one_login.paragraph1 = You have chosen to use the same GOV.UK One Login to access both your personal tax account and Self Assessment.
+signInAgain.one_login.paragraph2 = To complete this process, sign in with GOV.UK One Login:
+
 signInAgain.userId = Dynodydd Defnyddiwr (ID)
 signInAgain.email =  E-bost
 signInAgain.lastLoginDate = Mewngofnodwyd ddiwethaf

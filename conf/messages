@@ -61,25 +61,48 @@ multiplePTE.true.title = Tax Enrolment Assignment Frontend - Enrolment Present
 multiplePTE.true.heading = This user has no PT enrolment
 multiplePTE.true.text =  The current user does not have an assigned PT enrolment
 
-selfAssessmentInterrupt.title = You currently have more than one Government Gateway user ID
-selfAssessmentInterrupt.heading = You currently have more than one Government Gateway user ID
-selfAssessmentInterrupt.paragraph1 = We recommend that you use only one Government Gateway user ID to access your personal tax information.
-selfAssessmentInterrupt.paragraph2 = If you complete Self Assessment, you can choose to:
-selfAssessmentInterrupt.listItem1 = use a single user ID for both personal tax and Self Assessment
-selfAssessmentInterrupt.listItem2 = use a separate user ID for Self Assessment only
+selfAssessmentInterrupt.title = We are changing the way you access your personal tax account
+
+selfAssessmentInterrupt.mixed.heading = You currently have more than one way of signing in
+selfAssessmentInterrupt.gg.heading = You have more than one Government Gateway user ID
+selfAssessmentInterrupt.one_login.heading = You have more than one GOV.UK One Login
+
+selfAssessmentInterrupt.gg.paragraph1 = We recommend you use only one set of sign in details.
+selfAssessmentInterrupt.one_login.paragraph1 = We recommend you use only GOV.UK One Login to access your personal tax information.
+
+selfAssessmentInterrupt.paragraph2 = If you complete Self Assessment, you can choose:
+
+selfAssessmentInterrupt.mixed.listItem1 = the same sign in details to access both your personal tax account and Self Assessment
+selfAssessmentInterrupt.mixed.listItem2 = or separate sign in details for each
+
+selfAssessmentInterrupt.gg.listItem1 = the same Government Gateway user ID to access both your personal tax account and Self Assessment
+selfAssessmentInterrupt.gg.listItem2 = or separate Government Gateway user IDs for each
+
+selfAssessmentInterrupt.one_login.listItem1 = the same sign in details to access both your personal tax account and Self Assessment
+selfAssessmentInterrupt.one_login.listItem2 = or separate sign in details for each
+
 selfAssessmentInterrupt.paragraph3 = On the next screens we will ask you which option you want to choose.
 selfAssessmentInterrupt.continue = Continue
 
 keepAccessToSA.title = Do you want to keep access to Self Assessment from your personal tax account?
-keepAccessToSA.heading = Do you want a single Government Gateway user ID for personal tax information and Self Assessment?
+
+keepAccessToSA.mixed.heading = Do you want to use the same sign in details to access your personal tax account and Self Assessment?
+keepAccessToSA.gg.heading = Do you want to use the same Government Gateway user ID to access your personal tax account and Self Assessment?
+keepAccessToSA.one_login.heading = Do you want to use the same GOV.UK One Login to access your personal tax account and Self Assessment?
+
 keepAccessToSA.radio.yes = Yes
 keepAccessToSA.radio.no = No, I want to keep them separate
 keepAccessToSA.noSA = I do not complete Self Assessment Online
 keepAccessToSA.error.required = Select yes if you want a single Government Gateway user ID for personal tax information and Self Assessment
 
 signInAgain.title = You have chosen to have a single Government Gateway user ID
-signInAgain.heading1 = You have chosen to have a single Government Gateway user ID
-signInAgain.subheading = User ID for personal tax information and Self Assessment
+signInAgain.heading1 = You now need to sign in again
+
+signInAgain.gg.paragraph1 = You have chosen to use the same Government Gateway user ID to access both your personal tax account and Self Assessment.
+signInAgain.gg.paragraph2 = To complete this process, sign in with Government Gateway user ID:
+signInAgain.one_login.paragraph1 = You have chosen to use the same GOV.UK One Login to access both your personal tax account and Self Assessment.
+signInAgain.one_login.paragraph2 = To complete this process, sign in with GOV.UK One Login:
+
 signInAgain.userId = User ID
 signInAgain.email =  Email
 signInAgain.lastLoginDate = Last signed in

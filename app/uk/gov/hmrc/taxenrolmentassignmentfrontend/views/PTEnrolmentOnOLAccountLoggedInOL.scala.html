@@ -27,7 +27,7 @@ summaryRow: CreateSummaryRow
 @(ptEnrolmentOtherAccountViewModel: PTEnrolmentOnOtherAccount)(implicit request: Request[AnyRef], messages: Messages)
 
 @signInGuidance(bullet2: String) = {
-    @if(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.ptAccountDetails.userId)){
+    @if(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.ptAccountDetails.credId)){
         <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.sa.signInParagraph")</p>
     } else {
         <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.nonSa.signInParagraph")</p>
@@ -41,7 +41,7 @@ summaryRow: CreateSummaryRow
 @layout(pageTitle = Some(messages("ptEnrolmentOnOtherAccount.title")), None) {
 
     <h1 class="govuk-heading-l">@messages("ptEnrolmentOnOtherAccount.one_login.heading")</h1>
-    @if(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.currentAccountDetails.userId)){
+    @if(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.currentAccountDetails.credId)){
         <h2 class="govuk-heading-m">@messages("ptEnrolmentOnOtherAccount.saHeading")</h2>
         <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.one_login.saText")
             <a href="@routes.EnrolForSAController.enrolForSA" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.saLink")</a>.
@@ -49,7 +49,7 @@ summaryRow: CreateSummaryRow
         <h2 class="govuk-heading-m">@messages("ptEnrolmentOnOtherAccount.ptaHeading")</h2>
     }
 
-    @if(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.ptAccountDetails.userId)){
+    @if(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.ptAccountDetails.credId)){
         <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.one_loginSA.paragraph1")</p>
     } else {
         <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.one_loginNoSA.paragraph1")</p>

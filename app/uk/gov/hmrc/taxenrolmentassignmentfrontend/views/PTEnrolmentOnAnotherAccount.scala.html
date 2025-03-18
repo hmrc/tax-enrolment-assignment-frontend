@@ -40,7 +40,7 @@ summaryRow: CreateSummaryRow
 
 @layout(pageTitle = Some(messages("ptEnrolmentOnOtherAccount.title")), None) {
 
-    @if(ptEnrolmentOtherAccountViewModel.currentAccountDetails.identityProviderType.toString == "ONE_LOGIN"){
+    @if(ptEnrolmentOtherAccountViewModel.currentAccountDetails.isIdentityProviderOneLogin){
         <h1 class="govuk-heading-l">@messages("ptEnrolmentOnOtherAccount.one_login.heading")</h1>
         @if(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.currentAccountDetails.userId)){
             <h2 class="govuk-heading-m">@messages("ptEnrolmentOnOtherAccount.saHeading")</h2>
@@ -60,7 +60,7 @@ summaryRow: CreateSummaryRow
         }
     }
 
-    @if(ptEnrolmentOtherAccountViewModel.ptAccountDetails.identityProviderType.toString == "ONE_LOGIN"){
+    @if(ptEnrolmentOtherAccountViewModel.ptAccountDetails.isIdentityProviderOneLogin){
         <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.one_login.paragraph1")</p>
         <dl class="govuk-summary-list">
             @if(ptEnrolmentOtherAccountViewModel.ptAccountDetails.emailDecrypted.isDefined) {
@@ -91,7 +91,7 @@ summaryRow: CreateSummaryRow
         </p>
     }
 
-    @if(ptEnrolmentOtherAccountViewModel.ptAccountDetails.identityProviderType.toString == "ONE_LOGIN") {
+    @if(ptEnrolmentOtherAccountViewModel.ptAccountDetails.isIdentityProviderOneLogin) {
         @signInGuidance(messages("ptEnrolmentOnOtherAccount.one_login.signIn", ptEnrolmentOtherAccountViewModel.ptAccountDetails.emailDecrypted.get))
     } else {
         @signInGuidance(messages("ptEnrolmentOnOtherAccount.gg.signIn", ptEnrolmentOtherAccountViewModel.ptAccountDetails.userId))

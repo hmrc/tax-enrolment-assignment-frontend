@@ -48,10 +48,10 @@ class PTEnrolmentOnOtherAccountController @Inject() (
     ptAccountDetails: PTEnrolmentOnOtherAccount
   )(implicit request: RequestWithUserDetailsFromSessionAndMongo[AnyContent]) =
     (
-      ptAccountDetails.currentAccountDetails.identityProviderType.toString.equals("ONE_LOGIN"),
-      ptAccountDetails.ptAccountDetails.identityProviderType.toString.equals("ONE_LOGIN")
+      ptAccountDetails.currentAccountDetails.isIdentityProviderOneLogin,
+      ptAccountDetails.ptAccountDetails.isIdentityProviderOneLogin
     ) match {
-      case (true, true)   => ptOLLoggedInOLView(ptAccountDetails)
+      case (true, true) => ptOLLoggedInOLView(ptAccountDetails)
       case (true, false)  => ptGGLoggedInOLView(ptAccountDetails)
       case (false, true)  => ptOLLoggedInGGView(ptAccountDetails)
       case (false, false) => ptGGLoggedInGGView(ptAccountDetails)
@@ -67,6 +67,7 @@ class PTEnrolmentOnOtherAccountController @Inject() (
           val accountFriendlyDetails = AccountDetails.userFriendlyAccountDetails(accountDetails.ptAccountDetails)
           auditHandler
             .audit(AuditEvent.auditPTEnrolmentOnOtherAccount(accountFriendlyDetails))
+          println("bbbbb " + accountDetails)
           Ok(
             pageHandler(
               PTEnrolmentOnOtherAccount(

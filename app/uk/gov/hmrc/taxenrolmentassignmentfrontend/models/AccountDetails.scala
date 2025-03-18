@@ -69,6 +69,8 @@ case class AccountDetails(
           .format(DateTimeFormatter.ofPattern("a"))
           .toUpperCase // <- Older versions of Java return this in lower case
     }
+
+  def isIdentityProviderOneLogin: Boolean = identityProviderType == ONE_LOGIN
 }
 
 object AccountDetails {

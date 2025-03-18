@@ -54,7 +54,7 @@ class ReportSuspiciousIDController @Inject() (
   private def identityProviderPage(
     accountDetails: AccountDetails
   )(implicit request: RequestWithUserDetailsFromSessionAndMongo[AnyContent]): Result =
-    if (accountDetails.identityProviderType.toString == "ONE_LOGIN") {
+    if (accountDetails.isIdentityProviderOneLogin) {
       Ok(reportSuspiciousIDOneLogin(accountDetails, appConfig))
     } else {
       Ok(reportSuspiciousIDGateway(accountDetails, appConfig))

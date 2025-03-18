@@ -26,7 +26,7 @@
 
 @layout(pageTitle = Some(messages("enrolledForPT.title"))) {
 
- @if(accountDetails.identityProviderType.toString == "ONE_LOGIN") {
+ @if(accountDetails.isIdentityProviderOneLogin) {
   <h1 class="govuk-heading-l">@messages("enrolledForPT.one_login.heading")</h1>
   <p class="govuk-body">@messages("enrolledForPT.one_login.paragraph1")</p>
   <p class="govuk-body"><strong>@accountDetails.emailDecrypted.get</strong></p>

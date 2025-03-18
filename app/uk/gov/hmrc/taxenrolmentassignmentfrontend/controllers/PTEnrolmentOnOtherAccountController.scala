@@ -67,7 +67,6 @@ class PTEnrolmentOnOtherAccountController @Inject() (
           val accountFriendlyDetails = AccountDetails.userFriendlyAccountDetails(accountDetails.ptAccountDetails)
           auditHandler
             .audit(AuditEvent.auditPTEnrolmentOnOtherAccount(accountFriendlyDetails))
-          println("bbbbb " + accountDetails)
           Ok(
             pageHandler(
               PTEnrolmentOnOtherAccount(

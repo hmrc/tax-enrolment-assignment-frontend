@@ -89,12 +89,12 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
           val page = Jsoup.parse(contentAsString(result))
           page
             .select("h1")
-            .text() shouldBe messages("selfAssessmentInterrupt.heading")
+            .text() shouldBe messages("selfAssessmentInterrupt.gg.heading")
 
           page
             .select("p")
             .get(0)
-            .text() shouldBe messages("selfAssessmentInterrupt.paragraph1")
+            .text() shouldBe messages("selfAssessmentInterrupt.gg.paragraph1")
 
           page
             .select("p")

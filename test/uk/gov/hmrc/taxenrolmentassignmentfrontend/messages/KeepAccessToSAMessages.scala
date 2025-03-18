@@ -22,7 +22,7 @@ object KeepAccessToSAMessages extends BaseMessage {
   val title: String =
     "Do you want to keep access to Self Assessment from your personal tax account?" + defaultTitleSuffix
   val heading =
-    "Do you want a single Government Gateway user ID for personal tax information and Self Assessment?"
+    "Do you want to use the same Government Gateway user ID to access your personal tax account and Self Assessment?"
   val radioYes = "Yes"
   val radioNo = "No, I want to keep them separate"
   val noSALink = "I do not complete Self Assessment Online"

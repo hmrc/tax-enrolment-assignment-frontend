@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.messages
 
 object EnrolledForPTPageMessages extends BaseMessage {
   val title =
-    "Only your current user ID can access your personal tax account from now on" + defaultTitleSuffix
+    "You can only access your personal tax account with one user ID from now on" + defaultTitleSuffix
   val heading =
     "Only this Government Gateway user ID can access your personal tax account from now on"
   val paragraphSA: String =

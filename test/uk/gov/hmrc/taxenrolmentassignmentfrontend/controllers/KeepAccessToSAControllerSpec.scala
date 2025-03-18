@@ -89,7 +89,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
         val page = Jsoup
           .parse(contentAsString(result))
 
-        page.getElementsByTag("h1").text() shouldBe messages("keepAccessToSA.heading")
+        page.getElementsByTag("h1").text() shouldBe messages("keepAccessToSA.gg.heading")
         val radioInputs = page.getElementsByClass("govuk-radios__input")
         radioInputs.size() shouldBe 2
         radioInputs.get(0).attr("value") shouldBe "yes"
@@ -121,7 +121,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
         val page = Jsoup
           .parse(contentAsString(result))
 
-        page.getElementsByTag("h1").text() shouldBe messages("keepAccessToSA.heading")
+        page.getElementsByTag("h1").text() shouldBe messages("keepAccessToSA.gg.heading")
         val radioInputs = page.getElementsByClass("govuk-radios__input")
         radioInputs.size() shouldBe 2
         radioInputs.get(0).attr("value") shouldBe "yes"
@@ -153,7 +153,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
         val page = Jsoup
           .parse(contentAsString(result))
 
-        page.getElementsByTag("h1").text() shouldBe messages("keepAccessToSA.heading")
+        page.getElementsByTag("h1").text() shouldBe messages("keepAccessToSA.gg.heading")
         val radioInputs = page.getElementsByClass("govuk-radios__input")
         radioInputs.size() shouldBe 2
         radioInputs.get(0).attr("value") shouldBe "yes"

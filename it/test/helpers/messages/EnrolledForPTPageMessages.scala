@@ -18,7 +18,7 @@ package helpers.messages
 
 object EnrolledForPTPageMessages {
   val title =
-    "Only your current user ID can access your personal tax account from now on"
+    "You can only access your personal tax account with one user ID from now on"
   val heading =
     "Only your current user ID can access your personal tax account from now on"
   val paragraphSA: String =

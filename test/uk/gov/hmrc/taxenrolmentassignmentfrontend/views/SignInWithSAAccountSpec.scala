@@ -88,12 +88,6 @@ class SignInWithSAAccountSpec extends ViewSpecHelper {
         .text shouldBe SignInAgainMessages.heading
     }
 
-    "contain the correct subheader" in {
-      document
-        .getElementsByClass(Selectors.headingS)
-        .text shouldBe SignInAgainMessages.subheading
-    }
-
     "contain the correct paragraph" in {
       val paragraph = document.getElementsByTag("p")
       paragraph

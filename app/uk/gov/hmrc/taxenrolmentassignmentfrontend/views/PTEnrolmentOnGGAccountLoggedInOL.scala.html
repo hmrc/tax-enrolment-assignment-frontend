@@ -55,8 +55,8 @@ summaryRow: CreateSummaryRow
     }
     <dl class="govuk-summary-list">
         @summaryRow("common.userId", ptEnrolmentOtherAccountViewModel.ptAccountDetails.userId)
-        @if(ptEnrolmentOtherAccountViewModel.ptAccountDetails.emailDecrypted.isDefined) {
-            @summaryRow("ptEnrolmentOnOtherAccount.email", ptEnrolmentOtherAccountViewModel.ptAccountDetails.emailDecrypted.get)
+        @if(ptEnrolmentOtherAccountViewModel.ptAccountDetails.emailObfuscated.isDefined) {
+            @summaryRow("ptEnrolmentOnOtherAccount.email", ptEnrolmentOtherAccountViewModel.ptAccountDetails.emailObfuscated.get)
         }
         @summaryRow("ptEnrolmentOnOtherAccount.lastLoginDate", ptEnrolmentOtherAccountViewModel.ptAccountDetails.lastLoginDate.getOrElse(""))
         @for(mfaDetail <- ptEnrolmentOtherAccountViewModel.ptAccountDetails.mfaDetails) {

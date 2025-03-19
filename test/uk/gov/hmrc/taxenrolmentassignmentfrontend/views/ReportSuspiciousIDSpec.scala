@@ -197,7 +197,7 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
         suspiciousIdDetailsRows
           .get(0)
           .getElementsByClass(Selectors.summaryListValue)
-          .text() shouldBe accountDetails.emailDecrypted.get
+          .text() shouldBe accountDetails.emailObfuscated.get
       }
 
       "includes the last signed in date" in {

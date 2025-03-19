@@ -155,7 +155,7 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
           summaryListRows
             .get(1)
             .getElementsByClass(Selectors.summaryListValue)
-            .text() shouldBe testAccountDetails.emailDecrypted.get
+            .text() shouldBe testAccountDetails.emailObfuscated.get
         }
       }
       "does not include the email" when {

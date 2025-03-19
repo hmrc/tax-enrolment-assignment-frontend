@@ -42,6 +42,18 @@ class KeepAccessToSAController @Inject() (
 )(implicit ec: ExecutionContext)
     extends TEAFrontendController(mcc) {
 
+//  def view: Action[AnyContent] =
+//    authAction.andThen(accountMongoDetailsAction).async { implicit request =>
+//      for {
+//        keepAccess <- multipleAccountsOrchestrator.getDetailsForKeepAccessToSA
+//        saAccount <- multipleAccountsOrchestrator.getSACredentialDetails
+//      } yield {
+//        (saAccount.isIdentityProviderOneLogin, request.userDetails.providerType == "ONE_LOGIN") match {
+//          case (true, true) => Ok(keepAccessToSA(keepAccess))
+//        }
+//      }
+//    }
+
   def view: Action[AnyContent] =
     authAction.andThen(accountMongoDetailsAction).async { implicit request =>
       multipleAccountsOrchestrator.getDetailsForKeepAccessToSA.value.map {

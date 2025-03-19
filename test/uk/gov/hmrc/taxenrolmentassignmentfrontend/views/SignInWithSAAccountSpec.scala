@@ -126,7 +126,7 @@ class SignInWithSAAccountSpec extends ViewSpecHelper {
           summaryListRows
             .get(1)
             .getElementsByClass(Selectors.summaryListValue)
-            .text() shouldBe accountDetails.emailDecrypted.get
+            .text() shouldBe accountDetails.emailObfuscated.get
         }
       }
 

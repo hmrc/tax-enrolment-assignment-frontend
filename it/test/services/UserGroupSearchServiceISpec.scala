@@ -38,7 +38,7 @@ class UserGroupSearchServiceISpec extends IntegrationSpecBase {
       whenReady(res.value) { response =>
         response shouldBe Right(accountDetailsUnUserFriendly(CREDENTIAL_ID))
         response.getOrElse(AccountDetails(SCP, "", "", None, Some(""), Seq.empty, None)).emailDecrypted shouldBe Some(
-          "e****1@test.com"
+          "email1@test.com"
         )
 
       }

@@ -37,7 +37,7 @@
     </p>
 
     <dl class="govuk-summary-list">
-        @ptAccountDetails.emailDecrypted.map(email=>summaryRow("ReportSuspiciousID.email", email))
+        @ptAccountDetails.emailObfuscated.map(email=>summaryRow("ReportSuspiciousID.email", email))
         @ptAccountDetails.lastLoginDate.map(lld=>summaryRow("ReportSuspiciousID.lastLoginDate", lld))
         @for(mfaDetail <- ptAccountDetails.mfaDetails) {
             @summaryRow(mfaDetail.factorNameKey, mfaDetail.factorValue)

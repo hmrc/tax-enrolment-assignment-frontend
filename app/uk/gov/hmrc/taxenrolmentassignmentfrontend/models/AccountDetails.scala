@@ -56,7 +56,9 @@ case class AccountDetails(
   hasSA: Option[Boolean] = None
 ) {
 
-  val emailDecrypted: Option[String] = email.map(email => ObfuscatedEmailAddress.apply(email.decryptedValue))
+  val emailDecrypted: Option[String] = email.map(_.decryptedValue)
+
+  val emailObfuscated: Option[String] = emailDecrypted.map(ObfuscatedEmailAddress.apply(_).toString)
 
   private def formatDate(implicit messages: Messages): Option[String] =
     lastLoginDate.map { date =>

@@ -38,8 +38,8 @@
     <h3 class="govuk-heading-s">@messages("enrolledForPTWithSAOnOtherAccount.subheading")</h3>
     <dl class="govuk-summary-list">
         @summaryRow("common.userId", saAccountDetails.userId)
-        @if(saAccountDetails.emailDecrypted.isDefined) {
-            @summaryRow("enrolledForPTWithSAOnOtherAccount.email", saAccountDetails.emailDecrypted.get)
+        @if(saAccountDetails.emailObfuscated.isDefined) {
+            @summaryRow("enrolledForPTWithSAOnOtherAccount.email", saAccountDetails.emailObfuscated.get)
         }
         @summaryRow("enrolledForPTWithSAOnOtherAccount.lastLoginDate", saAccountDetails.lastLoginDate.getOrElse(""))
         @for(mfaDetail <- saAccountDetails.mfaDetails) {

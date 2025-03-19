@@ -55,8 +55,8 @@ summaryRow: CreateSummaryRow
         <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.one_loginNoSA.paragraph1")</p>
     }
     <dl class="govuk-summary-list">
-        @if(ptEnrolmentOtherAccountViewModel.ptAccountDetails.emailDecrypted.isDefined) {
-            @summaryRow("ptEnrolmentOnOtherAccount.email", ptEnrolmentOtherAccountViewModel.ptAccountDetails.emailDecrypted.get)
+        @if(ptEnrolmentOtherAccountViewModel.ptAccountDetails.emailObfuscated.isDefined) {
+            @summaryRow("ptEnrolmentOnOtherAccount.email", ptEnrolmentOtherAccountViewModel.ptAccountDetails.emailObfuscated.get)
         }
         @summaryRow("ptEnrolmentOnOtherAccount.lastLoginDate", ptEnrolmentOtherAccountViewModel.ptAccountDetails.lastLoginDate.getOrElse(""))
         @for(mfaDetail <- ptEnrolmentOtherAccountViewModel.ptAccountDetails.mfaDetails) {
@@ -67,6 +67,6 @@ summaryRow: CreateSummaryRow
         <a class = "govuk-link" href=@routes.ReportSuspiciousIDController.viewNoSA>@messages("ptEnrolmentOnOtherAccount.one_login.linkText")</a>
     </p>
 
-    @signInGuidance(messages("ptEnrolmentOnOtherAccount.one_login.signIn", ptEnrolmentOtherAccountViewModel.ptAccountDetails.emailDecrypted.get))
+    @signInGuidance(messages("ptEnrolmentOnOtherAccount.one_login.signIn", ptEnrolmentOtherAccountViewModel.ptAccountDetails.emailObfuscated.get))
 
 }

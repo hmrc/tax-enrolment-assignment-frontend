@@ -238,7 +238,8 @@ class AccountDetailsSpec extends BaseSpec {
         )
 
       Json.fromJson(json)(AccountDetails.mongoFormats(crypto.crypto)).get shouldBe accountDetails
-      accountDetails.emailDecrypted shouldBe Some("f***o@test.com")
+      accountDetails.emailDecrypted shouldBe Some("foooo@test.com")
+      accountDetails.emailObfuscated shouldBe Some("f***o@test.com")
     }
   }
 }

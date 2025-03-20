@@ -21,7 +21,6 @@ import cats.data.EitherT
 import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_OTHER_USER}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction, RequestWithUserDetailsFromSessionAndMongo}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
@@ -46,8 +45,7 @@ class ReportSuspiciousIDController @Inject() (
   reportSuspiciousIDOneLogin: ReportSuspiciousIDOneLogin,
   val logger: EventLoggerService,
   auditHandler: AuditHandler,
-  errorHandler: ErrorHandler,
-  appConfig: AppConfig
+  errorHandler: ErrorHandler
 )(implicit ec: ExecutionContext)
     extends TEAFrontendController(mcc) {
 
@@ -55,9 +53,9 @@ class ReportSuspiciousIDController @Inject() (
     accountDetails: AccountDetails
   )(implicit request: RequestWithUserDetailsFromSessionAndMongo[AnyContent]): Result =
     if (accountDetails.isIdentityProviderOneLogin) {
-      Ok(reportSuspiciousIDOneLogin(accountDetails, appConfig))
+      Ok(reportSuspiciousIDOneLogin(accountDetails))
     } else {
-      Ok(reportSuspiciousIDGateway(accountDetails, appConfig))
+      Ok(reportSuspiciousIDGateway(accountDetails))
     }
 
   def viewNoSA: Action[AnyContent] =

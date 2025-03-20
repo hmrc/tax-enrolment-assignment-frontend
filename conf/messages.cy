@@ -101,8 +101,9 @@ signInAgain.one_login.paragraph2 = To complete this process, sign in with GOV.UK
 
 signInAgain.nextSteps = Next steps
 signInAgain.guidance = To access your personal tax account and Self Assessment, you need to:
-signInAgain.gg.signIn = Sign in with the Government Gateway user ID ending with
-signInAgain.one_login.signIn = Sign in with the GOV.UK One Login email address
+signInAgain.listItem1 = Sign Out.
+signInAgain.gg.listItem2 = Sign in with the Government Gateway user ID ending with <strong>{0}</strong>
+signInAgain.one_login.listItem2 = Sign in with the GOV.UK One Login email address <strong>{0}</strong>
 
 
 choseSeparate.mixed.heading = You have chosen to use separate sign in details
@@ -116,19 +117,15 @@ choseSeparate.one_login.paragraph2 = You are currently signed in with GOV.UK One
 choseSeparate.gg.saInfo = To access your Self Assessment sign in with Government Gateway user ID:
 choseSeparate.one_login.saInfo = To access your Self Assessment sign in with GOV.UK One Login:
 choseSeparate.continueLink = Continue to personal tax account
+choseSeparate.saHeading = Self Assessment
+choseSeparate.ptaHeading = Personal tax account
 
 signInAgain.userId = Dynodydd Defnyddiwr (ID)
 signInAgain.email =  E-bost
 signInAgain.lastLoginDate = Mewngofnodwyd ddiwethaf
 signInAgain.phoneNumber = Rhif ffôn
 signInAgain.linkText = Nid yw’r Dynodydd Defnyddiwr (ID) uchod yn perthyn i mi
-signInAgain.heading2 = Yr hyn i’w wneud nesaf
-signInAgain.paragraph1 = Ar hyn o bryd, rydych wedi mewngofnodi gyda Dynodydd Defnyddiwr (ID) sy’n gorffen {0}
-signInAgain.paragraph2 = I gael mynediad at dreth bersonol a Hunanasesiad:
-signInAgain.listItem1 = allgofnodwch nawr
-signInAgain.listItem2 = mewngofnodwch eto gan ddefnyddio’ch Dynodydd Defnyddiwr (ID) arall sy’n gorffen {0}
-signInAgain.exclamation = Eich Dynodydd Defnyddiwr (ID) sy’n gorffen {0} yw’r unig Ddynodydd Defnyddiwr (ID) y gallwch ei ddefnyddio ar gyfer gwybodaeth treth bersonol a Hunanasesiad
-signInAgain.continue = Cadarnhau ac allgofnodi
+signInAgain.signOut = Sign Out
 
 enrolledForPTWithSAOnOtherAccount.title = Rydych yn dewis cael dau Ddynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth
 enrolledForPTWithSAOnOtherAccount.heading = Rydych yn dewis cael dau Ddynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth

@@ -20,7 +20,6 @@ import org.jsoup.nodes.Document
 import play.api.test.FakeRequest
 import play.twirl.api.HtmlFormat
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.ReportSuspiciousIDMessages
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails, SCP}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{ReportSuspiciousIDGateway, ReportSuspiciousIDOneLogin}
@@ -32,8 +31,6 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
 
   val reportSuspiciousIdOLView: ReportSuspiciousIDOneLogin =
     app.injector.instanceOf[ReportSuspiciousIDOneLogin]
-
-  val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
 
   object Selectors {
     val backLink = "govuk-back-link"
@@ -58,10 +55,10 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
     )
 
   def view(accountDetails: AccountDetails = accountDetails): HtmlFormat.Appendable =
-    reportSuspiciousIdGGView(accountDetails, appConfig)(FakeRequest(), testMessages)
+    reportSuspiciousIdGGView(accountDetails)(FakeRequest(), testMessages)
 
   val viewSA: HtmlFormat.Appendable =
-    reportSuspiciousIdGGView(accountDetails, appConfig)(FakeRequest(), testMessages)
+    reportSuspiciousIdGGView(accountDetails)(FakeRequest(), testMessages)
 
   val document: Document = doc(view())
   val documentSA: Document = doc(viewSA)
@@ -161,7 +158,7 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
 
   "The Report suspicious ID Page for OL account" should {
     def view(accountDetails: AccountDetails = accountDetails): HtmlFormat.Appendable =
-      reportSuspiciousIdOLView(accountDetails, appConfig)(FakeRequest(), testMessages)
+      reportSuspiciousIdOLView(accountDetails)(FakeRequest(), testMessages)
     val document: Document = doc(view())
     "have a back link" that {
       val backLink =

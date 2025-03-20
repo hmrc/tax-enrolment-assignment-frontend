@@ -21,10 +21,11 @@
 
 @this(
         layout: Layout,
-        summaryRow: CreateSummaryRow
+        summaryRow: CreateSummaryRow,
+        appConfig: AppConfig
 )
 
-@(ptAccountDetails: AccountDetails, appConfig: AppConfig)(implicit request: Request[_], messages: Messages)
+@(ptAccountDetails: AccountDetails)(implicit request: Request[_], messages: Messages)
 
 
 @layout(

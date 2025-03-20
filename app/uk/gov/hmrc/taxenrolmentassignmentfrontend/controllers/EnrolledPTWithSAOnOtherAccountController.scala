@@ -50,7 +50,7 @@ class EnrolledPTWithSAOnOtherAccountController @Inject() (
         optSAAccount   <- multipleAccountsOrchestrator.getSACredentialIfNotFraud
 
       } yield (
-        AccountDetails.userFriendlyAccountDetails(currentAccount).userId,
+        AccountDetails.userFriendlyAccountDetails(currentAccount),
         optSAAccount
       )
 

@@ -56,7 +56,7 @@ class SignInWithSAAccountController @Inject() (
                )
              }
         saAccount <- multipleAccountsOrchestrator.getSACredentialDetails
-      } yield (AccountDetails.userFriendlyAccountDetails(currentAccount).userId, saAccount)
+      } yield (AccountDetails.userFriendlyAccountDetails(currentAccount), saAccount)
 
       res.value.map {
         case Right((currentAccount, saAccount)) =>

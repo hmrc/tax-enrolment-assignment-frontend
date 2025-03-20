@@ -108,11 +108,10 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
         val content = Jsoup
           .parse(contentAsString(result))
 
-        content.body().text() should include(messages("enrolledForPTWithSAOnOtherAccount.heading"))
+        content.body().text() should include(messages("choseSeparate.gg.heading"))
         content.body().text() should include(
           messages(
-            "enrolledForPTWithSAOnOtherAccount.paragraph1",
-            USER_ID
+            "choseSeparate.paragraph"
           )
         )
       }

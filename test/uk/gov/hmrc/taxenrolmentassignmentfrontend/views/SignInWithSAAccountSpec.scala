@@ -38,7 +38,7 @@ class SignInWithSAAccountSpec extends ViewSpecHelper {
     inject[ReportSuspiciousIDGateway]
   lazy val userId = "3214"
   lazy val view: HtmlFormat.Appendable =
-    signInAgainPage(userId, accountDetails)(FakeRequest(), testMessages)
+    signInAgainPage(accountDetails, accountDetails)(FakeRequest(), testMessages)
   lazy val document: Document =
     Jsoup.parse(view.toString())
 
@@ -91,11 +91,11 @@ class SignInWithSAAccountSpec extends ViewSpecHelper {
     "contain the correct paragraph" in {
       val paragraph = document.getElementsByTag("p")
       paragraph
-        .get(1)
-        .text() shouldBe SignInAgainMessages.paragraph1 + s"$userId"
+        .get(0)
+        .text() shouldBe SignInAgainMessages.paragraph1
 
       paragraph
-        .get(2)
+        .get(1)
         .text() shouldBe SignInAgainMessages.paragraph2
     }
 

@@ -75,16 +75,12 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
           status(result) shouldBe OK
           page.title should include(SignInAgainMessages.title)
           page
-            .getElementsByClass("govuk-body")
+            .getElementsByTag("p")
             .get(0)
-            .text shouldBe SignInAgainMessages.paragraphLinkText
+            .text shouldBe SignInAgainMessages.paragraph1
           page
             .getElementsByTag("p")
             .get(1)
-            .text shouldBe SignInAgainMessages.paragraph1(USER_ID)
-          page
-            .getElementsByTag("p")
-            .get(2)
             .text shouldBe SignInAgainMessages.paragraph2
         }
       }

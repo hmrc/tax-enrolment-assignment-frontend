@@ -77,19 +77,19 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
   )
 
   val htmlSignedInWithSA =
-    view(ptEnrolmentDataModel(Some(USER_ID), testAccountDetailsWithSA))(
+    view(ptEnrolmentDataModel(Some(USER_ID), testAccountDetailsWithSA), "id")(
       FakeRequest(),
       testMessages
     )
 
   val htmlWithSA =
-    view(ptEnrolmentDataModel(Some(PT_USER_ID), testAccountDetailsWithSA))(
+    view(ptEnrolmentDataModel(Some(PT_USER_ID), testAccountDetailsWithSA), "id")(
       FakeRequest(),
       testMessages
     )
 
   val htmlOtherAccountWithSA =
-    view(ptEnrolmentDataModel(Some(PT_USER_ID), testAccountDetails))(
+    view(ptEnrolmentDataModel(Some(PT_USER_ID), testAccountDetails), "id")(
       FakeRequest(),
       testMessages
     )
@@ -100,12 +100,13 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
 
   val htmlNoEmail =
     view(
-      ptEnrolmentDataModel(Some(NO_EMAIL_USER_ID), accountDetailsWithNoEmail)
+      ptEnrolmentDataModel(Some(NO_EMAIL_USER_ID), accountDetailsWithNoEmail),
+      "id"
     )(FakeRequest(), testMessages)
   val documentNoEmail = doc(htmlNoEmail)
 
   val html =
-    view(ptEnrolmentDataModel(None, testAccountDetails))(
+    view(ptEnrolmentDataModel(None, testAccountDetails), "id")(
       FakeRequest(),
       testMessages
     )
@@ -155,7 +156,7 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
           summaryListRows
             .get(1)
             .getElementsByClass(Selectors.summaryListValue)
-            .text() shouldBe testAccountDetails.emailObfuscated.get
+            .text() shouldBe testAccountDetails.emailDecrypted.get
         }
       }
       "does not include the email" when {

@@ -41,11 +41,7 @@ summaryRow: CreateSummaryRow
 
 @script = {
 <script @CSPNonce.attr>
-    window.addEventListener( "DOMContentLoaded", logIdentifier );
-    function logIdentifier() {
-      window.optimizelyByoidValue = document.getElementById("mainHeading").getAttribute("data-user-identifier")
-    }
-    logIdentifier()
+    window.optimizelyByoidValue = document.getElementById("mainHeading").getAttribute("data-user-identifier")
 </script>
 }
 

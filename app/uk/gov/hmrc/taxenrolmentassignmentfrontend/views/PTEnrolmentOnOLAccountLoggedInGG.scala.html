@@ -47,7 +47,7 @@ summaryRow: CreateSummaryRow
 
 @layout(pageTitle = Some(messages("ptEnrolmentOnOtherAccount.title")), None, scripts = Some(script)) {
 
-    <h1 class="govuk-heading-l" data-user-identifier=@identifier>@messages("ptEnrolmentOnOtherAccount.generic.heading")</h1>
+    <h1 class="govuk-heading-l" id="mainHeading"  data-user-identifier=@identifier>@messages("ptEnrolmentOnOtherAccount.generic.heading")</h1>
     @if(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.currentAccountDetails.credId)){
         <h2 class="govuk-heading-m">@messages("ptEnrolmentOnOtherAccount.saHeading")</h2>
         <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.gg.saText")

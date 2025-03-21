@@ -24,7 +24,7 @@ layout: Layout,
 summaryRow: CreateSummaryRow
 )
 
-@(ptEnrolmentOtherAccountViewModel: PTEnrolmentOnOtherAccount)(implicit request: Request[AnyRef], messages: Messages)
+@(ptEnrolmentOtherAccountViewModel: PTEnrolmentOnOtherAccount, identifier: String)(implicit request: Request[AnyRef], messages: Messages)
 
 @signInGuidance(bullet2: String) = {
     @if(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.ptAccountDetails.credId)){
@@ -40,7 +40,7 @@ summaryRow: CreateSummaryRow
 
 @layout(pageTitle = Some(messages("ptEnrolmentOnOtherAccount.title")), None) {
 
-    <h1 class="govuk-heading-l">@messages("ptEnrolmentOnOtherAccount.generic.heading")</h1>
+    <h1 class="govuk-heading-l" data-user-identifier=@identifier>@messages("ptEnrolmentOnOtherAccount.generic.heading")</h1>
     @if(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.currentAccountDetails.credId)){
         <h2 class="govuk-heading-m">@messages("ptEnrolmentOnOtherAccount.saHeading")</h2>
         <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.gg.saText")

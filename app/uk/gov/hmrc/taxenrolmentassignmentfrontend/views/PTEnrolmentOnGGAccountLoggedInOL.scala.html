@@ -18,6 +18,7 @@
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.helpers.CreateSummaryRow
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.models._
+@import views.html.helper.CSPNonce
 
 @this(
 layout: Layout,
@@ -38,7 +39,17 @@ summaryRow: CreateSummaryRow
         </ol>
 }
 
-@layout(pageTitle = Some(messages("ptEnrolmentOnOtherAccount.title")), None) {
+@script = {
+<script @CSPNonce.attr>
+    window.addEventListener( "DOMContentLoaded", logIdentifier );
+    function logIdentifier() {
+      window.optimizelyByoidValue = document.getElementById("mainHeading").getAttribute("data-user-identifier")
+    }
+    logIdentifier()
+</script>
+}
+
+@layout(pageTitle = Some(messages("ptEnrolmentOnOtherAccount.title")), None, scripts = Some(script)) {
 
     <h1 class="govuk-heading-l" data-user-identifier=@identifier>@messages("ptEnrolmentOnOtherAccount.generic.heading")</h1>
     @if(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.currentAccountDetails.credId)){

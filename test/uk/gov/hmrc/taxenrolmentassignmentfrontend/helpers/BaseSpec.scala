@@ -33,7 +33,7 @@ import play.api.test.{FakeRequest, Injecting}
 import play.api.{Application, Configuration}
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.domain.{Nino, Generator => NinoGenerator}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, CacheMap, MFADetails, SCP}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, CacheMap, MFADetails, ONE_LOGIN, SCP}
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
@@ -41,7 +41,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SINGLE_OR_MULTIPL
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.HmrcModule
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo, UserDetailsFromSession}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{PT_USER_ID, USER_ID, userDetails, userDetailsNoEnrolments}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{CREDENTIAL_ID, CREDENTIAL_ID_1, PT_USER_ID, USER_ID, userDetails, userDetailsNoEnrolments}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.TENCrypto
@@ -177,7 +177,15 @@ trait BaseSpec
 
   val testAccountDetails = AccountDetails(
     identityProviderType = SCP,
-    "credId",
+    CREDENTIAL_ID,
+    userId = USER_ID,
+    email = Some(SensitiveString("email.otherUser@test.com")),
+    lastLoginDate = Some("27 February 2022 at 12:00PM"),
+    mfaDetails
+  )
+  val testAccountDetailsOL = AccountDetails(
+    identityProviderType = ONE_LOGIN,
+    CREDENTIAL_ID,
     userId = USER_ID,
     email = Some(SensitiveString("email.otherUser@test.com")),
     lastLoginDate = Some("27 February 2022 at 12:00PM"),
@@ -185,7 +193,16 @@ trait BaseSpec
   )
   val testAccountDetailsWithSA = AccountDetails(
     identityProviderType = SCP,
-    "credId",
+    CREDENTIAL_ID_1,
+    userId = PT_USER_ID,
+    email = Some(SensitiveString("email.otherUser@test.com")),
+    lastLoginDate = Some("27 February 2022 at 12:00PM"),
+    mfaDetails,
+    hasSA = Some(true)
+  )
+  val testAccountDetailsWithSAOL = AccountDetails(
+    identityProviderType = ONE_LOGIN,
+    CREDENTIAL_ID_1,
     userId = PT_USER_ID,
     email = Some(SensitiveString("email.otherUser@test.com")),
     lastLoginDate = Some("27 February 2022 at 12:00PM"),
@@ -195,7 +212,7 @@ trait BaseSpec
 
   val accountDetailsWithNoEmail: AccountDetails = AccountDetails(
     identityProviderType = SCP,
-    "credId",
+    CREDENTIAL_ID,
     userId = "9871",
     email = None,
     lastLoginDate = Some("27 February 2022 at 12:00PM"),

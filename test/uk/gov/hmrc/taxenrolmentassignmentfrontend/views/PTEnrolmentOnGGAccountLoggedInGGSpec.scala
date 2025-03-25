@@ -18,11 +18,11 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.views
 
 import play.api.test.FakeRequest
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.PTEnrolmentOtherAccountMesages
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.PTEnrolmentOtherAccountMessagesBothGG
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.MFADetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnGGAccountLoggedInGG
 
-class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
+class PTEnrolmentOnGGAccountLoggedInGGSpec extends ViewSpecHelper {
 
   lazy val view: PTEnrolmentOnGGAccountLoggedInGG =
     inject[PTEnrolmentOnGGAccountLoggedInGG]
@@ -42,27 +42,13 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
     5 -> MFADetails("Authenticator app", "HMRC APP")
   )
 
-  val htmlSignedInWithSA =
-    view(ptEnrolmentDataModel(Some(USER_ID), testAccountDetailsWithSA))(
-      FakeRequest(),
-      testMessages
-    )
-
   val htmlWithSA =
     view(ptEnrolmentDataModel(Some(PT_USER_ID), testAccountDetailsWithSA))(
       FakeRequest(),
       testMessages
     )
 
-  val htmlOtherAccountWithSA =
-    view(ptEnrolmentDataModel(Some(PT_USER_ID), testAccountDetails))(
-      FakeRequest(),
-      testMessages
-    )
-
   val documentWithSA = doc(htmlWithSA)
-  val documentSignedInWithSA = doc(htmlSignedInWithSA)
-  val documentOtherAccountWithSA = doc(htmlOtherAccountWithSA)
 
   val htmlNoEmail =
     view(
@@ -70,21 +56,14 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
     )(FakeRequest(), testMessages)
   val documentNoEmail = doc(htmlNoEmail)
 
-  val html =
-    view(ptEnrolmentDataModel(None, testAccountDetails))(
-      FakeRequest(),
-      testMessages
-    )
-  val document = doc(html)
-
   "PTEnrolmentOnAnotherAccount" should {
     "have the expected title" in {
-      documentWithSA.title() shouldBe PTEnrolmentOtherAccountMesages.title
+      documentWithSA.title() shouldBe PTEnrolmentOtherAccountMessagesBothGG.title
     }
     "have the expected heading" in {
       documentWithSA
         .getElementsByClass(Selectors.heading)
-        .text shouldBe PTEnrolmentOtherAccountMesages.heading
+        .text shouldBe PTEnrolmentOtherAccountMessagesBothGG.heading
     }
 
     validateTimeoutDialog(documentWithSA)
@@ -96,7 +75,7 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
         .getElementsByClass(Selectors.body)
         .get(0)
       "has the expected text" in {
-        textElement.text shouldBe PTEnrolmentOtherAccountMesages.text1
+        textElement.text shouldBe PTEnrolmentOtherAccountMessagesBothGG.text1
       }
     }
     "contain a summary list" that {
@@ -158,13 +137,13 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
     "contains a link for if userId not recognised" that {
       val textElement = documentWithSA
       "has the correct text" in {
-        documentWithSA.body.text() should include(PTEnrolmentOtherAccountMesages.notMyUserId)
+        documentWithSA.body.text() should include(PTEnrolmentOtherAccountMessagesBothGG.notMyUserId)
       }
       "contains a link to report suspicious Id" in {
         textElement
           .select("a.govuk-link")
           .get(2)
-          .attr("href") should include(PTEnrolmentOtherAccountMesages.fraudReportingUrl)
+          .attr("href") should include(PTEnrolmentOtherAccountMessagesBothGG.fraudReportingUrl)
       }
     }
   }

@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
+import cats.data.EitherT
 import org.jsoup.Jsoup
 import org.mockito.ArgumentMatchers.{any, eq => ameq}
 import org.mockito.MockitoSugar.{mock, when}
@@ -29,6 +30,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OT
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, UnexpectedPTEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{ControllersBaseSpec, UrlPaths}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.CADetailsSADetailsIfExists
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditHandler
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
@@ -76,8 +78,8 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
           )
             .thenReturn(Future.successful(retrievalResponse()))
 
-          when(mockMultipleAccountsOrchestrator.checkAccessAllowedForPage(ameq(List(SA_ASSIGNED_TO_OTHER_USER)))(any()))
-            .thenReturn(Right(SA_ASSIGNED_TO_OTHER_USER))
+          when(mockMultipleAccountsOrchestrator.getSAAndCADetails(any(), any(), any()))
+            .thenReturn(EitherT.right(Future.successful(CADetailsSADetailsIfExists(accountDetails, accountDetailsSA))))
 
           mockGetDataFromCacheForActionSuccess(randomAccountType)
 
@@ -115,8 +117,8 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
           )
             .thenReturn(Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly)))
 
-          when(mockMultipleAccountsOrchestrator.checkAccessAllowedForPage(ameq(List(SA_ASSIGNED_TO_OTHER_USER)))(any()))
-            .thenReturn(Left(UnexpectedPTEnrolment(SA_ASSIGNED_TO_OTHER_USER)))
+          when(mockMultipleAccountsOrchestrator.getSAAndCADetails(any(), any(), any()))
+            .thenReturn(EitherT.left(Future.successful(UnexpectedPTEnrolment(SA_ASSIGNED_TO_OTHER_USER))))
 
           mockGetDataFromCacheForActionSuccess(randomAccountType)
 
@@ -150,8 +152,8 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
         when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
 
-        when(mockMultipleAccountsOrchestrator.checkAccessAllowedForPage(ameq(List(SA_ASSIGNED_TO_OTHER_USER)))(any()))
-          .thenReturn(Left(IncorrectUserType(UrlPaths.returnUrl, randomAccountType)))
+        when(mockMultipleAccountsOrchestrator.getSAAndCADetails(any(), any(), any()))
+          .thenReturn(EitherT.left(Future.successful(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))))
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 

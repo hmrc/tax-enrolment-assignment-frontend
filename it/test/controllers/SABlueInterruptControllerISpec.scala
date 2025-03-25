@@ -27,6 +27,8 @@ import play.api.libs.json.Json
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import play.api.test.FakeRequest
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.USER_ASSIGNED_SA_ENROLMENT
 
 class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
   val urlPath: String = ItUrlPaths.saOnOtherAccountInterruptPath
@@ -43,9 +45,28 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
               SA_ASSIGNED_TO_OTHER_USER
             )
           )
+          await(
+            save[UsersAssignedEnrolment](
+              sessionId,
+              USER_ASSIGNED_SA_ENROLMENT,
+              UsersAssignedEnrolment(Some(CREDENTIAL_ID_2))
+            )
+          )
           val authResponse = authoriseResponseJson()
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
+
+          stubGet(
+            s"/users-groups-search/users/$CREDENTIAL_ID",
+            NON_AUTHORITATIVE_INFORMATION,
+            usergroupsResponseJson().toString()
+          )
+
+          stubGet(
+            s"/users-groups-search/users/$CREDENTIAL_ID_2",
+            NON_AUTHORITATIVE_INFORMATION,
+            usergroupsResponseJson().toString()
+          )
 
           val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
             .withSession(xAuthToken, xSessionId)

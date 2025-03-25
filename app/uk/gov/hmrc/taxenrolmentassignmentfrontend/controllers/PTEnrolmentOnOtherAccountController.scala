@@ -25,7 +25,6 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccounts
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{PTEnrolmentOnGGAccountLoggedInGG, PTEnrolmentOnGGAccountLoggedInOL, PTEnrolmentOnOLAccountLoggedInGG, PTEnrolmentOnOLAccountLoggedInOL}
 
-import java.security.MessageDigest
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
@@ -47,24 +46,17 @@ class PTEnrolmentOnOtherAccountController @Inject() (
 
   private def pageHandler(
     ptAccountDetails: PTEnrolmentOnOtherAccount
-  )(implicit request: RequestWithUserDetailsFromSessionAndMongo[AnyContent]) = {
-
-    def identifier(input: String): String = {
-      val digest = MessageDigest.getInstance("SHA-256")
-      val hashBytes = digest.digest(input.getBytes("UTF-8"))
-      hashBytes.map("%02x".format(_)).mkString.take(32)
-    }
+  )(implicit request: RequestWithUserDetailsFromSessionAndMongo[AnyContent]) =
     (
       ptAccountDetails.currentAccountDetails.isIdentityProviderOneLogin,
       ptAccountDetails.ptAccountDetails.isIdentityProviderOneLogin
     ) match {
-      case (true, true)   => ptOLLoggedInOLView(ptAccountDetails, identifier(request.userDetails.nino.nino))
-      case (true, false)  => ptGGLoggedInOLView(ptAccountDetails, identifier(request.userDetails.nino.nino))
-      case (false, true)  => ptOLLoggedInGGView(ptAccountDetails, identifier(request.userDetails.nino.nino))
-      case (false, false) => ptGGLoggedInGGView(ptAccountDetails, identifier(request.userDetails.nino.nino))
+      case (true, true)   => ptOLLoggedInOLView(ptAccountDetails)
+      case (true, false)  => ptGGLoggedInOLView(ptAccountDetails)
+      case (false, true)  => ptOLLoggedInGGView(ptAccountDetails)
+      case (false, false) => ptGGLoggedInGGView(ptAccountDetails)
 
     }
-  }
 
   def view: Action[AnyContent] =
     authAction.andThen(accountMongoDetailsAction).async { implicit request =>

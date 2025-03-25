@@ -10,7 +10,6 @@ mfaDetails.totp = Authenticator app
 mfaDetails.voice = Phone number
 mfaDetails.text = Text message
 enrolledForPT.title = You can only access your personal tax account with one user ID from now on
-enrolledForPT.heading = Only your current user ID can access your personal tax account from now on
 
 enrolledForPT.gg.heading = Only this Government Gateway user ID can access your personal tax account from now on
 enrolledForPT.one_login.heading = Only this GOV.UK One Login can access your personal tax account from now on

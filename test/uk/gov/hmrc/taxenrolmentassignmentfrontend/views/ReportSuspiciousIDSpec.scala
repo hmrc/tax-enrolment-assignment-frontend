@@ -42,7 +42,7 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
     val links = "govuk-link"
   }
 
-  val mfaDetails: Seq[MFADetails] = Seq(MFADetails("mfaDetails.text", "28923"))
+  override val mfaDetails: Seq[MFADetails] = Seq(MFADetails("mfaDetails.text", "28923"))
 
   val accountDetails: AccountDetails =
     AccountDetails(

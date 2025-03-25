@@ -9,17 +9,16 @@ common.dateToTime = am
 mfaDetails.totp = Ap dilysu
 mfaDetails.voice = Rhif ffôn
 mfaDetails.text = Neges destun
-enrolledForPT.title = Dim ond eich ID cyfredol all gael mynediad at eich cyfrif treth personol o hyn allan
-enrolledForPT.heading = Dim ond eich ID cyfredol all gael mynediad at eich cyfrif treth personol o hyn allan
-enrolledForPT.gg.heading = Only this Government Gateway user ID can access your personal tax account from now on
-enrolledForPT.one_login.heading = Only this GOV.UK One Login can access your personal tax account from now on
+enrolledForPT.title = O hyn allan, dim ond gan ddefnyddio un Dynodydd Defnyddiwr (ID) y gallwch gael mynediad at eich cyfrif treth personol
+enrolledForPT.gg.heading = O hyn allan, hwn yw’r unig Ddynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth a fydd yn rhoi mynediad at eich cyfrif treth personol
+enrolledForPT.one_login.heading = O hyn allan, hwn yw’r unig GOV.UK One Login a fydd yn rhoi mynediad at eich cyfrif treth personol
 
-enrolledForPT.gg.paragraph1 = You are signed in with Government Gateway user ID ending with {0}.
-enrolledForPT.one_login.paragraph1 = You are signed in with:
+enrolledForPT.gg.paragraph1 = Rydych wedi mewngofnodi gan ddefnyddio Dynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth sy’n gorffen gyda {0}.
+enrolledForPT.one_login.paragraph1 = Rydych wedi mewngofnodi gan ddefnyddio:
 
-enrolledForPT.paragraphSA = Use these sign in details to access your personal tax account and Self Assessment.
+enrolledForPT.paragraphSA = Defnyddiwch y manylion mewngofnodi hyn er mwyn cael mynediad at eich cyfrif treth personol a Hunanasesiad.
 
-enrolledForPT.paragraph2 = Keep these details safe.
+enrolledForPT.paragraph2 = Cadwch y manylion hyn yn ddiogel.
 
 enrolledForPT.heading2 = Beth sydd wedi digwydd i’m Dynodyddion Defnyddiwr (ID) eraill ar gyfer Porth y Llywodraeth?
 enrolledForPT.paragraph3 = Os oes gennych unrhyw Ddynodyddion Defnyddiwr (ID) eraill ar gyfer Porth y Llywodraeth, byddant yn colli mynediad at eich cyfrif treth personol.
@@ -29,12 +28,12 @@ ReportSuspiciousID.heading = Mae angen i chi gysylltu â ni
 ReportSuspiciousID.userId = Dynodydd Defnyddiwr (ID)
 ReportSuspiciousID.email = E-bost
 ReportSuspiciousID.lastLoginDate = Mewngofnodwyd ddiwethaf
-ReportSuspiciousID.gg.text1 = Take a note of this Government Gateway user ID as this screen will time out after 15 minutes.
-ReportSuspiciousID.one_login.text1 = Take a note of this GOV.UK One Login as this screen will time out after 15 minutes.
+ReportSuspiciousID.gg.text1 = Gwnewch nodyn o’r Dynodydd Defnyddiwr (ID) hwn ar gyfer Porth y Llywodraeth gan fydd y sesiwn hwn yn dod i ben ar ôl 15 munud.
+ReportSuspiciousID.one_login.text1 = Gwnewch nodyn o’r GOV.UK One Login gan fydd y sesiwn hwn yn dod i ben ar ôl 15 munud.
 
-ReportSuspiciousID.gg.linkText = Contact technical support with HMRC online services (opens in new tab)
-ReportSuspiciousID.gg.postLinkText = and quote <strong>PTA951</strong>
-ReportSuspiciousID.one_login.linkText = Contact GOV.UK One Login (opens in new tab)
+ReportSuspiciousID.gg.linkText = Cysylltwch â chymorth technegol gyda gwasanaethau ar-lein CThEF (yn agor tab newydd)
+ReportSuspiciousID.gg.postLinkText = a rhowch gyfeirnod <strong>PTA951</strong>
+ReportSuspiciousID.one_login.linkText = Cysylltwch â GOV.UK One Login (yn agor tab newydd)
 ReportSuspiciousID.text2 = Rydym yn argymell eich bod yn nodi’r ID a’r cyfeiriad e-bost isod oherwydd bydd y sgrin yn diflannu ar ôl 15 munud.
 ReportSuspiciousID.telephone.title = Ffôn:
 ReportSuspiciousID.telephone.number = 0300 200 1900
@@ -58,34 +57,33 @@ multiplePTE.true.title = Tax Enrolment Assignment Frontend - Enrolment Present
 multiplePTE.true.heading = This user has no PT enrolment
 multiplePTE.true.text =  The current user does not have an assigned PT enrolment
 
-selfAssessmentInterrupt.title = We are changing the way you access your personal tax account
+selfAssessmentInterrupt.title = Rydym yn newid y ffordd yr ydych yn cael mynediad at eich cyfrif treth personol
 
-selfAssessmentInterrupt.mixed.heading = You currently have more than one way of signing in
-selfAssessmentInterrupt.gg.heading = You have more than one Government Gateway user ID
-selfAssessmentInterrupt.one_login.heading = You have more than one GOV.UK One Login
+selfAssessmentInterrupt.mixed.heading = Ar hyn o bryd, mae gennych fwy nag un ffordd o fewngofnodi
+selfAssessmentInterrupt.gg.heading = Mae gennych fwy nag un Dynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth
+selfAssessmentInterrupt.one_login.heading = Mae gennych fwy nag un GOV.UK One Login
 
-selfAssessmentInterrupt.gg.paragraph1 = We recommend you use only one set of sign in details.
-selfAssessmentInterrupt.one_login.paragraph1 = We recommend you use only GOV.UK One Login to access your personal tax information.
+selfAssessmentInterrupt.gg.paragraph1 = Rydym yn eich argymell i ddefnyddio un set o fanylion mewngofnodi yn unig.
+selfAssessmentInterrupt.one_login.paragraph1 = Rydym yn eich argymell i ddefnyddio GOV.UK One Login yn unig er mwyn cael mynediad at eich gwybodaeth dreth bersonol
 
-selfAssessmentInterrupt.paragraph2 = If you complete Self Assessment, you can choose:
+selfAssessmentInterrupt.paragraph2 = Os ydych yn llenwi Ffurflen Dreth Hunanasesiad, gallwch ddewis y canlynol:
 
-selfAssessmentInterrupt.mixed.listItem1 = the same sign in details to access both your personal tax account and Self Assessment
-selfAssessmentInterrupt.mixed.listItem2 = or separate sign in details for each
+selfAssessmentInterrupt.mixed.listItem1 = yr un manylion mewngofnodi er mwyn cael mynediad at eich cyfrif treth personol a Hunanasesiad
+selfAssessmentInterrupt.mixed.listItem2 = neu fanylion mewngofnodi gwahanol i bob un
 
-selfAssessmentInterrupt.gg.listItem1 = the same Government Gateway user ID to access both your personal tax account and Self Assessment
-selfAssessmentInterrupt.gg.listItem2 = or separate Government Gateway user IDs for each
+selfAssessmentInterrupt.gg.listItem1 = yr un Dynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth er mwyn cael mynediad at eich cyfrif treth personol a Hunanasesiad
+selfAssessmentInterrupt.gg.listItem2 = neu Ddynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth gwahanol i bob un
 
-selfAssessmentInterrupt.one_login.listItem1 = the same sign in details to access both your personal tax account and Self Assessment
-selfAssessmentInterrupt.one_login.listItem2 = or separate sign in details for each
+selfAssessmentInterrupt.one_login.listItem1 = yr un manylion mewngofnodi er mwyn cael mynediad at eich cyfrif treth personol a Hunanasesiad
+selfAssessmentInterrupt.one_login.listItem2 = neu fanylion mewngofnodi gwahanol i bob un
 
-selfAssessmentInterrupt.paragraph2 = Os ydych yn llenwi Ffurflen Dreth Hunanasesiad, gallwch ddewis i wneud y canlynol:
-selfAssessmentInterrupt.paragraph3 = Ar y sgriniau nesaf, byddwn yn gofyn i chi pa opsiynau rydych am eu dewis
+selfAssessmentInterrupt.paragraph3 = Ar y sgriniau nesaf, byddwn yn gofyn i chi pa opsiwn rydych am ei ddewis.
 selfAssessmentInterrupt.continue = Yn eich blaen
 
 keepAccessToSA.title = A ydych am gadw mynediad at Hunanasesiad o’ch cyfrif treth personol?
-keepAccessToSA.mixed.heading = Do you want to use the same sign in details to access your personal tax account and Self Assessment?
-keepAccessToSA.gg.heading = Do you want to use the same Government Gateway user ID to access your personal tax account and Self Assessment?
-keepAccessToSA.one_login.heading = Do you want to use the same GOV.UK One Login to access your personal tax account and Self Assessment?
+keepAccessToSA.mixed.heading =  A ydych eisiau defnyddio’r un manylion mewngofnodi er mwyn cael mynediad at eich cyfrif treth personol a Hunanasesiad?
+keepAccessToSA.gg.heading = A ydych eisiau defnyddio’r un Dynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth er mwyn cael mynediad at eich cyfrif treth personol a Hunanasesiad?
+keepAccessToSA.one_login.heading = A ydych eisiau defnyddio’r un GOV.UK One Login er mwyn cael mynediad at eich cyfrif treth personol a Hunanasesiad?
 keepAccessToSA.radio.yes = Iawn
 keepAccessToSA.radio.no = Na, rwyf am gadw’r Dynodyddion Defnyddiwr (ID) ar wahn
 keepAccessToSA.noSA = Nid wyf yn llenwi Ffurflenni Treth Hunanasesiad ar-lein
@@ -93,32 +91,32 @@ keepAccessToSA.error.required = Dewiswch ’Iawn’ os ydych am gael un Dynodydd
 
 signInAgain.title = Rydych wedi dewis cael Dynodydd Defnyddiwr (ID) unigol ar gyfer Porth y Llywodraeth
 
-signInAgain.heading1 = You now need to sign in again
-signInAgain.gg.paragraph1 = You have chosen to use the same Government Gateway user ID to access both your personal tax account and Self Assessment.
-signInAgain.gg.paragraph2 = To complete this process, sign in with Government Gateway user ID:
-signInAgain.one_login.paragraph1 = You have chosen to use the same GOV.UK One Login to access both your personal tax account and Self Assessment.
-signInAgain.one_login.paragraph2 = To complete this process, sign in with GOV.UK One Login:
+signInAgain.heading1 = Mae angen i chi fewngofnodi eto.
+signInAgain.gg.paragraph1 = Rydych wedi dewis defnyddio’r un Dynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth er mwyn cael mynediad at eich cyfrif treth personol a Hunanasesiad.
+signInAgain.gg.paragraph2 = Er mwyn cwblhau’r broses hon, mewngofnodwch gan ddefnyddio Dynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth:
+signInAgain.one_login.paragraph1 = Rydych wedi dewis defnyddio’r un GOV.UK One Login er mwyn cael mynediad at eich cyfrif treth personol a Hunanasesiad.
+signInAgain.one_login.paragraph2 = Er mwyn cwblhau’r broses hon, mewngofnodwch gan ddefnyddio GOV.UK One Login:
 
-signInAgain.nextSteps = Next steps
-signInAgain.guidance = To access your personal tax account and Self Assessment, you need to:
-signInAgain.listItem1 = Sign Out.
-signInAgain.gg.listItem2 = Sign in with the Government Gateway user ID ending with <strong>{0}</strong>
-signInAgain.one_login.listItem2 = Sign in with the GOV.UK One Login email address <strong>{0}</strong>
+signInAgain.nextSteps = Y camau nesaf
+signInAgain.guidance = Er mwyn cael mynediad at eich cyfrif treth personol a Hunanasesiad, mae angen i chi wneud y canlynol:
+signInAgain.listItem1 =  Allgofnodwch.
+signInAgain.gg.listItem2 = Mewngofnodi gyda’r Dynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth sy’n gorffen gyda <strong>{0}</strong>
+signInAgain.one_login.listItem2 = Mewngofnodi gan ddefnyddio cyfeiriad e-bost GOV.UK One Login <strong>{0}</strong>
 
 
-choseSeparate.mixed.heading = You have chosen to use separate sign in details
-choseSeparate.gg.heading = You have chosen to have two separate Government Gateway user IDs
-choseSeparate.one_login.heading = You have chosen to have two separate GOV.UK One Logins
+choseSeparate.mixed.heading = Rydych wedi dewis defnyddio manylion mewngofnodi ar wahân
+choseSeparate.gg.heading = Rydych wedi dewis cael dau Ddynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth ar wahân
+choseSeparate.one_login.heading = Rydych wedi dewis cael dau GOV.UK One Login ar wahân
 
-choseSeparate.paragraph = You can only use these sign in details from now on. Keep these details safe.
-choseSeparate.gg.paragraph2 = You are currently signed in with Government Gateway user ID ending with {0}
-choseSeparate.one_login.paragraph2 = You are currently signed in with GOV.UK One Login:
+choseSeparate.paragraph = O hyn allan, dim ond y manylion mewngofnodi hyn y gallwch eu defnyddio. Cadwch y manylion hyn yn ddiogel.
+choseSeparate.gg.paragraph2 = Ar hyn o bryd, rydych wedi mewngofnodi gyda’ch Dynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth sy’n gorffen gyda {0}
+choseSeparate.one_login.paragraph2 = Ar hyn o bryd, rydych wedi mewngofnodi gyda GOV.UK One Login:
 
-choseSeparate.gg.saInfo = To access your Self Assessment sign in with Government Gateway user ID:
-choseSeparate.one_login.saInfo = To access your Self Assessment sign in with GOV.UK One Login:
-choseSeparate.continueLink = Continue to personal tax account
-choseSeparate.saHeading = Self Assessment
-choseSeparate.ptaHeading = Personal tax account
+choseSeparate.gg.saInfo = Er mwyn cael mynediad at eich Hunanasesiad, mewngofnodwch gan ddefnyddio Dynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth:
+choseSeparate.one_login.saInfo = Er mwyn cael mynediad at eich Hunanasesiad, mewngofnodwch gan ddefnyddio GOV.UK One Login:
+choseSeparate.continueLink = Parhau i’ch cyfrif treth personol
+choseSeparate.saHeading = Hunanasesiad
+choseSeparate.ptaHeading = Cyfrif treth personol
 
 signInAgain.userId = Dynodydd Defnyddiwr (ID)
 signInAgain.email =  E-bost
@@ -145,38 +143,37 @@ enrolledForPTWithSAOnOtherAccount.continue = Parhau i dreth bersonol
 timedout.title = Er eich diogelwch, gwnaethom eich allgofnodi
 timedout.heading = Er eich diogelwch, gwnaethom eich allgofnodi
 timedout.signin = Mewngofnodi
-ptEnrolmentOnOtherAccount.title = Rydym wedi dod o hyd i’ch cyfrif treth personol o dan ID gwahanol ar gyfer Porth y Llywodraeth
+ptEnrolmentOnOtherAccount.title = Ni allwch gael mynediad at eich cyfrif treth personol
 ptEnrolmentOnOtherAccount.heading = Rydym wedi dod o hyd i’ch cyfrif treth personol o dan ID gwahanol ar gyfer Porth y Llywodraeth
-ptEnrolmentOnOtherAccount.generic.heading = You cannot access your personal tax account with these sign in details
-ptEnrolmentOnOtherAccount.gg.heading = You cannot access your personal tax account with this Government Gateway user ID
-ptEnrolmentOnOtherAccount.one_login.heading = You cannot access your personal tax account with this GOV.UK One Login
+ptEnrolmentOnOtherAccount.generic.heading = Ni allwch gael mynediad at eich cyfrif treth personol gan ddefnyddio’r manylion mewngofnodi hyn
+ptEnrolmentOnOtherAccount.gg.heading = Ni allwch gael mynediad at eich cyfrif treth personol gan ddefnyddio’r Dynodydd Defnyddiwr (ID) hwn ar gyfer Porth y Llywodraeth
+ptEnrolmentOnOtherAccount.one_login.heading = Ni allwch gael mynediad at eich cyfrif treth personol gan ddefnyddio’r GOV.UK One Login hwn
 
-ptEnrolmentOnOtherAccount.ggSA.paragraph1 = To protect your information, access to your personal tax account and Self Assessment was limited to Government Gateway user ID:
-ptEnrolmentOnOtherAccount.one_loginSA.paragraph1 = To protect your information, access to your personal tax account and Self Assessment was limited to GOV.UK One Login:
+ptEnrolmentOnOtherAccount.ggSA.paragraph1 = Er mwyn diogelu’ch gwybodaeth, cafodd y mynediad at eich cyfrif treth personol a Hunanasesiad ei gyfyngu i Ddynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth:
+ptEnrolmentOnOtherAccount.one_loginSA.paragraph1 = Er mwyn diogelu’ch gwybodaeth, cafodd y mynediad at eich cyfrif treth personol a Hunanasesiad ei gyfyngu i GOV.UK One Login:
 
-ptEnrolmentOnOtherAccount.ggNoSA.paragraph1 = To protect your information, access to your personal tax account was limited to Government Gateway user ID:
-ptEnrolmentOnOtherAccount.one_loginNoSA.paragraph1 = To protect your information, access to your personal tax account was limited to GOV.UK One Login:
+ptEnrolmentOnOtherAccount.ggNoSA.paragraph1 = Er mwyn diogelu’ch gwybodaeth, cafodd y mynediad at eich cyfrif treth personol ei gyfyngu i Ddynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth:
+ptEnrolmentOnOtherAccount.one_loginNoSA.paragraph1 = Er mwyn diogelu’ch gwybodaeth, cafodd y mynediad at eich cyfrif treth personol ei gyfyngu i GOV.UK One Login:
 
-ptEnrolmentOnOtherAccount.gg.linkText = This Government Gateway user ID is not mine
-ptEnrolmentOnOtherAccount.one_login.linkText = This GOV.UK One Login is not mine
+ptEnrolmentOnOtherAccount.gg.linkText = Nid fy Nynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth i yw hwnhis Government Gateway user ID is not mine
+ptEnrolmentOnOtherAccount.one_login.linkText = Nid fy GOV.UK One Login i yw hwn
 
-ptEnrolmentOnOtherAccount.saHeading = Self Assessment
-ptEnrolmentOnOtherAccount.ptaHeading = Personal tax account
+ptEnrolmentOnOtherAccount.saHeading = Hunanasesiad
+ptEnrolmentOnOtherAccount.ptaHeading = Cyfrif treth personol
 
-ptEnrolmentOnOtherAccount.gg.saText = You can use this Government Gateway user ID to
-ptEnrolmentOnOtherAccount.one_login.saText = You can use this GOV.UK One Login to
-ptEnrolmentOnOtherAccount.saLink = access your Self Assessment
+ptEnrolmentOnOtherAccount.gg.saText = Gallwch ddefnyddio’r Dynodydd Defnyddiwr (ID) hwn ar gyfer Porth y Llywodraeth er mwyn
+ptEnrolmentOnOtherAccount.one_login.saText = Gallwch ddefnyddio’r GOV.UK One Login hwn er mwyn
+ptEnrolmentOnOtherAccount.saLink = cael mynediad at eich Hunanasesiad
 
-ptEnrolmentOnOtherAccount.sa.signInParagraph = To access your personal tax account and Self Assessment:
-ptEnrolmentOnOtherAccount.nonSa.signInParagraph = To access your personal tax account:
+ptEnrolmentOnOtherAccount.sa.signInParagraph = Er mwyn cael mynediad at eich cyfrif treth personol a Hunanasesiad:
+ptEnrolmentOnOtherAccount.nonSa.signInParagraph = Er mwyn cael mynediad at eich cyfrif treth personol:
 
-ptEnrolmentOnOtherAccount.signOut = Sign out.
+ptEnrolmentOnOtherAccount.signOut = Allgofnodwch.
 
-ptEnrolmentOnOtherAccount.gg.signIn = Sign in with Government Gateway user ID ending with <strong>{0}</strong>
-ptEnrolmentOnOtherAccount.one_login.signIn = Sign in with GOV.UK One Login email address <strong>{0}</strong>
+ptEnrolmentOnOtherAccount.gg.signIn = Mewngofnodwch gan ddefnyddio’r Dynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth sy’n gorffen gyda <strong>{0}</strong>
+ptEnrolmentOnOtherAccount.one_login.signIn = Mewngofnodi gan ddefnyddio’r GOV.UK One Login sy’n gorffen gyda <strong>{0}</strong>
 
-ptEnrolmentOnOtherAccount.text1 = To access your personal tax account and Self Assessment:
-ptEnrolmentOnOtherAccount.text1 = I gael mynediad at eich gwybodaeth treth bersonol, mae’n rhaid i chi
+ptEnrolmentOnOtherAccount.text1 = Er mwyn cael mynediad at eich cyfrif treth personol a Hunanasesiad:
 ptEnrolmentOnOtherAccount.signInAgain = fewngofnodi eto
 ptEnrolmentOnOtherAccount.text2 =  gyda’r ID canlynol:
 ptEnrolmentOnOtherAccount.userId = Dynodydd Defnyddiwr (ID)

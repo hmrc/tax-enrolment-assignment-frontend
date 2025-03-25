@@ -17,10 +17,9 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.views
 
 import play.api.test.FakeRequest
-import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.PTEnrolmentOtherAccountMesages
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails, SCP}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.MFADetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnGGAccountLoggedInGG
 
 class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
@@ -37,59 +36,26 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
     val saHeading = "govuk-heading-m"
   }
 
-  val mfaDetails = Seq(
-    MFADetails("mfaDetails.text", "28923"),
-    MFADetails("mfaDetails.voice", "53839"),
-    MFADetails("mfaDetails.totp", "HRMC APP")
-  )
-
   val elementsToMFADetails: Map[Int, MFADetails] = Map(
     3 -> MFADetails("Text message", "Ending with 28923"),
     4 -> MFADetails("Phone number", "Ending with 53839"),
-    5 -> MFADetails("Authenticator app", "HRMC APP")
-  )
-
-  val testAccountDetails = AccountDetails(
-    identityProviderType = SCP,
-    "credId",
-    userId = USER_ID,
-    email = Some(SensitiveString("email.otherUser@test.com")),
-    lastLoginDate = Some("27 February 2022 at 12:00PM"),
-    mfaDetails
-  )
-  val testAccountDetailsWithSA = AccountDetails(
-    identityProviderType = SCP,
-    "credId",
-    userId = PT_USER_ID,
-    email = Some(SensitiveString("email.otherUser@test.com")),
-    lastLoginDate = Some("27 February 2022 at 12:00PM"),
-    mfaDetails,
-    hasSA = Some(true)
-  )
-
-  val accountDetailsWithNoEmail: AccountDetails = AccountDetails(
-    identityProviderType = SCP,
-    "credId",
-    userId = "9871",
-    email = None,
-    lastLoginDate = Some("27 February 2022 at 12:00PM"),
-    mfaDetails = List(MFADetails("mfaDetails.text", "26543"))
+    5 -> MFADetails("Authenticator app", "HMRC APP")
   )
 
   val htmlSignedInWithSA =
-    view(ptEnrolmentDataModel(Some(USER_ID), testAccountDetailsWithSA), "id")(
+    view(ptEnrolmentDataModel(Some(USER_ID), testAccountDetailsWithSA))(
       FakeRequest(),
       testMessages
     )
 
   val htmlWithSA =
-    view(ptEnrolmentDataModel(Some(PT_USER_ID), testAccountDetailsWithSA), "id")(
+    view(ptEnrolmentDataModel(Some(PT_USER_ID), testAccountDetailsWithSA))(
       FakeRequest(),
       testMessages
     )
 
   val htmlOtherAccountWithSA =
-    view(ptEnrolmentDataModel(Some(PT_USER_ID), testAccountDetails), "id")(
+    view(ptEnrolmentDataModel(Some(PT_USER_ID), testAccountDetails))(
       FakeRequest(),
       testMessages
     )
@@ -100,13 +66,12 @@ class PTEnrolmentOnAnotherAccountSpec extends ViewSpecHelper {
 
   val htmlNoEmail =
     view(
-      ptEnrolmentDataModel(Some(NO_EMAIL_USER_ID), accountDetailsWithNoEmail),
-      "id"
+      ptEnrolmentDataModel(Some(NO_EMAIL_USER_ID), accountDetailsWithNoEmail)
     )(FakeRequest(), testMessages)
   val documentNoEmail = doc(htmlNoEmail)
 
   val html =
-    view(ptEnrolmentDataModel(None, testAccountDetails), "id")(
+    view(ptEnrolmentDataModel(None, testAccountDetails))(
       FakeRequest(),
       testMessages
     )

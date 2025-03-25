@@ -56,7 +56,7 @@ class SignInWithSAAccountSpec extends ViewSpecHelper {
     val bulletPointList = "govuk-list govuk-list--bullet"
   }
 
-  val mfaDetails: Seq[MFADetails] = Seq(
+  override val mfaDetails: Seq[MFADetails] = Seq(
     MFADetails("Text message", "07390328923"),
     MFADetails("Voice call", "0193453839"),
     MFADetails("Authenticator App", "HMRC APP")

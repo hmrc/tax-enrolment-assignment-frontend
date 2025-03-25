@@ -25,6 +25,8 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SABlueInterrupt
 
+import scala.concurrent.ExecutionContext
+
 @Singleton
 class SABlueInterruptController @Inject() (
   authAction: AuthAction,
@@ -34,14 +36,14 @@ class SABlueInterruptController @Inject() (
   val logger: EventLoggerService,
   saBlueInterrupt: SABlueInterrupt,
   errorHandler: ErrorHandler
-) extends TEAFrontendController(mcc) {
+)(implicit ec: ExecutionContext)
+    extends TEAFrontendController(mcc) {
 
   def view: Action[AnyContent] =
-    authAction.andThen(accountMongoDetailsAction) { implicit request =>
-      multipleAccountsOrchestrator
-        .checkAccessAllowedForPage(List(SA_ASSIGNED_TO_OTHER_USER)) match {
-        case Right(_) =>
-          Ok(saBlueInterrupt())
+    authAction.andThen(accountMongoDetailsAction).async { implicit request =>
+      multipleAccountsOrchestrator.getSAAndCADetails.value.map {
+        case Right(account) =>
+          Ok(saBlueInterrupt(account.currentAccountDetails, account.saAccountDetails))
         case Left(error) =>
           errorHandler.handleErrors(error, "[SABlueInterruptController][view]")(request, implicitly)
       }

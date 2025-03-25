@@ -21,7 +21,7 @@ import play.api.test.FakeRequest
 import play.twirl.api.HtmlFormat
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.CREDENTIAL_ID
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.EnrolledPTWithSAOnOtherAccountMessages
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails, SCP}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, SCP}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTWithSAOnOtherAccount
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 
@@ -30,11 +30,7 @@ class EnrolledForPTWithSAOnOtherAccountSpec extends ViewSpecHelper {
   val view: EnrolledForPTWithSAOnOtherAccount =
     app.injector.instanceOf[EnrolledForPTWithSAOnOtherAccount]
   val userId = "3214"
-  val mfaDetails: Seq[MFADetails] = Seq(
-    MFADetails("Text message", "07390328923"),
-    MFADetails("Voice call", "0193453839"),
-    MFADetails("Authenticator App", "HRMC APP")
-  )
+
   val currentAccountDetails: AccountDetails = AccountDetails(
     identityProviderType = SCP,
     credId = "credId321",

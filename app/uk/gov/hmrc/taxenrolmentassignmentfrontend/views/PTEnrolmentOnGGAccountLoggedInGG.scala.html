@@ -25,7 +25,7 @@ layout: Layout,
 summaryRow: CreateSummaryRow
 )
 
-@(ptEnrolmentOtherAccountViewModel: PTEnrolmentOnOtherAccount, identifier: String)(implicit request: Request[AnyRef], messages: Messages)
+@(ptEnrolmentOtherAccountViewModel: PTEnrolmentOnOtherAccount)(implicit request: Request[AnyRef], messages: Messages)
 
 @signInGuidance(bullet2: String) = {
     @if(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.ptAccountDetails.credId)){
@@ -39,15 +39,8 @@ summaryRow: CreateSummaryRow
         </ol>
 }
 
-@script = {
-    <script @CSPNonce.attr>
-        window.optimizelyByoidValue = document.getElementById("mainHeading").getAttribute("data-user-identifier")
-    </script>
-}
-
-
-@layout(pageTitle = Some(messages("ptEnrolmentOnOtherAccount.title")), None, scripts = Some(script)) {
-    <h1 class="govuk-heading-l" id="mainHeading" data-user-identifier=@identifier>@messages("ptEnrolmentOnOtherAccount.gg.heading")</h1>
+@layout(pageTitle = Some(messages("ptEnrolmentOnOtherAccount.title")), None) {
+    <h1 class="govuk-heading-l" id="mainHeading">@messages("ptEnrolmentOnOtherAccount.gg.heading")</h1>
     @if(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.currentAccountDetails.credId)){
         <h2 class="govuk-heading-m">@messages("ptEnrolmentOnOtherAccount.saHeading")</h2>
         <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.gg.saText")

@@ -33,8 +33,6 @@ object PTEnrolmentOtherAccountMesages {
     s"To access your Self Assessment you need to sign in again with user ID ending with 1243."
   val saText2 =
     "To access your personal tax account and Self Assessment:"
-  val saText3 =
-    "To access your personal tax account and Self Assessment:"
   val saUrl = "/protect-tax-info/logout"
 
 }

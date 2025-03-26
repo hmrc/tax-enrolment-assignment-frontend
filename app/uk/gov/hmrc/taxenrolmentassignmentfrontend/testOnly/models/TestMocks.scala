@@ -18,8 +18,8 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models
 
 object TestMocks {
   val mocks: List[(String, String)] = List(
-    "Scenario 3 + 4: GG Account with No Enrolments, GG with SA Enrolment"                -> "multipleAccountsOneWithSAEnrolment",
-    "Scenario 3 + 4: OL Account with No Enrolments, OL with SA Enrolment"                -> "OneLoginAccountWithNoEnrolmentsOneLoginAccountWithSAEnrolment",
+    "Scenario 3 + 4: GG Login Multiple Accounts: One with SA Enrolment"                  -> "multipleAccountsOneWithSAEnrolment",
+    "Scenario 3 + 4: One Login Multiple Accounts: One with SA Enrolment"                 -> "OneLoginMultipleAccountsOneWithSAEnrolment",
     "Scenario 3 + 4: GG Account with No Enrolments, OL with SA Enrolment"                -> "GGAccountWithNoEnrolmentsOneLoginAccountWithSAEnrolment",
     "Scenario 3 + 4: OL Account with No Enrolments, GG with SA Enrolment"                -> "OneLoginAccountWithNoEnrolmentsGGAccountWithSAEnrolment",
     "Scenario 5: GG Account with PT and SA Enrolment, OL with No Enrolment"              -> "GGAccountWithPTAndSAEnrolmentOneLoginAccountWithNoEnrolment",
@@ -35,7 +35,6 @@ object TestMocks {
     "Multiple Accounts: One with PT Enrolment, one with SA Enrolment, one with none"     -> "multipleAccountsOneWithPTEnrolmentOneWithSAOneWithNone",
     "Multiple Accounts: One with SA Enrolment"                                           -> "multipleAccountsOneWithSAEnrolment",
     "Single User: No enrolments"                                                         -> "singleUserNoEnrolments",
-    "Single User: SA Enrolments"                                                         -> "singleUserWithSAEnrolment",
-    "One Login Multiple Accounts: One with SA Enrolment"                                 -> "OneLoginMultipleAccountsOneWithSAEnrolment"
+    "Single User: SA Enrolments"                                                         -> "singleUserWithSAEnrolment"
   )
 }

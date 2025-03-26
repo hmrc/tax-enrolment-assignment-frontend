@@ -72,7 +72,7 @@ formHelper: FormWithCSRF,
 
     @signInGuidance(messages("ptEnrolmentOnOtherAccount.gg.signIn", ptEnrolmentOtherAccountViewModel.ptAccountDetails.userId))
 
-    @formHelper(action = routes.SignInWithSAAccountController.continue) {
+    @formHelper(action = routes.SignOutController.signOut) {
         @govukButton(Button(
             preventDoubleClick = Some(true),
             content = Text(messages("signInAgain.signOut"))

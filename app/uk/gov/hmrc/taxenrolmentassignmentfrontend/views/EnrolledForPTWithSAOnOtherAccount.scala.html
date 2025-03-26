@@ -49,20 +49,20 @@
     <p class="govuk-body"><a id="ptaLink" class="govuk-link" href=@appConfig.ptaHomePage>@messages("choseSeparate.continueLink")</a></p>
 
     <h2 class="govuk-heading-m">@messages("choseSeparate.saHeading")</h2>
-    @if(currentAccount.isIdentityProviderOneLogin){
+    @if(saAccountDetails.isIdentityProviderOneLogin){
         <p class="govuk-body">@messages("choseSeparate.one_login.saInfo")</p>
     } else {
         <p class="govuk-body">@messages("choseSeparate.gg.saInfo")</p>
     }
 
     <dl class="govuk-summary-list">
-        @if(!currentAccount.isIdentityProviderOneLogin){
+        @if(saAccountDetails.isIdentityProviderOneLogin){
+            @summaryRow("enrolledForPTWithSAOnOtherAccount.email", saAccountDetails.emailObfuscated.get)
+        } else {
             @summaryRow("common.userId", saAccountDetails.userId)
             @if(saAccountDetails.emailDecrypted.isDefined) {
                 @summaryRow("enrolledForPTWithSAOnOtherAccount.email", saAccountDetails.emailDecrypted.get)
             }
-        } else {
-            @summaryRow("enrolledForPTWithSAOnOtherAccount.email", saAccountDetails.emailObfuscated.get)
         }
         @summaryRow("enrolledForPTWithSAOnOtherAccount.lastLoginDate", saAccountDetails.lastLoginDate.getOrElse(""))
         @for(mfaDetail <- saAccountDetails.mfaDetails) {
@@ -71,7 +71,7 @@
     </dl>
     <p class="govuk-body govuk-!-margin-bottom-6">
         <a class="govuk-link" id="reportId" href="@routes.ReportSuspiciousIDController.viewSA">
-            @if(currentAccount.isIdentityProviderOneLogin){
+            @if(saAccountDetails.isIdentityProviderOneLogin){
                 @messages("ptEnrolmentOnOtherAccount.one_login.linkText")
             } else {
                 @messages("ptEnrolmentOnOtherAccount.gg.linkText")

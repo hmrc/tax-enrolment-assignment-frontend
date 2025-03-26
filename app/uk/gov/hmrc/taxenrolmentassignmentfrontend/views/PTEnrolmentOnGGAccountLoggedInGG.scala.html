@@ -22,7 +22,9 @@
 
 @this(
 layout: Layout,
-summaryRow: CreateSummaryRow
+summaryRow: CreateSummaryRow,
+govukButton: GovukButton,
+formHelper: FormWithCSRF
 )
 
 @(ptEnrolmentOtherAccountViewModel: PTEnrolmentOnOtherAccount)(implicit request: Request[AnyRef], messages: Messages)
@@ -68,5 +70,12 @@ summaryRow: CreateSummaryRow
     </p>
 
     @signInGuidance(messages("ptEnrolmentOnOtherAccount.gg.signIn", ptEnrolmentOtherAccountViewModel.ptAccountDetails.userId))
+
+    @formHelper(action = routes.SignInWithSAAccountController.continue) {
+        @govukButton(Button(
+            preventDoubleClick = Some(true),
+            content = Text(messages("signInAgain.signOut"))
+        ))
+    }
 
 }

@@ -31,7 +31,7 @@
   <p class="govuk-body">@messages("enrolledForPT.one_login.paragraph1")</p>
   <p class="govuk-body"><strong>@accountDetails.emailDecrypted.get</strong></p>
  } else {
-  <h1 class="govuk-heading-xl">@messages("enrolledForPT.gg.heading")</h1>
+  <h1 class="govuk-heading-l">@messages("enrolledForPT.gg.heading")</h1>
   <p class="govuk-body">@Html(messages("enrolledForPT.gg.paragraph1", accountDetails.userId))</p>
  }
  @if(hasSA) {

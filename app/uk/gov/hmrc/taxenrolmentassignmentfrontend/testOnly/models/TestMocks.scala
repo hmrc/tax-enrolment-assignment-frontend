@@ -18,25 +18,26 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models
 
 object TestMocks {
   val mocks: List[(String, String)] = List(
+    "Scenario 2: GG Multiple Accounts: No Enrolments"                                    -> "multipleAccountsNoEnrolments",
+    "Scenario 2: OL Multiple Accounts: No Enrolments"                                    -> "OneLoginMultipleAccountsNoEnrolments",
+    "Scenario 2: One GG, One OL Accounts: No Enrolments"                                 -> "OLGGMultipleAccountsNoEnrolments",
     "Scenario 3 + 4: GG Login Multiple Accounts: One with SA Enrolment"                  -> "multipleAccountsOneWithSAEnrolment",
     "Scenario 3 + 4: One Login Multiple Accounts: One with SA Enrolment"                 -> "OneLoginMultipleAccountsOneWithSAEnrolment",
     "Scenario 3 + 4: GG Account with No Enrolments, OL with SA Enrolment"                -> "GGAccountWithNoEnrolmentsOneLoginAccountWithSAEnrolment",
     "Scenario 3 + 4: OL Account with No Enrolments, GG with SA Enrolment"                -> "OneLoginAccountWithNoEnrolmentsGGAccountWithSAEnrolment",
-    "Scenario 5: GG Account with PT and SA Enrolment, OL with No Enrolment"              -> "GGAccountWithPTAndSAEnrolmentOneLoginAccountWithNoEnrolment",
-    "Scenario 5: OL Multiple Accounts: One with PT and SA Enrolment"                     -> "OneLoginMultipleAccountsOneWithPTAndSAEnrolment",
     "Scenario 5: GG Multiple Accounts: One with PT and SA Enrolment"                     -> "multipleAccountsOneWithPTAndSAEnrolment",
+    "Scenario 5: OL Multiple Accounts: One with PT and SA Enrolment"                     -> "OneLoginMultipleAccountsOneWithPTAndSAEnrolment",
+    "Scenario 5: GG Account with PT and SA Enrolment, OL with No Enrolment"              -> "GGAccountWithPTAndSAEnrolmentOneLoginAccountWithNoEnrolment",
     "Scenario 5: GG Account with No Enrolment, OL with PT and SA Enrolment"              -> "GGAccountWithNoEnrolmentOneLoginAccountWithPTAndSAEnrolment",
     "Scenario 6: GG Multiple Accounts: One with PT Enrolment"                            -> "multipleAccountsOneWithPTEnrolment",
     "Scenario 6: OL Multiple Accounts: One with PT Enrolment"                            -> "OneLoginMultipleAccountsOneWithPTEnrolment",
     "Scenario 6: GG Account with PT Enrolment, OL with No Enrolment"                     -> "GGAccountWithPTEnrolmentOneLoginAccountWithNoEnrolment",
     "Scenario 6: GG Account with No Enrolment, OL with PT Enrolment"                     -> "GGAccountWithNoEnrolmentOneLoginAccountWithPTEnrolment",
-    "Scenario 7: GG Account with PT Enrolment, OL with SA Enrolment"                     -> "GGAccountWithPTEnrolmentOneLoginAccountWithSAEnrolment",
-    "Scenario 7: GG Account with SA Enrolment, OL with PT Enrolment"                     -> "GGAccountWithSAEnrolmentOneLoginAccountWithPTEnrolment",
     "Scenario 7: GG Multiple Accounts: One with PT Enrolment, another with SA Enrolment" -> "multipleAccountsOneWithPTEnrolmentOtherWithSA",
     "Scenario 7: OL Multiple Accounts: One with PT Enrolment, another with SA Enrolment" -> "OneLoginMultipleAccountsOneWithPTEnrolmentOtherWithSA",
-    "Multiple Accounts: No Enrolments"                                                   -> "multipleAccountsNoEnrolments",
+    "Scenario 7: GG Account with PT Enrolment, OL with SA Enrolment"                     -> "GGAccountWithPTEnrolmentOneLoginAccountWithSAEnrolment",
+    "Scenario 7: GG Account with SA Enrolment, OL with PT Enrolment"                     -> "GGAccountWithSAEnrolmentOneLoginAccountWithPTEnrolment",
     "Multiple Accounts: One with PT Enrolment, one with SA Enrolment, one with none"     -> "multipleAccountsOneWithPTEnrolmentOneWithSAOneWithNone",
-    "Multiple Accounts: One with SA Enrolment"                                           -> "multipleAccountsOneWithSAEnrolment",
     "Single User: No enrolments"                                                         -> "singleUserNoEnrolments",
     "Single User: SA Enrolments"                                                         -> "singleUserWithSAEnrolment"
   )

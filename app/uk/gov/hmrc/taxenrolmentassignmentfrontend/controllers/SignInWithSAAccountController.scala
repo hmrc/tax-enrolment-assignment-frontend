@@ -47,7 +47,6 @@ class SignInWithSAAccountController @Inject() (
   def view: Action[AnyContent] =
     authAction.andThen(accountMongoDetailsAction).async { implicit request =>
       val res = for {
-        currentAccount <- multipleAccountsOrchestrator.getDetailsForEnrolledPTWithSAOnOtherAccount
         _ <- EitherT {
                Future.successful(
                  multipleAccountsOrchestrator.checkAccessAllowedForPage(
@@ -56,11 +55,11 @@ class SignInWithSAAccountController @Inject() (
                )
              }
         saAccount <- multipleAccountsOrchestrator.getSACredentialDetails
-      } yield (AccountDetails.userFriendlyAccountDetails(currentAccount), saAccount)
+      } yield (AccountDetails.userFriendlyAccountDetails(saAccount))
 
       res.value.map {
-        case Right((currentAccount, saAccount)) =>
-          Ok(signInWithSAAccount(currentAccount, AccountDetails.userFriendlyAccountDetails(saAccount)))
+        case Right(saAccount) =>
+          Ok(signInWithSAAccount(saAccount))
         case Left(error) =>
           errorHandler.handleErrors(error, "[SignInWithSAAccountController][view]")(request, implicitly)
       }

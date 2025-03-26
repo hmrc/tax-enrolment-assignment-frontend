@@ -14,7 +14,7 @@ enrolledForPT.title = You can only access your personal tax account with one use
 enrolledForPT.gg.heading = Only this Government Gateway user ID can access your personal tax account from now on
 enrolledForPT.one_login.heading = Only this GOV.UK One Login can access your personal tax account from now on
 
-enrolledForPT.gg.paragraph1 = You are signed in with Government Gateway user ID ending with {0}.
+enrolledForPT.gg.paragraph1 = You are signed in with Government Gateway user ID ending with <strong>{0}</strong>.
 enrolledForPT.one_login.paragraph1 = You are signed in with:
 
 enrolledForPT.paragraphSA = Use these sign in details to access your personal tax account and Self Assessment.
@@ -108,6 +108,9 @@ signInAgain.listItem1 = Sign Out.
 signInAgain.gg.listItem2 = Sign in with the Government Gateway user ID ending with <strong>{0}</strong>
 signInAgain.one_login.listItem2 = Sign in with the GOV.UK One Login email address <strong>{0}</strong>
 
+signInAgain.gg.linkText = This Government Gateway user ID is not mine
+signInAgain.one_login.linkText = This GOV.UK One Login is not mine
+
 choseSeparate.mixed.heading = You have chosen to use separate sign in details
 choseSeparate.gg.heading = You have chosen to have two separate Government Gateway user IDs
 choseSeparate.one_login.heading = You have chosen to have two separate GOV.UK One Logins
@@ -126,7 +129,6 @@ signInAgain.userId = User ID
 signInAgain.email =  Email
 signInAgain.lastLoginDate = Last signed in
 signInAgain.phoneNumber = Phone number
-signInAgain.linkText = The above user ID does not belong to me
 signInAgain.signOut = Sign out
 
 enrolledForPTWithSAOnOtherAccount.title = You are choosing to have two Government Gateway user IDs

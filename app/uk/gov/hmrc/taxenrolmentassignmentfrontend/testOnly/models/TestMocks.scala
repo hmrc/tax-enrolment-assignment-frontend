@@ -18,7 +18,10 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models
 
 object TestMocks {
   val mocks: List[(String, String)] = List(
-    "Scenario 3: GG Account with No Enrolments, OL with SA Enrolment"                    -> "GGAccountWithNoEnrolmentsOneLoginAccountWithSAEnrolment",
+    "Scenario 3 + 4: GG Account with No Enrolments, GG with SA Enrolment"                -> "multipleAccountsOneWithSAEnrolment",
+    "Scenario 3 + 4: OL Account with No Enrolments, OL with SA Enrolment"                -> "OneLoginAccountWithNoEnrolmentsOneLoginAccountWithSAEnrolment",
+    "Scenario 3 + 4: GG Account with No Enrolments, OL with SA Enrolment"                -> "GGAccountWithNoEnrolmentsOneLoginAccountWithSAEnrolment",
+    "Scenario 3 + 4: OL Account with No Enrolments, GG with SA Enrolment"                -> "OneLoginAccountWithNoEnrolmentsGGAccountWithSAEnrolment",
     "Scenario 5: GG Account with PT and SA Enrolment, OL with No Enrolment"              -> "GGAccountWithPTAndSAEnrolmentOneLoginAccountWithNoEnrolment",
     "Scenario 5: OL Multiple Accounts: One with PT and SA Enrolment"                     -> "OneLoginMultipleAccountsOneWithPTAndSAEnrolment",
     "Scenario 5: GG Multiple Accounts: One with PT and SA Enrolment"                     -> "multipleAccountsOneWithPTAndSAEnrolment",

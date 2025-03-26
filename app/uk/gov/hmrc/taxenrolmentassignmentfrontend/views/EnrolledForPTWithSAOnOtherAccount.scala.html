@@ -55,13 +55,13 @@
         <p class="govuk-body">@messages("choseSeparate.gg.saInfo")</p>
     }
 
-    <p class="govuk-body">@messages("enrolledForPTWithSAOnOtherAccount.paragraph3")</p>
-    <h3 class="govuk-heading-s">@messages("enrolledForPTWithSAOnOtherAccount.subheading")</h3>
     <dl class="govuk-summary-list">
         @if(!currentAccount.isIdentityProviderOneLogin){
             @summaryRow("common.userId", saAccountDetails.userId)
-        }
-        @if(saAccountDetails.emailObfuscated.isDefined) {
+            @if(saAccountDetails.emailDecrypted.isDefined) {
+                @summaryRow("enrolledForPTWithSAOnOtherAccount.email", saAccountDetails.emailDecrypted.get)
+            }
+        } else {
             @summaryRow("enrolledForPTWithSAOnOtherAccount.email", saAccountDetails.emailObfuscated.get)
         }
         @summaryRow("enrolledForPTWithSAOnOtherAccount.lastLoginDate", saAccountDetails.lastLoginDate.getOrElse(""))

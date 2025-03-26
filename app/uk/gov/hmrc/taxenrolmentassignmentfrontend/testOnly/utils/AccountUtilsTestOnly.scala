@@ -35,15 +35,6 @@ class AccountUtilsTestOnly @Inject() (
 )(implicit ec: ExecutionContext) {
   def deleteAccountDetails(account: AccountDetailsTestOnly)(implicit hc: HeaderCarrier): TEAFResult[Unit] =
     for {
-      // delete enrolment-store data
-      _ <- account.enrolments.map(enrolmentStoreServiceTestOnly.deallocateEnrolmentFromGroups(_)).sequence
-      _ <- account.enrolments.map(enrolmentStoreServiceTestOnly.deleteEnrolment(_)).sequence
-      _ <- enrolmentStoreServiceTestOnly.deleteAccount(account.groupId)
-      // Search and delete other known facts that might remains after the step above
-      _ <- enrolmentStoreServiceTestOnly.deleteAllKnownFactsForNino(account.nino)
-      _ <- enrolmentStoreServiceTestOnly.deleteGroup(account.groupId)
-      _ <- enrolmentStoreServiceTestOnly.deallocateEnrolmentsFromGroup(account.groupId)
-      _ <- enrolmentStoreServiceTestOnly.deallocateEnrolmentsFromUser(account.user.credId)
       // delete account from IPAC
       eacdId <- oneLoginStubConnectorTestOnly.getAccount(account.user.credId)
       _      <- eacdId.map(id => oneLoginStubConnectorTestOnly.deleteAccount(id)).sequence

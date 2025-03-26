@@ -13,7 +13,7 @@ enrolledForPT.title = O hyn allan, dim ond gan ddefnyddio un Dynodydd Defnyddiwr
 enrolledForPT.gg.heading = O hyn allan, hwn yw’r unig Ddynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth a fydd yn rhoi mynediad at eich cyfrif treth personol
 enrolledForPT.one_login.heading = O hyn allan, hwn yw’r unig GOV.UK One Login a fydd yn rhoi mynediad at eich cyfrif treth personol
 
-enrolledForPT.gg.paragraph1 = Rydych wedi mewngofnodi gan ddefnyddio Dynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth sy’n gorffen gyda {0}.
+enrolledForPT.gg.paragraph1 = Rydych wedi mewngofnodi gan ddefnyddio Dynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth sy’n gorffen gyda <strong>{0}</strong>.
 enrolledForPT.one_login.paragraph1 = Rydych wedi mewngofnodi gan ddefnyddio:
 
 enrolledForPT.paragraphSA = Defnyddiwch y manylion mewngofnodi hyn er mwyn cael mynediad at eich cyfrif treth personol a Hunanasesiad.
@@ -103,6 +103,9 @@ signInAgain.listItem1 =  Allgofnodwch.
 signInAgain.gg.listItem2 = Mewngofnodi gyda’r Dynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth sy’n gorffen gyda <strong>{0}</strong>
 signInAgain.one_login.listItem2 = Mewngofnodi gan ddefnyddio cyfeiriad e-bost GOV.UK One Login <strong>{0}</strong>
 
+signInAgain.gg.linkText = Nid fy Nynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth i yw hwnhis Government Gateway user ID is not mine
+signInAgain.one_login.linkText = Nid fy GOV.UK One Login i yw hwn
+
 
 choseSeparate.mixed.heading = Rydych wedi dewis defnyddio manylion mewngofnodi ar wahân
 choseSeparate.gg.heading = Rydych wedi dewis cael dau Ddynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth ar wahân
@@ -122,7 +125,6 @@ signInAgain.userId = Dynodydd Defnyddiwr (ID)
 signInAgain.email =  E-bost
 signInAgain.lastLoginDate = Mewngofnodwyd ddiwethaf
 signInAgain.phoneNumber = Rhif ffôn
-signInAgain.linkText = Nid yw’r Dynodydd Defnyddiwr (ID) uchod yn perthyn i mi
 signInAgain.signOut = Sign Out
 
 enrolledForPTWithSAOnOtherAccount.title = Rydych yn dewis cael dau Ddynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth

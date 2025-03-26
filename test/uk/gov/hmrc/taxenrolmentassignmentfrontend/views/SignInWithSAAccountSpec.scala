@@ -38,7 +38,7 @@ class SignInWithSAAccountSpec extends ViewSpecHelper {
     inject[ReportSuspiciousIDGateway]
   lazy val userId = "3214"
   lazy val view: HtmlFormat.Appendable =
-    signInAgainPage(accountDetails, accountDetails)(FakeRequest(), testMessages)
+    signInAgainPage(accountDetails)(FakeRequest(), testMessages)
   lazy val document: Document =
     Jsoup.parse(view.toString())
 
@@ -126,7 +126,7 @@ class SignInWithSAAccountSpec extends ViewSpecHelper {
           summaryListRows
             .get(1)
             .getElementsByClass(Selectors.summaryListValue)
-            .text() shouldBe accountDetails.emailObfuscated.get
+            .text() shouldBe accountDetails.emailDecrypted.get
         }
       }
 

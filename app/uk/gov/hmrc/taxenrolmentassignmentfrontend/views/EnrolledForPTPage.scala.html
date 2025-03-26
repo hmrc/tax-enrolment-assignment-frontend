@@ -32,7 +32,7 @@
   <p class="govuk-body"><strong>@accountDetails.emailDecrypted.get</strong></p>
  } else {
   <h1 class="govuk-heading-xl">@messages("enrolledForPT.gg.heading")</h1>
-  <p class="govuk-body">@messages("enrolledForPT.gg.paragraph1", accountDetails.userId)</p>
+  <p class="govuk-body">@Html(messages("enrolledForPT.gg.paragraph1", accountDetails.userId))</p>
  }
  @if(hasSA) {
   <p class="govuk-body">@messages("enrolledForPT.paragraphSA")</p>

@@ -25,7 +25,7 @@ object SignInAgainMessages extends BaseMessage {
   val paragraph2 = "To complete this process, sign in with Government Gateway user ID:"
   val heading2 = "Next steps"
   val backLink = "Back"
-  val linkText = "The above user ID does not belong to me"
+  val linkText = "This Government Gateway user ID is not mine"
   val listItem1 = "Sign Out."
   val listItem2 = "Sign in with the Government Gateway user ID ending with "
   val exclamation =

@@ -43,7 +43,7 @@ class EnrolledForPTPageSpec extends ViewSpecHelper {
   val documentWithNoSA = doc(htmlWithNoSA)
 
   object Selectors {
-    val heading = "govuk-heading-xl"
+    val heading = "govuk-heading-l"
     val body = "govuk-body"
     val saHeading = "govuk-heading-m"
     val button = "govuk-button"
@@ -79,7 +79,7 @@ class EnrolledForPTPageSpec extends ViewSpecHelper {
       }
       "contain the correct first header" in {
         documentWithNoSA
-          .getElementsByClass("govuk-heading-xl")
+          .getElementsByClass("govuk-heading-l")
           .text shouldBe EnrolledForPTPageMessages.heading
       }
 

@@ -1,6 +1,6 @@
 [
     {
-        "identityProviderType": "SCP",
+        "identityProviderType": "ONE_LOGIN",
         "groupId": "7284B3E9-D253-4D16-BC96-E685FD9DE3D6",
         "affinityGroup": "Individual",
         "nino": "JS271435C",

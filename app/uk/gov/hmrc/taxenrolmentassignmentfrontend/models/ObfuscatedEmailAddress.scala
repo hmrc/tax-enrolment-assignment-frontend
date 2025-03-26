@@ -25,8 +25,7 @@ trait ObfuscatedEmailAddress {
 }
 
 object ObfuscatedEmailAddress {
-  final private val shortMailbox: Regex = "(.{1,2})".r
-  final private val longMailbox: Regex = "(.)(.*)(.)".r
+  final private val splitMailbox: Regex = "(.)(.*)(.)".r
   val validEmail: Regex = """^([a-zA-Z0-9.!#$%&’'*+/=?^_`{|}~@-]+)@([a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*)$""".r
 
   implicit def obfuscatedEmailToString(e: ObfuscatedEmailAddress): String = e.value
@@ -34,10 +33,10 @@ object ObfuscatedEmailAddress {
   def apply(plainEmailAddress: String): ObfuscatedEmailAddress =
     new ObfuscatedEmailAddress {
       val value: String = plainEmailAddress match {
-        case validEmail(shortMailbox(m), domain) =>
+        case validEmail(m, domain) if m.length < 3 =>
           s"${obscure(m)}@$domain"
 
-        case validEmail(longMailbox(firstLetter, middle, lastLetter), domain) =>
+        case validEmail(splitMailbox(firstLetter, middle, lastLetter), domain) =>
           s"$firstLetter${obscure(middle)}$lastLetter@$domain"
 
         case invalidEmail =>

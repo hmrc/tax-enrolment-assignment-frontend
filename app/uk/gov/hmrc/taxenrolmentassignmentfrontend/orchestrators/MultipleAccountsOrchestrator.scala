@@ -154,25 +154,6 @@ class MultipleAccountsOrchestrator @Inject() (
     }
   }
 
-  def getCurrentAccountDetails(implicit
-    requestWithUserDetails: RequestWithUserDetailsFromSessionAndMongo[_],
-    hc: HeaderCarrier,
-    ec: ExecutionContext
-  ): TEAFResult[AccountDetails] = EitherT {
-    val optAccount =
-      requestWithUserDetails.accountDetailsFromMongo.optAccountDetails(requestWithUserDetails.userDetails.credId)
-    optAccount.fold[Option[String]](None)(account => Some(account.credId)) match {
-      case Some(cred) =>
-        usersGroupSearchService.getAccountDetails(cred)(implicitly, implicitly, requestWithUserDetails).value
-      case _ =>
-        eacdService.getUsersAssignedSAEnrolment(requestWithUserDetails, implicitly, implicitly).value.flatMap {
-          case Right(UsersAssignedEnrolment(Some(credId))) =>
-            usersGroupSearchService.getAccountDetails(credId)(implicitly, implicitly, requestWithUserDetails).value
-          case _ => Future.successful(Left(NoSAEnrolmentWhenOneExpected))
-        }
-    }
-  }
-
   def getPTCredentialDetails(implicit
     requestWithUserDetails: RequestWithUserDetailsFromSessionAndMongo[_],
     hc: HeaderCarrier,

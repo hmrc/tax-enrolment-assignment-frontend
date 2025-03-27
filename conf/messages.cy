@@ -103,7 +103,7 @@ signInAgain.listItem1 =  Allgofnodwch.
 signInAgain.gg.listItem2 = Mewngofnodi gyda’r Dynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth sy’n gorffen gyda <strong>{0}</strong>
 signInAgain.one_login.listItem2 = Mewngofnodi gan ddefnyddio cyfeiriad e-bost GOV.UK One Login <strong>{0}</strong>
 
-signInAgain.gg.linkText = Nid fy Nynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth i yw hwnhis Government Gateway user ID is not mine
+signInAgain.gg.linkText = Nid fy Nynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth i yw hwnhis
 signInAgain.one_login.linkText = Nid fy GOV.UK One Login i yw hwn
 
 
@@ -157,7 +157,7 @@ ptEnrolmentOnOtherAccount.one_loginSA.paragraph1 = Er mwyn diogelu’ch gwybodae
 ptEnrolmentOnOtherAccount.ggNoSA.paragraph1 = Er mwyn diogelu’ch gwybodaeth, cafodd y mynediad at eich cyfrif treth personol ei gyfyngu i Ddynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth:
 ptEnrolmentOnOtherAccount.one_loginNoSA.paragraph1 = Er mwyn diogelu’ch gwybodaeth, cafodd y mynediad at eich cyfrif treth personol ei gyfyngu i GOV.UK One Login:
 
-ptEnrolmentOnOtherAccount.gg.linkText = Nid fy Nynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth i yw hwnhis Government Gateway user ID is not mine
+ptEnrolmentOnOtherAccount.gg.linkText = Nid fy Nynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth i yw hwnhis
 ptEnrolmentOnOtherAccount.one_login.linkText = Nid fy GOV.UK One Login i yw hwn
 
 ptEnrolmentOnOtherAccount.saHeading = Hunanasesiad

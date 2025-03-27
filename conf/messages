@@ -92,7 +92,7 @@ keepAccessToSA.one_login.heading = Do you want to use the same GOV.UK One Login 
 keepAccessToSA.radio.yes = Yes
 keepAccessToSA.radio.no = No, I want to keep them separate
 keepAccessToSA.noSA = I do not complete Self Assessment Online
-keepAccessToSA.error.required = Select yes if you want a single Government Gateway user ID for personal tax information and Self Assessment
+keepAccessToSA.error.required = Select yes if you want to use the same sign in details for your personal tax account and Self Assessment
 
 signInAgain.title = You have chosen to have a single Government Gateway user ID
 signInAgain.heading1 = You now need to sign in again

@@ -695,10 +695,8 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
       }
     }
 
-    s"the accountType $SA_ASSIGNED_TO_OTHER_USER, no SA account is found" should {
-      "return a NoSAEnrolmentWhenOneExpected error" in {
-        val additionalCacheData = Map("USER_ASSIGNED_SA_ENROLMENT" -> Json.toJson(UsersAssignedEnrolment1))
-
+    s"the accountType $SA_ASSIGNED_TO_OTHER_USER, account has no SA in the current session but cred is retrieved" should {
+      "return a CADetailsSADetailsIfExists for the account details" in {
         when(
           mockUsersGroupService.getAccountDetails(
             ameq(CREDENTIAL_ID)
@@ -710,16 +708,6 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
         ).thenReturn(createInboundResult(accountDetails))
 
         when(
-          mockUsersGroupService.getAccountDetails(
-            ameq(CREDENTIAL_ID_1)
-          )(
-            any[ExecutionContext],
-            any[HeaderCarrier],
-            any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
-          )
-        ).thenReturn(createInboundResultError(NoSAEnrolmentWhenOneExpected))
-
-        when(
           mockEacdService.getUsersAssignedSAEnrolment(
             any[RequestWithUserDetailsFromSession[AnyContent]],
             any[HeaderCarrier],
@@ -727,8 +715,48 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
           )
         ).thenReturn(createInboundResult(UsersAssignedEnrolment(Some(CREDENTIAL_ID_1))))
 
+        when(
+          mockUsersGroupService.getAccountDetails(
+            ameq(CREDENTIAL_ID_1)
+          )(
+            any[ExecutionContext],
+            any[HeaderCarrier],
+            any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+          )
+        ).thenReturn(createInboundResult(accountDetailsSA))
         val res = orchestrator.getSAAndCADetails(
-          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData),
+          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER),
+          implicitly,
+          implicitly
+        )
+        whenReady(res.value) { result =>
+          result shouldBe Right(CADetailsSADetailsIfExists(accountDetails, accountDetailsSA))
+        }
+      }
+    }
+
+    s"the accountType $SA_ASSIGNED_TO_OTHER_USER, account has no SA in the current session and can't be is retrieved" should {
+      "return a NoSAEnrolmentWhenOneExpected error" in {
+        when(
+          mockUsersGroupService.getAccountDetails(
+            ameq(CREDENTIAL_ID)
+          )(
+            any[ExecutionContext],
+            any[HeaderCarrier],
+            any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+          )
+        ).thenReturn(createInboundResult(accountDetails))
+
+        when(
+          mockEacdService.getUsersAssignedSAEnrolment(
+            any[RequestWithUserDetailsFromSession[AnyContent]],
+            any[HeaderCarrier],
+            any[ExecutionContext]
+          )
+        ).thenReturn(createInboundResult(UsersAssignedEnrolment(None)))
+
+        val res = orchestrator.getSAAndCADetails(
+          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER),
           implicitly,
           implicitly
         )

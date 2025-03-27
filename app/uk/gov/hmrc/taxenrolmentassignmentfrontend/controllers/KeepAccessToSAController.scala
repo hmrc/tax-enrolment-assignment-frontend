@@ -48,12 +48,11 @@ class KeepAccessToSAController @Inject() (
         case Some(details) => KeepAccessToSAThroughPTAForm.keepAccessToSAThroughPTAForm.fill(details)
         case None          => KeepAccessToSAThroughPTAForm.keepAccessToSAThroughPTAForm
       }
-      multipleAccountsOrchestrator.getSAAndCADetails.value.map {
-        case Right(accountDetails) =>
+      multipleAccountsOrchestrator.getSAAndCADetails.fold(
+        error => errorHandler.handleErrors(error, "[KeepAccessToSAController][view]")(request, implicitly),
+        accountDetails =>
           Ok(keepAccessToSA(form, accountDetails.currentAccountDetails, accountDetails.saAccountDetails))
-        case Left(error) =>
-          errorHandler.handleErrors(error, "[KeepAccessToSAController][view]")(request, implicitly)
-      }
+      )
     }
 
   def continue: Action[AnyContent] =
@@ -62,8 +61,9 @@ class KeepAccessToSAController @Inject() (
         .bindFromRequest()
         .fold(
           formWithErrors =>
-            multipleAccountsOrchestrator.getSAAndCADetails.value.map {
-              case Right(accountDetails) =>
+            multipleAccountsOrchestrator.getSAAndCADetails.fold(
+              error => errorHandler.handleErrors(error, "[KeepAccessToSAController][view]")(request, implicitly),
+              accountDetails =>
                 BadRequest(
                   keepAccessToSA(
                     formWithErrors,
@@ -71,9 +71,7 @@ class KeepAccessToSAController @Inject() (
                     accountDetails.saAccountDetails
                   )
                 )
-              case Left(error) =>
-                errorHandler.handleErrors(error, "[KeepAccessToSAController][view]")(request, implicitly)
-            },
+            ),
           keepAccessToSA =>
             multipleAccountsOrchestrator
               .handleKeepAccessToSAChoice(keepAccessToSA)

@@ -41,12 +41,10 @@ class SABlueInterruptController @Inject() (
 
   def view: Action[AnyContent] =
     authAction.andThen(accountMongoDetailsAction).async { implicit request =>
-      multipleAccountsOrchestrator.getSAAndCADetails.value.map {
-        case Right(account) =>
-          Ok(saBlueInterrupt(account.currentAccountDetails, account.saAccountDetails))
-        case Left(error) =>
-          errorHandler.handleErrors(error, "[SABlueInterruptController][view]")(request, implicitly)
-      }
+      multipleAccountsOrchestrator.getSAAndCADetails.fold(
+        error => errorHandler.handleErrors(error, "[SABlueInterruptController][view]")(request, implicitly),
+        account => Ok(saBlueInterrupt(account.currentAccountDetails, account.saAccountDetails))
+      )
     }
 
   def continue: Action[AnyContent] =

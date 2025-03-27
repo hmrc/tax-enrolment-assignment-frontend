@@ -299,7 +299,7 @@ class MultipleAccountsOrchestrator @Inject() (
 
     def getSAAccountDetails: TEAFResult[AccountDetails] = EitherT {
       val optCredential = requestWithUserDetails.accountDetailsFromMongo.optUserAssignedSA
-      optCredential.fold[Option[String]](None)(_.enrolledCredential) match {
+      optCredential.flatMap(_.enrolledCredential) match {
         case Some(saCred) =>
           usersGroupSearchService.getAccountDetails(saCred)(implicitly, implicitly, requestWithUserDetails).value
         case _ =>

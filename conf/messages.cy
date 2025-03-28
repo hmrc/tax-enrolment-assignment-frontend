@@ -87,7 +87,7 @@ keepAccessToSA.one_login.heading = A ydych eisiau defnyddio’r un GOV.UK One Lo
 keepAccessToSA.radio.yes = Iawn
 keepAccessToSA.radio.no = Na, rwyf am gadw’r Dynodyddion Defnyddiwr (ID) ar wahn
 keepAccessToSA.noSA = Nid wyf yn llenwi Ffurflenni Treth Hunanasesiad ar-lein
-keepAccessToSA.error.required = Dewiswch ’Iawn’ os ydych am gael un Dynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth ar gyfer gwybodaeth treth bersonol a Hunanasesiad
+keepAccessToSA.error.required = Dewiswch ‘Iawn’ os ydych eisiau defnyddio’r un manylion mewngofnodi ar gyfer eich cyfrif treth personol a Hunanasesiad
 
 signInAgain.title = Rydych wedi dewis cael Dynodydd Defnyddiwr (ID) unigol ar gyfer Porth y Llywodraeth
 

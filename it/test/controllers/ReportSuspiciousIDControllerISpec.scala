@@ -73,7 +73,6 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
         status(result) shouldBe OK
         page.title should include(ReportSuspiciousIDMessages.title)
-        page.getElementsByClass("govuk-button").size() shouldBe 1
 
         val expectedAuditEvent = AuditEvent.auditReportSuspiciousSAAccount(
           accountDetailsUserFriendly(CREDENTIAL_ID_2)
@@ -115,7 +114,6 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
         status(result) shouldBe OK
         page.title should include(ReportSuspiciousIDMessages.titleWelsh)
-        page.getElementsByClass("govuk-button").size() shouldBe 1
       }
     }
 
@@ -153,7 +151,6 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
           status(result) shouldBe OK
           page.title should include(ReportSuspiciousIDMessages.title)
-          page.getElementsByClass("govuk-button").size() shouldBe 1
         }
       }
     }

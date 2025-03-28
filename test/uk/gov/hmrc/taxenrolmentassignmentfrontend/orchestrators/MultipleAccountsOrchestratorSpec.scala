@@ -24,14 +24,13 @@ import play.api.inject.{Binding, bind}
 import play.api.libs.json.{JsBoolean, Json}
 import play.api.mvc.{AnyContent, BodyParsers}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.CacheMap
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{CADetailsSADetailsIfExists, CacheMap, UsersAssignedEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{BaseSpec, UrlPaths}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
@@ -232,7 +231,7 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
           implicitly
         )
         whenReady(res.value) { result =>
-          result shouldBe Right(ptEnrolmentDataModel(Some(USER_ID)))
+          result shouldBe Right(ptEnrolmentDataModel(Some(CREDENTIAL_ID)))
         }
       }
     }
@@ -275,7 +274,7 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
           implicitly
         )
         whenReady(res.value) { result =>
-          result shouldBe Right(ptEnrolmentDataModel(Some(PT_USER_ID)))
+          result shouldBe Right(ptEnrolmentDataModel(Some(CREDENTIAL_ID_1)))
         }
       }
     }
@@ -328,7 +327,7 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
           implicitly
         )
         whenReady(res.value) { result =>
-          result shouldBe Right(ptEnrolmentDataModel(Some(CREDENTIAL_ID_2)))
+          result shouldBe Right(ptEnrolmentDataModel(Some(CREDENTIAL_ID)))
         }
       }
     }
@@ -656,6 +655,133 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
             whenReady(res.value) { result =>
               result shouldBe Left(IncorrectUserType(UrlPaths.returnUrl, accountType))
             }
+          }
+        }
+      }
+    }
+  }
+  s"getSAAndCADetails" when {
+    s"the accountType $SA_ASSIGNED_TO_OTHER_USER, account has SA in the current session" should {
+      "return a CADetailsSADetailsIfExists for the account details" in {
+        val additionalCacheData = Map("USER_ASSIGNED_SA_ENROLMENT" -> Json.toJson(UsersAssignedEnrolment1))
+
+        when(
+          mockUsersGroupService.getAccountDetails(
+            ameq(CREDENTIAL_ID)
+          )(
+            any[ExecutionContext],
+            any[HeaderCarrier],
+            any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+          )
+        ).thenReturn(createInboundResult(accountDetails))
+
+        when(
+          mockUsersGroupService.getAccountDetails(
+            ameq(CREDENTIAL_ID_1)
+          )(
+            any[ExecutionContext],
+            any[HeaderCarrier],
+            any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+          )
+        ).thenReturn(createInboundResult(accountDetailsSA))
+        val res = orchestrator.getSAAndCADetails(
+          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData),
+          implicitly,
+          implicitly
+        )
+        whenReady(res.value) { result =>
+          result shouldBe Right(CADetailsSADetailsIfExists(accountDetails, accountDetailsSA))
+        }
+      }
+    }
+
+    s"the accountType $SA_ASSIGNED_TO_OTHER_USER, account has no SA in the current session but cred is retrieved" should {
+      "return a CADetailsSADetailsIfExists for the account details" in {
+        when(
+          mockUsersGroupService.getAccountDetails(
+            ameq(CREDENTIAL_ID)
+          )(
+            any[ExecutionContext],
+            any[HeaderCarrier],
+            any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+          )
+        ).thenReturn(createInboundResult(accountDetails))
+
+        when(
+          mockEacdService.getUsersAssignedSAEnrolment(
+            any[RequestWithUserDetailsFromSession[AnyContent]],
+            any[HeaderCarrier],
+            any[ExecutionContext]
+          )
+        ).thenReturn(createInboundResult(UsersAssignedEnrolment(Some(CREDENTIAL_ID_1))))
+
+        when(
+          mockUsersGroupService.getAccountDetails(
+            ameq(CREDENTIAL_ID_1)
+          )(
+            any[ExecutionContext],
+            any[HeaderCarrier],
+            any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+          )
+        ).thenReturn(createInboundResult(accountDetailsSA))
+        val res = orchestrator.getSAAndCADetails(
+          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER),
+          implicitly,
+          implicitly
+        )
+        whenReady(res.value) { result =>
+          result shouldBe Right(CADetailsSADetailsIfExists(accountDetails, accountDetailsSA))
+        }
+      }
+    }
+
+    s"the accountType $SA_ASSIGNED_TO_OTHER_USER, account has no SA in the current session and can't be is retrieved" should {
+      "return a NoSAEnrolmentWhenOneExpected error" in {
+        when(
+          mockUsersGroupService.getAccountDetails(
+            ameq(CREDENTIAL_ID)
+          )(
+            any[ExecutionContext],
+            any[HeaderCarrier],
+            any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+          )
+        ).thenReturn(createInboundResult(accountDetails))
+
+        when(
+          mockEacdService.getUsersAssignedSAEnrolment(
+            any[RequestWithUserDetailsFromSession[AnyContent]],
+            any[HeaderCarrier],
+            any[ExecutionContext]
+          )
+        ).thenReturn(createInboundResult(UsersAssignedEnrolment(None)))
+
+        val res = orchestrator.getSAAndCADetails(
+          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER),
+          implicitly,
+          implicitly
+        )
+        whenReady(res.value) { result =>
+          result shouldBe Left(NoSAEnrolmentWhenOneExpected)
+        }
+      }
+    }
+
+    List(
+      PT_ASSIGNED_TO_CURRENT_USER,
+      SINGLE_OR_MULTIPLE_ACCOUNTS,
+      SA_ASSIGNED_TO_CURRENT_USER,
+      PT_ASSIGNED_TO_OTHER_USER
+    ).foreach { accountType =>
+      s"the accountType is $accountType" should {
+        s"return the $IncorrectUserType containing redirectUrl" in {
+
+          val res = orchestrator.getSAAndCADetails(
+            requestWithAccountType(accountType),
+            implicitly,
+            implicitly
+          )
+          whenReady(res.value) { result =>
+            result shouldBe Left(IncorrectUserType(UrlPaths.returnUrl, accountType))
           }
         }
       }

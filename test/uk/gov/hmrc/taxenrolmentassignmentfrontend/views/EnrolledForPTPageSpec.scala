@@ -43,7 +43,7 @@ class EnrolledForPTPageSpec extends ViewSpecHelper {
   val documentWithNoSA = doc(htmlWithNoSA)
 
   object Selectors {
-    val heading = "govuk-heading-xl"
+    val heading = "govuk-heading-l"
     val body = "govuk-body"
     val saHeading = "govuk-heading-m"
     val button = "govuk-button"
@@ -68,25 +68,8 @@ class EnrolledForPTPageSpec extends ViewSpecHelper {
       "contain the correct body" in {
         documentWithSA
           .getElementsByClass(Selectors.body)
+          .get(1)
           .text shouldBe EnrolledForPTPageMessages.paragraphSA
-      }
-
-      "contain the correct second header" in {
-        documentWithSA
-          .getElementsByClass(Selectors.saHeading)
-          .text shouldBe EnrolledForPTPageMessages.heading2
-      }
-
-      "contain the correct button" in {
-        documentWithSA
-          .getElementsByClass(Selectors.button)
-          .text shouldBe EnrolledForPTPageMessages.button
-      }
-
-      "contains a form with the correct action" in {
-        documentWithSA
-          .select(Selectors.form)
-          .attr("action") shouldBe EnrolledForPTPageMessages.saAction
       }
     }
 
@@ -96,7 +79,7 @@ class EnrolledForPTPageSpec extends ViewSpecHelper {
       }
       "contain the correct first header" in {
         documentWithNoSA
-          .getElementsByClass("govuk-heading-xl")
+          .getElementsByClass("govuk-heading-l")
           .text shouldBe EnrolledForPTPageMessages.heading
       }
 
@@ -106,7 +89,13 @@ class EnrolledForPTPageSpec extends ViewSpecHelper {
       "contain the correct body" in {
         documentWithNoSA
           .getElementsByClass("govuk-body")
-          .text shouldBe EnrolledForPTPageMessages.paragraphNoSA
+          .get(0)
+          .text shouldBe EnrolledForPTPageMessages.paragraph
+
+        documentWithNoSA
+          .getElementsByClass("govuk-body")
+          .get(1)
+          .text shouldBe EnrolledForPTPageMessages.paragraph2
       }
       "contain the correct button" in {
         documentWithNoSA

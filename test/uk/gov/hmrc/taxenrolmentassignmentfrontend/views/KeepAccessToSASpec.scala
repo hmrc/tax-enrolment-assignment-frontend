@@ -33,7 +33,7 @@ class KeepAccessToSASpec extends ViewSpecHelper {
   def documentPopForm(isYes: Boolean = true): Document = {
     val popForm = KeepAccessToSAThroughPTAForm.keepAccessToSAThroughPTAForm
       .fill(KeepAccessToSAThroughPTA(isYes))
-    val popView = view(popForm)(FakeRequest(), testMessages)
+    val popView = view(popForm, testAccountDetails, testAccountDetailsWithSA)(FakeRequest(), testMessages)
     doc(popView)
   }
 
@@ -52,7 +52,7 @@ class KeepAccessToSASpec extends ViewSpecHelper {
   "KeepAccessToSA" when {
     "the form is not prepopulated and has no error" should {
       val html =
-        view(form)(FakeRequest(), testMessages)
+        view(form, testAccountDetails, testAccountDetailsWithSA)(FakeRequest(), testMessages)
       val document = doc(html)
       "have the expected title" in {
         document.title() shouldBe KeepAccessToSAMessages.title
@@ -254,7 +254,7 @@ class KeepAccessToSASpec extends ViewSpecHelper {
           Map("select-continue" -> "")
         )
       val html =
-        view(formWithErrors)(FakeRequest(), testMessages)
+        view(formWithErrors, testAccountDetails, testAccountDetailsWithSA)(FakeRequest(), testMessages)
       val document = doc(html)
 
       "have a page title containing error" in {

@@ -58,6 +58,8 @@ case class AccountDetails(
 
   val emailDecrypted: Option[String] = email.map(_.decryptedValue)
 
+  val emailObfuscated: Option[String] = emailDecrypted.map(ObfuscatedEmailAddress.apply(_).toString)
+
   private def formatDate(implicit messages: Messages): Option[String] =
     lastLoginDate.map { date =>
       val locale = Locale.forLanguageTag(s"${messages.lang.code}-GB")
@@ -69,6 +71,8 @@ case class AccountDetails(
           .format(DateTimeFormatter.ofPattern("a"))
           .toUpperCase // <- Older versions of Java return this in lower case
     }
+
+  def isIdentityProviderOneLogin: Boolean = identityProviderType == ONE_LOGIN
 }
 
 object AccountDetails {

@@ -9,11 +9,18 @@ common.dateToTime = at
 mfaDetails.totp = Authenticator app
 mfaDetails.voice = Phone number
 mfaDetails.text = Text message
-enrolledForPT.title = Only your current user ID can access your personal tax account from now on
-enrolledForPT.heading = Only your current user ID can access your personal tax account from now on
-enrolledForPT.paragraph1 = You are currently signed in with the Government Gateway user ID ending with {0}.
-enrolledForPT.paragraph2 = This is now the only user ID that can access your personal tax account. Please keep the details of this user ID safe.
-enrolledForPT.paragraphSA = You also have access to Self Assessment with your current user ID.
+enrolledForPT.title = You can only access your personal tax account with one user ID from now on
+
+enrolledForPT.gg.heading = Only this Government Gateway user ID can access your personal tax account from now on
+enrolledForPT.one_login.heading = Only this GOV.UK One Login can access your personal tax account from now on
+
+enrolledForPT.gg.paragraph1 = You are signed in with Government Gateway user ID ending with <strong>{0}</strong>.
+enrolledForPT.one_login.paragraph1 = You are signed in with:
+
+enrolledForPT.paragraphSA = Use these sign in details to access your personal tax account and Self Assessment.
+
+enrolledForPT.paragraph2 = Keep these details safe.
+
 enrolledForPT.heading2 = What has happened to my other Government Gateway user IDs?
 enrolledForPT.paragraph3 = If you have any other Government Gateway user IDs, they will lose access to your personal tax account.
 enrolledForPT.continue = Continue
@@ -22,7 +29,14 @@ ReportSuspiciousID.heading = You need to contact us
 ReportSuspiciousID.userId = User ID
 ReportSuspiciousID.email = Email
 ReportSuspiciousID.lastLoginDate = Last signed in
-ReportSuspiciousID.text1 = This is so we can investigate this user ID.
+
+ReportSuspiciousID.gg.text1 = Take a note of this Government Gateway user ID as this screen will time out after 15 minutes.
+ReportSuspiciousID.one_login.text1 = Take a note of this GOV.UK One Login as this screen will time out after 15 minutes.
+
+ReportSuspiciousID.gg.linkText = Contact technical support with HMRC online services (opens in new tab)
+ReportSuspiciousID.gg.postLinkText = and quote <strong>PTA951</strong>
+ReportSuspiciousID.one_login.linkText = Contact GOV.UK One Login (opens in new tab)
+
 ReportSuspiciousID.text2 = We recommend you take a note of the user ID and email address below as this screen will time out after 15 minutes.
 ReportSuspiciousID.telephone.title = Telephone:
 ReportSuspiciousID.telephone.number = 0300 200 3600
@@ -46,37 +60,76 @@ multiplePTE.true.title = Tax Enrolment Assignment Frontend - Enrolment Present
 multiplePTE.true.heading = This user has no PT enrolment
 multiplePTE.true.text =  The current user does not have an assigned PT enrolment
 
-selfAssessmentInterrupt.title = You currently have more than one Government Gateway user ID
-selfAssessmentInterrupt.heading = You currently have more than one Government Gateway user ID
-selfAssessmentInterrupt.paragraph1 = We recommend that you use only one Government Gateway user ID to access your personal tax information.
-selfAssessmentInterrupt.paragraph2 = If you complete Self Assessment, you can choose to:
-selfAssessmentInterrupt.listItem1 = use a single user ID for both personal tax and Self Assessment
-selfAssessmentInterrupt.listItem2 = use a separate user ID for Self Assessment only
-selfAssessmentInterrupt.paragraph3 = On the next screens we will ask you which option you want to choose.
+selfAssessmentInterrupt.title = We are changing the way you access your personal tax account
+
+selfAssessmentInterrupt.mixed.heading = You currently have more than one way of signing in
+selfAssessmentInterrupt.gg.heading = You have more than one Government Gateway user ID
+selfAssessmentInterrupt.one_login.heading = You have more than one GOV.UK One Login
+
+selfAssessmentInterrupt.gg.paragraph1 = We recommend you use only one set of sign in details.
+selfAssessmentInterrupt.one_login.paragraph1 = We recommend you use only GOV.UK One Login to access your personal tax information.
+
+selfAssessmentInterrupt.paragraph2 = If you complete Self Assessment, you can choose:
+
+selfAssessmentInterrupt.mixed.listItem1 = the same sign in details to access both your personal tax account and Self Assessment
+selfAssessmentInterrupt.mixed.listItem2 = or separate sign in details for each
+
+selfAssessmentInterrupt.gg.listItem1 = the same Government Gateway user ID to access both your personal tax account and Self Assessment
+selfAssessmentInterrupt.gg.listItem2 = or separate Government Gateway user IDs for each
+
+selfAssessmentInterrupt.one_login.listItem1 = the same sign in details to access both your personal tax account and Self Assessment
+selfAssessmentInterrupt.one_login.listItem2 = or separate sign in details for each
+
+selfAssessmentInterrupt.paragraph3 = On the next screens, we will ask you which option you want to choose.
 selfAssessmentInterrupt.continue = Continue
 
 keepAccessToSA.title = Do you want to keep access to Self Assessment from your personal tax account?
-keepAccessToSA.heading = Do you want a single Government Gateway user ID for personal tax information and Self Assessment?
+
+keepAccessToSA.mixed.heading = Do you want to use the same sign in details to access your personal tax account and Self Assessment?
+keepAccessToSA.gg.heading = Do you want to use the same Government Gateway user ID to access your personal tax account and Self Assessment?
+keepAccessToSA.one_login.heading = Do you want to use the same GOV.UK One Login to access your personal tax account and Self Assessment?
+
 keepAccessToSA.radio.yes = Yes
 keepAccessToSA.radio.no = No, I want to keep them separate
 keepAccessToSA.noSA = I do not complete Self Assessment Online
-keepAccessToSA.error.required = Select yes if you want a single Government Gateway user ID for personal tax information and Self Assessment
+keepAccessToSA.error.required = Select yes if you want to use the same sign in details for your personal tax account and Self Assessment
 
 signInAgain.title = You have chosen to have a single Government Gateway user ID
-signInAgain.heading1 = You have chosen to have a single Government Gateway user ID
-signInAgain.subheading = User ID for personal tax information and Self Assessment
+signInAgain.heading1 = You now need to sign in again
+
+signInAgain.gg.paragraph1 = You have chosen to use the same Government Gateway user ID to access both your personal tax account and Self Assessment.
+signInAgain.gg.paragraph2 = To complete this process, sign in with Government Gateway user ID:
+signInAgain.one_login.paragraph1 = You have chosen to use the same GOV.UK One Login to access both your personal tax account and Self Assessment.
+signInAgain.one_login.paragraph2 = To complete this process, sign in with GOV.UK One Login:
+
+signInAgain.nextSteps = Next steps
+signInAgain.guidance = To access your personal tax account and Self Assessment, you need to:
+signInAgain.listItem1 = Sign Out.
+signInAgain.gg.listItem2 = Sign in with the Government Gateway user ID ending with <strong>{0}</strong>
+signInAgain.one_login.listItem2 = Sign in with the GOV.UK One Login email address <strong>{0}</strong>
+
+signInAgain.gg.linkText = This Government Gateway user ID is not mine
+signInAgain.one_login.linkText = This GOV.UK One Login is not mine
+
+choseSeparate.mixed.heading = You have chosen to use separate sign in details
+choseSeparate.gg.heading = You have chosen to have two separate Government Gateway user IDs
+choseSeparate.one_login.heading = You have chosen to have two separate GOV.UK One Logins
+
+choseSeparate.paragraph = You can only use these sign in details from now on. Keep these details safe.
+choseSeparate.gg.paragraph2 = You are currently signed in with Government Gateway user ID ending with {0}
+choseSeparate.one_login.paragraph2 = You are currently signed in with GOV.UK One Login:
+
+choseSeparate.gg.saInfo = To access your Self Assessment sign in with Government Gateway user ID:
+choseSeparate.one_login.saInfo = To access your Self Assessment sign in with GOV.UK One Login:
+choseSeparate.continueLink = Continue to personal tax account
+choseSeparate.saHeading = Self Assessment
+choseSeparate.ptaHeading = Personal tax account
+
 signInAgain.userId = User ID
 signInAgain.email =  Email
 signInAgain.lastLoginDate = Last signed in
 signInAgain.phoneNumber = Phone number
-signInAgain.linkText = The above user ID does not belong to me
-signInAgain.heading2 = What to do next
-signInAgain.paragraph1 = You are currently signed in with a user ID ending with {0}
-signInAgain.paragraph2 = To access personal tax and Self Assessment:
-signInAgain.listItem1 = sign out now
-signInAgain.listItem2 = sign in again using your other user ID ending with {0}
-signInAgain.exclamation = Your user ID ending with {0} is the only user ID you can use for personal tax information and Self Assessment
-signInAgain.continue = Confirm and sign out
+signInAgain.signOut = Sign out
 
 enrolledForPTWithSAOnOtherAccount.title = You are choosing to have two Government Gateway user IDs
 enrolledForPTWithSAOnOtherAccount.heading = You are choosing to have two Government Gateway user IDs
@@ -95,21 +148,40 @@ enrolledForPTWithSAOnOtherAccount.continue = Continue to personal tax
 timedout.title = For your security, we signed you out
 timedout.heading = For your security, we signed you out
 timedout.signin = Sign in
-ptEnrolmentOnOtherAccount.title = We have found your personal tax account under a different Government Gateway user ID
+ptEnrolmentOnOtherAccount.title = You cannot access your personal tax account
 ptEnrolmentOnOtherAccount.heading = We have found your personal tax account under a different Government Gateway user ID
-ptEnrolmentOnOtherAccount.paragraph1 = To protect your information, access to your personal tax account was limited to the user ID below, ending with {0}.
-ptEnrolmentOnOtherAccount.paragraph2 = You are currently signed in with the user ID ending with {0}.
-ptEnrolmentOnOtherAccount.linkText = The above user ID does not belong to me
-ptEnrolmentOnOtherAccount.text1 = To access your personal tax information you need to
+
+ptEnrolmentOnOtherAccount.generic.heading = You cannot access your personal tax account with these sign in details
+ptEnrolmentOnOtherAccount.gg.heading = You cannot access your personal tax account with this Government Gateway user ID
+ptEnrolmentOnOtherAccount.one_login.heading = You cannot access your personal tax account with this GOV.UK One Login
+
+ptEnrolmentOnOtherAccount.ggSA.paragraph1 = To protect your information, access to your personal tax account and Self Assessment was limited to Government Gateway user ID:
+ptEnrolmentOnOtherAccount.one_loginSA.paragraph1 = To protect your information, access to your personal tax account and Self Assessment was limited to GOV.UK One Login:
+
+ptEnrolmentOnOtherAccount.ggNoSA.paragraph1 = To protect your information, access to your personal tax account was limited to Government Gateway user ID:
+ptEnrolmentOnOtherAccount.one_loginNoSA.paragraph1 = To protect your information, access to your personal tax account was limited to GOV.UK One Login:
+
+ptEnrolmentOnOtherAccount.gg.linkText = This Government Gateway user ID is not mine
+ptEnrolmentOnOtherAccount.one_login.linkText = This GOV.UK One Login is not mine
+
+ptEnrolmentOnOtherAccount.saHeading = Self Assessment
+ptEnrolmentOnOtherAccount.ptaHeading = Personal tax account
+
+ptEnrolmentOnOtherAccount.gg.saText = You can use this Government Gateway user ID to
+ptEnrolmentOnOtherAccount.one_login.saText = You can use this GOV.UK One Login to
+ptEnrolmentOnOtherAccount.saLink = access your Self Assessment
+
+ptEnrolmentOnOtherAccount.sa.signInParagraph = To access your personal tax account and Self Assessment:
+ptEnrolmentOnOtherAccount.nonSa.signInParagraph = To access your personal tax account:
+
+ptEnrolmentOnOtherAccount.signOut = Sign out.
+
+ptEnrolmentOnOtherAccount.gg.signIn = Sign in with Government Gateway user ID ending with <strong>{0}</strong>
+ptEnrolmentOnOtherAccount.one_login.signIn = Sign in with GOV.UK One Login email address <strong>{0}</strong>
+
+ptEnrolmentOnOtherAccount.text1 = To access your personal tax account and Self Assessment:
 ptEnrolmentOnOtherAccount.signInAgain = sign in again
 ptEnrolmentOnOtherAccount.text2 =  with the following user ID:
 ptEnrolmentOnOtherAccount.userId = User ID
 ptEnrolmentOnOtherAccount.email =  Email
 ptEnrolmentOnOtherAccount.lastLoginDate = Last signed in
-ptEnrolmentOnOtherAccount.saHeading = Access to Self Assessment
-ptEnrolmentOnOtherAccount.saText1 = To access your Self Assessment
-ptEnrolmentOnOtherAccount.saText2 = with the above user ID.
-ptEnrolmentOnOtherAccount.saText3 = The user ID you are currently signed in with can
-ptEnrolmentOnOtherAccount.saLink = access Self Assessment
-ptEnrolmentOnOtherAccount.saText4 = To access your Self Assessment you need to
-ptEnrolmentOnOtherAccount.saText5 = with user ID ending with {0}.

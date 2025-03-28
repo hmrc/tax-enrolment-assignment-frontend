@@ -18,16 +18,17 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.messages
 
 object SignInAgainMessages extends BaseMessage {
   val title: String = "You have chosen to have a single Government Gateway user ID" + defaultTitleSuffix
-  val heading = "You have chosen to have a single Government Gateway user ID"
+  val heading = "You now need to sign in again"
   val subheading = "User ID for personal tax information and Self Assessment"
-  val paragraph1 = "You are currently signed in with a user ID ending with "
-  val paragraph2 = "To access personal tax and Self Assessment:"
-  val heading2 = "What to do next"
+  val paragraph1 =
+    "You have chosen to use the same Government Gateway user ID to access both your personal tax account and Self Assessment."
+  val paragraph2 = "To complete this process, sign in with Government Gateway user ID:"
+  val heading2 = "Next steps"
   val backLink = "Back"
-  val linkText = "The above user ID does not belong to me"
-  val listItem1 = "sign out now"
-  val listItem2 = "sign in again using your other user ID ending with "
+  val linkText = "This Government Gateway user ID is not mine"
+  val listItem1 = "Sign Out."
+  val listItem2 = "Sign in with the Government Gateway user ID ending with "
   val exclamation =
     "If you have any other Government Gateway user IDs, you will not be able to use them to access your personal tax information or Self Assessment" // TODO - Add once class is figured out
-  val confirmAndSignOut = "Confirm and sign out"
+  val confirmAndSignOut = "Sign out"
 }

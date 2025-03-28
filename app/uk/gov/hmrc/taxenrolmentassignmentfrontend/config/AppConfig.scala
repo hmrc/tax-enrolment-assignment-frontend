@@ -50,4 +50,8 @@ class AppConfig @Inject() (val config: ServicesConfig) {
     s"/protect-tax-info/keepAlive"
 
   lazy val appName = config.getString("appName")
+
+  lazy val contactOneLoginFraud = config.getString("contactFraud.oneLogin")
+  lazy val contactGGFraud = config.getString("contactFraud.gg")
+  lazy val ptaHomePage = config.baseUrl("personal-tax-account") + "/personal-account"
 }

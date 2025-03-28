@@ -22,16 +22,19 @@ import play.twirl.api.HtmlFormat
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.ReportSuspiciousIDMessages
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails, SCP}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.ReportSuspiciousID
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{ReportSuspiciousIDGateway, ReportSuspiciousIDOneLogin}
 
 class ReportSuspiciousIDSpec extends ViewSpecHelper {
 
-  val reportSuspiciousIdView: ReportSuspiciousID =
-    app.injector.instanceOf[ReportSuspiciousID]
+  val reportSuspiciousIdGGView: ReportSuspiciousIDGateway =
+    app.injector.instanceOf[ReportSuspiciousIDGateway]
+
+  val reportSuspiciousIdOLView: ReportSuspiciousIDOneLogin =
+    app.injector.instanceOf[ReportSuspiciousIDOneLogin]
 
   object Selectors {
     val backLink = "govuk-back-link"
-    val heading = "govuk-heading-xl"
+    val heading = "govuk-heading-l"
     val body = "govuk-body"
     val summaryListRow = "govuk-summary-list__row"
     val summaryListKey = "govuk-summary-list__key"
@@ -39,7 +42,7 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
     val links = "govuk-link"
   }
 
-  val mfaDetails: Seq[MFADetails] = Seq(MFADetails("mfaDetails.text", "28923"))
+  override val mfaDetails: Seq[MFADetails] = Seq(MFADetails("mfaDetails.text", "28923"))
 
   val accountDetails: AccountDetails =
     AccountDetails(
@@ -52,15 +55,15 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
     )
 
   def view(accountDetails: AccountDetails = accountDetails): HtmlFormat.Appendable =
-    reportSuspiciousIdView(accountDetails)(FakeRequest(), testMessages)
+    reportSuspiciousIdGGView(accountDetails)(FakeRequest(), testMessages)
 
   val viewSA: HtmlFormat.Appendable =
-    reportSuspiciousIdView(accountDetails, saOnOtherAccountJourney = true)(FakeRequest(), testMessages)
+    reportSuspiciousIdGGView(accountDetails)(FakeRequest(), testMessages)
 
   val document: Document = doc(view())
   val documentSA: Document = doc(viewSA)
 
-  "The Report suspicious ID Page" should {
+  "The Report suspicious ID Page for GG account" should {
     "have a back link" that {
       val backLink =
         document.getElementsByClass(Selectors.backLink)
@@ -135,101 +138,107 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
 
       paragraph
         .get(0)
-        .text() shouldBe ReportSuspiciousIDMessages.paragraph1
+        .text() shouldBe ReportSuspiciousIDMessages.paragraphGG
     }
 
-    "contains the contact UK telephone details " in {
-      val telephoneBlock = document.select("#telephone-numbers li")
+    "contains a valid paragraph details for the link" in {
+      val paragraph = document.select("p." + Selectors.body)
 
-      telephoneBlock
-        .get(0)
-        .text() shouldBe ReportSuspiciousIDMessages.telephone.head
-
-      telephoneBlock
+      paragraph
         .get(1)
-        .text() shouldBe ReportSuspiciousIDMessages.telephone(1)
+        .text() shouldBe ReportSuspiciousIDMessages.linkTextGG + " " + ReportSuspiciousIDMessages.postLinkTextGG
     }
 
-    "contains the outside UK contact details " in {
-      val outsideUKBlock = document.select("#telephone-numbers li")
+    "contains the relevant link to report the fraud" in {
+      val links = document.select("""a[id="reportLink"]""")
 
-      outsideUKBlock
-        .get(2)
-        .text() shouldBe ReportSuspiciousIDMessages.outsideUK.head
-
-      outsideUKBlock
-        .get(3)
-        .text() shouldBe ReportSuspiciousIDMessages.outsideUK(1)
+      links.get(0).attr("href") shouldBe ReportSuspiciousIDMessages.linkGG
     }
+  }
 
-    "contains the details block with valid details with in" that {
-      val detailsBlockParagraphs = document
-        .select("details p")
-
-      "correct title" in {
-        document
-          .select(".govuk-details__summary")
-          .text() shouldBe ReportSuspiciousIDMessages.informationBlock.head
+  "The Report suspicious ID Page for OL account" should {
+    def view(accountDetails: AccountDetails = accountDetails): HtmlFormat.Appendable =
+      reportSuspiciousIdOLView(accountDetails)(FakeRequest(), testMessages)
+    val document: Document = doc(view())
+    "have a back link" that {
+      val backLink =
+        document.getElementsByClass(Selectors.backLink)
+      "has the text back" in {
+        backLink.text() shouldBe "Back"
       }
-      "correct information" in {
-        detailsBlockParagraphs
+      "has the expected href" in {
+        backLink.get(0).attr("href") shouldBe "#"
+      }
+    }
+
+    validateTimeoutDialog(document)
+    validateTechnicalHelpLinkPresent(document)
+    validateAccessibilityStatementLinkPresent(document)
+
+    "contains the correct title" in {
+      document.title shouldBe ReportSuspiciousIDMessages.title
+    }
+    "contains the correct heading" in {
+      document
+        .getElementsByClass(Selectors.heading)
+        .text() shouldBe ReportSuspiciousIDMessages.heading
+    }
+    "contains a suspicious userId summary details" that {
+      val suspiciousIdDetailsRows =
+        document.getElementsByClass(Selectors.summaryListRow)
+      "includes the email field with correct value" in {
+        suspiciousIdDetailsRows
           .get(0)
-          .text() shouldBe ReportSuspiciousIDMessages.informationBlock(1)
-        detailsBlockParagraphs
+          .getElementsByClass(Selectors.summaryListKey)
+          .text() shouldBe "Email"
+        suspiciousIdDetailsRows
+          .get(0)
+          .getElementsByClass(Selectors.summaryListValue)
+          .text() shouldBe accountDetails.emailObfuscated.get
+      }
+
+      "includes the last signed in date" in {
+        suspiciousIdDetailsRows
           .get(1)
-          .text() shouldBe ReportSuspiciousIDMessages.informationBlock(2)
-        detailsBlockParagraphs
-          .get(2)
-          .text() shouldBe ReportSuspiciousIDMessages.informationBlock(3)
+          .getElementsByClass(Selectors.summaryListKey)
+          .text() shouldBe "Last signed in"
+        suspiciousIdDetailsRows
+          .get(1)
+          .getElementsByClass(Selectors.summaryListValue)
+          .text() shouldBe accountDetails.lastLoginDate.get
       }
-      "correct gov-uk link target and link text for Relay UK link" in {
-        document
-          .getElementsByClass(Selectors.links)
+      "includes the text message field with correct value" in {
+        suspiciousIdDetailsRows
           .get(2)
-          .attr("target") shouldBe "_blank"
-
-        document
-          .select("details a")
-          .text() shouldBe ReportSuspiciousIDMessages.detailBlockLink
-
-        document
-          .select("details a")
-          .attr("href") shouldBe ReportSuspiciousIDMessages.relayUkLinkUrl
+          .getElementsByClass(Selectors.summaryListKey)
+          .text() shouldBe "Text message"
+        suspiciousIdDetailsRows
+          .get(2)
+          .getElementsByClass(Selectors.summaryListValue)
+          .text() shouldBe s"Ending with ${accountDetails.mfaDetails.head.factorValue}"
       }
     }
 
-    "not display the continue button when no SA identified" in {
-      document
-        .body()
-        .text()
-        .contains(ReportSuspiciousIDMessages.saPText) shouldBe false
+    "contains a valid paragraph details" in {
+      val paragraph = document.select("p." + Selectors.body)
 
-      document
-        .select("govuk-button")
-        .size() shouldBe 0
+      paragraph
+        .get(0)
+        .text() shouldBe ReportSuspiciousIDMessages.paragraphOL
     }
 
-    "only display the continue button when SA identified" in {
-      documentSA
-        .select("p." + Selectors.body)
-        .get(5)
-        .text() shouldBe ReportSuspiciousIDMessages.saPText
+    "contains a valid paragraph details for the link" in {
+      val paragraph = document.select("p." + Selectors.body)
 
-      documentSA
-        .getElementsByClass("govuk-button")
-        .text shouldBe ReportSuspiciousIDMessages.button
+      paragraph
+        .get(1)
+        .text() shouldBe ReportSuspiciousIDMessages.linkTextOL
     }
 
-    "contains a form with the correct action" in {
-      documentSA
-        .select("form")
-        .attr("action") shouldBe ReportSuspiciousIDMessages.action
-    }
+    "contains the relevant link to report the fraud" in {
+      val links = document.select("""a[id="reportLink"]""")
 
-    "display the code and helpdesk timing" in {
-      documentSA
-        .text()
-        .contains(ReportSuspiciousIDMessages.referenceNumberAndHelpdeskTiming) shouldBe true
+      links.get(0).attr("href") shouldBe ReportSuspiciousIDMessages.linkOL
     }
   }
 

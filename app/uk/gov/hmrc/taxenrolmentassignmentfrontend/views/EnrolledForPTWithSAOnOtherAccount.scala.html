@@ -17,29 +17,52 @@
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.helpers.CreateSummaryRow
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 
 @this(
         layout: Layout,
-        formHelper: FormWithCSRF,
-        govukButton: GovukButton,
         summaryRow: CreateSummaryRow,
-        govukWarningText: GovukWarningText
+        appConfig: AppConfig
 )
 
-@(userId: String, saAccountDetails: AccountDetails)(implicit request: Request[AnyRef], messages: Messages)
+@(currentAccount: AccountDetails, saAccountDetails: AccountDetails)(implicit request: Request[AnyRef], messages: Messages)
+
+@headingKey = @{
+    (currentAccount.isIdentityProviderOneLogin, saAccountDetails.isIdentityProviderOneLogin) match {
+        case (true, true) => "choseSeparate.one_login.heading"
+        case (false, false) => "choseSeparate.gg.heading"
+        case _ => "choseSeparate.mixed.heading"
+    }
+}
 
 @layout(pageTitle = Some(messages("enrolledForPTWithSAOnOtherAccount.title")), backLinkEnabled = true) {
 
-    <h1 class="govuk-heading-l">@messages("enrolledForPTWithSAOnOtherAccount.heading")</h1>
-    <p class="govuk-body">@messages("enrolledForPTWithSAOnOtherAccount.paragraph1", userId)</p>
-    <h2 class="govuk-heading-m">@messages("enrolledForPTWithSAOnOtherAccount.heading2")</h2>
-    <p class="govuk-body">@messages("enrolledForPTWithSAOnOtherAccount.paragraph2", saAccountDetails.userId)</p>
-    <p class="govuk-body">@messages("enrolledForPTWithSAOnOtherAccount.paragraph3")</p>
-    <h3 class="govuk-heading-s">@messages("enrolledForPTWithSAOnOtherAccount.subheading")</h3>
+    <h1 class="govuk-heading-l">@messages(headingKey)</h1>
+    <p class="govuk-body">@messages("choseSeparate.paragraph")</p>
+    <h2 class="govuk-heading-m">@messages("choseSeparate.ptaHeading")</h2>
+    @if(currentAccount.isIdentityProviderOneLogin){
+        <p class="govuk-body">@messages("choseSeparate.one_login.paragraph2")</p>
+        <p class="govuk-body">@currentAccount.emailDecrypted</p>
+    } else {
+        <p class="govuk-body">@Html(messages("choseSeparate.gg.paragraph2", currentAccount.userId))</p>
+    }
+    <p class="govuk-body"><a id="ptaLink" class="govuk-link" href=@appConfig.ptaHomePage>@messages("choseSeparate.continueLink")</a></p>
+
+    <h2 class="govuk-heading-m">@messages("choseSeparate.saHeading")</h2>
+    @if(saAccountDetails.isIdentityProviderOneLogin){
+        <p class="govuk-body">@messages("choseSeparate.one_login.saInfo")</p>
+    } else {
+        <p class="govuk-body">@messages("choseSeparate.gg.saInfo")</p>
+    }
+
     <dl class="govuk-summary-list">
-        @summaryRow("common.userId", saAccountDetails.userId)
-        @if(saAccountDetails.emailDecrypted.isDefined) {
-            @summaryRow("enrolledForPTWithSAOnOtherAccount.email", saAccountDetails.emailDecrypted.get)
+        @if(saAccountDetails.isIdentityProviderOneLogin){
+            @summaryRow("enrolledForPTWithSAOnOtherAccount.email", saAccountDetails.emailObfuscated.get)
+        } else {
+            @summaryRow("common.userId", saAccountDetails.userId)
+            @if(saAccountDetails.emailDecrypted.isDefined) {
+                @summaryRow("enrolledForPTWithSAOnOtherAccount.email", saAccountDetails.emailDecrypted.get)
+            }
         }
         @summaryRow("enrolledForPTWithSAOnOtherAccount.lastLoginDate", saAccountDetails.lastLoginDate.getOrElse(""))
         @for(mfaDetail <- saAccountDetails.mfaDetails) {
@@ -48,20 +71,11 @@
     </dl>
     <p class="govuk-body govuk-!-margin-bottom-6">
         <a class="govuk-link" id="reportId" href="@routes.ReportSuspiciousIDController.viewSA">
-        @messages("enrolledForPTWithSAOnOtherAccount.linkText")
+            @if(saAccountDetails.isIdentityProviderOneLogin){
+                @messages("ptEnrolmentOnOtherAccount.one_login.linkText")
+            } else {
+                @messages("ptEnrolmentOnOtherAccount.gg.linkText")
+            }
         </a>
     </p>
-
-    @govukWarningText(
-        WarningText(
-            content = Text(messages("enrolledForPTWithSAOnOtherAccount.exclamation"))
-        )
-    )
-
-    @formHelper(action = routes.EnrolledPTWithSAOnOtherAccountController.continue) {
-        @govukButton(Button(
-            preventDoubleClick = Some(true),
-            content = Text(messages("enrolledForPTWithSAOnOtherAccount.continue"))
-        ))
-    }
 }

@@ -1,0 +1,56 @@
+[
+    {
+        "identityProviderType": "ONE_LOGIN",
+        "groupId": "1B958C76-8F5B-406A-B2D6-CB3B7D92E063",
+        "affinityGroup": "Individual",
+        "nino": "JS347435A",
+        "user": {
+            "credId": "1358163060829375",
+            "name": "Firstname Surname",
+            "email": "email10@test.com"
+        },
+        "enrolments": [
+            {
+                "serviceName": "HMRC-PT",
+                "identifiers": {
+                    "key": "NINO",
+                    "value": "JS347435A"
+                },
+                "verifiers": [
+                    {
+                        "key": "NINO1",
+                        "value": "JS347435A"
+                    }
+                ],
+                "enrolmentFriendlyName": "HMRC-PT Enrolment",
+                "state": "Activated",
+                "enrolmentType": "principal",
+                "assignedToAll": false
+            }
+        ],
+        "additionalFactors": [
+            {
+                "factorType": "totp",
+                "name": "HMRC App"
+            }
+        ]
+    },
+    {
+        "identityProviderType": "SCP",
+        "groupId": "A707606F-BF9C-4469-8234-F72D97E27278",
+        "affinityGroup": "Individual",
+        "nino": "JS347435A",
+        "user": {
+            "credId": "5500977999892956",
+            "name": "Firstname Surname",
+            "email": "email11@test.com"
+        },
+        "enrolments": [],
+        "additionalFactors": [
+            {
+                "factorType": "totp",
+                "name": "HMRC App"
+            }
+        ]
+    }
+]

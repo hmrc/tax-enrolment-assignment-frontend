@@ -17,16 +17,17 @@
 package controllers
 
 import helpers.TestITData._
-import play.api.test.Helpers.{GET, POST, await, contentAsString, defaultAwaitTimeout, redirectLocation, route}
-import play.api.test.Helpers.{status, writeableOf_AnyContentAsEmpty}
+import play.api.test.Helpers.{GET, NON_AUTHORITATIVE_INFORMATION, POST, await, contentAsString, defaultAwaitTimeout, redirectLocation, route, status, writeableOf_AnyContentAsEmpty}
 import helpers.messages._
 import helpers.{IntegrationSpecBase, ItUrlPaths}
 import org.jsoup.Jsoup
 import play.api.http.Status
+import play.api.http.Status.NON_AUTHORITATIVE_INFORMATION
 import play.api.libs.json.{JsString, Json}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_OR_MULTIPLE_ACCOUNTS}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys._
@@ -46,8 +47,28 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
             SA_ASSIGNED_TO_OTHER_USER
           )
         )
+        await(
+          save[UsersAssignedEnrolment](
+            sessionId,
+            USER_ASSIGNED_SA_ENROLMENT,
+            UsersAssignedEnrolment(Some(CREDENTIAL_ID_2))
+          )
+        )
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
+
+        stubGet(
+          s"/users-groups-search/users/$CREDENTIAL_ID",
+          NON_AUTHORITATIVE_INFORMATION,
+          usergroupsResponseJson().toString()
+        )
+
+        stubGet(
+          s"/users-groups-search/users/$CREDENTIAL_ID_2",
+          NON_AUTHORITATIVE_INFORMATION,
+          usergroupsResponseJson().toString()
+        )
+
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
         val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
@@ -63,81 +84,6 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
         radioInputs.get(0).hasAttr("checked") shouldBe false
         radioInputs.get(1).attr("value") shouldBe "no"
         radioInputs.get(1).hasAttr("checked") shouldBe false
-      }
-    }
-
-    s"the session cache contains Account type of $SA_ASSIGNED_TO_OTHER_USER and user has previously selected yes" should {
-      s"render the KeepAccessToSA page with radio buttons unchecked" in {
-        await(save[String](sessionId, "redirectURL", returnUrl))
-        await(
-          save[AccountTypes.Value](
-            sessionId,
-            "ACCOUNT_TYPE",
-            SA_ASSIGNED_TO_OTHER_USER
-          )
-        )
-        await(
-          save[KeepAccessToSAThroughPTA](
-            sessionId,
-            KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM,
-            KeepAccessToSAThroughPTA(true)
-          )
-        )
-        val authResponse = authoriseResponseJson()
-        stubAuthorizePost(OK, authResponse.toString())
-        stubPost(s"/write/.*", OK, """{"x":2}""")
-
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
-          .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
-
-        status(result) shouldBe OK
-        page.title should include(KeepAccessToSAMessages.title)
-        val radioInputs = page.getElementsByClass("govuk-radios__input")
-        radioInputs.size() shouldBe 2
-        radioInputs.get(0).attr("value") shouldBe "yes"
-        radioInputs.get(0).hasAttr("checked") shouldBe true
-        radioInputs.get(1).attr("value") shouldBe "no"
-        radioInputs.get(1).hasAttr("checked") shouldBe false
-      }
-    }
-
-    s"the session cache contains Account type of $SA_ASSIGNED_TO_OTHER_USER and user has previously selected no" should {
-      s"render the KeepAccessToSA page with radio buttons unchecked" in {
-        await(save[String](sessionId, "redirectURL", returnUrl))
-        await(
-          save[AccountTypes.Value](
-            sessionId,
-            "ACCOUNT_TYPE",
-            SA_ASSIGNED_TO_OTHER_USER
-          )
-        )
-        await(
-          save[KeepAccessToSAThroughPTA](
-            sessionId,
-            KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM,
-            KeepAccessToSAThroughPTA(false)
-          )
-        )
-        val authResponse = authoriseResponseJson()
-        stubAuthorizePost(OK, authResponse.toString())
-        stubPost(s"/write/.*", OK, """{"x":2}""")
-
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
-          .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
-
-        status(result) shouldBe OK
-        page.title should include(KeepAccessToSAMessages.title)
-        val radioInputs = page.getElementsByClass("govuk-radios__input")
-        radioInputs.size() shouldBe 2
-        radioInputs.get(0).attr("value") shouldBe "yes"
-        radioInputs.get(0).hasAttr("checked") shouldBe false
-        radioInputs.get(1).attr("value") shouldBe "no"
-        radioInputs.get(1).hasAttr("checked") shouldBe true
-
       }
     }
 
@@ -514,11 +460,36 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
 
     "an invalid form is supplied" should {
       "render the keepAccessToSA page with errors" in {
+        await(save[String](sessionId, "redirectURL", returnUrl))
+        await(
+          save[AccountTypes.Value](
+            sessionId,
+            "ACCOUNT_TYPE",
+            SA_ASSIGNED_TO_OTHER_USER
+          )
+        )
+        await(
+          save[UsersAssignedEnrolment](
+            sessionId,
+            USER_ASSIGNED_SA_ENROLMENT,
+            UsersAssignedEnrolment(Some(CREDENTIAL_ID_2))
+          )
+        )
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
-        await(save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", SA_ASSIGNED_TO_CURRENT_USER))
-        await(save[String](sessionId, "redirectURL", returnUrl))
         stubPost(s"/write/.*", OK, """{"x":2}""")
+
+        stubGet(
+          s"/users-groups-search/users/$CREDENTIAL_ID",
+          NON_AUTHORITATIVE_INFORMATION,
+          usergroupsResponseJson().toString()
+        )
+
+        stubGet(
+          s"/users-groups-search/users/$CREDENTIAL_ID_2",
+          NON_AUTHORITATIVE_INFORMATION,
+          usergroupsResponseJson().toString()
+        )
 
         val request = FakeRequest(POST, "/protect-tax-info" + urlPath)
           .withSession(xAuthToken, xSessionId)

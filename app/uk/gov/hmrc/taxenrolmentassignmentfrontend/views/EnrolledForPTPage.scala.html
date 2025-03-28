@@ -26,21 +26,22 @@
 
 @layout(pageTitle = Some(messages("enrolledForPT.title"))) {
 
- <h1 class="govuk-heading-xl">@messages("enrolledForPT.heading")</h1>
- <p class="govuk-body">@messages("enrolledForPT.paragraph1", accountDetails.userId)</p>
- <p class="govuk-body">@messages("enrolledForPT.paragraph2")</p>
-
+ @if(accountDetails.isIdentityProviderOneLogin) {
+  <h1 class="govuk-heading-l">@messages("enrolledForPT.one_login.heading")</h1>
+  <p class="govuk-body">@messages("enrolledForPT.one_login.paragraph1")</p>
+  <p class="govuk-body"><strong>@accountDetails.emailDecrypted.get</strong></p>
+ } else {
+  <h1 class="govuk-heading-l">@messages("enrolledForPT.gg.heading")</h1>
+  <p class="govuk-body">@Html(messages("enrolledForPT.gg.paragraph1", accountDetails.userId))</p>
+ }
  @if(hasSA) {
   <p class="govuk-body">@messages("enrolledForPT.paragraphSA")</p>
  }
-
- <h2 class="govuk-heading-m">@messages("enrolledForPT.heading2")</h2>
- <p class="govuk-body">@messages("enrolledForPT.paragraph3")</p>
-
- @formHelper(action = postAction) {
-  @govukButton(Button(
-   preventDoubleClick = Some(true),
-   content = Text(messages("enrolledForPT.continue"))
-  ))
- }
+ <p class="govuk-body">@messages("enrolledForPT.paragraph2")</p>
+  @formHelper(action = postAction) {
+   @govukButton(Button(
+    preventDoubleClick = Some(true),
+    content = Text(messages("enrolledForPT.continue"))
+   ))
+  }
 }

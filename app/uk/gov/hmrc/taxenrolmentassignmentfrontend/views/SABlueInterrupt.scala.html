@@ -17,6 +17,7 @@
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.helpers.InterruptCard
 @import components.FullWidthMainContent
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
 
 @this(layout: Layout,
         govukButton: GovukButton,
@@ -24,36 +25,79 @@
         formHelper: FormWithCSRF,
         fullWidthMainContent: FullWidthMainContent)
 
-@()(implicit request: Request[_], messages: Messages)
+@(currentAccount: AccountDetails, saAccount: AccountDetails)(implicit request: Request[_], messages: Messages)
+
+@cardMixedLogin = {
+
+        <h1 class="govuk-heading-xl">@messages("selfAssessmentInterrupt.mixed.heading")</h1>
+
+        <p class="govuk-body">@messages("selfAssessmentInterrupt.gg.paragraph1")</p>
+
+        <p class="govuk-body">@messages("selfAssessmentInterrupt.paragraph2")</p>
+
+        <ul class="govuk-list govuk-list--bullet">
+            <li>@messages("selfAssessmentInterrupt.mixed.listItem1")</li>
+            <li>@messages("selfAssessmentInterrupt.mixed.listItem2")</li>
+        </ul>
+
+        <p class="govuk-body">@messages("selfAssessmentInterrupt.paragraph3")</p>
+}
+
+@card2GG = {
+        <h1 class="govuk-heading-xl">@messages("selfAssessmentInterrupt.gg.heading")</h1>
+
+        <p class="govuk-body">@messages("selfAssessmentInterrupt.gg.paragraph1")</p>
+
+        <p class="govuk-body">@messages("selfAssessmentInterrupt.paragraph2")</p>
+
+        <ul class="govuk-list govuk-list--bullet">
+            <li>@messages("selfAssessmentInterrupt.gg.listItem1")</li>
+            <li>@messages("selfAssessmentInterrupt.gg.listItem2")</li>
+        </ul>
+
+        <p class="govuk-body">@messages("selfAssessmentInterrupt.paragraph3")</p>
+
+}
+
+@card2OL = {
+
+        <h1 class="govuk-heading-xl">@messages("selfAssessmentInterrupt.one_login.heading")</h1>
+
+        <p class="govuk-body">@messages("selfAssessmentInterrupt.one_login.paragraph1")</p>
+
+        <p class="govuk-body">@messages("selfAssessmentInterrupt.paragraph2")</p>
+
+        <ul class="govuk-list govuk-list--bullet">
+            <li>@messages("selfAssessmentInterrupt.one_login.listItem1")</li>
+            <li>@messages("selfAssessmentInterrupt.one_login.listItem2")</li>
+        </ul>
+
+        <p class="govuk-body">@messages("selfAssessmentInterrupt.paragraph3")</p>
+}
+
+@cardChoice = @{
+    (currentAccount.isIdentityProviderOneLogin, saAccount.isIdentityProviderOneLogin) match {
+        case (true, true) => card2OL
+        case (false, false) => card2GG
+        case _ => cardMixedLogin
+    }
+
+}
 
 @layout(pageTitle = Some(messages("selfAssessmentInterrupt.title")), mainLayout = Some(fullWidthMainContent(_)), backLinkEnabled = true) {
 
     @card {
-
-        <h1 class="govuk-heading-xl">@messages("selfAssessmentInterrupt.heading")</h1>
         <div class="govuk-grid-row">
             <div class="govuk-grid-column-two-thirds">
-
-                <p class="govuk-body">@messages("selfAssessmentInterrupt.paragraph1")</p>
-
-                <p class="govuk-body">@messages("selfAssessmentInterrupt.paragraph2")</p>
-
-                <ul class="govuk-list govuk-list--bullet">
-                    <li>@messages("selfAssessmentInterrupt.listItem1")</li>
-                    <li>@messages("selfAssessmentInterrupt.listItem2")</li>
-                </ul>
-
-                <p class="govuk-body">@messages("selfAssessmentInterrupt.paragraph3")</p>
-
+                @cardChoice
                 @formHelper(action = routes.SABlueInterruptController.continue) {
-                    <div class="actions">
+                <div class="actions">
                     @govukButton(Button(
-                        content = Text(messages("selfAssessmentInterrupt.continue"))
+                    content = Text(messages("selfAssessmentInterrupt.continue"))
                     ))
-                    </div>
+                </div>
                 }
             </div>
         </div>
     }
-
 }

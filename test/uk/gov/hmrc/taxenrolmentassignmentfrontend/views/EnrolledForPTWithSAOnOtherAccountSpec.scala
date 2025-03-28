@@ -21,7 +21,7 @@ import play.api.test.FakeRequest
 import play.twirl.api.HtmlFormat
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.CREDENTIAL_ID
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.EnrolledPTWithSAOnOtherAccountMessages
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails, SCP}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, SCP}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTWithSAOnOtherAccount
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 
@@ -30,12 +30,16 @@ class EnrolledForPTWithSAOnOtherAccountSpec extends ViewSpecHelper {
   val view: EnrolledForPTWithSAOnOtherAccount =
     app.injector.instanceOf[EnrolledForPTWithSAOnOtherAccount]
   val userId = "3214"
-  val mfaDetails: Seq[MFADetails] = Seq(
-    MFADetails("Text message", "07390328923"),
-    MFADetails("Voice call", "0193453839"),
-    MFADetails("Authenticator App", "HRMC APP")
+
+  val currentAccountDetails: AccountDetails = AccountDetails(
+    identityProviderType = SCP,
+    credId = "credId321",
+    userId,
+    Some(SensitiveString("email2@test.com")),
+    Some("Today"),
+    mfaDetails
   )
-  val accountDetails: AccountDetails = AccountDetails(
+  val saAccountDetails: AccountDetails = AccountDetails(
     identityProviderType = SCP,
     credId = CREDENTIAL_ID,
     userId,
@@ -44,10 +48,10 @@ class EnrolledForPTWithSAOnOtherAccountSpec extends ViewSpecHelper {
     mfaDetails
   )
   val html: HtmlFormat.Appendable =
-    view(userId, accountDetails)(FakeRequest(), testMessages)
+    view(currentAccountDetails, saAccountDetails)(FakeRequest(), testMessages)
   val document: Document = doc(html)
   val htmlSA: HtmlFormat.Appendable =
-    view(userId, accountDetails)(FakeRequest(), testMessages)
+    view(currentAccountDetails, saAccountDetails)(FakeRequest(), testMessages)
   val documentSA: Document = doc(htmlSA)
 
   object Selectors {
@@ -59,7 +63,7 @@ class EnrolledForPTWithSAOnOtherAccountSpec extends ViewSpecHelper {
     val form = "form"
   }
   "EnrolledForPTWithSAOnOtherAccount" when {
-    "the user has choosen to keep SA separate" should {
+    "the user has chosen to keep SA separate" should {
       "contain the correct title" in {
         documentSA.title shouldBe EnrolledPTWithSAOnOtherAccountMessages.title
       }
@@ -72,32 +76,6 @@ class EnrolledForPTWithSAOnOtherAccountSpec extends ViewSpecHelper {
       validateTimeoutDialog(documentSA)
       validateTechnicalHelpLinkPresent(documentSA)
       validateAccessibilityStatementLinkPresent(documentSA)
-
-      "contain the correct body" which {
-        "has a sub heading for BTA ID" in {
-          val subHeadings = documentSA.getElementsByClass(Selectors.subHeading)
-          subHeadings
-            .get(0)
-            .text() shouldBe EnrolledPTWithSAOnOtherAccountMessages.subheading1
-        }
-        "has a sub heading for SA ID" in {
-          val subHeadings = documentSA.getElementsByClass(Selectors.smallSubHeading)
-          subHeadings
-            .get(0)
-            .text() shouldBe EnrolledPTWithSAOnOtherAccountMessages.subheading2
-        }
-      }
-      "contain the correct button" in {
-        documentSA
-          .getElementsByClass("govuk-button")
-          .text shouldBe EnrolledPTWithSAOnOtherAccountMessages.button
-      }
-
-      "contains a form with the correct action" in {
-        documentSA
-          .select(Selectors.form)
-          .attr("action") shouldBe EnrolledPTWithSAOnOtherAccountMessages.action
-      }
     }
 
     "the user has come from fraud reporting" should {
@@ -114,17 +92,11 @@ class EnrolledForPTWithSAOnOtherAccountSpec extends ViewSpecHelper {
       validateTechnicalHelpLinkPresent(document)
 
       "contain the correct body" which {
-        val subHeadings = document.getElementsByClass(Selectors.subHeading)
-        "has a sub heading for other IDs" in {
-          subHeadings
-            .get(0)
-            .text() shouldBe EnrolledPTWithSAOnOtherAccountMessages.subheading1
-        }
         "have expected paragraphs that don't include SA" in {
           document
             .getElementsByTag("p")
             .get(0)
-            .text shouldBe EnrolledPTWithSAOnOtherAccountMessages.paragraph1(userId)
+            .text shouldBe EnrolledPTWithSAOnOtherAccountMessages.paragraph1
 
           document
             .getElementsByTag("p")
@@ -132,21 +104,14 @@ class EnrolledForPTWithSAOnOtherAccountSpec extends ViewSpecHelper {
             .text shouldBe EnrolledPTWithSAOnOtherAccountMessages.paragraph2(userId)
 
           document
-            .getElementsByTag("p")
-            .get(2)
-            .text shouldBe EnrolledPTWithSAOnOtherAccountMessages.paragraph3
-        }
-      }
-      "contain the correct button" in {
-        document
-          .getElementsByClass("govuk-button")
-          .text shouldBe EnrolledPTWithSAOnOtherAccountMessages.button
-      }
+            .getElementById("ptaLink")
+            .text shouldBe EnrolledPTWithSAOnOtherAccountMessages.ptaLinkText
 
-      "contains a form with the correct action" in {
-        document
-          .select(Selectors.form)
-          .attr("action") shouldBe EnrolledPTWithSAOnOtherAccountMessages.action
+          document
+            .getElementById("ptaLink")
+            .attr("href") should include(EnrolledPTWithSAOnOtherAccountMessages.ptaLink)
+
+        }
       }
     }
   }

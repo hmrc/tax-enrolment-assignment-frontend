@@ -1,0 +1,37 @@
+[
+    {
+        "identityProviderType": "ONE_LOGIN",
+        "groupId": "F8AEE9A3-2BD0-42F8-9782-610567E81201",
+        "affinityGroup": "Individual",
+        "nino": "JS281435A",
+        "user": {
+            "credId": "2338687273700201",
+            "name": "TwoCreds NoEnrolments1",
+            "email": "twocredsnoemrolemail1@test.com"
+        },
+        "additionalFactors": [
+            {
+                "factorType": "voiceCall",
+                "phoneNumber": "07783924122",
+                "name": "voice call"
+            }
+        ]
+    },
+    {
+        "identityProviderType": "ONE_LOGIN",
+        "groupId": "ED4EA886-52C5-478F-9DFB-DFEA2CC40202",
+        "affinityGroup": "Individual",
+        "nino": "JS281435A",
+        "user": {
+            "credId": "5052110129550202",
+            "name": "TwoCreds NoEnrolments2",
+            "email": "twocredsnoemrolemail2@test.com"
+        },
+        "additionalFactors": [
+            {
+                "factorType": "totp",
+                "name": "HMRC App"
+            }
+        ]
+    }
+]

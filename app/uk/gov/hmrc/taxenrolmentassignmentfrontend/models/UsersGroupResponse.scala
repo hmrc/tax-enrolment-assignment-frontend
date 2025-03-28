@@ -30,10 +30,7 @@ case class UsersGroupResponse(
   email: Option[String],
   lastAccessedTimestamp: Option[String],
   additionalFactors: Option[List[AdditonalFactors]]
-) {
-  def isIdentityProviderSCP: Boolean = identityProviderType == SCP
-  def isIdentityProviderOneLogin: Boolean = identityProviderType == ONE_LOGIN
-}
+)
 
 object AdditonalFactors {
   implicit val format: Format[AdditonalFactors] = Json.format[AdditonalFactors]

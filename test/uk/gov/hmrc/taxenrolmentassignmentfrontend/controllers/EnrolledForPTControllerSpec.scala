@@ -83,7 +83,7 @@ class EnrolledForPTControllerSpec extends ControllersBaseSpec {
         Jsoup
           .parse(contentAsString(result))
           .body()
-          .text() should include(messages("enrolledForPT.heading"))
+          .text() should include(messages("enrolledForPT.gg.heading"))
       }
     }
 

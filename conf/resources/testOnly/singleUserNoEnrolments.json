@@ -1,4 +1,5 @@
 {
+    "identityProviderType": "SCP",
     "groupId": "E9099DA7-7AAA-4D8C-B07A-68923620DCF6",
     "affinityGroup": "Individual",
     "nino": "JS271435D",

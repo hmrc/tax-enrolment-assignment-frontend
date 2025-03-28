@@ -18,6 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators
 
 import cats.data.EitherT
 import cats.implicits._
+
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.data.Form
@@ -31,7 +32,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTA
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logNoUserFoundWithPTEnrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, CADetailsPTADetailsSADetailsIfExists, PTEnrolmentOnOtherAccount, UsersAssignedEnrolment}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, CADetailsPTADetailsSADetailsIfExists, CADetailsSADetailsIfExists, PTEnrolmentOnOtherAccount, UsersAssignedEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, SilentAssignmentService, UsersGroupsSearchService}
@@ -234,7 +235,7 @@ class MultipleAccountsOrchestrator @Inject() (
       PTEnrolmentOnOtherAccount(
         model.currentAccountDetails,
         model.ptAccountDetails,
-        model.saAccountDetails.map(_.userId)
+        model.saAccountDetails.map(_.credId)
       )
     }
 
@@ -286,6 +287,38 @@ class MultipleAccountsOrchestrator @Inject() (
     } yield CADetailsPTADetailsSADetailsIfExists(
       currentAccountDetails,
       ptAccountDetails,
+      saOnOtherAccountDetails
+    )
+  }
+
+  def getSAAndCADetails(implicit
+    requestWithUserDetails: RequestWithUserDetailsFromSessionAndMongo[_],
+    hc: HeaderCarrier,
+    ec: ExecutionContext
+  ): TEAFResult[CADetailsSADetailsIfExists] = {
+
+    def getSAAccountDetails: TEAFResult[AccountDetails] = EitherT {
+      val optCredential = requestWithUserDetails.accountDetailsFromMongo.optUserAssignedSA
+      optCredential.flatMap(_.enrolledCredential) match {
+        case Some(saCred) =>
+          usersGroupSearchService.getAccountDetails(saCred)(implicitly, implicitly, requestWithUserDetails).value
+        case _ =>
+          eacdService.getUsersAssignedSAEnrolment(requestWithUserDetails, implicitly, implicitly).value.flatMap {
+            case Right(UsersAssignedEnrolment(Some(credId))) =>
+              usersGroupSearchService.getAccountDetails(credId)(implicitly, implicitly, requestWithUserDetails).value
+            case _ => Future.successful(Left(NoSAEnrolmentWhenOneExpected))
+          }
+      }
+    }
+
+    for {
+      _ <- EitherT(Future(checkAccessAllowedForPage(List(SA_ASSIGNED_TO_OTHER_USER))))
+      currentAccountDetails <-
+        usersGroupSearchService
+          .getAccountDetails(requestWithUserDetails.userDetails.credId)(implicitly, implicitly, requestWithUserDetails)
+      saOnOtherAccountDetails <- getSAAccountDetails
+    } yield CADetailsSADetailsIfExists(
+      currentAccountDetails,
       saOnOtherAccountDetails
     )
   }

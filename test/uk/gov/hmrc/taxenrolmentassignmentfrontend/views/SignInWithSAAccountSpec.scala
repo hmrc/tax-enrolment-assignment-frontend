@@ -26,17 +26,19 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.CREDENTIAL_ID
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.SignInAgainMessages
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.SignInAgainMessages.{listItem1, listItem2}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails, SCP}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{ReportSuspiciousID, SignInWithSAAccount}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{ReportSuspiciousIDGateway, ReportSuspiciousIDOneLogin, SignInWithSAAccount}
 
 class SignInWithSAAccountSpec extends ViewSpecHelper {
 
   lazy val service: SignOutController = inject[SignOutController]
   lazy val signInAgainPage: SignInWithSAAccount = inject[SignInWithSAAccount]
-  lazy val reportSuspiciousIDPage: ReportSuspiciousID =
-    inject[ReportSuspiciousID]
+  lazy val reportSuspiciousIDOneLoginPage: ReportSuspiciousIDOneLogin =
+    inject[ReportSuspiciousIDOneLogin]
+  lazy val reportSuspiciousIDGGPage: ReportSuspiciousIDGateway =
+    inject[ReportSuspiciousIDGateway]
   lazy val userId = "3214"
   lazy val view: HtmlFormat.Appendable =
-    signInAgainPage(userId, accountDetails)(FakeRequest(), testMessages)
+    signInAgainPage(accountDetails)(FakeRequest(), testMessages)
   lazy val document: Document =
     Jsoup.parse(view.toString())
 
@@ -54,7 +56,7 @@ class SignInWithSAAccountSpec extends ViewSpecHelper {
     val bulletPointList = "govuk-list govuk-list--bullet"
   }
 
-  val mfaDetails: Seq[MFADetails] = Seq(
+  override val mfaDetails: Seq[MFADetails] = Seq(
     MFADetails("Text message", "07390328923"),
     MFADetails("Voice call", "0193453839"),
     MFADetails("Authenticator App", "HMRC APP")
@@ -86,20 +88,14 @@ class SignInWithSAAccountSpec extends ViewSpecHelper {
         .text shouldBe SignInAgainMessages.heading
     }
 
-    "contain the correct subheader" in {
-      document
-        .getElementsByClass(Selectors.headingS)
-        .text shouldBe SignInAgainMessages.subheading
-    }
-
     "contain the correct paragraph" in {
       val paragraph = document.getElementsByTag("p")
       paragraph
-        .get(1)
-        .text() shouldBe SignInAgainMessages.paragraph1 + s"$userId"
+        .get(0)
+        .text() shouldBe SignInAgainMessages.paragraph1
 
       paragraph
-        .get(2)
+        .get(1)
         .text() shouldBe SignInAgainMessages.paragraph2
     }
 

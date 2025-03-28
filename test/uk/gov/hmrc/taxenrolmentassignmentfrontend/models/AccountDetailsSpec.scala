@@ -194,7 +194,7 @@ class AccountDetailsSpec extends BaseSpec {
           identityProviderType = SCP,
           "credid",
           "userId",
-          Some(SensitiveString("foo")),
+          Some(SensitiveString("foo@test.com")),
           Some("lastLoginDate"),
           Seq(mfaDetailsTotp),
           None
@@ -211,7 +211,7 @@ class AccountDetailsSpec extends BaseSpec {
         )
       )
 
-      crypto.crypto.decrypt(Crypted(res.as[JsObject].value("email").as[String])).value shouldBe """"foo""""
+      crypto.crypto.decrypt(Crypted(res.as[JsObject].value("email").as[String])).value shouldBe """"foo@test.com""""
     }
     "read from json" in {
       implicit val ssf = JsonEncryption.sensitiveEncrypterDecrypter(SensitiveString.apply)(implicitly, crypto.crypto)
@@ -220,7 +220,7 @@ class AccountDetailsSpec extends BaseSpec {
         "credId"               -> "credid",
         "userId"               -> "userId",
         "lastLoginDate"        -> "lastLoginDate",
-        "email"                -> SensitiveString("foo"),
+        "email"                -> SensitiveString("foooo@test.com"),
         "mfaDetails" -> Json.arr(
           Json.obj("factorNameKey" -> "mfaDetails.totp", "factorValue" -> "HMRC App")
         )
@@ -231,14 +231,15 @@ class AccountDetailsSpec extends BaseSpec {
           identityProviderType = SCP,
           "credid",
           "userId",
-          Some(SensitiveString("foo")),
+          Some(SensitiveString("foooo@test.com")),
           Some("lastLoginDate"),
           Seq(mfaDetailsTotp),
           None
         )
 
       Json.fromJson(json)(AccountDetails.mongoFormats(crypto.crypto)).get shouldBe accountDetails
-      accountDetails.emailDecrypted shouldBe Some("foo")
+      accountDetails.emailDecrypted shouldBe Some("foooo@test.com")
+      accountDetails.emailObfuscated shouldBe Some("f***o@test.com")
     }
   }
 }

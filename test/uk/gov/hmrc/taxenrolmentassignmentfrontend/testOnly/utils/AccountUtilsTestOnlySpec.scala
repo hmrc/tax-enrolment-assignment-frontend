@@ -114,13 +114,6 @@ class AccountUtilsTestOnlySpec extends BaseSpec {
       when(mockBasStubsConnectorTestOnly.deleteAdditionalFactors(credId))
         .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
-      val result = sut.deleteAccountDetails(account).value.futureValue
-
-      result mustBe Right(())
-    }
-
-    "delete all details for OLFG user" in {
-
       account.enrolments.foreach { enrolment =>
         when(mockEnrolmentStoreServiceTestOnly.deallocateEnrolmentFromGroups(enrolment))
           .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
@@ -150,7 +143,7 @@ class AccountUtilsTestOnlySpec extends BaseSpec {
       when(mockEnrolmentStoreServiceTestOnly.deallocateEnrolmentsFromUser(credId))
         .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
 
-      val result = sut.deleteAccountDetails(account.copy(identityProviderType = "ONE_LOGIN")).value.futureValue
+      val result = sut.deleteAccountDetails(account).value.futureValue
 
       result mustBe Right(())
     }

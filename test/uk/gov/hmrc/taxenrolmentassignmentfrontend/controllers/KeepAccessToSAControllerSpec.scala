@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
+import cats.data.EitherT
 import org.jsoup.Jsoup
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.{any, eq => ameq}
@@ -30,13 +31,13 @@ import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, UnexpectedPTEnrolment, UnexpectedResponseFromTaxEnrolments}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm.keepAccessToSAThroughPTAForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{ControllersBaseSpec, UrlPaths}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.CADetailsSADetailsIfExists
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_ASSIGNED_SA_ENROLMENT, accountDetailsForCredential}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM, USER_ASSIGNED_SA_ENROLMENT, accountDetailsForCredential}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.KeepAccessToSA
@@ -77,8 +78,8 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
         when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
 
-        when(mockMultipleAccountsOrchestrator.getDetailsForKeepAccessToSA(any(), any()))
-          .thenReturn(createInboundResult(keepAccessToSAThroughPTAForm))
+        when(mockMultipleAccountsOrchestrator.getSAAndCADetails(any(), any(), any()))
+          .thenReturn(EitherT.right(Future.successful(CADetailsSADetailsIfExists(accountDetails, accountDetailsSA))))
 
         mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
 
@@ -89,7 +90,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
         val page = Jsoup
           .parse(contentAsString(result))
 
-        page.getElementsByTag("h1").text() shouldBe messages("keepAccessToSA.heading")
+        page.getElementsByTag("h1").text() shouldBe messages("keepAccessToSA.gg.heading")
         val radioInputs = page.getElementsByClass("govuk-radios__input")
         radioInputs.size() shouldBe 2
         radioInputs.get(0).attr("value") shouldBe "yes"
@@ -100,19 +101,19 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
     }
 
     "the user has multiple accounts, is signed in with one without SA and has previously selected Yes" should {
+
       "render the keep access to sa page with Yes checked" in {
 
         when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
 
-        when(mockMultipleAccountsOrchestrator.getDetailsForKeepAccessToSA(any(), any()))
-          .thenReturn(
-            createInboundResult(
-              keepAccessToSAThroughPTAForm.fill(KeepAccessToSAThroughPTA(true))
-            )
-          )
+        when(mockMultipleAccountsOrchestrator.getSAAndCADetails(any(), any(), any()))
+          .thenReturn(EitherT.right(Future.successful(CADetailsSADetailsIfExists(accountDetails, accountDetailsSA))))
 
-        mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
+        mockGetDataFromCacheForActionSuccess(
+          SA_ASSIGNED_TO_OTHER_USER,
+          additionCacheData = Map(KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM -> Json.toJson(KeepAccessToSAThroughPTA(true)))
+        )
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -121,7 +122,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
         val page = Jsoup
           .parse(contentAsString(result))
 
-        page.getElementsByTag("h1").text() shouldBe messages("keepAccessToSA.heading")
+        page.getElementsByTag("h1").text() shouldBe messages("keepAccessToSA.gg.heading")
         val radioInputs = page.getElementsByClass("govuk-radios__input")
         radioInputs.size() shouldBe 2
         radioInputs.get(0).attr("value") shouldBe "yes"
@@ -137,14 +138,13 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
         when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
 
-        when(mockMultipleAccountsOrchestrator.getDetailsForKeepAccessToSA(any(), any()))
-          .thenReturn(
-            createInboundResult(
-              keepAccessToSAThroughPTAForm.fill(KeepAccessToSAThroughPTA(false))
-            )
-          )
+        when(mockMultipleAccountsOrchestrator.getSAAndCADetails(any(), any(), any()))
+          .thenReturn(EitherT.right(Future.successful(CADetailsSADetailsIfExists(accountDetails, accountDetailsSA))))
 
-        mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
+        mockGetDataFromCacheForActionSuccess(
+          SA_ASSIGNED_TO_OTHER_USER,
+          additionCacheData = Map(KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM -> Json.toJson(KeepAccessToSAThroughPTA(false)))
+        )
 
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
@@ -153,7 +153,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
         val page = Jsoup
           .parse(contentAsString(result))
 
-        page.getElementsByTag("h1").text() shouldBe messages("keepAccessToSA.heading")
+        page.getElementsByTag("h1").text() shouldBe messages("keepAccessToSA.gg.heading")
         val radioInputs = page.getElementsByClass("govuk-radios__input")
         radioInputs.size() shouldBe 2
         radioInputs.get(0).attr("value") shouldBe "yes"
@@ -169,8 +169,8 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
         when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly)))
 
-        when(mockMultipleAccountsOrchestrator.getDetailsForKeepAccessToSA(any(), any()))
-          .thenReturn(createInboundResultError(UnexpectedPTEnrolment(SA_ASSIGNED_TO_OTHER_USER)))
+        when(mockMultipleAccountsOrchestrator.getSAAndCADetails(any(), any(), any()))
+          .thenReturn(EitherT.left(Future.successful(UnexpectedPTEnrolment(SA_ASSIGNED_TO_OTHER_USER))))
 
         mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
 
@@ -188,8 +188,8 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
         when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
 
-        when(mockMultipleAccountsOrchestrator.getDetailsForKeepAccessToSA(any(), any()))
-          .thenReturn(createInboundResultError(IncorrectUserType(UrlPaths.returnUrl, randomAccountType)))
+        when(mockMultipleAccountsOrchestrator.getSAAndCADetails(any(), any(), any()))
+          .thenReturn(EitherT.left(Future.successful(IncorrectUserType(UrlPaths.returnUrl, randomAccountType))))
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
@@ -428,6 +428,9 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
           )
             .thenReturn(Future.successful(retrievalResponse()))
 
+          when(mockMultipleAccountsOrchestrator.getSAAndCADetails(any(), any(), any()))
+            .thenReturn(EitherT.right(Future.successful(CADetailsSADetailsIfExists(accountDetails, accountDetailsSA))))
+
           when(
             mockMultipleAccountsOrchestrator.handleKeepAccessToSAChoice(
               ArgumentMatchers.eq(KeepAccessToSAThroughPTA(false))
@@ -453,6 +456,9 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
       "render the keepAccessToSA page with error summary" in {
         when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
+
+        when(mockMultipleAccountsOrchestrator.getSAAndCADetails(any(), any(), any()))
+          .thenReturn(EitherT.right(Future.successful(CADetailsSADetailsIfExists(accountDetails, accountDetailsSA))))
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 

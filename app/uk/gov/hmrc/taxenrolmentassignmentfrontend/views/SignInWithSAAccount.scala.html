@@ -23,21 +23,38 @@
         layout: Layout,
         govukButton: GovukButton,
         formHelper: FormWithCSRF,
-        summaryRow: CreateSummaryRow,
-        govukWarningText: GovukWarningText
+        summaryRow: CreateSummaryRow
 )
 
-@(userId: String, saAccountDetails: AccountDetails)(implicit request: Request[_], messages: Messages)
+@(saAccountDetails: AccountDetails)(implicit request: Request[_], messages: Messages)
 
 @layout(pageTitle = Some(messages("signInAgain.title")), backLinkEnabled = true) {
 
+
     <h1 class="govuk-heading-l">@messages("signInAgain.heading1")</h1>
-    <h2 class="govuk-heading-s">@messages("signInAgain.subheading")</h2>
-    <dl class="govuk-summary-list">
+    @if(saAccountDetails.isIdentityProviderOneLogin){
+        <p class="govuk-body">
+           @messages("signInAgain.one_login.paragraph1")
+        </p>
+        <p class="govuk-body">
+            @messages("signInAgain.one_login.paragraph2")
+        </p>
+        <dl class="govuk-summary-list">
+            @summaryRow("signInAgain.email", saAccountDetails.emailObfuscated.get)
+
+    } else {
+       <p class="govuk-body">
+           @messages("signInAgain.gg.paragraph1")
+       </p>
+       <p class="govuk-body">
+           @messages("signInAgain.gg.paragraph2")
+       </p>
+        <dl class="govuk-summary-list">
         @summaryRow("common.userId", saAccountDetails.userId)
         @if(saAccountDetails.emailDecrypted.isDefined) {
             @summaryRow("signInAgain.email", saAccountDetails.emailDecrypted.get)
         }
+    }
         @summaryRow("signInAgain.lastLoginDate", saAccountDetails.lastLoginDate.getOrElse(""))
         @for(mfaDetail <- saAccountDetails.mfaDetails) {
             @summaryRow(mfaDetail.factorNameKey, mfaDetail.factorValue)
@@ -46,28 +63,29 @@
 
     <p class="govuk-body govuk-!-margin-bottom-6">
         <a class="govuk-link" id="reportId" href="@routes.ReportSuspiciousIDController.viewSA">
-        @messages("signInAgain.linkText")
+            @if(saAccountDetails.isIdentityProviderOneLogin){
+                @messages("signInAgain.one_login.linkText")
+            } else {
+                @messages("signInAgain.gg.linkText")
+            }
         </a>
     </p>
 
-    <h2 class="govuk-heading-m">@messages("signInAgain.heading2")</h2>
-    <p class="govuk-body">@messages("signInAgain.paragraph1", userId)</p>
-    <p class="govuk-body">@messages("signInAgain.paragraph2")</p>
+    <h2 class="govuk-heading-m">@messages("signInAgain.nextSteps")</h2>
+    <p class="govuk-body">@messages("signInAgain.guidance")</p>
     <ul class="govuk-list govuk-list--bullet">
         <li>@messages("signInAgain.listItem1")</li>
-        <li>@messages("signInAgain.listItem2", saAccountDetails.userId)</li>
+        @if(saAccountDetails.isIdentityProviderOneLogin){
+            <li>@Html(messages("signInAgain.one_login.listItem2", saAccountDetails.emailObfuscated.get))</li>
+        } else {
+            <li>@Html(messages("signInAgain.gg.listItem2", saAccountDetails.userId))</li>
+        }
     </ul>
-
-    @govukWarningText(
-        WarningText(
-            content = Text(messages("signInAgain.exclamation", saAccountDetails.userId))
-        )
-    )
 
     @formHelper(action = routes.SignInWithSAAccountController.continue) {
         @govukButton(Button(
             preventDoubleClick = Some(true),
-            content = Text(messages("signInAgain.continue"))
+            content = Text(messages("signInAgain.signOut"))
         ))
     }
 }

@@ -17,6 +17,7 @@
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
 
 @this(
         layout: Layout,
@@ -26,10 +27,18 @@
         govukButton: GovukButton
 )
 
-@(form: Form[KeepAccessToSAThroughPTA])(implicit request: Request[AnyRef], messages: Messages)
+@(form: Form[KeepAccessToSAThroughPTA], currentAccount: AccountDetails, saAccount: AccountDetails)(implicit request: Request[AnyRef], messages: Messages)
 
 @formError = @{
     form.errors.map(_.message).headOption
+}
+
+@headingKey = @{
+    (currentAccount.isIdentityProviderOneLogin, saAccount.isIdentityProviderOneLogin) match {
+        case (true, true) => "keepAccessToSA.one_login.heading"
+        case (false, false) => "keepAccessToSA.gg.heading"
+        case _ => "keepAccessToSA.mixed.heading"
+    }
 }
 
 @layout(
@@ -52,7 +61,7 @@
         @govukRadios(Radios(
             fieldset = Some(Fieldset(
                 legend = Some(Legend(
-                    content = Text(messages("keepAccessToSA.heading")),
+                    content = Text(messages(headingKey)),
                     classes = "govuk-fieldset__legend--l",
                     isPageHeading = true
                 ))

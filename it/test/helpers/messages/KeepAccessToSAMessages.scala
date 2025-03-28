@@ -20,5 +20,5 @@ object KeepAccessToSAMessages {
   val title = "Do you want to keep access to Self Assessment from your personal tax account?"
   val errorTitle = "There is a problem"
   val errorMessage =
-    "Select yes if you want a single Government Gateway user ID for personal tax information and Self Assessment"
+    "Select yes if you want to use the same sign in details for your personal tax account and Self Assessment"
 }

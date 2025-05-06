@@ -16,11 +16,12 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 
-import play.api.libs.json.{JsResult, JsString, JsSuccess, JsValue, Reads, Writes}
+import play.api.libs.json.{Format, JsResult, JsString, JsSuccess, JsValue, Reads, Writes}
 
 trait IdentityProviderType
 
 object IdentityProviderTypeFormat {
+
   final val reads: Reads[IdentityProviderType] = new Reads[IdentityProviderType] {
     override def reads(json: JsValue): JsResult[IdentityProviderType] =
       json.as[String] match {
@@ -33,6 +34,9 @@ object IdentityProviderTypeFormat {
   val writes: Writes[IdentityProviderType] = new Writes[IdentityProviderType] {
     override def writes(o: IdentityProviderType): JsValue = JsString(o.toString)
   }
+
+  implicit val format: Format[IdentityProviderType] = Format(reads, writes)
+
 }
 
 case object ONE_LOGIN extends IdentityProviderType {

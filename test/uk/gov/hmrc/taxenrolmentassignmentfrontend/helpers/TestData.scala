@@ -318,4 +318,11 @@ object TestData {
     SA_ASSIGNED_TO_CURRENT_USER,
     SA_ASSIGNED_TO_OTHER_USER
   )
+
+  val userGroupSearchCredIds: Seq[IdentityProviderWithCredId] =
+    Seq(
+      IdentityProviderWithCredId("12345678989012", SCP, "12345678989012"),
+      IdentityProviderWithCredId("098765432109", ONE_LOGIN, "12345"),
+      IdentityProviderWithCredId("543210987654", SCP, "543210987654")
+    )
 }

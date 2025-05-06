@@ -19,9 +19,9 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions
 import play.api.libs.json.JsValue
 import uk.gov.hmrc.crypto.{Decrypter, Encrypter}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, UsersAssignedEnrolment}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, IdentityProviderWithCredId, UsersAssignedEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM, REDIRECT_URL, REPORTED_FRAUD, USER_ASSIGNED_PT_ENROLMENT, USER_ASSIGNED_SA_ENROLMENT, accountDetailsForCredential}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM, LIST_OF_CRED_IDS, REDIRECT_URL, REPORTED_FRAUD, USER_ASSIGNED_PT_ENROLMENT, USER_ASSIGNED_SA_ENROLMENT, accountDetailsForCredential}
 
 case class AccountDetailsFromMongo(
   accountType: AccountTypes.Value,
@@ -39,6 +39,8 @@ case class AccountDetailsFromMongo(
     sessionData.get(USER_ASSIGNED_PT_ENROLMENT).map(_.as[UsersAssignedEnrolment])
   def optAccountDetails(credId: String): Option[AccountDetails] =
     sessionData.get(accountDetailsForCredential(credId)).map(_.as[AccountDetails](AccountDetails.mongoFormats(crypto)))
+  def listOfCredIds: Option[Seq[IdentityProviderWithCredId]] =
+    sessionData.get(LIST_OF_CRED_IDS).map(_.as[Seq[IdentityProviderWithCredId]])
 
 }
 

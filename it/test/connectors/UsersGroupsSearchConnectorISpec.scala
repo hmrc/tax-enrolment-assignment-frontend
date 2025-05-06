@@ -84,4 +84,40 @@ class UsersGroupsSearchConnectorISpec extends IntegrationSpecBase {
       }
     }
   }
+
+  "getAllCredIdsByNino" when {
+    val PATH =
+      s"/users-groups-search/users/nino/$nino/credIds"
+    s"no errors occur" should {
+      "return a list of credIds and identity providers" in {
+        stubGet(
+          PATH,
+          OK,
+          userGroupSearchCredIdsResponse
+        )
+        whenReady(connector.getAllCredIdsByNino(nino.nino).value) { response =>
+          response shouldBe Right(userGroupSearchCredIds)
+        }
+      }
+      "return an empty list when no credIds found" in {
+        stubGet(
+          PATH,
+          NOT_FOUND,
+          ""
+        )
+        whenReady(connector.getAllCredIdsByNino(nino.nino).value) { response =>
+          response shouldBe Right(Seq.empty)
+        }
+      }
+      "a BAD_REQUEST is returned" should {
+        "return an UnexpectedResponseFromTaxEnrolments error" in {
+          stubGet(PATH, BAD_REQUEST, "")
+          stubPost(s"/write/.*", OK, """{"x":2}""")
+          whenReady(connector.getAllCredIdsByNino(CREDENTIAL_ID).value) { response =>
+            response shouldBe Left(UnexpectedResponseFromUsersGroupsSearch)
+          }
+        }
+      }
+    }
+  }
 }

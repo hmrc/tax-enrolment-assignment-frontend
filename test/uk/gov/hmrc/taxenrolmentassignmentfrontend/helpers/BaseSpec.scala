@@ -37,7 +37,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, CacheM
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SINGLE_OR_MULTIPLE_ACCOUNTS
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SINGLE_ACCOUNT
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.HmrcModule
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo, UserDetailsFromSession}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
@@ -126,7 +126,7 @@ trait BaseSpec
     Map(ACCOUNT_TYPE -> Json.toJson(accountType), REDIRECT_URL -> JsString(redirectUrl))
 
   def requestWithAccountType(
-    accountType: AccountTypes.Value = SINGLE_OR_MULTIPLE_ACCOUNTS,
+    accountType: AccountTypes.Value = SINGLE_ACCOUNT,
     redirectUrl: String = UrlPaths.returnUrl,
     additionalCacheData: Map[String, JsValue] = Map(),
     langCode: String = "en"

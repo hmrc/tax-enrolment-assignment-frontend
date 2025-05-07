@@ -63,7 +63,7 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
   val orchestrator: MultipleAccountsOrchestrator = app.injector.instanceOf[MultipleAccountsOrchestrator]
 
   s"getDetailsForEnrolledPT" when {
-    List(SINGLE_OR_MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER).foreach { accountType =>
+    List(MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER).foreach { accountType =>
       s"the account type is correct for $accountType" should {
         "return the userDetails for the account" in {
 
@@ -89,6 +89,7 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
     }
 
     List(
+      SINGLE_ACCOUNT,
       PT_ASSIGNED_TO_OTHER_USER,
       PT_ASSIGNED_TO_CURRENT_USER
     ).foreach { accountType =>
@@ -127,9 +128,10 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
       }
     }
     List(
+      SINGLE_ACCOUNT,
       PT_ASSIGNED_TO_OTHER_USER,
       PT_ASSIGNED_TO_CURRENT_USER,
-      SINGLE_OR_MULTIPLE_ACCOUNTS,
+      MULTIPLE_ACCOUNTS,
       SA_ASSIGNED_TO_CURRENT_USER
     ).foreach { accountType =>
       s"the accountType is $accountType" should {
@@ -334,7 +336,7 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
 
     List(
       PT_ASSIGNED_TO_CURRENT_USER,
-      SINGLE_OR_MULTIPLE_ACCOUNTS,
+      MULTIPLE_ACCOUNTS,
       SA_ASSIGNED_TO_CURRENT_USER,
       SA_ASSIGNED_TO_OTHER_USER
     ).foreach { accountType =>
@@ -768,7 +770,7 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
 
     List(
       PT_ASSIGNED_TO_CURRENT_USER,
-      SINGLE_OR_MULTIPLE_ACCOUNTS,
+      MULTIPLE_ACCOUNTS,
       SA_ASSIGNED_TO_CURRENT_USER,
       PT_ASSIGNED_TO_OTHER_USER
     ).foreach { accountType =>

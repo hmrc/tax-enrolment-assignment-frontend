@@ -33,11 +33,11 @@ class EnrolledForPTISpec extends IntegrationSpecBase {
   val urlPath: String = ItUrlPaths.enrolledPTNoSAOnAnyAccountPath
 
   s"GET $urlPath" when {
-    s"the session cache has Account type of $SINGLE_OR_MULTIPLE_ACCOUNTS" should {
+    s"the session cache has Account type of $MULTIPLE_ACCOUNTS" should {
       s"render the EnrolledForPT page" in {
         await(save[String](sessionId, "redirectURL", returnUrl))
         await(
-          save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", SINGLE_OR_MULTIPLE_ACCOUNTS)
+          save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", MULTIPLE_ACCOUNTS)
         )
         stubAuthorizePost(OK, authoriseResponseWithPTEnrolment().toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")

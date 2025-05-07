@@ -27,7 +27,7 @@ import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.domain.{Generator, Nino}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_OR_MULTIPLE_ACCOUNTS}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.UserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{EACDEnrolment => _, _}
 
@@ -85,7 +85,7 @@ object TestData {
     )
   )
 
-  val randomAccountType: AccountTypes.Value = SINGLE_OR_MULTIPLE_ACCOUNTS
+  val randomAccountType: AccountTypes.Value = SINGLE_ACCOUNT
   val predicates: Predicate =
     AuthProviders(GovernmentGateway) and ConfidenceLevel.L200
 
@@ -312,9 +312,10 @@ object TestData {
     )
 
   val all_account_types: Seq[AccountTypes.Value] = List(
+    SINGLE_ACCOUNT,
     PT_ASSIGNED_TO_OTHER_USER,
     PT_ASSIGNED_TO_CURRENT_USER,
-    SINGLE_OR_MULTIPLE_ACCOUNTS,
+    MULTIPLE_ACCOUNTS,
     SA_ASSIGNED_TO_CURRENT_USER,
     SA_ASSIGNED_TO_OTHER_USER
   )
@@ -324,5 +325,10 @@ object TestData {
       IdentityProviderWithCredId("12345678989012", SCP, "12345678989012"),
       IdentityProviderWithCredId("098765432109", ONE_LOGIN, "12345"),
       IdentityProviderWithCredId("543210987654", SCP, "543210987654")
+    )
+
+  val userGroupSearchOneCredId: Seq[IdentityProviderWithCredId] =
+    Seq(
+      IdentityProviderWithCredId("12345678989012", SCP, "12345678989012")
     )
 }

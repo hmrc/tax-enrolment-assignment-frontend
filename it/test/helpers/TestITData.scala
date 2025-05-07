@@ -468,6 +468,19 @@ object TestITData {
       |}
       |""".stripMargin
 
+  val userGroupSearchCredIdsResponseOneId =
+    """
+      |{
+      |    "credIds": [
+      |        {
+      |            "credId": "12345678989012",
+      |            "identityProviderType": "SCP",
+      |            "identityProviderId": "12345678989012"
+      |        }
+      |    ]
+      |}
+      |""".stripMargin
+
   val userGroupSearchCredIds =
     List(
       IdentityProviderWithCredId("12345678989012", SCP, "12345678989012"),

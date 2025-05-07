@@ -130,9 +130,10 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
 
     List(
       PT_ASSIGNED_TO_CURRENT_USER,
-      SINGLE_OR_MULTIPLE_ACCOUNTS,
       PT_ASSIGNED_TO_OTHER_USER,
-      SA_ASSIGNED_TO_CURRENT_USER
+      SA_ASSIGNED_TO_CURRENT_USER,
+      SINGLE_ACCOUNT,
+      MULTIPLE_ACCOUNTS
     ).foreach { accountType =>
       s"the session cache has a credential with account type ${accountType.toString}" should {
         s"redirect to /protect-tax-info" in {

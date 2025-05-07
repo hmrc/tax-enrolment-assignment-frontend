@@ -125,6 +125,22 @@ trait LoggingEventInfo {
       )
     )
 
+  def logCurrentUserhasMultipleAccounts(credentialId: String): LoggingEvent =
+    Info(
+      Event(
+        "[AccountCheckOrchestrator][getAccountType]",
+        details = Some(s"Signed in credential $credentialId has multiple accounts")
+      )
+    )
+
+  def logCurrentUserhasOneAccount(credentialId: String): LoggingEvent =
+    Info(
+      Event(
+        "[AccountCheckOrchestrator][getAccountType]",
+        details = Some(s"Signed in credential $credentialId has one account")
+      )
+    )
+
   def logCurrentUserhasOneOrMultipleAccounts(credentialId: String): LoggingEvent =
     Info(
       Event(

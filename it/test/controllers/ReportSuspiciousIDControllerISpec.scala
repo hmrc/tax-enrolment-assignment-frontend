@@ -157,9 +157,10 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
     List(
       PT_ASSIGNED_TO_CURRENT_USER,
-      SINGLE_OR_MULTIPLE_ACCOUNTS,
       PT_ASSIGNED_TO_OTHER_USER,
-      SA_ASSIGNED_TO_CURRENT_USER
+      SA_ASSIGNED_TO_CURRENT_USER,
+      SINGLE_ACCOUNT,
+      MULTIPLE_ACCOUNTS
     ).foreach { accountType =>
       s"the session cache has a credential with account type ${accountType.toString}" when {
         s"redirect to /protect-tax-info" in {
@@ -468,9 +469,10 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
     List(
       PT_ASSIGNED_TO_CURRENT_USER,
-      SINGLE_OR_MULTIPLE_ACCOUNTS,
       SA_ASSIGNED_TO_OTHER_USER,
-      SA_ASSIGNED_TO_CURRENT_USER
+      SA_ASSIGNED_TO_CURRENT_USER,
+      SINGLE_ACCOUNT,
+      MULTIPLE_ACCOUNTS
     ).foreach { accountType =>
       s"the session cache has a credential with account type ${accountType.toString}" when {
         s"redirect to /protect-tax-info" in {
@@ -840,8 +842,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
     List(
       PT_ASSIGNED_TO_OTHER_USER,
       PT_ASSIGNED_TO_CURRENT_USER,
-      SINGLE_OR_MULTIPLE_ACCOUNTS,
-      SA_ASSIGNED_TO_CURRENT_USER
+      SA_ASSIGNED_TO_CURRENT_USER,
+      SINGLE_ACCOUNT,
+      MULTIPLE_ACCOUNTS
     ).foreach { accountType =>
       s"the session cache has Account type of $accountType" when {
         s"redirect to accountCheck" in {

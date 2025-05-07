@@ -26,8 +26,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.UsersGroupsSearchCo
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromUsersGroupsSearch
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, CacheMap, IdentityProviderWithCredId}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.LIST_OF_CRED_IDS
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, CacheMap}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 
 import scala.concurrent.Future
@@ -101,41 +100,16 @@ class UsersGroupsSearchServiceSpec extends BaseSpec {
   }
 
   "getAllCredIdsByNino" when {
-    "a list of creds is already in the cache" should {
-      "not call the users-groups-search and return value from cache" in {
-        val additionCacheData = Map(
-          LIST_OF_CRED_IDS -> Json.toJson(userGroupSearchCredIds)(IdentityProviderWithCredId.writesList)
-        )
-        val result = service.getAllCredIdsByNino(generateNino.nino)(
-          implicitly,
-          implicitly,
-          requestWithAccountType(additionalCacheData = additionCacheData)
-        )
-        whenReady(result.value) { res =>
-          res shouldBe Right(userGroupSearchCredIds)
-        }
-
-      }
-    }
-    "a list of creds is not already in the cache" should {
-      "call the users-groups-search, save to cache and return the account details" in {
+    "a list of creds is successfully retrieved" should {
+      "call the users-groups-search return the account details" in {
         val nino = generateNino.nino
 
         when(mockUsersGroupsSearchConnector.getAllCredIdsByNino(nino))
           .thenReturn(createInboundResult(userGroupSearchCredIds))
 
-        when(
-          mockTeaSessionCache
-            .save(
-              ArgumentMatchers.eq(LIST_OF_CRED_IDS),
-              ArgumentMatchers.eq(userGroupSearchCredIds)
-            )(any(), any())
-        ).thenReturn(Future(CacheMap(request.sessionID, Map())))
-
         val result = service.getAllCredIdsByNino(nino)(
           implicitly,
-          implicitly,
-          requestWithAccountType()
+          implicitly
         )
         whenReady(result.value) { res =>
           res shouldBe Right(userGroupSearchCredIds)
@@ -143,7 +117,7 @@ class UsersGroupsSearchServiceSpec extends BaseSpec {
 
       }
     }
-    "the list of creds is not already in the cache and users-group-search returns an error" should {
+    "users-group-search returns an error" should {
       "return an error" in {
         val nino = generateNino.nino
 
@@ -152,8 +126,7 @@ class UsersGroupsSearchServiceSpec extends BaseSpec {
 
         val result = service.getAllCredIdsByNino(nino)(
           implicitly,
-          implicitly,
-          requestWithAccountType()
+          implicitly
         )
         whenReady(result.value) { res =>
           res shouldBe Left(UnexpectedResponseFromUsersGroupsSearch)

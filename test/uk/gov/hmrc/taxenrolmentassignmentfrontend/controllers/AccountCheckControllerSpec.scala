@@ -98,9 +98,9 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
           mockAuthCall()
           when(mockTeaSessionCache.save(any(), any())(any(), any()))
             .thenReturn(Future.successful(CacheMap("FAKE_SESSION_ID", Map.empty)))
-          mockAccountCheckSuccess(SINGLE_OR_MULTIPLE_ACCOUNTS)
+          mockAccountCheckSuccess(SINGLE_ACCOUNT)
           mockSilentEnrolSuccess
-          mockAuditPTEnrolledWhen(SINGLE_OR_MULTIPLE_ACCOUNTS, requestWithUserDetails(), messagesApi)
+          mockAuditPTEnrolledWhen(SINGLE_ACCOUNT, requestWithUserDetails(), messagesApi)
 
           val result: Future[Result] = controller
             .accountCheck(returnUrl)
@@ -110,7 +110,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
           redirectLocation(result) shouldBe Some("/protect-tax-info/enrol-pt/enrolment-success-no-sa")
           verify(mockTeaSessionCache, times(0)).removeRecord(any())
           verify(mockTeaSessionCache, times(1)).save(any(), any())(any(), any())
-          mockAuditPTEnrolledVerify(SINGLE_OR_MULTIPLE_ACCOUNTS, requestWithUserDetails(), messagesApi)
+          mockAuditPTEnrolledVerify(SINGLE_ACCOUNT, requestWithUserDetails(), messagesApi)
 
         }
       }
@@ -144,7 +144,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
         mockAuthCall()
         when(mockTeaSessionCache.save(any(), any())(any(), any()))
           .thenReturn(Future.successful(CacheMap("FAKE_SESSION_ID", Map.empty)))
-        mockAccountCheckSuccess(SINGLE_OR_MULTIPLE_ACCOUNTS)
+        mockAccountCheckSuccess(SINGLE_ACCOUNT)
         mockSilentEnrolFailure
 
         val result: Future[Result] = controller
@@ -208,9 +208,9 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
           when(mockTeaSessionCache.save(any(), any())(any(), any()))
             .thenReturn(Future.successful(CacheMap("FAKE_SESSION_ID", Map.empty)))
 
-          mockAccountCheckSuccess(SINGLE_OR_MULTIPLE_ACCOUNTS)
+          mockAccountCheckSuccess(MULTIPLE_ACCOUNTS)
           mockSilentEnrolSuccess
-          mockAuditPTEnrolledWhen(SINGLE_OR_MULTIPLE_ACCOUNTS, requestWithUserDetails(), messagesApi)
+          mockAuditPTEnrolledWhen(MULTIPLE_ACCOUNTS, requestWithUserDetails(), messagesApi)
 
           val result: Future[Result] = controller
             .accountCheck(returnUrl)
@@ -221,7 +221,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
             "/protect-tax-info/enrol-pt/enrolment-success-no-sa"
           )
           verify(mockTeaSessionCache, times(1)).save(any(), any())(any(), any())
-          mockAuditPTEnrolledVerify(SINGLE_OR_MULTIPLE_ACCOUNTS, requestWithUserDetails(), messagesApi)
+          mockAuditPTEnrolledVerify(MULTIPLE_ACCOUNTS, requestWithUserDetails(), messagesApi)
 
         }
       }
@@ -231,7 +231,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
           mockAuthCallWithPT()
           when(mockTeaSessionCache.save(any(), any())(any(), any()))
             .thenReturn(Future.successful(CacheMap("FAKE_SESSION_ID", Map.empty)))
-          mockAccountCheckSuccess(SINGLE_OR_MULTIPLE_ACCOUNTS)
+          mockAccountCheckSuccess(MULTIPLE_ACCOUNTS)
           when(
             mockTeaSessionCache
               .removeRecord(any())

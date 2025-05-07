@@ -27,7 +27,7 @@ object AccountTypes extends Enumeration {
   )
   val SINGLE_ACCOUNT: AccountTypes.Value = Value("SINGLE_ACCOUNT")
   val MULTIPLE_ACCOUNTS: AccountTypes.Value = Value("MULTIPLE_ACCOUNTS")
-  val SINGLE_OR_MULTIPLE_ACCOUNTS: AccountTypes.Value = Value("SINGLE_OR_MULTIPLE_ACCOUNTS")
+
   val SA_ASSIGNED_TO_CURRENT_USER: AccountTypes.Value = Value(
     "SA_ASSIGNED_TO_CURRENT_USER"
   )

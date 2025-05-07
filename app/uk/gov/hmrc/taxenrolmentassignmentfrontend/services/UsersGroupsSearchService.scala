@@ -25,7 +25,7 @@ import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.UsersGroupsSearchConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, IdentityProviderWithCredId}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{LIST_OF_CRED_IDS, accountDetailsForCredential}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.accountDetailsForCredential
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -77,22 +77,8 @@ class UsersGroupsSearchService @Inject() (
 
   def getAllCredIdsByNino(nino: String)(implicit
     ec: ExecutionContext,
-    hc: HeaderCarrier,
-    request: RequestWithUserDetailsFromSessionAndMongo[_]
+    hc: HeaderCarrier
   ): TEAFResult[Seq[IdentityProviderWithCredId]] = EitherT {
-    request.accountDetailsFromMongo.listOfCredIds match {
-      case Some(list) => Future.successful(Right(list))
-      case None =>
-        usersGroupsSearchConnector.getAllCredIdsByNino(nino).value.flatMap {
-          case Right(list) =>
-            sessionCache
-              .save[Seq[IdentityProviderWithCredId]](LIST_OF_CRED_IDS, list)(
-                request,
-                IdentityProviderWithCredId.formatList
-              )
-              .map(_ => Right(list))
-          case Left(error) => Future.successful(Left(error))
-        }
-    }
+    usersGroupsSearchConnector.getAllCredIdsByNino(nino).value
   }
 }

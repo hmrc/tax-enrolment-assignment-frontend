@@ -25,7 +25,6 @@ object SessionKeys {
   val HAS_OTHER_VALID_PTA_ACCOUNTS = "HAS_OTHER_VALID_PTA_ACCOUNTS"
   val REPORTED_FRAUD = "reportedFraud"
   val KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM = "KEEP_ACCESS_TO_SA_THROUGH_PTA_FORM"
-  val LIST_OF_CRED_IDS = "LIST_OF_CRED_IDS"
 
   def accountDetailsForCredential(credId: String) = s"AccountDetailsFor$credId"
 

@@ -483,9 +483,9 @@ object TestITData {
 
   val userGroupSearchCredIds =
     List(
-      IdentityProviderWithCredId("12345678989012", SCP, "12345678989012"),
-      IdentityProviderWithCredId("098765432109", ONE_LOGIN, "12345"),
-      IdentityProviderWithCredId("543210987654", SCP, "543210987654")
+      IdentityProviderWithCredId("12345678989012", SCP),
+      IdentityProviderWithCredId("098765432109", ONE_LOGIN),
+      IdentityProviderWithCredId("543210987654", SCP)
     )
 
 }

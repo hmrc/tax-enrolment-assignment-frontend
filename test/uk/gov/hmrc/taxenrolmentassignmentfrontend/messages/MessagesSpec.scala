@@ -60,8 +60,8 @@ class MessagesSpec extends BaseSpec {
       },
       filename
     ) match {
-      case Right(messages) => messages
-      case Left(e)         => throw e
+      case Right(allMessages) => allMessages
+      case Left(e)            => throw e
     }
 
   private def countMessagesWithArgs(messages: Map[String, String]) =

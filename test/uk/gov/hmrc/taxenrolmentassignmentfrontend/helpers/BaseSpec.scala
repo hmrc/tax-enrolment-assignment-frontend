@@ -157,7 +157,6 @@ trait BaseSpec
     ): Future[Option[CacheMap]] =
       Future(Some(CacheMap(request.sessionID, Map())))
 
-    @annotation.nowarn("msg=parameter request in method extendSession is never used")
     override def extendSession()(implicit
       request: RequestWithUserDetailsFromSession[_]
     ): Future[Boolean] = Future.successful(true)

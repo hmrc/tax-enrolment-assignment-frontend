@@ -16,12 +16,11 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 
-import play.api.libs.json.{Format, JsArray, JsPath, JsString, JsSuccess, JsValue, Json, Reads, Writes}
+import play.api.libs.json.{JsArray, JsPath, JsSuccess, JsValue, Reads}
 
 case class IdentityProviderWithCredId(
   credId: String,
-  identityProviderType: IdentityProviderType,
-  identityProviderId: String
+  identityProviderType: IdentityProviderType
 )
 
 object IdentityProviderWithCredId {
@@ -30,8 +29,7 @@ object IdentityProviderWithCredId {
     credId <- (JsPath \ "credId").read[String]
     identityProviderType <-
       (JsPath \ "identityProviderType").read[IdentityProviderType](IdentityProviderTypeFormat.reads)
-    identityProviderId <- (JsPath \ "identityProviderId").read[String]
-  } yield IdentityProviderWithCredId(credId, identityProviderType, identityProviderId)
+  } yield IdentityProviderWithCredId(credId, identityProviderType)
 
   private val credIdsWithId: Reads[Seq[IdentityProviderWithCredId]] = (json: JsValue) => {
 
@@ -42,27 +40,7 @@ object IdentityProviderWithCredId {
 
     JsSuccess(credIds.map(_.as[IdentityProviderWithCredId](reads)))
   }
-  val writes: Writes[IdentityProviderWithCredId] = new Writes[IdentityProviderWithCredId] {
-    override def writes(o: IdentityProviderWithCredId): JsValue = JsString(o.toString)
-  }
-
-  val writesList: Writes[Seq[IdentityProviderWithCredId]] = new Writes[Seq[IdentityProviderWithCredId]] {
-    override def writes(o: Seq[IdentityProviderWithCredId]): JsValue =
-      Json.obj(
-        "credIds" -> o.map { cred =>
-          Json.obj(
-            "credId"               -> cred.credId,
-            "identityProviderType" -> cred.identityProviderType.toString,
-            "identityProviderId"   -> cred.identityProviderId
-          )
-        }
-      )
-  }
 
   implicit val readList: Reads[Seq[IdentityProviderWithCredId]] =
     (JsPath \ "credIds").read[Seq[IdentityProviderWithCredId]](credIdsWithId)
-
-  implicit val format: Format[IdentityProviderWithCredId] = Format(reads, writes)
-
-  implicit val formatList: Format[Seq[IdentityProviderWithCredId]] = Format(readList, writesList)
 }

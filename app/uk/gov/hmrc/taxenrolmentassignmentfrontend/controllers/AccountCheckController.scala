@@ -118,11 +118,18 @@ class AccountCheckController @Inject() (
       silentAssignmentService.enrolUser().flatMap { _ =>
         auditHandler.audit(AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(accountType))
         EitherT.right(
-          Future.successful(
-            logger.logEvent(
-              logSingleOrMultipleAccountHolderAssignedEnrolment(request.userDetails.credId, request.userDetails.nino)
+          if (accountType == SINGLE_ACCOUNT) {
+            sessionCache.removeRecord.map { _ =>
+              logger.logEvent(
+                logSingleAccountHolderAssignedEnrolment(request.userDetails.credId, request.userDetails.nino)
+              )
+            }
+          } else
+            Future.successful(
+              logger.logEvent(
+                logMultipleAccountHolderAssignedEnrolment(request.userDetails.credId, request.userDetails.nino)
+              )
             )
-          )
         )
       }
     } else if (hasPTEnrolmentAlready) {

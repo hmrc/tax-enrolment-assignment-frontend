@@ -98,6 +98,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
           mockAuthCall()
           when(mockTeaSessionCache.save(any(), any())(any(), any()))
             .thenReturn(Future.successful(CacheMap("FAKE_SESSION_ID", Map.empty)))
+          when(mockTeaSessionCache.removeRecord(any())).thenReturn(Future.successful(true))
           mockAccountCheckSuccess(SINGLE_ACCOUNT)
           mockSilentEnrolSuccess
           mockAuditPTEnrolledWhen(SINGLE_ACCOUNT, requestWithUserDetails(), messagesApi)
@@ -108,7 +109,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
 
           status(result) shouldBe SEE_OTHER
           redirectLocation(result) shouldBe Some("/protect-tax-info/enrol-pt/enrolment-success-no-sa")
-          verify(mockTeaSessionCache, times(0)).removeRecord(any())
+          verify(mockTeaSessionCache, times(1)).removeRecord(any())
           verify(mockTeaSessionCache, times(1)).save(any(), any())(any(), any())
           mockAuditPTEnrolledVerify(SINGLE_ACCOUNT, requestWithUserDetails(), messagesApi)
 

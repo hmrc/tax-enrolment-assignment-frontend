@@ -32,7 +32,7 @@ trait LoggingEventInfo {
     )
   )
 
-  def logSingleOrMultipleAccountHolderAssignedEnrolment(
+  def logSingleAccountHolderAssignedEnrolment(
     credentialId: String,
     nino: Nino
   ): LoggingEvent =
@@ -40,7 +40,20 @@ trait LoggingEventInfo {
       Event(
         "[AccountCheckController][silentEnrol]",
         details = Some(
-          s"$hmrcPTKey enrolment assigned to credential $credentialId which has a single or multiple accounts with nino ${nino.nino}"
+          s"$hmrcPTKey enrolment assigned to single account credential $credentialId with nino ${nino.nino}"
+        )
+      )
+    )
+
+  def logMultipleAccountHolderAssignedEnrolment(
+    credentialId: String,
+    nino: Nino
+  ): LoggingEvent =
+    Info(
+      Event(
+        "[AccountCheckController][silentEnrol]",
+        details = Some(
+          s"$hmrcPTKey enrolment assigned to credential $credentialId which has multiple accounts with nino ${nino.nino}"
         )
       )
     )

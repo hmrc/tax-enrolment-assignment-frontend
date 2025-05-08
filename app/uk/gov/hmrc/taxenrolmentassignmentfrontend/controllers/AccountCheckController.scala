@@ -117,20 +117,19 @@ class AccountCheckController @Inject() (
     if (!hasPTEnrolmentAlready && accountTypesToEnrolForPT.contains(accountType)) {
       silentAssignmentService.enrolUser().flatMap { _ =>
         auditHandler.audit(AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(accountType))
-        EitherT.right(
-          if (accountType == SINGLE_ACCOUNT) {
-            sessionCache.removeRecord.map { _ =>
-              logger.logEvent(
-                logSingleAccountHolderAssignedEnrolment(request.userDetails.credId, request.userDetails.nino)
-              )
-            }
-          } else
-            Future.successful(
-              logger.logEvent(
-                logMultipleAccountHolderAssignedEnrolment(request.userDetails.credId, request.userDetails.nino)
-              )
+        EitherT.right(if (accountType == SINGLE_ACCOUNT) {
+          Future.successful(
+            logger.logEvent(
+              logSingleAccountHolderAssignedEnrolment(request.userDetails.credId, request.userDetails.nino)
             )
-        )
+          )
+        } else {
+          Future.successful(
+            logger.logEvent(
+              logMultipleAccountHolderAssignedEnrolment(request.userDetails.credId, request.userDetails.nino)
+            )
+          )
+        })
       }
     } else if (hasPTEnrolmentAlready) {
       EitherT.right(sessionCache.removeRecord.map(_ => (): Unit))

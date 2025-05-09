@@ -95,7 +95,6 @@ class AccountCheckController @Inject() (
       case SA_ASSIGNED_TO_OTHER_USER if request.userDetails.hasPTEnrolment =>
         Future.successful(Redirect(routes.EnrolledPTWithSAOnOtherAccountController.view))
       case SA_ASSIGNED_TO_OTHER_USER   => Future.successful(Redirect(routes.SABlueInterruptController.view))
-      case SINGLE_ACCOUNT              => Future.successful(Redirect(routes.EnrolledForPTController.view))
       case MULTIPLE_ACCOUNTS           => Future.successful(Redirect(routes.EnrolledForPTController.view))
       case SA_ASSIGNED_TO_CURRENT_USER => Future.successful(Redirect(routes.EnrolledForPTWithSAController.view))
       case _ =>

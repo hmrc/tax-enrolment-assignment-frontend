@@ -26,7 +26,7 @@ import play.api.mvc.{AnyContent, Request}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{GET, contentAsString, defaultAwaitTimeout, redirectLocation, route, status, writeableOf_AnyContentAsEmpty}
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{SA_ASSIGNED_TO_CURRENT_USER, SINGLE_ACCOUNT}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER, SINGLE_ACCOUNT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession, UserDetailsFromSession}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.hmrcPTKey
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
@@ -108,7 +108,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
         val result = route(app, request).get
 
         status(result) shouldBe SEE_OTHER
-        redirectLocation(result).get should include("/protect-tax-info/enrol-pt/enrolment-success-no-sa")
+        redirectLocation(result).get should include(returnUrl)
       }
     }
   }
@@ -154,7 +154,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
       val result = route(app, request).get
 
       status(result) shouldBe SEE_OTHER
-      redirectLocation(result).get should include("/protect-tax-info/enrol-pt/enrolment-success-no-sa")
+      redirectLocation(result).get should include(returnUrl)
 
       val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
         SINGLE_ACCOUNT
@@ -208,7 +208,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
       val result = route(app, request).get
 
       status(result) shouldBe SEE_OTHER
-      redirectLocation(result).get should include("/protect-tax-info/enrol-pt/enrolment-success-no-sa")
+      redirectLocation(result).get should include(returnUrl)
 
       val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
         SINGLE_ACCOUNT
@@ -271,7 +271,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
       val result = route(app, request).get
 
       status(result) shouldBe SEE_OTHER
-      redirectLocation(result).get should include("/protect-tax-info/enrol-pt/enrolment-success-no-sa")
+      redirectLocation(result).get should include(returnUrl)
       List("ABCDEFG123456", "QWERTYU12346", "POIUYTT09876").foreach { id =>
         server.verify(
           1,
@@ -485,7 +485,78 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
   }
 
   s"redirect to ${ItUrlPaths.enrolledPTNoSAOnAnyAccountPath}" when {
-    "the user has no PT or SA enrolments" in {
+    "the user has no PT or SA enrolments and has multiple accounts" in {
+      val authResponse = authoriseResponseJson()
+      stubAuthorizePost(OK, authResponse.toString())
+      stubPost(s"/write/.*", OK, """{"x":2}""")
+      stubGet(
+        s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/users",
+        OK,
+        es0ResponseNoRecordCred
+      )
+      stubGetWithQueryParam(
+        "/identity-verification/nino",
+        "nino",
+        NINO.nino,
+        OK,
+        ivResponseMultiCredsJsonString
+      )
+      stubGetMatching(
+        s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_3/enrolments?type=principal",
+        NO_CONTENT,
+        ""
+      )
+      stubGetMatching(
+        s"/enrolment-store-proxy/enrolment-store/users/$CREDENTIAL_ID_4/enrolments?type=principal",
+        NO_CONTENT,
+        ""
+      )
+
+      stubPost(
+        s"/enrolment-store-proxy/enrolment-store/enrolments",
+        NO_CONTENT,
+        ""
+      )
+      stubPut(
+        s"/tax-enrolments/service/HMRC-PT/enrolment",
+        NO_CONTENT,
+        ""
+      )
+
+      stubGet(
+        s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/groups",
+        NO_CONTENT,
+        es0GroupsResponseNoRecordCred
+      )
+
+      stubGet(
+        s"/users-groups-search/users/nino/$NINO/credIds",
+        OK,
+        userGroupSearchCredIdsResponse
+      )
+
+      val request = FakeRequest(GET, urlPath)
+        .withSession(xAuthToken)
+      val result = route(app, request).get
+
+      status(result) shouldBe SEE_OTHER
+      redirectLocation(result).get should include(ItUrlPaths.enrolledPTNoSAOnAnyAccountPath)
+      recordExistsInMongo shouldBe true
+
+      val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
+        MULTIPLE_ACCOUNTS
+      )(requestWithUserDetails(), messagesApi)
+      verifyAuditEventSent(expectedAuditEvent)
+
+    }
+  }
+
+  "redirect to the return url" when {
+    "the user has no PT or SA enrolments and has only 1 account" in {
+      val relativeUrl = "/redirect/url"
+      val encodedUrl = URLEncoder.encode(relativeUrl, "UTF-8")
+      val urlPath = s"/protect-tax-info?redirectUrl=$encodedUrl"
+
       val authResponse = authoriseResponseJson()
       stubAuthorizePost(OK, authResponse.toString())
       stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -534,8 +605,8 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
       val result = route(app, request).get
 
       status(result) shouldBe SEE_OTHER
-      redirectLocation(result).get should include(ItUrlPaths.enrolledPTNoSAOnAnyAccountPath)
-      recordExistsInMongo shouldBe true
+      redirectLocation(result).get should include(relativeUrl)
+      recordExistsInMongo shouldBe false
 
       val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
         SINGLE_ACCOUNT
@@ -543,9 +614,6 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
       verifyAuditEventSent(expectedAuditEvent)
 
     }
-  }
-
-  "redirect to the return url" when {
     s"the user has pt enrolment in session" should {
       "redirect to the return url" when {
         "the redirectUrl is a valid encoded relative url" in {

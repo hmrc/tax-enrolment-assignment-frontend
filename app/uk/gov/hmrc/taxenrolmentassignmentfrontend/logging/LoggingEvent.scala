@@ -51,7 +51,7 @@ trait LoggingEventInfo {
   ): LoggingEvent =
     Info(
       Event(
-        "[AccountCheckController][silentEnrol]",
+        "[AccountCheckController][enrolForPTIfRequired]",
         details = Some(
           s"$hmrcPTKey enrolment assigned to credential $credentialId which has multiple accounts with nino ${nino.nino}"
         )

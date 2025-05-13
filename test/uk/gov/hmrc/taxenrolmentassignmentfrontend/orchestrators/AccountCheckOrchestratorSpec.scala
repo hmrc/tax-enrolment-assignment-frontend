@@ -30,7 +30,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.ACCOUNT_TYPE
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, SilentAssignmentService}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, SilentAssignmentService, UsersGroupsSearchService}
 
 import scala.concurrent.Future
 
@@ -43,6 +43,7 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
   lazy val mockEacdService: EACDService = mock[EACDService]
   lazy val mockTeaSessionCache: TEASessionCache = mock[TEASessionCache]
   lazy val mockTaxEnrolmentConnector: TaxEnrolmentsConnector = mock[TaxEnrolmentsConnector]
+  lazy val mockUserGroupSearchService: UsersGroupsSearchService = mock[UsersGroupsSearchService]
 
   lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
   lazy val mockMultipleAccountsOrchestrator: MultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
@@ -55,7 +56,8 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
     .overrides(
       bind[SilentAssignmentService].toInstance(mockSilentAssignmentService),
       bind[EACDService].toInstance(mockEacdService),
-      bind[TaxEnrolmentsConnector].toInstance(mockTaxEnrolmentConnector)
+      bind[TaxEnrolmentsConnector].toInstance(mockTaxEnrolmentConnector),
+      bind[UsersGroupsSearchService].toInstance(mockUserGroupSearchService)
     )
     .build()
 
@@ -75,12 +77,16 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
   "getAccountType" when {
     "the accountType is available in the cache" should {
       "return the accountType" in {
+        when(mockUserGroupSearchService.getAllCredIdsByNino(any())(any(), any())).thenReturn(
+          createInboundResult(userGroupSearchOneCredId)
+        )
+
         when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))
-          .thenReturn(Future.successful(Some(generateBasicCacheMap(SINGLE_OR_MULTIPLE_ACCOUNTS))))
+          .thenReturn(Future.successful(Some(generateBasicCacheMap(SINGLE_ACCOUNT))))
 
         val res = orchestrator.getAccountType
         whenReady(res.value) { result =>
-          result shouldBe Right(SINGLE_OR_MULTIPLE_ACCOUNTS)
+          result shouldBe Right(SINGLE_ACCOUNT)
         }
       }
     }
@@ -88,6 +94,9 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
     "a user has one credential associated with their nino" that {
       "has no PT enrolment in session or EACD" should {
         s"return SINGLE_ACCOUNT" in {
+          when(mockUserGroupSearchService.getAllCredIdsByNino(any())(any(), any())).thenReturn(
+            createInboundResult(userGroupSearchOneCredId)
+          )
 
           when(mockEacdService.getUsersAssignedPTEnrolment(any(), any(), any()))
             .thenReturn(createInboundResult(UsersAssignedEnrolmentEmpty))
@@ -95,7 +104,7 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
           when(mockEacdService.getUsersAssignedSAEnrolment(any(), any(), any()))
             .thenReturn(createInboundResult(UsersAssignedEnrolmentEmpty))
 
-          when(mockTeaSessionCache.save(ameq(ACCOUNT_TYPE), ameq(SINGLE_OR_MULTIPLE_ACCOUNTS))(any(), any()))
+          when(mockTeaSessionCache.save(ameq(ACCOUNT_TYPE), ameq(SINGLE_ACCOUNT))(any(), any()))
             .thenReturn(Future.successful(CacheMap(request.sessionID, Map())))
 
           when(mockEacdService.getGroupsAssignedPTEnrolment).thenReturn(
@@ -105,13 +114,16 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
           val res = orchestrator.getAccountType
 
           whenReady(res.value) { result =>
-            result shouldBe Right(SINGLE_OR_MULTIPLE_ACCOUNTS)
+            result shouldBe Right(SINGLE_ACCOUNT)
           }
         }
       }
 
       "has a PT enrolment in the session" should {
         s"return PT_ASSIGNED_TO_CURRENT_USER" in {
+          when(mockUserGroupSearchService.getAllCredIdsByNino(any())(any(), any())).thenReturn(
+            createInboundResult(userGroupSearchOneCredId)
+          )
 
           when(mockTeaSessionCache.save(ameq(ACCOUNT_TYPE), ameq(PT_ASSIGNED_TO_CURRENT_USER))(any(), any()))
             .thenReturn(Future(CacheMap(request.sessionID, Map())))
@@ -140,6 +152,9 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
 
       "has PT enrolment in EACD but not the session" should {
         s"return PT_ASSIGNED_TO_CURRENT_USER" in {
+          when(mockUserGroupSearchService.getAllCredIdsByNino(any())(any(), any())).thenReturn(
+            createInboundResult(userGroupSearchOneCredId)
+          )
 
           when(mockEacdService.getUsersAssignedPTEnrolment(any(), any(), any()))
             .thenReturn(createInboundResult(UsersAssignedEnrolmentCurrentCred))
@@ -167,6 +182,9 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
     "a user has other none business credentials associated with their NINO" that {
       "includes one with a PT enrolment" should {
         "return PT_ASSIGNED_TO_OTHER_USER" in {
+          when(mockUserGroupSearchService.getAllCredIdsByNino(any())(any(), any())).thenReturn(
+            createInboundResult(userGroupSearchCredIds)
+          )
 
           when(mockEacdService.getUsersAssignedPTEnrolment(any(), any(), any()))
             .thenReturn(createInboundResult(UsersAssignedEnrolment1))
@@ -191,6 +209,9 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
 
       "includes a credential (not signed in) with SA enrolment" should {
         "return SA_ASSIGNED_TO_OTHER_USER" in {
+          when(mockUserGroupSearchService.getAllCredIdsByNino(any())(any(), any())).thenReturn(
+            createInboundResult(userGroupSearchCredIds)
+          )
 
           when(mockEacdService.getUsersAssignedPTEnrolment(any(), any(), any()))
             .thenReturn(createInboundResult(UsersAssignedEnrolmentEmpty))
@@ -215,6 +236,9 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
 
       "have no enrolments but the signed in credential has SA in request" should {
         "return SA_ASSIGNED_TO_CURRENT_USER" in {
+          when(mockUserGroupSearchService.getAllCredIdsByNino(any())(any(), any())).thenReturn(
+            createInboundResult(userGroupSearchCredIds)
+          )
 
           when(mockEacdService.getUsersAssignedPTEnrolment(any(), any(), any()))
             .thenReturn(createInboundResult(UsersAssignedEnrolmentEmpty))
@@ -243,6 +267,9 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
 
       "have no enrolments but the signed in credential has SA in EACD" should {
         "return SA_ASSIGNED_TO_CURRENT_USER" in {
+          when(mockUserGroupSearchService.getAllCredIdsByNino(any())(any(), any())).thenReturn(
+            createInboundResult(userGroupSearchCredIds)
+          )
 
           when(mockEacdService.getUsersAssignedPTEnrolment(any(), any(), any()))
             .thenReturn(createInboundResult(UsersAssignedEnrolmentEmpty))
@@ -264,6 +291,9 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
 
       "have no enrolments" should {
         s"return MULTIPLE_ACCOUNTS" in {
+          when(mockUserGroupSearchService.getAllCredIdsByNino(any())(any(), any())).thenReturn(
+            createInboundResult(userGroupSearchCredIds)
+          )
 
           when(mockEacdService.getUsersAssignedPTEnrolment(any(), any(), any()))
             .thenReturn(createInboundResult(UsersAssignedEnrolmentEmpty))
@@ -271,7 +301,7 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
           when(mockEacdService.getUsersAssignedSAEnrolment(any(), any(), any()))
             .thenReturn(createInboundResult(UsersAssignedEnrolmentEmpty))
 
-          when(mockTeaSessionCache.save(ameq(ACCOUNT_TYPE), ameq(SINGLE_OR_MULTIPLE_ACCOUNTS))(any(), any()))
+          when(mockTeaSessionCache.save(ameq(ACCOUNT_TYPE), ameq(MULTIPLE_ACCOUNTS))(any(), any()))
             .thenReturn(Future(CacheMap(request.sessionID, Map())))
 
           when(mockEacdService.getGroupsAssignedPTEnrolment).thenReturn(
@@ -281,13 +311,16 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
           val res = orchestrator.getAccountType
 
           whenReady(res.value) { result =>
-            result shouldBe Right(SINGLE_OR_MULTIPLE_ACCOUNTS)
+            result shouldBe Right(MULTIPLE_ACCOUNTS)
           }
         }
       }
 
       "includes one with a SA enrolment" should {
         "return SA_ASSIGNED_TO_OTHER_USER" in {
+          when(mockUserGroupSearchService.getAllCredIdsByNino(any())(any(), any())).thenReturn(
+            createInboundResult(userGroupSearchCredIds)
+          )
 
           when(mockEacdService.getUsersAssignedPTEnrolment(any(), any(), any()))
             .thenReturn(createInboundResult(UsersAssignedEnrolmentEmpty))
@@ -313,6 +346,9 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
 
     "there are no user credentials with the enrolment" should {
       "find any groups with the assignment and deallocate them from each" in {
+        when(mockUserGroupSearchService.getAllCredIdsByNino(any())(any(), any())).thenReturn(
+          createInboundResult(userGroupSearchCredIds)
+        )
 
         when(mockEacdService.getUsersAssignedPTEnrolment(any(), any(), any()))
           .thenReturn(createInboundResult(UsersAssignedEnrolmentEmpty))
@@ -346,6 +382,9 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
 
     "IR-SA enrolment on both the current and an other account" should {
       "return SA_ASSIGNED_TO_CURRENT_USER" in {
+        when(mockUserGroupSearchService.getAllCredIdsByNino(any())(any(), any())).thenReturn(
+          createInboundResult(userGroupSearchCredIds)
+        )
         implicit val request: RequestWithUserDetailsFromSession[AnyContent] =
           requestWithEnrolments(hmrcPt = false, irSa = true)
 

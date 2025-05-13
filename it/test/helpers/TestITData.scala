@@ -445,4 +445,47 @@ object TestITData {
                                 |    }]
                                 |}""".stripMargin
 
+  val userGroupSearchCredIdsResponse =
+    """
+      |{
+      |    "credIds": [
+      |        {
+      |            "credId": "12345678989012",
+      |            "identityProviderType": "SCP",
+      |            "identityProviderId": "12345678989012"
+      |        },
+      |        {
+      |            "credId": "098765432109",
+      |            "identityProviderType": "ONE_LOGIN",
+      |            "identityProviderId": "12345"
+      |        },
+      |        {
+      |            "credId": "543210987654",
+      |            "identityProviderType": "SCP",
+      |            "identityProviderId": "543210987654"
+      |        }
+      |    ]
+      |}
+      |""".stripMargin
+
+  val userGroupSearchCredIdsResponseOneId =
+    """
+      |{
+      |    "credIds": [
+      |        {
+      |            "credId": "12345678989012",
+      |            "identityProviderType": "SCP",
+      |            "identityProviderId": "12345678989012"
+      |        }
+      |    ]
+      |}
+      |""".stripMargin
+
+  val userGroupSearchCredIds =
+    List(
+      IdentityProviderWithCredId("12345678989012", SCP),
+      IdentityProviderWithCredId("098765432109", ONE_LOGIN),
+      IdentityProviderWithCredId("543210987654", SCP)
+    )
+
 }

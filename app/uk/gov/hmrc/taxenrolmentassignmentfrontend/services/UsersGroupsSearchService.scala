@@ -17,13 +17,14 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.services
 
 import cats.data.EitherT
+
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.UsersGroupsSearchConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, IdentityProviderWithCredId}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.accountDetailsForCredential
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 
@@ -72,5 +73,12 @@ class UsersGroupsSearchService @Inject() (
             .map(_ => Right(accountDetails))
         case Left(error) => Future.successful(Left(error))
       }
+  }
+
+  def getAllCredIdsByNino(nino: String)(implicit
+    ec: ExecutionContext,
+    hc: HeaderCarrier
+  ): TEAFResult[Seq[IdentityProviderWithCredId]] = EitherT {
+    usersGroupsSearchConnector.getAllCredIdsByNino(nino).value
   }
 }

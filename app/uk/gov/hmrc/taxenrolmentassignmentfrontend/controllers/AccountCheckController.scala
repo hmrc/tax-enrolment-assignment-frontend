@@ -95,7 +95,7 @@ class AccountCheckController @Inject() (
       case SA_ASSIGNED_TO_OTHER_USER if request.userDetails.hasPTEnrolment =>
         Future.successful(Redirect(routes.EnrolledPTWithSAOnOtherAccountController.view))
       case SA_ASSIGNED_TO_OTHER_USER   => Future.successful(Redirect(routes.SABlueInterruptController.view))
-      case SINGLE_OR_MULTIPLE_ACCOUNTS => Future.successful(Redirect(routes.EnrolledForPTController.view))
+      case MULTIPLE_ACCOUNTS           => Future.successful(Redirect(routes.EnrolledForPTController.view))
       case SA_ASSIGNED_TO_CURRENT_USER => Future.successful(Redirect(routes.EnrolledForPTWithSAController.view))
       case _ =>
         logger.logEvent(
@@ -111,18 +111,24 @@ class AccountCheckController @Inject() (
     request: RequestWithUserDetailsFromSession[_],
     hc: HeaderCarrier
   ): TEAFResult[Unit] = {
-    val accountTypesToEnrolForPT = List(SINGLE_OR_MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER)
+    val accountTypesToEnrolForPT = List(SINGLE_ACCOUNT, MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER)
     val hasPTEnrolmentAlready = request.userDetails.hasPTEnrolment
     if (!hasPTEnrolmentAlready && accountTypesToEnrolForPT.contains(accountType)) {
       silentAssignmentService.enrolUser().flatMap { _ =>
         auditHandler.audit(AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(accountType))
-        EitherT.right(
+        EitherT.right(if (accountType == SINGLE_ACCOUNT) {
           Future.successful(
             logger.logEvent(
-              logSingleOrMultipleAccountHolderAssignedEnrolment(request.userDetails.credId, request.userDetails.nino)
+              logSingleAccountHolderAssignedEnrolment(request.userDetails.credId, request.userDetails.nino)
             )
           )
-        )
+        } else {
+          Future.successful(
+            logger.logEvent(
+              logMultipleAccountHolderAssignedEnrolment(request.userDetails.credId, request.userDetails.nino)
+            )
+          )
+        })
       }
     } else if (hasPTEnrolmentAlready) {
       EitherT.right(sessionCache.removeRecord.map(_ => (): Unit))

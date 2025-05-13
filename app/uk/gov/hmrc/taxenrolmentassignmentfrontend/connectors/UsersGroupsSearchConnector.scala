@@ -20,16 +20,16 @@ import cats.data.EitherT
 
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
-import play.api.http.Status.NON_AUTHORITATIVE_INFORMATION
+import play.api.http.Status.{NON_AUTHORITATIVE_INFORMATION, NOT_FOUND, OK}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.HttpClientV2
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps, UpstreamErrorResponse}
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseFromUsersGroupsSearch
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersGroupResponse
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{IdentityProviderWithCredId, UsersGroupResponse}
 
 import scala.concurrent.ExecutionContext
 
@@ -62,5 +62,22 @@ class UsersGroupsSearchConnector @Inject() (
             Left(UnexpectedResponseFromUsersGroupsSearch)
         }
       )
+  }
+
+  def getAllCredIdsByNino(nino: String)(implicit
+    ec: ExecutionContext,
+    hc: HeaderCarrier
+  ): TEAFResult[Seq[IdentityProviderWithCredId]] = EitherT {
+    val url = s"${appConfig.usersGroupsSearchBaseURL}/users/nino/$nino/credIds"
+
+    httpClient
+      .get(url"$url")
+      .execute[Either[UpstreamErrorResponse, HttpResponse]]
+      .map {
+        case Right(httpResponse) if httpResponse.status == OK =>
+          Right(httpResponse.json.as[Seq[IdentityProviderWithCredId]](IdentityProviderWithCredId.readList))
+        case Left(error) if error.statusCode == NOT_FOUND => Right(Seq.empty)
+        case _                                            => Left(UnexpectedResponseFromUsersGroupsSearch)
+      }
   }
 }

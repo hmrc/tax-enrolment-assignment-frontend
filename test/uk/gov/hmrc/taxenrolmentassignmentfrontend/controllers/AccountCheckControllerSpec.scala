@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import cats.data.EitherT
 import org.mockito.ArgumentMatchers.{any, eq => ameq}
-import org.mockito.MockitoSugar.{mock, times, verify, when}
+import org.mockito.MockitoSugar.{mock, reset, times, verify, when}
 import org.mockito.stubbing.ScalaOngoingStubbing
 import org.scalatest.OneInstancePerTest
 import play.api.Application
@@ -81,6 +81,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
 
   override def afterEach(): Unit = {
     super.afterEach()
+    reset(mockTeaSessionCache)
     verify(mockHmrcPTEnrolment, times(1)).findAndDeleteWrongPTEnrolment(any(), any(), any())(any(), any())
 
   }
@@ -96,21 +97,22 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
       s"silently assign the HMRC-PT Enrolment and redirect to users redirect url" when {
         "the user has not been assigned the enrolment already" in new TestHelper {
           mockAuthCall()
+          when(mockTeaSessionCache.removeRecord(any())).thenReturn(Future.successful(true))
           when(mockTeaSessionCache.save(any(), any())(any(), any()))
             .thenReturn(Future.successful(CacheMap("FAKE_SESSION_ID", Map.empty)))
-          mockAccountCheckSuccess(SINGLE_OR_MULTIPLE_ACCOUNTS)
+          mockAccountCheckSuccess(SINGLE_ACCOUNT)
           mockSilentEnrolSuccess
-          mockAuditPTEnrolledWhen(SINGLE_OR_MULTIPLE_ACCOUNTS, requestWithUserDetails(), messagesApi)
+          mockAuditPTEnrolledWhen(SINGLE_ACCOUNT, requestWithUserDetails(), messagesApi)
 
           val result: Future[Result] = controller
             .accountCheck(returnUrl)
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
           status(result) shouldBe SEE_OTHER
-          redirectLocation(result) shouldBe Some("/protect-tax-info/enrol-pt/enrolment-success-no-sa")
-          verify(mockTeaSessionCache, times(0)).removeRecord(any())
+          redirectLocation(result) shouldBe Some("/redirect/url")
+          verify(mockTeaSessionCache, times(1)).removeRecord(any())
           verify(mockTeaSessionCache, times(1)).save(any(), any())(any(), any())
-          mockAuditPTEnrolledVerify(SINGLE_OR_MULTIPLE_ACCOUNTS, requestWithUserDetails(), messagesApi)
+          mockAuditPTEnrolledVerify(SINGLE_ACCOUNT, requestWithUserDetails(), messagesApi)
 
         }
       }
@@ -140,11 +142,33 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
         }
       }
 
+      s"silently assign the HMRC-PT Enrolment and redirect to the enrolled for PT interstitial page" when {
+        "the user has not been assigned the enrolment already and has multiple accounts" in new TestHelper {
+          mockAuthCall()
+          when(mockTeaSessionCache.save(any(), any())(any(), any()))
+            .thenReturn(Future.successful(CacheMap("FAKE_SESSION_ID", Map.empty)))
+          mockAccountCheckSuccess(MULTIPLE_ACCOUNTS)
+          mockSilentEnrolSuccess
+          mockAuditPTEnrolledWhen(MULTIPLE_ACCOUNTS, requestWithUserDetails(), messagesApi)
+
+          val result: Future[Result] = controller
+            .accountCheck(returnUrl)
+            .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+
+          status(result) shouldBe SEE_OTHER
+          redirectLocation(result) shouldBe Some("/protect-tax-info/enrol-pt/enrolment-success-no-sa")
+          verify(mockTeaSessionCache, times(0)).removeRecord(any())
+          verify(mockTeaSessionCache, times(1)).save(any(), any())(any(), any())
+          mockAuditPTEnrolledVerify(MULTIPLE_ACCOUNTS, requestWithUserDetails(), messagesApi)
+
+        }
+      }
+
       "return an error page if there was an error assigning the enrolment" in new TestHelper {
         mockAuthCall()
         when(mockTeaSessionCache.save(any(), any())(any(), any()))
           .thenReturn(Future.successful(CacheMap("FAKE_SESSION_ID", Map.empty)))
-        mockAccountCheckSuccess(SINGLE_OR_MULTIPLE_ACCOUNTS)
+        mockAccountCheckSuccess(SINGLE_ACCOUNT)
         mockSilentEnrolFailure
 
         val result: Future[Result] = controller
@@ -208,9 +232,9 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
           when(mockTeaSessionCache.save(any(), any())(any(), any()))
             .thenReturn(Future.successful(CacheMap("FAKE_SESSION_ID", Map.empty)))
 
-          mockAccountCheckSuccess(SINGLE_OR_MULTIPLE_ACCOUNTS)
+          mockAccountCheckSuccess(MULTIPLE_ACCOUNTS)
           mockSilentEnrolSuccess
-          mockAuditPTEnrolledWhen(SINGLE_OR_MULTIPLE_ACCOUNTS, requestWithUserDetails(), messagesApi)
+          mockAuditPTEnrolledWhen(MULTIPLE_ACCOUNTS, requestWithUserDetails(), messagesApi)
 
           val result: Future[Result] = controller
             .accountCheck(returnUrl)
@@ -221,7 +245,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
             "/protect-tax-info/enrol-pt/enrolment-success-no-sa"
           )
           verify(mockTeaSessionCache, times(1)).save(any(), any())(any(), any())
-          mockAuditPTEnrolledVerify(SINGLE_OR_MULTIPLE_ACCOUNTS, requestWithUserDetails(), messagesApi)
+          mockAuditPTEnrolledVerify(MULTIPLE_ACCOUNTS, requestWithUserDetails(), messagesApi)
 
         }
       }
@@ -231,7 +255,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
           mockAuthCallWithPT()
           when(mockTeaSessionCache.save(any(), any())(any(), any()))
             .thenReturn(Future.successful(CacheMap("FAKE_SESSION_ID", Map.empty)))
-          mockAccountCheckSuccess(SINGLE_OR_MULTIPLE_ACCOUNTS)
+          mockAccountCheckSuccess(MULTIPLE_ACCOUNTS)
           when(
             mockTeaSessionCache
               .removeRecord(any())

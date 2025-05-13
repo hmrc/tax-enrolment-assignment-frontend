@@ -98,4 +98,41 @@ class UsersGroupsSearchServiceSpec extends BaseSpec {
       }
     }
   }
+
+  "getAllCredIdsByNino" when {
+    "a list of creds is successfully retrieved" should {
+      "call the users-groups-search return the account details" in {
+        val nino = generateNino.nino
+
+        when(mockUsersGroupsSearchConnector.getAllCredIdsByNino(nino))
+          .thenReturn(createInboundResult(userGroupSearchCredIds))
+
+        val result = service.getAllCredIdsByNino(nino)(
+          implicitly,
+          implicitly
+        )
+        whenReady(result.value) { res =>
+          res shouldBe Right(userGroupSearchCredIds)
+        }
+
+      }
+    }
+    "users-group-search returns an error" should {
+      "return an error" in {
+        val nino = generateNino.nino
+
+        when(mockUsersGroupsSearchConnector.getAllCredIdsByNino(nino))
+          .thenReturn(createInboundResultError(UnexpectedResponseFromUsersGroupsSearch))
+
+        val result = service.getAllCredIdsByNino(nino)(
+          implicitly,
+          implicitly
+        )
+        whenReady(result.value) { res =>
+          res shouldBe Left(UnexpectedResponseFromUsersGroupsSearch)
+        }
+
+      }
+    }
+  }
 }

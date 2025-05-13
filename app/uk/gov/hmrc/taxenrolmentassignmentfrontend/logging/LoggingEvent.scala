@@ -32,7 +32,7 @@ trait LoggingEventInfo {
     )
   )
 
-  def logSingleOrMultipleAccountHolderAssignedEnrolment(
+  def logSingleAccountHolderAssignedEnrolment(
     credentialId: String,
     nino: Nino
   ): LoggingEvent =
@@ -40,7 +40,20 @@ trait LoggingEventInfo {
       Event(
         "[AccountCheckController][silentEnrol]",
         details = Some(
-          s"$hmrcPTKey enrolment assigned to credential $credentialId which has a single or multiple accounts with nino ${nino.nino}"
+          s"$hmrcPTKey enrolment assigned to single account credential $credentialId with nino ${nino.nino}"
+        )
+      )
+    )
+
+  def logMultipleAccountHolderAssignedEnrolment(
+    credentialId: String,
+    nino: Nino
+  ): LoggingEvent =
+    Info(
+      Event(
+        "[AccountCheckController][enrolForPTIfRequired]",
+        details = Some(
+          s"$hmrcPTKey enrolment assigned to credential $credentialId which has multiple accounts with nino ${nino.nino}"
         )
       )
     )
@@ -122,6 +135,22 @@ trait LoggingEventInfo {
           s"Signed in with credential $credentialId has got $IRSAKey enrolment but another " +
             s"credential $credentialWithSAEnrolment also has SA enrolment. IR-SA enrolment cannot be on both the current and an other account"
         )
+      )
+    )
+
+  def logCurrentUserhasMultipleAccounts(credentialId: String): LoggingEvent =
+    Info(
+      Event(
+        "[AccountCheckOrchestrator][getAccountType]",
+        details = Some(s"Signed in credential $credentialId has multiple accounts")
+      )
+    )
+
+  def logCurrentUserhasOneAccount(credentialId: String): LoggingEvent =
+    Info(
+      Event(
+        "[AccountCheckOrchestrator][getAccountType]",
+        details = Some(s"Signed in credential $credentialId has one account")
       )
     )
 

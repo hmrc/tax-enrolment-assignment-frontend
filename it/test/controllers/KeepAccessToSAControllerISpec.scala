@@ -26,7 +26,7 @@ import play.api.http.Status.NON_AUTHORITATIVE_INFORMATION
 import play.api.libs.json.{JsString, Json}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_OR_MULTIPLE_ACCOUNTS}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
@@ -126,8 +126,9 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
     List(
       PT_ASSIGNED_TO_OTHER_USER,
       PT_ASSIGNED_TO_CURRENT_USER,
-      SINGLE_OR_MULTIPLE_ACCOUNTS,
-      SA_ASSIGNED_TO_CURRENT_USER
+      SA_ASSIGNED_TO_CURRENT_USER,
+      SINGLE_ACCOUNT,
+      MULTIPLE_ACCOUNTS
     ).foreach { accountType =>
       s"the session cache has Account type of $accountType" should {
         s"redirect to /protect-tax-info" in {
@@ -377,8 +378,9 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
     List(
       PT_ASSIGNED_TO_OTHER_USER,
       PT_ASSIGNED_TO_CURRENT_USER,
-      SINGLE_OR_MULTIPLE_ACCOUNTS,
-      SA_ASSIGNED_TO_CURRENT_USER
+      SA_ASSIGNED_TO_CURRENT_USER,
+      SINGLE_ACCOUNT,
+      MULTIPLE_ACCOUNTS
     ).foreach { accountType =>
       s"the session cache has Account type of $accountType" should {
         s"redirect to /protect-tax-info" when {

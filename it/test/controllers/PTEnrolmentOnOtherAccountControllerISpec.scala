@@ -35,7 +35,6 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_ASSIGNED_PT_ENROLMENT, USER_ASSIGNED_SA_ENROLMENT}
 
 import scala.concurrent.Future
-import scala.jdk.CollectionConverters._
 
 class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
 

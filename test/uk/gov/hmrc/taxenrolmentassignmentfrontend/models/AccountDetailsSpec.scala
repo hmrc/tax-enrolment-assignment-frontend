@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 
 import play.api.i18n.Lang
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.{Format, JsObject, Json}
 import uk.gov.hmrc.crypto.Crypted
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.crypto.json.JsonEncryption
@@ -214,7 +214,8 @@ class AccountDetailsSpec extends BaseSpec {
       crypto.crypto.decrypt(Crypted(res.as[JsObject].value("email").as[String])).value shouldBe """"foo@test.com""""
     }
     "read from json" in {
-      implicit val ssf = JsonEncryption.sensitiveEncrypterDecrypter(SensitiveString.apply)(implicitly, crypto.crypto)
+      implicit val ssf: Format[SensitiveString] =
+        JsonEncryption.sensitiveEncrypterDecrypter(SensitiveString.apply)(implicitly, crypto.crypto)
       val json = Json.obj(
         "identityProviderType" -> "SCP",
         "credId"               -> "credid",

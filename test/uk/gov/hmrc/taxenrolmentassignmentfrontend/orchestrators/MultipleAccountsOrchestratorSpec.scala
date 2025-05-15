@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators
 
 import cats.data.EitherT
 import org.mockito.ArgumentMatchers.{any, eq => ameq}
-import org.mockito.MockitoSugar.{mock, when}
+import org.mockito.Mockito.when
 import play.api.Application
 import play.api.inject.{Binding, bind}
 import play.api.libs.json.{JsBoolean, Json}

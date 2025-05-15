@@ -19,7 +19,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 import cats.data.EitherT
 import org.jsoup.Jsoup
 import org.mockito.ArgumentMatchers.{any, eq => ameq}
-import org.mockito.MockitoSugar.{mock, when}
+import org.mockito.Mockito.when
 import play.api.Application
 import play.api.inject.{Binding, bind}
 import play.api.mvc.BodyParsers
@@ -83,8 +83,7 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
 
           mockGetDataFromCacheForActionSuccess(randomAccountType)
 
-          val result = controller
-            .view()
+          val result = controller.view
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
           status(result) shouldBe OK
@@ -122,8 +121,7 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
 
           mockGetDataFromCacheForActionSuccess(randomAccountType)
 
-          val result = controller
-            .view()
+          val result = controller.view
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
           status(result) shouldBe SEE_OTHER
@@ -138,8 +136,7 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
 
         mockGetDataFromCacheForActionNoRedirectUrl
 
-        val result = controller
-          .view()
+        val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
@@ -157,8 +154,7 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
-        val result = controller
-          .view()
+        val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe SEE_OTHER
@@ -178,8 +174,7 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
-        val result = controller
-          .continue()
+        val result = controller.continue
           .apply(buildFakePOSTRequestWithSessionId(Map.empty))
 
         status(result) shouldBe SEE_OTHER
@@ -194,8 +189,7 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
           .thenReturn(Future.successful(retrievalResponse()))
         mockGetDataFromCacheForActionNoRedirectUrl
 
-        val result = controller
-          .continue()
+        val result = controller.continue
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
@@ -213,8 +207,7 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
-        val result = controller
-          .continue()
+        val result = controller.continue
           .apply(buildFakePOSTRequestWithSessionId(Map.empty))
 
         status(result) shouldBe SEE_OTHER

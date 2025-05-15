@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import org.mockito.ArgumentMatchers.{any, eq => ameq}
-import org.mockito.MockitoSugar.{mock, when}
+import org.mockito.Mockito.when
 import play.api.Application
 import play.api.inject.{Binding, bind}
 import play.api.libs.json.JsString
@@ -84,7 +84,7 @@ class SignOutControllerSpec extends ControllersBaseSpec {
 
         when(mockTeaSessionCache.removeRecord(any())).thenReturn(Future.successful(true))
 
-        val result = controller.signOut().apply(fakeReq("GET"))
+        val result = controller.signOut.apply(fakeReq("GET"))
 
         status(result) shouldBe SEE_OTHER
         headers(result).contains("X-Request-ID") shouldBe false
@@ -104,7 +104,7 @@ class SignOutControllerSpec extends ControllersBaseSpec {
 
         when(mockTeaSessionCache.removeRecord(any())).thenReturn(Future.successful(true))
 
-        val result = controller.signOut().apply(fakeReq("GET"))
+        val result = controller.signOut.apply(fakeReq("GET"))
 
         status(result) shouldBe SEE_OTHER
         headers(result).contains("X-Request-ID") shouldBe false
@@ -123,7 +123,7 @@ class SignOutControllerSpec extends ControllersBaseSpec {
 
         when(mockTeaSessionCache.removeRecord(any())).thenReturn(Future.successful(true))
 
-        val result = controller.signOut().apply(fakeReq("GET"))
+        val result = controller.signOut.apply(fakeReq("GET"))
 
         status(result) shouldBe SEE_OTHER
         headers(result).contains("X-Request-ID") shouldBe false

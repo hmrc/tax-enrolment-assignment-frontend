@@ -20,11 +20,12 @@ import helpers.IntegrationSpecBase
 import org.mongodb.scala.model.Filters
 import play.api.libs.json.JsString
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{CacheMap, DatedCacheMap}
+import org.mongodb.scala.SingleObservableFuture
 
 import java.time.{Duration, Instant}
 import java.util.UUID
 
-class SessionRepositoryISpec extends IntegrationSpecBase {
+class repositoryISpec extends IntegrationSpecBase {
 
   "upsert" when {
     "there is no data in the cache" should {
@@ -36,7 +37,7 @@ class SessionRepositoryISpec extends IntegrationSpecBase {
         val cacheMap = CacheMap(sessionId, Map(KEY -> JsString(data)))
 
         val res = for {
-          saved   <- sessionRepository.upsert(cacheMap)
+          saved   <- repository.upsert(cacheMap)
           fetched <- fetch(sessionId)
         } yield (saved, fetched)
 
@@ -61,7 +62,7 @@ class SessionRepositoryISpec extends IntegrationSpecBase {
         val res = for {
           _              <- save[String](sessionId, KEY, currentData)
           fetchedCurrent <- fetch(sessionId)
-          updated        <- sessionRepository.upsert(updatedCacheMap)
+          updated        <- repository.upsert(updatedCacheMap)
           fetchedUpdated <- fetch(sessionId)
         } yield (fetchedCurrent, updated, fetchedUpdated)
 
@@ -78,7 +79,7 @@ class SessionRepositoryISpec extends IntegrationSpecBase {
     "there is no record" should {
       "return None" in {
         val sessionId = UUID.randomUUID().toString
-        val res = sessionRepository.get(sessionId)
+        val res = repository.get(sessionId)
 
         whenReady(res) { result =>
           result shouldBe None
@@ -96,7 +97,7 @@ class SessionRepositoryISpec extends IntegrationSpecBase {
 
         val res = for {
           saved   <- save[String](sessionId, KEY, data)
-          fetched <- sessionRepository.get(sessionId)
+          fetched <- repository.get(sessionId)
         } yield (saved, fetched)
 
         whenReady(res) { case (saved, fetched) =>
@@ -111,7 +112,7 @@ class SessionRepositoryISpec extends IntegrationSpecBase {
     "there is no record" should {
       "create a new record with no data" in {
         val sessionId = UUID.randomUUID().toString
-        val res = sessionRepository.updateLastUpdated(sessionId)
+        val res = repository.updateLastUpdated(sessionId)
 
         whenReady(res) { result =>
           result shouldBe true
@@ -130,15 +131,15 @@ class SessionRepositoryISpec extends IntegrationSpecBase {
         val datedCachedMap =
           DatedCacheMap(sessionId, cacheMap.data, oldDatetime)
         val res = for {
-          _ <- sessionRepository.collection
+          _ <- repository.collection
                  .insertOne(datedCachedMap)
                  .toFuture()
-          getOriginal <- sessionRepository.collection
+          getOriginal <- repository.collection
                            .find(Filters.equal("id", sessionId))
                            .first()
                            .toFuture()
-          updateLastUpdated <- sessionRepository.updateLastUpdated(sessionId)
-          getUpdated <- sessionRepository.collection
+          updateLastUpdated <- repository.updateLastUpdated(sessionId)
+          getUpdated <- repository.collection
                           .find(Filters.equal("id", sessionId))
                           .first()
                           .toFuture()

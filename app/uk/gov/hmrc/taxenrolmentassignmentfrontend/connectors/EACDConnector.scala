@@ -19,6 +19,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors
 import cats.data.EitherT
 import play.api.Logger
 import play.api.http.Status._
+import play.api.libs.ws.writeableOf_JsValue
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.HttpClientV2

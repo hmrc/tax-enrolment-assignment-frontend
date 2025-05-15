@@ -56,7 +56,7 @@ class TEASessionCacheSpec extends IntegrationSpecBase {
           val dataToUpsert = CacheMap(sessionId, Map("test" -> JsString("efg")))
 
           val res = for {
-            _       <- sessionRepository.upsert(initialData)
+            _       <- repository.upsert(initialData)
             updated <- teaSessionCache.save("test", "efg")
           } yield updated
 
@@ -75,7 +75,7 @@ class TEASessionCacheSpec extends IntegrationSpecBase {
           )
 
           val res = for {
-            _       <- sessionRepository.upsert(initialData)
+            _       <- repository.upsert(initialData)
             updated <- teaSessionCache.save("test1", "efg")
           } yield updated
 
@@ -91,7 +91,7 @@ class TEASessionCacheSpec extends IntegrationSpecBase {
     "remove all the data for session id and return true" in {
       val data = CacheMap(sessionId, Map("test" -> JsString("abc")))
       val res = for {
-        _       <- sessionRepository.upsert(data)
+        _       <- repository.upsert(data)
         remove  <- teaSessionCache.removeRecord
         fetched <- fetch(sessionId)
       } yield (remove, fetched)
@@ -105,8 +105,8 @@ class TEASessionCacheSpec extends IntegrationSpecBase {
       val data = CacheMap("fooboochoo", Map("test" -> JsString("abc")))
       val dataToBeDeleted = CacheMap(sessionId, Map("test" -> JsString("abc")))
       val res = for {
-        _       <- sessionRepository.upsert(data)
-        _       <- sessionRepository.upsert(dataToBeDeleted)
+        _       <- repository.upsert(data)
+        _       <- repository.upsert(dataToBeDeleted)
         remove  <- teaSessionCache.removeRecord
         fetched <- fetch("fooboochoo")
       } yield (remove, fetched)
@@ -147,7 +147,7 @@ class TEASessionCacheSpec extends IntegrationSpecBase {
           Map("test" -> JsString("abc"), "test1" -> JsString("efg"))
         )
         val res = for {
-          _       <- sessionRepository.upsert(data)
+          _       <- repository.upsert(data)
           fetched <- teaSessionCache.fetch()
         } yield fetched
 
@@ -173,7 +173,7 @@ class TEASessionCacheSpec extends IntegrationSpecBase {
       "just override the last login date" in {
         val data = CacheMap(sessionId, Map("test" -> JsString("abc")))
         val res = for {
-          _       <- sessionRepository.upsert(data)
+          _       <- repository.upsert(data)
           updated <- teaSessionCache.extendSession()
         } yield updated
 

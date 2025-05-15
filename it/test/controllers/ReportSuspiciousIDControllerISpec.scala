@@ -33,6 +33,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, UsersAssignedEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
+import org.mongodb.scala.SingleObservableFuture
 
 class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
@@ -66,7 +67,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
           usergroupsResponseJson().toString()
         )
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPathSa)
+        val request = FakeRequest(GET, urlPathSa)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
         val page = Jsoup.parse(contentAsString(result))
@@ -106,7 +107,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
           usergroupsResponseJson().toString()
         )
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPathSa)
+        val request = FakeRequest(GET, urlPathSa)
           .withSession(xAuthToken, xSessionId)
           .withTransientLang(Lang.get("CY").get)
         val result = route(app, request).get
@@ -144,7 +145,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
             usergroupsResponseJson().toString()
           )
 
-          val request = FakeRequest(GET, "/protect-tax-info" + urlPathSa)
+          val request = FakeRequest(GET, urlPathSa)
             .withSession(xAuthToken, xSessionId)
           val result = route(app, request).get
           val page = Jsoup.parse(contentAsString(result))
@@ -172,7 +173,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
 
-          val request = FakeRequest(GET, "/protect-tax-info" + urlPathSa)
+          val request = FakeRequest(GET, urlPathSa)
             .withSession(xAuthToken, xSessionId)
           val result = route(app, request).get
 
@@ -205,7 +206,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPathSa)
+        val request = FakeRequest(GET, urlPathSa)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -236,7 +237,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
         )
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPathSa)
+        val request = FakeRequest(GET, urlPathSa)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -252,7 +253,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPathSa)
+        val request = FakeRequest(GET, urlPathSa)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -288,7 +289,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
           ""
         )
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPathSa)
+        val request = FakeRequest(GET, urlPathSa)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -319,7 +320,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
           ""
         )
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPathSa)
+        val request = FakeRequest(GET, urlPathSa)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -350,7 +351,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
           ""
         )
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPathSa)
+        val request = FakeRequest(GET, urlPathSa)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -366,7 +367,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPathSa)
+        val request = FakeRequest(GET, urlPathSa)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -382,7 +383,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPathSa)
+        val request = FakeRequest(GET, urlPathSa)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -397,7 +398,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
         stubAuthorizePostUnauthorised(insufficientConfidenceLevel)
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPathSa)
+        val request = FakeRequest(GET, urlPathSa)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -412,7 +413,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
         stubAuthorizePostUnauthorised(sessionNotFound)
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPathSa)
+        val request = FakeRequest(GET, urlPathSa)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -450,7 +451,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
           usergroupsResponseJson().toString()
         )
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPathPT)
+        val request = FakeRequest(GET, urlPathPT)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
         val page = Jsoup.parse(contentAsString(result))
@@ -484,7 +485,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
 
-          val request = FakeRequest(GET, "/protect-tax-info" + urlPathPT)
+          val request = FakeRequest(GET, urlPathPT)
             .withSession(xAuthToken, xSessionId)
           val result = route(app, request).get
 
@@ -518,7 +519,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPathPT)
+        val request = FakeRequest(GET, urlPathPT)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -549,7 +550,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
         )
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPathPT)
+        val request = FakeRequest(GET, urlPathPT)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -572,7 +573,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPathPT)
+        val request = FakeRequest(GET, urlPathPT)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -608,7 +609,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
           ""
         )
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPathPT)
+        val request = FakeRequest(GET, urlPathPT)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -639,7 +640,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
           ""
         )
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPathPT)
+        val request = FakeRequest(GET, urlPathPT)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -668,7 +669,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
           Status.INTERNAL_SERVER_ERROR,
           ""
         )
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPathPT)
+        val request = FakeRequest(GET, urlPathPT)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -684,7 +685,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPathPT)
+        val request = FakeRequest(GET, urlPathPT)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -700,7 +701,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPathPT)
+        val request = FakeRequest(GET, urlPathPT)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -715,7 +716,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
         stubAuthorizePostUnauthorised(insufficientConfidenceLevel)
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPathPT)
+        val request = FakeRequest(GET, urlPathPT)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -730,7 +731,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
         stubAuthorizePostUnauthorised(sessionNotFound)
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPathPT)
+        val request = FakeRequest(GET, urlPathPT)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -763,7 +764,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
             ""
           )
 
-          val request = FakeRequest(POST, "/protect-tax-info" + urlPathSa)
+          val request = FakeRequest(POST, urlPathSa)
             .withSession(xAuthToken, xSessionId)
             .withJsonBody(Json.obj())
           val result = route(app, request).get
@@ -795,7 +796,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
 
-          val request = FakeRequest(POST, "/protect-tax-info" + urlPathSa)
+          val request = FakeRequest(POST, urlPathSa)
             .withSession(xAuthToken, xSessionId)
             .withJsonBody(Json.obj())
           val result = route(app, request).get
@@ -828,7 +829,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
           ""
         )
 
-        val request = FakeRequest(POST, "/protect-tax-info" + urlPathSa)
+        val request = FakeRequest(POST, urlPathSa)
           .withSession(xAuthToken, xSessionId)
           .withJsonBody(Json.obj())
         val result = route(app, request).get
@@ -856,7 +857,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
 
-          val request = FakeRequest(POST, "/protect-tax-info" + urlPathSa)
+          val request = FakeRequest(POST, urlPathSa)
             .withSession(xAuthToken, xSessionId)
             .withJsonBody(Json.obj())
           val result = route(app, request).get
@@ -872,12 +873,12 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
     "the session cache is empty" when {
       s"redirect to login" in {
-        await(sessionRepository.collection.deleteMany(BsonDocument()).toFuture())
+        await(repository.collection.deleteMany(BsonDocument()).toFuture())
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(POST, "/protect-tax-info" + urlPathSa)
+        val request = FakeRequest(POST, urlPathSa)
           .withSession(xAuthToken, xSessionId)
           .withJsonBody(Json.obj())
         val result = route(app, request).get

@@ -17,8 +17,8 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions
 
 import org.mockito.ArgumentMatchers.any
-import org.mockito.MockitoSugar.{mock, times, verify, when}
-import org.mockito.stubbing.ScalaOngoingStubbing
+import org.mockito.Mockito.{times, verify, when}
+import org.mockito.stubbing.OngoingStubbing
 import play.api.Application
 import play.api.inject.{Binding, bind}
 import play.api.libs.json.{JsString, Json}
@@ -40,7 +40,7 @@ import scala.concurrent.Future
 
 class AccountMongoDetailsActionSpec extends BaseSpec {
 
-  def mockDeleteDataFromCacheWhen: ScalaOngoingStubbing[Future[Boolean]] =
+  def mockDeleteDataFromCacheWhen: OngoingStubbing[Future[Boolean]] =
     when(mockTeaSessionCache.removeRecord(any()))
       .thenReturn(Future.successful(true))
 

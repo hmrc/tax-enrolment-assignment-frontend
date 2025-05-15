@@ -19,15 +19,17 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.utils
 import cats.data.EitherT
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.{any, anyString}
-import org.mockito.MockitoSugar.{mock, times, verify, when}
+import org.mockito.Mockito.{times, verify, when}
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
 import uk.gov.hmrc.domain.Generator
 import uk.gov.hmrc.http.{HttpResponse, UpstreamErrorResponse}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.TaxEnrolmentsConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.*
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.EACDService
+
+import scala.concurrent.Future
 
 class HmrcPTEnrolmentSpec extends BaseSpec {
 
@@ -40,7 +42,7 @@ class HmrcPTEnrolmentSpec extends BaseSpec {
     "There is no enrolment" should {
       "not call eacdService" in {
         when(mockTaxEnrolmentsConnector.deallocateEnrolment(anyString(), any())(any(), any()))
-          .thenReturn(EitherT.rightT(HttpResponse(OK, "")))
+          .thenReturn(EitherT.rightT[Future, UpstreamErrorResponse](HttpResponse(OK, "")))
 
         val result = service.findAndDeleteWrongPTEnrolment(NINO, Enrolments(Set.empty: Set[Enrolment]), "groupId")
         whenReady(result.value) { res =>
@@ -55,7 +57,7 @@ class HmrcPTEnrolmentSpec extends BaseSpec {
         val enrolments = Set(Enrolment("key", Seq(EnrolmentIdentifier("key", "value")), "activated"))
 
         when(mockTaxEnrolmentsConnector.deallocateEnrolment(anyString(), any())(any(), any()))
-          .thenReturn(EitherT.rightT(HttpResponse(OK, "")))
+          .thenReturn(EitherT.rightT[Future, UpstreamErrorResponse](HttpResponse(OK, "")))
 
         val result = service.findAndDeleteWrongPTEnrolment(NINO, Enrolments(enrolments), "groupId")
         whenReady(result.value) { res =>
@@ -70,7 +72,7 @@ class HmrcPTEnrolmentSpec extends BaseSpec {
         val enrolments = Set(Enrolment("HMRC-PT", Seq(EnrolmentIdentifier("NINO", NINO.nino)), "activated"))
 
         when(mockTaxEnrolmentsConnector.deallocateEnrolment(anyString(), any())(any(), any()))
-          .thenReturn(EitherT.rightT(HttpResponse(OK, "")))
+          .thenReturn(EitherT.rightT[Future, UpstreamErrorResponse](HttpResponse(OK, "")))
 
         val result = service.findAndDeleteWrongPTEnrolment(NINO, Enrolments(enrolments), "groupId")
         whenReady(result.value) { res =>
@@ -89,7 +91,7 @@ class HmrcPTEnrolmentSpec extends BaseSpec {
           mockTaxEnrolmentsConnector
             .deallocateEnrolment(anyString(), ArgumentMatchers.eq(s"HMRC-PT~NINO~${secondNino.nino}"))(any(), any())
         )
-          .thenReturn(EitherT.rightT(HttpResponse(OK, "")))
+          .thenReturn(EitherT.rightT[Future, UpstreamErrorResponse](HttpResponse(OK, "")))
 
         val result = service.findAndDeleteWrongPTEnrolment(NINO, Enrolments(enrolments), "groupId")
         whenReady(result.value) { res =>
@@ -115,31 +117,31 @@ class HmrcPTEnrolmentSpec extends BaseSpec {
           mockTaxEnrolmentsConnector
             .deallocateEnrolment(anyString(), ArgumentMatchers.eq(s"HMRC-PT~NINO~${secondNino.nino}"))(any(), any())
         )
-          .thenReturn(EitherT.rightT(HttpResponse(OK, "")))
+          .thenReturn(EitherT.rightT[Future, UpstreamErrorResponse](HttpResponse(OK, "")))
 
         when(
           mockTaxEnrolmentsConnector
             .deallocateEnrolment(anyString(), ArgumentMatchers.eq(s"HMRC-PT~NINO~${thirdNino.nino}"))(any(), any())
         )
-          .thenReturn(EitherT.rightT(HttpResponse(OK, "")))
+          .thenReturn(EitherT.rightT[Future, UpstreamErrorResponse](HttpResponse(OK, "")))
 
         when(
           mockTaxEnrolmentsConnector
             .deallocateEnrolment(anyString(), ArgumentMatchers.eq(s"HMRC-PT~NINO~${NINO.nino}"))(any(), any())
         )
-          .thenReturn(EitherT.rightT(HttpResponse(OK, "")))
+          .thenReturn(EitherT.rightT[Future, UpstreamErrorResponse](HttpResponse(OK, "")))
 
         when(
           mockTaxEnrolmentsConnector
             .deallocateEnrolment(anyString(), ArgumentMatchers.eq(s"FAKE~NINO~${secondNino.nino}"))(any(), any())
         )
-          .thenReturn(EitherT.rightT(HttpResponse(OK, "")))
+          .thenReturn(EitherT.rightT[Future, UpstreamErrorResponse](HttpResponse(OK, "")))
 
         when(
           mockTaxEnrolmentsConnector
             .deallocateEnrolment(anyString(), ArgumentMatchers.eq(s"IR-SA~UTR~000000"))(any(), any())
         )
-          .thenReturn(EitherT.rightT(HttpResponse(OK, "")))
+          .thenReturn(EitherT.rightT[Future, UpstreamErrorResponse](HttpResponse(OK, "")))
 
         val result = service.findAndDeleteWrongPTEnrolment(NINO, Enrolments(enrolments), "groupId")
         whenReady(result.value) { res =>
@@ -166,7 +168,7 @@ class HmrcPTEnrolmentSpec extends BaseSpec {
           mockTaxEnrolmentsConnector
             .deallocateEnrolment(anyString(), ArgumentMatchers.eq(s"HMRC-PT~NINO~${secondNino.nino}"))(any(), any())
         )
-          .thenReturn(EitherT.leftT(UpstreamErrorResponse("error", INTERNAL_SERVER_ERROR)))
+          .thenReturn(EitherT.leftT[Future, HttpResponse](UpstreamErrorResponse("error", INTERNAL_SERVER_ERROR)))
 
         val result = service.findAndDeleteWrongPTEnrolment(NINO, Enrolments(enrolments), "groupId")
         whenReady(result.value) { res =>

@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.services
 
-import org.mockito.MockitoSugar.mock
 import play.api.Application
 import play.api.inject.{Binding, bind}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.{EACDConnector, TaxEnrolmentsConnector}

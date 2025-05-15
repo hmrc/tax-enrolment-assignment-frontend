@@ -18,9 +18,8 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import org.jsoup.Jsoup
 import org.mockito.ArgumentMatchers.{any, eq => ameq}
-import org.mockito.MockitoSugar.{mock, when}
+import org.mockito.Mockito.when
 import play.api.Application
-import play.api.http.Status.OK
 import play.api.inject.{Binding, bind}
 import play.api.mvc.BodyParsers
 import play.api.test.Helpers._
@@ -164,8 +163,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
         mockGetDataFromCacheForActionNoRedirectUrl
 
-        val res = controller
-          .view()
+        val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(res) shouldBe INTERNAL_SERVER_ERROR

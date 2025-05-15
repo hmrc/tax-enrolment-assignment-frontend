@@ -44,7 +44,7 @@ class SignOutControllerISpec extends IntegrationSpecBase {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
 
-        val request = FakeRequest(GET, "/protect-tax-info" + url)
+        val request = FakeRequest(GET, url)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -52,7 +52,7 @@ class SignOutControllerISpec extends IntegrationSpecBase {
         redirectLocation(result).get should include(
           s"/bas-gateway/sign-out-without-state?continue=${URLEncoder.encode(returnUrl, "UTF-8")}"
         )
-        await(sessionRepository.get(sessionId)) shouldBe None
+        await(repository.get(sessionId)) shouldBe None
 
       }
     }
@@ -64,7 +64,7 @@ class SignOutControllerISpec extends IntegrationSpecBase {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
 
-        val request = FakeRequest(GET, "/protect-tax-info" + url)
+        val request = FakeRequest(GET, url)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -72,7 +72,7 @@ class SignOutControllerISpec extends IntegrationSpecBase {
         redirectLocation(result).get should include(
           s"/bas-gateway/sign-out-without-state"
         )
-        sessionRepository.get(sessionId).map(session => assert(session.isEmpty))
+        repository.get(sessionId).map(session => assert(session.isEmpty))
 
       }
     }
@@ -84,7 +84,7 @@ class SignOutControllerISpec extends IntegrationSpecBase {
         val authResponse = authoriseResponseJson()
         stubAuthorizePost(OK, authResponse.toString())
 
-        val request = FakeRequest(GET, "/protect-tax-info" + url)
+        val request = FakeRequest(GET, url)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 

@@ -17,9 +17,8 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import org.mockito.ArgumentMatchers.{any, eq => ameq}
-import org.mockito.MockitoSugar.{mock, when}
+import org.mockito.Mockito.when
 import play.api.Application
-import play.api.http.Status.{INTERNAL_SERVER_ERROR, SEE_OTHER}
 import play.api.inject.{Binding, bind}
 import play.api.mvc.BodyParsers
 import play.api.test.Helpers._

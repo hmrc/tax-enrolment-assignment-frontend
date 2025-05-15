@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import org.mockito.ArgumentMatchers.{any, eq => ameq}
-import org.mockito.MockitoSugar.{mock, times, verify, when}
+import org.mockito.Mockito.{times, verify, when}
 import play.api.Application
 import play.api.inject.{Binding, bind}
 import play.api.libs.json.Json
@@ -87,8 +87,7 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
 
           mockGetDataFromCacheForActionSuccess(randomAccountType)
 
-          val result = controller
-            .view()
+          val result = controller.view
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
           status(result) shouldBe OK
@@ -110,8 +109,7 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
 
           mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
 
-          val result = controller
-            .view()
+          val result = controller.view
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
           status(result) shouldBe SEE_OTHER
@@ -125,8 +123,7 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
           .thenReturn(Future.successful(retrievalResponse()))
         mockGetDataFromCacheForActionNoRedirectUrl
 
-        val result = controller
-          .view()
+        val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
@@ -172,8 +169,7 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
-        val res = controller
-          .view()
+        val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(res) shouldBe INTERNAL_SERVER_ERROR
@@ -205,8 +201,7 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
 
       when(mockAuditHandler.audit(ameq(auditEvent))(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
 
-      val res = controller
-        .continue()
+      val res = controller.continue
         .apply(buildFakeRequestWithSessionId("POST", "Not Used"))
 
       status(res) shouldBe SEE_OTHER
@@ -221,8 +216,7 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
         .thenReturn(Future.successful(retrievalResponse()))
       mockGetDataFromCacheForActionNoRedirectUrl
 
-      val result = controller
-        .view()
+      val result = controller.view
         .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
       status(result) shouldBe INTERNAL_SERVER_ERROR

@@ -17,8 +17,8 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers
 
 import org.mockito.ArgumentMatchers.any
-import org.mockito.MockitoSugar.{mock, times, verify, when}
-import org.mockito.stubbing.ScalaOngoingStubbing
+import org.mockito.Mockito.{times, verify, when}
+import org.mockito.stubbing.OngoingStubbing
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
@@ -35,7 +35,7 @@ trait ControllersBaseSpec extends BaseSpec {
   lazy val mockAuthConnector: AuthConnector = mock[AuthConnector]
   lazy val mockTeaSessionCache: TEASessionCache = mock[TEASessionCache]
 
-  def mockGetDataFromCacheForActionNoRedirectUrl: ScalaOngoingStubbing[Future[Option[CacheMap]]] = {
+  def mockGetDataFromCacheForActionNoRedirectUrl: OngoingStubbing[Future[Option[CacheMap]]] = {
     val data = Map(ACCOUNT_TYPE -> Json.toJson(randomAccountType))
     val cacheMap = CacheMap("id", data)
 
@@ -47,7 +47,7 @@ trait ControllersBaseSpec extends BaseSpec {
     accountType: AccountTypes.Value,
     redirectUrl: String = "foo",
     additionCacheData: Map[String, JsValue] = Map()
-  ): ScalaOngoingStubbing[Future[Option[CacheMap]]] = {
+  ): OngoingStubbing[Future[Option[CacheMap]]] = {
     val data = generateBasicCacheData(accountType, redirectUrl) ++ additionCacheData
     val cacheMap = CacheMap("id", data)
 
@@ -55,7 +55,7 @@ trait ControllersBaseSpec extends BaseSpec {
       .thenReturn(Future.successful(Some(cacheMap)))
   }
 
-  def mockDeleteDataFromCacheWhen: ScalaOngoingStubbing[Future[Boolean]] =
+  def mockDeleteDataFromCacheWhen: OngoingStubbing[Future[Boolean]] =
     when(mockTeaSessionCache.removeRecord(any()))
       .thenReturn(Future.successful(true))
 

@@ -68,7 +68,7 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
             usergroupsResponseJson().toString()
           )
 
-          val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+          val request = FakeRequest(GET, urlPath)
             .withSession(xAuthToken, xSessionId)
           val result = route(app, request).get
           val page = Jsoup.parse(contentAsString(result))
@@ -104,7 +104,7 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
 
-          val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+          val request = FakeRequest(GET, urlPath)
             .withSession(xAuthToken, xSessionId)
           val result = route(app, request).get
 
@@ -134,7 +134,7 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
 
-          val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+          val request = FakeRequest(GET, urlPath)
             .withSession(xAuthToken, xSessionId)
           val result = route(app, request).get
 
@@ -155,7 +155,7 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -179,7 +179,7 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
           ""
         )
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -202,7 +202,7 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
           ""
         )
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -217,7 +217,7 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -233,7 +233,7 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -247,7 +247,7 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
         stubAuthorizePostUnauthorised(insufficientConfidenceLevel)
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -261,7 +261,7 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
         stubAuthorizePostUnauthorised(sessionNotFound)
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -288,7 +288,7 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
 
-          val request = FakeRequest(POST, "/protect-tax-info" + urlPath)
+          val request = FakeRequest(POST, urlPath)
             .withSession(xAuthToken, xSessionId)
             .withJsonBody(Json.obj())
           val result = route(app, request).get
@@ -314,7 +314,7 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
 
-          val request = FakeRequest(POST, "/protect-tax-info" + urlPath)
+          val request = FakeRequest(POST, urlPath)
             .withSession(xAuthToken, xSessionId)
             .withJsonBody(Json.obj())
           val result = route(app, request).get
@@ -345,7 +345,7 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
 
-          val request = FakeRequest(POST, "/protect-tax-info" + urlPath)
+          val request = FakeRequest(POST, urlPath)
             .withSession(xAuthToken, xSessionId)
             .withJsonBody(Json.obj())
           val result = route(app, request).get
@@ -364,7 +364,7 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(POST, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(POST, urlPath)
           .withSession(xAuthToken, xSessionId)
           .withJsonBody(Json.obj())
         val result = route(app, request).get
@@ -379,7 +379,7 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(POST, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(POST, urlPath)
           .withSession(xAuthToken, xSessionId)
           .withJsonBody(Json.obj())
         val result = route(app, request).get
@@ -396,7 +396,7 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(POST, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(POST, urlPath)
           .withSession(xAuthToken, xSessionId)
           .withJsonBody(Json.obj())
         val result = route(app, request).get
@@ -411,7 +411,7 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
         stubAuthorizePostUnauthorised(insufficientConfidenceLevel)
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(POST, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(POST, urlPath)
           .withSession(xAuthToken, xSessionId)
           .withJsonBody(Json.obj())
         val result = route(app, request).get
@@ -427,7 +427,7 @@ class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {
         stubAuthorizePostUnauthorised(sessionNotFound)
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(POST, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(POST, urlPath)
           .withSession(xAuthToken, xSessionId)
           .withJsonBody(Json.obj())
         val result = route(app, request).get

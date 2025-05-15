@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import org.jsoup.Jsoup
-import org.mockito.MockitoSugar.when
+import org.mockito.Mockito.when
 import play.api.Application
 import play.api.inject.{Binding, bind}
 import play.api.mvc.AnyContentAsEmpty
@@ -64,7 +64,7 @@ class TimeOutControllerSpec extends ControllersBaseSpec {
       when(mockTeaSessionCache.extendSession())
         .thenReturn(Future.successful(true))
 
-      val result = controller.keepAlive().apply(fakeReq("GET"))
+      val result = controller.keepAlive.apply(fakeReq("GET"))
 
       status(result) shouldBe NO_CONTENT
     }
@@ -72,7 +72,7 @@ class TimeOutControllerSpec extends ControllersBaseSpec {
 
   "timeout" should {
     "render the timeout view" in {
-      val result = controller.timeout().apply(fakeReq("GET"))
+      val result = controller.timeout.apply(fakeReq("GET"))
 
       status(result) shouldBe OK
       val page = Jsoup

@@ -20,9 +20,8 @@ import cats.data.EitherT
 import org.jsoup.Jsoup
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.{any, eq => ameq}
-import org.mockito.MockitoSugar.{mock, times, verify, when}
+import org.mockito.Mockito.{times, verify, when}
 import play.api.Application
-import play.api.http.Status.OK
 import play.api.inject.{Binding, bind}
 import play.api.libs.json.Json
 import play.api.mvc.BodyParsers

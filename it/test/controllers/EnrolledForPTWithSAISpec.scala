@@ -48,7 +48,7 @@ class EnrolledForPTWithSAISpec extends IntegrationSpecBase {
           usergroupsResponseJson().toString()
         )
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(GET, urlPath)
           .withSession(xSessionId, xAuthToken)
         val result = route(app, request).get
         val page = Jsoup.parse(contentAsString(result))
@@ -71,7 +71,7 @@ class EnrolledForPTWithSAISpec extends IntegrationSpecBase {
             stubAuthorizePost(OK, authResponse.toString())
             stubPost(s"/write/.*", OK, """{"x":2}""")
 
-            val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+            val request = FakeRequest(GET, urlPath)
               .withSession(xSessionId, xAuthToken)
             val result = route(app, request).get
 
@@ -90,7 +90,7 @@ class EnrolledForPTWithSAISpec extends IntegrationSpecBase {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken)
         val result = route(app, request).get
 
@@ -115,7 +115,7 @@ class EnrolledForPTWithSAISpec extends IntegrationSpecBase {
           ""
         )
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(GET, urlPath)
           .withSession(xSessionId, xAuthToken)
         val result = route(app, request).get
 
@@ -134,7 +134,7 @@ class EnrolledForPTWithSAISpec extends IntegrationSpecBase {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(GET, urlPath)
           .withSession(xSessionId, xAuthToken)
         val result = route(app, request).get
 
@@ -152,7 +152,7 @@ class EnrolledForPTWithSAISpec extends IntegrationSpecBase {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(GET, urlPath)
           .withSession(xSessionId, xAuthToken)
         val result = route(app, request).get
 
@@ -168,7 +168,7 @@ class EnrolledForPTWithSAISpec extends IntegrationSpecBase {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(GET, urlPath)
           .withSession(xSessionId, xAuthToken)
         val result = route(app, request).get
 
@@ -183,7 +183,7 @@ class EnrolledForPTWithSAISpec extends IntegrationSpecBase {
         stubAuthorizePostUnauthorised(insufficientConfidenceLevel)
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(GET, urlPath)
           .withSession(xSessionId, xAuthToken)
         val result = route(app, request).get
 
@@ -198,7 +198,7 @@ class EnrolledForPTWithSAISpec extends IntegrationSpecBase {
         stubAuthorizePostUnauthorised(sessionNotFound)
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(GET, urlPath)
           .withSession(xSessionId, xAuthToken)
         val result = route(app, request).get
 
@@ -217,7 +217,7 @@ class EnrolledForPTWithSAISpec extends IntegrationSpecBase {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(POST, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(POST, urlPath)
           .withSession(xSessionId, xAuthToken)
           .withJsonBody(Json.obj())
         val result = route(app, request).get
@@ -235,7 +235,7 @@ class EnrolledForPTWithSAISpec extends IntegrationSpecBase {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(POST, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(POST, urlPath)
           .withSession(xSessionId, xAuthToken)
           .withJsonBody(Json.obj())
         val result = route(app, request).get

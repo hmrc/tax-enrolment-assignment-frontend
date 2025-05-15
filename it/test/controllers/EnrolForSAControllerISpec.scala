@@ -35,7 +35,7 @@ class EnrolForSAControllerISpec extends IntegrationSpecBase {
       s"User hasSA == true" in {
         stubAuthoriseSuccess(hasSAEnrolment = true)
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken)
         val result = route(app, request).get
 
@@ -49,7 +49,7 @@ class EnrolForSAControllerISpec extends IntegrationSpecBase {
       s"User hasSA == false" in {
         stubAuthoriseSuccess()
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(GET, urlPath)
           .withSession(xSessionId, xAuthToken)
         val result = route(app, request).get
 

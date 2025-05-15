@@ -52,7 +52,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
           usersGroupSearchResponsePTEnrolment(USER_ID)
         )
 
-        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
         val result: Future[Result] = route(app, request).get
         val page: Document = Jsoup.parse(contentAsString(result))
@@ -82,7 +82,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
           usersGroupSearchResponsePTEnrolment(USER_ID)
         )
 
-        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
         val result: Future[Result] = route(app, request).get
         val page: Document = Jsoup.parse(contentAsString(result))
@@ -112,7 +112,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
           saveDataToCache(accountType = accountType, optSAEnrolledCredential = Some(CREDENTIAL_ID_3))
           stubAuthoriseSuccess()
 
-          val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/protect-tax-info" + urlPath)
+          val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, urlPath)
             .withSession(xAuthToken, xSessionId)
           val result: Future[Result] = route(app, request).get
 
@@ -131,7 +131,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
         stubAuthoriseSuccess()
         stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
 
-        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
         val result: Future[Result] = route(app, request).get
 
@@ -146,7 +146,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
         stubAuthoriseSuccess()
         stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
 
-        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
         val result: Future[Result] = route(app, request).get
 
@@ -161,7 +161,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
         stubAuthoriseSuccess()
         stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
 
-        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
         val result: Future[Result] = route(app, request).get
 
@@ -175,7 +175,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
         await(save[AccountTypes.Value](xSessionId._2, "ACCOUNT_TYPE", PT_ASSIGNED_TO_CURRENT_USER))
         stubAuthoriseSuccess()
 
-        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
         val result: Future[Result] = route(app, request).get
 
@@ -190,7 +190,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
         stubAuthoriseSuccess()
         stubUserGroupSearchFailure(CREDENTIAL_ID)
 
-        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
         val result: Future[Result] = route(app, request).get
 
@@ -206,7 +206,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
         stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
         stubUserGroupSearchFailure(CREDENTIAL_ID_2)
 
-        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
         val result: Future[Result] = route(app, request).get
 
@@ -226,7 +226,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
         )
         stubUserGroupSearchFailure(CREDENTIAL_ID)
 
-        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
         val result: Future[Result] = route(app, request).get
 
@@ -239,7 +239,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
       s"redirect to ${ItUrlPaths.unauthorizedPath}" in new DataAndMockSetup {
         stubUnAuthorised(hasNino = false)
 
-        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
         val result: Future[Result] = route(app, request).get
 
@@ -252,7 +252,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
       s"redirect to ${ItUrlPaths.unauthorizedPath}" in new DataAndMockSetup {
         stubUnAuthorised(hasCred = false)
 
-        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
         val result: Future[Result] = route(app, request).get
 
@@ -265,7 +265,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
       s"redirect to ${ItUrlPaths.unauthorizedPath}" in new DataAndMockSetup {
         stubUnAuthorised(unauthorisedError = Some(insufficientConfidenceLevel))
 
-        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
         val result: Future[Result] = route(app, request).get
 
@@ -278,7 +278,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
       s"redirect to login" in new DataAndMockSetup {
         stubUnAuthorised(unauthorisedError = Some(sessionNotFound))
 
-        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
         val result: Future[Result] = route(app, request).get
 

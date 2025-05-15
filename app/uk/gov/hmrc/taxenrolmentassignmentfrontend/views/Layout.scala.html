@@ -20,9 +20,11 @@
 @import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.backlink.BackLink
 @import play.api.mvc.RequestHeader
+@import uk.gov.hmrc.hmrcfrontend.views.viewmodels.hmrcstandardpage._
+
 @this(
         appConfig: AppConfig,
-        hmrcLayout: HmrcLayout,
+        hmrcStandardPage: HmrcStandardPage,
         hmrcTimeoutDialogHelper: HmrcTimeoutDialogHelper,
         hmrcReportTechnicalIssueHelper: HmrcReportTechnicalIssueHelper,
         defaultMainContent: TwoThirdsMainContent
@@ -49,13 +51,19 @@
     @hmrcReportTechnicalIssueHelper()
 }
 
-@hmrcLayout(
- additionalHeadBlock = Some(headBlock),
- pageTitle = Some(messages(if(hasError) {"common.pageTitle.error"} else {"common.pageTitle"}, pageTitle.getOrElse(""), messages("service.name"))),
- serviceName = Some(messages("service.name")),
- isWelshTranslationAvailable = appConfig.welshLanguageSupportEnabled,
- backLink = if(backLinkEnabled) Some(BackLink.mimicsBrowserBackButtonViaJavaScript) else None,
- signOutUrl = if(displaySignout) {Some(appConfig.signOutUrl)} else {None},
- mainContentLayout = mainLayout,
- additionalScriptsBlock = scripts
+@hmrcStandardPage(
+    HmrcStandardPageParams(
+        serviceURLs = ServiceURLs(
+            signOutUrl = if(displaySignout) {Some(appConfig.signOutUrl)} else {None}
+        ),
+        templateOverrides = TemplateOverrides(
+            additionalHeadBlock = Some(headBlock),
+            additionalScriptsBlock = scripts,
+            mainContentLayout = mainLayout
+        ),
+        pageTitle = Some(messages(if(hasError) {"common.pageTitle.error"} else {"common.pageTitle"}, pageTitle.getOrElse(""), messages("service.name"))),
+        serviceName = Some(messages("service.name")),
+        isWelshTranslationAvailable = appConfig.welshLanguageSupportEnabled,
+        backLink = if(backLinkEnabled) Some(BackLink.mimicsBrowserBackButtonViaJavaScript) else None
+    )
 )(content)

@@ -17,9 +17,8 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import org.mockito.ArgumentMatchers.{any, eq => ameq}
-import org.mockito.MockitoSugar.{mock, when}
+import org.mockito.Mockito.when
 import play.api.Application
-import play.api.http.Status.OK
 import play.api.inject.{Binding, bind}
 import play.api.mvc.BodyParsers
 import play.api.test.Helpers._
@@ -99,8 +98,7 @@ class EnrolledForPTWithSAControllerSpec extends ControllersBaseSpec {
         mockDeleteDataFromCacheWhen
         mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_CURRENT_USER, UrlPaths.returnUrl)
 
-        val result = controller
-          .continue()
+        val result = controller.continue
           .apply(buildFakeRequestWithSessionId(""))
 
         status(result) shouldBe SEE_OTHER

@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.utils
 
 import cats.data.EitherT
-import org.mockito.MockitoSugar.{mock, when}
+import org.mockito.Mockito.when
 import org.scalatest.matchers.must.Matchers._
 import play.api.Application
 import play.api.inject.bind

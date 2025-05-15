@@ -71,7 +71,7 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
 
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
         val page = Jsoup.parse(contentAsString(result))
@@ -113,7 +113,7 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
           usergroupsResponseJson().toString()
         )
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -140,7 +140,7 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
 
-          val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+          val request = FakeRequest(GET, urlPath)
             .withSession(xAuthToken, xSessionId)
           val result = route(app, request).get
 
@@ -156,7 +156,7 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -171,7 +171,7 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -186,7 +186,7 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -200,7 +200,7 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
         stubAuthorizePostUnauthorised(insufficientConfidenceLevel)
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -214,7 +214,7 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
         stubAuthorizePostUnauthorised(sessionNotFound)
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -243,7 +243,7 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
 
-          val request = FakeRequest(POST, "/protect-tax-info" + urlPath)
+          val request = FakeRequest(POST, urlPath)
             .withSession(xAuthToken, xSessionId)
             .withBody(Map("select-continue" -> Seq("yes")))
           val result = route(app, request).get
@@ -270,7 +270,7 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
 
-          val request = FakeRequest(POST, "/protect-tax-info" + urlPath)
+          val request = FakeRequest(POST, urlPath)
             .withSession(xAuthToken, xSessionId)
             .withBody(Map("select-continue" -> Seq("yes")))
           val result = route(app, request).get
@@ -301,7 +301,7 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
             ""
           )
 
-          val request = FakeRequest(POST, "/protect-tax-info" + urlPath)
+          val request = FakeRequest(POST, urlPath)
             .withSession(xAuthToken, xSessionId)
             .withBody(Map("select-continue" -> Seq("no")))
           val result = route(app, request).get
@@ -331,7 +331,7 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
 
-          val request = FakeRequest(POST, "/protect-tax-info" + urlPath)
+          val request = FakeRequest(POST, urlPath)
             .withSession(xAuthToken, xSessionId)
             .withBody(Map("select-continue" -> Seq("no")))
           val result = route(app, request).get
@@ -363,7 +363,7 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
             ""
           )
 
-          val request = FakeRequest(POST, "/protect-tax-info" + urlPath)
+          val request = FakeRequest(POST, urlPath)
             .withSession(xAuthToken, xSessionId)
             .withBody(Map("select-continue" -> Seq("no")))
           val result = route(app, request).get
@@ -393,7 +393,7 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
             stubAuthorizePost(OK, authResponse.toString())
             stubPost(s"/write/.*", OK, """{"x":2}""")
 
-            val request = FakeRequest(POST, "/protect-tax-info" + urlPath)
+            val request = FakeRequest(POST, urlPath)
               .withSession(xAuthToken, xSessionId)
               .withBody(Map("select-continue" -> Seq("yes")))
             val result = route(app, request).get
@@ -410,7 +410,7 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
             stubAuthorizePost(OK, authResponse.toString())
             stubPost(s"/write/.*", OK, """{"x":2}""")
 
-            val request = FakeRequest(POST, "/protect-tax-info" + urlPath)
+            val request = FakeRequest(POST, urlPath)
               .withSession(xAuthToken, xSessionId)
               .withBody(Map("select-continue" -> Seq("no")))
             val result = route(app, request).get
@@ -432,7 +432,7 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
             save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", SA_ASSIGNED_TO_CURRENT_USER)
           )
 
-          val request = FakeRequest(POST, "/protect-tax-info" + urlPath)
+          val request = FakeRequest(POST, urlPath)
             .withSession(xAuthToken, xSessionId)
             .withBody(Map("select-continue" -> Seq("yes")))
           val result = route(app, request).get
@@ -449,7 +449,7 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
             save[AccountTypes.Value](sessionId, "ACCOUNT_TYPE", SA_ASSIGNED_TO_CURRENT_USER)
           )
 
-          val request = FakeRequest(POST, "/protect-tax-info" + urlPath)
+          val request = FakeRequest(POST, urlPath)
             .withSession(xAuthToken, xSessionId)
             .withBody(Map("select-continue" -> Seq("no")))
           val result = route(app, request).get
@@ -493,7 +493,7 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
           usergroupsResponseJson().toString()
         )
 
-        val request = FakeRequest(POST, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(POST, urlPath)
           .withSession(xAuthToken, xSessionId)
           .withBody(Map("select-continue" -> Seq("error")))
         val result = route(app, request).get

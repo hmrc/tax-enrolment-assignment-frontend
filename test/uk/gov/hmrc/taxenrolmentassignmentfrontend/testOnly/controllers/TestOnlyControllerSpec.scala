@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.controllers
 
 import cats.data.EitherT
 import org.mockito.ArgumentMatchers.{any, eq => ameq}
-import org.mockito.MockitoSugar.{mock, when}
+import org.mockito.Mockito.when
 import org.scalatest.matchers.must.Matchers._
 import play.api.Application
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK}

@@ -60,7 +60,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec extends IntegrationSpecBase 
           usergroupsResponseJson().toString()
         )
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
         val page = Jsoup.parse(contentAsString(result))
@@ -100,7 +100,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec extends IntegrationSpecBase 
           usergroupsResponseJson().toString()
         )
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -130,7 +130,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec extends IntegrationSpecBase 
           ""
         )
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -156,7 +156,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec extends IntegrationSpecBase 
           stubAuthorizePost(OK, authResponse.toString())
           stubPost(s"/write/.*", OK, """{"x":2}""")
 
-          val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+          val request = FakeRequest(GET, urlPath)
             .withSession(xAuthToken, xSessionId)
           val result = route(app, request).get
 
@@ -175,7 +175,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec extends IntegrationSpecBase 
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -191,7 +191,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec extends IntegrationSpecBase 
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -207,7 +207,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec extends IntegrationSpecBase 
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -222,7 +222,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec extends IntegrationSpecBase 
         stubAuthorizePostUnauthorised(insufficientConfidenceLevel)
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -237,7 +237,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec extends IntegrationSpecBase 
         stubAuthorizePostUnauthorised(sessionNotFound)
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(GET, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
         val result = route(app, request).get
 
@@ -257,7 +257,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec extends IntegrationSpecBase 
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(POST, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(POST, urlPath)
           .withSession(xAuthToken, xSessionId)
           .withJsonBody(Json.obj())
         val result = route(app, request).get
@@ -274,7 +274,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec extends IntegrationSpecBase 
         stubAuthorizePost(OK, authResponse.toString())
         stubPost(s"/write/.*", OK, """{"x":2}""")
 
-        val request = FakeRequest(POST, "/protect-tax-info" + urlPath)
+        val request = FakeRequest(POST, urlPath)
           .withSession(xAuthToken, xSessionId)
           .withJsonBody(Json.obj())
         val result = route(app, request).get

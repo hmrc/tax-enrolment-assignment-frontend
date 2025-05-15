@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend
 
-import play.api.libs.json.Reads
+import play.api.libs.json.{Format, Json, Reads}
 
 object AccountTypes extends Enumeration {
   val PT_ASSIGNED_TO_CURRENT_USER: AccountTypes.Value = Value(
@@ -36,4 +36,6 @@ object AccountTypes extends Enumeration {
   )
   implicit val read: Reads[AccountTypes.Value] =
     Reads.enumNameReads(AccountTypes)
+
+  implicit val format: Format[AccountTypes.Value] = Json.formatEnum(AccountTypes)
 }

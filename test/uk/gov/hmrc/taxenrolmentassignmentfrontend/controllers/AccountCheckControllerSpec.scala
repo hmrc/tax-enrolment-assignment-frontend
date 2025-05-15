@@ -18,31 +18,30 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import cats.data.EitherT
 import org.mockito.ArgumentMatchers.{any, eq => ameq}
-import org.mockito.MockitoSugar.{mock, reset, times, verify, when}
-import org.mockito.stubbing.ScalaOngoingStubbing
+import org.mockito.Mockito.{reset, times, verify, when}
+import org.mockito.stubbing.OngoingStubbing
 import org.scalatest.OneInstancePerTest
 import play.api.Application
-import play.api.http.Status.SEE_OTHER
 import play.api.i18n.MessagesApi
 import play.api.inject.{Binding, bind}
 import play.api.mvc.{BodyParsers, Result}
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, ~}
 import uk.gov.hmrc.auth.core.{AffinityGroup, AuthConnector, Enrolments}
-import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.{HeaderCarrier, UpstreamErrorResponse}
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.*
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{TaxEnrolmentAssignmentErrors, UnexpectedResponseFromIV, UnexpectedResponseFromTaxEnrolments}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.*
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{BaseSpec, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.AccountCheckOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.*
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.utils.HmrcPTEnrolment
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -76,7 +75,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
   override def beforeEach(): Unit = {
     super.beforeEach()
     when(mockHmrcPTEnrolment.findAndDeleteWrongPTEnrolment(any(), any(), any())(any(), any()))
-      .thenReturn(EitherT.rightT(()))
+      .thenReturn(EitherT.rightT[Future, UpstreamErrorResponse](()))
   }
 
   override def afterEach(): Unit = {
@@ -375,19 +374,19 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
   }
 
   class TestHelper {
-    def mockAuthCall(): ScalaOngoingStubbing[Future[
+    def mockAuthCall(): OngoingStubbing[Future[
       Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String] ~ Option[AffinityGroup] ~ Option[String]
     ]] =
       when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(retrievalResponse()))
 
-    def mockAuthCallWithSA(): ScalaOngoingStubbing[Future[
+    def mockAuthCallWithSA(): OngoingStubbing[Future[
       Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String] ~ Option[AffinityGroup] ~ Option[String]
     ]] =
       when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(retrievalResponse(enrolments = saEnrolmentOnly)))
 
-    def mockAuthCallWithPT(hasSA: Boolean = false): ScalaOngoingStubbing[Future[
+    def mockAuthCallWithPT(hasSA: Boolean = false): OngoingStubbing[Future[
       Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String] ~ Option[AffinityGroup] ~ Option[String]
     ]] = {
       val enrolments = if (hasSA) saAndptEnrolments else ptEnrolmentOnly
@@ -397,20 +396,20 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
 
     def mockGetAccountTypeFailure(
       error: TaxEnrolmentAssignmentErrors
-    ): ScalaOngoingStubbing[EitherT[Future, TaxEnrolmentAssignmentErrors, AccountTypes.Value]] =
+    ): OngoingStubbing[EitherT[Future, TaxEnrolmentAssignmentErrors, AccountTypes.Value]] =
       when(mockAccountCheckOrchestrator.getAccountType(any(), any(), any())).thenReturn(createInboundResultError(error))
 
     def mockAccountCheckSuccess(
       accountType: AccountTypes.Value
-    ): ScalaOngoingStubbing[EitherT[Future, TaxEnrolmentAssignmentErrors, AccountTypes.Value]] =
+    ): OngoingStubbing[EitherT[Future, TaxEnrolmentAssignmentErrors, AccountTypes.Value]] =
       when(mockAccountCheckOrchestrator.getAccountType(any(), any(), any()))
         .thenReturn(createInboundResult(accountType))
 
-    def mockSilentEnrolSuccess: ScalaOngoingStubbing[TEAFResult[Unit]] =
+    def mockSilentEnrolSuccess: OngoingStubbing[TEAFResult[Unit]] =
       when(mockSilentAssignmentService.enrolUser()(any(), any(), any()))
         .thenReturn(EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(())))
 
-    def mockSilentEnrolFailure: ScalaOngoingStubbing[TEAFResult[Unit]] =
+    def mockSilentEnrolFailure: OngoingStubbing[TEAFResult[Unit]] =
       when(mockSilentAssignmentService.enrolUser()(any(), any(), any()))
         .thenReturn(createInboundResultError(UnexpectedResponseFromTaxEnrolments))
 
@@ -418,7 +417,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
       accountType: AccountTypes.Value,
       requestWithUserDetailsFromSession: RequestWithUserDetailsFromSession[_],
       messagesApi: MessagesApi
-    ): ScalaOngoingStubbing[Future[Unit]] = {
+    ): OngoingStubbing[Future[Unit]] = {
       val expectedAudit = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(accountType)(
         requestWithUserDetailsFromSession,
         messagesApi

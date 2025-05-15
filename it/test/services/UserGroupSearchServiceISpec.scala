@@ -43,7 +43,7 @@ class UserGroupSearchServiceISpec extends IntegrationSpecBase {
 
       }
       val emailEncrypted: String =
-        (sessionRepository
+        (repository
           .get(request.sessionID)
           .futureValue
           .get

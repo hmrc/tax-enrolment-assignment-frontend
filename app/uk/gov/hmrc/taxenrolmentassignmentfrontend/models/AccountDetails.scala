@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 
 import play.api.i18n.Messages
-import play.api.libs.functional.syntax.{toFunctionalBuilderOps, unlift}
+import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json._
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.crypto.json.JsonEncryption
@@ -109,7 +109,7 @@ object AccountDetails {
   def mongoFormats(implicit crypto: Encrypter with Decrypter): Format[AccountDetails] = {
 
     implicit val strFormats: Format[String] = Format(Reads.StringReads, Writes.StringWrites)
-    implicit val ssf = JsonEncryption.sensitiveEncrypterDecrypter(SensitiveString.apply)
+    implicit val ssf: Format[SensitiveString] = JsonEncryption.sensitiveEncrypterDecrypter(SensitiveString.apply)
 
     ((__ \ "identityProviderType").format[IdentityProviderType](IdentityProviderTypeFormat.reads)(
       IdentityProviderTypeFormat.writes
@@ -119,7 +119,10 @@ object AccountDetails {
       (__ \ "email").formatNullable[SensitiveString] ~
       (__ \ "lastLoginDate").formatNullable[String] ~
       (__ \ "mfaDetails").format[Seq[MFADetails]] ~
-      (__ \ "hasSA").formatNullable[Boolean])(AccountDetails.apply, unlift(AccountDetails.unapply))
+      (__ \ "hasSA").formatNullable[Boolean])(
+      AccountDetails.apply,
+      a => Tuple7(a.identityProviderType, a.credId, a.userId, a.email, a.lastLoginDate, a.mfaDetails, a.hasSA)
+    )
 
   }
 }

@@ -17,9 +17,8 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import org.mockito.ArgumentMatchers.{any, eq => ameq}
-import org.mockito.MockitoSugar.{mock, times, verify, when}
+import org.mockito.Mockito.{times, verify, when}
 import play.api.Application
-import play.api.http.Status.OK
 import play.api.inject.{Binding, bind}
 import play.api.libs.json.Json
 import play.api.mvc.BodyParsers
@@ -92,8 +91,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
         when(mockAuditHandler.audit(ameq(auditEvent))(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
 
-        val result = controller
-          .viewNoSA()
+        val result = controller.viewNoSA
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe OK
@@ -114,8 +112,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
         mockGetDataFromCacheForActionSuccess(PT_ASSIGNED_TO_OTHER_USER)
 
-        val result = controller
-          .viewNoSA()
+        val result = controller.viewNoSA
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe SEE_OTHER
@@ -138,8 +135,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
-        val res = controller
-          .viewNoSA()
+        val res = controller.viewNoSA
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(res) shouldBe INTERNAL_SERVER_ERROR
@@ -174,8 +170,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
           when(mockAuditHandler.audit(ameq(auditEvent))(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
 
-          val result = controller
-            .viewSA()
+          val result = controller.viewSA
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
           status(result) shouldBe OK
@@ -198,8 +193,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
           mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER)
 
-          val result = controller
-            .viewSA()
+          val result = controller.viewSA
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
           status(result) shouldBe OK
@@ -214,8 +208,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
         mockGetDataFromCacheForActionNoRedirectUrl
 
-        val res = controller
-          .viewNoSA()
+        val res = controller.viewNoSA
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(res) shouldBe INTERNAL_SERVER_ERROR
@@ -233,8 +226,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
-        val result = controller
-          .viewSA()
+        val result = controller.viewSA
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe SEE_OTHER
@@ -255,8 +247,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
-        val res = controller
-          .viewSA()
+        val res = controller.viewSA
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(res) shouldBe INTERNAL_SERVER_ERROR
@@ -301,8 +292,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
         when(mockAuditHandler.audit(ameq(auditEvent))(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
 
-        val res = controller
-          .continue()
+        val res = controller.continue
           .apply(buildFakeRequestWithSessionId("POST", "Not Used"))
 
         status(res) shouldBe SEE_OTHER
@@ -335,8 +325,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
         mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData)
 
-        val res = controller
-          .continue()
+        val res = controller.continue
           .apply(buildFakeRequestWithSessionId("POST", "Not Used"))
 
         status(res) shouldBe SEE_OTHER
@@ -352,8 +341,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
           .thenReturn(Future.successful(retrievalResponse()))
         mockGetDataFromCacheForActionNoRedirectUrl
 
-        val res = controller
-          .continue()
+        val res = controller.continue
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(res) shouldBe INTERNAL_SERVER_ERROR
@@ -377,8 +365,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
-        val res = controller
-          .continue()
+        val res = controller.continue
           .apply(buildFakeRequestWithSessionId("POST", "Not Used"))
 
         status(res) shouldBe SEE_OTHER
@@ -403,8 +390,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
-        val res = controller
-          .continue()
+        val res = controller.continue
           .apply(buildFakeRequestWithSessionId("POST", "Not Used"))
 
         status(res) shouldBe INTERNAL_SERVER_ERROR

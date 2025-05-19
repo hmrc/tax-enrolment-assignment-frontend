@@ -45,6 +45,11 @@ trait IntegrationSpecBase
     extends AnyWordSpec with GuiceOneAppPerSuite with Matchers with PatienceConfiguration with BeforeAndAfterEach
     with ScalaFutures with Injecting with IntegrationPatience with SessionCacheOperations {
 
+  override def fakeApplication(): Application =
+    new GuiceApplicationBuilder()
+      .configure(Map("mongodb.uri" -> mongoUri))
+      .build()
+
   def generateNino: Nino = new NinoGenerator().nextNino
   def secondGenerateNino: Nino = new NinoGenerator().nextNino
 
@@ -65,8 +70,7 @@ trait IntegrationSpecBase
   )
   lazy val crypto: TENCrypto = app.injector.instanceOf[TENCrypto]
 
-  lazy val config: Map[String, Any] = {
-    server.start()
+  lazy val config: Map[String, Any] =
     Map(
       "play.filters.csrf.header.bypassHeaders.Csrf-Token" -> "nocheck",
       "auditing.enabled"                                  -> true,
@@ -84,7 +88,6 @@ trait IntegrationSpecBase
       "play.ws.timeout.request"                           -> "5000ms",
       "play.ws.timeout.connection"                        -> "100ms"
     )
-  }
 
   protected def localGuiceApplicationBuilder: GuiceApplicationBuilder =
     GuiceApplicationBuilder()

@@ -6,7 +6,7 @@ import scoverage.ScoverageKeys
 val appName = "tax-enrolment-assignment-frontend"
 
 ThisBuild / majorVersion := 2
-ThisBuild / scalaVersion := "3.3.5"
+ThisBuild / scalaVersion := "3.3.6"
 ThisBuild / scalafmtOnCompile := true
 
 lazy val scoverageSettings: Seq[Setting[?]] = {

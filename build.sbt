@@ -1,6 +1,7 @@
 import sbt.*
 import uk.gov.hmrc.DefaultBuildSettings
 import uk.gov.hmrc.DefaultBuildSettings.*
+import scoverage.ScoverageKeys
 
 val appName = "tax-enrolment-assignment-frontend"
 
@@ -9,9 +10,8 @@ ThisBuild / scalaVersion := "3.3.5"
 ThisBuild / scalafmtOnCompile := true
 
 lazy val scoverageSettings: Seq[Setting[?]] = {
-  import scoverage.ScoverageKeys
   Seq(
-    ScoverageKeys.coverageExcludedPackages := "<empty>;Reverse.*;models/.data/..*;view.*;models.*;config.*;.*(BuildInfo|Routes).*;controllers.testOnly.*",
+    ScoverageKeys.coverageExcludedPackages := "<empty>;Reverse.*;uk.gov.hmrc.taxenrolmentassignmentfrontend.views.*;uk.gov.hmrc.taxenrolmentassignmentfrontend.models.*;config.*;.*(BuildInfo|Routes).*;uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.*",
     ScoverageKeys.coverageMinimumStmtTotal := 89,
     ScoverageKeys.coverageFailOnMinimum := true,
     ScoverageKeys.coverageHighlighting := true

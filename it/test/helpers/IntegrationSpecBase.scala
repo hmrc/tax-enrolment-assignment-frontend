@@ -16,7 +16,7 @@
 
 package helpers
 
-import helpers.TestITData._
+import helpers.TestITData.*
 import org.scalatest.concurrent.{IntegrationPatience, PatienceConfiguration, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -43,7 +43,12 @@ import scala.concurrent.ExecutionContext
 
 trait IntegrationSpecBase
     extends AnyWordSpec with GuiceOneAppPerSuite with Matchers with PatienceConfiguration with BeforeAndAfterEach
-    with ScalaFutures with Injecting with IntegrationPatience with SessionCacheOperations with WireMockHelper {
+    with ScalaFutures with Injecting with IntegrationPatience with SessionCacheOperations {
+
+  override def fakeApplication(): Application =
+    new GuiceApplicationBuilder()
+      .configure(Map("mongodb.uri" -> mongoUri))
+      .build()
 
   def generateNino: Nino = new NinoGenerator().nextNino
   def secondGenerateNino: Nino = new NinoGenerator().nextNino
@@ -65,23 +70,24 @@ trait IntegrationSpecBase
   )
   lazy val crypto: TENCrypto = app.injector.instanceOf[TENCrypto]
 
-  lazy val config: Map[String, Any] = Map(
-    "play.filters.csrf.header.bypassHeaders.Csrf-Token" -> "nocheck",
-    "auditing.enabled"                                  -> true,
-    "auditing.consumer.baseUri.port"                    -> server.port(),
-    "microservice.services.auth.port"                   -> server.port(),
-    "microservice.services.identity-verification.port"  -> server.port(),
-    "microservice.services.enrolment-store-proxy.port"  -> server.port(),
-    "microservice.services.enrolment-store-stub.port"   -> server.port(),
-    "microservice.services.tax-enrolments.port"         -> server.port(),
-    "microservice.services.users-groups-search.port"    -> server.port(),
-    "microservice.services.bas-stubs.port"              -> server.port(),
-    "microservice.services.one-login-stub.port"         -> server.port(),
-    "play.http.router"                                  -> "testOnlyDoNotUseInAppConf.Routes",
-    "mongodb.uri"                                       -> mongoUri,
-    "play.ws.timeout.request"                           -> "5000ms",
-    "play.ws.timeout.connection"                        -> "100ms"
-  )
+  lazy val config: Map[String, Any] =
+    Map(
+      "play.filters.csrf.header.bypassHeaders.Csrf-Token" -> "nocheck",
+      "auditing.enabled"                                  -> true,
+      "auditing.consumer.baseUri.port"                    -> server.port(),
+      "microservice.services.auth.port"                   -> server.port(),
+      "microservice.services.identity-verification.port"  -> server.port(),
+      "microservice.services.enrolment-store-proxy.port"  -> server.port(),
+      "microservice.services.enrolment-store-stub.port"   -> server.port(),
+      "microservice.services.tax-enrolments.port"         -> server.port(),
+      "microservice.services.users-groups-search.port"    -> server.port(),
+      "microservice.services.bas-stubs.port"              -> server.port(),
+      "microservice.services.one-login-stub.port"         -> server.port(),
+      "play.http.router"                                  -> "testOnlyDoNotUseInAppConf.Routes",
+      "mongodb.uri"                                       -> mongoUri,
+      "play.ws.timeout.request"                           -> "5000ms",
+      "play.ws.timeout.connection"                        -> "100ms"
+    )
 
   protected def localGuiceApplicationBuilder: GuiceApplicationBuilder =
     GuiceApplicationBuilder()
@@ -117,4 +123,5 @@ trait IntegrationSpecBase
     app.injector.instanceOf[MessagesApi]
 
   implicit lazy val messages: Messages = messagesApi.preferred(List(Lang("en")))
+
 }

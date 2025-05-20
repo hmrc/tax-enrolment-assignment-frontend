@@ -18,16 +18,17 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors
 
 import cats.data.EitherT
 import play.api.Logger
-import play.api.http.Status._
+import play.api.http.Status.*
+import play.api.libs.json.Json
+import play.api.libs.ws.writeableOf_JsValue
 import uk.gov.hmrc.auth.core.Enrolment
-import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse, StringContextOps}
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedResponseAssigningTemporaryPTAEnrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.{EventLoggerService, LoggingEvent}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.formats.EnrolmentsFormats.jsonBodyWritable
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
@@ -42,7 +43,7 @@ class LegacyAuthConnector @Inject() (httpClient: HttpClientV2, logger: EventLogg
       val url = s"${appConfig.AUTH_BASE_URL}/enrolments"
       httpClient
         .put(url"$url")
-        .withBody(enrolments)
+        .withBody(Json.toJson(enrolments))
         .execute[HttpResponse]
         .map(httpResponse =>
           httpResponse.status match {

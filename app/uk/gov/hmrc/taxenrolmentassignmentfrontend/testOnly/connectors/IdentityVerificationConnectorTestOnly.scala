@@ -20,6 +20,7 @@ import cats.data.EitherT
 import play.api.Logging
 import play.api.http.Status.OK
 import play.api.libs.json.Json
+import play.api.libs.ws.writeableOf_JsValue
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.HttpClientV2
@@ -60,7 +61,7 @@ class IdentityVerificationConnectorTestOnly @Inject() (httpClient: HttpClientV2,
     )
     val url = s"${appConfigTestOnly.identityVerification}/identity-verification/nino/$credId"
     EitherT(
-      httpClient.put(url"$url").withBody(requestBody).execute[Either[UpstreamErrorResponse, HttpResponse]]
+      httpClient.put(url"$url").withBody(Json.toJson(requestBody)).execute[Either[UpstreamErrorResponse, HttpResponse]]
     ).transform {
       case Right(response) if response.status == OK => Right(())
       case Right(response) =>

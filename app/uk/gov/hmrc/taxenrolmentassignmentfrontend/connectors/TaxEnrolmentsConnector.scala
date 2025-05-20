@@ -22,6 +22,7 @@ import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.http.Status._
 import play.api.libs.json.Json
+import play.api.libs.ws.writeableOf_JsValue
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http.client.HttpClientV2
@@ -53,7 +54,7 @@ class TaxEnrolmentsConnector @Inject() (httpClient: HttpClientV2, logger: EventL
     val url = s"${appConfig.TAX_ENROLMENTS_BASE_URL}/service/$hmrcPTKey/enrolment"
     httpClient
       .put(url"$url")
-      .withBody(request)
+      .withBody(Json.toJson(request))
       .execute[HttpResponse]
       .map(httpResponse =>
         httpResponse.status match {

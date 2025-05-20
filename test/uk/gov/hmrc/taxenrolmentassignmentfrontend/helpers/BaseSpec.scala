@@ -22,13 +22,14 @@ import org.scalatest.concurrent.{IntegrationPatience, PatienceConfiguration, Sca
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.{BeforeAndAfterEach, OneInstancePerTest, Suite}
+import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.i18n.{Lang, Messages, MessagesApi, MessagesImpl}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.inject.{Binding, bind}
 import play.api.libs.json.{Format, JsString, JsValue, Json}
 import play.api.mvc.{AnyContent, AnyContentAsEmpty, Request}
-import play.api.test.CSRFTokenHelper._
+import play.api.test.CSRFTokenHelper.*
 import play.api.test.{FakeRequest, Injecting}
 import play.api.{Application, Configuration}
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
@@ -50,7 +51,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait BaseSpec
     extends AnyWordSpec with GuiceOneAppPerSuite with Matchers with PatienceConfiguration with BeforeAndAfterEach
-    with OneInstancePerTest with ScalaFutures with Injecting with IntegrationPatience {
+    with OneInstancePerTest with ScalaFutures with Injecting with IntegrationPatience with MockitoSugar {
   this: Suite =>
 
   def generateNino: Nino = new NinoGenerator().nextNino

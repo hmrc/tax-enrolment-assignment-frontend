@@ -62,7 +62,7 @@ class TaxEnrolmentsConnectorISpec extends IntegrationSpecBase {
 
     s"the user is not authorized" should {
       "return an UnexpectedResponseFromTaxEnrolments" in {
-        stubPostWithAuthorizeHeaders(
+        stubPutWithAuthorizeHeaders(
           PATH,
           AUTHORIZE_HEADER_VALUE,
           Status.UNAUTHORIZED
@@ -76,7 +76,7 @@ class TaxEnrolmentsConnectorISpec extends IntegrationSpecBase {
 
     "a BAD_REQUEST is returned" should {
       "return an UnexpectedResponseFromTaxEnrolments error" in {
-        stubPostWithAuthorizeHeaders(
+        stubPutWithAuthorizeHeaders(
           PATH,
           AUTHORIZE_HEADER_VALUE,
           Status.BAD_REQUEST
@@ -90,7 +90,7 @@ class TaxEnrolmentsConnectorISpec extends IntegrationSpecBase {
 
     "a NOT_FOUND is returned" should {
       "return an UnexpectedResponseFromTaxEnrolments error" in {
-        stubPostWithAuthorizeHeaders(
+        stubPutWithAuthorizeHeaders(
           PATH,
           AUTHORIZE_HEADER_VALUE,
           Status.NOT_FOUND
@@ -104,10 +104,24 @@ class TaxEnrolmentsConnectorISpec extends IntegrationSpecBase {
 
     "a INTERNAL_SERVER_ERROR is returned" should {
       "return an UnexpectedResponseFromTaxEnrolments error" in {
-        stubPostWithAuthorizeHeaders(
+        stubPutWithAuthorizeHeaders(
           PATH,
           AUTHORIZE_HEADER_VALUE,
           Status.INTERNAL_SERVER_ERROR
+        )
+        stubPost(s"/write/.*", OK, """{"x":2}""")
+        whenReady(connector.assignPTEnrolmentWithKnownFacts(NINO).value) { response =>
+          response shouldBe Left(UnexpectedResponseFromTaxEnrolments)
+        }
+      }
+    }
+
+    "an unexpected response is returned" should {
+      "return an UnexpectedResponseFromTaxEnrolments error" in {
+        stubPutWithAuthorizeHeaders(
+          PATH,
+          AUTHORIZE_HEADER_VALUE,
+          Status.IM_A_TEAPOT
         )
         stubPost(s"/write/.*", OK, """{"x":2}""")
         whenReady(connector.assignPTEnrolmentWithKnownFacts(NINO).value) { response =>

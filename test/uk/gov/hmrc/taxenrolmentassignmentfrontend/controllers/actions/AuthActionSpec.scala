@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions
 
 import cats.data.EitherT
 import org.mockito.ArgumentMatchers.{any, anyString, eq => ameq}
-import org.mockito.MockitoSugar.{mock, times, verify, when}
+import org.mockito.Mockito.{times, verify, when}
 import org.scalatest.Assertion
 import play.api.Application
 import play.api.inject.{Binding, bind}
@@ -70,7 +70,7 @@ class AuthActionSpec extends BaseSpec {
           mockHmrcPTEnrolment
             .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
         )
-          .thenReturn(EitherT.rightT(()))
+          .thenReturn(EitherT.rightT[Future, UpstreamErrorResponse](()))
 
         val result: Future[Result] = authAction(
           defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
@@ -93,7 +93,7 @@ class AuthActionSpec extends BaseSpec {
           mockHmrcPTEnrolment
             .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
         )
-          .thenReturn(EitherT.rightT(()))
+          .thenReturn(EitherT.rightT[Future, UpstreamErrorResponse](()))
 
         val result: Future[Result] = authAction(
           defaultAsyncBody(_.userDetails shouldBe userDetailsWithSAEnrolment)
@@ -116,7 +116,7 @@ class AuthActionSpec extends BaseSpec {
           mockHmrcPTEnrolment
             .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
         )
-          .thenReturn(EitherT.rightT(()))
+          .thenReturn(EitherT.rightT[Future, UpstreamErrorResponse](()))
 
         val result: Future[Result] = authAction(
           defaultAsyncBody(_.userDetails shouldBe userDetailsWithPTEnrolment)
@@ -138,7 +138,7 @@ class AuthActionSpec extends BaseSpec {
           mockHmrcPTEnrolment
             .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
         )
-          .thenReturn(EitherT.rightT(()))
+          .thenReturn(EitherT.rightT[Future, UpstreamErrorResponse](()))
 
         val result: Future[Result] = authAction(
           defaultAsyncBody(
@@ -162,7 +162,7 @@ class AuthActionSpec extends BaseSpec {
           mockHmrcPTEnrolment
             .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
         )
-          .thenReturn(EitherT.rightT(()))
+          .thenReturn(EitherT.rightT[Future, UpstreamErrorResponse](()))
 
         val result: Future[Result] = authAction(
           defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
@@ -184,7 +184,7 @@ class AuthActionSpec extends BaseSpec {
           mockHmrcPTEnrolment
             .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
         )
-          .thenReturn(EitherT.rightT(()))
+          .thenReturn(EitherT.rightT[Future, UpstreamErrorResponse](()))
 
         val result: Future[Result] = authAction(
           defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
@@ -210,7 +210,7 @@ class AuthActionSpec extends BaseSpec {
           mockHmrcPTEnrolment
             .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
         )
-          .thenReturn(EitherT.rightT(()))
+          .thenReturn(EitherT.rightT[Future, UpstreamErrorResponse](()))
 
         val result: Future[Result] = authAction(
           defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
@@ -232,7 +232,7 @@ class AuthActionSpec extends BaseSpec {
           mockHmrcPTEnrolment
             .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
         )
-          .thenReturn(EitherT.rightT(()))
+          .thenReturn(EitherT.rightT[Future, UpstreamErrorResponse](()))
 
         val result: Future[Result] = authAction(
           defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
@@ -257,7 +257,7 @@ class AuthActionSpec extends BaseSpec {
           mockHmrcPTEnrolment
             .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
         )
-          .thenReturn(EitherT.rightT(()))
+          .thenReturn(EitherT.rightT[Future, UpstreamErrorResponse](()))
 
         val result: Future[Result] = authAction(
           defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
@@ -279,7 +279,7 @@ class AuthActionSpec extends BaseSpec {
           mockHmrcPTEnrolment
             .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
         )
-          .thenReturn(EitherT.rightT(()))
+          .thenReturn(EitherT.rightT[Future, UpstreamErrorResponse](()))
 
         val result: Future[Result] = authAction(
           defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
@@ -302,7 +302,7 @@ class AuthActionSpec extends BaseSpec {
         mockHmrcPTEnrolment
           .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
       )
-        .thenReturn(EitherT.leftT(UpstreamErrorResponse("error", INTERNAL_SERVER_ERROR)))
+        .thenReturn(EitherT.leftT[Future, Unit](UpstreamErrorResponse("error", INTERNAL_SERVER_ERROR)))
 
       val result: Future[Result] = authAction(
         defaultAsyncBody(_.userDetails shouldBe userDetailsWithPTEnrolment)

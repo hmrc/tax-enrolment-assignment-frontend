@@ -26,6 +26,7 @@ import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.PlayMongoRepository
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{CacheMap, DatedCacheMap}
+import org.mongodb.scala.SingleObservableFuture
 
 import java.time.{LocalDateTime, ZoneId}
 import java.util.concurrent.TimeUnit
@@ -48,7 +49,7 @@ class DefaultTEASessionCache @Inject() (
           IndexOptions()
             .name("userAnswersExpiry")
             .expireAfter(
-              config.get[Int]("mongodb.timeToLiveInSeconds"),
+              config.get[Int]("mongodb.timeToLiveInSeconds").toLong,
               TimeUnit.SECONDS
             )
         ),
@@ -79,8 +80,8 @@ class DefaultTEASessionCache @Inject() (
 
   def get(id: String): Future[Option[CacheMap]] =
     collection.find(equal("id", id)).headOption().map { datedCacheMap =>
-      datedCacheMap.map { value: DatedCacheMap =>
-        value.toCacheMap
+      datedCacheMap.map { cachedValue =>
+        cachedValue.toCacheMap
       }
     }
 

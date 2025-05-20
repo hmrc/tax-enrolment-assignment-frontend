@@ -19,7 +19,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.services
 import cats.data.EitherT
 import org.mockito.ArgumentMatchers
 import org.mockito.ArgumentMatchers.any
-import org.mockito.MockitoSugar.{mock, when}
+import org.mockito.Mockito.when
 import play.api.http.Status.INTERNAL_SERVER_ERROR
 import uk.gov.hmrc.http.{HttpResponse, UpstreamErrorResponse}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.CacheMap
@@ -142,7 +142,7 @@ class EACDServiceSpec extends BaseSpec {
       "call the EACD, save to cache and return the group ids with the enrolment" in {
         when(mockEacdConnector.getGroupsFromEnrolment(s"HMRC-PT~NINO~$NINO"))
           .thenReturn(
-            EitherT.rightT(
+            EitherT.rightT[Future, UpstreamErrorResponse](
               HttpResponse(
                 200,
                 """
@@ -177,7 +177,7 @@ class EACDServiceSpec extends BaseSpec {
       "return an error" in {
         val error = UpstreamErrorResponse("server error", INTERNAL_SERVER_ERROR)
         when(mockEacdConnector.getGroupsFromEnrolment(s"HMRC-PT~NINO~$NINO"))
-          .thenReturn(EitherT.leftT(error))
+          .thenReturn(EitherT.leftT[Future, HttpResponse](error))
 
         val result = service.getGroupsAssignedPTEnrolment
         whenReady(result.value) { res =>

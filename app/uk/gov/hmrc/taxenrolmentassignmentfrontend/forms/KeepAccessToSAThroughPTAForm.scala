@@ -28,6 +28,6 @@ object KeepAccessToSAThroughPTAForm {
       "select-continue" -> default[String](text, "")
         .verifying(pattern("yes|no".r, error = "keepAccessToSA.error.required"))
         .transform[Boolean](_ == "yes", x => if (x) "yes" else "no")
-    )(KeepAccessToSAThroughPTA.apply)(KeepAccessToSAThroughPTA.unapply)
+    )(KeepAccessToSAThroughPTA.apply)(ka => Some(ka.keepAccessToSAThroughPTA))
   )
 }

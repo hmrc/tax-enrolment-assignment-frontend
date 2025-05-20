@@ -26,7 +26,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDe
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{logAnotherAccountAlreadyHasPTEnrolment, logAnotherAccountHasSAEnrolment, logCurrentAndAnotherAccountHasSAEnrolment, logCurrentUserAlreadyHasPTEnrolment, logCurrentUserHasSAEnrolment, logCurrentUserhasMultipleAccounts, logCurrentUserhasOneAccount}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{CacheMap, IdentityProviderWithCredId, UsersAssignedEnrolment}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{CacheMap, IdentityProviderWithCredId}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, UsersGroupsSearchService}
@@ -51,7 +51,7 @@ class AccountCheckOrchestrator @Inject() (
     hc: HeaderCarrier,
     requestWithUserDetails: RequestWithUserDetailsFromSession[_]
   ): EitherT[Future, TaxEnrolmentAssignmentErrors, Option[String]] =
-    eacdService.getUsersAssignedPTEnrolment.flatMap { userAssignedEnrolment: UsersAssignedEnrolment =>
+    eacdService.getUsersAssignedPTEnrolment.flatMap { userAssignedEnrolment =>
       userAssignedEnrolment.enrolledCredential match {
         // HMRC-PT enrolment found on the logged in credential
         case Some(requestWithUserDetails.userDetails.credId) =>
@@ -77,7 +77,7 @@ class AccountCheckOrchestrator @Inject() (
     hc: HeaderCarrier,
     requestWithUserDetails: RequestWithUserDetailsFromSession[_]
   ): EitherT[Future, TaxEnrolmentAssignmentErrors, Option[String]] =
-    eacdService.getUsersAssignedSAEnrolment.map { userAssignedEnrolment: UsersAssignedEnrolment =>
+    eacdService.getUsersAssignedSAEnrolment.map { userAssignedEnrolment =>
       userAssignedEnrolment.enrolledCredential match {
         case Some(requestWithUserDetails.userDetails.credId) => None
         case Some(credId)                                    => Some(credId)

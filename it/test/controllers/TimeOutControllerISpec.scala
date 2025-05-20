@@ -44,7 +44,7 @@ class TimeOutControllerISpec extends IntegrationSpecBase {
       stubAuthorizePost(OK, authResponse.toString())
       Thread.sleep(2000)
 
-      val request = FakeRequest(GET, "/protect-tax-info" + urlPathKeepAlive)
+      val request = FakeRequest(GET, urlPathKeepAlive)
         .withSession(xAuthToken, xSessionId)
       val result = route(app, request).get
 
@@ -55,7 +55,7 @@ class TimeOutControllerISpec extends IntegrationSpecBase {
 
   s"GET $urlPathTimeout" should {
     "return OK and render the timeout page" in {
-      val request = FakeRequest(GET, "/protect-tax-info" + urlPathTimeout)
+      val request = FakeRequest(GET, urlPathTimeout)
         .withSession(xAuthToken, xSessionId)
       val result = route(app, request).get
 

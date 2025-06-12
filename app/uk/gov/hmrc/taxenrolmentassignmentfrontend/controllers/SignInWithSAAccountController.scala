@@ -27,7 +27,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.SignInWithSAAccount
-
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.AuditEventCreationService
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -40,7 +40,8 @@ class SignInWithSAAccountController @Inject() (
   signInWithSAAccount: SignInWithSAAccount,
   val logger: EventLoggerService,
   auditHandler: AuditHandler,
-  errorHandler: ErrorHandler
+  errorHandler: ErrorHandler,
+  auditEventCreationService: AuditEventCreationService
 )(implicit ec: ExecutionContext)
     extends TEAFrontendController(mcc) {
 
@@ -55,7 +56,7 @@ class SignInWithSAAccountController @Inject() (
                )
              }
         saAccount <- multipleAccountsOrchestrator.getSACredentialDetails
-      } yield (AccountDetails.userFriendlyAccountDetails(saAccount))
+      } yield AccountDetails.userFriendlyAccountDetails(saAccount)
 
       res.value.map {
         case Right(saAccount) =>
@@ -70,7 +71,7 @@ class SignInWithSAAccountController @Inject() (
       logger.logEvent(
         logUserSignsInAgainWithSAAccount(request.userDetails.credId)
       )
-      auditHandler.audit(AuditEvent.auditSigninAgainWithSACredential())
+      auditHandler.audit(auditEventCreationService.auditSigninAgainWithSACredential())
       Redirect(routes.SignOutController.signOut)
     }
 }

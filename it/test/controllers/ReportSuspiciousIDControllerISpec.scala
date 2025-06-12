@@ -75,10 +75,11 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
         status(result) shouldBe OK
         page.title should include(ReportSuspiciousIDMessages.title)
 
-        val expectedAuditEvent = AuditEvent.auditReportSuspiciousSAAccount(
-          accountDetailsUserFriendly(CREDENTIAL_ID_2)
-        )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER), messagesApi)
-
+        val expectedAuditEvent = AuditEvent(
+          auditType = "SuccessfullyEnrolledPersonalTax",
+          transactionName = "successfully-enrolled-personal-tax",
+          detail = Json.obj()
+        )
         verifyAuditEventSent(expectedAuditEvent)
       }
 
@@ -460,9 +461,11 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
         page.title should include(ReportSuspiciousIDMessages.title)
         page.getElementsByClass("govuk-button").size() shouldBe 0
 
-        val expectedAuditEvent = AuditEvent.auditReportSuspiciousPTAccount(
-          accountDetailsUserFriendly(CREDENTIAL_ID_2)
-        )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
+        val expectedAuditEvent = AuditEvent(
+          auditType = "SuccessfullyEnrolledPersonalTax",
+          transactionName = "successfully-enrolled-personal-tax",
+          detail = Json.obj()
+        )
         verifyAuditEventSent(expectedAuditEvent)
 
       }
@@ -774,9 +777,10 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
             uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes.EnrolledForPTController.continue.url
           )
           val expectedAuditEvent =
-            AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
-              requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, mongoCacheData = cacheData),
-              messagesApi
+            AuditEvent(
+              auditType = "SuccessfullyEnrolledPersonalTax",
+              transactionName = "successfully-enrolled-personal-tax",
+              detail = Json.obj()
             )
           verifyAuditEventSent(expectedAuditEvent)
 

@@ -21,6 +21,7 @@ import helpers.TestITData.{CREDENTIAL_ID, accountDetailsUnUserFriendly, usersGro
 import play.api.libs.json.JsObject
 import uk.gov.hmrc.crypto.Crypted
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.PT_ASSIGNED_TO_OTHER_USER
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AccountDetailsFromMongo
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, SCP}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.UsersGroupsSearchService
 
@@ -33,7 +34,11 @@ class UserGroupSearchServiceISpec extends IntegrationSpecBase {
 
       stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
       val request = requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER)
-      val res = service.getAccountDetails(CREDENTIAL_ID)(implicitly, implicitly, request)
+      val res =
+        service.getAccountDetails(
+          CREDENTIAL_ID,
+          AccountDetailsFromMongo(PT_ASSIGNED_TO_OTHER_USER, returnUrl, exampleMongoSessionData)(crypto.crypto)
+        )(implicitly, implicitly, request)
 
       whenReady(res.value) { response =>
         response shouldBe Right(accountDetailsUnUserFriendly(CREDENTIAL_ID))

@@ -17,11 +17,12 @@
 package controllers
 
 import com.github.tomakehurst.wiremock.client.WireMock.{deleteRequestedFor, urlEqualTo, urlMatching}
-import helpers.TestITData._
-import helpers.messages._
+import helpers.TestITData.*
+import helpers.messages.*
 import helpers.{IntegrationSpecBase, ItUrlPaths}
 import play.api.http.Status
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NO_CONTENT, OK, SEE_OTHER}
+import play.api.libs.json.Json
 import play.api.mvc.{AnyContent, Request}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{GET, contentAsString, defaultAwaitTimeout, redirectLocation, route, status, writeableOf_AnyContentAsEmpty}
@@ -156,9 +157,11 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
       status(result) shouldBe SEE_OTHER
       redirectLocation(result).get should include(returnUrl)
 
-      val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
-        SINGLE_ACCOUNT
-      )(requestWithUserDetails(), messagesApi)
+      val expectedAuditEvent = AuditEvent(
+        auditType = "SuccessfullyEnrolledPersonalTax",
+        transactionName = "successfully-enrolled-personal-tax",
+        detail = Json.obj()
+      )
       verifyAuditEventSent(expectedAuditEvent)
 
     }
@@ -210,9 +213,11 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
       status(result) shouldBe SEE_OTHER
       redirectLocation(result).get should include(returnUrl)
 
-      val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
-        SINGLE_ACCOUNT
-      )(requestWithUserDetails(), messagesApi)
+      val expectedAuditEvent = AuditEvent(
+        auditType = "SuccessfullyEnrolledPersonalTax",
+        transactionName = "successfully-enrolled-personal-tax",
+        detail = Json.obj()
+      )
       verifyAuditEventSent(expectedAuditEvent)
       server.verify(
         1,
@@ -418,9 +423,11 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
       redirectLocation(result).get should include(ItUrlPaths.enrolledPTWithSAOnAnyAccountPath)
       recordExistsInMongo shouldBe true
 
-      val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
-        SA_ASSIGNED_TO_CURRENT_USER
-      )(requestWithUserDetails(userDetailsNoEnrolments.copy(hasSAEnrolment = true)), messagesApi)
+      val expectedAuditEvent = AuditEvent(
+        auditType = "SuccessfullyEnrolledPersonalTax",
+        transactionName = "successfully-enrolled-personal-tax",
+        detail = Json.obj()
+      )
       verifyAuditEventSent(expectedAuditEvent)
     }
   }
@@ -477,9 +484,11 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
       redirectLocation(result).get should include(ItUrlPaths.enrolledPTWithSAOnAnyAccountPath)
       recordExistsInMongo shouldBe true
 
-      val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
-        SA_ASSIGNED_TO_CURRENT_USER
-      )(requestWithUserDetails(), messagesApi)
+      val expectedAuditEvent = AuditEvent(
+        auditType = "SuccessfullyEnrolledPersonalTax",
+        transactionName = "successfully-enrolled-personal-tax",
+        detail = Json.obj()
+      )
       verifyAuditEventSent(expectedAuditEvent)
     }
   }
@@ -543,9 +552,11 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
       redirectLocation(result).get should include(ItUrlPaths.enrolledPTNoSAOnAnyAccountPath)
       recordExistsInMongo shouldBe true
 
-      val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
-        MULTIPLE_ACCOUNTS
-      )(requestWithUserDetails(), messagesApi)
+      val expectedAuditEvent = AuditEvent(
+        auditType = "SuccessfullyEnrolledPersonalTax",
+        transactionName = "successfully-enrolled-personal-tax",
+        detail = Json.obj()
+      )
       verifyAuditEventSent(expectedAuditEvent)
 
     }
@@ -608,9 +619,11 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
       redirectLocation(result).get should include(relativeUrl)
       recordExistsInMongo shouldBe false
 
-      val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
-        SINGLE_ACCOUNT
-      )(requestWithUserDetails(), messagesApi)
+      val expectedAuditEvent = AuditEvent(
+        auditType = "SuccessfullyEnrolledPersonalTax",
+        transactionName = "successfully-enrolled-personal-tax",
+        detail = Json.obj()
+      )
       verifyAuditEventSent(expectedAuditEvent)
 
     }

@@ -311,8 +311,11 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
             ItUrlPaths.enrolledPTSAOnOtherAccountPath
           )
 
-          val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(
-          )(requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, mongoCacheData = cacheData), messagesApi)
+          val expectedAuditEvent = AuditEvent(
+            auditType = "SuccessfullyEnrolledPersonalTax",
+            transactionName = "successfully-enrolled-personal-tax",
+            detail = Json.obj()
+          )
           verifyAuditEventSent(expectedAuditEvent)
         }
       }

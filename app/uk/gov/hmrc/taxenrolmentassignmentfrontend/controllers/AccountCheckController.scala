@@ -19,22 +19,22 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 import cats.data.EitherT
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.bootstrap.binders.*
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl.idFunctor
-import uk.gov.hmrc.play.bootstrap.binders._
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.*
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AuthJourney, RequestWithUserDetailsFromSession}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{InvalidRedirectUrl, TaxEnrolmentAssignmentErrors}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.*
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.AccountCheckOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REDIRECT_URL
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.SilentAssignmentService
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{AuditEventCreationService, SilentAssignmentService}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -50,7 +50,8 @@ class AccountCheckController @Inject() (
   sessionCache: TEASessionCache,
   appConfig: AppConfig,
   val logger: EventLoggerService,
-  errorHandler: ErrorHandler
+  errorHandler: ErrorHandler,
+  auditEventCreationService: AuditEventCreationService
 )(implicit ec: ExecutionContext)
     extends TEAFrontendController(mcc) {
 
@@ -115,7 +116,7 @@ class AccountCheckController @Inject() (
     val hasPTEnrolmentAlready = request.userDetails.hasPTEnrolment
     if (!hasPTEnrolmentAlready && accountTypesToEnrolForPT.contains(accountType)) {
       silentAssignmentService.enrolUser().flatMap { _ =>
-        auditHandler.audit(AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(accountType))
+        auditHandler.audit(auditEventCreationService.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(accountType))
         EitherT.right(if (accountType == SINGLE_ACCOUNT) {
           Future.successful(
             logger.logEvent(

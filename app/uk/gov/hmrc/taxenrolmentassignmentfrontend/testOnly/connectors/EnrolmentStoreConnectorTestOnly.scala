@@ -37,7 +37,7 @@ import scala.concurrent.ExecutionContext
 class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClientV2, appConfig: AppConfig)(implicit
   ec: ExecutionContext
 ) extends Logging {
-  //ES0
+  // ES0
   def deleteGroup(groupId: String)(implicit hc: HeaderCarrier): TEAFResult[Unit] = {
     val url = s"${appConfig.EACD_BASE_URL_TESTONLY}/enrolment-store/data/$groupId"
     EitherT(
@@ -58,7 +58,7 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClientV2, appCo
       }
   }
 
-  //ES0
+  // ES0
   def getUsersFromEnrolment(enrolmentKey: String)(implicit hc: HeaderCarrier): TEAFResult[List[String]] = {
     val url = s"${appConfig.EACD_BASE_URL}/enrolment-store/enrolments/$enrolmentKey/users"
     EitherT(
@@ -79,7 +79,7 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClientV2, appCo
       }
   }
 
-  //ES1
+  // ES1
   def getGroupsFromEnrolment(enrolmentKey: String)(implicit hc: HeaderCarrier): TEAFResult[List[String]] = {
     val url = s"${appConfig.EACD_BASE_URL}/enrolment-store/enrolments/$enrolmentKey/groups"
     EitherT(
@@ -98,7 +98,7 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClientV2, appCo
       }
   }
 
-  //ES2
+  // ES2
   def getEnrolmentsFromUser(credId: String)(implicit hc: HeaderCarrier): TEAFResult[List[String]] = {
     val url = s"${appConfig.EACD_BASE_URL}/enrolment-store/users/$credId/enrolments"
     EitherT(
@@ -121,7 +121,7 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClientV2, appCo
       }
   }
 
-  //ES3
+  // ES3
   def getEnrolmentsFromGroup(groupId: String)(implicit hc: HeaderCarrier): TEAFResult[List[String]] = {
     val url = s"${appConfig.EACD_BASE_URL}/enrolment-store/groups/$groupId/enrolments"
     EitherT(
@@ -144,7 +144,7 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClientV2, appCo
       }
   }
 
-  //ES6
+  // ES6
   def upsertEnrolment(enrolment: EnrolmentDetailsTestOnly)(implicit hc: HeaderCarrier): TEAFResult[Unit] = {
     val verifiers = Json.obj(
       "verifiers" -> Json.toJson(enrolment.verifiers)
@@ -171,7 +171,7 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClientV2, appCo
       }
   }
 
-  //ES8
+  // ES8
   def addEnrolmentToGroup(groupId: String, credId: String, enrolment: EnrolmentDetailsTestOnly)(implicit
     hc: HeaderCarrier
   ): TEAFResult[Unit] = {
@@ -205,7 +205,7 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClientV2, appCo
       }
   }
 
-  //ES9
+  // ES9
   def deleteEnrolmentFromGroup(enrolmentKey: String, groupId: String)(implicit hc: HeaderCarrier): TEAFResult[Unit] = {
     val url = s"${appConfig.EACD_BASE_URL}/enrolment-store/groups/$groupId/enrolments/$enrolmentKey"
     EitherT(
@@ -226,7 +226,7 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClientV2, appCo
       }
   }
 
-  //ES12
+  // ES12
   def deleteEnrolmentFromUser(enrolmentKey: String, credId: String)(implicit hc: HeaderCarrier): TEAFResult[Unit] = {
     val url = s"${appConfig.EACD_BASE_URL}/enrolment-store/users/$credId/enrolments/$enrolmentKey"
     EitherT(
@@ -253,7 +253,7 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClientV2, appCo
       }
   }
 
-  //ES7
+  // ES7
   def deleteEnrolment(enrolmentKey: String)(implicit hc: HeaderCarrier): TEAFResult[Unit] = {
     val url = s"${appConfig.EACD_BASE_URL}/enrolment-store/enrolments/$enrolmentKey"
     EitherT(
@@ -272,7 +272,7 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClientV2, appCo
       }
   }
 
-  //ES20 Query known facts that match the supplied query parameters
+  // ES20 Query known facts that match the supplied query parameters
   def queryKnownFactsByVerifiers(service: String, identifiersOrVerifiers: List[IdentifiersOrVerifiers])(implicit
     ec: ExecutionContext,
     hc: HeaderCarrier

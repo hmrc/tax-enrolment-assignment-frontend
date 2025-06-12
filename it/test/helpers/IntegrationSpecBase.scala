@@ -17,27 +17,26 @@
 package helpers
 
 import helpers.TestITData.*
+import org.scalatest.BeforeAndAfterEach
 import org.scalatest.concurrent.{IntegrationPatience, PatienceConfiguration, ScalaFutures}
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
-import org.scalatest.BeforeAndAfterEach
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
+import play.api.Application
 import play.api.i18n.{Lang, Messages, MessagesApi}
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.json.{JsString, JsValue, Json}
 import play.api.mvc.{AnyContent, Request}
 import play.api.test.{FakeRequest, Injecting}
-import play.api.Application
+import uk.gov.hmrc.domain.{Generator => NinoGenerator, Nino}
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSessionAndMongo}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.TENCrypto
-import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.domain.{Generator => NinoGenerator}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.TENCrypto
 
 import scala.concurrent.ExecutionContext
 
@@ -111,12 +110,11 @@ trait IntegrationSpecBase
     accountType: AccountTypes.Value,
     redirectUrl: String = returnUrl,
     mongoCacheData: Map[String, JsValue] = exampleMongoSessionData
-  ): RequestWithUserDetailsFromSessionAndMongo[_] =
-    RequestWithUserDetailsFromSessionAndMongo(
+  ): RequestWithUserDetailsFromSession[_] =
+    RequestWithUserDetailsFromSession(
       FakeRequest().asInstanceOf[Request[AnyContent]],
       userDetailsNoEnrolments,
-      sessionId,
-      AccountDetailsFromMongo(accountType, redirectUrl, mongoCacheData)(crypto.crypto)
+      sessionId
     )
 
   def messagesApi: MessagesApi =

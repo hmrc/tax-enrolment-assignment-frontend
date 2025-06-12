@@ -90,9 +90,10 @@ object TestData {
     AuthProviders(GovernmentGateway) and ConfidenceLevel.L200
 
   val retrievals: Retrieval[
-    Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String] ~ Option[
-      AffinityGroup
-    ] ~ Option[String]
+    Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String] ~
+      Option[
+        AffinityGroup
+      ] ~ Option[String]
   ] = nino and credentials and allEnrolments and groupIdentifier and affinityGroup and email
 
   def retrievalResponse(
@@ -102,9 +103,10 @@ object TestData {
     optGroupId: Option[String] = Some(GROUP_ID),
     optAffinityGroup: Option[AffinityGroup] = Some(Individual),
     email: Option[String] = Some(CURRENT_USER_EMAIL)
-  ): Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String] ~ Option[AffinityGroup] ~ Option[
-    String
-  ] =
+  ): Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String] ~ Option[AffinityGroup] ~
+    Option[
+      String
+    ] =
     new ~(
       new ~(
         new ~(new ~(new ~(optNino, optCredentials), enrolments), optGroupId),

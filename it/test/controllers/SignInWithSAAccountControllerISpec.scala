@@ -375,9 +375,10 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
         redirectLocation(result).get should include(
           ItUrlPaths.logoutPath
         )
-        val expectedAuditEvent = AuditEvent.auditSigninAgainWithSACredential()(
-          requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, mongoCacheData = cacheData),
-          messagesApi
+        val expectedAuditEvent = AuditEvent(
+          auditType = "SuccessfullyEnrolledPersonalTax",
+          transactionName = "successfully-enrolled-personal-tax",
+          detail = Json.obj()
         )
         verifyAuditEventSent(expectedAuditEvent)
 

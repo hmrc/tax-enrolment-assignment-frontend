@@ -24,7 +24,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, PTEnro
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.MultipleAccountsOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{PTEnrolmentOnGGAccountLoggedInGG, PTEnrolmentOnGGAccountLoggedInOL, PTEnrolmentOnOLAccountLoggedInGG, PTEnrolmentOnOLAccountLoggedInOL}
-
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.AuditEventCreationService
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
@@ -40,7 +40,8 @@ class PTEnrolmentOnOtherAccountController @Inject() (
   ptGGLoggedInGGView: PTEnrolmentOnGGAccountLoggedInGG,
   val logger: EventLoggerService,
   errorHandler: ErrorHandler,
-  auditHandler: AuditHandler
+  auditHandler: AuditHandler,
+  auditEventCreationService: AuditEventCreationService
 )(implicit ec: ExecutionContext)
     extends TEAFrontendController(mcc) {
 
@@ -66,7 +67,7 @@ class PTEnrolmentOnOtherAccountController @Inject() (
         case Right(accountDetails) =>
           val accountFriendlyDetails = AccountDetails.userFriendlyAccountDetails(accountDetails.ptAccountDetails)
           auditHandler
-            .audit(AuditEvent.auditPTEnrolmentOnOtherAccount(accountFriendlyDetails))
+            .audit(auditEventCreationService.auditPTEnrolmentOnOtherAccount(accountFriendlyDetails))
           Ok(
             pageHandler(
               PTEnrolmentOnOtherAccount(

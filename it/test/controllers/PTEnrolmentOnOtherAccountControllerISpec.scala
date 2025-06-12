@@ -63,9 +63,11 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
           .get(0)
           .text() shouldBe PTEnrolmentOtherAccountMesages.saHeading
 
-        val expectedAuditEvent: AuditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-          accountDetailsUserFriendly(CREDENTIAL_ID_2)
-        )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
+        val expectedAuditEvent: AuditEvent = AuditEvent(
+          auditType = "SuccessfullyEnrolledPersonalTax",
+          transactionName = "successfully-enrolled-personal-tax",
+          detail = Json.obj()
+        )
 
         verifyAuditEventSent(expectedAuditEvent)
       }
@@ -90,9 +92,11 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
         page.title should include(PTEnrolmentOtherAccountMesages.title)
         page.getElementsByClass("govuk-heading-m").text().isEmpty
 
-        val expectedAuditEvent: AuditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-          accountDetailsUserFriendly(CREDENTIAL_ID_2)
-        )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
+        val expectedAuditEvent: AuditEvent = AuditEvent(
+          auditType = "SuccessfullyEnrolledPersonalTax",
+          transactionName = "successfully-enrolled-personal-tax",
+          detail = Json.obj()
+        )
 
         verifyAuditEventSent(expectedAuditEvent)
 

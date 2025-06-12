@@ -20,13 +20,14 @@ import org.mockito.ArgumentMatchers.{any, eq => ameq}
 import org.mockito.Mockito.{times, verify, when}
 import play.api.Application
 import play.api.inject.{Binding, bind}
+import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.BodyParsers
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.PT_ASSIGNED_TO_OTHER_USER
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.*
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.*
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{ControllersBaseSpec, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
@@ -49,7 +50,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
   override lazy val overrides: Seq[Binding[TEASessionCache]] = Seq(
     bind[TEASessionCache].toInstance(mockTeaSessionCache)
   )
-  lazy val mockMessageDigest = mock[MessageDigest]
+  lazy val mockMessageDigest: MessageDigest = mock[MessageDigest]
 
   override implicit lazy val app: Application = localGuiceApplicationBuilder()
     .overrides(
@@ -95,9 +96,19 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
-        val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-          accountDetailsWithPT.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM"))
-        )(requestWithAccountType(randomAccountType), messagesApi)
+        val auditEvent = AuditEvent(
+          "EnrolledOnAnotherAccount",
+          "enrolled-on-another-account",
+          Json
+            .parse(
+              s"""{"NINO":"$NINO","currentAccount":{"credentialId":"credId123","type":"SINGLE_ACCOUNT",
+                 |"authProvider":"GovernmentGateway","email":"foobarwizz","affinityGroup":"Individual"},
+                 |"enrolledAccount":{"credentialId":"6102202884164541","userId":"Ending with 2341",
+                 |"email":"email.otherUser@test.com","lastSignedIn":"27 February 2022 at 12:00PM",
+                 |"mfaDetails":[{"factorType":"Text message","factorValue":"Ending with 26543"}],"authProvider":"SCP"}}""".stripMargin
+            )
+            .as[JsObject]
+        )
 
         when(mockAuditHandler.audit(ameq(auditEvent))(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
 
@@ -105,21 +116,6 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe OK
-//        contentAsString(result) shouldBe viewMultipleGG(
-//          ptEnrolmentDataModelNone
-//            .copy(
-//              currentAccountDetails = ptEnrolmentDataModelNone.currentAccountDetails.copy(lastLoginDate =
-//                Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM")
-//              ),
-//              ptAccountDetails = ptEnrolmentDataModelNone.ptAccountDetails.copy(lastLoginDate =
-//                Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM")
-//              )
-//            ),
-//          "id"
-//        )(
-//          fakeRequest,
-//          messages
-//        ).toString
         verify(mockAuditHandler, times(1)).audit(ameq(auditEvent))(any[HeaderCarrier])
       }
     }
@@ -137,9 +133,19 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
-        val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-          accountDetailsWithPT.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM"))
-        )(requestWithAccountType(randomAccountType), messagesApi)
+        val auditEvent = AuditEvent(
+          "EnrolledOnAnotherAccount",
+          "enrolled-on-another-account",
+          Json
+            .parse(
+              s"""{"NINO":"$NINO","currentAccount":{"credentialId":"credId123","type":"SINGLE_ACCOUNT",
+                 |"authProvider":"GovernmentGateway","email":"foobarwizz","affinityGroup":"Individual"},
+                 |"enrolledAccount":{"credentialId":"6102202884164541","userId":"Ending with 2341",
+                 |"email":"email.otherUser@test.com","lastSignedIn":"27 February 2022 at 12:00PM",
+                 |"mfaDetails":[{"factorType":"Text message","factorValue":"Ending with 26543"}],"authProvider":"SCP"}}""".stripMargin
+            )
+            .as[JsObject]
+        )
 
         when(mockAuditHandler.audit(ameq(auditEvent))(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
 
@@ -147,20 +153,6 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe OK
-//        contentAsString(result) shouldBe viewMultipleGG(
-//          ptEnrolmentModel.copy(
-//            currentAccountDetails = ptEnrolmentModel.currentAccountDetails.copy(lastLoginDate =
-//              Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM")
-//            ),
-//            ptAccountDetails = ptEnrolmentModel.ptAccountDetails.copy(lastLoginDate =
-//              Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM")
-//            )
-//          ),
-//          "id"
-//        )(
-//          fakeRequest,
-//          messages
-//        ).toString
         verify(mockAuditHandler, times(1)).audit(ameq(auditEvent))(any[HeaderCarrier])
       }
       "render the pt on another page with Access SA text and OL messaging" in {
@@ -175,11 +167,19 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
-        val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-          accountDetailsWithPTOL.copy(lastLoginDate =
-            Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM")
-          )
-        )(requestWithAccountType(randomAccountType), messagesApi)
+        val auditEvent = AuditEvent(
+          "EnrolledOnAnotherAccount",
+          "enrolled-on-another-account",
+          Json
+            .parse(
+              s"""{"NINO":"$NINO","currentAccount":{"credentialId":"credId123","type":"SINGLE_ACCOUNT",
+                 |"authProvider":"GovernmentGateway","email":"foobarwizz","affinityGroup":"Individual"},
+                 |"enrolledAccount":{"credentialId":"6102202884164541","userId":"Ending with 2341",
+                 |"email":"email.otherUser@test.com","lastSignedIn":"27 February 2022 at 12:00PM",
+                 |"mfaDetails":[{"factorType":"Text message","factorValue":"Ending with 26543"}],"authProvider":"ONE_LOGIN"}}""".stripMargin
+            )
+            .as[JsObject]
+        )
 
         when(mockAuditHandler.audit(ameq(auditEvent))(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
 
@@ -187,20 +187,6 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe OK
-//        contentAsString(result) shouldBe viewMultipleOL(
-//          ptEnrolmentModel.copy(
-//            currentAccountDetails = ptEnrolmentModel.currentAccountDetails.copy(lastLoginDate =
-//              Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM")
-//            ),
-//            ptAccountDetails = ptEnrolmentModel.ptAccountDetails.copy(lastLoginDate =
-//              Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM")
-//            )
-//          ),
-//          "id"
-//        )(
-//          fakeRequest,
-//          messages
-//        ).toString
         verify(mockAuditHandler, times(1)).audit(ameq(auditEvent))(any[HeaderCarrier])
       }
       "render the pt on another page with Access SA text and mixed identity provider (logged in gg, PT on OL) messaging" in {
@@ -215,11 +201,19 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
-        val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-          accountDetailsWithPTOL.copy(lastLoginDate =
-            Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM")
-          )
-        )(requestWithAccountType(randomAccountType), messagesApi)
+        val auditEvent = AuditEvent(
+          "EnrolledOnAnotherAccount",
+          "enrolled-on-another-account",
+          Json
+            .parse(
+              s"""{"NINO":"$NINO","currentAccount":{"credentialId":"credId123","type":"SINGLE_ACCOUNT",
+                 |"authProvider":"GovernmentGateway","email":"foobarwizz","affinityGroup":"Individual"},
+                 |"enrolledAccount":{"credentialId":"6102202884164541","userId":"Ending with 2341",
+                 |"email":"email.otherUser@test.com","lastSignedIn":"27 February 2022 at 12:00PM",
+                 |"mfaDetails":[{"factorType":"Text message","factorValue":"Ending with 26543"}],"authProvider":"ONE_LOGIN"}}""".stripMargin
+            )
+            .as[JsObject]
+        )
 
         when(mockAuditHandler.audit(ameq(auditEvent))(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
 
@@ -227,20 +221,6 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe OK
-//        contentAsString(result) shouldBe viewLoggedInGGPTOnOL(
-//          ptEnrolmentModel.copy(
-//            currentAccountDetails = ptEnrolmentModel.currentAccountDetails.copy(lastLoginDate =
-//              Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM")
-//            ),
-//            ptAccountDetails = ptEnrolmentModel.ptAccountDetails.copy(lastLoginDate =
-//              Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM")
-//            )
-//          ),
-//          "id"
-//        )(
-//          fakeRequest,
-//          messages
-//        ).toString
         verify(mockAuditHandler, times(1)).audit(ameq(auditEvent))(any[HeaderCarrier])
       }
       "render the pt on another page with Access SA text and mixed identity provider (logged in OL, PT on GG) messaging" in {
@@ -255,9 +235,19 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
-        val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-          accountDetailsWithPT.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM"))
-        )(requestWithAccountType(randomAccountType), messagesApi)
+        val auditEvent = AuditEvent(
+          "EnrolledOnAnotherAccount",
+          "enrolled-on-another-account",
+          Json
+            .parse(
+              s"""{"NINO":"$NINO","currentAccount":{"credentialId":"credId123","type":"SINGLE_ACCOUNT",
+                 |"authProvider":"GovernmentGateway","email":"foobarwizz","affinityGroup":"Individual"},
+                 |"enrolledAccount":{"credentialId":"6102202884164541","userId":"Ending with 2341",
+                 |"email":"email.otherUser@test.com","lastSignedIn":"27 February 2022 at 12:00PM",
+                 |"mfaDetails":[{"factorType":"Text message","factorValue":"Ending with 26543"}],"authProvider":"ONE_LOGIN"}}""".stripMargin
+            )
+            .as[JsObject]
+        )
 
         when(mockAuditHandler.audit(ameq(auditEvent))(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
 
@@ -265,21 +255,6 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe OK
-//        contentAsString(result) shouldBe viewLoggedInOLPTOnGG(
-//          ptEnrolmentModel.copy(
-//            currentAccountDetails = ptEnrolmentModel.currentAccountDetails.copy(lastLoginDate =
-//              Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM")
-//            ),
-//            ptAccountDetails = ptEnrolmentModel.ptAccountDetails.copy(lastLoginDate =
-//              Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM")
-//            )
-//          ),
-//          "id"
-//        )(
-//          fakeRequest,
-//          messages
-//        ).toString
-//        verify(mockAuditHandler, times(1)).audit(ameq(auditEvent))(any[HeaderCarrier])
       }
       "render the pt on another page with Access SA text and One Login messaging" in {
 
@@ -293,9 +268,16 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
-        val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-          accountDetailsWithPT.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM"))
-        )(requestWithAccountType(randomAccountType), messagesApi)
+        val auditEvent = AuditEvent(
+          "EnrolledOnAnotherAccount",
+          "enrolled-on-another-account",
+          Json
+            .parse(
+              s"""{"NINO":"$NINO","currentAccount":{"credentialId":"credId123","type":"SINGLE_ACCOUNT",
+                 |"authProvider":"GovernmentGateway","email":"foobarwizz","affinityGroup":"Individual"},"enrolledAccount":{"credentialId":"6102202884164541","userId":"Ending with 2341","email":"email.otherUser@test.com","lastSignedIn":"27 February 2022 at 12:00PM","mfaDetails":[{"factorType":"Text message","factorValue":"Ending with 26543"}],"authProvider":"SCP"}}""".stripMargin
+            )
+            .as[JsObject]
+        )
 
         when(mockAuditHandler.audit(ameq(auditEvent))(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
 
@@ -303,20 +285,6 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe OK
-//        contentAsString(result) shouldBe viewMultipleGG(
-//          ptEnrolmentModel.copy(
-//            currentAccountDetails = ptEnrolmentModel.currentAccountDetails.copy(lastLoginDate =
-//              Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM")
-//            ),
-//            ptAccountDetails = ptEnrolmentModel.ptAccountDetails.copy(lastLoginDate =
-//              Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM")
-//            )
-//          ),
-//          "id"
-//        )(
-//          fakeRequest,
-//          messages
-//        ).toString
         verify(mockAuditHandler, times(1)).audit(ameq(auditEvent))(any[HeaderCarrier])
       }
     }
@@ -334,9 +302,16 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
-        val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-          accountDetailsWithPT.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM"))
-        )(requestWithAccountType(randomAccountType), messagesApi)
+        val auditEvent = AuditEvent(
+          "EnrolledOnAnotherAccount",
+          "enrolled-on-another-account",
+          Json
+            .parse(
+              s"""{"NINO":"$NINO","currentAccount":{"credentialId":"credId123","type":"SINGLE_ACCOUNT",
+                 |"authProvider":"GovernmentGateway","email":"foobarwizz","affinityGroup":"Individual"},"enrolledAccount":{"credentialId":"6102202884164541","userId":"Ending with 2341","email":"email.otherUser@test.com","lastSignedIn":"27 February 2022 at 12:00PM","mfaDetails":[{"factorType":"Text message","factorValue":"Ending with 26543"}],"authProvider":"SCP"}}""".stripMargin
+            )
+            .as[JsObject]
+        )
 
         when(mockAuditHandler.audit(ameq(auditEvent))(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
 
@@ -344,20 +319,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe OK
-//        contentAsString(result) shouldBe viewMultipleGG(
-//          ptEnrolmentModel.copy(
-//            currentAccountDetails = ptEnrolmentModel.currentAccountDetails.copy(lastLoginDate =
-//              Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM")
-//            ),
-//            ptAccountDetails = ptEnrolmentModel.ptAccountDetails.copy(lastLoginDate =
-//              Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM")
-//            )
-//          ),
-//          "id"
-//        )(
-//          fakeRequest,
-//          messages
-//        ).toString
+
         verify(mockAuditHandler, times(1)).audit(ameq(auditEvent))(any[HeaderCarrier])
       }
     }
@@ -375,9 +337,16 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
-        val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-          accountDetailsWithPT.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM"))
-        )(requestWithAccountType(randomAccountType), messagesApi)
+        val auditEvent = AuditEvent(
+          "EnrolledOnAnotherAccount",
+          "enrolled-on-another-account",
+          Json
+            .parse(
+              s"""{"NINO":"$NINO","currentAccount":{"credentialId":"credId123","type":"SINGLE_ACCOUNT",
+                 |"authProvider":"GovernmentGateway","email":"foobarwizz","affinityGroup":"Individual"},"enrolledAccount":{"credentialId":"6102202884164541","userId":"Ending with 2341","email":"email.otherUser@test.com","lastSignedIn":"27 February 2022 at 12:00PM","mfaDetails":[{"factorType":"Text message","factorValue":"Ending with 26543"}],"authProvider":"SCP"}}""".stripMargin
+            )
+            .as[JsObject]
+        )
 
         when(mockAuditHandler.audit(ameq(auditEvent))(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
 
@@ -385,20 +354,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe OK
-//        contentAsString(result) shouldBe viewMultipleGG(
-//          ptEnrolmentModel.copy(
-//            currentAccountDetails = ptEnrolmentModel.currentAccountDetails.copy(lastLoginDate =
-//              Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM")
-//            ),
-//            ptAccountDetails = ptEnrolmentModel.ptAccountDetails.copy(lastLoginDate =
-//              Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM")
-//            )
-//          ),
-//          "id"
-//        )(
-//          fakeRequest,
-//          messages
-//        ).toString
+
         verify(mockAuditHandler, times(1)).audit(ameq(auditEvent))(any[HeaderCarrier])
       }
     }
@@ -416,9 +372,16 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
-        val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-          accountDetailsWithPT.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM"))
-        )(requestWithAccountType(randomAccountType), messagesApi)
+        val auditEvent = AuditEvent(
+          "EnrolledOnAnotherAccount",
+          "enrolled-on-another-account",
+          Json
+            .parse(
+              s"""{"NINO":"$NINO","currentAccount":{"credentialId":"credId123","type":"SINGLE_ACCOUNT",
+                 |"authProvider":"GovernmentGateway","email":"foobarwizz","affinityGroup":"Individual"},"enrolledAccount":{"credentialId":"6102202884164541","userId":"Ending with 2341","email":"email.otherUser@test.com","lastSignedIn":"27 February 2022 at 12:00PM","mfaDetails":[{"factorType":"Text message","factorValue":"Ending with 26543"}],"authProvider":"SCP"}}""".stripMargin
+            )
+            .as[JsObject]
+        )
 
         when(mockAuditHandler.audit(ameq(auditEvent))(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
 
@@ -426,20 +389,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe OK
-//        contentAsString(result) shouldBe viewMultipleGG(
-//          ptEnrolmentModel.copy(
-//            currentAccountDetails = ptEnrolmentModel.currentAccountDetails.copy(lastLoginDate =
-//              Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM")
-//            ),
-//            ptAccountDetails = ptEnrolmentModel.ptAccountDetails.copy(lastLoginDate =
-//              Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM")
-//            )
-//          ),
-//          "id"
-//        )(
-//          fakeRequest,
-//          messages
-//        ).toString
+
         verify(mockAuditHandler, times(1)).audit(ameq(auditEvent))(any[HeaderCarrier])
       }
     }

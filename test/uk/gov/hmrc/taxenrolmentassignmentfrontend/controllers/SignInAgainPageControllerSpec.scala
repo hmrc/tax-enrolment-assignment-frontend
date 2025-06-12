@@ -20,14 +20,14 @@ import org.mockito.ArgumentMatchers.{any, eq => ameq}
 import org.mockito.Mockito.{times, verify, when}
 import play.api.Application
 import play.api.inject.{Binding, bind}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.BodyParsers
 import play.api.test.Helpers.{status, _}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, NoSAEnrolmentWhenOneExpected, UnexpectedPTEnrolment}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.*
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{ControllersBaseSpec, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
@@ -190,13 +190,19 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
         .thenReturn(Future.successful(retrievalResponse()))
 
       mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData)
-      val auditEvent = AuditEvent.auditSigninAgainWithSACredential()(
-        requestWithAccountType(
-          SA_ASSIGNED_TO_OTHER_USER,
-          UrlPaths.returnUrl,
-          additionalCacheData = additionalCacheData
-        ),
-        messagesApi
+
+      val auditEvent = AuditEvent(
+        "SignInWithOtherAccount",
+        "sign-in-with-other-account",
+        Json
+          .parse(
+            s"""{"NINO":"$NINO","currentAccount":{"credentialId":"credId123","type":"SA_ASSIGNED_TO_OTHER_USER",
+               |"authProvider":"GovernmentGateway","email":"foobarwizz","affinityGroup":"Individual"},
+               |"saAccount":{"credentialId":"credId123","userId":"Ending with 6037","email":"email1@test.com",
+               |      "lastSignedIn":"2022-02-27T12:00:27Z","mfaDetails":[{"factorType":"Text message",
+               |      "factorValue":"Ending with 24321"}],"authProvider":"SCP"}}""".stripMargin
+          )
+          .as[JsObject]
       )
 
       when(mockAuditHandler.audit(ameq(auditEvent))(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))

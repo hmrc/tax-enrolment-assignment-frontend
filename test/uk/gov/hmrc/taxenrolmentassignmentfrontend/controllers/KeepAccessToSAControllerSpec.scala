@@ -23,14 +23,14 @@ import org.mockito.ArgumentMatchers.{any, eq => ameq}
 import org.mockito.Mockito.{times, verify, when}
 import play.api.Application
 import play.api.inject.{Binding, bind}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.BodyParsers
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, UnexpectedPTEnrolment, UnexpectedResponseFromTaxEnrolments}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.*
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{ControllersBaseSpec, UrlPaths}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.CADetailsSADetailsIfExists
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
@@ -329,13 +329,15 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
 
           mockGetDataFromCacheForActionSuccess(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl, additionalCacheData)
 
-          val auditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount()(
-            requestWithAccountType(
-              SA_ASSIGNED_TO_OTHER_USER,
-              UrlPaths.returnUrl,
-              additionalCacheData = additionalCacheData
-            ),
-            messagesApi
+          val auditEvent = AuditEvent(
+            "SuccessfullyEnrolledPersonalTax",
+            "successfully-enrolled-personal-tax",
+            Json
+              .parse(
+                s"""{"NINO":"$NINO","currentAccount":{"credentialId":"credId123","type":"SA_ASSIGNED_TO_OTHER_USER",
+                   |"authProvider":"GovernmentGateway","email":"foobarwizz","affinityGroup":"Individual"},"saAccountCredentialId":"6102202884164541"}""".stripMargin
+              )
+              .as[JsObject]
           )
           when(mockAuditHandler.audit(ameq(auditEvent))(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
 

@@ -33,7 +33,7 @@ import play.api.test.CSRFTokenHelper.*
 import play.api.test.{FakeRequest, Injecting}
 import play.api.{Application, Configuration}
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
-import uk.gov.hmrc.domain.{Nino, Generator => NinoGenerator}
+import uk.gov.hmrc.domain.{Generator => NinoGenerator, Nino}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, CacheMap, MFADetails, ONE_LOGIN, SCP}
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.service.TEAFResult

@@ -24,6 +24,7 @@ import org.scalatest.OneInstancePerTest
 import play.api.Application
 import play.api.i18n.MessagesApi
 import play.api.inject.{Binding, bind}
+import play.api.libs.json.{JsObject, Json}
 import play.api.mvc.{BodyParsers, Result}
 import play.api.test.Helpers.*
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, ~}
@@ -111,7 +112,18 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
           redirectLocation(result) shouldBe Some("/redirect/url")
           verify(mockTeaSessionCache, times(1)).removeRecord(any())
           verify(mockTeaSessionCache, times(1)).save(any(), any())(any(), any())
-          mockAuditPTEnrolledVerify(SINGLE_ACCOUNT, requestWithUserDetails(), messagesApi)
+
+          val expectedAudit: AuditEvent = AuditEvent(
+            "SuccessfullyEnrolledPersonalTax",
+            "successfully-enrolled-personal-tax",
+            Json
+              .parse(
+                s"""{"NINO":"$NINO","currentAccount":{"credentialId":"credId123","type":"SINGLE_ACCOUNT",
+                   |"authProvider":"GovernmentGateway","email":"foobarwizz","affinityGroup":"Individual"}}""".stripMargin
+              )
+              .as[JsObject]
+          )
+          verify(mockAuditHandler, times(1)).audit(ameq(expectedAudit))(any[HeaderCarrier])
 
         }
       }
@@ -158,7 +170,18 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
           redirectLocation(result) shouldBe Some("/protect-tax-info/enrol-pt/enrolment-success-no-sa")
           verify(mockTeaSessionCache, times(0)).removeRecord(any())
           verify(mockTeaSessionCache, times(1)).save(any(), any())(any(), any())
-          mockAuditPTEnrolledVerify(MULTIPLE_ACCOUNTS, requestWithUserDetails(), messagesApi)
+
+          val expectedAudit: AuditEvent = AuditEvent(
+            "SuccessfullyEnrolledPersonalTax",
+            "successfully-enrolled-personal-tax",
+            Json
+              .parse(
+                s"""{"NINO":"$NINO","currentAccount":{"credentialId":"credId123","type":"MULTIPLE_ACCOUNTS",
+                   |"authProvider":"GovernmentGateway","email":"foobarwizz","affinityGroup":"Individual"}}""".stripMargin
+              )
+              .as[JsObject]
+          )
+          verify(mockAuditHandler, times(1)).audit(ameq(expectedAudit))(any[HeaderCarrier])
 
         }
       }
@@ -243,8 +266,19 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
           redirectLocation(result) shouldBe Some(
             "/protect-tax-info/enrol-pt/enrolment-success-no-sa"
           )
+
           verify(mockTeaSessionCache, times(1)).save(any(), any())(any(), any())
-          mockAuditPTEnrolledVerify(MULTIPLE_ACCOUNTS, requestWithUserDetails(), messagesApi)
+          val expectedAudit: AuditEvent = AuditEvent(
+            "SuccessfullyEnrolledPersonalTax",
+            "successfully-enrolled-personal-tax",
+            Json
+              .parse(
+                s"""{"NINO":"$NINO","currentAccount":{"credentialId":"credId123","type":"MULTIPLE_ACCOUNTS",
+                   |"authProvider":"GovernmentGateway","email":"foobarwizz","affinityGroup":"Individual"}}""".stripMargin
+              )
+              .as[JsObject]
+          )
+          verify(mockAuditHandler, times(1)).audit(ameq(expectedAudit))(any[HeaderCarrier])
 
         }
       }
@@ -297,12 +331,19 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
           redirectLocation(result) shouldBe Some(
             "/protect-tax-info/enrol-pt/enrolment-success-sa-user-id"
           )
+
           verify(mockTeaSessionCache, times(1)).save(any(), any())(any(), any())
-          mockAuditPTEnrolledVerify(
-            SA_ASSIGNED_TO_CURRENT_USER,
-            requestWithUserDetails(userDetailsWithSAEnrolment),
-            messagesApi
+          val expectedAudit: AuditEvent = AuditEvent(
+            "SuccessfullyEnrolledPersonalTax",
+            "successfully-enrolled-personal-tax",
+            Json
+              .parse(
+                s"""{"NINO":"$NINO","currentAccount":{"credentialId":"credId123","type":"SA_ASSIGNED_TO_CURRENT_USER",
+                   |"authProvider":"GovernmentGateway","email":"foobarwizz","affinityGroup":"Individual"},"saAccountCredentialId":"credId123"}""".stripMargin
+              )
+              .as[JsObject]
           )
+          verify(mockAuditHandler, times(1)).audit(ameq(expectedAudit))(any[HeaderCarrier])
         }
       }
     }
@@ -418,23 +459,12 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
       requestWithUserDetailsFromSession: RequestWithUserDetailsFromSession[_],
       messagesApi: MessagesApi
     ): OngoingStubbing[Future[Unit]] = {
-      val expectedAudit = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(accountType)(
-        requestWithUserDetailsFromSession,
-        messagesApi
+      val expectedAudit = AuditEvent(
+        auditType = "SuccessfullyEnrolledPersonalTax",
+        transactionName = "successfully-enrolled-personal-tax",
+        detail = Json.obj()
       )
       when(mockAuditHandler.audit(ameq(expectedAudit))(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
-    }
-
-    def mockAuditPTEnrolledVerify(
-      accountType: AccountTypes.Value,
-      requestWithUserDetailsFromSession: RequestWithUserDetailsFromSession[_],
-      messagesApi: MessagesApi
-    ): Future[Unit] = {
-      val expectedAudit = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(accountType)(
-        requestWithUserDetailsFromSession,
-        messagesApi
-      )
-      verify(mockAuditHandler, times(1)).audit(ameq(expectedAudit))(any[HeaderCarrier])
     }
   }
 }

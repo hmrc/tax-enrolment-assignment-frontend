@@ -26,7 +26,7 @@ import play.api.mvc.{AnyContent, BodyParsers}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{CADetailsSADetailsIfExists, CacheMap, UsersAssignedEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
@@ -38,7 +38,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, SilentA
 
 import scala.concurrent.ExecutionContext
 
-import scala.concurrent.{Future}
+import scala.concurrent.Future
 
 class MultipleAccountsOrchestratorSpec extends BaseSpec {
 

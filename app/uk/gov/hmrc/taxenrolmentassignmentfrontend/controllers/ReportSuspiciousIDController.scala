@@ -31,7 +31,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHa
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REPORTED_FRAUD
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{ReportSuspiciousIDGateway, ReportSuspiciousIDOneLogin}
-
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.AuditEventCreationService
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -45,7 +45,8 @@ class ReportSuspiciousIDController @Inject() (
   reportSuspiciousIDOneLogin: ReportSuspiciousIDOneLogin,
   val logger: EventLoggerService,
   auditHandler: AuditHandler,
-  errorHandler: ErrorHandler
+  errorHandler: ErrorHandler,
+  auditEventCreationService: AuditEventCreationService
 )(implicit ec: ExecutionContext)
     extends TEAFrontendController(mcc) {
 
@@ -73,7 +74,7 @@ class ReportSuspiciousIDController @Inject() (
       res.value.map {
         case Right(ptAccount) =>
           auditHandler
-            .audit(AuditEvent.auditReportSuspiciousPTAccount(ptAccount))
+            .audit(auditEventCreationService.auditReportSuspiciousPTAccount(ptAccount))
           identityProviderPage(ptAccount)
         case Left(error) =>
           errorHandler.handleErrors(
@@ -99,7 +100,7 @@ class ReportSuspiciousIDController @Inject() (
         case Right(saAccount) =>
           if (!request.userDetails.hasPTEnrolment) {
             auditHandler
-              .audit(AuditEvent.auditReportSuspiciousSAAccount(saAccount))
+              .audit(auditEventCreationService.auditReportSuspiciousSAAccount(saAccount))
           }
           identityProviderPage(saAccount)
         case Left(error) =>
@@ -123,7 +124,7 @@ class ReportSuspiciousIDController @Inject() (
                 request.userDetails.credId
               )
             )
-            auditHandler.audit(AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true))
+            auditHandler.audit(auditEventCreationService.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(true))
             Redirect(routes.EnrolledForPTController.view)
           case Left(error) =>
             errorHandler.handleErrors(

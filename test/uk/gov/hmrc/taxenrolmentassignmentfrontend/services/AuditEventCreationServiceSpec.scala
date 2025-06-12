@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.services
 
 import play.api.libs.json.{JsObject, JsString, Json}
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
@@ -22,12 +22,16 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSessionAndMongo}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.*
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails, SCP}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_ASSIGNED_SA_ENROLMENT, accountDetailsForCredential}
 
-class AuditEventSpec extends BaseSpec {
-
+class AuditEventCreationServiceSpec extends BaseSpec {
+  private val mockAccountMongoDetailsRetrievalService = mock[AccountMongoDetailsRetrievalService]
+  private val mockUsersGroupsSearchService = mock[UsersGroupsSearchService]
+  private val auditEventCreationService =
+    new AuditEventCreationService(mockAccountMongoDetailsRetrievalService, mockUsersGroupsSearchService)
   private val accountDetailsWithOneMFADetails: AccountDetails = AccountDetails(
     identityProviderType = SCP,
     credId = CREDENTIAL_ID_1,
@@ -223,7 +227,7 @@ class AuditEventSpec extends BaseSpec {
         val expectedAuditEvent =
           getExpectedAuditEvent(accountDetailsWithOneMFADetails, isSA = true)
 
-        AuditEvent.auditReportSuspiciousSAAccount(
+        auditEventCreationService.auditReportSuspiciousSAAccount(
           accountDetailsWithOneMFADetails
         )(requestWithMongoAndAccountType, messagesApi) shouldEqual expectedAuditEvent
       }
@@ -234,7 +238,7 @@ class AuditEventSpec extends BaseSpec {
         val expectedAuditEvent =
           getExpectedAuditEvent(accountDetailsNoEmailOrMFA, isSA = true)
 
-        AuditEvent.auditReportSuspiciousSAAccount(accountDetailsNoEmailOrMFA)(
+        auditEventCreationService.auditReportSuspiciousSAAccount(accountDetailsNoEmailOrMFA)(
           requestWithMongoAndAccountType,
           messagesApi
         ) shouldEqual expectedAuditEvent
@@ -246,7 +250,7 @@ class AuditEventSpec extends BaseSpec {
         val expectedAuditEvent =
           getExpectedAuditEvent(accountDetailsNoEmail, isSA = true)
 
-        AuditEvent.auditReportSuspiciousSAAccount(accountDetailsNoEmail)(
+        auditEventCreationService.auditReportSuspiciousSAAccount(accountDetailsNoEmail)(
           requestWithMongoAndAccountType,
           messagesApi
         ) shouldEqual expectedAuditEvent
@@ -258,7 +262,7 @@ class AuditEventSpec extends BaseSpec {
         val expectedAuditEvent =
           getExpectedAuditEvent(accountDetailsNoMFA, isSA = true)
 
-        AuditEvent.auditReportSuspiciousSAAccount(accountDetailsNoMFA)(
+        auditEventCreationService.auditReportSuspiciousSAAccount(accountDetailsNoMFA)(
           requestWithMongoAndAccountType,
           messagesApi
         ) shouldEqual expectedAuditEvent
@@ -276,7 +280,7 @@ class AuditEventSpec extends BaseSpec {
         val expectedAuditEvent =
           getExpectedAuditEvent(accountDetailsWithThreeMFADetails, isSA = true)
 
-        AuditEvent.auditReportSuspiciousSAAccount(
+        auditEventCreationService.auditReportSuspiciousSAAccount(
           accountDetailsWithThreeMFADetails
         )(requestWithMongoAndAccountType, messagesApi) shouldEqual expectedAuditEvent
       }
@@ -287,7 +291,7 @@ class AuditEventSpec extends BaseSpec {
         val expectedAuditEvent =
           getExpectedAuditEvent(accountDetailsWithOneMFADetails, isSA = true, isWelsh = true)
 
-        AuditEvent.auditReportSuspiciousSAAccount(
+        auditEventCreationService.auditReportSuspiciousSAAccount(
           accountDetailsWithOneMFADetails
         )(requestWithMongoAndAccountTypeLangCY, messagesApi) shouldEqual expectedAuditEvent
       }
@@ -298,7 +302,7 @@ class AuditEventSpec extends BaseSpec {
         val expectedAuditEvent =
           getExpectedAuditEvent(accountDetailsNoEmailOrMFA, isSA = true, isWelsh = true)
 
-        AuditEvent.auditReportSuspiciousSAAccount(accountDetailsNoEmailOrMFA)(
+        auditEventCreationService.auditReportSuspiciousSAAccount(accountDetailsNoEmailOrMFA)(
           requestWithMongoAndAccountTypeLangCY,
           messagesApi
         ) shouldEqual expectedAuditEvent
@@ -310,7 +314,7 @@ class AuditEventSpec extends BaseSpec {
         val expectedAuditEvent =
           getExpectedAuditEvent(accountDetailsNoEmail, isSA = true, isWelsh = true)
 
-        AuditEvent.auditReportSuspiciousSAAccount(accountDetailsNoEmail)(
+        auditEventCreationService.auditReportSuspiciousSAAccount(accountDetailsNoEmail)(
           requestWithMongoAndAccountTypeLangCY,
           messagesApi
         ) shouldEqual expectedAuditEvent
@@ -322,7 +326,7 @@ class AuditEventSpec extends BaseSpec {
         val expectedAuditEvent =
           getExpectedAuditEvent(accountDetailsNoMFA, isSA = true, isWelsh = true)
 
-        AuditEvent.auditReportSuspiciousSAAccount(accountDetailsNoMFA)(
+        auditEventCreationService.auditReportSuspiciousSAAccount(accountDetailsNoMFA)(
           requestWithMongoAndAccountTypeLangCY,
           messagesApi
         ) shouldEqual expectedAuditEvent
@@ -340,7 +344,7 @@ class AuditEventSpec extends BaseSpec {
         val expectedAuditEvent =
           getExpectedAuditEvent(accountDetailsWithThreeMFADetails, isSA = true, isWelsh = true)
 
-        AuditEvent.auditReportSuspiciousSAAccount(
+        auditEventCreationService.auditReportSuspiciousSAAccount(
           accountDetailsWithThreeMFADetails
         )(requestWithMongoAndAccountTypeLangCY, messagesApi) shouldEqual expectedAuditEvent
       }
@@ -358,7 +362,7 @@ class AuditEventSpec extends BaseSpec {
         val expectedAuditEvent =
           getExpectedAuditEvent(accountDetailsWithOneMFADetails, isSA = false)
 
-        AuditEvent.auditReportSuspiciousPTAccount(
+        auditEventCreationService.auditReportSuspiciousPTAccount(
           accountDetailsWithOneMFADetails
         )(requestWithMongoAndAccountType, messagesApi) shouldEqual expectedAuditEvent
       }
@@ -369,7 +373,7 @@ class AuditEventSpec extends BaseSpec {
         val expectedAuditEvent =
           getExpectedAuditEvent(accountDetailsNoEmailOrMFA, isSA = false)
 
-        AuditEvent.auditReportSuspiciousPTAccount(accountDetailsNoEmailOrMFA)(
+        auditEventCreationService.auditReportSuspiciousPTAccount(accountDetailsNoEmailOrMFA)(
           requestWithMongoAndAccountType,
           messagesApi
         ) shouldEqual expectedAuditEvent
@@ -381,7 +385,7 @@ class AuditEventSpec extends BaseSpec {
         val expectedAuditEvent =
           getExpectedAuditEvent(accountDetailsNoEmail, isSA = false)
 
-        AuditEvent.auditReportSuspiciousPTAccount(accountDetailsNoEmail)(
+        auditEventCreationService.auditReportSuspiciousPTAccount(accountDetailsNoEmail)(
           requestWithMongoAndAccountType,
           messagesApi
         ) shouldEqual expectedAuditEvent
@@ -393,7 +397,7 @@ class AuditEventSpec extends BaseSpec {
         val expectedAuditEvent =
           getExpectedAuditEvent(accountDetailsNoMFA, isSA = false)
 
-        AuditEvent.auditReportSuspiciousPTAccount(accountDetailsNoMFA)(
+        auditEventCreationService.auditReportSuspiciousPTAccount(accountDetailsNoMFA)(
           requestWithMongoAndAccountType,
           messagesApi
         ) shouldEqual expectedAuditEvent
@@ -411,7 +415,7 @@ class AuditEventSpec extends BaseSpec {
         val expectedAuditEvent =
           getExpectedAuditEvent(accountDetailsWithThreeMFADetails, isSA = false)
 
-        AuditEvent.auditReportSuspiciousPTAccount(
+        auditEventCreationService.auditReportSuspiciousPTAccount(
           accountDetailsWithThreeMFADetails
         )(requestWithMongoAndAccountType, messagesApi) shouldEqual expectedAuditEvent
       }
@@ -422,7 +426,7 @@ class AuditEventSpec extends BaseSpec {
         val expectedAuditEvent =
           getExpectedAuditEvent(accountDetailsWithOneMFADetails, isSA = false, isWelsh = true)
 
-        AuditEvent.auditReportSuspiciousPTAccount(
+        auditEventCreationService.auditReportSuspiciousPTAccount(
           accountDetailsWithOneMFADetails
         )(requestWithMongoAndAccountTypeLangCY, messagesApi) shouldEqual expectedAuditEvent
       }
@@ -433,7 +437,7 @@ class AuditEventSpec extends BaseSpec {
         val expectedAuditEvent =
           getExpectedAuditEvent(accountDetailsNoEmailOrMFA, isSA = false, isWelsh = true)
 
-        AuditEvent.auditReportSuspiciousPTAccount(accountDetailsNoEmailOrMFA)(
+        auditEventCreationService.auditReportSuspiciousPTAccount(accountDetailsNoEmailOrMFA)(
           requestWithMongoAndAccountTypeLangCY,
           messagesApi
         ) shouldEqual expectedAuditEvent
@@ -445,7 +449,7 @@ class AuditEventSpec extends BaseSpec {
         val expectedAuditEvent =
           getExpectedAuditEvent(accountDetailsNoEmail, isSA = false, isWelsh = true)
 
-        AuditEvent.auditReportSuspiciousPTAccount(accountDetailsNoEmail)(
+        auditEventCreationService.auditReportSuspiciousPTAccount(accountDetailsNoEmail)(
           requestWithMongoAndAccountTypeLangCY,
           messagesApi
         ) shouldEqual expectedAuditEvent
@@ -457,7 +461,7 @@ class AuditEventSpec extends BaseSpec {
         val expectedAuditEvent =
           getExpectedAuditEvent(accountDetailsNoMFA, isSA = false, isWelsh = true)
 
-        AuditEvent.auditReportSuspiciousPTAccount(accountDetailsNoMFA)(
+        auditEventCreationService.auditReportSuspiciousPTAccount(accountDetailsNoMFA)(
           requestWithMongoAndAccountTypeLangCY,
           messagesApi
         ) shouldEqual expectedAuditEvent
@@ -476,7 +480,7 @@ class AuditEventSpec extends BaseSpec {
         val expectedAuditEvent =
           getExpectedAuditEvent(accountDetailsWithThreeMFADetails, isSA = false, isWelsh = true)
 
-        AuditEvent.auditReportSuspiciousPTAccount(
+        auditEventCreationService.auditReportSuspiciousPTAccount(
           accountDetailsWithThreeMFADetails
         )(requestWithMongoAndAccountTypeLangCY, messagesApi) shouldEqual expectedAuditEvent
       }
@@ -503,7 +507,7 @@ class AuditEventSpec extends BaseSpec {
         val expectedAuditEvent =
           getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsWithOneMFADetails, isSA = false)
 
-        AuditEvent.auditPTEnrolmentOnOtherAccount(
+        auditEventCreationService.auditPTEnrolmentOnOtherAccount(
           accountDetailsWithOneMFADetails
         )(requestWithMongoAndAccountType, messagesApi) shouldEqual expectedAuditEvent
       }
@@ -514,7 +518,7 @@ class AuditEventSpec extends BaseSpec {
         val expectedAuditEvent =
           getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsNoEmailOrMFA, isSA = false)
 
-        AuditEvent.auditPTEnrolmentOnOtherAccount(accountDetailsNoEmailOrMFA)(
+        auditEventCreationService.auditPTEnrolmentOnOtherAccount(accountDetailsNoEmailOrMFA)(
           requestWithMongoAndAccountType,
           messagesApi
         ) shouldEqual expectedAuditEvent
@@ -526,7 +530,7 @@ class AuditEventSpec extends BaseSpec {
         val expectedAuditEvent =
           getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsNoEmail, isSA = false)
 
-        AuditEvent.auditPTEnrolmentOnOtherAccount(accountDetailsNoEmail)(
+        auditEventCreationService.auditPTEnrolmentOnOtherAccount(accountDetailsNoEmail)(
           requestWithMongoAndAccountType,
           messagesApi
         ) shouldEqual expectedAuditEvent
@@ -538,7 +542,7 @@ class AuditEventSpec extends BaseSpec {
         val expectedAuditEvent =
           getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsNoMFA, isSA = false)
 
-        AuditEvent.auditPTEnrolmentOnOtherAccount(accountDetailsNoMFA)(
+        auditEventCreationService.auditPTEnrolmentOnOtherAccount(accountDetailsNoMFA)(
           requestWithMongoAndAccountType,
           messagesApi
         ) shouldEqual expectedAuditEvent
@@ -556,7 +560,7 @@ class AuditEventSpec extends BaseSpec {
         val expectedAuditEvent =
           getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsWithThreeMFADetails, isSA = false)
 
-        AuditEvent.auditPTEnrolmentOnOtherAccount(
+        auditEventCreationService.auditPTEnrolmentOnOtherAccount(
           accountDetailsWithThreeMFADetails
         )(requestWithMongoAndAccountType, messagesApi) shouldEqual expectedAuditEvent
       }
@@ -567,7 +571,7 @@ class AuditEventSpec extends BaseSpec {
         val expectedAuditEvent =
           getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsWithOneMFADetails, isSA = false, isWelsh = true)
 
-        AuditEvent.auditPTEnrolmentOnOtherAccount(
+        auditEventCreationService.auditPTEnrolmentOnOtherAccount(
           accountDetailsWithOneMFADetails
         )(requestWithMongoAndAccountTypeLangCY, messagesApi) shouldEqual expectedAuditEvent
       }
@@ -578,7 +582,7 @@ class AuditEventSpec extends BaseSpec {
         val expectedAuditEvent =
           getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsNoEmailOrMFA, isSA = false, isWelsh = true)
 
-        AuditEvent.auditPTEnrolmentOnOtherAccount(accountDetailsNoEmailOrMFA)(
+        auditEventCreationService.auditPTEnrolmentOnOtherAccount(accountDetailsNoEmailOrMFA)(
           requestWithMongoAndAccountTypeLangCY,
           messagesApi
         ) shouldEqual expectedAuditEvent
@@ -590,7 +594,7 @@ class AuditEventSpec extends BaseSpec {
         val expectedAuditEvent =
           getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsNoEmail, isSA = false, isWelsh = true)
 
-        AuditEvent.auditPTEnrolmentOnOtherAccount(accountDetailsNoEmail)(
+        auditEventCreationService.auditPTEnrolmentOnOtherAccount(accountDetailsNoEmail)(
           requestWithMongoAndAccountTypeLangCY,
           messagesApi
         ) shouldEqual expectedAuditEvent
@@ -602,7 +606,7 @@ class AuditEventSpec extends BaseSpec {
         val expectedAuditEvent =
           getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsNoMFA, isSA = false, isWelsh = true)
 
-        AuditEvent.auditPTEnrolmentOnOtherAccount(accountDetailsNoMFA)(
+        auditEventCreationService.auditPTEnrolmentOnOtherAccount(accountDetailsNoMFA)(
           requestWithMongoAndAccountTypeLangCY,
           messagesApi
         ) shouldEqual expectedAuditEvent
@@ -625,7 +629,7 @@ class AuditEventSpec extends BaseSpec {
             isWelsh = true
           )
 
-        AuditEvent.auditPTEnrolmentOnOtherAccount(
+        auditEventCreationService.auditPTEnrolmentOnOtherAccount(
           accountDetailsWithThreeMFADetails
         )(requestWithMongoAndAccountTypeLangCY, messagesApi) shouldEqual expectedAuditEvent
       }
@@ -642,7 +646,7 @@ class AuditEventSpec extends BaseSpec {
         val expectedAuditEvent =
           getExpectedAuditForPTEnrolled(SINGLE_ACCOUNT, None, None, withEmail = Some("-"))
 
-        AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
+        auditEventCreationService.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
           SINGLE_ACCOUNT
         )(requestForAudit, messagesApi) shouldEqual expectedAuditEvent
 
@@ -657,7 +661,7 @@ class AuditEventSpec extends BaseSpec {
         val expectedAuditEvent =
           getExpectedAuditForPTEnrolled(SINGLE_ACCOUNT, None, None, withEmail = Some(CURRENT_USER_EMAIL))
 
-        AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
+        auditEventCreationService.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
           SINGLE_ACCOUNT
         )(requestForAudit, messagesApi) shouldEqual expectedAuditEvent
       }
@@ -671,7 +675,7 @@ class AuditEventSpec extends BaseSpec {
         val expectedAuditEvent =
           getExpectedAuditForPTEnrolled(SINGLE_ACCOUNT, None, Some(CREDENTIAL_ID))
 
-        AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
+        auditEventCreationService.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
           SINGLE_ACCOUNT
         )(requestForAudit, messagesApi) shouldEqual expectedAuditEvent
       }
@@ -685,7 +689,7 @@ class AuditEventSpec extends BaseSpec {
         val expectedAuditEvent =
           getExpectedAuditForPTEnrolled(MULTIPLE_ACCOUNTS, None, None)
 
-        AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
+        auditEventCreationService.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
           MULTIPLE_ACCOUNTS
         )(requestForAudit, messagesApi) shouldEqual expectedAuditEvent
       }
@@ -699,7 +703,7 @@ class AuditEventSpec extends BaseSpec {
         val expectedAuditEvent =
           getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_CURRENT_USER, None, Some(CREDENTIAL_ID))
 
-        AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
+        auditEventCreationService.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
           SA_ASSIGNED_TO_CURRENT_USER
         )(requestForAudit, messagesApi) shouldEqual expectedAuditEvent
       }
@@ -729,7 +733,7 @@ class AuditEventSpec extends BaseSpec {
         val expectedAuditEvent =
           getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_OTHER_USER, None, Some(CREDENTIAL_ID_1), withEmail = Some("-"))
 
-        AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(
+        auditEventCreationService.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(
         )(requestForAudit, messagesApi) shouldEqual expectedAuditEvent
       }
     }
@@ -746,7 +750,7 @@ class AuditEventSpec extends BaseSpec {
         val expectedAuditEvent =
           getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_OTHER_USER, None, Some(CREDENTIAL_ID_1))
 
-        AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(
+        auditEventCreationService.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(
         )(requestForAudit, messagesApi) shouldEqual expectedAuditEvent
       }
     }
@@ -774,7 +778,7 @@ class AuditEventSpec extends BaseSpec {
           val requestForAudit =
             requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
-          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
+          auditEventCreationService.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
             requestForAudit,
             messagesApi
           ) shouldEqual expectedAuditEvent
@@ -801,7 +805,7 @@ class AuditEventSpec extends BaseSpec {
           val requestForAudit =
             requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
-          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
+          auditEventCreationService.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
             requestForAudit,
             messagesApi
           ) shouldEqual expectedAuditEvent
@@ -827,7 +831,7 @@ class AuditEventSpec extends BaseSpec {
           val requestForAudit =
             requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
-          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
+          auditEventCreationService.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
             requestForAudit,
             messagesApi
           ) shouldEqual expectedAuditEvent
@@ -860,7 +864,7 @@ class AuditEventSpec extends BaseSpec {
           val requestForAudit =
             requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
-          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
+          auditEventCreationService.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
             requestForAudit,
             messagesApi
           ) shouldEqual expectedAuditEvent
@@ -898,7 +902,7 @@ class AuditEventSpec extends BaseSpec {
               langCode = "cy"
             )
 
-          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
+          auditEventCreationService.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
             requestForAudit,
             messagesApi
           ) shouldEqual expectedAuditEvent
@@ -932,7 +936,7 @@ class AuditEventSpec extends BaseSpec {
               langCode = "cy"
             )
 
-          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
+          auditEventCreationService.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
             requestForAudit,
             messagesApi
           ) shouldEqual expectedAuditEvent
@@ -964,7 +968,7 @@ class AuditEventSpec extends BaseSpec {
               langCode = "cy"
             )
 
-          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
+          auditEventCreationService.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
             requestForAudit,
             messagesApi
           ) shouldEqual expectedAuditEvent
@@ -1004,7 +1008,7 @@ class AuditEventSpec extends BaseSpec {
               langCode = "cy"
             )
 
-          AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
+          auditEventCreationService.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
             requestForAudit,
             messagesApi
           ) shouldEqual expectedAuditEvent
@@ -1032,7 +1036,7 @@ class AuditEventSpec extends BaseSpec {
         val requestForAudit =
           requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
-        AuditEvent.auditSigninAgainWithSACredential()(
+        auditEventCreationService.auditSigninAgainWithSACredential()(
           requestForAudit,
           messagesApi
         ) shouldEqual expectedAuditEvent
@@ -1055,7 +1059,7 @@ class AuditEventSpec extends BaseSpec {
         val requestForAudit =
           requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
-        AuditEvent.auditSigninAgainWithSACredential()(
+        auditEventCreationService.auditSigninAgainWithSACredential()(
           requestForAudit,
           messagesApi
         ) shouldEqual expectedAuditEvent
@@ -1076,7 +1080,7 @@ class AuditEventSpec extends BaseSpec {
         val requestForAudit =
           requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
-        AuditEvent.auditSigninAgainWithSACredential()(
+        auditEventCreationService.auditSigninAgainWithSACredential()(
           requestForAudit,
           messagesApi
         ) shouldEqual expectedAuditEvent
@@ -1105,7 +1109,7 @@ class AuditEventSpec extends BaseSpec {
         val requestForAudit =
           requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
-        AuditEvent.auditSigninAgainWithSACredential()(
+        auditEventCreationService.auditSigninAgainWithSACredential()(
           requestForAudit,
           messagesApi
         ) shouldEqual expectedAuditEvent
@@ -1118,7 +1122,7 @@ class AuditEventSpec extends BaseSpec {
         val requestForAudit =
           requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER)
 
-        AuditEvent.auditSigninAgainWithSACredential()(
+        auditEventCreationService.auditSigninAgainWithSACredential()(
           requestForAudit,
           messagesApi
         ) shouldEqual expectedAuditEvent
@@ -1146,7 +1150,7 @@ class AuditEventSpec extends BaseSpec {
         val requestForAudit =
           requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData, langCode = "cy")
 
-        AuditEvent.auditSigninAgainWithSACredential()(
+        auditEventCreationService.auditSigninAgainWithSACredential()(
           requestForAudit,
           messagesApi
         ) shouldEqual expectedAuditEvent
@@ -1172,7 +1176,7 @@ class AuditEventSpec extends BaseSpec {
         val requestForAudit =
           requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData, langCode = "cy")
 
-        AuditEvent.auditSigninAgainWithSACredential()(
+        auditEventCreationService.auditSigninAgainWithSACredential()(
           requestForAudit,
           messagesApi
         ) shouldEqual expectedAuditEvent
@@ -1197,7 +1201,7 @@ class AuditEventSpec extends BaseSpec {
         val requestForAudit =
           requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData, langCode = "cy")
 
-        AuditEvent.auditSigninAgainWithSACredential()(
+        auditEventCreationService.auditSigninAgainWithSACredential()(
           requestForAudit,
           messagesApi
         ) shouldEqual expectedAuditEvent
@@ -1229,7 +1233,7 @@ class AuditEventSpec extends BaseSpec {
         val requestForAudit =
           requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData, langCode = "cy")
 
-        AuditEvent.auditSigninAgainWithSACredential()(
+        auditEventCreationService.auditSigninAgainWithSACredential()(
           requestForAudit,
           messagesApi
         ) shouldEqual expectedAuditEvent
@@ -1242,7 +1246,7 @@ class AuditEventSpec extends BaseSpec {
         val requestForAudit =
           requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, langCode = "cy")
 
-        AuditEvent.auditSigninAgainWithSACredential()(
+        auditEventCreationService.auditSigninAgainWithSACredential()(
           requestForAudit,
           messagesApi
         ) shouldEqual expectedAuditEvent

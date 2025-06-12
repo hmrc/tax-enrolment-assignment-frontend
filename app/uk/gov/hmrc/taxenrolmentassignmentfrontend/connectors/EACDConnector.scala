@@ -85,7 +85,7 @@ class EACDConnector @Inject() (httpClient: HttpClientV2, logger: EventLoggerServ
       )
   }
 
-  //ES20 Query known facts that match the supplied query parameters
+  // ES20 Query known facts that match the supplied query parameters
   def queryKnownFactsByNinoVerifier(nino: Nino)(implicit
     ec: ExecutionContext,
     hc: HeaderCarrier
@@ -138,7 +138,7 @@ class EACDConnector @Inject() (httpClient: HttpClientV2, logger: EventLoggerServ
       )
   }
 
-  //ES1 Query groups who have an allocated enrolment
+  // ES1 Query groups who have an allocated enrolment
   def getGroupsFromEnrolment(
     enrolmentKey: String
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): EitherT[Future, UpstreamErrorResponse, HttpResponse] = {

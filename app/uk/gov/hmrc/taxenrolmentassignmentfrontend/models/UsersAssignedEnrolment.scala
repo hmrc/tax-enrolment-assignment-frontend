@@ -25,12 +25,11 @@ object UsersAssignedEnrolment {
   val readsCache: Reads[UsersAssignedEnrolment] =
     Json.reads[UsersAssignedEnrolment]
 
-  val reads: Reads[UsersAssignedEnrolment] = (json: JsValue) => {
+  val reads: Reads[UsersAssignedEnrolment] = (json: JsValue) =>
     for {
       jsObject         <- json.validate[JsObject]
       principleUserIds <- (jsObject \ "principalUserIds").validate[List[String]]
     } yield UsersAssignedEnrolment(principleUserIds.headOption)
-  }
   val writes: Writes[UsersAssignedEnrolment] =
     Json.writes[UsersAssignedEnrolment]
 

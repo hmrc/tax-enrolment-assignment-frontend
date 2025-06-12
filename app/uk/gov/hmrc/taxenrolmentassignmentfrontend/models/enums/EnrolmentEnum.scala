@@ -18,10 +18,10 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums
 
 object EnrolmentEnum extends Enumeration {
 
-  val hmrcPTKey: EnrolmentEnum.Value = Value("HMRC-PT")
-  val IRSAKey: EnrolmentEnum.Value = Value("IR-SA")
+  val hmrcPTKey: EnrolmentEnum.Value    = Value("HMRC-PT")
+  val IRSAKey: EnrolmentEnum.Value      = Value("IR-SA")
   val hmrcMTDITKey: EnrolmentEnum.Value = Value("HMRC-MTD-IT")
-  val hmrcNIKey: EnrolmentEnum.Value = Value("HMRC-NI")
+  val hmrcNIKey: EnrolmentEnum.Value    = Value("HMRC-NI")
 
   val saEnrolmentSet: Set[String] =
     Set(IRSAKey.toString, hmrcMTDITKey.toString, hmrcNIKey.toString)

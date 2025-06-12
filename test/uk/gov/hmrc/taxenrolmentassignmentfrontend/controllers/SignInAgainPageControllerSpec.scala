@@ -41,11 +41,11 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class SignInAgainPageControllerSpec extends ControllersBaseSpec {
 
-  lazy val mockSilentAssignmentService: SilentAssignmentService = mock[SilentAssignmentService]
+  lazy val mockSilentAssignmentService: SilentAssignmentService   = mock[SilentAssignmentService]
   lazy val mockAccountCheckOrchestrator: AccountCheckOrchestrator = mock[AccountCheckOrchestrator]
-  lazy val mockAuditHandler: AuditHandler = mock[AuditHandler]
+  lazy val mockAuditHandler: AuditHandler                         = mock[AuditHandler]
 
-  lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
+  lazy val testBodyParser: BodyParsers.Default                            = mock[BodyParsers.Default]
   lazy val mockMultipleAccountsOrchestrator: MultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
 
   override lazy val overrides: Seq[Binding[TEASessionCache]] = Seq(
@@ -68,7 +68,7 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
   val view: SignInWithSAAccount = app.injector.instanceOf[SignInWithSAAccount]
 
   "view" when {
-    "a user has SA on another account" should {
+    "a user has SA on another account"                                      should {
       "render the signInWithSAAccount page" when {
         "the user has not already been assigned the PT enrolment" in {
           when(
@@ -90,7 +90,7 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
           val result = controller.view
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-          status(result) shouldBe OK
+          status(result)        shouldBe OK
           contentAsString(result) should include(messages("signInAgain.heading1"))
         }
       }
@@ -112,12 +112,12 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
           val result = controller.view
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-          status(result) shouldBe SEE_OTHER
+          status(result)           shouldBe SEE_OTHER
           redirectLocation(result) shouldBe Some(UrlPaths.enrolledPTSAOnOtherAccountPath)
         }
       }
     }
-    s"the cache no redirectUrl" should {
+    s"the cache no redirectUrl"                                             should {
       "render the error page" in {
         when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
@@ -126,7 +126,7 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(result) shouldBe INTERNAL_SERVER_ERROR
+        status(result)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) should include(messages("enrolmentError.heading"))
       }
     }
@@ -147,7 +147,7 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(result) shouldBe SEE_OTHER
+        status(result)           shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some(UrlPaths.accountCheckPath)
       }
     }
@@ -172,7 +172,7 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
         val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(res) shouldBe INTERNAL_SERVER_ERROR
+        status(res)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(res) should include(messages("enrolmentError.heading"))
       }
     }
@@ -180,7 +180,7 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
   "continue" should {
     s"redirect to ${UrlPaths.logoutPath}" in {
       val additionalCacheData = Map(
-        USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+        USER_ASSIGNED_SA_ENROLMENT                   -> Json.toJson(UsersAssignedEnrolment1),
         accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetails)(
           AccountDetails.mongoFormats(crypto.crypto)
         )
@@ -210,7 +210,7 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
       val res = controller.continue
         .apply(buildFakeRequestWithSessionId("POST", "Not Used"))
 
-      status(res) shouldBe SEE_OTHER
+      status(res)           shouldBe SEE_OTHER
       redirectLocation(res) shouldBe
         Some(UrlPaths.logoutPath)
       verify(mockAuditHandler, times(1)).audit(ameq(auditEvent))(any[HeaderCarrier])
@@ -225,7 +225,7 @@ class SignInAgainPageControllerSpec extends ControllersBaseSpec {
       val result = controller.view
         .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-      status(result) shouldBe INTERNAL_SERVER_ERROR
+      status(result)        shouldBe INTERNAL_SERVER_ERROR
       contentAsString(result) should include(messages("enrolmentError.heading"))
     }
   }

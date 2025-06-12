@@ -62,12 +62,12 @@ class AccountCheckController @Inject() (
       case Success(redirectUrlString) =>
         handleRequest(redirectUrlString).value.flatMap {
           case Right(accountType) => handleUsers(accountType, redirectUrlString)
-          case Left(error) =>
+          case Left(error)        =>
             Future.successful(
               errorHandler.handleErrors(error, "[AccountCheckController][accountCheck]")
             )
         }
-      case Failure(error) =>
+      case Failure(error)             =>
         logger.logEvent(logInvalidRedirectUrl(error.getMessage), error)
         Future.successful(
           errorHandler.handleErrors(InvalidRedirectUrl, "[AccountCheckController][accountCheck]")
@@ -81,9 +81,9 @@ class AccountCheckController @Inject() (
     hc: HeaderCarrier
   ): TEAFResult[AccountTypes.Value] =
     for {
-      _ <- EitherT.right[TaxEnrolmentAssignmentErrors](
-             sessionCache.save[String](REDIRECT_URL, redirectUrl)(request, implicitly)
-           )
+      _           <- EitherT.right[TaxEnrolmentAssignmentErrors](
+                       sessionCache.save[String](REDIRECT_URL, redirectUrl)(request, implicitly)
+                     )
       accountType <- accountCheckOrchestrator.getAccountType
       _           <- enrolForPTIfRequired(accountType)
     } yield accountType
@@ -92,13 +92,13 @@ class AccountCheckController @Inject() (
     request: RequestWithUserDetailsFromSession[_]
   ): Future[Result] =
     accountType match {
-      case PT_ASSIGNED_TO_OTHER_USER => Future.successful(Redirect(routes.PTEnrolmentOnOtherAccountController.view))
+      case PT_ASSIGNED_TO_OTHER_USER                                       => Future.successful(Redirect(routes.PTEnrolmentOnOtherAccountController.view))
       case SA_ASSIGNED_TO_OTHER_USER if request.userDetails.hasPTEnrolment =>
         Future.successful(Redirect(routes.EnrolledPTWithSAOnOtherAccountController.view))
-      case SA_ASSIGNED_TO_OTHER_USER   => Future.successful(Redirect(routes.SABlueInterruptController.view))
-      case MULTIPLE_ACCOUNTS           => Future.successful(Redirect(routes.EnrolledForPTController.view))
-      case SA_ASSIGNED_TO_CURRENT_USER => Future.successful(Redirect(routes.EnrolledForPTWithSAController.view))
-      case _ =>
+      case SA_ASSIGNED_TO_OTHER_USER                                       => Future.successful(Redirect(routes.SABlueInterruptController.view))
+      case MULTIPLE_ACCOUNTS                                               => Future.successful(Redirect(routes.EnrolledForPTController.view))
+      case SA_ASSIGNED_TO_CURRENT_USER                                     => Future.successful(Redirect(routes.EnrolledForPTWithSAController.view))
+      case _                                                               =>
         logger.logEvent(
           logRedirectingToReturnUrl(
             request.userDetails.credId,
@@ -113,7 +113,7 @@ class AccountCheckController @Inject() (
     hc: HeaderCarrier
   ): TEAFResult[Unit] = {
     val accountTypesToEnrolForPT = List(SINGLE_ACCOUNT, MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER)
-    val hasPTEnrolmentAlready = request.userDetails.hasPTEnrolment
+    val hasPTEnrolmentAlready    = request.userDetails.hasPTEnrolment
     if (!hasPTEnrolmentAlready && accountTypesToEnrolForPT.contains(accountType)) {
       silentAssignmentService.enrolUser().flatMap { _ =>
         auditHandler.audit(auditEventCreationService.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(accountType))

@@ -30,7 +30,7 @@ class EnrolmentStoreConnectorTestOnlyISpec extends IntegrationSpecBase {
   "deleteEnrolment" should {
 
     val enrolmentKey = "SERVICE~KEY~VALUE"
-    val apiUrl = s"/enrolment-store-proxy/enrolment-store/enrolments/$enrolmentKey"
+    val apiUrl       = s"/enrolment-store-proxy/enrolment-store/enrolments/$enrolmentKey"
 
     "delete enrolment" when {
       "response is NO_CONTENT" in {
@@ -65,8 +65,8 @@ class EnrolmentStoreConnectorTestOnlyISpec extends IntegrationSpecBase {
 
   "upsertEnrolment" should {
 
-    val identifier = IdentifiersOrVerifiers("KEY", "VALUE")
-    val enrolment = EnrolmentDetailsTestOnly(
+    val identifier  = IdentifiersOrVerifiers("KEY", "VALUE")
+    val enrolment   = EnrolmentDetailsTestOnly(
       "serviceName",
       identifier,
       List.empty,
@@ -80,7 +80,7 @@ class EnrolmentStoreConnectorTestOnlyISpec extends IntegrationSpecBase {
         |  "verifiers" : [ ]
         |}
         |""".stripMargin
-    val apiUrl =
+    val apiUrl      =
       s"/enrolment-store-proxy/enrolment-store/enrolments/${enrolment.serviceName}~${identifier.key}~${identifier.value}"
 
     "insert enrolment" when {
@@ -113,9 +113,9 @@ class EnrolmentStoreConnectorTestOnlyISpec extends IntegrationSpecBase {
       override def toString = s"$serviceName~$key~$value"
     }
 
-    val enrolment1 = Enrolment("SERVICE1", "IR-SA", "1")
-    val enrolment2 = Enrolment("SERVICE2", "IR-SA", "2")
-    val groupId = "groupId"
+    val enrolment1   = Enrolment("SERVICE1", "IR-SA", "1")
+    val enrolment2   = Enrolment("SERVICE2", "IR-SA", "2")
+    val groupId      = "groupId"
     val responseBody =
       s"""
          |{
@@ -153,7 +153,7 @@ class EnrolmentStoreConnectorTestOnlyISpec extends IntegrationSpecBase {
          |    ]
          |}
          |""".stripMargin
-    val apiUrl =
+    val apiUrl       =
       s"/enrolment-store-proxy/enrolment-store/groups/$groupId/enrolments"
 
     "get enrolments" when {
@@ -193,9 +193,9 @@ class EnrolmentStoreConnectorTestOnlyISpec extends IntegrationSpecBase {
       override def toString = s"$serviceName~$key~$value"
     }
 
-    val enrolment1 = Enrolment("SERVICE1", "IR-SA", "1")
-    val enrolment2 = Enrolment("SERVICE2", "IR-SA", "2")
-    val credId = "credId"
+    val enrolment1   = Enrolment("SERVICE1", "IR-SA", "1")
+    val enrolment2   = Enrolment("SERVICE2", "IR-SA", "2")
+    val credId       = "credId"
     val responseBody =
       s"""
          |{
@@ -233,7 +233,7 @@ class EnrolmentStoreConnectorTestOnlyISpec extends IntegrationSpecBase {
          |    ]
          |}
          |""".stripMargin
-    val apiUrl =
+    val apiUrl       =
       s"/enrolment-store-proxy/enrolment-store/users/$credId/enrolments"
 
     "get enrolments" when {
@@ -282,7 +282,7 @@ class EnrolmentStoreConnectorTestOnlyISpec extends IntegrationSpecBase {
          |    ]
          |}
          |""".stripMargin
-    val apiUrl =
+    val apiUrl       =
       s"/enrolment-store-proxy/enrolment-store/enrolments/$enrolmentKey/groups"
 
     "get enrolments" when {
@@ -331,7 +331,7 @@ class EnrolmentStoreConnectorTestOnlyISpec extends IntegrationSpecBase {
          |    ]
          |}
          |""".stripMargin
-    val apiUrl =
+    val apiUrl       =
       s"/enrolment-store-proxy/enrolment-store/enrolments/$enrolmentKey/users"
 
     "get enrolments" when {
@@ -360,9 +360,9 @@ class EnrolmentStoreConnectorTestOnlyISpec extends IntegrationSpecBase {
 
   "addEnrolmentToGroup" should {
 
-    val groupId = "groupId"
-    val credId = "credId"
-    val enrolment = EnrolmentDetailsTestOnly(
+    val groupId     = "groupId"
+    val credId      = "credId"
+    val enrolment   = EnrolmentDetailsTestOnly(
       "SERVICE",
       IdentifiersOrVerifiers("KEY", "VALUE"),
       List(IdentifiersOrVerifiers("KEY2", "VALUE2")),
@@ -379,7 +379,7 @@ class EnrolmentStoreConnectorTestOnlyISpec extends IntegrationSpecBase {
          |
          |}
          |""".stripMargin
-    val apiUrl =
+    val apiUrl      =
       s"/enrolment-store-proxy/enrolment-store/groups/$groupId/enrolments/${enrolment.serviceName}~${enrolment.identifiers.key}~${enrolment.identifiers.value}"
 
     "add enrolment to group" when {
@@ -408,9 +408,9 @@ class EnrolmentStoreConnectorTestOnlyISpec extends IntegrationSpecBase {
 
   "deleteEnrolmentFromGroup" should {
 
-    val groupId = "groupId"
+    val groupId      = "groupId"
     val enrolmentKey = "SERVICE~KEY~VALUE"
-    val apiUrl =
+    val apiUrl       =
       s"/enrolment-store-proxy/enrolment-store/groups/$groupId/enrolments/$enrolmentKey"
 
     "delete enrolment from group" when {
@@ -446,9 +446,9 @@ class EnrolmentStoreConnectorTestOnlyISpec extends IntegrationSpecBase {
 
   "deleteEnrolmentFromUser" should {
 
-    val credId = "credId"
+    val credId       = "credId"
     val enrolmentKey = "SERVICE~KEY~VALUE"
-    val apiUrl =
+    val apiUrl       =
       s"/enrolment-store-proxy/enrolment-store/users/$credId/enrolments/$enrolmentKey"
 
     "return success" when {

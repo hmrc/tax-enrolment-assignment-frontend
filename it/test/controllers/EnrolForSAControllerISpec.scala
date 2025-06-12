@@ -26,7 +26,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 
 class EnrolForSAControllerISpec extends IntegrationSpecBase {
 
-  val urlPath: String = ItUrlPaths.enrolForSAPath
+  val urlPath: String           = ItUrlPaths.enrolForSAPath
   lazy val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
 
   s"GET to $urlPath" should {
@@ -37,9 +37,9 @@ class EnrolForSAControllerISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include(appConfig.btaUrl)
 
       }
@@ -51,7 +51,7 @@ class EnrolForSAControllerISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xSessionId, xAuthToken)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
       }

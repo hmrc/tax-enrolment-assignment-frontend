@@ -62,12 +62,12 @@ class ReportSuspiciousIDController @Inject() (
   def viewNoSA: Action[AnyContent] =
     authAction.andThen(accountMongoDetailsAction).async { implicit request =>
       val res = for {
-        _ <- EitherT {
-               Future.successful(
-                 multipleAccountsOrchestrator
-                   .checkValidAccountType(List(PT_ASSIGNED_TO_OTHER_USER))
-               )
-             }
+        _         <- EitherT {
+                       Future.successful(
+                         multipleAccountsOrchestrator
+                           .checkValidAccountType(List(PT_ASSIGNED_TO_OTHER_USER))
+                       )
+                     }
         ptAccount <- multipleAccountsOrchestrator.getPTCredentialDetails
       } yield AccountDetails.userFriendlyAccountDetails(ptAccount)
 
@@ -76,7 +76,7 @@ class ReportSuspiciousIDController @Inject() (
           auditHandler
             .audit(auditEventCreationService.auditReportSuspiciousPTAccount(ptAccount))
           identityProviderPage(ptAccount)
-        case Left(error) =>
+        case Left(error)      =>
           errorHandler.handleErrors(
             error,
             "[ReportSuspiciousIDController][viewNoSA]"
@@ -87,12 +87,12 @@ class ReportSuspiciousIDController @Inject() (
   def viewSA: Action[AnyContent] =
     authAction.andThen(accountMongoDetailsAction).async { implicit request =>
       val res = for {
-        _ <- EitherT {
-               Future.successful(
-                 multipleAccountsOrchestrator
-                   .checkValidAccountType(List(SA_ASSIGNED_TO_OTHER_USER))
-               )
-             }
+        _         <- EitherT {
+                       Future.successful(
+                         multipleAccountsOrchestrator
+                           .checkValidAccountType(List(SA_ASSIGNED_TO_OTHER_USER))
+                       )
+                     }
         saAccount <- multipleAccountsOrchestrator.getSACredentialDetails
       } yield AccountDetails.userFriendlyAccountDetails(saAccount)
 
@@ -103,7 +103,7 @@ class ReportSuspiciousIDController @Inject() (
               .audit(auditEventCreationService.auditReportSuspiciousSAAccount(saAccount))
           }
           identityProviderPage(saAccount)
-        case Left(error) =>
+        case Left(error)      =>
           errorHandler.handleErrors(
             error,
             "[ReportSuspiciousIDController][viewSA]"
@@ -118,7 +118,7 @@ class ReportSuspiciousIDController @Inject() (
         .checkValidAccountTypeAndEnrolForPT(SA_ASSIGNED_TO_OTHER_USER)
         .value
         .map {
-          case Right(_) =>
+          case Right(_)    =>
             logger.logEvent(
               logAssignedEnrolmentAfterReportingFraud(
                 request.userDetails.credId

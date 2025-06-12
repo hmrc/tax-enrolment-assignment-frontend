@@ -31,8 +31,8 @@ class repositoryISpec extends IntegrationSpecBase {
     "there is no data in the cache" should {
       "create a new mongo record and return true" in {
         val sessionId = UUID.randomUUID().toString
-        val KEY = "testing"
-        val data = "example"
+        val KEY       = "testing"
+        val data      = "example"
 
         val cacheMap = CacheMap(sessionId, Map(KEY -> JsString(data)))
 
@@ -42,7 +42,7 @@ class repositoryISpec extends IntegrationSpecBase {
         } yield (saved, fetched)
 
         whenReady(res) { case (saved, fetched) =>
-          saved shouldBe true
+          saved   shouldBe true
           fetched shouldBe Some(cacheMap)
         }
       }
@@ -50,10 +50,10 @@ class repositoryISpec extends IntegrationSpecBase {
 
     "there is already data in the cache" should {
       "override the current value and return true" in {
-        val sessionId = UUID.randomUUID().toString
-        val KEY = "testing"
+        val sessionId   = UUID.randomUUID().toString
+        val KEY         = "testing"
         val currentData = "example"
-        val newData = "example 1"
+        val newData     = "example 1"
 
         val initialCacheMap =
           CacheMap(sessionId, Map(KEY -> JsString(currentData)))
@@ -68,7 +68,7 @@ class repositoryISpec extends IntegrationSpecBase {
 
         whenReady(res) { case (fetchedInitial, updated, fetchedUpdated) =>
           fetchedInitial shouldBe Some(initialCacheMap)
-          updated shouldBe true
+          updated        shouldBe true
           fetchedUpdated shouldBe Some(updatedCacheMap)
         }
       }
@@ -79,7 +79,7 @@ class repositoryISpec extends IntegrationSpecBase {
     "there is no record" should {
       "return None" in {
         val sessionId = UUID.randomUUID().toString
-        val res = repository.get(sessionId)
+        val res       = repository.get(sessionId)
 
         whenReady(res) { result =>
           result shouldBe None
@@ -90,8 +90,8 @@ class repositoryISpec extends IntegrationSpecBase {
     "a record exists" should {
       "return the cacheMap" in {
         val sessionId = UUID.randomUUID().toString
-        val KEY = "testing"
-        val data = "example"
+        val KEY       = "testing"
+        val data      = "example"
 
         val expectedCacheMap = CacheMap(sessionId, Map(KEY -> JsString(data)))
 
@@ -101,7 +101,7 @@ class repositoryISpec extends IntegrationSpecBase {
         } yield (saved, fetched)
 
         whenReady(res) { case (saved, fetched) =>
-          saved shouldBe expectedCacheMap
+          saved   shouldBe expectedCacheMap
           fetched shouldBe Some(expectedCacheMap)
         }
       }
@@ -112,7 +112,7 @@ class repositoryISpec extends IntegrationSpecBase {
     "there is no record" should {
       "create a new record with no data" in {
         val sessionId = UUID.randomUUID().toString
-        val res = repository.updateLastUpdated(sessionId)
+        val res       = repository.updateLastUpdated(sessionId)
 
         whenReady(res) { result =>
           result shouldBe true
@@ -123,30 +123,30 @@ class repositoryISpec extends IntegrationSpecBase {
     "a record exists" should {
       "update the lastLoginDate" in {
         val sessionId = UUID.randomUUID().toString
-        val KEY = "testing"
-        val data = "example"
+        val KEY       = "testing"
+        val data      = "example"
 
-        val oldDatetime = Instant.now().minus(Duration.ofMinutes(1))
-        val cacheMap = CacheMap(sessionId, Map(KEY -> JsString(data)))
+        val oldDatetime    = Instant.now().minus(Duration.ofMinutes(1))
+        val cacheMap       = CacheMap(sessionId, Map(KEY -> JsString(data)))
         val datedCachedMap =
           DatedCacheMap(sessionId, cacheMap.data, oldDatetime)
-        val res = for {
-          _ <- repository.collection
-                 .insertOne(datedCachedMap)
-                 .toFuture()
-          getOriginal <- repository.collection
-                           .find(Filters.equal("id", sessionId))
-                           .first()
-                           .toFuture()
+        val res            = for {
+          _                 <- repository.collection
+                                 .insertOne(datedCachedMap)
+                                 .toFuture()
+          getOriginal       <- repository.collection
+                                 .find(Filters.equal("id", sessionId))
+                                 .first()
+                                 .toFuture()
           updateLastUpdated <- repository.updateLastUpdated(sessionId)
-          getUpdated <- repository.collection
-                          .find(Filters.equal("id", sessionId))
-                          .first()
-                          .toFuture()
+          getUpdated        <- repository.collection
+                                 .find(Filters.equal("id", sessionId))
+                                 .first()
+                                 .toFuture()
         } yield (getOriginal, updateLastUpdated, getUpdated)
 
         whenReady(res) { case (getOriginal, updateLastUpdated, getUpdated) =>
-          updateLastUpdated shouldBe true
+          updateLastUpdated       shouldBe true
           getUpdated.lastUpdated shouldNot equal(getOriginal.lastUpdated)
         }
       }

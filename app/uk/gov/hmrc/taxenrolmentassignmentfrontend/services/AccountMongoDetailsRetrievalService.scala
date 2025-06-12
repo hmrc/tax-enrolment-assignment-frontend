@@ -45,7 +45,7 @@ class AccountMongoDetailsRetrievalService @Inject() (
               Right(
                 AccountDetailsFromMongo(accountType, redirectUrl, cachedMap.data)(crypto.crypto)
               )
-            case (optAccountType, optRedirectUrl) =>
+            case (optAccountType, optRedirectUrl)       =>
               Left(
                 CacheNotCompleteOrNotCorrect(optRedirectUrl, optAccountType)
               )

@@ -25,7 +25,7 @@ import javax.inject.Singleton
 @Singleton
 class EventLoggerService {
   private def asJsonString(loggingEvent: LoggingEvent.Event): String = Json.stringify(Json.toJson(loggingEvent))
-  def logEvent(event: LoggingEvent)(implicit logger: Logger): Unit =
+  def logEvent(event: LoggingEvent)(implicit logger: Logger): Unit   =
     event match {
       case Debug(e) => logger.debug(asJsonString(e))
       case Info(e)  => logger.info(asJsonString(e))

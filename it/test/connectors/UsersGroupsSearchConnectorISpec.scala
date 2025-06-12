@@ -30,7 +30,7 @@ class UsersGroupsSearchConnectorISpec extends IntegrationSpecBase {
   "getUserDetails" when {
     val PATH =
       s"/users-groups-search/users/$CREDENTIAL_ID"
-    s"no errors occur" should {
+    s"no errors occur"                               should {
       "return the user details" in {
         stubGet(
           PATH,

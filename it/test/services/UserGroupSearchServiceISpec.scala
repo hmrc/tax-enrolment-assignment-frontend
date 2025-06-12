@@ -34,14 +34,14 @@ class UserGroupSearchServiceISpec extends IntegrationSpecBase {
 
       stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
       val request = requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER)
-      val res =
+      val res     =
         service.getAccountDetails(
           CREDENTIAL_ID,
           AccountDetailsFromMongo(PT_ASSIGNED_TO_OTHER_USER, returnUrl, exampleMongoSessionData)(crypto.crypto)
         )(implicitly, implicitly, request)
 
       whenReady(res.value) { response =>
-        response shouldBe Right(accountDetailsUnUserFriendly(CREDENTIAL_ID))
+        response                                                                                        shouldBe Right(accountDetailsUnUserFriendly(CREDENTIAL_ID))
         response.getOrElse(AccountDetails(SCP, "", "", None, Some(""), Seq.empty, None)).emailDecrypted shouldBe Some(
           "email1@test.com"
         )

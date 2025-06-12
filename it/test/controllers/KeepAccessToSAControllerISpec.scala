@@ -37,7 +37,7 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
   val urlPath: String = ItUrlPaths.saOnOtherAccountKeepAccessToSAPath
 
   s"GET $urlPath" when {
-    s"the session cache contains Account type of $SA_ASSIGNED_TO_OTHER_USER and no page data" should {
+    s"the session cache contains Account type of $SA_ASSIGNED_TO_OTHER_USER and no page data"                should {
       s"render the KeepAccessToSA page with radio buttons unchecked" in {
         await(save[String](sessionId, "redirectURL", returnUrl))
         await(
@@ -73,16 +73,16 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
+        val result  = route(app, request).get
+        val page    = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe OK
-        page.title should include(KeepAccessToSAMessages.title)
+        page.title       should include(KeepAccessToSAMessages.title)
         val radioInputs = page.getElementsByClass("govuk-radios__input")
-        radioInputs.size() shouldBe 2
-        radioInputs.get(0).attr("value") shouldBe "yes"
+        radioInputs.size()                    shouldBe 2
+        radioInputs.get(0).attr("value")      shouldBe "yes"
         radioInputs.get(0).hasAttr("checked") shouldBe false
-        radioInputs.get(1).attr("value") shouldBe "no"
+        radioInputs.get(1).attr("value")      shouldBe "no"
         radioInputs.get(1).hasAttr("checked") shouldBe false
       }
     }
@@ -115,9 +115,9 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include(ItUrlPaths.enrolledPTSAOnOtherAccountPath)
 
       }
@@ -142,9 +142,9 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
 
           val request = FakeRequest(GET, urlPath)
             .withSession(xAuthToken, xSessionId)
-          val result = route(app, request).get
+          val result  = route(app, request).get
 
-          status(result) shouldBe SEE_OTHER
+          status(result)             shouldBe SEE_OTHER
           redirectLocation(result).get should include(accountCheckPath)
         }
       }
@@ -158,9 +158,9 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include("/bas-gateway/sign-in")
       }
     }
@@ -173,9 +173,9 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
       }
     }
@@ -188,9 +188,9 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
       }
     }
@@ -202,9 +202,9 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
       }
     }
@@ -216,9 +216,9 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include("/bas-gateway/sign-in")
       }
     }
@@ -246,9 +246,9 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
           val request = FakeRequest(POST, urlPath)
             .withSession(xAuthToken, xSessionId)
             .withBody(Map("select-continue" -> Seq("yes")))
-          val result = route(app, request).get
+          val result  = route(app, request).get
 
-          status(result) shouldBe SEE_OTHER
+          status(result)             shouldBe SEE_OTHER
           redirectLocation(result).get should include(
             ItUrlPaths.saOnOtherAccountSigninAgainPath
           )
@@ -273,9 +273,9 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
           val request = FakeRequest(POST, urlPath)
             .withSession(xAuthToken, xSessionId)
             .withBody(Map("select-continue" -> Seq("yes")))
-          val result = route(app, request).get
+          val result  = route(app, request).get
 
-          status(result) shouldBe SEE_OTHER
+          status(result)             shouldBe SEE_OTHER
           redirectLocation(result).get should include(
             ItUrlPaths.enrolledPTSAOnOtherAccountPath
           )
@@ -304,9 +304,9 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
           val request = FakeRequest(POST, urlPath)
             .withSession(xAuthToken, xSessionId)
             .withBody(Map("select-continue" -> Seq("no")))
-          val result = route(app, request).get
+          val result  = route(app, request).get
 
-          status(result) shouldBe SEE_OTHER
+          status(result)             shouldBe SEE_OTHER
           redirectLocation(result).get should include(
             ItUrlPaths.enrolledPTSAOnOtherAccountPath
           )
@@ -337,9 +337,9 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
           val request = FakeRequest(POST, urlPath)
             .withSession(xAuthToken, xSessionId)
             .withBody(Map("select-continue" -> Seq("no")))
-          val result = route(app, request).get
+          val result  = route(app, request).get
 
-          status(result) shouldBe SEE_OTHER
+          status(result)             shouldBe SEE_OTHER
           redirectLocation(result).get should include(
             ItUrlPaths.enrolledPTSAOnOtherAccountPath
           )
@@ -369,9 +369,9 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
           val request = FakeRequest(POST, urlPath)
             .withSession(xAuthToken, xSessionId)
             .withBody(Map("select-continue" -> Seq("no")))
-          val result = route(app, request).get
+          val result  = route(app, request).get
 
-          status(result) shouldBe INTERNAL_SERVER_ERROR
+          status(result)        shouldBe INTERNAL_SERVER_ERROR
           contentAsString(result) should include(ErrorTemplateMessages.title)
 
         }
@@ -399,9 +399,9 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
             val request = FakeRequest(POST, urlPath)
               .withSession(xAuthToken, xSessionId)
               .withBody(Map("select-continue" -> Seq("yes")))
-            val result = route(app, request).get
+            val result  = route(app, request).get
 
-            status(result) shouldBe SEE_OTHER
+            status(result)             shouldBe SEE_OTHER
             redirectLocation(result).get should include(accountCheckPath)
           }
           "no is selected" in {
@@ -416,9 +416,9 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
             val request = FakeRequest(POST, urlPath)
               .withSession(xAuthToken, xSessionId)
               .withBody(Map("select-continue" -> Seq("no")))
-            val result = route(app, request).get
+            val result  = route(app, request).get
 
-            status(result) shouldBe SEE_OTHER
+            status(result)             shouldBe SEE_OTHER
             redirectLocation(result).get should include(accountCheckPath)
           }
         }
@@ -438,9 +438,9 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
           val request = FakeRequest(POST, urlPath)
             .withSession(xAuthToken, xSessionId)
             .withBody(Map("select-continue" -> Seq("yes")))
-          val result = route(app, request).get
+          val result  = route(app, request).get
 
-          status(result) shouldBe INTERNAL_SERVER_ERROR
+          status(result)        shouldBe INTERNAL_SERVER_ERROR
           contentAsString(result) should include(ErrorTemplateMessages.title)
         }
 
@@ -455,9 +455,9 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
           val request = FakeRequest(POST, urlPath)
             .withSession(xAuthToken, xSessionId)
             .withBody(Map("select-continue" -> Seq("no")))
-          val result = route(app, request).get
+          val result  = route(app, request).get
 
-          status(result) shouldBe INTERNAL_SERVER_ERROR
+          status(result)        shouldBe INTERNAL_SERVER_ERROR
           contentAsString(result) should include(ErrorTemplateMessages.title)
         }
       }
@@ -499,18 +499,18 @@ class KeepAccessToSAControllerISpec extends IntegrationSpecBase with Status {
         val request = FakeRequest(POST, urlPath)
           .withSession(xAuthToken, xSessionId)
           .withBody(Map("select-continue" -> Seq("error")))
-        val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
+        val result  = route(app, request).get
+        val page    = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe BAD_REQUEST
-        page.title() should include(s"Error - ${KeepAccessToSAMessages.title}")
+        page.title()     should include(s"Error - ${KeepAccessToSAMessages.title}")
         page
           .getElementsByClass("govuk-error-summary__title")
-          .text() shouldBe KeepAccessToSAMessages.errorTitle
+          .text()      shouldBe KeepAccessToSAMessages.errorTitle
         page
           .getElementsByClass("govuk-list govuk-error-summary__list")
           .first()
-          .text() shouldBe KeepAccessToSAMessages.errorMessage
+          .text()      shouldBe KeepAccessToSAMessages.errorMessage
 
       }
     }

@@ -27,8 +27,8 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 class SilentAssignmentServiceSpec extends BaseSpec {
 
   lazy val mockTaxEnrolmentsConnector: TaxEnrolmentsConnector = mock[TaxEnrolmentsConnector]
-  lazy val mockEacdConnector: EACDConnector = mock[EACDConnector]
-  lazy val mockTeaSessionCache: TEASessionCache = mock[TEASessionCache]
+  lazy val mockEacdConnector: EACDConnector                   = mock[EACDConnector]
+  lazy val mockTeaSessionCache: TEASessionCache               = mock[TEASessionCache]
 
   override lazy val overrides: Seq[Binding[TEASessionCache]] = Seq(
     bind[TEASessionCache].toInstance(mockTeaSessionCache)
@@ -45,7 +45,7 @@ class SilentAssignmentServiceSpec extends BaseSpec {
 
   val businessEnrolmentResponse: UserEnrolmentsListResponse =
     UserEnrolmentsListResponse(Seq(userEnrolmentIRPAYE))
-  val irsaResponse: UserEnrolmentsListResponse = UserEnrolmentsListResponse(
+  val irsaResponse: UserEnrolmentsListResponse              = UserEnrolmentsListResponse(
     Seq(userEnrolmentIRSA)
   )
 }

@@ -32,7 +32,7 @@ class TaxEnrolmentsConnectorISpec extends IntegrationSpecBase {
 
     val PATH = s"/tax-enrolments/service/HMRC-PT/enrolment"
 
-    s"the user is assigned the enrolment" should {
+    s"the user is assigned the enrolment"               should {
       "return Unit" in {
         stubPutWithAuthorizeHeaders(
           PATH,
@@ -60,7 +60,7 @@ class TaxEnrolmentsConnectorISpec extends IntegrationSpecBase {
       }
     }
 
-    s"the user is not authorized" should {
+    s"the user is not authorized"                       should {
       "return an UnexpectedResponseFromTaxEnrolments" in {
         stubPutWithAuthorizeHeaders(
           PATH,
@@ -132,9 +132,9 @@ class TaxEnrolmentsConnectorISpec extends IntegrationSpecBase {
   }
 
   "deallocateEnrolment" should {
-    val groupId = "fakeId"
+    val groupId      = "fakeId"
     val enrolmentKey = s"HMRC-PT~NINO~$NINO"
-    val url =
+    val url          =
       s"/tax-enrolments/groups/$groupId/enrolments/$enrolmentKey"
 
     "return Right if the delete request is successful" in {

@@ -51,7 +51,7 @@ class SABlueInterruptController @Inject() (
     authAction.andThen(accountMongoDetailsAction) { implicit request =>
       multipleAccountsOrchestrator
         .checkAccessAllowedForPage(List(SA_ASSIGNED_TO_OTHER_USER)) match {
-        case Right(_) => Redirect(routes.KeepAccessToSAController.view)
+        case Right(_)    => Redirect(routes.KeepAccessToSAController.view)
         case Left(error) =>
           errorHandler.handleErrors(error, "[SABlueInterruptController][continue]")(request, implicitly)
       }

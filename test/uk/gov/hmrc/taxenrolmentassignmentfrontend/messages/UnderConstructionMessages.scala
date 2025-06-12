@@ -18,8 +18,8 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.messages
 
 object UnderConstructionMessages extends BaseMessage {
 
-  val title = "Tax Enrolment Assignment Frontend - Enrolment Present" + defaultTitleSuffix
+  val title   = "Tax Enrolment Assignment Frontend - Enrolment Present" + defaultTitleSuffix
   val heading = "This user has no PT enrolment"
-  val p = "The current user does not have an assigned PT enrolment"
+  val p       = "The current user does not have an assigned PT enrolment"
 
 }

@@ -69,11 +69,11 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, urlPathSa)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
+        val result  = route(app, request).get
+        val page    = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe OK
-        page.title should include(ReportSuspiciousIDMessages.title)
+        page.title       should include(ReportSuspiciousIDMessages.title)
 
         val expectedAuditEvent = AuditEvent(
           auditType = "SuccessfullyEnrolledPersonalTax",
@@ -111,11 +111,11 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
         val request = FakeRequest(GET, urlPathSa)
           .withSession(xAuthToken, xSessionId)
           .withTransientLang(Lang.get("CY").get)
-        val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
+        val result  = route(app, request).get
+        val page    = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe OK
-        page.title should include(ReportSuspiciousIDMessages.titleWelsh)
+        page.title       should include(ReportSuspiciousIDMessages.titleWelsh)
       }
     }
 
@@ -148,11 +148,11 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
           val request = FakeRequest(GET, urlPathSa)
             .withSession(xAuthToken, xSessionId)
-          val result = route(app, request).get
-          val page = Jsoup.parse(contentAsString(result))
+          val result  = route(app, request).get
+          val page    = Jsoup.parse(contentAsString(result))
 
           status(result) shouldBe OK
-          page.title should include(ReportSuspiciousIDMessages.title)
+          page.title       should include(ReportSuspiciousIDMessages.title)
         }
       }
     }
@@ -176,9 +176,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
           val request = FakeRequest(GET, urlPathSa)
             .withSession(xAuthToken, xSessionId)
-          val result = route(app, request).get
+          val result  = route(app, request).get
 
-          status(result) shouldBe SEE_OTHER
+          status(result)             shouldBe SEE_OTHER
           redirectLocation(result).get should include(
             accountCheckPath
           )
@@ -209,9 +209,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, urlPathSa)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe INTERNAL_SERVER_ERROR
+        status(result)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) should include(ErrorTemplateMessages.title)
 
       }
@@ -240,9 +240,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, urlPathSa)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe INTERNAL_SERVER_ERROR
+        status(result)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) should include(ErrorTemplateMessages.title)
 
       }
@@ -256,9 +256,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, urlPathSa)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include("/bas-gateway/sign-in")
 
       }
@@ -292,9 +292,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, urlPathSa)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe INTERNAL_SERVER_ERROR
+        status(result)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) should include(ErrorTemplateMessages.title)
 
       }
@@ -323,9 +323,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, urlPathSa)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe INTERNAL_SERVER_ERROR
+        status(result)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) should include(ErrorTemplateMessages.title)
 
       }
@@ -354,9 +354,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, urlPathSa)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe INTERNAL_SERVER_ERROR
+        status(result)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) should include(ErrorTemplateMessages.title)
 
       }
@@ -370,9 +370,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, urlPathSa)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
 
       }
@@ -386,9 +386,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, urlPathSa)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
 
       }
@@ -401,9 +401,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, urlPathSa)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
 
       }
@@ -416,9 +416,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, urlPathSa)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include("/bas-gateway/sign-in")
 
       }
@@ -454,11 +454,11 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, urlPathPT)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
+        val result  = route(app, request).get
+        val page    = Jsoup.parse(contentAsString(result))
 
-        status(result) shouldBe OK
-        page.title should include(ReportSuspiciousIDMessages.title)
+        status(result)                                 shouldBe OK
+        page.title                                       should include(ReportSuspiciousIDMessages.title)
         page.getElementsByClass("govuk-button").size() shouldBe 0
 
         val expectedAuditEvent = AuditEvent(
@@ -490,9 +490,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
           val request = FakeRequest(GET, urlPathPT)
             .withSession(xAuthToken, xSessionId)
-          val result = route(app, request).get
+          val result  = route(app, request).get
 
-          status(result) shouldBe SEE_OTHER
+          status(result)             shouldBe SEE_OTHER
           redirectLocation(result).get should include(
             accountCheckPath
           )
@@ -524,9 +524,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, urlPathPT)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe INTERNAL_SERVER_ERROR
+        status(result)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) should include(ErrorTemplateMessages.title)
 
       }
@@ -555,9 +555,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, urlPathPT)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe INTERNAL_SERVER_ERROR
+        status(result)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) should include(ErrorTemplateMessages.title)
 
       }
@@ -578,9 +578,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, urlPathPT)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe INTERNAL_SERVER_ERROR
+        status(result)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) should include(ErrorTemplateMessages.title)
 
       }
@@ -614,9 +614,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, urlPathPT)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe INTERNAL_SERVER_ERROR
+        status(result)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) should include(ErrorTemplateMessages.title)
 
       }
@@ -645,9 +645,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, urlPathPT)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe INTERNAL_SERVER_ERROR
+        status(result)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) should include(ErrorTemplateMessages.title)
       }
     }
@@ -672,11 +672,11 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
           Status.INTERNAL_SERVER_ERROR,
           ""
         )
-        val request = FakeRequest(GET, urlPathPT)
+        val request      = FakeRequest(GET, urlPathPT)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result       = route(app, request).get
 
-        status(result) shouldBe INTERNAL_SERVER_ERROR
+        status(result)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) should include(ErrorTemplateMessages.title)
 
       }
@@ -690,9 +690,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, urlPathPT)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
 
       }
@@ -706,9 +706,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, urlPathPT)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
 
       }
@@ -721,9 +721,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, urlPathPT)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
 
       }
@@ -736,9 +736,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, urlPathPT)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include("/bas-gateway/sign-in")
 
       }
@@ -749,10 +749,10 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
     "the user has account type of SA_ASSIGNED_TO_OTHER_USER" when {
       s"enrol the user for PT and redirect to the EnroledAfterReportingFraud" when {
         "the user hasn't already been assigned a PT enrolment" in {
-          val cacheData = Map(
-            ACCOUNT_TYPE               -> Json.toJson(SA_ASSIGNED_TO_OTHER_USER),
-            REDIRECT_URL               -> JsString(returnUrl),
-            USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(saUsers),
+          val cacheData    = Map(
+            ACCOUNT_TYPE                                 -> Json.toJson(SA_ASSIGNED_TO_OTHER_USER),
+            REDIRECT_URL                                 -> JsString(returnUrl),
+            USER_ASSIGNED_SA_ENROLMENT                   -> Json.toJson(saUsers),
             accountDetailsForCredential(CREDENTIAL_ID_2) -> Json.toJson(accountDetails)(
               AccountDetails.mongoFormats(crypto.crypto)
             )
@@ -770,9 +770,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
           val request = FakeRequest(POST, urlPathSa)
             .withSession(xAuthToken, xSessionId)
             .withJsonBody(Json.obj())
-          val result = route(app, request).get
+          val result  = route(app, request).get
 
-          status(result) shouldBe SEE_OTHER
+          status(result)             shouldBe SEE_OTHER
           redirectLocation(result).get should include(
             uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes.EnrolledForPTController.continue.url
           )
@@ -789,7 +789,7 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
 
       s"not enrol the user for PT and redirect to the EnroledAfterReportingFraud" when {
         "the user has already been assigned a PT enrolment" in {
-          val cacheData = Map(
+          val cacheData    = Map(
             ACCOUNT_TYPE                                 -> Json.toJson(SA_ASSIGNED_TO_OTHER_USER),
             REDIRECT_URL                                 -> JsString(returnUrl),
             USER_ASSIGNED_SA_ENROLMENT                   -> Json.toJson(saUsers),
@@ -803,9 +803,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
           val request = FakeRequest(POST, urlPathSa)
             .withSession(xAuthToken, xSessionId)
             .withJsonBody(Json.obj())
-          val result = route(app, request).get
+          val result  = route(app, request).get
 
-          status(result) shouldBe SEE_OTHER
+          status(result)             shouldBe SEE_OTHER
           redirectLocation(result).get should include(
             "/enrol-pt/choose-two-user-ids"
           )
@@ -836,9 +836,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
         val request = FakeRequest(POST, urlPathSa)
           .withSession(xAuthToken, xSessionId)
           .withJsonBody(Json.obj())
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe INTERNAL_SERVER_ERROR
+        status(result)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) should include(ErrorTemplateMessages.title)
 
       }
@@ -864,9 +864,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
           val request = FakeRequest(POST, urlPathSa)
             .withSession(xAuthToken, xSessionId)
             .withJsonBody(Json.obj())
-          val result = route(app, request).get
+          val result  = route(app, request).get
 
-          status(result) shouldBe SEE_OTHER
+          status(result)             shouldBe SEE_OTHER
           redirectLocation(result).get should include(
             accountCheckPath
           )
@@ -885,9 +885,9 @@ class ReportSuspiciousIDControllerISpec extends IntegrationSpecBase {
         val request = FakeRequest(POST, urlPathSa)
           .withSession(xAuthToken, xSessionId)
           .withJsonBody(Json.obj())
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include("/bas-gateway/sign-in")
 
       }

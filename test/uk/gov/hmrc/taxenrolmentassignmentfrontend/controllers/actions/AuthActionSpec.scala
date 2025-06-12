@@ -37,7 +37,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class AuthActionSpec extends BaseSpec {
 
   lazy val mockTeaSessionCache: TEASessionCache = mock[TEASessionCache]
-  lazy val mockAuthConnector: AuthConnector = mock[AuthConnector]
+  lazy val mockAuthConnector: AuthConnector     = mock[AuthConnector]
   lazy val mockHmrcPTEnrolment: HmrcPTEnrolment = mock[HmrcPTEnrolment]
 
   override lazy val overrides: Seq[Binding[TEASessionCache]] = Seq(
@@ -76,7 +76,7 @@ class AuthActionSpec extends BaseSpec {
           defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
         )(FakeRequest())
 
-        status(result) shouldBe OK
+        status(result)          shouldBe OK
         contentAsString(result) shouldBe "Successful"
         verify(mockHmrcPTEnrolment, times(1))
           .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
@@ -99,7 +99,7 @@ class AuthActionSpec extends BaseSpec {
           defaultAsyncBody(_.userDetails shouldBe userDetailsWithSAEnrolment)
         )(FakeRequest())
 
-        status(result) shouldBe OK
+        status(result)          shouldBe OK
         contentAsString(result) shouldBe "Successful"
         verify(mockHmrcPTEnrolment, times(1))
           .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
@@ -122,7 +122,7 @@ class AuthActionSpec extends BaseSpec {
           defaultAsyncBody(_.userDetails shouldBe userDetailsWithPTEnrolment)
         )(FakeRequest())
 
-        status(result) shouldBe OK
+        status(result)          shouldBe OK
         contentAsString(result) shouldBe "Successful"
         verify(mockHmrcPTEnrolment, times(1))
           .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
@@ -146,7 +146,7 @@ class AuthActionSpec extends BaseSpec {
           )
         )(FakeRequest())
 
-        status(result) shouldBe OK
+        status(result)          shouldBe OK
         contentAsString(result) shouldBe "Successful"
         verify(mockHmrcPTEnrolment, times(1))
           .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
@@ -168,7 +168,7 @@ class AuthActionSpec extends BaseSpec {
           defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
         )(FakeRequest())
 
-        status(result) shouldBe SEE_OTHER
+        status(result)           shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some("/protect-tax-info/unauthorised")
         verify(mockHmrcPTEnrolment, times(0))
           .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
@@ -190,7 +190,7 @@ class AuthActionSpec extends BaseSpec {
           defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
         )(FakeRequest())
 
-        status(result) shouldBe SEE_OTHER
+        status(result)           shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some("/protect-tax-info/unauthorised")
         verify(mockHmrcPTEnrolment, times(0))
           .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
@@ -216,7 +216,7 @@ class AuthActionSpec extends BaseSpec {
           defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
         )(FakeRequest())
 
-        status(result) shouldBe SEE_OTHER
+        status(result)           shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some("/protect-tax-info/unauthorised")
         verify(mockHmrcPTEnrolment, times(0))
           .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
@@ -241,7 +241,7 @@ class AuthActionSpec extends BaseSpec {
         val loginUrl = "http://localhost:9553/bas-gateway/sign-in?continue_url=http%3A%2F%2Flocalhost%3A9232%2F" +
           "personal-account&origin=tax-enrolment-assignment-frontend"
 
-        status(result) shouldBe SEE_OTHER
+        status(result)           shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some(loginUrl)
         verify(mockHmrcPTEnrolment, times(0))
           .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
@@ -263,7 +263,7 @@ class AuthActionSpec extends BaseSpec {
           defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
         )(FakeRequest())
 
-        status(result) shouldBe SEE_OTHER
+        status(result)           shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some("/protect-tax-info/unauthorised")
         verify(mockHmrcPTEnrolment, times(0))
           .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])
@@ -285,7 +285,7 @@ class AuthActionSpec extends BaseSpec {
           defaultAsyncBody(_.userDetails shouldBe userDetailsNoEnrolments)
         )(FakeRequest())
 
-        status(result) shouldBe SEE_OTHER
+        status(result)           shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some("/protect-tax-info/unauthorised")
         verify(mockHmrcPTEnrolment, times(0))
           .findAndDeleteWrongPTEnrolment(any(), any(), anyString())(any[HeaderCarrier], any[ExecutionContext])

@@ -49,11 +49,11 @@ class EnrolledForPTISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xSessionId, xAuthToken)
-        val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
+        val result  = route(app, request).get
+        val page    = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe OK
-        page.title should include(EnrolledForPTPageMessages.title)
+        page.title       should include(EnrolledForPTPageMessages.title)
 
       }
     }
@@ -71,9 +71,9 @@ class EnrolledForPTISpec extends IntegrationSpecBase {
 
             val request = FakeRequest(GET, urlPath)
               .withSession(xSessionId, xAuthToken)
-            val result = route(app, request).get
+            val result  = route(app, request).get
 
-            status(result) shouldBe SEE_OTHER
+            status(result)             shouldBe SEE_OTHER
             redirectLocation(result).get should include(
               accountCheckPath
             )
@@ -89,9 +89,9 @@ class EnrolledForPTISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xSessionId, xAuthToken)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include("/bas-gateway/sign-in")
 
       }
@@ -113,9 +113,9 @@ class EnrolledForPTISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xSessionId, xAuthToken)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe INTERNAL_SERVER_ERROR
+        status(result)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) should include(ErrorTemplateMessages.title)
       }
     }
@@ -136,9 +136,9 @@ class EnrolledForPTISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xSessionId, xAuthToken)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe INTERNAL_SERVER_ERROR
+        status(result)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) should include(ErrorTemplateMessages.title)
 
       }
@@ -154,9 +154,9 @@ class EnrolledForPTISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xSessionId, xAuthToken)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
 
       }
@@ -170,9 +170,9 @@ class EnrolledForPTISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xSessionId, xAuthToken)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
 
       }
@@ -185,9 +185,9 @@ class EnrolledForPTISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xSessionId, xAuthToken)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
 
       }
@@ -200,9 +200,9 @@ class EnrolledForPTISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xSessionId, xAuthToken)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include("/bas-gateway/sign-in")
 
       }
@@ -221,11 +221,11 @@ class EnrolledForPTISpec extends IntegrationSpecBase {
         val request = FakeRequest(POST, urlPath)
           .withSession(xSessionId, xAuthToken)
           .withJsonBody(Json.obj())
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include(returnUrl)
-        recordExistsInMongo shouldBe false
+        recordExistsInMongo        shouldBe false
 
       }
     }
@@ -239,9 +239,9 @@ class EnrolledForPTISpec extends IntegrationSpecBase {
         val request = FakeRequest(POST, urlPath)
           .withSession(xSessionId, xAuthToken)
           .withJsonBody(Json.obj())
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include("/bas-gateway/sign-in")
       }
     }

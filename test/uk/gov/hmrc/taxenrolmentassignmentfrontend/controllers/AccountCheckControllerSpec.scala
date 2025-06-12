@@ -49,12 +49,12 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
 
-  lazy val mockSilentAssignmentService: SilentAssignmentService = mock[SilentAssignmentService]
+  lazy val mockSilentAssignmentService: SilentAssignmentService   = mock[SilentAssignmentService]
   lazy val mockAccountCheckOrchestrator: AccountCheckOrchestrator = mock[AccountCheckOrchestrator]
-  lazy val mockAuditHandler: AuditHandler = mock[AuditHandler]
+  lazy val mockAuditHandler: AuditHandler                         = mock[AuditHandler]
 
-  lazy val mockAuthConnector: AuthConnector = mock[AuthConnector]
-  lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
+  lazy val mockAuthConnector: AuthConnector     = mock[AuthConnector]
+  lazy val testBodyParser: BodyParsers.Default  = mock[BodyParsers.Default]
   lazy val mockTeaSessionCache: TEASessionCache = mock[TEASessionCache]
   lazy val mockHmrcPTEnrolment: HmrcPTEnrolment = mock[HmrcPTEnrolment]
 
@@ -88,7 +88,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
 
   lazy val controller: AccountCheckController = app.injector.instanceOf[AccountCheckController]
 
-  val returnUrlValue = "/redirect/url"
+  val returnUrlValue              = "/redirect/url"
   lazy val returnUrl: RedirectUrl = RedirectUrl.apply(returnUrlValue)
 
   "accountCheck" when {
@@ -108,7 +108,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
             .accountCheck(returnUrl)
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-          status(result) shouldBe SEE_OTHER
+          status(result)           shouldBe SEE_OTHER
           redirectLocation(result) shouldBe Some("/redirect/url")
           verify(mockTeaSessionCache, times(1)).removeRecord(any())
           verify(mockTeaSessionCache, times(1)).save(any(), any())(any(), any())
@@ -145,7 +145,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
             .accountCheck(returnUrl)
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-          status(result) shouldBe SEE_OTHER
+          status(result)           shouldBe SEE_OTHER
           redirectLocation(result) shouldBe Some(returnUrlValue)
           verify(mockTeaSessionCache, times(1)).save(any(), any())(any(), any())
           verify(mockTeaSessionCache, times(2)).removeRecord(any())
@@ -166,7 +166,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
             .accountCheck(returnUrl)
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-          status(result) shouldBe SEE_OTHER
+          status(result)           shouldBe SEE_OTHER
           redirectLocation(result) shouldBe Some("/protect-tax-info/enrol-pt/enrolment-success-no-sa")
           verify(mockTeaSessionCache, times(0)).removeRecord(any())
           verify(mockTeaSessionCache, times(1)).save(any(), any())(any(), any())
@@ -197,7 +197,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
           .accountCheck(returnUrl)
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(result) shouldBe INTERNAL_SERVER_ERROR
+        status(result)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) should include(messages("enrolmentError.heading"))
         verify(mockTeaSessionCache, times(1)).save(any(), any())(any(), any())
 
@@ -221,7 +221,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
           .accountCheck(returnUrl)
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(result) shouldBe SEE_OTHER
+        status(result)           shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some(UrlPaths.returnUrl)
         verify(mockTeaSessionCache, times(1)).removeRecord(any())
         verify(mockTeaSessionCache, times(1)).save(any(), any())(any(), any())
@@ -240,7 +240,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
           .accountCheck(returnUrl)
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(result) shouldBe SEE_OTHER
+        status(result)           shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some("/protect-tax-info/no-pt-enrolment")
         verify(mockTeaSessionCache, times(1)).save(any(), any())(any(), any())
 
@@ -262,7 +262,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
             .accountCheck(returnUrl)
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-          status(result) shouldBe SEE_OTHER
+          status(result)           shouldBe SEE_OTHER
           redirectLocation(result) shouldBe Some(
             "/protect-tax-info/enrol-pt/enrolment-success-no-sa"
           )
@@ -298,7 +298,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
             .accountCheck(returnUrl)
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-          status(result) shouldBe SEE_OTHER
+          status(result)           shouldBe SEE_OTHER
           redirectLocation(result) shouldBe Some(
             "/protect-tax-info/enrol-pt/enrolment-success-no-sa"
           )
@@ -327,7 +327,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
             .accountCheck(returnUrl)
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-          status(result) shouldBe SEE_OTHER
+          status(result)           shouldBe SEE_OTHER
           redirectLocation(result) shouldBe Some(
             "/protect-tax-info/enrol-pt/enrolment-success-sa-user-id"
           )
@@ -360,7 +360,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
             .accountCheck(returnUrl)
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-          status(result) shouldBe SEE_OTHER
+          status(result)           shouldBe SEE_OTHER
           redirectLocation(result) shouldBe Some(
             "/protect-tax-info/enrol-pt/more-than-one-user-id"
           )
@@ -385,7 +385,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
             .accountCheck(returnUrl)
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-          status(result) shouldBe SEE_OTHER
+          status(result)           shouldBe SEE_OTHER
           redirectLocation(result) shouldBe Some(
             "/protect-tax-info/enrol-pt/choose-two-user-ids"
           )
@@ -407,7 +407,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
           .accountCheck(returnUrl)
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(res) shouldBe INTERNAL_SERVER_ERROR
+        status(res)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(res) should include(messages("enrolmentError.heading"))
         verify(mockTeaSessionCache, times(1)).save(any(), any())(any(), any())
       }

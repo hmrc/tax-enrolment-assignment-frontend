@@ -46,13 +46,13 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClientV2, appCo
         .execute[Either[UpstreamErrorResponse, HttpResponse]]
     )
       .transform {
-        case Right(response) if response.status == NO_CONTENT => Right(())
-        case Right(response) =>
+        case Right(response) if response.status == NO_CONTENT             => Right(())
+        case Right(response)                                              =>
           val ex = new RuntimeException(s"Unexpected ${response.status} status")
           logger.error(ex.getMessage, ex)
           Left(UpstreamUnexpected2XX(response.body, response.status))
         case Left(upstreamError) if upstreamError.statusCode == NOT_FOUND => Right(())
-        case Left(upstreamError) =>
+        case Left(upstreamError)                                          =>
           logger.error(upstreamError.message)
           Left(UpstreamError(upstreamError))
       }
@@ -68,9 +68,9 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClientV2, appCo
     )
       .transform {
         case Right(response) if response.status == NO_CONTENT => Right(List.empty)
-        case Right(response) =>
+        case Right(response)                                  =>
           val principals = (response.json \ "principalUserIds").as[List[String]]
-          val delegated = (response.json \ "delegatedUserIds").as[List[String]]
+          val delegated  = (response.json \ "delegatedUserIds").as[List[String]]
           Right(principals ++ delegated)
 
         case Left(upstreamError) =>
@@ -87,9 +87,9 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClientV2, appCo
     )
       .transform {
         case Right(response) if response.status == NO_CONTENT => Right(List.empty)
-        case Right(response) =>
+        case Right(response)                                  =>
           val principals = (response.json \ "principalGroupIds").as[List[String]]
-          val delegated = (response.json \ "delegatedGroupIds").as[List[String]]
+          val delegated  = (response.json \ "delegatedGroupIds").as[List[String]]
           Right(principals ++ delegated)
 
         case Left(upstreamError) =>
@@ -105,17 +105,17 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClientV2, appCo
       httpClient.get(url"$url").execute[Either[UpstreamErrorResponse, HttpResponse]]
     )
       .transform {
-        case Right(response) if response.status == NO_CONTENT => Right(List.empty)
-        case Right(response) =>
+        case Right(response) if response.status == NO_CONTENT             => Right(List.empty)
+        case Right(response)                                              =>
           Right((response.json \ "enrolments").as[JsArray].value.toList.map { enrolment =>
-            val service = (enrolment \ "service").as[String]
+            val service    = (enrolment \ "service").as[String]
             val identifier = (enrolment \ "identifiers").as[JsArray].value.toList.head
-            val key = (identifier \ "key").as[String]
-            val value = (identifier \ "value").as[String]
+            val key        = (identifier \ "key").as[String]
+            val value      = (identifier \ "value").as[String]
             s"$service~$key~$value"
           })
         case Left(upstreamError) if upstreamError.statusCode == NOT_FOUND => Right(List.empty)
-        case Left(upstreamError) =>
+        case Left(upstreamError)                                          =>
           logger.error(upstreamError.message)
           Left(UpstreamError(upstreamError))
       }
@@ -128,17 +128,17 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClientV2, appCo
       httpClient.get(url"$url").execute[Either[UpstreamErrorResponse, HttpResponse]]
     )
       .transform {
-        case Right(response) if response.status == NO_CONTENT => Right(List.empty)
-        case Right(response) =>
+        case Right(response) if response.status == NO_CONTENT             => Right(List.empty)
+        case Right(response)                                              =>
           Right((response.json \ "enrolments").as[JsArray].value.toList.map { enrolment =>
-            val service = (enrolment \ "service").as[String]
+            val service    = (enrolment \ "service").as[String]
             val identifier = (enrolment \ "identifiers").as[JsArray].value.toList.head
-            val key = (identifier \ "key").as[String]
-            val value = (identifier \ "value").as[String]
+            val key        = (identifier \ "key").as[String]
+            val value      = (identifier \ "value").as[String]
             s"$service~$key~$value"
           })
         case Left(upstreamError) if upstreamError.statusCode == NOT_FOUND => Right(List.empty)
-        case Left(upstreamError) =>
+        case Left(upstreamError)                                          =>
           logger.error(upstreamError.message)
           Left(UpstreamError(upstreamError))
       }
@@ -150,7 +150,7 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClientV2, appCo
       "verifiers" -> Json.toJson(enrolment.verifiers)
     )
 
-    val identifierKey = enrolment.identifiers.key
+    val identifierKey   = enrolment.identifiers.key
     val identifierValue = enrolment.identifiers.value
 
     val url =
@@ -161,11 +161,11 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClientV2, appCo
     )
       .transform {
         case Right(response) if response.status == NO_CONTENT => Right(())
-        case Right(response) =>
+        case Right(response)                                  =>
           val ex = new RuntimeException(s"Unexpected ${response.status} status")
           logger.error(ex.getMessage, ex)
           Left(UpstreamUnexpected2XX(response.body, response.status))
-        case Left(upstreamError) =>
+        case Left(upstreamError)                              =>
           logger.error(upstreamError.message)
           Left(UpstreamError(upstreamError))
       }
@@ -181,7 +181,7 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClientV2, appCo
       "action" -> "enrolAndActivate"
     )
 
-    val identifierKey = enrolment.identifiers.key
+    val identifierKey   = enrolment.identifiers.key
     val identifierValue = enrolment.identifiers.value
 
     val url =
@@ -195,11 +195,11 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClientV2, appCo
     )
       .transform {
         case Right(response) if response.status == CREATED => Right(())
-        case Right(response) =>
+        case Right(response)                               =>
           val ex = new RuntimeException(s"Unexpected ${response.status} status")
           logger.error(ex.getMessage, ex)
           Left(UpstreamUnexpected2XX(response.body, response.status))
-        case Left(upstreamError) =>
+        case Left(upstreamError)                           =>
           logger.error(upstreamError.message)
           Left(UpstreamError(upstreamError))
       }
@@ -212,15 +212,15 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClientV2, appCo
       httpClient.delete(url"$url").execute[Either[UpstreamErrorResponse, HttpResponse]]
     )
       .transform {
-        case Left(response) if response.statusCode == NOT_FOUND => Right(())
+        case Left(response) if response.statusCode == NOT_FOUND                                                   => Right(())
         case Left(response) if response.statusCode == BAD_REQUEST && response.message.contains("INVALID_SERVICE") =>
           Right(())
-        case Right(response) if response.status == NO_CONTENT => Right(())
-        case Right(response) =>
+        case Right(response) if response.status == NO_CONTENT                                                     => Right(())
+        case Right(response)                                                                                      =>
           val ex = new RuntimeException(s"Unexpected ${response.status} status")
           logger.error(ex.getMessage, ex)
           Left(UpstreamUnexpected2XX(response.body, response.status))
-        case Left(upstreamError) =>
+        case Left(upstreamError)                                                                                  =>
           logger.error(upstreamError.message)
           Left(UpstreamError(upstreamError))
       }
@@ -239,7 +239,7 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClientV2, appCo
       .transform {
         case Left(response) if response.statusCode == NOT_FOUND => Right(())
         case Right(response) if response.status == NO_CONTENT   => Right(())
-        case Right(response) =>
+        case Right(response)                                    =>
           val ex = new RuntimeException(s"Unexpected ${response.status} status")
           logger.error(ex.getMessage, ex)
           Left(UpstreamUnexpected2XX(response.body, response.status))
@@ -247,7 +247,7 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClientV2, appCo
             if upstreamError.statusCode == BAD_REQUEST && upstreamError.message.contains("INVALID_SERVICE") =>
           logger.error(upstreamError.message)
           Right(())
-        case Left(upstreamError) =>
+        case Left(upstreamError)                                =>
           logger.error(upstreamError.message)
           Left(UpstreamError(upstreamError))
       }
@@ -262,11 +262,11 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClientV2, appCo
       .transform {
         case Left(response) if response.statusCode == NOT_FOUND => Right(())
         case Right(response) if response.status == NO_CONTENT   => Right(())
-        case Right(response) =>
+        case Right(response)                                    =>
           val ex = new RuntimeException(s"Unexpected ${response.status} status")
           logger.error(ex.getMessage, ex)
           Left(UpstreamUnexpected2XX(response.body, response.status))
-        case Left(upstreamError) =>
+        case Left(upstreamError)                                =>
           logger.error(upstreamError.message)
           Left(UpstreamError(upstreamError))
       }
@@ -291,18 +291,18 @@ class EnrolmentStoreConnectorTestOnly @Inject() (httpClient: HttpClientV2, appCo
         .execute[Either[UpstreamErrorResponse, HttpResponse]]
     )
       .transform {
-        case Right(response) if response.status == OK =>
+        case Right(response) if response.status == OK         =>
           Right((response.json \ "enrolments").as[List[JsObject]].map { enrolment =>
-            val key = (enrolment \ "identifiers" \\ "key").head.as[String]
+            val key   = (enrolment \ "identifiers" \\ "key").head.as[String]
             val value = (enrolment \ "identifiers" \\ "value").head.as[String]
             s"$service~$key~$value"
           })
         case Right(response) if response.status == NO_CONTENT => Right(List.empty)
-        case Right(response) =>
+        case Right(response)                                  =>
           val ex = new RuntimeException(s"Unexpected ${response.status} status")
           logger.error(ex.getMessage, ex)
           Left(UpstreamUnexpected2XX(response.body, response.status))
-        case Left(upstreamError) =>
+        case Left(upstreamError)                              =>
           logger.error(upstreamError.message)
           Left(UpstreamError(upstreamError))
       }

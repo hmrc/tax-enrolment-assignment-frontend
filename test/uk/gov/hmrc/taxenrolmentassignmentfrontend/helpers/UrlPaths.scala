@@ -21,25 +21,25 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 
 object UrlPaths {
 
-  val returnUrl: String = "/redirect/url"
-  val accountCheckPath =
+  val returnUrl: String                  = "/redirect/url"
+  val accountCheckPath                   =
     routes.AccountCheckController.accountCheck(RedirectUrl.apply(returnUrl)).url
-  val enrolledPTNoSAOnAnyAccountPath = routes.EnrolledForPTController.view.url
-  val enrolledPTWithSAAccountPath = routes.EnrolledForPTWithSAController.view.url
-  val enrolledPTSAOnOtherAccountPath =
+  val enrolledPTNoSAOnAnyAccountPath     = routes.EnrolledForPTController.view.url
+  val enrolledPTWithSAAccountPath        = routes.EnrolledForPTWithSAController.view.url
+  val enrolledPTSAOnOtherAccountPath     =
     routes.EnrolledPTWithSAOnOtherAccountController.view.url
-  val reportFraudPTAccountPath =
+  val reportFraudPTAccountPath           =
     routes.ReportSuspiciousIDController.viewNoSA.url
-  val reportFraudSAAccountPath =
+  val reportFraudSAAccountPath           =
     routes.ReportSuspiciousIDController.viewSA.url
-  val saOnOtherAccountInterruptPath =
+  val saOnOtherAccountInterruptPath      =
     routes.SABlueInterruptController.view.url
   val saOnOtherAccountKeepAccessToSAPath =
     routes.KeepAccessToSAController.view.url
-  val saOnOtherAccountSigninAgainPath =
+  val saOnOtherAccountSigninAgainPath    =
     routes.SignInWithSAAccountController.view.url
-  val ptOnOtherAccountPath =
+  val ptOnOtherAccountPath               =
     routes.PTEnrolmentOnOtherAccountController.view.url
-  val logoutPath = routes.SignOutController.signOut.url
+  val logoutPath                         = routes.SignOutController.signOut.url
 
 }

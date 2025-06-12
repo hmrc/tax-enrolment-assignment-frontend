@@ -18,21 +18,21 @@ package helpers.messages
 
 object PTEnrolmentOtherAccountMesages {
 
-  val title =
+  val title             =
     "You cannot access your personal tax account"
-  val heading =
+  val heading           =
     "You cannot access your personal tax account "
-  val text1 =
+  val text1             =
     "You cannot access your personal tax account with this Government Gateway user ID"
-  val signoutUrl = "http://test/signout"
-  val notMyUserId = "The above user ID does not belong to me"
+  val signoutUrl        = "http://test/signout"
+  val notMyUserId       = "The above user ID does not belong to me"
   val fraudReportingUrl =
     "/protect-tax-info/no-pt-enrolment/contact-hmrc-pta"
-  val saHeading = "Self Assessment"
-  val saText =
+  val saHeading         = "Self Assessment"
+  val saText            =
     s"To access your Self Assessment you need to sign in again with user ID ending with 1243."
-  val saText2 =
+  val saText2           =
     "To access your personal tax account and Self Assessment:"
-  val saUrl = "/protect-tax-info/logout"
+  val saUrl             = "/protect-tax-info/logout"
 
 }

@@ -20,7 +20,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 
 class ObfuscatedEmailAddressSpec extends BaseSpec {
 
-  "Obfuscating an email address" should {
+  "Obfuscating an email address"    should {
     "work for a valid email address with a long mailbox" in {
       ObfuscatedEmailAddress("abcdef@example.com").value should be("a****f@example.com")
     }

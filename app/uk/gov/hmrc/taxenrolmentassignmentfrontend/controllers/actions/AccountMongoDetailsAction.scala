@@ -56,7 +56,8 @@ class AccountMongoDetailsAction @Inject() (
   logger: EventLoggerService,
   accountMongoDetailsRetrievalService: AccountMongoDetailsRetrievalService
 )(implicit val executionContext: ExecutionContext)
-    extends AccountMongoDetailsActionTrait with RedirectHelper {
+    extends AccountMongoDetailsActionTrait
+    with RedirectHelper {
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
   override protected def refine[A](
     request: RequestWithUserDetailsFromSession[A]
@@ -64,7 +65,7 @@ class AccountMongoDetailsAction @Inject() (
     accountMongoDetailsRetrievalService
       .getAccountDetailsFromMongoFromCache(request)
       .map {
-        case Right(accountDetailsFromMongo) =>
+        case Right(accountDetailsFromMongo)                 =>
           Right(
             RequestWithUserDetailsFromSessionAndMongo(
               request.request,
@@ -76,7 +77,7 @@ class AccountMongoDetailsAction @Inject() (
         case Left(CacheNotCompleteOrNotCorrect(None, None)) =>
           logger.logEvent(LoggingEvent.logUserHasNoCacheInMongo(request.userDetails.credId, request.sessionID))
           Left(toGGLogin)
-        case Left(error) =>
+        case Left(error)                                    =>
           Left(
             errorHandler
               .handleErrors(error, "[AccountTypeAction][invokeBlock]")(request, baseLogger)

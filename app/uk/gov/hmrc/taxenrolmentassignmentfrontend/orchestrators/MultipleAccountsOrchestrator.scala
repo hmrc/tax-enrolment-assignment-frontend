@@ -58,7 +58,7 @@ class MultipleAccountsOrchestrator @Inject() (
       List(MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER)
     ) match {
       case Left(error) => EitherT.left(Future.successful(error))
-      case Right(_) =>
+      case Right(_)    =>
         usersGroupSearchService
           .getAccountDetails(
             requestWithUserDetails.userDetails.credId,
@@ -78,7 +78,7 @@ class MultipleAccountsOrchestrator @Inject() (
   ): TEAFResult[AccountDetails] =
     checkValidAccountType(List(SA_ASSIGNED_TO_OTHER_USER)) match {
       case Left(error) => EitherT.left(Future.successful(error))
-      case Right(_) =>
+      case Right(_)    =>
         usersGroupSearchService.getAccountDetails(
           requestWithUserDetails.userDetails.credId,
           requestWithUserDetails.accountDetailsFromMongo
@@ -91,7 +91,7 @@ class MultipleAccountsOrchestrator @Inject() (
   ): TEAFResult[Form[KeepAccessToSAThroughPTA]] =
     checkAccessAllowedForPage(List(SA_ASSIGNED_TO_OTHER_USER)) match {
       case Left(error) => EitherT.left(Future.successful(error))
-      case Right(_) =>
+      case Right(_)    =>
         EitherT.right[TaxEnrolmentAssignmentErrors](
           Future.successful(
             requestWithUserDetails.accountDetailsFromMongo.optKeepAccessToSAFormData match {
@@ -109,7 +109,7 @@ class MultipleAccountsOrchestrator @Inject() (
   ): TEAFResult[Boolean] =
     checkAccessAllowedForPage(List(SA_ASSIGNED_TO_OTHER_USER)) match {
       case Left(error) => EitherT.left(Future.successful(error))
-      case Right(_) =>
+      case Right(_)    =>
         for {
           _ <- if (keepAccessToSA.keepAccessToSAThroughPTA) {
                  EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful((): Unit))
@@ -152,7 +152,7 @@ class MultipleAccountsOrchestrator @Inject() (
             requestWithUserDetails
           )
           .value
-      case _ =>
+      case _            =>
         eacdService.getUsersAssignedSAEnrolment(requestWithUserDetails, implicitly, implicitly).value.flatMap {
           case Right(UsersAssignedEnrolment(Some(credId))) =>
             usersGroupSearchService
@@ -162,7 +162,7 @@ class MultipleAccountsOrchestrator @Inject() (
                 requestWithUserDetails
               )
               .value
-          case _ => Future.successful(Left(NoSAEnrolmentWhenOneExpected))
+          case _                                           => Future.successful(Left(NoSAEnrolmentWhenOneExpected))
         }
     }
   }
@@ -182,7 +182,7 @@ class MultipleAccountsOrchestrator @Inject() (
             requestWithUserDetails
           )
           .value
-      case _ =>
+      case _                                                                   =>
         logger.logEvent(
           logNoUserFoundWithPTEnrolment(
             requestWithUserDetails.userDetails.credId
@@ -210,7 +210,7 @@ class MultipleAccountsOrchestrator @Inject() (
     (checkValidAccountType(validAccountTypes), checkPTEnrolmentDoesNotExist) match {
       case (Right(accountType), Right(_)) => Right(accountType)
       case (Right(_), Left(error))        => Left(error)
-      case _ =>
+      case _                              =>
         Left(
           IncorrectUserType(
             requestWithUserDetailsAndMongo.accountDetailsFromMongo.redirectUrl,
@@ -269,13 +269,13 @@ class MultipleAccountsOrchestrator @Inject() (
         requestWithUserDetails.userDetails.hasSAEnrolment,
         requestWithUserDetails.accountDetailsFromMongo.optUserAssignedSA
       ) match {
-        case (true, _) =>
+        case (true, _)                             =>
           EitherT.right[TaxEnrolmentAssignmentErrors](
             Future.successful(Some(requestWithUserDetails.userDetails.credId))
           )
         case (false, Some(usersAssignedEnrolment)) =>
           EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(usersAssignedEnrolment.enrolledCredential))
-        case (false, None) =>
+        case (false, None)                         =>
           eacdService
             .getUsersAssignedSAEnrolment(requestWithUserDetails, implicitly, implicitly)
             .map(user => user.enrolledCredential)
@@ -288,9 +288,9 @@ class MultipleAccountsOrchestrator @Inject() (
       optSACredentialId.flatMap {
         case Some(credId) if credId == currentAccountDetails.credId =>
           EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(Some(currentAccountDetails)))
-        case Some(credId) if credId == ptAccountDetails.credId =>
+        case Some(credId) if credId == ptAccountDetails.credId      =>
           EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(Some(ptAccountDetails)))
-        case Some(credId) =>
+        case Some(credId)                                           =>
           usersGroupSearchService
             .getAccountDetails(credId, requestWithUserDetails.accountDetailsFromMongo)(
               implicitly,
@@ -298,13 +298,13 @@ class MultipleAccountsOrchestrator @Inject() (
               requestWithUserDetails
             )
             .map(Some(_))
-        case None =>
+        case None                                                   =>
           EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(Option.empty[AccountDetails]))
       }
 
     for {
-      _ <- EitherT(Future(checkAccessAllowedForPage(List(PT_ASSIGNED_TO_OTHER_USER))))
-      currentAccountDetails <-
+      _                       <- EitherT(Future(checkAccessAllowedForPage(List(PT_ASSIGNED_TO_OTHER_USER))))
+      currentAccountDetails   <-
         usersGroupSearchService
           .getAccountDetails(requestWithUserDetails.userDetails.credId, requestWithUserDetails.accountDetailsFromMongo)(
             implicitly,
@@ -337,7 +337,7 @@ class MultipleAccountsOrchestrator @Inject() (
               requestWithUserDetails
             )
             .value
-        case _ =>
+        case _            =>
           eacdService.getUsersAssignedSAEnrolment(requestWithUserDetails, implicitly, implicitly).value.flatMap {
             case Right(UsersAssignedEnrolment(Some(credId))) =>
               usersGroupSearchService
@@ -347,14 +347,14 @@ class MultipleAccountsOrchestrator @Inject() (
                   requestWithUserDetails
                 )
                 .value
-            case _ => Future.successful(Left(NoSAEnrolmentWhenOneExpected))
+            case _                                           => Future.successful(Left(NoSAEnrolmentWhenOneExpected))
           }
       }
     }
 
     for {
-      _ <- EitherT(Future(checkAccessAllowedForPage(List(SA_ASSIGNED_TO_OTHER_USER))))
-      currentAccountDetails <-
+      _                       <- EitherT(Future(checkAccessAllowedForPage(List(SA_ASSIGNED_TO_OTHER_USER))))
+      currentAccountDetails   <-
         usersGroupSearchService
           .getAccountDetails(requestWithUserDetails.userDetails.credId, requestWithUserDetails.accountDetailsFromMongo)(
             implicitly,

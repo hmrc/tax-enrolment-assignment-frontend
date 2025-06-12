@@ -69,19 +69,19 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
 
           val request = FakeRequest(GET, urlPath)
             .withSession(xAuthToken, xSessionId)
-          val result = route(app, request).get
-          val page = Jsoup.parse(contentAsString(result))
+          val result  = route(app, request).get
+          val page    = Jsoup.parse(contentAsString(result))
 
           status(result) shouldBe OK
-          page.title should include(SignInAgainMessages.title)
+          page.title       should include(SignInAgainMessages.title)
           page
             .getElementsByTag("p")
             .get(0)
-            .text shouldBe SignInAgainMessages.paragraph1
+            .text        shouldBe SignInAgainMessages.paragraph1
           page
             .getElementsByTag("p")
             .get(1)
-            .text shouldBe SignInAgainMessages.paragraph2
+            .text        shouldBe SignInAgainMessages.paragraph2
         }
       }
       s"redirect to ${ItUrlPaths.enrolledPTSAOnOtherAccountPath}" when {
@@ -117,9 +117,9 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
 
           val request = FakeRequest(GET, urlPath)
             .withSession(xAuthToken, xSessionId)
-          val result = route(app, request).get
+          val result  = route(app, request).get
 
-          status(result) shouldBe SEE_OTHER
+          status(result)             shouldBe SEE_OTHER
           redirectLocation(result).get should include(
             ItUrlPaths.enrolledPTSAOnOtherAccountPath
           )
@@ -147,9 +147,9 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
 
           val request = FakeRequest(GET, urlPath)
             .withSession(xAuthToken, xSessionId)
-          val result = route(app, request).get
+          val result  = route(app, request).get
 
-          status(result) shouldBe SEE_OTHER
+          status(result)             shouldBe SEE_OTHER
           redirectLocation(result).get should include(
             accountCheckPath
           )
@@ -181,15 +181,15 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe INTERNAL_SERVER_ERROR
+        status(result)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) should include(ErrorTemplateMessages.title)
 
       }
     }
 
-    s"the session cache has no credentials with SA enrolment" should {
+    s"the session cache has no credentials with SA enrolment"                            should {
       s"render the error page" in {
         await(save[String](sessionId, "redirectURL", returnUrl))
         await(
@@ -212,9 +212,9 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe INTERNAL_SERVER_ERROR
+        status(result)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) should include(ErrorTemplateMessages.title)
 
       }
@@ -235,9 +235,9 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe INTERNAL_SERVER_ERROR
+        status(result)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) should include(ErrorTemplateMessages.title)
 
       }
@@ -271,9 +271,9 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe INTERNAL_SERVER_ERROR
+        status(result)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) should include(ErrorTemplateMessages.title)
 
       }
@@ -287,9 +287,9 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include(
           ItUrlPaths.unauthorizedPath
         )
@@ -305,9 +305,9 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include(
           ItUrlPaths.unauthorizedPath
         )
@@ -322,9 +322,9 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include(
           ItUrlPaths.unauthorizedPath
         )
@@ -338,9 +338,9 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include("/bas-gateway/sign-in")
 
       }
@@ -352,10 +352,10 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
     import play.api.test.Helpers.redirectLocation
     "the session cache has a credential for SA enrolment that is not the signed in account" should {
       s"redirect to ${ItUrlPaths.logoutPath}" in {
-        val cacheData = Map(
-          ACCOUNT_TYPE               -> Json.toJson(SA_ASSIGNED_TO_OTHER_USER),
-          REDIRECT_URL               -> JsString(returnUrl),
-          USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(saUsers),
+        val cacheData    = Map(
+          ACCOUNT_TYPE                                 -> Json.toJson(SA_ASSIGNED_TO_OTHER_USER),
+          REDIRECT_URL                                 -> JsString(returnUrl),
+          USER_ASSIGNED_SA_ENROLMENT                   -> Json.toJson(saUsers),
           accountDetailsForCredential(CREDENTIAL_ID_2) -> Json.toJson(accountDetails)(
             AccountDetails.mongoFormats(crypto.crypto)
           )
@@ -371,7 +371,7 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
 
         val result = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include(
           ItUrlPaths.logoutPath
         )
@@ -385,7 +385,7 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
       }
     }
 
-    "the session cache has no redirectUrl" should {
+    "the session cache has no redirectUrl"                 should {
       s"return $INTERNAL_SERVER_ERROR" in {
         await(
           save[AccountTypes.Value](
@@ -403,7 +403,7 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
           .withJsonBody(Json.obj())
 
         val result = route(app, request).get
-        status(result) shouldBe INTERNAL_SERVER_ERROR
+        status(result)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) should include(ErrorTemplateMessages.title)
 
       }
@@ -420,7 +420,7 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
 
         val result = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
 
       }
@@ -438,7 +438,7 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
 
         val result = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
 
       }
@@ -455,7 +455,7 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
 
         val result = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
 
       }
@@ -472,7 +472,7 @@ class SignInWithSAAccountControllerISpec extends IntegrationSpecBase with Status
 
         val result = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include("/bas-gateway/sign-in")
 
       }

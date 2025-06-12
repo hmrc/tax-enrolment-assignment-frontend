@@ -63,11 +63,12 @@ class DefaultTEASessionCache @Inject() (
         )
       ),
       replaceIndexes = false
-    ) with TEASessionCache {
+    )
+    with TEASessionCache {
 
-  def upsert(cm: CacheMap): Future[Boolean] = {
+  def upsert(cm: CacheMap): Future[Boolean]            = {
     val cmUpdated = DatedCacheMap(cm.id, cm.data)
-    val options = ReplaceOptions().upsert(true)
+    val options   = ReplaceOptions().upsert(true)
     collection
       .replaceOne(equal("id", cm.id), cmUpdated, options)
       .toFuture()

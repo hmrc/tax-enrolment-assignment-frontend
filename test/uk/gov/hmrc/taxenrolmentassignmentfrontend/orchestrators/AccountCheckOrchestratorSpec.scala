@@ -40,12 +40,12 @@ class AccountCheckOrchestratorSpec extends BaseSpec {
     CacheMap("id", generateBasicCacheData(accountType, redirectUrl))
 
   lazy val mockSilentAssignmentService: SilentAssignmentService = mock[SilentAssignmentService]
-  lazy val mockEacdService: EACDService = mock[EACDService]
-  lazy val mockTeaSessionCache: TEASessionCache = mock[TEASessionCache]
-  lazy val mockTaxEnrolmentConnector: TaxEnrolmentsConnector = mock[TaxEnrolmentsConnector]
+  lazy val mockEacdService: EACDService                         = mock[EACDService]
+  lazy val mockTeaSessionCache: TEASessionCache                 = mock[TEASessionCache]
+  lazy val mockTaxEnrolmentConnector: TaxEnrolmentsConnector    = mock[TaxEnrolmentsConnector]
   lazy val mockUserGroupSearchService: UsersGroupsSearchService = mock[UsersGroupsSearchService]
 
-  lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
+  lazy val testBodyParser: BodyParsers.Default                            = mock[BodyParsers.Default]
   lazy val mockMultipleAccountsOrchestrator: MultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
 
   override lazy val overrides: Seq[Binding[TEASessionCache]] = Seq(

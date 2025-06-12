@@ -48,7 +48,7 @@ class LegacyAuthConnector @Inject() (httpClient: HttpClientV2, logger: EventLogg
         .map(httpResponse =>
           httpResponse.status match {
             case OK => Right(())
-            case _ =>
+            case _  =>
               logger.logEvent(LoggingEvent.logUnexpectedErrorFromAuthWhenUsingLegacyEndpoint(httpResponse.status))
               Left(UnexpectedResponseAssigningTemporaryPTAEnrolment)
           }

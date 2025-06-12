@@ -26,7 +26,7 @@ trait ObfuscatedEmailAddress {
 
 object ObfuscatedEmailAddress {
   final private val splitMailbox: Regex = "(.)(.*)(.)".r
-  val validEmail: Regex = """^([a-zA-Z0-9.!#$%&’'*+/=?^_`{|}~@-]+)@([a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*)$""".r
+  val validEmail: Regex                 = """^([a-zA-Z0-9.!#$%&’'*+/=?^_`{|}~@-]+)@([a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*)$""".r
 
   implicit def obfuscatedEmailToString(e: ObfuscatedEmailAddress): String = e.value
 

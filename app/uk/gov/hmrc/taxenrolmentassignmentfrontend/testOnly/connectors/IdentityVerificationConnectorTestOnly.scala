@@ -43,11 +43,11 @@ class IdentityVerificationConnectorTestOnly @Inject() (httpClient: HttpClientV2,
       httpClient.delete(url"$url").execute[Either[UpstreamErrorResponse, HttpResponse]]
     ).transform {
       case Right(response) if response.status == OK => Right(())
-      case Right(response) =>
+      case Right(response)                          =>
         val ex = new RuntimeException(s"Unexpected ${response.status} status")
         logger.error(ex.getMessage, ex)
         Left(UpstreamUnexpected2XX(response.body, response.status))
-      case Left(upstreamError) =>
+      case Left(upstreamError)                      =>
         logger.error(upstreamError.message)
         Left(UpstreamError(upstreamError))
     }
@@ -59,16 +59,16 @@ class IdentityVerificationConnectorTestOnly @Inject() (httpClient: HttpClientV2,
       "nino"            -> nino.nino,
       "confidenceLevel" -> 200
     )
-    val url = s"${appConfigTestOnly.identityVerification}/identity-verification/nino/$credId"
+    val url         = s"${appConfigTestOnly.identityVerification}/identity-verification/nino/$credId"
     EitherT(
       httpClient.put(url"$url").withBody(Json.toJson(requestBody)).execute[Either[UpstreamErrorResponse, HttpResponse]]
     ).transform {
       case Right(response) if response.status == OK => Right(())
-      case Right(response) =>
+      case Right(response)                          =>
         val ex = new RuntimeException(s"Unexpected ${response.status} status")
         logger.error(ex.getMessage, ex)
         Left(UpstreamUnexpected2XX(response.body, response.status))
-      case Left(upstreamError) =>
+      case Left(upstreamError)                      =>
         logger.error(upstreamError.message)
         Left(UpstreamError(upstreamError))
     }

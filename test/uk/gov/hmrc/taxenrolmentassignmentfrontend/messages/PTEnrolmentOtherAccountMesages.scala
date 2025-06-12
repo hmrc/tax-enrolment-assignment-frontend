@@ -19,65 +19,65 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.messages
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 
 trait PTEnrolmentOtherAccountMessages extends BaseMessage {
-  val title = "You cannot access your personal tax account" + defaultTitleSuffix
-  val heading = ""
-  val text1 = ""
-  val signoutUrl = "http://test/signout"
-  val notMyUserId = ""
-  val fraudReportingUrl =
+  val title                   = "You cannot access your personal tax account" + defaultTitleSuffix
+  val heading                 = ""
+  val text1                   = ""
+  val signoutUrl              = "http://test/signout"
+  val notMyUserId             = ""
+  val fraudReportingUrl       =
     "/protect-tax-info/no-pt-enrolment/contact-hmrc-pta"
   val signInGuidanceParagraph = "To access your personal tax account and Self Assessment:"
-  val signInGuidanceList1 =
+  val signInGuidanceList1     =
     "Sign out."
-  val signInGuidanceList2 = ""
-  val saHeading = "Self Assessment"
-  val saText = ""
+  val signInGuidanceList2     = ""
+  val saHeading               = "Self Assessment"
+  val saText                  = ""
 }
 
 object PTEnrolmentOtherAccountMessagesBothGG extends PTEnrolmentOtherAccountMessages {
 
-  override val heading =
+  override val heading             =
     "You cannot access your personal tax account with this Government Gateway user ID"
-  override val text1 =
+  override val text1               =
     s"To protect your information, access to your personal tax account was limited to Government Gateway user ID:"
-  override val notMyUserId = "This Government Gateway user ID is not mine"
+  override val notMyUserId         = "This Government Gateway user ID is not mine"
   override val signInGuidanceList2 =
     s"Sign in with Government Gateway user ID ending with ${accountDetailsWithPT.userId}."
-  override val saText = "You can use this Government Gateway user ID to access your Self Assessment."
+  override val saText              = "You can use this Government Gateway user ID to access your Self Assessment."
 
 }
 
 object PTEnrolmentOtherAccountMessagesBothOL extends PTEnrolmentOtherAccountMessages {
 
-  override val heading =
+  override val heading             =
     "You cannot access your personal tax account with this GOV.UK One Login"
-  override val text1 =
+  override val text1               =
     s"To protect your information, access to your personal tax account and Self Assessment was limited to GOV.UK One Login:"
-  override val notMyUserId = "This GOV.UK One Login is not mine"
+  override val notMyUserId         = "This GOV.UK One Login is not mine"
   override val signInGuidanceList2 = s"Sign in with GOV.UK One Login email address ${accountDetailsWithPT.userId}."
-  override val saText = "You can use this GOV.UK One Login to access your Self Assessment."
+  override val saText              = "You can use this GOV.UK One Login to access your Self Assessment."
 }
 
 object PTEnrolmentOtherAccountMessagesEnrolmentGGLoggedInOL extends BaseMessage with PTEnrolmentOtherAccountMessages {
 
-  override val heading =
+  override val heading             =
     "You cannot access your personal tax account with these sign in details"
-  override val text1 =
+  override val text1               =
     s"To protect your information, access to your personal tax account and Self Assessment was limited to Government Gateway user ID:"
-  override val notMyUserId = "This Government Gateway user ID is not mine"
+  override val notMyUserId         = "This Government Gateway user ID is not mine"
   override val signInGuidanceList2 =
     s"Sign in with Government Gateway user ID ending with ${accountDetailsWithPT.userId}."
-  override val saText = "You can use this GOV.UK One Login to access your Self Assessment."
+  override val saText              = "You can use this GOV.UK One Login to access your Self Assessment."
 }
 
 object PTEnrolmentOtherAccountMessagesEnrolmentOLLoggedInGG extends BaseMessage with PTEnrolmentOtherAccountMessages {
 
-  override val heading =
+  override val heading             =
     "You cannot access your personal tax account with these sign in details"
-  override val text1 =
+  override val text1               =
     s"To protect your information, access to your personal tax account and Self Assessment was limited to GOV.UK One Login:"
-  override val notMyUserId = "This GOV.UK One Login is not mine"
+  override val notMyUserId         = "This GOV.UK One Login is not mine"
   override val signInGuidanceList2 =
     s"Sign in with GOV.UK One Login email address ${accountDetailsWithPT.emailObfuscated}."
-  override val saText = "You can use this Government Gateway user ID to access your Self Assessment."
+  override val saText              = "You can use this Government Gateway user ID to access your Self Assessment."
 }

@@ -66,14 +66,14 @@ class EACDConnector @Inject() (httpClient: HttpClientV2, logger: EventLoggerServ
       .execute[HttpResponse]
       .map(httpResponse =>
         httpResponse.status match {
-          case OK =>
+          case OK         =>
             Right(
               httpResponse.json
                 .as[UsersAssignedEnrolment](UsersAssignedEnrolment.reads)
             )
           case NO_CONTENT =>
             Right(UsersAssignedEnrolment(None))
-          case status =>
+          case status     =>
             logger.logEvent(
               logUnexpectedResponseFromEACD(
                 enrolmentKey.split("~").head,
@@ -90,7 +90,7 @@ class EACDConnector @Inject() (httpClient: HttpClientV2, logger: EventLoggerServ
     ec: ExecutionContext,
     hc: HeaderCarrier
   ): TEAFResult[Option[String]] = EitherT {
-    val url = s"${appConfig.EACD_BASE_URL}/enrolment-store/enrolments"
+    val url     = s"${appConfig.EACD_BASE_URL}/enrolment-store/enrolments"
     val request = KnownFactQueryForNINO(nino)
     httpClient
       .post(url"$url")
@@ -98,10 +98,10 @@ class EACDConnector @Inject() (httpClient: HttpClientV2, logger: EventLoggerServ
       .execute[HttpResponse]
       .map(httpResponse =>
         httpResponse.status match {
-          case OK =>
+          case OK         =>
             Right(Some(httpResponse.json.as[KnownFactResponseForNINO].getUTR))
           case NO_CONTENT => Right(None)
-          case status =>
+          case status     =>
             logger.logEvent(
               logUnexpectedResponseFromEACDQueryKnownFacts(
                 nino,
@@ -126,10 +126,10 @@ class EACDConnector @Inject() (httpClient: HttpClientV2, logger: EventLoggerServ
       .execute[HttpResponse]
       .map(httpResponse =>
         httpResponse.status match {
-          case OK =>
+          case OK         =>
             Right(Some(httpResponse.json.as[UserEnrolmentsListResponse]))
           case NO_CONTENT => Right(None)
-          case status =>
+          case status     =>
             logger.logEvent(
               logES2ErrorFromEACD(userId, status, httpResponse.body)
             )

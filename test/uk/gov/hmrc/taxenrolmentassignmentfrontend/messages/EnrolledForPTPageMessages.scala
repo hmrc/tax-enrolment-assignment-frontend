@@ -17,20 +17,20 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.messages
 
 object EnrolledForPTPageMessages extends BaseMessage {
-  val title =
+  val title               =
     "You can only access your personal tax account with one user ID from now on" + defaultTitleSuffix
-  val heading =
+  val heading             =
     "Only this Government Gateway user ID can access your personal tax account from now on"
   val paragraphSA: String =
     "Use these sign in details to access your personal tax account and Self Assessment."
-  val paragraph: String =
+  val paragraph: String   =
     "You are signed in with Government Gateway user ID ending with 3214."
-  val paragraph2: String = "Keep these details safe."
-  val heading2: String =
+  val paragraph2: String  = "Keep these details safe."
+  val heading2: String    =
     "What has happened to my other Government Gateway user IDs?"
-  val button = "Continue"
-  val action =
+  val button              = "Continue"
+  val action              =
     "/protect-tax-info/enrol-pt/enrolment-success-no-sa"
-  val saAction =
+  val saAction            =
     "/protect-tax-info/enrol-pt/enrolment-success-sa-user-id"
 }

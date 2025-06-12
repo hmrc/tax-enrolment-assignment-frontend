@@ -52,7 +52,7 @@ class TEASessionCacheSpec extends IntegrationSpecBase {
     "there is data in database" should {
       "overrride the value then upsert" when {
         "the key already exists" in {
-          val initialData = CacheMap(sessionId, Map("test" -> JsString("abc")))
+          val initialData  = CacheMap(sessionId, Map("test" -> JsString("abc")))
           val dataToUpsert = CacheMap(sessionId, Map("test" -> JsString("efg")))
 
           val res = for {
@@ -68,7 +68,7 @@ class TEASessionCacheSpec extends IntegrationSpecBase {
 
       "add the value to map and then upsert" when {
         "the key does not already exists" in {
-          val initialData = CacheMap(sessionId, Map("test" -> JsString("abc")))
+          val initialData  = CacheMap(sessionId, Map("test" -> JsString("abc")))
           val dataToUpsert = CacheMap(
             sessionId,
             Map("test" -> JsString("abc"), "test1" -> JsString("efg"))
@@ -90,21 +90,21 @@ class TEASessionCacheSpec extends IntegrationSpecBase {
   "removeRecord" should {
     "remove all the data for session id and return true" in {
       val data = CacheMap(sessionId, Map("test" -> JsString("abc")))
-      val res = for {
+      val res  = for {
         _       <- repository.upsert(data)
         remove  <- teaSessionCache.removeRecord
         fetched <- fetch(sessionId)
       } yield (remove, fetched)
 
       whenReady(res) { case (remove, fetched) =>
-        remove shouldBe true
+        remove  shouldBe true
         fetched shouldBe None
       }
     }
     "remove all the data for session id and return true but leave another record with another sessionid" in {
-      val data = CacheMap("fooboochoo", Map("test" -> JsString("abc")))
+      val data            = CacheMap("fooboochoo", Map("test" -> JsString("abc")))
       val dataToBeDeleted = CacheMap(sessionId, Map("test" -> JsString("abc")))
-      val res = for {
+      val res             = for {
         _       <- repository.upsert(data)
         _       <- repository.upsert(dataToBeDeleted)
         remove  <- teaSessionCache.removeRecord
@@ -112,7 +112,7 @@ class TEASessionCacheSpec extends IntegrationSpecBase {
       } yield (remove, fetched)
 
       whenReady(res) { case (remove, fetched) =>
-        remove shouldBe true
+        remove  shouldBe true
         fetched shouldBe Some(data)
       }
     }
@@ -123,7 +123,7 @@ class TEASessionCacheSpec extends IntegrationSpecBase {
       } yield (remove, fetched)
 
       whenReady(res) { case (remove, fetched) =>
-        remove shouldBe false
+        remove  shouldBe false
         fetched shouldBe None
       }
     }
@@ -146,7 +146,7 @@ class TEASessionCacheSpec extends IntegrationSpecBase {
           sessionId,
           Map("test" -> JsString("abc"), "test1" -> JsString("efg"))
         )
-        val res = for {
+        val res  = for {
           _       <- repository.upsert(data)
           fetched <- teaSessionCache.fetch()
         } yield fetched
@@ -172,7 +172,7 @@ class TEASessionCacheSpec extends IntegrationSpecBase {
     "there is data in database" should {
       "just override the last login date" in {
         val data = CacheMap(sessionId, Map("test" -> JsString("abc")))
-        val res = for {
+        val res  = for {
           _       <- repository.upsert(data)
           updated <- teaSessionCache.extendSession()
         } yield updated

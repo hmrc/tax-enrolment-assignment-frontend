@@ -53,7 +53,7 @@ class SignOutController @Inject() (
         case Some(redirectUrl) =>
           Redirect(appConfig.signOutUrl, Map("continue" -> Seq(redirectUrl)))
             .removingFromSession("X-Request-ID", "Session-Id")
-        case None =>
+        case None              =>
           Redirect(appConfig.signOutUrl)
             .removingFromSession("X-Request-ID", "Session-Id")
       }

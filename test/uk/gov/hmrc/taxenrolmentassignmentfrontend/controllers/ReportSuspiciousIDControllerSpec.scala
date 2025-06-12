@@ -42,11 +42,11 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
-  lazy val mockSilentAssignmentService: SilentAssignmentService = mock[SilentAssignmentService]
+  lazy val mockSilentAssignmentService: SilentAssignmentService   = mock[SilentAssignmentService]
   lazy val mockAccountCheckOrchestrator: AccountCheckOrchestrator = mock[AccountCheckOrchestrator]
-  lazy val mockAuditHandler: AuditHandler = mock[AuditHandler]
+  lazy val mockAuditHandler: AuditHandler                         = mock[AuditHandler]
 
-  lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
+  lazy val testBodyParser: BodyParsers.Default                            = mock[BodyParsers.Default]
   lazy val mockMultipleAccountsOrchestrator: MultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
 
   override lazy val overrides: Seq[Binding[TEASessionCache]] = Seq(
@@ -104,7 +104,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
         val result = controller.viewNoSA
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(result) shouldBe OK
+        status(result)        shouldBe OK
         contentAsString(result) should include(messages("ReportSuspiciousID.heading"))
         verify(mockAuditHandler, times(1)).audit(ameq(auditEvent))(any[HeaderCarrier])
 
@@ -125,7 +125,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
         val result = controller.viewNoSA
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(result) shouldBe SEE_OTHER
+        status(result)           shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some(UrlPaths.accountCheckPath)
       }
     }
@@ -148,7 +148,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
         val res = controller.viewNoSA
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(res) shouldBe INTERNAL_SERVER_ERROR
+        status(res)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(res) should include(messages("enrolmentError.heading"))
       }
     }
@@ -157,7 +157,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
 
   "viewSA" when {
 
-    "a user has SA on another account" should {
+    "a user has SA on another account"                                      should {
       "render the ReportSuspiciousID page" when {
         "the user hasn't already been assigned a PT enrolment" in {
 
@@ -193,7 +193,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
           val result = controller.viewSA
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-          status(result) shouldBe OK
+          status(result)        shouldBe OK
           contentAsString(result) should include(messages("ReportSuspiciousID.heading"))
           verify(mockAuditHandler, times(1)).audit(ameq(auditEvent))(any[HeaderCarrier])
         }
@@ -216,12 +216,12 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
           val result = controller.viewSA
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-          status(result) shouldBe OK
+          status(result)        shouldBe OK
           contentAsString(result) should include(messages("ReportSuspiciousID.heading"))
         }
       }
     }
-    s"the cache no redirectUrl" should {
+    s"the cache no redirectUrl"                                             should {
       "render the error page" in {
         when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
@@ -231,7 +231,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
         val res = controller.viewNoSA
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(res) shouldBe INTERNAL_SERVER_ERROR
+        status(res)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(res) should include(messages("enrolmentError.heading"))
       }
     }
@@ -249,7 +249,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
         val result = controller.viewSA
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(result) shouldBe SEE_OTHER
+        status(result)           shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some(UrlPaths.accountCheckPath)
       }
     }
@@ -270,7 +270,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
         val res = controller.viewSA
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(res) shouldBe INTERNAL_SERVER_ERROR
+        status(res)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(res) should include(messages("enrolmentError.heading"))
       }
     }
@@ -329,7 +329,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
           USER_ASSIGNED_SA_ENROLMENT                   -> Json.toJson(UsersAssignedEnrolment1),
           accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetails)
         )
-        val sessionData = generateBasicCacheData(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl) ++ additionalCacheData
+        val sessionData         = generateBasicCacheData(SA_ASSIGNED_TO_OTHER_USER, UrlPaths.returnUrl) ++ additionalCacheData
 
         when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse(enrolments = ptEnrolmentOnly)))
@@ -348,14 +348,14 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
         val res = controller.continue
           .apply(buildFakeRequestWithSessionId("POST", "Not Used"))
 
-        status(res) shouldBe SEE_OTHER
+        status(res)           shouldBe SEE_OTHER
         redirectLocation(res) shouldBe Some(
           UrlPaths.enrolledPTSAOnOtherAccountPath
         )
       }
     }
 
-    s"the cache no redirectUrl" should {
+    s"the cache no redirectUrl"                                                     should {
       "render the error page" in {
         when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
@@ -364,7 +364,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
         val res = controller.continue
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(res) shouldBe INTERNAL_SERVER_ERROR
+        status(res)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(res) should include(messages("enrolmentError.heading"))
       }
     }
@@ -388,7 +388,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
         val res = controller.continue
           .apply(buildFakeRequestWithSessionId("POST", "Not Used"))
 
-        status(res) shouldBe SEE_OTHER
+        status(res)           shouldBe SEE_OTHER
         redirectLocation(res) shouldBe
           Some(UrlPaths.accountCheckPath)
       }
@@ -413,7 +413,7 @@ class ReportSuspiciousIDControllerSpec extends ControllersBaseSpec {
         val res = controller.continue
           .apply(buildFakeRequestWithSessionId("POST", "Not Used"))
 
-        status(res) shouldBe INTERNAL_SERVER_ERROR
+        status(res)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(res) should include(messages("enrolmentError.heading"))
       }
     }

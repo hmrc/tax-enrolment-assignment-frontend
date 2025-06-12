@@ -43,7 +43,7 @@ class UsersGroupsSearchService @Inject() (
     accountDetailsFromMongo.optAccountDetails(credId) match {
       case Some(entry) =>
         Future.successful(Right(entry))
-      case None =>
+      case None        =>
         getAccountDetailsFromUsersGroupSearch(credId, accountDetailsForCredential(credId)).value
     }
   }
@@ -70,7 +70,7 @@ class UsersGroupsSearchService @Inject() (
           sessionCache
             .save[AccountDetails](key, accountDetails)(request, AccountDetails.mongoFormats(crypto.crypto))
             .map(_ => Right(accountDetails))
-        case Left(error) => Future.successful(Left(error))
+        case Left(error)        => Future.successful(Left(error))
       }
   }
 

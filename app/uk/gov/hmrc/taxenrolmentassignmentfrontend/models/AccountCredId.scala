@@ -26,7 +26,7 @@ case class IdentityProviderWithCredId(
 object IdentityProviderWithCredId {
 
   implicit val reads: Reads[IdentityProviderWithCredId] = for {
-    credId <- (JsPath \ "credId").read[String]
+    credId               <- (JsPath \ "credId").read[String]
     identityProviderType <-
       (JsPath \ "identityProviderType").read[IdentityProviderType](IdentityProviderTypeFormat.reads)
   } yield IdentityProviderWithCredId(credId, identityProviderType)

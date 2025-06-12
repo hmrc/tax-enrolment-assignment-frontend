@@ -41,22 +41,22 @@ class AccountUtilsTestOnly @Inject() (
       /*  Overwrite the account first
           Sometimes the account is not of type individual causing a later call to fail
        */
-      _ <- basStubsConnectorTestOnly.putAccount(account)
+      _      <- basStubsConnectorTestOnly.putAccount(account)
       // delete identity-verification data - Link nino / confidence level to account and holds mfa details
-      _ <- identityVerificationConnectorTestOnly.deleteCredId(account.user.credId)
+      _      <- identityVerificationConnectorTestOnly.deleteCredId(account.user.credId)
       // delete enrolment-store data
-      _ <- account.enrolments.map(enrolmentStoreServiceTestOnly.deallocateEnrolmentFromGroups(_)).sequence
-      _ <- account.enrolments.map(enrolmentStoreServiceTestOnly.deallocateEnrolmentFromUsers(_)).sequence
-      _ <- account.enrolments.map(enrolmentStoreServiceTestOnly.deleteEnrolment(_)).sequence
+      _      <- account.enrolments.map(enrolmentStoreServiceTestOnly.deallocateEnrolmentFromGroups(_)).sequence
+      _      <- account.enrolments.map(enrolmentStoreServiceTestOnly.deallocateEnrolmentFromUsers(_)).sequence
+      _      <- account.enrolments.map(enrolmentStoreServiceTestOnly.deleteEnrolment(_)).sequence
       // Search and delete other known facts that might remains after the step above
-      _ <- enrolmentStoreServiceTestOnly.deleteAllKnownFactsForNino(account.nino)
-      _ <- enrolmentStoreServiceTestOnly.deleteGroup(account.groupId)
-      _ <- enrolmentStoreServiceTestOnly.deleteAccount(account.groupId)
-      _ <- enrolmentStoreServiceTestOnly.deallocateEnrolmentsFromGroup(account.groupId)
-      _ <- enrolmentStoreServiceTestOnly.deallocateEnrolmentsFromUser(account.user.credId)
+      _      <- enrolmentStoreServiceTestOnly.deleteAllKnownFactsForNino(account.nino)
+      _      <- enrolmentStoreServiceTestOnly.deleteGroup(account.groupId)
+      _      <- enrolmentStoreServiceTestOnly.deleteAccount(account.groupId)
+      _      <- enrolmentStoreServiceTestOnly.deallocateEnrolmentsFromGroup(account.groupId)
+      _      <- enrolmentStoreServiceTestOnly.deallocateEnrolmentsFromUser(account.user.credId)
       // delete bas-stub data - The users accounts
-      _ <- basStubsConnectorTestOnly.deleteAdditionalFactors(account.user.credId)
-      _ <- basStubsConnectorTestOnly.deleteAccount(account)
+      _      <- basStubsConnectorTestOnly.deleteAdditionalFactors(account.user.credId)
+      _      <- basStubsConnectorTestOnly.deleteAccount(account)
     } yield ()
 
   def insertAccountDetails(account: AccountDetailsTestOnly)(implicit hc: HeaderCarrier): TEAFResult[Unit] =

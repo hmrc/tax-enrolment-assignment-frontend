@@ -18,12 +18,12 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.messages
 
 object ErrorTemplateMessages extends BaseMessage {
 
-  val title = "Sorry, there is a problem with the service" + defaultTitleSuffix
-  val heading = "Sorry, there is a problem with the service"
-  val paragraph1 = "Try again later."
-  val paragraph2Text =
+  val title              = "Sorry, there is a problem with the service" + defaultTitleSuffix
+  val heading            = "Sorry, there is a problem with the service"
+  val paragraph1         = "Try again later."
+  val paragraph2Text     =
     "Contact the technical support helpdesk if you keep experiencing this problem."
   val paragraph2LinkText = "Contact the technical support helpdesk"
-  val paragraph2Link =
+  val paragraph2Link     =
     "https://www.gov.uk/government/organisations/hm-revenue-customs/contact/online-services-helpdesk"
 }

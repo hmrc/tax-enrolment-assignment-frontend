@@ -30,30 +30,30 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.{ReportSuspiciousID
 
 class SignInWithSAAccountSpec extends ViewSpecHelper {
 
-  lazy val service: SignOutController = inject[SignOutController]
-  lazy val signInAgainPage: SignInWithSAAccount = inject[SignInWithSAAccount]
+  lazy val service: SignOutController                                 = inject[SignOutController]
+  lazy val signInAgainPage: SignInWithSAAccount                       = inject[SignInWithSAAccount]
   lazy val reportSuspiciousIDOneLoginPage: ReportSuspiciousIDOneLogin =
     inject[ReportSuspiciousIDOneLogin]
-  lazy val reportSuspiciousIDGGPage: ReportSuspiciousIDGateway =
+  lazy val reportSuspiciousIDGGPage: ReportSuspiciousIDGateway        =
     inject[ReportSuspiciousIDGateway]
-  lazy val userId = "3214"
-  lazy val view: HtmlFormat.Appendable =
+  lazy val userId                                                     = "3214"
+  lazy val view: HtmlFormat.Appendable                                =
     signInAgainPage(accountDetails)(FakeRequest(), testMessages)
-  lazy val document: Document =
+  lazy val document: Document                                         =
     Jsoup.parse(view.toString())
 
   object Selectors {
-    val headingL = "govuk-heading-l"
-    val headingM = "govuk-heading-m"
-    val headingS = "govuk-heading-s"
-    val body = "govuk-body"
-    val backLink = "govuk-back-link"
-    val button = "govuk-button"
-    val summaryListRow = "govuk-summary-list__row"
-    val summaryListKey = "govuk-summary-list__key"
+    val headingL         = "govuk-heading-l"
+    val headingM         = "govuk-heading-m"
+    val headingS         = "govuk-heading-s"
+    val body             = "govuk-body"
+    val backLink         = "govuk-back-link"
+    val button           = "govuk-button"
+    val summaryListRow   = "govuk-summary-list__row"
+    val summaryListKey   = "govuk-summary-list__key"
     val summaryListValue = "govuk-summary-list__value"
-    val link = "govuk-link"
-    val bulletPointList = "govuk-list govuk-list--bullet"
+    val link             = "govuk-link"
+    val bulletPointList  = "govuk-list govuk-list--bullet"
   }
 
   override val mfaDetails: Seq[MFADetails] = Seq(
@@ -169,7 +169,7 @@ class SignInWithSAAccountSpec extends ViewSpecHelper {
     "contain the correct back link" in {
       val backLink = document
         .getElementsByClass(Selectors.backLink)
-      backLink.text shouldBe SignInAgainMessages.backLink
+      backLink.text                shouldBe SignInAgainMessages.backLink
       backLink.get(0).attr("href") shouldBe "#"
     }
     "contain the correct button" in {

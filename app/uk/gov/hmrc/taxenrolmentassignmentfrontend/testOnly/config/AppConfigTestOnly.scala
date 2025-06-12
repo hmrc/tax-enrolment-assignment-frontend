@@ -22,11 +22,11 @@ import javax.inject.{Inject, Singleton}
 
 @Singleton
 class AppConfigTestOnly @Inject() (val config: ServicesConfig) {
-  val enrolmentStoreStub: String = config.baseUrl("enrolment-store-stub")
+  val enrolmentStoreStub: String   = config.baseUrl("enrolment-store-stub")
   val identityVerification: String = config.baseUrl("identity-verification")
-  val basStubsBaseUrl: String = config.baseUrl("bas-stubs")
-  val authLoginStub: String = config.getString("testOnly.loginUrl")
-  val environment: String = config.getString("testOnly.environment")
-  val tensRedirectUrl: String = config.getString("testOnly.redirectUrl")
-  val oneLoginStubBaseUrl: String = config.baseUrl("one-login-stub")
+  val basStubsBaseUrl: String      = config.baseUrl("bas-stubs")
+  val authLoginStub: String        = config.getString("testOnly.loginUrl")
+  val environment: String          = config.getString("testOnly.environment")
+  val tensRedirectUrl: String      = config.getString("testOnly.redirectUrl")
+  val oneLoginStubBaseUrl: String  = config.baseUrl("one-login-stub")
 }

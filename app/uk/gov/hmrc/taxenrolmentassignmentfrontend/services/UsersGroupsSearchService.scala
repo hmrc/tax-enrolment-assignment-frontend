@@ -17,17 +17,16 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.services
 
 import cats.data.EitherT
-
-import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.UsersGroupsSearchConnector
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSession}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, IdentityProviderWithCredId}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.accountDetailsForCredential
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -36,12 +35,12 @@ class UsersGroupsSearchService @Inject() (
   sessionCache: TEASessionCache
 )(implicit crypto: TENCrypto) {
 
-  def getAccountDetails(credId: String)(implicit
+  def getAccountDetails(credId: String, accountDetailsFromMongo: AccountDetailsFromMongo)(implicit
     ec: ExecutionContext,
     hc: HeaderCarrier,
-    request: RequestWithUserDetailsFromSessionAndMongo[_]
+    request: RequestWithUserDetailsFromSession[_]
   ): TEAFResult[AccountDetails] = EitherT {
-    request.accountDetailsFromMongo.optAccountDetails(credId) match {
+    accountDetailsFromMongo.optAccountDetails(credId) match {
       case Some(entry) =>
         Future.successful(Right(entry))
       case None =>
@@ -52,7 +51,7 @@ class UsersGroupsSearchService @Inject() (
   private def getAccountDetailsFromUsersGroupSearch(credId: String, key: String)(implicit
     ec: ExecutionContext,
     hc: HeaderCarrier,
-    request: RequestWithUserDetailsFromSessionAndMongo[_]
+    request: RequestWithUserDetailsFromSession[_]
   ): TEAFResult[AccountDetails] = EitherT {
     usersGroupsSearchConnector
       .getUserDetails(credId)

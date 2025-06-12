@@ -126,6 +126,16 @@ trait BaseSpec
   def generateBasicCacheData(accountType: AccountTypes.Value, redirectUrl: String = "foo"): Map[String, JsValue] =
     Map(ACCOUNT_TYPE -> Json.toJson(accountType), REDIRECT_URL -> JsString(redirectUrl))
 
+  def accountDetailsFromMongo(
+    accountType: AccountTypes.Value = SINGLE_ACCOUNT,
+    redirectUrl: String = UrlPaths.returnUrl,
+    additionalCacheData: Map[String, JsValue] = Map()
+  ): AccountDetailsFromMongo = AccountDetailsFromMongo(
+    accountType = accountType,
+    redirectUrl = redirectUrl,
+    sessionData = generateBasicCacheData(accountType, redirectUrl) ++ additionalCacheData
+  )(crypto.crypto)
+
   def requestWithAccountType(
     accountType: AccountTypes.Value = SINGLE_ACCOUNT,
     redirectUrl: String = UrlPaths.returnUrl,
@@ -133,14 +143,10 @@ trait BaseSpec
     langCode: String = "en"
   ): RequestWithUserDetailsFromSessionAndMongo[_] =
     RequestWithUserDetailsFromSessionAndMongo(
-      request.request.withTransientLang(langCode),
-      request.userDetails,
-      request.sessionID,
-      AccountDetailsFromMongo(
-        accountType,
-        redirectUrl,
-        generateBasicCacheData(accountType, redirectUrl) ++ additionalCacheData
-      )(crypto.crypto)
+      request = request.request.withTransientLang(langCode),
+      userDetails = request.userDetails,
+      sessionID = request.sessionID,
+      accountDetailsFromMongo = accountDetailsFromMongo(accountType, redirectUrl, additionalCacheData)
     )
 
   class TestTeaSessionCache extends TEASessionCache {

@@ -17,9 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators
 
 import cats.data.EitherT
-import cats.implicits._
-
-import javax.inject.{Inject, Singleton}
+import cats.implicits.*
 import play.api.Logger
 import play.api.data.Form
 import uk.gov.hmrc.http.HeaderCarrier
@@ -27,16 +25,17 @@ import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.*
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logNoUserFoundWithPTEnrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, CADetailsPTADetailsSADetailsIfExists, CADetailsSADetailsIfExists, PTEnrolmentOnOtherAccount, UsersAssignedEnrolment}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.*
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.*
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, SilentAssignmentService, UsersGroupsSearchService}
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -62,7 +61,8 @@ class MultipleAccountsOrchestrator @Inject() (
       case Right(_) =>
         usersGroupSearchService
           .getAccountDetails(
-            requestWithUserDetails.userDetails.credId
+            requestWithUserDetails.userDetails.credId,
+            requestWithUserDetails.accountDetailsFromMongo
           )(implicitly, implicitly, requestWithUserDetails)
           .map(accountDetails =>
             accountDetails.copy(
@@ -80,7 +80,8 @@ class MultipleAccountsOrchestrator @Inject() (
       case Left(error) => EitherT.left(Future.successful(error))
       case Right(_) =>
         usersGroupSearchService.getAccountDetails(
-          requestWithUserDetails.userDetails.credId
+          requestWithUserDetails.userDetails.credId,
+          requestWithUserDetails.accountDetailsFromMongo
         )(implicitly, implicitly, requestWithUserDetails)
     }
 
@@ -144,11 +145,23 @@ class MultipleAccountsOrchestrator @Inject() (
     val optCredential = requestWithUserDetails.accountDetailsFromMongo.optUserAssignedSA
     optCredential.fold[Option[String]](None)(_.enrolledCredential) match {
       case Some(saCred) =>
-        usersGroupSearchService.getAccountDetails(saCred)(implicitly, implicitly, requestWithUserDetails).value
+        usersGroupSearchService
+          .getAccountDetails(saCred, requestWithUserDetails.accountDetailsFromMongo)(
+            implicitly,
+            implicitly,
+            requestWithUserDetails
+          )
+          .value
       case _ =>
         eacdService.getUsersAssignedSAEnrolment(requestWithUserDetails, implicitly, implicitly).value.flatMap {
           case Right(UsersAssignedEnrolment(Some(credId))) =>
-            usersGroupSearchService.getAccountDetails(credId)(implicitly, implicitly, requestWithUserDetails).value
+            usersGroupSearchService
+              .getAccountDetails(credId, requestWithUserDetails.accountDetailsFromMongo)(
+                implicitly,
+                implicitly,
+                requestWithUserDetails
+              )
+              .value
           case _ => Future.successful(Left(NoSAEnrolmentWhenOneExpected))
         }
     }
@@ -162,7 +175,13 @@ class MultipleAccountsOrchestrator @Inject() (
     val optCredential = requestWithUserDetails.accountDetailsFromMongo.optUserAssignedPT
     optCredential.fold[Option[String]](None)(_.enrolledCredential) match {
       case Some(ptCred) if ptCred != requestWithUserDetails.userDetails.credId =>
-        usersGroupSearchService.getAccountDetails(ptCred)(implicitly, implicitly, requestWithUserDetails).value
+        usersGroupSearchService
+          .getAccountDetails(ptCred, requestWithUserDetails.accountDetailsFromMongo)(
+            implicitly,
+            implicitly,
+            requestWithUserDetails
+          )
+          .value
       case _ =>
         logger.logEvent(
           logNoUserFoundWithPTEnrolment(
@@ -272,7 +291,13 @@ class MultipleAccountsOrchestrator @Inject() (
         case Some(credId) if credId == ptAccountDetails.credId =>
           EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(Some(ptAccountDetails)))
         case Some(credId) =>
-          usersGroupSearchService.getAccountDetails(credId)(implicitly, implicitly, requestWithUserDetails).map(Some(_))
+          usersGroupSearchService
+            .getAccountDetails(credId, requestWithUserDetails.accountDetailsFromMongo)(
+              implicitly,
+              implicitly,
+              requestWithUserDetails
+            )
+            .map(Some(_))
         case None =>
           EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(Option.empty[AccountDetails]))
       }
@@ -281,7 +306,11 @@ class MultipleAccountsOrchestrator @Inject() (
       _ <- EitherT(Future(checkAccessAllowedForPage(List(PT_ASSIGNED_TO_OTHER_USER))))
       currentAccountDetails <-
         usersGroupSearchService
-          .getAccountDetails(requestWithUserDetails.userDetails.credId)(implicitly, implicitly, requestWithUserDetails)
+          .getAccountDetails(requestWithUserDetails.userDetails.credId, requestWithUserDetails.accountDetailsFromMongo)(
+            implicitly,
+            implicitly,
+            requestWithUserDetails
+          )
       ptAccountDetails        <- getPTCredentialDetails
       saOnOtherAccountDetails <- getSAAccountDetails(currentAccountDetails, ptAccountDetails)
     } yield CADetailsPTADetailsSADetailsIfExists(
@@ -301,11 +330,23 @@ class MultipleAccountsOrchestrator @Inject() (
       val optCredential = requestWithUserDetails.accountDetailsFromMongo.optUserAssignedSA
       optCredential.flatMap(_.enrolledCredential) match {
         case Some(saCred) =>
-          usersGroupSearchService.getAccountDetails(saCred)(implicitly, implicitly, requestWithUserDetails).value
+          usersGroupSearchService
+            .getAccountDetails(saCred, requestWithUserDetails.accountDetailsFromMongo)(
+              implicitly,
+              implicitly,
+              requestWithUserDetails
+            )
+            .value
         case _ =>
           eacdService.getUsersAssignedSAEnrolment(requestWithUserDetails, implicitly, implicitly).value.flatMap {
             case Right(UsersAssignedEnrolment(Some(credId))) =>
-              usersGroupSearchService.getAccountDetails(credId)(implicitly, implicitly, requestWithUserDetails).value
+              usersGroupSearchService
+                .getAccountDetails(credId, requestWithUserDetails.accountDetailsFromMongo)(
+                  implicitly,
+                  implicitly,
+                  requestWithUserDetails
+                )
+                .value
             case _ => Future.successful(Left(NoSAEnrolmentWhenOneExpected))
           }
       }
@@ -315,7 +356,11 @@ class MultipleAccountsOrchestrator @Inject() (
       _ <- EitherT(Future(checkAccessAllowedForPage(List(SA_ASSIGNED_TO_OTHER_USER))))
       currentAccountDetails <-
         usersGroupSearchService
-          .getAccountDetails(requestWithUserDetails.userDetails.credId)(implicitly, implicitly, requestWithUserDetails)
+          .getAccountDetails(requestWithUserDetails.userDetails.credId, requestWithUserDetails.accountDetailsFromMongo)(
+            implicitly,
+            implicitly,
+            requestWithUserDetails
+          )
       saOnOtherAccountDetails <- getSAAccountDetails
     } yield CADetailsSADetailsIfExists(
       currentAccountDetails,

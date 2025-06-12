@@ -16,16 +16,15 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions
 
-import javax.inject.Inject
 import play.api.Logger
-import play.api.mvc._
+import play.api.mvc.*
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.ErrorHandler
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.*
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.{EventLoggerService, LoggingEvent}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.TENCrypto
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.AccountMongoDetailsRetrievalService
 
+import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 case class RequestWithUserDetailsFromSessionAndMongo[A](
@@ -50,18 +49,20 @@ object RequestWithUserDetailsFromSessionAndMongo {
 trait AccountMongoDetailsActionTrait
     extends ActionRefiner[RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo]
 
+// TODO: Spec file - mock AccountMongoDetailsRetrievalService
 class AccountMongoDetailsAction @Inject() (
-  teaSessionCache: TEASessionCache,
   errorHandler: ErrorHandler,
   val appConfig: AppConfig,
-  logger: EventLoggerService
-)(implicit val executionContext: ExecutionContext, crypto: TENCrypto)
+  logger: EventLoggerService,
+  accountMongoDetailsRetrievalService: AccountMongoDetailsRetrievalService
+)(implicit val executionContext: ExecutionContext)
     extends AccountMongoDetailsActionTrait with RedirectHelper {
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
   override protected def refine[A](
     request: RequestWithUserDetailsFromSession[A]
   ): Future[Either[Result, RequestWithUserDetailsFromSessionAndMongo[A]]] =
-    getAccountDetailsFromMongoFromCache(request)
+    accountMongoDetailsRetrievalService
+      .getAccountDetailsFromMongoFromCache(request)
       .map {
         case Right(accountDetailsFromMongo) =>
           Right(
@@ -90,29 +91,5 @@ class AccountMongoDetailsAction @Inject() (
             )
         )
       }
-
-  private def getAccountDetailsFromMongoFromCache(implicit
-    request: RequestWithUserDetailsFromSession[_]
-  ): Future[Either[TaxEnrolmentAssignmentErrors, AccountDetailsFromMongo]] =
-    teaSessionCache.fetch().map { optCachedMap =>
-      optCachedMap
-        .fold[Either[TaxEnrolmentAssignmentErrors, AccountDetailsFromMongo]](
-          Left(CacheNotCompleteOrNotCorrect(None, None))
-        ) { cachedMap =>
-          (
-            AccountDetailsFromMongo.optAccountType(cachedMap.data),
-            AccountDetailsFromMongo.optRedirectUrl(cachedMap.data)
-          ) match {
-            case (Some(accountType), Some(redirectUrl)) =>
-              Right(
-                AccountDetailsFromMongo(accountType, redirectUrl, cachedMap.data)(crypto.crypto)
-              )
-            case (optAccountType, optRedirectUrl) =>
-              Left(
-                CacheNotCompleteOrNotCorrect(optRedirectUrl, optAccountType)
-              )
-          }
-        }
-    }
 
 }

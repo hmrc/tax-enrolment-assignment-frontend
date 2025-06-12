@@ -26,7 +26,7 @@ import play.api.mvc.{AnyContent, BodyParsers}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{CADetailsSADetailsIfExists, CacheMap, UsersAssignedEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
@@ -36,7 +36,9 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.KEEP_AC
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, SilentAssignmentService, UsersGroupsSearchService}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
+
+import scala.concurrent.{Future}
 
 class MultipleAccountsOrchestratorSpec extends BaseSpec {
 
@@ -69,11 +71,12 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
 
           when(
             mockUsersGroupService.getAccountDetails(
-              ameq(CREDENTIAL_ID)
+              ameq(CREDENTIAL_ID),
+              any()
             )(
               any[ExecutionContext],
               any[HeaderCarrier],
-              any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+              any[RequestWithUserDetailsFromSession[AnyContent]]
             )
           ).thenReturn(createInboundResult(accountDetails))
 
@@ -109,11 +112,12 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
       "return the userDetails for the account" in {
         when(
           mockUsersGroupService.getAccountDetails(
-            ameq(CREDENTIAL_ID)
+            ameq(CREDENTIAL_ID),
+            any()
           )(
             any[ExecutionContext],
             any[HeaderCarrier],
-            any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+            any[RequestWithUserDetailsFromSession[AnyContent]]
           )
         ).thenReturn(createInboundResult(accountDetails))
 
@@ -157,21 +161,23 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
 
         when(
           mockUsersGroupService.getAccountDetails(
-            ameq(CREDENTIAL_ID)
+            ameq(CREDENTIAL_ID),
+            any()
           )(
             any[ExecutionContext],
             any[HeaderCarrier],
-            any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+            any[RequestWithUserDetailsFromSession[AnyContent]]
           )
         ).thenReturn(createInboundResult(accountDetails))
 
         when(
           mockUsersGroupService.getAccountDetails(
-            ameq(CREDENTIAL_ID_1)
+            ameq(CREDENTIAL_ID_1),
+            any()
           )(
             any[ExecutionContext],
             any[HeaderCarrier],
-            any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+            any[RequestWithUserDetailsFromSession[AnyContent]]
           )
         ).thenReturn(createInboundResult(accountDetailsWithPT.copy(hasSA = None)))
 
@@ -201,21 +207,23 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
 
         when(
           mockUsersGroupService.getAccountDetails(
-            ameq(CREDENTIAL_ID)
+            ameq(CREDENTIAL_ID),
+            any()
           )(
             any[ExecutionContext],
             any[HeaderCarrier],
-            any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+            any[RequestWithUserDetailsFromSession[AnyContent]]
           )
         ).thenReturn(createInboundResult(accountDetails))
 
         when(
           mockUsersGroupService.getAccountDetails(
-            ameq(CREDENTIAL_ID_1)
+            ameq(CREDENTIAL_ID_1),
+            any()
           )(
             any[ExecutionContext],
             any[HeaderCarrier],
-            any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+            any[RequestWithUserDetailsFromSession[AnyContent]]
           )
         ).thenReturn(createInboundResult(accountDetailsWithPT))
 
@@ -244,21 +252,23 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
 
         when(
           mockUsersGroupService.getAccountDetails(
-            ameq(CREDENTIAL_ID)
+            ameq(CREDENTIAL_ID),
+            any()
           )(
             any[ExecutionContext],
             any[HeaderCarrier],
-            any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+            any[RequestWithUserDetailsFromSession[AnyContent]]
           )
         ).thenReturn(createInboundResult(accountDetails))
 
         when(
           mockUsersGroupService.getAccountDetails(
-            ameq(CREDENTIAL_ID_1)
+            ameq(CREDENTIAL_ID_1),
+            any()
           )(
             any[ExecutionContext],
             any[HeaderCarrier],
-            any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+            any[RequestWithUserDetailsFromSession[AnyContent]]
           )
         ).thenReturn(createInboundResult(accountDetailsWithPT))
 
@@ -287,21 +297,23 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
 
         when(
           mockUsersGroupService.getAccountDetails(
-            ameq(CREDENTIAL_ID)
+            ameq(CREDENTIAL_ID),
+            any()
           )(
             any[ExecutionContext],
             any[HeaderCarrier],
-            any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+            any[RequestWithUserDetailsFromSession[AnyContent]]
           )
         ).thenReturn(createInboundResult(accountDetails))
 
         when(
           mockUsersGroupService.getAccountDetails(
-            ameq(CREDENTIAL_ID_1)
+            ameq(CREDENTIAL_ID_1),
+            any()
           )(
             any[ExecutionContext],
             any[HeaderCarrier],
-            any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+            any[RequestWithUserDetailsFromSession[AnyContent]]
           )
         ).thenReturn(createInboundResult(accountDetailsWithPT))
 
@@ -315,11 +327,12 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
 
         when(
           mockUsersGroupService.getAccountDetails(
-            ameq(CREDENTIAL_ID_2)
+            ameq(CREDENTIAL_ID_2),
+            any()
           )(
             any[ExecutionContext],
             any[HeaderCarrier],
-            any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+            any[RequestWithUserDetailsFromSession[AnyContent]]
           )
         ).thenReturn(createInboundResult(accountDetails.copy(userId = CREDENTIAL_ID_2)))
 
@@ -421,11 +434,12 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
 
           when(
             mockUsersGroupService.getAccountDetails(
-              ameq(CREDENTIAL_ID_1)
+              ameq(CREDENTIAL_ID_1),
+              any()
             )(
               any[ExecutionContext],
               any[HeaderCarrier],
-              any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+              any[RequestWithUserDetailsFromSession[AnyContent]]
             )
           ).thenReturn(createInboundResult(accountDetails))
 
@@ -490,11 +504,12 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
 
         when(
           mockUsersGroupService.getAccountDetails(
-            ameq(CREDENTIAL_ID_1)
+            ameq(CREDENTIAL_ID_1),
+            any()
           )(
             any[ExecutionContext],
             any[HeaderCarrier],
-            any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+            any[RequestWithUserDetailsFromSession[AnyContent]]
           )
         ).thenReturn(createInboundResult(accountDetails))
 
@@ -669,21 +684,23 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
 
         when(
           mockUsersGroupService.getAccountDetails(
-            ameq(CREDENTIAL_ID)
+            ameq(CREDENTIAL_ID),
+            any()
           )(
             any[ExecutionContext],
             any[HeaderCarrier],
-            any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+            any[RequestWithUserDetailsFromSession[AnyContent]]
           )
         ).thenReturn(createInboundResult(accountDetails))
 
         when(
           mockUsersGroupService.getAccountDetails(
-            ameq(CREDENTIAL_ID_1)
+            ameq(CREDENTIAL_ID_1),
+            any()
           )(
             any[ExecutionContext],
             any[HeaderCarrier],
-            any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+            any[RequestWithUserDetailsFromSession[AnyContent]]
           )
         ).thenReturn(createInboundResult(accountDetailsSA))
         val res = orchestrator.getSAAndCADetails(
@@ -701,11 +718,12 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
       "return a CADetailsSADetailsIfExists for the account details" in {
         when(
           mockUsersGroupService.getAccountDetails(
-            ameq(CREDENTIAL_ID)
+            ameq(CREDENTIAL_ID),
+            any()
           )(
             any[ExecutionContext],
             any[HeaderCarrier],
-            any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+            any[RequestWithUserDetailsFromSession[AnyContent]]
           )
         ).thenReturn(createInboundResult(accountDetails))
 
@@ -719,11 +737,12 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
 
         when(
           mockUsersGroupService.getAccountDetails(
-            ameq(CREDENTIAL_ID_1)
+            ameq(CREDENTIAL_ID_1),
+            any()
           )(
             any[ExecutionContext],
             any[HeaderCarrier],
-            any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+            any[RequestWithUserDetailsFromSession[AnyContent]]
           )
         ).thenReturn(createInboundResult(accountDetailsSA))
         val res = orchestrator.getSAAndCADetails(
@@ -741,11 +760,12 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
       "return a NoSAEnrolmentWhenOneExpected error" in {
         when(
           mockUsersGroupService.getAccountDetails(
-            ameq(CREDENTIAL_ID)
+            ameq(CREDENTIAL_ID),
+            any()
           )(
             any[ExecutionContext],
             any[HeaderCarrier],
-            any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+            any[RequestWithUserDetailsFromSession[AnyContent]]
           )
         ).thenReturn(createInboundResult(accountDetails))
 

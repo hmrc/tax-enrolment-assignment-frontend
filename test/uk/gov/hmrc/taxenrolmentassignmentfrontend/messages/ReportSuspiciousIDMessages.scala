@@ -18,15 +18,15 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.messages
 
 object ReportSuspiciousIDMessages extends BaseMessage {
 
-  val title: String = "You need to contact us" + defaultTitleSuffix
-  val heading = "You need to contact us"
-  val paragraphGG: String =
+  val title: String          = "You need to contact us" + defaultTitleSuffix
+  val heading                = "You need to contact us"
+  val paragraphGG: String    =
     "Take a note of this Government Gateway user ID as this screen will time out after 15 minutes."
-  val paragraphOL: String = "Take a note of this GOV.UK One Login as this screen will time out after 15 minutes."
-  val linkTextGG: String = "Contact technical support with HMRC online services (opens in new tab)"
+  val paragraphOL: String    = "Take a note of this GOV.UK One Login as this screen will time out after 15 minutes."
+  val linkTextGG: String     = "Contact technical support with HMRC online services (opens in new tab)"
   val postLinkTextGG: String = "and quote PTA951"
-  val linkTextOL: String = "Contact GOV.UK One Login (opens in new tab)"
-  val linkGG: String = "https://www.gov.uk/government/organisations/hm-revenue-customs/contact/online-services-helpdesk"
-  val linkOL: String = "https://home.account.gov.uk/contact-gov-uk-one-login"
+  val linkTextOL: String     = "Contact GOV.UK One Login (opens in new tab)"
+  val linkGG: String         = "https://www.gov.uk/government/organisations/hm-revenue-customs/contact/online-services-helpdesk"
+  val linkOL: String         = "https://home.account.gov.uk/contact-gov-uk-one-login"
 
 }

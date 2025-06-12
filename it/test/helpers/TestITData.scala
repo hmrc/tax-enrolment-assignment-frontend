@@ -29,41 +29,41 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models._
 
 object TestITData {
 
-  val NINO: Nino = new Generator().nextNino
+  val NINO: Nino         = new Generator().nextNino
   val mismatchNino: Nino = new Generator().nextNino
 
-  val PROVIDER_TYPE = "GovernmentGateway"
-  val CURRENT_USER_EMAIL = "foobarwizz"
-  val CREDENTIAL_ID: String = "6902202884164548"
-  val CREDENTIAL_ID_2: String = "8316291481001919"
-  val CREDENTIAL_ID_3: String = "0493831301037584"
-  val CREDENTIAL_ID_4: String = "2884521810163541"
-  val USER_ID = "6037"
-  val GROUP_ID: String = "GROUPID123"
-  val UTR = "1234567890"
-  val CL50 = 50
-  val CL200 = 200
-  val creds: Credentials =
+  val PROVIDER_TYPE                     = "GovernmentGateway"
+  val CURRENT_USER_EMAIL                = "foobarwizz"
+  val CREDENTIAL_ID: String             = "6902202884164548"
+  val CREDENTIAL_ID_2: String           = "8316291481001919"
+  val CREDENTIAL_ID_3: String           = "0493831301037584"
+  val CREDENTIAL_ID_4: String           = "2884521810163541"
+  val USER_ID                           = "6037"
+  val GROUP_ID: String                  = "GROUPID123"
+  val UTR                               = "1234567890"
+  val CL50                              = 50
+  val CL200                             = 200
+  val creds: Credentials                =
     Credentials(CREDENTIAL_ID, GovernmentGateway.toString)
-  val noEnrolments: JsValue = Json.arr()
-  val saEnrolmentOnly: JsValue =
+  val noEnrolments: JsValue             = Json.arr()
+  val saEnrolmentOnly: JsValue          =
     Json.arr(createEnrolmentJson("IR-SA", "UTR", "123456789"))
   val saEnrolmentAsCaseClass: Enrolment = Enrolment("IR-SA", Seq(EnrolmentIdentifier("UTR", "123456789")), "Activated")
-  val ptEnrolmentOnly: JsValue =
+  val ptEnrolmentOnly: JsValue          =
     Json.arr(createEnrolmentJson("HMRC-PT", "NINO", NINO.nino))
-  val mismatchPtEnrolmentOnly: JsArray =
+  val mismatchPtEnrolmentOnly: JsArray  =
     Json.arr(createEnrolmentJson("HMRC-PT", "NINO", mismatchNino.nino))
-  val saAndptEnrolments: JsArray = Json.arr(
+  val saAndptEnrolments: JsArray        = Json.arr(
     createEnrolmentJson("HMRC-PT", "NINO", NINO.nino),
     createEnrolmentJson("IR-SA", "UTR", "123456789")
   )
-  val AUTHORIZE_HEADER_VALUE =
+  val AUTHORIZE_HEADER_VALUE            =
     "Bearer BXQ3/Treo4kQCZvVcCqKPhhpBYpRtQQKWTypn1WBfRHWUopu5V/IFWF5phY/fymAP1FMqQR27MmCJxb50Hi5GD6G3VMjMtSLu7TAAIuqDia6jByIpXJpqOgLQuadi7j0XkyDVkl0Zp/zbKtHiNrxpa0nVHm3+GUC4H2h4Ki8OjP9KwIkeIPK/mMlBESjue4V"
 
   def createEnrolmentJson(key: String, identifierKey: String, identifierValue: String): JsValue =
     Json.obj(
       fields = "key" -> JsString(key),
-      "identifiers" -> Json
+      "identifiers"     -> Json
         .arr(
           Json.obj(
             "key"   -> JsString(identifierKey),
@@ -74,7 +74,7 @@ object TestITData {
       "confidenceLevel" -> JsNumber(CL200)
     )
 
-  val sessionId = "sessionId-eb3158c2-0aff-4ce8-8d1b-f2208ace52fe"
+  val sessionId                    = "sessionId-eb3158c2-0aff-4ce8-8d1b-f2208ace52fe"
   val xSessionId: (String, String) = SessionKeys.sessionId -> sessionId
   val xAuthToken: (String, String) = SessionKeys.authToken -> "Bearer 1"
 
@@ -86,8 +86,8 @@ object TestITData {
     enrolments: JsValue = noEnrolments
   ): JsValue = {
 
-    val enrolmentsJson = Json.obj("allEnrolments" -> enrolments)
-    val ninoJson = optNino.fold[JsObject](Json.obj())(nino => Json.obj("nino" -> JsString(nino)))
+    val enrolmentsJson  = Json.obj("allEnrolments" -> enrolments)
+    val ninoJson        = optNino.fold[JsObject](Json.obj())(nino => Json.obj("nino" -> JsString(nino)))
     val credentialsJson = optCreds.fold[JsObject](Json.obj())(creds =>
       Json.obj(
         "optionalCredentials" -> Json.obj(
@@ -96,7 +96,7 @@ object TestITData {
         )
       )
     )
-    val groupIdJson = optGroupId.fold[JsObject](Json.obj())(groupId => Json.obj("groupIdentifier" -> JsString(groupId)))
+    val groupIdJson     = optGroupId.fold[JsObject](Json.obj())(groupId => Json.obj("groupIdentifier" -> JsString(groupId)))
 
     val affinityGroupJson = affinityGroup.toJson.as[JsObject]
 
@@ -116,7 +116,7 @@ object TestITData {
     authoriseResponseJson(optNino, optCreds, optGroupId, affinityGroup, enrolments)
   }
 
-  val sessionNotFound = "SessionRecordNotFound"
+  val sessionNotFound             = "SessionRecordNotFound"
   val insufficientConfidenceLevel = "InsufficientConfidenceLevel"
 
   val eacdExampleError: String =
@@ -305,7 +305,7 @@ object TestITData {
   val identifierTxNum: IdentifiersOrVerifiers = IdentifiersOrVerifiers("TaxOfficeNumber", "123")
   val identifierTxRef: IdentifiersOrVerifiers =
     IdentifiersOrVerifiers("TaxOfficeReference", "XYZ9876543")
-  val identifierUTR: IdentifiersOrVerifiers = IdentifiersOrVerifiers("UTR", "1234567890")
+  val identifierUTR: IdentifiersOrVerifiers   = IdentifiersOrVerifiers("UTR", "1234567890")
 
   val userEnrolmentIRSA: UserEnrolment = UserEnrolment(
     service = "IR-SA",
@@ -368,13 +368,13 @@ object TestITData {
 
   val saUsers: UsersAssignedEnrolment = UsersAssignedEnrolment(Some(CREDENTIAL_ID_2))
 
-  val underConstructionTruePageTitle =
+  val underConstructionTruePageTitle    =
     "Tax Enrolment Assignment Frontend - Enrolment Present"
-  val enrolledPTPageTitle =
+  val enrolledPTPageTitle               =
     "Only your current user ID can access your personal tax account from now on"
   val ptEnrolledOnOtherAccountPageTitle =
     "We have found your personal tax account under a different Government Gateway user ID"
-  val reportSuspiciousIDPageTitle =
+  val reportSuspiciousIDPageTitle       =
     "You need to contact us"
 
   val keepAccessToSAPageTitle =

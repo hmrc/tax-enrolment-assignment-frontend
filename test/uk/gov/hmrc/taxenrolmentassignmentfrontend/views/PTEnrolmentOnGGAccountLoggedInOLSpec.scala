@@ -28,12 +28,12 @@ class PTEnrolmentOnGGAccountLoggedInOLSpec extends ViewSpecHelper {
     inject[PTEnrolmentOnGGAccountLoggedInOL]
 
   object Selectors {
-    val heading = "govuk-heading-l"
-    val body = "govuk-body"
-    val summaryListRow = "govuk-summary-list__row"
-    val summaryListKey = "govuk-summary-list__key"
+    val heading          = "govuk-heading-l"
+    val body             = "govuk-body"
+    val summaryListRow   = "govuk-summary-list__row"
+    val summaryListKey   = "govuk-summary-list__key"
     val summaryListValue = "govuk-summary-list__value"
-    val saHeading = "govuk-heading-m"
+    val saHeading        = "govuk-heading-m"
   }
 
   val elementsToMFADetails: Map[Int, MFADetails] = Map(
@@ -50,7 +50,7 @@ class PTEnrolmentOnGGAccountLoggedInOLSpec extends ViewSpecHelper {
 
   val documentWithSA = doc(htmlWithSA)
 
-  val htmlNoEmail =
+  val htmlNoEmail     =
     view(
       ptEnrolmentDataModelOL(Some(NO_EMAIL_USER_ID), accountDetailsWithNoEmail)
     )(FakeRequest(), testMessages)

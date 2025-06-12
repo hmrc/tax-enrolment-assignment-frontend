@@ -18,21 +18,21 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.messages
 
 object KeepAccessToSAMessages extends BaseMessage {
 
-  val continue = "Continue"
-  val title: String =
+  val continue          = "Continue"
+  val title: String     =
     "Do you want to keep access to Self Assessment from your personal tax account?" + defaultTitleSuffix
-  val heading =
+  val heading           =
     "Do you want to use the same Government Gateway user ID to access your personal tax account and Self Assessment?"
-  val radioYes = "Yes"
-  val radioNo = "No, I want to keep them separate"
-  val noSALink = "I do not complete Self Assessment Online"
+  val radioYes          = "Yes"
+  val radioNo           = "No, I want to keep them separate"
+  val noSALink          = "I do not complete Self Assessment Online"
   val fraudReportingUrl =
     "/protect-tax-info/enrol-pt/contact-hmrc-sa"
-  val errorTitle = "There is a problem"
-  val errorMessage =
+  val errorTitle        = "There is a problem"
+  val errorMessage      =
     "Select yes if you want to use the same sign in details for your personal tax account and Self Assessment"
-  val button = "Continue"
-  val action: String =
+  val button            = "Continue"
+  val action: String    =
     uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes.KeepAccessToSAController.continue.url
 
 }

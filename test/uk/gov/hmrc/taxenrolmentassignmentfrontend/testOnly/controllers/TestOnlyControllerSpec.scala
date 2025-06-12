@@ -43,7 +43,7 @@ import scala.util.Success
 class TestOnlyControllerSpec extends BaseSpec {
 
   lazy val mockAccountUtilsTestOnly: AccountUtilsTestOnly = mock[AccountUtilsTestOnly]
-  lazy val mockFileHelper: FileHelper = mock[FileHelper]
+  lazy val mockFileHelper: FileHelper                     = mock[FileHelper]
 
   override implicit lazy val app: Application = localGuiceApplicationBuilder()
     .overrides(
@@ -57,7 +57,7 @@ class TestOnlyControllerSpec extends BaseSpec {
   "create" must {
 
     "create a single account" in {
-      val nino = generateNino
+      val nino        = generateNino
       val requestBody =
         s"""
            |    {
@@ -108,7 +108,7 @@ class TestOnlyControllerSpec extends BaseSpec {
            |        ]
            |    }
            |""".stripMargin
-      val account = Json.parse(requestBody).as[AccountDetailsTestOnly]
+      val account     = Json.parse(requestBody).as[AccountDetailsTestOnly]
 
       when(mockAccountUtilsTestOnly.deleteAccountDetails(ameq(account))(any()))
         .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
@@ -126,7 +126,7 @@ class TestOnlyControllerSpec extends BaseSpec {
     }
 
     "create multiple accounts" in {
-      val nino = generateNino
+      val nino        = generateNino
       val requestBody =
         s"""
            |[
@@ -185,7 +185,7 @@ class TestOnlyControllerSpec extends BaseSpec {
            |    }
            |]
            |""".stripMargin
-      val accounts = Json.parse(requestBody).as[List[AccountDetailsTestOnly]]
+      val accounts    = Json.parse(requestBody).as[List[AccountDetailsTestOnly]]
 
       accounts.foreach { account =>
         when(mockAccountUtilsTestOnly.deleteAccountDetails(ameq(account))(any()))
@@ -204,7 +204,7 @@ class TestOnlyControllerSpec extends BaseSpec {
       status(result) mustBe OK
     }
     "throw an error" in {
-      val nino = generateNino
+      val nino        = generateNino
       val requestBody =
         s"""
            |[
@@ -283,7 +283,7 @@ class TestOnlyControllerSpec extends BaseSpec {
 
   "insertCustomTestData" must {
     "create an account with enrolmemts" in {
-      val nino = generateNino
+      val nino                 = generateNino
       val identityProviderType = "SCP"
 
       val account = AccountDetailsTestOnly(
@@ -325,7 +325,7 @@ class TestOnlyControllerSpec extends BaseSpec {
       status(result) mustBe OK
     }
     "create an account with no enrolments" in {
-      val nino = generateNino
+      val nino                 = generateNino
       val identityProviderType = "SCP"
 
       val account = AccountDetailsTestOnly(
@@ -368,7 +368,7 @@ class TestOnlyControllerSpec extends BaseSpec {
       status(result) mustBe BAD_REQUEST
     }
     "give 500 response when API returns an error" in {
-      val nino = generateNino
+      val nino                 = generateNino
       val identityProviderType = "SCP"
 
       val account = AccountDetailsTestOnly(
@@ -404,7 +404,7 @@ class TestOnlyControllerSpec extends BaseSpec {
 
   "insertTestData" must {
     "create an account with enrolmemts" in {
-      val nino = generateNino
+      val nino                 = generateNino
       val identityProviderType = "SCP"
 
       val account = AccountDetailsTestOnly(
@@ -446,7 +446,7 @@ class TestOnlyControllerSpec extends BaseSpec {
       status(result) mustBe OK
     }
     "create an account with no enrolments" in {
-      val nino = generateNino
+      val nino                 = generateNino
       val identityProviderType = "SCP"
 
       val account = AccountDetailsTestOnly(
@@ -488,7 +488,7 @@ class TestOnlyControllerSpec extends BaseSpec {
       status(result) mustBe BAD_REQUEST
     }
     "give 500 response when API returns an error" in {
-      val nino = generateNino
+      val nino                 = generateNino
       val identityProviderType = "SCP"
 
       val account = AccountDetailsTestOnly(
@@ -521,9 +521,9 @@ class TestOnlyControllerSpec extends BaseSpec {
       status(result) mustBe INTERNAL_SERVER_ERROR
     }
   }
-  "extractData" must {
+  "extractData"    must {
     "return List of AccountDetailsTestOnly when given valid json" in {
-      val nino = generateNino
+      val nino                 = generateNino
       val identityProviderType = "SCP"
 
       val account = AccountDetailsTestOnly(
@@ -548,7 +548,7 @@ class TestOnlyControllerSpec extends BaseSpec {
   "delete" must {
 
     "delete all data related to accounts" in {
-      val nino = generateNino
+      val nino        = generateNino
       val requestBody =
         s"""
            |    {
@@ -599,7 +599,7 @@ class TestOnlyControllerSpec extends BaseSpec {
            |        ]
            |    }
            |""".stripMargin
-      val account = Json.parse(requestBody).as[AccountDetailsTestOnly]
+      val account     = Json.parse(requestBody).as[AccountDetailsTestOnly]
 
       when(mockAccountUtilsTestOnly.deleteAccountDetails(ameq(account))(any()))
         .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
@@ -614,7 +614,7 @@ class TestOnlyControllerSpec extends BaseSpec {
     }
 
     "create multiple accounts" in {
-      val nino = generateNino
+      val nino        = generateNino
       val requestBody =
         s"""
            |[
@@ -673,7 +673,7 @@ class TestOnlyControllerSpec extends BaseSpec {
            |    }
            |]
            |""".stripMargin
-      val accounts = Json.parse(requestBody).as[List[AccountDetailsTestOnly]]
+      val accounts    = Json.parse(requestBody).as[List[AccountDetailsTestOnly]]
 
       accounts.foreach { account =>
         when(mockAccountUtilsTestOnly.deleteAccountDetails(ameq(account))(any()))
@@ -693,7 +693,7 @@ class TestOnlyControllerSpec extends BaseSpec {
     }
 
     "thrown an error" in {
-      val nino = generateNino
+      val nino        = generateNino
       val requestBody =
         s"""
            |[
@@ -786,7 +786,7 @@ class TestOnlyControllerSpec extends BaseSpec {
       val request = FakeRequest()
         .withMethod("GET")
 
-      val nino = generateNino
+      val nino                 = generateNino
       val identityProviderType = "SCP"
 
       val account = AccountDetailsTestOnly(
@@ -811,9 +811,9 @@ class TestOnlyControllerSpec extends BaseSpec {
   }
 
   "successfulCall" must {
-    val mockEacdService = mock[EACDService]
+    val mockEacdService           = mock[EACDService]
     val mockEnrolmentStoreService = mock[EnrolmentStoreServiceTestOnly]
-    val mockAuthConnector = mock[AuthConnector]
+    val mockAuthConnector         = mock[AuthConnector]
 
     "call EACDService in non staging environments" in {
       implicit lazy val app: Application = localGuiceApplicationBuilder()

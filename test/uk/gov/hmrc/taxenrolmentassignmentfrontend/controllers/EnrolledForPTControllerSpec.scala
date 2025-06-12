@@ -37,11 +37,11 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class EnrolledForPTControllerSpec extends ControllersBaseSpec {
 
-  lazy val mockSilentAssignmentService: SilentAssignmentService = mock[SilentAssignmentService]
+  lazy val mockSilentAssignmentService: SilentAssignmentService   = mock[SilentAssignmentService]
   lazy val mockAccountCheckOrchestrator: AccountCheckOrchestrator = mock[AccountCheckOrchestrator]
-  lazy val mockAuditHandler: AuditHandler = mock[AuditHandler]
+  lazy val mockAuditHandler: AuditHandler                         = mock[AuditHandler]
 
-  lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
+  lazy val testBodyParser: BodyParsers.Default                            = mock[BodyParsers.Default]
   lazy val mockMultipleAccountsOrchestrator: MultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
 
   override lazy val overrides: Seq[Binding[TEASessionCache]] = Seq(
@@ -82,7 +82,7 @@ class EnrolledForPTControllerSpec extends ControllersBaseSpec {
         Jsoup
           .parse(contentAsString(result))
           .body()
-          .text() should include(messages("enrolledForPT.gg.heading"))
+          .text()        should include(messages("enrolledForPT.gg.heading"))
       }
     }
 
@@ -107,7 +107,7 @@ class EnrolledForPTControllerSpec extends ControllersBaseSpec {
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(result) shouldBe SEE_OTHER
+        status(result)           shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some(
           "/protect-tax-info?redirectUrl=%2Fredirect%2Furl"
         )
@@ -125,7 +125,7 @@ class EnrolledForPTControllerSpec extends ControllersBaseSpec {
         val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(res) shouldBe INTERNAL_SERVER_ERROR
+        status(res)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(res) should include(messages("enrolmentError.heading"))
       }
     }
@@ -144,7 +144,7 @@ class EnrolledForPTControllerSpec extends ControllersBaseSpec {
         val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(res) shouldBe INTERNAL_SERVER_ERROR
+        status(res)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(res) should include(messages("enrolmentError.heading"))
       }
     }

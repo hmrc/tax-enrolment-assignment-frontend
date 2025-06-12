@@ -18,6 +18,6 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.messages
 
 trait BaseMessage {
 
-  val serviceName = "Protect your tax"
+  val serviceName                = "Protect your tax"
   val defaultTitleSuffix: String = " - " + serviceName + " - GOV.UK"
 }

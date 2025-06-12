@@ -35,7 +35,7 @@ import java.net.URLEncoder
 
 class AccountCheckControllerISpec extends IntegrationSpecBase {
 
-  lazy val urlPath: String = accountCheckPath
+  lazy val urlPath: String              = accountCheckPath
   val newEnrolment: String => Enrolment = (nino: String) =>
     Enrolment(s"$hmrcPTKey", Seq(EnrolmentIdentifier("NINO", nino)), "Activated", None)
 
@@ -77,9 +77,9 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include(returnUrl)
       }
 
@@ -105,9 +105,9 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include(returnUrl)
       }
     }
@@ -151,9 +151,9 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
       val request = FakeRequest(GET, urlPath)
         .withSession(xAuthToken)
-      val result = route(app, request).get
+      val result  = route(app, request).get
 
-      status(result) shouldBe SEE_OTHER
+      status(result)             shouldBe SEE_OTHER
       redirectLocation(result).get should include(returnUrl)
 
       val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
@@ -205,9 +205,9 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
       val request = FakeRequest(GET, urlPath)
         .withSession(xAuthToken)
-      val result = route(app, request).get
+      val result  = route(app, request).get
 
-      status(result) shouldBe SEE_OTHER
+      status(result)             shouldBe SEE_OTHER
       redirectLocation(result).get should include(returnUrl)
 
       val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
@@ -268,9 +268,9 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
       val request = FakeRequest(GET, urlPath)
         .withSession(xAuthToken)
-      val result = route(app, request).get
+      val result  = route(app, request).get
 
-      status(result) shouldBe SEE_OTHER
+      status(result)             shouldBe SEE_OTHER
       redirectLocation(result).get should include(returnUrl)
       List("ABCDEFG123456", "QWERTYU12346", "POIUYTT09876").foreach { id =>
         server.verify(
@@ -301,11 +301,11 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include(ItUrlPaths.ptOnOtherAccountPath)
-        recordExistsInMongo shouldBe true
+        recordExistsInMongo        shouldBe true
       }
     }
   }
@@ -357,11 +357,11 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
       val request = FakeRequest(GET, urlPath)
         .withSession(xAuthToken)
-      val result = route(app, request).get
+      val result  = route(app, request).get
 
-      status(result) shouldBe SEE_OTHER
+      status(result)             shouldBe SEE_OTHER
       redirectLocation(result).get should include(ItUrlPaths.saOnOtherAccountInterruptPath)
-      recordExistsInMongo shouldBe true
+      recordExistsInMongo        shouldBe true
     }
   }
 
@@ -412,11 +412,11 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
       val request = FakeRequest(GET, urlPath)
         .withSession(xAuthToken)
-      val result = route(app, request).get
+      val result  = route(app, request).get
 
-      status(result) shouldBe SEE_OTHER
+      status(result)             shouldBe SEE_OTHER
       redirectLocation(result).get should include(ItUrlPaths.enrolledPTWithSAOnAnyAccountPath)
-      recordExistsInMongo shouldBe true
+      recordExistsInMongo        shouldBe true
 
       val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
         SA_ASSIGNED_TO_CURRENT_USER
@@ -471,11 +471,11 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
       val request = FakeRequest(GET, urlPath)
         .withSession(xAuthToken)
-      val result = route(app, request).get
+      val result  = route(app, request).get
 
-      status(result) shouldBe SEE_OTHER
+      status(result)             shouldBe SEE_OTHER
       redirectLocation(result).get should include(ItUrlPaths.enrolledPTWithSAOnAnyAccountPath)
-      recordExistsInMongo shouldBe true
+      recordExistsInMongo        shouldBe true
 
       val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
         SA_ASSIGNED_TO_CURRENT_USER
@@ -537,11 +537,11 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
       val request = FakeRequest(GET, urlPath)
         .withSession(xAuthToken)
-      val result = route(app, request).get
+      val result  = route(app, request).get
 
-      status(result) shouldBe SEE_OTHER
+      status(result)             shouldBe SEE_OTHER
       redirectLocation(result).get should include(ItUrlPaths.enrolledPTNoSAOnAnyAccountPath)
-      recordExistsInMongo shouldBe true
+      recordExistsInMongo        shouldBe true
 
       val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
         MULTIPLE_ACCOUNTS
@@ -554,8 +554,8 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
   "redirect to the return url" when {
     "the user has no PT or SA enrolments and has only 1 account" in {
       val relativeUrl = "/redirect/url"
-      val encodedUrl = URLEncoder.encode(relativeUrl, "UTF-8")
-      val urlPath = s"/protect-tax-info?redirectUrl=$encodedUrl"
+      val encodedUrl  = URLEncoder.encode(relativeUrl, "UTF-8")
+      val urlPath     = s"/protect-tax-info?redirectUrl=$encodedUrl"
 
       val authResponse = authoriseResponseJson()
       stubAuthorizePost(OK, authResponse.toString())
@@ -602,11 +602,11 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
       val request = FakeRequest(GET, urlPath)
         .withSession(xAuthToken)
-      val result = route(app, request).get
+      val result  = route(app, request).get
 
-      status(result) shouldBe SEE_OTHER
+      status(result)             shouldBe SEE_OTHER
       redirectLocation(result).get should include(relativeUrl)
-      recordExistsInMongo shouldBe false
+      recordExistsInMongo        shouldBe false
 
       val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
         SINGLE_ACCOUNT
@@ -618,8 +618,8 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
       "redirect to the return url" when {
         "the redirectUrl is a valid encoded relative url" in {
           val relativeUrl = "/redirect/url"
-          val encodedUrl = URLEncoder.encode(relativeUrl, "UTF-8")
-          val urlPath = s"/protect-tax-info?redirectUrl=$encodedUrl"
+          val encodedUrl  = URLEncoder.encode(relativeUrl, "UTF-8")
+          val urlPath     = s"/protect-tax-info?redirectUrl=$encodedUrl"
 
           val authResponse = authoriseResponseJson(enrolments = ptEnrolmentOnly)
           stubAuthorizePost(OK, authResponse.toString())
@@ -643,16 +643,16 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
           val request = FakeRequest(GET, urlPath)
             .withSession(xAuthToken)
-          val result = route(app, request).get
+          val result  = route(app, request).get
 
-          status(result) shouldBe SEE_OTHER
+          status(result)             shouldBe SEE_OTHER
           redirectLocation(result).get should include(relativeUrl)
-          recordExistsInMongo shouldBe false
+          recordExistsInMongo        shouldBe false
         }
 
         "the redirectUrl is a valid relative url" in {
           val relativeUrl = "/redirect/url"
-          val urlPath = s"/protect-tax-info?redirectUrl=$relativeUrl"
+          val urlPath     = s"/protect-tax-info?redirectUrl=$relativeUrl"
 
           val authResponse = authoriseResponseJson(enrolments = ptEnrolmentOnly)
           stubAuthorizePost(OK, authResponse.toString())
@@ -675,17 +675,17 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
           val request = FakeRequest(GET, urlPath)
             .withSession(xAuthToken)
-          val result = route(app, request).get
+          val result  = route(app, request).get
 
-          status(result) shouldBe SEE_OTHER
+          status(result)             shouldBe SEE_OTHER
           redirectLocation(result).get should include(relativeUrl)
-          recordExistsInMongo shouldBe false
+          recordExistsInMongo        shouldBe false
         }
 
         "the redirectUrl is a valid encoded absolute localhost url" in {
           val absoluteUrl = "http://localhost:1234/redirect/url"
-          val encodedUrl = URLEncoder.encode(absoluteUrl, "UTF-8")
-          val urlPath = s"/protect-tax-info?redirectUrl=$encodedUrl"
+          val encodedUrl  = URLEncoder.encode(absoluteUrl, "UTF-8")
+          val urlPath     = s"/protect-tax-info?redirectUrl=$encodedUrl"
 
           val authResponse = authoriseResponseJson(enrolments = ptEnrolmentOnly)
           stubAuthorizePost(OK, authResponse.toString())
@@ -714,16 +714,16 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
           val request = FakeRequest(GET, urlPath)
             .withSession(xAuthToken)
-          val result = route(app, request).get
+          val result  = route(app, request).get
 
-          status(result) shouldBe SEE_OTHER
+          status(result)             shouldBe SEE_OTHER
           redirectLocation(result).get should include(absoluteUrl)
-          recordExistsInMongo shouldBe false
+          recordExistsInMongo        shouldBe false
         }
 
         "the redirectUrl is a valid absolute localhost url" in {
           val absoluteUrl = "http://localhost:1234/redirect/url"
-          val urlPath = s"/protect-tax-info?redirectUrl=$absoluteUrl"
+          val urlPath     = s"/protect-tax-info?redirectUrl=$absoluteUrl"
 
           val authResponse = authoriseResponseJson(enrolments = ptEnrolmentOnly)
           stubAuthorizePost(OK, authResponse.toString())
@@ -752,17 +752,17 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
           val request = FakeRequest(GET, urlPath)
             .withSession(xAuthToken)
-          val result = route(app, request).get
+          val result  = route(app, request).get
 
-          status(result) shouldBe SEE_OTHER
+          status(result)             shouldBe SEE_OTHER
           redirectLocation(result).get should include(absoluteUrl)
-          recordExistsInMongo shouldBe false
+          recordExistsInMongo        shouldBe false
         }
 
         "the redirectUrl is a valid encoded absolute url with hostname www.tax.service.gov.uk" in {
           val absoluteUrl = "https://www.tax.service.gov.uk/redirect/url"
-          val encodedUrl = URLEncoder.encode(absoluteUrl, "UTF-8")
-          val urlPath = s"/protect-tax-info?redirectUrl=$encodedUrl"
+          val encodedUrl  = URLEncoder.encode(absoluteUrl, "UTF-8")
+          val urlPath     = s"/protect-tax-info?redirectUrl=$encodedUrl"
 
           val authResponse = authoriseResponseJson(enrolments = ptEnrolmentOnly)
           stubAuthorizePost(OK, authResponse.toString())
@@ -790,16 +790,16 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
           val request = FakeRequest(GET, urlPath)
             .withSession(xAuthToken)
-          val result = route(app, request).get
+          val result  = route(app, request).get
 
-          status(result) shouldBe SEE_OTHER
+          status(result)             shouldBe SEE_OTHER
           redirectLocation(result).get should include(absoluteUrl)
-          recordExistsInMongo shouldBe false
+          recordExistsInMongo        shouldBe false
         }
 
         "the redirectUrl is a valid absolute url with hostname www.tax.service.gov.uk" in {
           val absoluteUrl = "https://www.tax.service.gov.uk/redirect/url"
-          val urlPath = s"/protect-tax-info?redirectUrl=$absoluteUrl"
+          val urlPath     = s"/protect-tax-info?redirectUrl=$absoluteUrl"
 
           val authResponse = authoriseResponseJson(enrolments = ptEnrolmentOnly)
           stubAuthorizePost(OK, authResponse.toString())
@@ -828,11 +828,11 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
           val request = FakeRequest(GET, urlPath)
             .withSession(xAuthToken)
-          val result = route(app, request).get
+          val result  = route(app, request).get
 
-          status(result) shouldBe SEE_OTHER
+          status(result)             shouldBe SEE_OTHER
           redirectLocation(result).get should include(absoluteUrl)
-          recordExistsInMongo shouldBe false
+          recordExistsInMongo        shouldBe false
         }
       }
 
@@ -846,11 +846,11 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
           val request = FakeRequest(GET, urlPath)
             .withSession(xAuthToken)
-          val result = route(app, request).get
+          val result  = route(app, request).get
 
-          status(result) shouldBe BAD_REQUEST
+          status(result)        shouldBe BAD_REQUEST
           contentAsString(result) should include(ErrorTemplateMessages.title)
-          recordExistsInMongo shouldBe false
+          recordExistsInMongo   shouldBe false
         }
 
         "a non supported redirect host is supplied" in {
@@ -862,11 +862,11 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
           val request = FakeRequest(GET, urlPath)
             .withSession(xAuthToken)
-          val result = route(app, request).get
+          val result  = route(app, request).get
 
-          status(result) shouldBe BAD_REQUEST
+          status(result)        shouldBe BAD_REQUEST
           contentAsString(result) should include(ErrorTemplateMessages.title)
-          recordExistsInMongo shouldBe false
+          recordExistsInMongo   shouldBe false
         }
       }
     }
@@ -879,11 +879,11 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
-        recordExistsInMongo shouldBe false
+        recordExistsInMongo        shouldBe false
       }
     }
 
@@ -895,11 +895,11 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
-        recordExistsInMongo shouldBe false
+        recordExistsInMongo        shouldBe false
       }
     }
 
@@ -910,11 +910,11 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
-        recordExistsInMongo shouldBe false
+        recordExistsInMongo        shouldBe false
       }
     }
 
@@ -925,11 +925,11 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include("/bas-gateway/sign-in")
-        recordExistsInMongo shouldBe false
+        recordExistsInMongo        shouldBe false
       }
     }
 
@@ -944,7 +944,7 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
         server.verify(1, deleteRequestedFor(urlMatching(url)))

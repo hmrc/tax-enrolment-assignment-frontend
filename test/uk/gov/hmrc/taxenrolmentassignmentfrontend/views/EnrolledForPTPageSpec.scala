@@ -24,8 +24,8 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, SCP}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.EnrolledForPTPage
 
 class EnrolledForPTPageSpec extends ViewSpecHelper {
-  val userId = "3214"
-  val accountDetails = AccountDetails(
+  val userId                               = "3214"
+  val accountDetails                       = AccountDetails(
     identityProviderType = SCP,
     credId = "credId",
     userId = userId,
@@ -35,19 +35,19 @@ class EnrolledForPTPageSpec extends ViewSpecHelper {
   )
   val enrolledForPTPage: EnrolledForPTPage =
     app.injector.instanceOf[EnrolledForPTPage]
-  val htmlWithSA: HtmlFormat.Appendable =
+  val htmlWithSA: HtmlFormat.Appendable    =
     enrolledForPTPage(accountDetails, true, routes.EnrolledForPTWithSAController.continue)(FakeRequest(), testMessages)
-  val htmlWithNoSA: HtmlFormat.Appendable =
+  val htmlWithNoSA: HtmlFormat.Appendable  =
     enrolledForPTPage(accountDetails, false, routes.EnrolledForPTController.continue)(FakeRequest(), testMessages)
-  val documentWithSA = doc(htmlWithSA)
-  val documentWithNoSA = doc(htmlWithNoSA)
+  val documentWithSA                       = doc(htmlWithSA)
+  val documentWithNoSA                     = doc(htmlWithNoSA)
 
   object Selectors {
-    val heading = "govuk-heading-l"
-    val body = "govuk-body"
+    val heading   = "govuk-heading-l"
+    val body      = "govuk-body"
     val saHeading = "govuk-heading-m"
-    val button = "govuk-button"
-    val form = "form"
+    val button    = "govuk-button"
+    val form      = "form"
   }
 
   "EnrolledForPTPage" when {

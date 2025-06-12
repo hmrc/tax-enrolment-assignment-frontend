@@ -30,7 +30,7 @@ import scala.concurrent.Future
 class TimeOutControllerISpec extends IntegrationSpecBase {
 
   val urlPathKeepAlive: String = ItUrlPaths.keepAlive
-  val urlPathTimeout: String = ItUrlPaths.timeout
+  val urlPathTimeout: String   = ItUrlPaths.timeout
 
   def saveToSessionAndGetLastLoginDate: Future[Instant] =
     save[String](sessionId, "redirectURL", returnUrl)
@@ -40,24 +40,24 @@ class TimeOutControllerISpec extends IntegrationSpecBase {
     "extend the session cache and return NoContent" in {
       val initialLastLoginDate = await(saveToSessionAndGetLastLoginDate)
       stubPost(s"/write/.*", OK, """{"x":2}""")
-      val authResponse = authoriseResponseJson()
+      val authResponse         = authoriseResponseJson()
       stubAuthorizePost(OK, authResponse.toString())
       Thread.sleep(2000)
 
       val request = FakeRequest(GET, urlPathKeepAlive)
         .withSession(xAuthToken, xSessionId)
-      val result = route(app, request).get
+      val result  = route(app, request).get
 
       status(result) shouldBe NO_CONTENT
       assert(getLastLoginDateTime(sessionId).isAfter(initialLastLoginDate))
     }
   }
 
-  s"GET $urlPathTimeout" should {
+  s"GET $urlPathTimeout"   should {
     "return OK and render the timeout page" in {
       val request = FakeRequest(GET, urlPathTimeout)
         .withSession(xAuthToken, xSessionId)
-      val result = route(app, request).get
+      val result  = route(app, request).get
 
       status(result) shouldBe OK
       val page = Jsoup.parse(contentAsString(result))

@@ -62,7 +62,7 @@ case class AccountDetails(
 
   private def formatDate(implicit messages: Messages): Option[String] =
     lastLoginDate.map { date =>
-      val locale = Locale.forLanguageTag(s"${messages.lang.code}-GB")
+      val locale        = Locale.forLanguageTag(s"${messages.lang.code}-GB")
       val zonedDateTime = ZonedDateTime.ofInstant(Instant.parse(date), ZoneId.of("GB"))
       zonedDateTime.format(DateTimeFormatter.ofPattern("dd MMMM uuuu").withLocale(locale)) +
         " " + messages("common.dateToTime") + " " +
@@ -108,7 +108,7 @@ object AccountDetails {
 
   def mongoFormats(implicit crypto: Encrypter with Decrypter): Format[AccountDetails] = {
 
-    implicit val strFormats: Format[String] = Format(Reads.StringReads, Writes.StringWrites)
+    implicit val strFormats: Format[String]   = Format(Reads.StringReads, Writes.StringWrites)
     implicit val ssf: Format[SensitiveString] = JsonEncryption.sensitiveEncrypterDecrypter(SensitiveString.apply)
 
     ((__ \ "identityProviderType").format[IdentityProviderType](IdentityProviderTypeFormat.reads)(

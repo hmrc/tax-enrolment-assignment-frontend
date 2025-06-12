@@ -147,7 +147,7 @@ class AuditEventSpec extends BaseSpec {
     optSACred: Option[String],
     withEmail: Option[String] = Some(CURRENT_USER_EMAIL)
   ): AuditEvent = {
-    val email = if (withEmail.isDefined) Json.obj("email" -> withEmail.get) else Json.obj()
+    val email                 = if (withEmail.isDefined) Json.obj("email" -> withEmail.get) else Json.obj()
     val currentAccountDetails = Json
       .obj(
         ("credentialId", JsString(CREDENTIAL_ID)),
@@ -180,7 +180,7 @@ class AuditEventSpec extends BaseSpec {
       ("authProvider", JsString(PROVIDER_TYPE)),
       ("email", JsString(CURRENT_USER_EMAIL))
     )
-    val details = Json.obj(
+    val details               = Json.obj(
       ("NINO", JsString(NINO.nino)),
       ("currentAccount", currentAccountDetails)
     ) ++ saAccountDetails.getOrElse(Json.obj())
@@ -194,13 +194,13 @@ class AuditEventSpec extends BaseSpec {
 
   private def getFactorType(fType: String, isWelsh: Boolean): String =
     fType match {
-      case "text" =>
+      case "text"  =>
         if (isWelsh) { "Neges destun" }
         else { "Text message" }
       case "voice" =>
         if (isWelsh) { "Rhif ffôn" }
         else { "Phone number" }
-      case _ =>
+      case _       =>
         if (isWelsh) { "Ap dilysu" }
         else { "Authenticator app" }
     }
@@ -213,7 +213,7 @@ class AuditEventSpec extends BaseSpec {
     }
 
   "auditReportSuspiciousSAAccount" should {
-    val requestWithMongoAndAccountType =
+    val requestWithMongoAndAccountType       =
       requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER)
     val requestWithMongoAndAccountTypeLangCY =
       requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, langCode = "cy")
@@ -231,7 +231,7 @@ class AuditEventSpec extends BaseSpec {
       "the reported account has no email or mfaDetails" in {
         val accountDetailsNoEmailOrMFA = accountDetailsWithOneMFADetails
           .copy(email = None, mfaDetails = Seq.empty)
-        val expectedAuditEvent =
+        val expectedAuditEvent         =
           getExpectedAuditEvent(accountDetailsNoEmailOrMFA, isSA = true)
 
         AuditEvent.auditReportSuspiciousSAAccount(accountDetailsNoEmailOrMFA)(
@@ -243,7 +243,7 @@ class AuditEventSpec extends BaseSpec {
       "the reported account has no email" in {
         val accountDetailsNoEmail = accountDetailsWithOneMFADetails
           .copy(email = None)
-        val expectedAuditEvent =
+        val expectedAuditEvent    =
           getExpectedAuditEvent(accountDetailsNoEmail, isSA = true)
 
         AuditEvent.auditReportSuspiciousSAAccount(accountDetailsNoEmail)(
@@ -255,7 +255,7 @@ class AuditEventSpec extends BaseSpec {
       "the reported account has no mfaDetails" in {
         val accountDetailsNoMFA = accountDetailsWithOneMFADetails
           .copy(mfaDetails = Seq.empty)
-        val expectedAuditEvent =
+        val expectedAuditEvent  =
           getExpectedAuditEvent(accountDetailsNoMFA, isSA = true)
 
         AuditEvent.auditReportSuspiciousSAAccount(accountDetailsNoMFA)(
@@ -273,7 +273,7 @@ class AuditEventSpec extends BaseSpec {
               MFADetails("mfaDetails.totp", "TEST")
             )
           )
-        val expectedAuditEvent =
+        val expectedAuditEvent                =
           getExpectedAuditEvent(accountDetailsWithThreeMFADetails, isSA = true)
 
         AuditEvent.auditReportSuspiciousSAAccount(
@@ -295,7 +295,7 @@ class AuditEventSpec extends BaseSpec {
       "the reported account has no email or mfaDetails" in {
         val accountDetailsNoEmailOrMFA = accountDetailsWithOneMFADetails
           .copy(email = None, mfaDetails = Seq.empty)
-        val expectedAuditEvent =
+        val expectedAuditEvent         =
           getExpectedAuditEvent(accountDetailsNoEmailOrMFA, isSA = true, isWelsh = true)
 
         AuditEvent.auditReportSuspiciousSAAccount(accountDetailsNoEmailOrMFA)(
@@ -307,7 +307,7 @@ class AuditEventSpec extends BaseSpec {
       "the reported account has no email and lang is welsh" in {
         val accountDetailsNoEmail = accountDetailsWithOneMFADetails
           .copy(email = None)
-        val expectedAuditEvent =
+        val expectedAuditEvent    =
           getExpectedAuditEvent(accountDetailsNoEmail, isSA = true, isWelsh = true)
 
         AuditEvent.auditReportSuspiciousSAAccount(accountDetailsNoEmail)(
@@ -319,7 +319,7 @@ class AuditEventSpec extends BaseSpec {
       "the reported account has no mfaDetails and lang is welsh" in {
         val accountDetailsNoMFA = accountDetailsWithOneMFADetails
           .copy(mfaDetails = Seq.empty)
-        val expectedAuditEvent =
+        val expectedAuditEvent  =
           getExpectedAuditEvent(accountDetailsNoMFA, isSA = true, isWelsh = true)
 
         AuditEvent.auditReportSuspiciousSAAccount(accountDetailsNoMFA)(
@@ -337,7 +337,7 @@ class AuditEventSpec extends BaseSpec {
               MFADetails("mfaDetails.totp", "TEST")
             )
           )
-        val expectedAuditEvent =
+        val expectedAuditEvent                =
           getExpectedAuditEvent(accountDetailsWithThreeMFADetails, isSA = true, isWelsh = true)
 
         AuditEvent.auditReportSuspiciousSAAccount(
@@ -348,7 +348,7 @@ class AuditEventSpec extends BaseSpec {
   }
 
   "auditReportSuspiciousPTAccount" should {
-    val requestWithMongoAndAccountType =
+    val requestWithMongoAndAccountType       =
       requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER)
     val requestWithMongoAndAccountTypeLangCY =
       requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER, langCode = "cy")
@@ -366,7 +366,7 @@ class AuditEventSpec extends BaseSpec {
       "the reported account has no email or mfaDetails" in {
         val accountDetailsNoEmailOrMFA = accountDetailsWithOneMFADetails
           .copy(email = None, mfaDetails = Seq.empty)
-        val expectedAuditEvent =
+        val expectedAuditEvent         =
           getExpectedAuditEvent(accountDetailsNoEmailOrMFA, isSA = false)
 
         AuditEvent.auditReportSuspiciousPTAccount(accountDetailsNoEmailOrMFA)(
@@ -378,7 +378,7 @@ class AuditEventSpec extends BaseSpec {
       "the reported account has no email" in {
         val accountDetailsNoEmail = accountDetailsWithOneMFADetails
           .copy(email = None)
-        val expectedAuditEvent =
+        val expectedAuditEvent    =
           getExpectedAuditEvent(accountDetailsNoEmail, isSA = false)
 
         AuditEvent.auditReportSuspiciousPTAccount(accountDetailsNoEmail)(
@@ -390,7 +390,7 @@ class AuditEventSpec extends BaseSpec {
       "the reported account has no mfaDetails" in {
         val accountDetailsNoMFA = accountDetailsWithOneMFADetails
           .copy(mfaDetails = Seq.empty)
-        val expectedAuditEvent =
+        val expectedAuditEvent  =
           getExpectedAuditEvent(accountDetailsNoMFA, isSA = false)
 
         AuditEvent.auditReportSuspiciousPTAccount(accountDetailsNoMFA)(
@@ -408,7 +408,7 @@ class AuditEventSpec extends BaseSpec {
               MFADetails("mfaDetails.totp", "TEST")
             )
           )
-        val expectedAuditEvent =
+        val expectedAuditEvent                =
           getExpectedAuditEvent(accountDetailsWithThreeMFADetails, isSA = false)
 
         AuditEvent.auditReportSuspiciousPTAccount(
@@ -430,7 +430,7 @@ class AuditEventSpec extends BaseSpec {
       "the reported account has no email or mfaDetails and language set to welsh" in {
         val accountDetailsNoEmailOrMFA = accountDetailsWithOneMFADetails
           .copy(email = None, mfaDetails = Seq.empty)
-        val expectedAuditEvent =
+        val expectedAuditEvent         =
           getExpectedAuditEvent(accountDetailsNoEmailOrMFA, isSA = false, isWelsh = true)
 
         AuditEvent.auditReportSuspiciousPTAccount(accountDetailsNoEmailOrMFA)(
@@ -442,7 +442,7 @@ class AuditEventSpec extends BaseSpec {
       "the reported account has no email and language set to welsh" in {
         val accountDetailsNoEmail = accountDetailsWithOneMFADetails
           .copy(email = None)
-        val expectedAuditEvent =
+        val expectedAuditEvent    =
           getExpectedAuditEvent(accountDetailsNoEmail, isSA = false, isWelsh = true)
 
         AuditEvent.auditReportSuspiciousPTAccount(accountDetailsNoEmail)(
@@ -454,7 +454,7 @@ class AuditEventSpec extends BaseSpec {
       "the reported account has no mfaDetails and language set to welsh" in {
         val accountDetailsNoMFA = accountDetailsWithOneMFADetails
           .copy(mfaDetails = Seq.empty)
-        val expectedAuditEvent =
+        val expectedAuditEvent  =
           getExpectedAuditEvent(accountDetailsNoMFA, isSA = false, isWelsh = true)
 
         AuditEvent.auditReportSuspiciousPTAccount(accountDetailsNoMFA)(
@@ -484,7 +484,7 @@ class AuditEventSpec extends BaseSpec {
   }
 
   "auditPTEnrolmentOnOtherAccount" should {
-    val requestWithMongoAndAccountType =
+    val requestWithMongoAndAccountType       =
       requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER)
     val requestWithMongoAndAccountTypeLangCY =
       requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER, langCode = "cy")
@@ -511,7 +511,7 @@ class AuditEventSpec extends BaseSpec {
       "the reported account has no email or mfaDetails" in {
         val accountDetailsNoEmailOrMFA = accountDetailsWithOneMFADetails
           .copy(email = None, mfaDetails = Seq.empty)
-        val expectedAuditEvent =
+        val expectedAuditEvent         =
           getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsNoEmailOrMFA, isSA = false)
 
         AuditEvent.auditPTEnrolmentOnOtherAccount(accountDetailsNoEmailOrMFA)(
@@ -523,7 +523,7 @@ class AuditEventSpec extends BaseSpec {
       "the reported account has no email" in {
         val accountDetailsNoEmail = accountDetailsWithOneMFADetails
           .copy(email = None)
-        val expectedAuditEvent =
+        val expectedAuditEvent    =
           getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsNoEmail, isSA = false)
 
         AuditEvent.auditPTEnrolmentOnOtherAccount(accountDetailsNoEmail)(
@@ -535,7 +535,7 @@ class AuditEventSpec extends BaseSpec {
       "the reported account has no mfaDetails" in {
         val accountDetailsNoMFA = accountDetailsWithOneMFADetails
           .copy(mfaDetails = Seq.empty)
-        val expectedAuditEvent =
+        val expectedAuditEvent  =
           getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsNoMFA, isSA = false)
 
         AuditEvent.auditPTEnrolmentOnOtherAccount(accountDetailsNoMFA)(
@@ -553,7 +553,7 @@ class AuditEventSpec extends BaseSpec {
               MFADetails("mfaDetails.totp", "TEST")
             )
           )
-        val expectedAuditEvent =
+        val expectedAuditEvent                =
           getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsWithThreeMFADetails, isSA = false)
 
         AuditEvent.auditPTEnrolmentOnOtherAccount(
@@ -575,7 +575,7 @@ class AuditEventSpec extends BaseSpec {
       "the reported account has no email or mfaDetails and language set to welsh" in {
         val accountDetailsNoEmailOrMFA = accountDetailsWithOneMFADetails
           .copy(email = None, mfaDetails = Seq.empty)
-        val expectedAuditEvent =
+        val expectedAuditEvent         =
           getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsNoEmailOrMFA, isSA = false, isWelsh = true)
 
         AuditEvent.auditPTEnrolmentOnOtherAccount(accountDetailsNoEmailOrMFA)(
@@ -587,7 +587,7 @@ class AuditEventSpec extends BaseSpec {
       "the reported account has no email and language set to welsh" in {
         val accountDetailsNoEmail = accountDetailsWithOneMFADetails
           .copy(email = None)
-        val expectedAuditEvent =
+        val expectedAuditEvent    =
           getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsNoEmail, isSA = false, isWelsh = true)
 
         AuditEvent.auditPTEnrolmentOnOtherAccount(accountDetailsNoEmail)(
@@ -599,7 +599,7 @@ class AuditEventSpec extends BaseSpec {
       "the reported account has no mfaDetails and language set to welsh" in {
         val accountDetailsNoMFA = accountDetailsWithOneMFADetails
           .copy(mfaDetails = Seq.empty)
-        val expectedAuditEvent =
+        val expectedAuditEvent  =
           getExpectedAuditEventPTEnrolmentOnOtherAccount(accountDetailsNoMFA, isSA = false, isWelsh = true)
 
         AuditEvent.auditPTEnrolmentOnOtherAccount(accountDetailsNoMFA)(
@@ -707,15 +707,15 @@ class AuditEventSpec extends BaseSpec {
   }
 
   "auditSuccessfullyEnrolledPTWhenSAOnOtherAccount" when {
-    "email does not exist in user details session" should {
+    "email does not exist in user details session"                    should {
       "return an audit that does not contain the email" in {
         val additionalCacheData = Map(
-          USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+          USER_ASSIGNED_SA_ENROLMENT                   -> Json.toJson(UsersAssignedEnrolment1),
           accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsSA)(
             AccountDetails.mongoFormats(crypto.crypto)
           )
         )
-        val requestForAudit =
+        val requestForAudit     =
           RequestWithUserDetailsFromSessionAndMongo(
             request.request.withTransientLang("en"),
             request.userDetails.copy(email = None),
@@ -726,7 +726,7 @@ class AuditEventSpec extends BaseSpec {
               generateBasicCacheData(SA_ASSIGNED_TO_OTHER_USER, "foo") ++ additionalCacheData
             )(crypto.crypto)
           )
-        val expectedAuditEvent =
+        val expectedAuditEvent  =
           getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_OTHER_USER, None, Some(CREDENTIAL_ID_1), withEmail = Some("-"))
 
         AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(
@@ -736,14 +736,14 @@ class AuditEventSpec extends BaseSpec {
     "the user has enrolled after choosing to keep PT and SA separate" should {
       "return an audit event with the expected details" in {
         val additionalCacheData = Map(
-          USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+          USER_ASSIGNED_SA_ENROLMENT                   -> Json.toJson(UsersAssignedEnrolment1),
           accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsSA)(
             AccountDetails.mongoFormats(crypto.crypto)
           )
         )
-        val requestForAudit =
+        val requestForAudit     =
           requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
-        val expectedAuditEvent =
+        val expectedAuditEvent  =
           getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_OTHER_USER, None, Some(CREDENTIAL_ID_1))
 
         AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(
@@ -756,9 +756,9 @@ class AuditEventSpec extends BaseSpec {
         "the reported account has no email or mfaDetails" in {
           val accountDetailsNoEmailOrMFA = accountDetailsWithOneMFADetails
             .copy(email = None, mfaDetails = Seq.empty)
-          val reportedAccountDetails =
+          val reportedAccountDetails     =
             Json.obj(("reportedAccount", getReportedAccountJson(accountDetailsNoEmailOrMFA)))
-          val expectedAuditEvent =
+          val expectedAuditEvent         =
             getExpectedAuditForPTEnrolled(
               SA_ASSIGNED_TO_OTHER_USER,
               Some(reportedAccountDetails),
@@ -766,12 +766,12 @@ class AuditEventSpec extends BaseSpec {
             )
 
           val additionalCacheData = Map(
-            USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+            USER_ASSIGNED_SA_ENROLMENT                   -> Json.toJson(UsersAssignedEnrolment1),
             accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmailOrMFA)(
               AccountDetails.mongoFormats(crypto.crypto)
             )
           )
-          val requestForAudit =
+          val requestForAudit     =
             requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
           AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
@@ -781,11 +781,11 @@ class AuditEventSpec extends BaseSpec {
         }
 
         "the reported account has no email" in {
-          val accountDetailsNoEmail = accountDetailsWithOneMFADetails
+          val accountDetailsNoEmail  = accountDetailsWithOneMFADetails
             .copy(email = None)
           val reportedAccountDetails =
             Json.obj(("reportedAccount", getReportedAccountJson(accountDetailsNoEmail)))
-          val expectedAuditEvent =
+          val expectedAuditEvent     =
             getExpectedAuditForPTEnrolled(
               SA_ASSIGNED_TO_OTHER_USER,
               Some(reportedAccountDetails),
@@ -793,12 +793,12 @@ class AuditEventSpec extends BaseSpec {
             )
 
           val additionalCacheData = Map(
-            USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+            USER_ASSIGNED_SA_ENROLMENT                   -> Json.toJson(UsersAssignedEnrolment1),
             accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmail)(
               AccountDetails.mongoFormats(crypto.crypto)
             )
           )
-          val requestForAudit =
+          val requestForAudit     =
             requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
           AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
@@ -812,19 +812,19 @@ class AuditEventSpec extends BaseSpec {
             .copy(mfaDetails = Seq.empty)
 
           val reportedAccountDetails = Json.obj(("reportedAccount", getReportedAccountJson(accountDetailsNoMFA)))
-          val expectedAuditEvent =
+          val expectedAuditEvent     =
             getExpectedAuditForPTEnrolled(
               SA_ASSIGNED_TO_OTHER_USER,
               Some(reportedAccountDetails),
               Some(CREDENTIAL_ID_1)
             )
-          val additionalCacheData = Map(
-            USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+          val additionalCacheData    = Map(
+            USER_ASSIGNED_SA_ENROLMENT                   -> Json.toJson(UsersAssignedEnrolment1),
             accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoMFA)(
               AccountDetails.mongoFormats(crypto.crypto)
             )
           )
-          val requestForAudit =
+          val requestForAudit        =
             requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
           AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
@@ -842,9 +842,9 @@ class AuditEventSpec extends BaseSpec {
                 MFADetails("mfaDetails.totp", "TEST")
               )
             )
-          val reportedAccountDetails =
+          val reportedAccountDetails            =
             Json.obj(("reportedAccount", getReportedAccountJson(accountDetailsWithThreeMFADetails)))
-          val expectedAuditEvent =
+          val expectedAuditEvent                =
             getExpectedAuditForPTEnrolled(
               SA_ASSIGNED_TO_OTHER_USER,
               Some(reportedAccountDetails),
@@ -852,12 +852,12 @@ class AuditEventSpec extends BaseSpec {
             )
 
           val additionalCacheData = Map(
-            USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+            USER_ASSIGNED_SA_ENROLMENT                   -> Json.toJson(UsersAssignedEnrolment1),
             accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsWithThreeMFADetails)(
               AccountDetails.mongoFormats(crypto.crypto)
             )
           )
-          val requestForAudit =
+          val requestForAudit     =
             requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
           AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(enrolledAfterReportingFraud = true)(
@@ -873,12 +873,12 @@ class AuditEventSpec extends BaseSpec {
         "the reported account has no email or mfaDetails" in {
           val accountDetailsNoEmailOrMFA = accountDetailsWithOneMFADetails
             .copy(email = None, mfaDetails = Seq.empty)
-          val reportedAccountDetails =
+          val reportedAccountDetails     =
             Json.obj(
               ("reportedAccount", getReportedAccountJson(accountDetailsNoEmailOrMFA, isWelsh = true)),
               ("reportedAccountEN", getReportedAccountJson(accountDetailsNoEmailOrMFA))
             )
-          val expectedAuditEvent =
+          val expectedAuditEvent         =
             getExpectedAuditForPTEnrolled(
               SA_ASSIGNED_TO_OTHER_USER,
               Some(reportedAccountDetails),
@@ -886,12 +886,12 @@ class AuditEventSpec extends BaseSpec {
             )
 
           val additionalCacheData = Map(
-            USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+            USER_ASSIGNED_SA_ENROLMENT                   -> Json.toJson(UsersAssignedEnrolment1),
             accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmailOrMFA)(
               AccountDetails.mongoFormats(crypto.crypto)
             )
           )
-          val requestForAudit =
+          val requestForAudit     =
             requestWithAccountType(
               SA_ASSIGNED_TO_OTHER_USER,
               additionalCacheData = additionalCacheData,
@@ -905,14 +905,14 @@ class AuditEventSpec extends BaseSpec {
         }
 
         "the reported account has no email" in {
-          val accountDetailsNoEmail = accountDetailsWithOneMFADetails
+          val accountDetailsNoEmail  = accountDetailsWithOneMFADetails
             .copy(email = None)
           val reportedAccountDetails =
             Json.obj(
               ("reportedAccount", getReportedAccountJson(accountDetailsNoEmail, isWelsh = true)),
               ("reportedAccountEN", getReportedAccountJson(accountDetailsNoEmail))
             )
-          val expectedAuditEvent =
+          val expectedAuditEvent     =
             getExpectedAuditForPTEnrolled(
               SA_ASSIGNED_TO_OTHER_USER,
               Some(reportedAccountDetails),
@@ -920,12 +920,12 @@ class AuditEventSpec extends BaseSpec {
             )
 
           val additionalCacheData = Map(
-            USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+            USER_ASSIGNED_SA_ENROLMENT                   -> Json.toJson(UsersAssignedEnrolment1),
             accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmail)(
               AccountDetails.mongoFormats(crypto.crypto)
             )
           )
-          val requestForAudit =
+          val requestForAudit     =
             requestWithAccountType(
               SA_ASSIGNED_TO_OTHER_USER,
               additionalCacheData = additionalCacheData,
@@ -939,25 +939,25 @@ class AuditEventSpec extends BaseSpec {
         }
 
         "the reported account has no mfaDetails" in {
-          val accountDetailsNoMFA = accountDetailsWithOneMFADetails
+          val accountDetailsNoMFA    = accountDetailsWithOneMFADetails
             .copy(mfaDetails = Seq.empty)
           val reportedAccountDetails = Json.obj(
             ("reportedAccount", getReportedAccountJson(accountDetailsNoMFA, isWelsh = true)),
             ("reportedAccountEN", getReportedAccountJson(accountDetailsNoMFA))
           )
-          val expectedAuditEvent =
+          val expectedAuditEvent     =
             getExpectedAuditForPTEnrolled(
               SA_ASSIGNED_TO_OTHER_USER,
               Some(reportedAccountDetails),
               Some(CREDENTIAL_ID_1)
             )
-          val additionalCacheData = Map(
-            USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+          val additionalCacheData    = Map(
+            USER_ASSIGNED_SA_ENROLMENT                   -> Json.toJson(UsersAssignedEnrolment1),
             accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoMFA)(
               AccountDetails.mongoFormats(crypto.crypto)
             )
           )
-          val requestForAudit =
+          val requestForAudit        =
             requestWithAccountType(
               SA_ASSIGNED_TO_OTHER_USER,
               additionalCacheData = additionalCacheData,
@@ -979,12 +979,12 @@ class AuditEventSpec extends BaseSpec {
                 MFADetails("mfaDetails.totp", "TEST")
               )
             )
-          val reportedAccountDetails =
+          val reportedAccountDetails            =
             Json.obj(
               ("reportedAccount", getReportedAccountJson(accountDetailsWithThreeMFADetails, isWelsh = true)),
               (("reportedAccountEN", getReportedAccountJson(accountDetailsWithThreeMFADetails)))
             )
-          val expectedAuditEvent =
+          val expectedAuditEvent                =
             getExpectedAuditForPTEnrolled(
               SA_ASSIGNED_TO_OTHER_USER,
               Some(reportedAccountDetails),
@@ -992,12 +992,12 @@ class AuditEventSpec extends BaseSpec {
             )
 
           val additionalCacheData = Map(
-            USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+            USER_ASSIGNED_SA_ENROLMENT                   -> Json.toJson(UsersAssignedEnrolment1),
             accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsWithThreeMFADetails)(
               AccountDetails.mongoFormats(crypto.crypto)
             )
           )
-          val requestForAudit =
+          val requestForAudit     =
             requestWithAccountType(
               SA_ASSIGNED_TO_OTHER_USER,
               additionalCacheData = additionalCacheData,
@@ -1018,18 +1018,18 @@ class AuditEventSpec extends BaseSpec {
       "the sa account has no email or mfaDetails" in {
         val accountDetailsNoEmailOrMFA = accountDetailsWithOneMFADetails
           .copy(email = None, mfaDetails = Seq.empty)
-        val saAccountDetails =
+        val saAccountDetails           =
           Json.obj(("saAccount", getReportedAccountJson(accountDetailsNoEmailOrMFA)))
-        val expectedAuditEvent =
+        val expectedAuditEvent         =
           getExpectedAuditForSigninWithSA(Some(saAccountDetails))
 
         val additionalCacheData = Map(
-          USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+          USER_ASSIGNED_SA_ENROLMENT                   -> Json.toJson(UsersAssignedEnrolment1),
           accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmailOrMFA)(
             AccountDetails.mongoFormats(crypto.crypto)
           )
         )
-        val requestForAudit =
+        val requestForAudit     =
           requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
         AuditEvent.auditSigninAgainWithSACredential()(
@@ -1041,18 +1041,18 @@ class AuditEventSpec extends BaseSpec {
       "the reported account has no email" in {
         val accountDetailsNoEmail = accountDetailsWithOneMFADetails
           .copy(email = None)
-        val saAccountDetails =
+        val saAccountDetails      =
           Json.obj(("saAccount", getReportedAccountJson(accountDetailsNoEmail)))
-        val expectedAuditEvent =
+        val expectedAuditEvent    =
           getExpectedAuditForSigninWithSA(Some(saAccountDetails))
 
         val additionalCacheData = Map(
-          USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+          USER_ASSIGNED_SA_ENROLMENT                   -> Json.toJson(UsersAssignedEnrolment1),
           accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmail)(
             AccountDetails.mongoFormats(crypto.crypto)
           )
         )
-        val requestForAudit =
+        val requestForAudit     =
           requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
         AuditEvent.auditSigninAgainWithSACredential()(
@@ -1064,16 +1064,16 @@ class AuditEventSpec extends BaseSpec {
       "the reported account has no mfaDetails" in {
         val accountDetailsNoMFA = accountDetailsWithOneMFADetails
           .copy(mfaDetails = Seq.empty)
-        val saAccountDetails = Json.obj(("saAccount", getReportedAccountJson(accountDetailsNoMFA)))
-        val expectedAuditEvent =
+        val saAccountDetails    = Json.obj(("saAccount", getReportedAccountJson(accountDetailsNoMFA)))
+        val expectedAuditEvent  =
           getExpectedAuditForSigninWithSA(Some(saAccountDetails))
         val additionalCacheData = Map(
-          USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+          USER_ASSIGNED_SA_ENROLMENT                   -> Json.toJson(UsersAssignedEnrolment1),
           accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoMFA)(
             AccountDetails.mongoFormats(crypto.crypto)
           )
         )
-        val requestForAudit =
+        val requestForAudit     =
           requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
         AuditEvent.auditSigninAgainWithSACredential()(
@@ -1091,18 +1091,18 @@ class AuditEventSpec extends BaseSpec {
               MFADetails("mfaDetails.totp", "TEST")
             )
           )
-        val saAccountDetails =
+        val saAccountDetails                  =
           Json.obj(("saAccount", getReportedAccountJson(accountDetailsWithThreeMFADetails)))
-        val expectedAuditEvent =
+        val expectedAuditEvent                =
           getExpectedAuditForSigninWithSA(Some(saAccountDetails))
 
         val additionalCacheData = Map(
-          USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+          USER_ASSIGNED_SA_ENROLMENT                   -> Json.toJson(UsersAssignedEnrolment1),
           accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsWithThreeMFADetails)(
             AccountDetails.mongoFormats(crypto.crypto)
           )
         )
-        val requestForAudit =
+        val requestForAudit     =
           requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData)
 
         AuditEvent.auditSigninAgainWithSACredential()(
@@ -1129,21 +1129,21 @@ class AuditEventSpec extends BaseSpec {
       "the sa account has no email or mfaDetails and the page was displayed in welsh" in {
         val accountDetailsNoEmailOrMFA = accountDetailsWithOneMFADetails
           .copy(email = None, mfaDetails = Seq.empty)
-        val saAccountDetails =
+        val saAccountDetails           =
           Json.obj(
             ("saAccount", getReportedAccountJson(accountDetailsNoEmailOrMFA, isWelsh = true)),
             ("saAccountEN", getReportedAccountJson(accountDetailsNoEmailOrMFA))
           )
-        val expectedAuditEvent =
+        val expectedAuditEvent         =
           getExpectedAuditForSigninWithSA(Some(saAccountDetails))
 
         val additionalCacheData = Map(
-          USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+          USER_ASSIGNED_SA_ENROLMENT                   -> Json.toJson(UsersAssignedEnrolment1),
           accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmailOrMFA)(
             AccountDetails.mongoFormats(crypto.crypto)
           )
         )
-        val requestForAudit =
+        val requestForAudit     =
           requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData, langCode = "cy")
 
         AuditEvent.auditSigninAgainWithSACredential()(
@@ -1155,21 +1155,21 @@ class AuditEventSpec extends BaseSpec {
       "the reported account has no email" in {
         val accountDetailsNoEmail = accountDetailsWithOneMFADetails
           .copy(email = None)
-        val saAccountDetails =
+        val saAccountDetails      =
           Json.obj(
             ("saAccount", getReportedAccountJson(accountDetailsNoEmail, isWelsh = true)),
             ("saAccountEN", getReportedAccountJson(accountDetailsNoEmail))
           )
-        val expectedAuditEvent =
+        val expectedAuditEvent    =
           getExpectedAuditForSigninWithSA(Some(saAccountDetails))
 
         val additionalCacheData = Map(
-          USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+          USER_ASSIGNED_SA_ENROLMENT                   -> Json.toJson(UsersAssignedEnrolment1),
           accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoEmail)(
             AccountDetails.mongoFormats(crypto.crypto)
           )
         )
-        val requestForAudit =
+        val requestForAudit     =
           requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData, langCode = "cy")
 
         AuditEvent.auditSigninAgainWithSACredential()(
@@ -1181,20 +1181,20 @@ class AuditEventSpec extends BaseSpec {
       "the reported account has no mfaDetails" in {
         val accountDetailsNoMFA = accountDetailsWithOneMFADetails
           .copy(mfaDetails = Seq.empty)
-        val saAccountDetails =
+        val saAccountDetails    =
           Json.obj(
             ("saAccount", getReportedAccountJson(accountDetailsNoMFA, isWelsh = true)),
             ("saAccountEN", getReportedAccountJson(accountDetailsNoMFA))
           )
-        val expectedAuditEvent =
+        val expectedAuditEvent  =
           getExpectedAuditForSigninWithSA(Some(saAccountDetails))
         val additionalCacheData = Map(
-          USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+          USER_ASSIGNED_SA_ENROLMENT                   -> Json.toJson(UsersAssignedEnrolment1),
           accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsNoMFA)(
             AccountDetails.mongoFormats(crypto.crypto)
           )
         )
-        val requestForAudit =
+        val requestForAudit     =
           requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData, langCode = "cy")
 
         AuditEvent.auditSigninAgainWithSACredential()(
@@ -1212,21 +1212,21 @@ class AuditEventSpec extends BaseSpec {
               MFADetails("mfaDetails.totp", "TEST")
             )
           )
-        val saAccountDetails =
+        val saAccountDetails                  =
           Json.obj(
             ("saAccount", getReportedAccountJson(accountDetailsWithThreeMFADetails, isWelsh = true)),
             ("saAccountEN", getReportedAccountJson(accountDetailsWithThreeMFADetails))
           )
-        val expectedAuditEvent =
+        val expectedAuditEvent                =
           getExpectedAuditForSigninWithSA(Some(saAccountDetails))
 
         val additionalCacheData = Map(
-          USER_ASSIGNED_SA_ENROLMENT -> Json.toJson(UsersAssignedEnrolment1),
+          USER_ASSIGNED_SA_ENROLMENT                   -> Json.toJson(UsersAssignedEnrolment1),
           accountDetailsForCredential(CREDENTIAL_ID_1) -> Json.toJson(accountDetailsWithThreeMFADetails)(
             AccountDetails.mongoFormats(crypto.crypto)
           )
         )
-        val requestForAudit =
+        val requestForAudit     =
           requestWithAccountType(SA_ASSIGNED_TO_OTHER_USER, additionalCacheData = additionalCacheData, langCode = "cy")
 
         AuditEvent.auditSigninAgainWithSACredential()(

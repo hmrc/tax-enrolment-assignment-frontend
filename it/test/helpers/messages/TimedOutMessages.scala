@@ -18,8 +18,8 @@ package helpers.messages
 
 object TimedOutMessages {
 
-  val title = "For your security, we signed you out"
+  val title   = "For your security, we signed you out"
   val heading = "For your security, we signed you out"
-  val button = "Sign in"
+  val button  = "Sign in"
 
 }

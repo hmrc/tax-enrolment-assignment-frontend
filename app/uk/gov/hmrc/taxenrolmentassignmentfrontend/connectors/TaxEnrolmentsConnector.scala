@@ -51,18 +51,18 @@ class TaxEnrolmentsConnector @Inject() (httpClient: HttpClientV2, logger: EventL
       identifiers = Seq(IdentifiersOrVerifiers("NINO", nino.nino)),
       verifiers = Seq(IdentifiersOrVerifiers("NINO1", nino.nino))
     )
-    val url = s"${appConfig.TAX_ENROLMENTS_BASE_URL}/service/$hmrcPTKey/enrolment"
+    val url     = s"${appConfig.TAX_ENROLMENTS_BASE_URL}/service/$hmrcPTKey/enrolment"
     httpClient
       .put(url"$url")
       .withBody(Json.toJson(request))
       .execute[HttpResponse]
       .map(httpResponse =>
         httpResponse.status match {
-          case NO_CONTENT => Right(())
-          case CONFLICT =>
+          case NO_CONTENT              => Right(())
+          case CONFLICT                =>
             logger.logEvent(logPTEnrolmentHasAlreadyBeenAssigned(nino))
             Right(())
-          case FORBIDDEN =>
+          case FORBIDDEN               =>
             logger
               .logEvent(logUnexpectedResponseFromTaxEnrolmentsKnownFacts(nino, FORBIDDEN))
             Left(UnexpectedResponseFromTaxEnrolments)
@@ -70,7 +70,7 @@ class TaxEnrolmentsConnector @Inject() (httpClient: HttpClientV2, logger: EventL
             logger
               .logEvent(logUnexpectedResponseFromTaxEnrolmentsKnownFacts(nino, status))
             Left(UnexpectedResponseFromTaxEnrolments)
-          case status =>
+          case status                  =>
             val exception = new RuntimeException(
               s"Tax Enrolments return status of $status when allocating $hmrcPTKey enrolment"
             )
@@ -104,7 +104,7 @@ class TaxEnrolmentsConnector @Inject() (httpClient: HttpClientV2, logger: EventL
           logES2ErrorFromEACDDelete(groupId, error.statusCode, error.message)
         )
         error
-      case error =>
+      case error                            =>
         logger.logEvent(
           logES2ErrorFromEACDDelete(groupId, error.statusCode, error.message),
           error

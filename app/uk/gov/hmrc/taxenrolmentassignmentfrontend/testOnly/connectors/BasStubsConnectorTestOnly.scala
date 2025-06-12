@@ -46,11 +46,11 @@ class BasStubsConnectorTestOnly @Inject() (httpClient: HttpClientV2, appConfigTe
     )
       .transform {
         case Right(response) if response.status == CREATED => Right(())
-        case Right(response) =>
+        case Right(response)                               =>
           val ex = new RuntimeException(s"Unexpected ${response.status} status")
           logger.error(ex.getMessage, ex)
           Left(UpstreamUnexpected2XX(response.body, response.status))
-        case Left(upstreamError) =>
+        case Left(upstreamError)                           =>
           logger.error(upstreamError.message)
           Left(UpstreamError(upstreamError))
       }
@@ -66,11 +66,11 @@ class BasStubsConnectorTestOnly @Inject() (httpClient: HttpClientV2, appConfigTe
     )
       .transform {
         case Right(response) if response.status == NO_CONTENT => Right(())
-        case Right(response) =>
+        case Right(response)                                  =>
           val ex = new RuntimeException(s"Unexpected ${response.status} status")
           logger.error(ex.getMessage, ex)
           Left(UpstreamUnexpected2XX(response.body, response.status))
-        case Left(upstreamError) =>
+        case Left(upstreamError)                              =>
           logger.error(upstreamError.message)
           Left(UpstreamError(upstreamError))
       }
@@ -86,11 +86,11 @@ class BasStubsConnectorTestOnly @Inject() (httpClient: HttpClientV2, appConfigTe
     )
       .transform {
         case Right(response) if response.status == CREATED => Right(())
-        case Right(response) =>
+        case Right(response)                               =>
           val ex = new RuntimeException(s"Unexpected ${response.status} status")
           logger.error(ex.getMessage, ex)
           Left(UpstreamUnexpected2XX(response.body, response.status))
-        case Left(upstreamError) =>
+        case Left(upstreamError)                           =>
           logger.error(upstreamError.message)
           Left(UpstreamError(upstreamError))
       }
@@ -102,11 +102,11 @@ class BasStubsConnectorTestOnly @Inject() (httpClient: HttpClientV2, appConfigTe
       .transform {
         case Left(error) if error.statusCode == NOT_FOUND     => Right(())
         case Right(response) if response.status == NO_CONTENT => Right(())
-        case Right(response) =>
+        case Right(response)                                  =>
           val ex = new RuntimeException(s"Unexpected ${response.status} status")
           logger.error(ex.getMessage, ex)
           Left(UpstreamUnexpected2XX(response.body, response.status))
-        case Left(upstreamError) =>
+        case Left(upstreamError)                              =>
           logger.error(upstreamError.message)
           Left(UpstreamError(upstreamError))
       }

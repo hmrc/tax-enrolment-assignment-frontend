@@ -24,7 +24,7 @@ class SABlueInterruptSpec extends ViewSpecHelper {
 
   val sABlueInterruptView: SABlueInterrupt =
     app.injector.instanceOf[SABlueInterrupt]
-  val view =
+  val view                                 =
     sABlueInterruptView(testAccountDetails, testAccountDetailsWithSA)(FakeRequest(), testMessages)
 
   val document = doc(view)

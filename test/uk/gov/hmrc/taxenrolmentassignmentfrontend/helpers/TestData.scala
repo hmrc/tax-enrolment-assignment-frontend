@@ -33,22 +33,22 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{EACDEnrolment => _, _}
 
 object TestData {
 
-  val NINO: Nino = new Generator().nextNino
-  val secondNino: Nino = new Generator().nextNino
-  val GROUP_ID = "D37DB2E1-CF03-42E8-B151-E17300FFCF78"
-  val CREDENTIAL_ID = "credId123"
-  val PROVIDER_TYPE = "GovernmentGateway"
-  val USER_ID = "6037"
-  val PT_USER_ID = "2341"
-  val NO_EMAIL_USER_ID = "9871"
-  val CREDENTIAL_ID_1 = "6102202884164541"
+  val NINO: Nino         = new Generator().nextNino
+  val secondNino: Nino   = new Generator().nextNino
+  val GROUP_ID           = "D37DB2E1-CF03-42E8-B151-E17300FFCF78"
+  val CREDENTIAL_ID      = "credId123"
+  val PROVIDER_TYPE      = "GovernmentGateway"
+  val USER_ID            = "6037"
+  val PT_USER_ID         = "2341"
+  val NO_EMAIL_USER_ID   = "9871"
+  val CREDENTIAL_ID_1    = "6102202884164541"
   val CURRENT_USER_EMAIL = "foobarwizz"
 
-  val CREDENTIAL_ID_2 = "6102202884164542"
-  val UTR = "123456789"
-  val creds: Credentials = Credentials(CREDENTIAL_ID, PROVIDER_TYPE)
-  val noEnrolments: Enrolments = Enrolments(Set.empty[Enrolment])
-  val saEnrolmentOnly: Enrolments = Enrolments(
+  val CREDENTIAL_ID_2               = "6102202884164542"
+  val UTR                           = "123456789"
+  val creds: Credentials            = Credentials(CREDENTIAL_ID, PROVIDER_TYPE)
+  val noEnrolments: Enrolments      = Enrolments(Set.empty[Enrolment])
+  val saEnrolmentOnly: Enrolments   = Enrolments(
     Set(
       Enrolment(
         "IR-SA",
@@ -58,7 +58,7 @@ object TestData {
       )
     )
   )
-  val ptEnrolmentOnly: Enrolments = Enrolments(
+  val ptEnrolmentOnly: Enrolments   = Enrolments(
     Set(
       Enrolment(
         "HMRC-PT",
@@ -86,13 +86,14 @@ object TestData {
   )
 
   val randomAccountType: AccountTypes.Value = SINGLE_ACCOUNT
-  val predicates: Predicate =
+  val predicates: Predicate                 =
     AuthProviders(GovernmentGateway) and ConfidenceLevel.L200
 
   val retrievals: Retrieval[
-    Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String] ~ Option[
-      AffinityGroup
-    ] ~ Option[String]
+    Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String] ~
+      Option[
+        AffinityGroup
+      ] ~ Option[String]
   ] = nino and credentials and allEnrolments and groupIdentifier and affinityGroup and email
 
   def retrievalResponse(
@@ -102,9 +103,10 @@ object TestData {
     optGroupId: Option[String] = Some(GROUP_ID),
     optAffinityGroup: Option[AffinityGroup] = Some(Individual),
     email: Option[String] = Some(CURRENT_USER_EMAIL)
-  ): Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String] ~ Option[AffinityGroup] ~ Option[
-    String
-  ] =
+  ): Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String] ~ Option[AffinityGroup] ~
+    Option[
+      String
+    ] =
     new ~(
       new ~(
         new ~(new ~(new ~(optNino, optCredentials), enrolments), optGroupId),
@@ -126,7 +128,7 @@ object TestData {
       hasSAEnrolment = irSa
     )
 
-  val userDetailsNoEnrolments: UserDetailsFromSession =
+  val userDetailsNoEnrolments: UserDetailsFromSession         =
     UserDetailsFromSession(
       CREDENTIAL_ID,
       PROVIDER_TYPE,
@@ -138,7 +140,7 @@ object TestData {
       hasPTEnrolment = false,
       hasSAEnrolment = false
     )
-  val userDetailsWithPTEnrolment: UserDetailsFromSession =
+  val userDetailsWithPTEnrolment: UserDetailsFromSession      =
     UserDetailsFromSession(
       CREDENTIAL_ID,
       PROVIDER_TYPE,
@@ -150,7 +152,7 @@ object TestData {
       hasPTEnrolment = true,
       hasSAEnrolment = false
     )
-  val userDetailsWithSAEnrolment: UserDetailsFromSession =
+  val userDetailsWithSAEnrolment: UserDetailsFromSession      =
     UserDetailsFromSession(
       CREDENTIAL_ID,
       PROVIDER_TYPE,
@@ -177,9 +179,9 @@ object TestData {
 
   val UsersAssignedEnrolmentCurrentCred: UsersAssignedEnrolment =
     UsersAssignedEnrolment(Some(CREDENTIAL_ID))
-  val UsersAssignedEnrolment1: UsersAssignedEnrolment =
+  val UsersAssignedEnrolment1: UsersAssignedEnrolment           =
     UsersAssignedEnrolment(Some(CREDENTIAL_ID_1))
-  val UsersAssignedEnrolmentEmpty: UsersAssignedEnrolment =
+  val UsersAssignedEnrolmentEmpty: UsersAssignedEnrolment       =
     UsersAssignedEnrolment(None)
 
   val accountDetails: AccountDetails = AccountDetails(
@@ -267,7 +269,7 @@ object TestData {
   val identifierTxNum: IdentifiersOrVerifiers = IdentifiersOrVerifiers("TaxOfficeNumber", "123")
   val identifierTxRef: IdentifiersOrVerifiers =
     IdentifiersOrVerifiers("TaxOfficeReference", "XYZ9876543")
-  val identifierUTR: IdentifiersOrVerifiers = IdentifiersOrVerifiers("UTR", "1234567890")
+  val identifierUTR: IdentifiersOrVerifiers   = IdentifiersOrVerifiers("UTR", "1234567890")
 
   val userEnrolmentIRSA: UserEnrolment = UserEnrolment(
     service = "IR-SA",

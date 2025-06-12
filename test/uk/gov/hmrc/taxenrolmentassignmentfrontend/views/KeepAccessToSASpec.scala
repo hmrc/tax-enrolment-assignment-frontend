@@ -38,20 +38,20 @@ class KeepAccessToSASpec extends ViewSpecHelper {
   }
 
   object Selectors {
-    val heading = "govuk-fieldset__heading"
-    val radios = "govuk-radios__item"
-    val radioInput = "govuk-radios__input"
-    val radioLabels = "govuk-label govuk-radios__label"
-    val body = "govuk-body"
+    val heading           = "govuk-fieldset__heading"
+    val radios            = "govuk-radios__item"
+    val radioInput        = "govuk-radios__input"
+    val radioLabels       = "govuk-label govuk-radios__label"
+    val body              = "govuk-body"
     val errorSummaryTitle = "govuk-error-summary__title"
-    val errorSummaryList = "govuk-list govuk-error-summary__list"
-    val button = "govuk-button"
-    val form = "form"
+    val errorSummaryList  = "govuk-list govuk-error-summary__list"
+    val button            = "govuk-button"
+    val form              = "form"
   }
 
   "KeepAccessToSA" when {
     "the form is not prepopulated and has no error" should {
-      val html =
+      val html     =
         view(form, testAccountDetails, testAccountDetailsWithSA)(FakeRequest(), testMessages)
       val document = doc(html)
       "have the expected title" in {
@@ -76,10 +76,10 @@ class KeepAccessToSASpec extends ViewSpecHelper {
             .get(0)
           radioButton1
             .getElementsByClass(Selectors.radioLabels)
-            .text() shouldBe KeepAccessToSAMessages.radioYes
+            .text()             shouldBe KeepAccessToSAMessages.radioYes
           radioButton1
             .getElementsByClass(Selectors.radioInput)
-            .attr("value") shouldBe "yes"
+            .attr("value")      shouldBe "yes"
           radioButton1
             .getElementsByClass(Selectors.radioInput)
             .hasAttr("checked") shouldBe false
@@ -89,10 +89,10 @@ class KeepAccessToSASpec extends ViewSpecHelper {
             .get(1)
           radioButton2
             .getElementsByClass(Selectors.radioLabels)
-            .text() shouldBe KeepAccessToSAMessages.radioNo
+            .text()             shouldBe KeepAccessToSAMessages.radioNo
           radioButton2
             .getElementsByClass(Selectors.radioInput)
-            .attr("value") shouldBe "no"
+            .attr("value")      shouldBe "no"
           radioButton2
             .getElementsByClass(Selectors.radioInput)
             .hasAttr("checked") shouldBe false
@@ -128,10 +128,10 @@ class KeepAccessToSASpec extends ViewSpecHelper {
 
     "the form is prepopulated and has no error" should {
       val documentYes = documentPopForm()
-      val documentNo = documentPopForm(false)
+      val documentNo  = documentPopForm(false)
       "have the expected title" in {
         documentYes.title() shouldBe KeepAccessToSAMessages.title
-        documentNo.title() shouldBe KeepAccessToSAMessages.title
+        documentNo.title()  shouldBe KeepAccessToSAMessages.title
       }
 
       "have the expected heading" in {
@@ -145,17 +145,17 @@ class KeepAccessToSASpec extends ViewSpecHelper {
 
       "have radio buttons" that {
         val radioButtonsYes = documentYes.getElementsByClass(Selectors.radios)
-        val radioButtonsNo = documentNo.getElementsByClass(Selectors.radios)
+        val radioButtonsNo  = documentNo.getElementsByClass(Selectors.radios)
         "have the option to select Yes and is checked" when {
           "the form is populated with yes" in {
             val radioButton1 = radioButtonsYes
               .get(0)
             radioButton1
               .getElementsByClass(Selectors.radioLabels)
-              .text() shouldBe KeepAccessToSAMessages.radioYes
+              .text()             shouldBe KeepAccessToSAMessages.radioYes
             radioButton1
               .getElementsByClass(Selectors.radioInput)
-              .attr("value") shouldBe "yes"
+              .attr("value")      shouldBe "yes"
             radioButton1
               .getElementsByClass(Selectors.radioInput)
               .hasAttr("checked") shouldBe true
@@ -167,10 +167,10 @@ class KeepAccessToSASpec extends ViewSpecHelper {
               .get(1)
             radioButton2
               .getElementsByClass(Selectors.radioLabels)
-              .text() shouldBe KeepAccessToSAMessages.radioNo
+              .text()             shouldBe KeepAccessToSAMessages.radioNo
             radioButton2
               .getElementsByClass(Selectors.radioInput)
-              .attr("value") shouldBe "no"
+              .attr("value")      shouldBe "no"
             radioButton2
               .getElementsByClass(Selectors.radioInput)
               .hasAttr("checked") shouldBe false
@@ -182,10 +182,10 @@ class KeepAccessToSASpec extends ViewSpecHelper {
               .get(0)
             radioButton1
               .getElementsByClass(Selectors.radioLabels)
-              .text() shouldBe KeepAccessToSAMessages.radioYes
+              .text()             shouldBe KeepAccessToSAMessages.radioYes
             radioButton1
               .getElementsByClass(Selectors.radioInput)
-              .attr("value") shouldBe "yes"
+              .attr("value")      shouldBe "yes"
             radioButton1
               .getElementsByClass(Selectors.radioInput)
               .hasAttr("checked") shouldBe false
@@ -197,10 +197,10 @@ class KeepAccessToSASpec extends ViewSpecHelper {
               .get(1)
             radioButton2
               .getElementsByClass(Selectors.radioLabels)
-              .text() shouldBe KeepAccessToSAMessages.radioNo
+              .text()             shouldBe KeepAccessToSAMessages.radioNo
             radioButton2
               .getElementsByClass(Selectors.radioInput)
-              .attr("value") shouldBe "no"
+              .attr("value")      shouldBe "no"
             radioButton2
               .getElementsByClass(Selectors.radioInput)
               .hasAttr("checked") shouldBe true
@@ -212,12 +212,12 @@ class KeepAccessToSASpec extends ViewSpecHelper {
         val textElementYes = documentYes
           .getElementsByClass(Selectors.body)
           .get(0)
-        val textElementNo = documentYes
+        val textElementNo  = documentYes
           .getElementsByClass(Selectors.body)
           .get(0)
         "has the correct text" in {
           textElementYes.text() shouldBe KeepAccessToSAMessages.noSALink
-          textElementNo.text() shouldBe KeepAccessToSAMessages.noSALink
+          textElementNo.text()  shouldBe KeepAccessToSAMessages.noSALink
         }
 
         "has the link to fraud reporting" in {
@@ -253,9 +253,9 @@ class KeepAccessToSASpec extends ViewSpecHelper {
         KeepAccessToSAThroughPTAForm.keepAccessToSAThroughPTAForm.bind(
           Map("select-continue" -> "")
         )
-      val html =
+      val html           =
         view(formWithErrors, testAccountDetails, testAccountDetailsWithSA)(FakeRequest(), testMessages)
-      val document = doc(html)
+      val document       = doc(html)
 
       "have a page title containing error" in {
         document.title() shouldBe s"Error - ${KeepAccessToSAMessages.title}"
@@ -273,7 +273,7 @@ class KeepAccessToSASpec extends ViewSpecHelper {
             .first()
           errorSummary
             .select("a")
-            .attr("href") shouldBe "#select-continue"
+            .attr("href")     shouldBe "#select-continue"
           errorSummary.text() shouldBe KeepAccessToSAMessages.errorMessage
         }
       }

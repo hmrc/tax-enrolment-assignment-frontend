@@ -33,7 +33,7 @@ import play.api.test.CSRFTokenHelper.*
 import play.api.test.{FakeRequest, Injecting}
 import play.api.{Application, Configuration}
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
-import uk.gov.hmrc.domain.{Nino, Generator => NinoGenerator}
+import uk.gov.hmrc.domain.{Generator => NinoGenerator, Nino}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, CacheMap, MFADetails, ONE_LOGIN, SCP}
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.service.TEAFResult
@@ -50,8 +50,16 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.TENCrypto
 import scala.concurrent.{ExecutionContext, Future}
 
 trait BaseSpec
-    extends AnyWordSpec with GuiceOneAppPerSuite with Matchers with PatienceConfiguration with BeforeAndAfterEach
-    with OneInstancePerTest with ScalaFutures with Injecting with IntegrationPatience with MockitoSugar {
+    extends AnyWordSpec
+    with GuiceOneAppPerSuite
+    with Matchers
+    with PatienceConfiguration
+    with BeforeAndAfterEach
+    with OneInstancePerTest
+    with ScalaFutures
+    with Injecting
+    with IntegrationPatience
+    with MockitoSugar {
   this: Suite =>
 
   def generateNino: Nino = new NinoGenerator().nextNino
@@ -77,13 +85,13 @@ trait BaseSpec
   override implicit lazy val app: Application = localGuiceApplicationBuilder().build()
 
   implicit lazy val ec: ExecutionContext = inject[ExecutionContext]
-  implicit lazy val crypto: TENCrypto = inject[TENCrypto]
-  lazy val config: Configuration = inject[Configuration]
-  lazy val messagesApi: MessagesApi = inject[MessagesApi]
-  implicit lazy val messages: Messages = MessagesImpl(Lang("en"), messagesApi)
-  implicit lazy val mat: Materializer = inject[Materializer]
+  implicit lazy val crypto: TENCrypto    = inject[TENCrypto]
+  lazy val config: Configuration         = inject[Configuration]
+  lazy val messagesApi: MessagesApi      = inject[MessagesApi]
+  implicit lazy val messages: Messages   = MessagesImpl(Lang("en"), messagesApi)
+  implicit lazy val mat: Materializer    = inject[Materializer]
 
-  lazy val requestPath = "Not Used"
+  lazy val requestPath                                               = "Not Used"
   implicit lazy val fakeRequest: FakeRequest[AnyContentAsEmpty.type] =
     FakeRequest("", requestPath)
       .withSession(
@@ -162,10 +170,10 @@ trait BaseSpec
       request: RequestWithUserDetailsFromSession[_]
     ): Future[Boolean] = Future.successful(true)
 
-    def collectionDeleteOne(id: String): Future[Boolean] = ???
-    def get(id: String): scala.concurrent.Future[Option[CacheMap]] = ???
+    def collectionDeleteOne(id: String): Future[Boolean]                = ???
+    def get(id: String): scala.concurrent.Future[Option[CacheMap]]      = ???
     def updateLastUpdated(id: String): scala.concurrent.Future[Boolean] = ???
-    def upsert(cm: CacheMap): scala.concurrent.Future[Boolean] = ???
+    def upsert(cm: CacheMap): scala.concurrent.Future[Boolean]          = ???
 
   }
 
@@ -175,7 +183,7 @@ trait BaseSpec
     MFADetails("mfaDetails.totp", "HMRC APP")
   )
 
-  val testAccountDetails = AccountDetails(
+  val testAccountDetails         = AccountDetails(
     identityProviderType = SCP,
     CREDENTIAL_ID,
     userId = USER_ID,
@@ -183,7 +191,7 @@ trait BaseSpec
     lastLoginDate = Some("27 February 2022 at 12:00PM"),
     mfaDetails
   )
-  val testAccountDetailsOL = AccountDetails(
+  val testAccountDetailsOL       = AccountDetails(
     identityProviderType = ONE_LOGIN,
     CREDENTIAL_ID,
     userId = USER_ID,
@@ -191,7 +199,7 @@ trait BaseSpec
     lastLoginDate = Some("27 February 2022 at 12:00PM"),
     mfaDetails
   )
-  val testAccountDetailsWithSA = AccountDetails(
+  val testAccountDetailsWithSA   = AccountDetails(
     identityProviderType = SCP,
     CREDENTIAL_ID_1,
     userId = PT_USER_ID,

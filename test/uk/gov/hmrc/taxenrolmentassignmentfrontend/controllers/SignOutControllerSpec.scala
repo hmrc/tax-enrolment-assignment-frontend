@@ -41,11 +41,11 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class SignOutControllerSpec extends ControllersBaseSpec {
 
-  lazy val mockSilentAssignmentService: SilentAssignmentService = mock[SilentAssignmentService]
+  lazy val mockSilentAssignmentService: SilentAssignmentService   = mock[SilentAssignmentService]
   lazy val mockAccountCheckOrchestrator: AccountCheckOrchestrator = mock[AccountCheckOrchestrator]
-  lazy val mockAuditHandler: AuditHandler = mock[AuditHandler]
+  lazy val mockAuditHandler: AuditHandler                         = mock[AuditHandler]
 
-  lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
+  lazy val testBodyParser: BodyParsers.Default                            = mock[BodyParsers.Default]
   lazy val mockMultipleAccountsOrchestrator: MultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
 
   override lazy val overrides: Seq[Binding[TEASessionCache]] = Seq(
@@ -86,9 +86,9 @@ class SignOutControllerSpec extends ControllersBaseSpec {
 
         val result = controller.signOut.apply(fakeReq("GET"))
 
-        status(result) shouldBe SEE_OTHER
+        status(result)                           shouldBe SEE_OTHER
         headers(result).contains("X-Request-ID") shouldBe false
-        redirectLocation(result) shouldBe Some(
+        redirectLocation(result)                 shouldBe Some(
           s"http://localhost:9553/bas-gateway/sign-out-without-state?continue=${URLEncoder.encode(UrlPaths.returnUrl, "UTF-8")}"
         )
       }
@@ -106,9 +106,9 @@ class SignOutControllerSpec extends ControllersBaseSpec {
 
         val result = controller.signOut.apply(fakeReq("GET"))
 
-        status(result) shouldBe SEE_OTHER
+        status(result)                           shouldBe SEE_OTHER
         headers(result).contains("X-Request-ID") shouldBe false
-        redirectLocation(result) shouldBe Some(
+        redirectLocation(result)                 shouldBe Some(
           s"http://localhost:9553/bas-gateway/sign-out-without-state"
         )
       }
@@ -125,9 +125,9 @@ class SignOutControllerSpec extends ControllersBaseSpec {
 
         val result = controller.signOut.apply(fakeReq("GET"))
 
-        status(result) shouldBe SEE_OTHER
+        status(result)                           shouldBe SEE_OTHER
         headers(result).contains("X-Request-ID") shouldBe false
-        redirectLocation(result) shouldBe Some(
+        redirectLocation(result)                 shouldBe Some(
           s"http://localhost:9553/bas-gateway/sign-out-without-state"
         )
       }

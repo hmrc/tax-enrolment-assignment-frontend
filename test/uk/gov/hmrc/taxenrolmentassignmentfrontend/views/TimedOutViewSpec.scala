@@ -30,7 +30,7 @@ class TimedOutViewSpec extends ViewSpecHelper {
 
   object Selectors {
     val heading = "govuk-heading-xl"
-    val button = "govuk-button"
+    val button  = "govuk-button"
   }
 
   "TimedOutView" must {

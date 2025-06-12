@@ -27,31 +27,31 @@ class AppConfig @Inject() (val config: ServicesConfig) {
 
   lazy val validRedirectHostNames: Set[String] = config.getConfString("validRedirectHostNames", "").split(",").toSet
 
-  lazy val IV_BASE_URL: String = config.baseUrl("identity-verification") + "/identity-verification"
-  lazy val EACD_BASE_URL: String = config.baseUrl("enrolment-store-proxy") + "/enrolment-store-proxy"
-  lazy val EACD_BASE_URL_TESTONLY: String = config.baseUrl("enrolment-store-proxy") + "/test-only"
+  lazy val IV_BASE_URL: String             = config.baseUrl("identity-verification") + "/identity-verification"
+  lazy val EACD_BASE_URL: String           = config.baseUrl("enrolment-store-proxy") + "/enrolment-store-proxy"
+  lazy val EACD_BASE_URL_TESTONLY: String  = config.baseUrl("enrolment-store-proxy") + "/test-only"
   lazy val TAX_ENROLMENTS_BASE_URL: String = config.baseUrl("tax-enrolments") + "/tax-enrolments"
 
   lazy val AUTH_BASE_URL: String = config.baseUrl("auth") + "/auth"
 
-  lazy val btaUrl: String =
+  lazy val btaUrl: String        =
     config.getString("external-url.business-tax-account.host")
-  lazy val basAuthHost: String =
+  lazy val basAuthHost: String   =
     config.getString("external-url.bas-gateway-frontend.host")
   lazy val loginCallback: String =
     config.getString("external-url.bas-gateway-frontend.continue-callback.url")
 
   lazy val usersGroupsSearchBaseURL: String =
     s"${config.baseUrl("users-groups-search")}/users-groups-search"
-  lazy val loginURL: String = s"$basAuthHost/bas-gateway/sign-in"
-  lazy val signOutUrl: String =
+  lazy val loginURL: String                 = s"$basAuthHost/bas-gateway/sign-in"
+  lazy val signOutUrl: String               =
     s"$basAuthHost/bas-gateway/sign-out-without-state"
-  lazy val keepAliveUrl: String =
+  lazy val keepAliveUrl: String             =
     s"/protect-tax-info/keepAlive"
 
   lazy val appName = config.getString("appName")
 
   lazy val contactOneLoginFraud = config.getString("contactFraud.oneLogin")
-  lazy val contactGGFraud = config.getString("contactFraud.gg")
-  lazy val ptaHomePage = config.getString("external-url.personal-tax-account.host")
+  lazy val contactGGFraud       = config.getString("contactFraud.gg")
+  lazy val ptaHomePage          = config.getString("external-url.personal-tax-account.host")
 }

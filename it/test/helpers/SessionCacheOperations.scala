@@ -41,7 +41,7 @@ trait SessionCacheOperations extends DefaultPlayMongoRepositorySupport[DatedCach
       }
     """))
 
-  lazy val cascadeUpsert: CascadeUpsert = fakeApplication().injector.instanceOf[CascadeUpsert]
+  lazy val cascadeUpsert: CascadeUpsert  = fakeApplication().injector.instanceOf[CascadeUpsert]
   val repository: DefaultTEASessionCache = fakeApplication().injector.instanceOf[DefaultTEASessionCache]
 
   def save[T](sessionID: String, key: String, value: T)(implicit

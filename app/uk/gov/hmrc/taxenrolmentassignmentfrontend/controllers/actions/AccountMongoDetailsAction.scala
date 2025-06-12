@@ -56,14 +56,15 @@ class AccountMongoDetailsAction @Inject() (
   val appConfig: AppConfig,
   logger: EventLoggerService
 )(implicit val executionContext: ExecutionContext, crypto: TENCrypto)
-    extends AccountMongoDetailsActionTrait with RedirectHelper {
+    extends AccountMongoDetailsActionTrait
+    with RedirectHelper {
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
   override protected def refine[A](
     request: RequestWithUserDetailsFromSession[A]
   ): Future[Either[Result, RequestWithUserDetailsFromSessionAndMongo[A]]] =
     getAccountDetailsFromMongoFromCache(request)
       .map {
-        case Right(accountDetailsFromMongo) =>
+        case Right(accountDetailsFromMongo)                 =>
           Right(
             RequestWithUserDetailsFromSessionAndMongo(
               request.request,
@@ -75,7 +76,7 @@ class AccountMongoDetailsAction @Inject() (
         case Left(CacheNotCompleteOrNotCorrect(None, None)) =>
           logger.logEvent(LoggingEvent.logUserHasNoCacheInMongo(request.userDetails.credId, request.sessionID))
           Left(toGGLogin)
-        case Left(error) =>
+        case Left(error)                                    =>
           Left(
             errorHandler
               .handleErrors(error, "[AccountTypeAction][invokeBlock]")(request, baseLogger)
@@ -107,7 +108,7 @@ class AccountMongoDetailsAction @Inject() (
               Right(
                 AccountDetailsFromMongo(accountType, redirectUrl, cachedMap.data)(crypto.crypto)
               )
-            case (optAccountType, optRedirectUrl) =>
+            case (optAccountType, optRedirectUrl)       =>
               Left(
                 CacheNotCompleteOrNotCorrect(optRedirectUrl, optAccountType)
               )

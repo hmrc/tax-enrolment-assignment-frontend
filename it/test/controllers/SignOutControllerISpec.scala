@@ -46,10 +46,10 @@ class SignOutControllerISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, url)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
-        redirectLocation(result).get should include(
+        status(result)                   shouldBe SEE_OTHER
+        redirectLocation(result).get       should include(
           s"/bas-gateway/sign-out-without-state?continue=${URLEncoder.encode(returnUrl, "UTF-8")}"
         )
         await(repository.get(sessionId)) shouldBe None
@@ -66,9 +66,9 @@ class SignOutControllerISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, url)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include(
           s"/bas-gateway/sign-out-without-state"
         )
@@ -86,9 +86,9 @@ class SignOutControllerISpec extends IntegrationSpecBase {
 
         val request = FakeRequest(GET, url)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include(
           s"/bas-gateway/sign-out-without-state"
         )

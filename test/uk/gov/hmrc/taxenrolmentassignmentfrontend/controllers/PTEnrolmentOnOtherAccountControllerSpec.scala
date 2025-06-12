@@ -39,17 +39,17 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
-  lazy val mockSilentAssignmentService: SilentAssignmentService = mock[SilentAssignmentService]
+  lazy val mockSilentAssignmentService: SilentAssignmentService   = mock[SilentAssignmentService]
   lazy val mockAccountCheckOrchestrator: AccountCheckOrchestrator = mock[AccountCheckOrchestrator]
-  lazy val mockAuditHandler: AuditHandler = mock[AuditHandler]
+  lazy val mockAuditHandler: AuditHandler                         = mock[AuditHandler]
 
-  lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
+  lazy val testBodyParser: BodyParsers.Default                            = mock[BodyParsers.Default]
   lazy val mockMultipleAccountsOrchestrator: MultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
 
   override lazy val overrides: Seq[Binding[TEASessionCache]] = Seq(
     bind[TEASessionCache].toInstance(mockTeaSessionCache)
   )
-  lazy val mockMessageDigest = mock[MessageDigest]
+  lazy val mockMessageDigest                                 = mock[MessageDigest]
 
   override implicit lazy val app: Application = localGuiceApplicationBuilder()
     .overrides(
@@ -76,8 +76,8 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
   val viewLoggedInGGPTOnOL: PTEnrolmentOnOLAccountLoggedInGG =
     app.injector.instanceOf[PTEnrolmentOnOLAccountLoggedInGG]
-  def identifier(input: String): String = {
-    val digest = MessageDigest.getInstance("SHA-256")
+  def identifier(input: String): String                      = {
+    val digest    = MessageDigest.getInstance("SHA-256")
     val hashBytes = digest.digest(input.getBytes("UTF-8"))
     hashBytes.map("%02x".format(_)).mkString.take(32)
   }
@@ -444,7 +444,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
       }
     }
 
-    s"the user does not have an account type of $PT_ASSIGNED_TO_OTHER_USER" should {
+    s"the user does not have an account type of $PT_ASSIGNED_TO_OTHER_USER"                      should {
       s"redirect to ${UrlPaths.accountCheckPath}" in {
         when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
@@ -457,7 +457,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(result) shouldBe SEE_OTHER
+        status(result)           shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some(UrlPaths.accountCheckPath)
       }
     }
@@ -476,11 +476,11 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
         val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(res) shouldBe INTERNAL_SERVER_ERROR
+        status(res)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(res) should include(messages("enrolmentError.heading"))
       }
     }
-    "no redirect url in cache" should {
+    "no redirect url in cache"                                                                     should {
       "render the error page" in {
         when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
@@ -490,7 +490,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
         val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(res) shouldBe INTERNAL_SERVER_ERROR
+        status(res)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(res) should include(messages("enrolmentError.heading"))
       }
     }

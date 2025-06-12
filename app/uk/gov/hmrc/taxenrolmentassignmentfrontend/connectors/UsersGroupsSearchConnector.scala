@@ -55,7 +55,7 @@ class UsersGroupsSearchConnector @Inject() (
         httpResponse.status match {
           case NON_AUTHORITATIVE_INFORMATION =>
             Right(httpResponse.json.as[UsersGroupResponse])
-          case status =>
+          case status                        =>
             logger.logEvent(
               logUnexpectedResponseFromUsersGroupsSearch(credId, status)
             )
@@ -76,8 +76,8 @@ class UsersGroupsSearchConnector @Inject() (
       .map {
         case Right(httpResponse) if httpResponse.status == OK =>
           Right(httpResponse.json.as[Seq[IdentityProviderWithCredId]](IdentityProviderWithCredId.readList))
-        case Left(error) if error.statusCode == NOT_FOUND => Right(Seq.empty)
-        case _                                            => Left(UnexpectedResponseFromUsersGroupsSearch)
+        case Left(error) if error.statusCode == NOT_FOUND     => Right(Seq.empty)
+        case _                                                => Left(UnexpectedResponseFromUsersGroupsSearch)
       }
   }
 }

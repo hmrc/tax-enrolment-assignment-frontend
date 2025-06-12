@@ -33,7 +33,7 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec extends IntegrationSpecBase 
     ItUrlPaths.enrolledPTSAOnOtherAccountPath
 
   s"GET $urlPath" when {
-    s"the session cache has Account type of $SA_ASSIGNED_TO_OTHER_USER and no fraud reported" should {
+    s"the session cache has Account type of $SA_ASSIGNED_TO_OTHER_USER and no fraud reported"           should {
       s"render the enrolledPTPage that includes SA details" in {
         await(save[String](sessionId, "redirectURL", returnUrl))
         await(
@@ -60,21 +60,21 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec extends IntegrationSpecBase 
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
-        val page = Jsoup.parse(contentAsString(result))
+        val result  = route(app, request).get
+        val page    = Jsoup.parse(contentAsString(result))
 
         status(result) shouldBe OK
-        page.title should include(
+        page.title       should include(
           EnrolledPTWithSAOnOtherAccountMessages.title
         )
         page
           .getElementsByTag("p")
           .get(0)
-          .text() shouldBe EnrolledPTWithSAOnOtherAccountMessages.paragraph1
+          .text()      shouldBe EnrolledPTWithSAOnOtherAccountMessages.paragraph1
         page
           .getElementsByTag("p")
           .get(1)
-          .text() shouldBe EnrolledPTWithSAOnOtherAccountMessages.paragraph2("6037")
+          .text()      shouldBe EnrolledPTWithSAOnOtherAccountMessages.paragraph2("6037")
       }
     }
 
@@ -100,13 +100,13 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec extends IntegrationSpecBase 
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
         status(result) shouldBe INTERNAL_SERVER_ERROR
       }
     }
 
-    s"the session cache has Account type of $SA_ASSIGNED_TO_OTHER_USER but users group search fails" should {
+    s"the session cache has Account type of $SA_ASSIGNED_TO_OTHER_USER but users group search fails"    should {
       s"return $INTERNAL_SERVER_ERROR" in {
         await(save[String](sessionId, "redirectURL", returnUrl))
         await(
@@ -130,9 +130,9 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec extends IntegrationSpecBase 
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe INTERNAL_SERVER_ERROR
+        status(result)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) should include(ErrorTemplateMessages.title)
       }
     }
@@ -156,9 +156,9 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec extends IntegrationSpecBase 
 
           val request = FakeRequest(GET, urlPath)
             .withSession(xAuthToken, xSessionId)
-          val result = route(app, request).get
+          val result  = route(app, request).get
 
-          status(result) shouldBe SEE_OTHER
+          status(result)             shouldBe SEE_OTHER
           redirectLocation(result).get should include(
             accountCheckPath
           )
@@ -175,9 +175,9 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec extends IntegrationSpecBase 
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include("/bas-gateway/sign-in")
 
       }
@@ -191,9 +191,9 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec extends IntegrationSpecBase 
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
 
       }
@@ -207,9 +207,9 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec extends IntegrationSpecBase 
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
 
       }
@@ -222,9 +222,9 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec extends IntegrationSpecBase 
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include(ItUrlPaths.unauthorizedPath)
 
       }
@@ -237,9 +237,9 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec extends IntegrationSpecBase 
 
         val request = FakeRequest(GET, urlPath)
           .withSession(xAuthToken, xSessionId)
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include("/bas-gateway/sign-in")
 
       }
@@ -258,11 +258,11 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec extends IntegrationSpecBase 
         val request = FakeRequest(POST, urlPath)
           .withSession(xAuthToken, xSessionId)
           .withJsonBody(Json.obj())
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include(returnUrl)
-        recordExistsInMongo shouldBe false
+        recordExistsInMongo        shouldBe false
       }
     }
 
@@ -275,9 +275,9 @@ class EnrolledPTWithSAOnOtherAccountControllerISpec extends IntegrationSpecBase 
         val request = FakeRequest(POST, urlPath)
           .withSession(xAuthToken, xSessionId)
           .withJsonBody(Json.obj())
-        val result = route(app, request).get
+        val result  = route(app, request).get
 
-        status(result) shouldBe SEE_OTHER
+        status(result)             shouldBe SEE_OTHER
         redirectLocation(result).get should include("/bas-gateway/sign-in")
       }
     }

@@ -54,7 +54,7 @@ class EnrolledForPTController @Inject() (
               routes.EnrolledForPTController.continue
             )
           )
-        case Left(error) =>
+        case Left(error)           =>
           errorHandler.handleErrors(error, "[EnrolledForPTController][view]")(request, implicitly)
       }
     }

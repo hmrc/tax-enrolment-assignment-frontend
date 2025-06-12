@@ -67,7 +67,7 @@ class EventLoggerServiceSpec extends BaseSpec {
             .collectFirst { case event =>
               event.getLevel.levelStr shouldEqual "INFO"
               event.getThrowableProxy shouldEqual null
-              event.getMessage shouldEqual expected
+              event.getMessage        shouldEqual expected
             }
             .getOrElse(fail("No logging captured"))
         }
@@ -78,16 +78,16 @@ class EventLoggerServiceSpec extends BaseSpec {
       "log and return unit" in {
         val infoLevelEvent =
           Info(Event("test event", details = Some("level INFO")))
-        val exception = new Exception("info error")
+        val exception      = new Exception("info error")
         withCaptureOfLoggingFrom(testLogger) { events =>
           eventLogger.logEvent(infoLevelEvent, exception)
           val expected =
             """{"event":"test event","details":"level INFO"}"""
           events
             .collectFirst { case event =>
-              event.getLevel.levelStr shouldEqual "INFO"
+              event.getLevel.levelStr            shouldEqual "INFO"
               event.getThrowableProxy.getMessage shouldEqual "info error"
-              event.getMessage shouldEqual expected
+              event.getMessage                   shouldEqual expected
             }
             .getOrElse(fail("No logging captured"))
         }
@@ -106,7 +106,7 @@ class EventLoggerServiceSpec extends BaseSpec {
             .collectFirst { case event =>
               event.getLevel.levelStr shouldEqual "WARN"
               event.getThrowableProxy shouldEqual null
-              event.getMessage shouldEqual expected
+              event.getMessage        shouldEqual expected
             }
             .getOrElse(fail("No logging captured"))
         }
@@ -117,16 +117,16 @@ class EventLoggerServiceSpec extends BaseSpec {
       "log and return unit" in {
         val infoLevelEvent =
           Warn(Event("test event", errorDetails = Some("level WARN")))
-        val exception = new Exception("warn error")
+        val exception      = new Exception("warn error")
         withCaptureOfLoggingFrom(testLogger) { events =>
           eventLogger.logEvent(infoLevelEvent, exception)
           val expected =
             """{"event":"test event","errorDetails":"level WARN"}"""
           events
             .collectFirst { case event =>
-              event.getLevel.levelStr shouldEqual "WARN"
+              event.getLevel.levelStr            shouldEqual "WARN"
               event.getThrowableProxy.getMessage shouldEqual "warn error"
-              event.getMessage shouldEqual expected
+              event.getMessage                   shouldEqual expected
             }
             .getOrElse(fail("No logging captured"))
         }
@@ -145,7 +145,7 @@ class EventLoggerServiceSpec extends BaseSpec {
             .collectFirst { case event =>
               event.getLevel.levelStr shouldEqual "ERROR"
               event.getThrowableProxy shouldEqual null
-              event.getMessage shouldEqual expected
+              event.getMessage        shouldEqual expected
             }
             .getOrElse(fail("No logging captured"))
         }
@@ -156,16 +156,16 @@ class EventLoggerServiceSpec extends BaseSpec {
       "log and return unit" in {
         val infoLevelEvent =
           Error(Event("test event", errorDetails = Some("level ERROR")))
-        val exception = new Exception("error")
+        val exception      = new Exception("error")
         withCaptureOfLoggingFrom(testLogger) { events =>
           eventLogger.logEvent(infoLevelEvent, exception)
           val expected =
             """{"event":"test event","errorDetails":"level ERROR"}"""
           events
             .collectFirst { case event =>
-              event.getLevel.levelStr shouldEqual "ERROR"
+              event.getLevel.levelStr            shouldEqual "ERROR"
               event.getThrowableProxy.getMessage shouldEqual "error"
-              event.getMessage shouldEqual expected
+              event.getMessage                   shouldEqual expected
             }
             .getOrElse(fail("No logging captured"))
         }

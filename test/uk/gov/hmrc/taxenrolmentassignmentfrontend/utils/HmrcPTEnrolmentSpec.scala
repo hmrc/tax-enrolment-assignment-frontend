@@ -34,7 +34,7 @@ import scala.concurrent.Future
 class HmrcPTEnrolmentSpec extends BaseSpec {
 
   lazy val mockTaxEnrolmentsConnector: TaxEnrolmentsConnector = mock[TaxEnrolmentsConnector]
-  lazy val mockEacdService: EACDService = mock[EACDService]
+  lazy val mockEacdService: EACDService                       = mock[EACDService]
 
   val service = new HmrcPTEnrolment(mockTaxEnrolmentsConnector, mockEacdService)
 
@@ -104,7 +104,7 @@ class HmrcPTEnrolmentSpec extends BaseSpec {
 
     "There is several HMRC-PT enrolments" should {
       "call delete for the invalid enrolments only" in {
-        val thirdNino = new Generator().nextNino
+        val thirdNino  = new Generator().nextNino
         val enrolments = Set(
           Enrolment("HMRC-PT", Seq(EnrolmentIdentifier("NINO", secondNino.nino)), "activated"),
           Enrolment("HMRC-PT", Seq(EnrolmentIdentifier("NINO", thirdNino.nino)), "activated"),

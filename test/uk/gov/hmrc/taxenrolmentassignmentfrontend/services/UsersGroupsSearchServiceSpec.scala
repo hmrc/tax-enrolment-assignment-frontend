@@ -34,7 +34,7 @@ import scala.concurrent.Future
 class UsersGroupsSearchServiceSpec extends BaseSpec {
 
   lazy val mockUsersGroupsSearchConnector: UsersGroupsSearchConnector = mock[UsersGroupsSearchConnector]
-  lazy val mockTeaSessionCache: TEASessionCache = mock[TEASessionCache]
+  lazy val mockTeaSessionCache: TEASessionCache                       = mock[TEASessionCache]
 
   override lazy val overrides: Seq[Binding[TEASessionCache]] = Seq(
     bind[TEASessionCache].toInstance(mockTeaSessionCache)
@@ -49,12 +49,12 @@ class UsersGroupsSearchServiceSpec extends BaseSpec {
   lazy val service: UsersGroupsSearchService = app.injector.instanceOf[UsersGroupsSearchService]
 
   "getAccountDetails" when {
-    "the account details are already in the cache" should {
+    "the account details are already in the cache"     should {
       "not call the users-groups-search and return value from cache" in {
         val additionCacheData = Map(
           s"AccountDetailsFor$CREDENTIAL_ID" -> Json.toJson(accountDetails)(AccountDetails.mongoFormats(crypto.crypto))
         )
-        val result = service.getAccountDetails(CREDENTIAL_ID)(
+        val result            = service.getAccountDetails(CREDENTIAL_ID)(
           implicitly,
           implicitly,
           requestWithAccountType(additionalCacheData = additionCacheData)
@@ -117,7 +117,7 @@ class UsersGroupsSearchServiceSpec extends BaseSpec {
 
       }
     }
-    "users-group-search returns an error" should {
+    "users-group-search returns an error"       should {
       "return an error" in {
         val nino = generateNino.nino
 

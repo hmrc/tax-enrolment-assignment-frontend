@@ -42,13 +42,13 @@ class EACDService @Inject() (eacdConnector: EACDConnector, sessionCache: TEASess
     for {
       userWithPTEnrolment <- eacdConnector
                                .getUsersWithPTEnrolment(requestWithUserDetails.userDetails.nino)
-      _ <- EitherT.right[TaxEnrolmentAssignmentErrors](
-             sessionCache
-               .save[UsersAssignedEnrolment](
-                 USER_ASSIGNED_PT_ENROLMENT,
-                 userWithPTEnrolment
-               )
-           )
+      _                   <- EitherT.right[TaxEnrolmentAssignmentErrors](
+                               sessionCache
+                                 .save[UsersAssignedEnrolment](
+                                   USER_ASSIGNED_PT_ENROLMENT,
+                                   userWithPTEnrolment
+                                 )
+                             )
     } yield userWithPTEnrolment
 
   def getUsersAssignedSAEnrolment(implicit
@@ -57,22 +57,22 @@ class EACDService @Inject() (eacdConnector: EACDConnector, sessionCache: TEASess
     ec: ExecutionContext
   ): TEAFResult[UsersAssignedEnrolment] =
     for {
-      optUTR <- eacdConnector.queryKnownFactsByNinoVerifier(
-                  requestWithUserDetails.userDetails.nino
-                )
+      optUTR               <- eacdConnector.queryKnownFactsByNinoVerifier(
+                                requestWithUserDetails.userDetails.nino
+                              )
       usersWithSAEnrolment <- optUTR match {
                                 case Some(utr) => eacdConnector.getUsersWithSAEnrolment(utr)
-                                case None =>
+                                case None      =>
                                   EitherT.right[TaxEnrolmentAssignmentErrors](
                                     Future.successful(UsersAssignedEnrolment(None))
                                   )
                               }
-      _ <- EitherT.right[TaxEnrolmentAssignmentErrors](
-             sessionCache.save[UsersAssignedEnrolment](
-               USER_ASSIGNED_SA_ENROLMENT,
-               usersWithSAEnrolment
-             )
-           )
+      _                    <- EitherT.right[TaxEnrolmentAssignmentErrors](
+                                sessionCache.save[UsersAssignedEnrolment](
+                                  USER_ASSIGNED_SA_ENROLMENT,
+                                  usersWithSAEnrolment
+                                )
+                              )
     } yield usersWithSAEnrolment
 
   def getGroupsAssignedPTEnrolment(implicit
@@ -86,11 +86,11 @@ class EACDService @Inject() (eacdConnector: EACDConnector, sessionCache: TEASess
         error => UpstreamError(error),
         {
           case response if response.status == OK =>
-            val json = response.json
+            val json       = response.json
             val principals = (json \ "principalGroupIds").asOpt[List[String]]
-            val delegated = (json \ "delegatedGroupIds").asOpt[List[String]]
+            val delegated  = (json \ "delegatedGroupIds").asOpt[List[String]]
             principals.getOrElse(List.empty) ++ delegated.getOrElse(List.empty)
-          case _ => List.empty
+          case _                                 => List.empty
         }
       )
 }

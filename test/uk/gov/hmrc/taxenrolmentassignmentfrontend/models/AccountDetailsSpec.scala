@@ -25,9 +25,9 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 
 class AccountDetailsSpec extends BaseSpec {
   private case class DateInfo(month: String, sourceDate: String, expectedDate: String)
-  private val mfaDetailsText = MFADetails("mfaDetails.text", "24321")
+  private val mfaDetailsText  = MFADetails("mfaDetails.text", "24321")
   private val mfaDetailsVoice = MFADetails("mfaDetails.voice", "24321")
-  private val mfaDetailsTotp = MFADetails("mfaDetails.totp", "HMRC App")
+  private val mfaDetailsTotp  = MFADetails("mfaDetails.totp", "HMRC App")
 
   private def accountDetails(formattedLastLoginDate: String, mfaDetails: List[MFADetails]): AccountDetails =
     AccountDetails(
@@ -43,7 +43,7 @@ class AccountDetailsSpec extends BaseSpec {
     seqDateInfo.foreach { test =>
       s"${test.month} should display ${test.expectedDate} for ${test.sourceDate} for language $lang" in {
         val expectedResult = accountDetails(test.expectedDate, List(mfaDetailsText))
-        val res = AccountDetails.userFriendlyAccountDetails(
+        val res            = AccountDetails.userFriendlyAccountDetails(
           AccountDetails(
             identityProviderType = SCP,
             "credId",
@@ -171,7 +171,7 @@ class AccountDetailsSpec extends BaseSpec {
           "27 March 2022 at 1:00PM",
           List(mfaDetailsText, mfaDetailsVoice, mfaDetailsTotp)
         )
-        val res = AccountDetails.userFriendlyAccountDetails(
+        val res            = AccountDetails.userFriendlyAccountDetails(
           AccountDetails(
             identityProviderType = SCP,
             "credId",
@@ -206,7 +206,7 @@ class AccountDetailsSpec extends BaseSpec {
         "credId"               -> "credid",
         "userId"               -> "userId",
         "lastLoginDate"        -> "lastLoginDate",
-        "mfaDetails" -> Json.arr(
+        "mfaDetails"           -> Json.arr(
           Json.obj("factorNameKey" -> "mfaDetails.totp", "factorValue" -> "HMRC App")
         )
       )
@@ -216,13 +216,13 @@ class AccountDetailsSpec extends BaseSpec {
     "read from json" in {
       implicit val ssf: Format[SensitiveString] =
         JsonEncryption.sensitiveEncrypterDecrypter(SensitiveString.apply)(implicitly, crypto.crypto)
-      val json = Json.obj(
+      val json                                  = Json.obj(
         "identityProviderType" -> "SCP",
         "credId"               -> "credid",
         "userId"               -> "userId",
         "lastLoginDate"        -> "lastLoginDate",
         "email"                -> SensitiveString("foooo@test.com"),
-        "mfaDetails" -> Json.arr(
+        "mfaDetails"           -> Json.arr(
           Json.obj("factorNameKey" -> "mfaDetails.totp", "factorValue" -> "HMRC App")
         )
       )
@@ -239,8 +239,8 @@ class AccountDetailsSpec extends BaseSpec {
         )
 
       Json.fromJson(json)(AccountDetails.mongoFormats(crypto.crypto)).get shouldBe accountDetails
-      accountDetails.emailDecrypted shouldBe Some("foooo@test.com")
-      accountDetails.emailObfuscated shouldBe Some("f***o@test.com")
+      accountDetails.emailDecrypted                                       shouldBe Some("foooo@test.com")
+      accountDetails.emailObfuscated                                      shouldBe Some("f***o@test.com")
     }
   }
 }

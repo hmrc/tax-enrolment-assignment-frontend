@@ -33,10 +33,10 @@ class UserGroupSearchServiceISpec extends IntegrationSpecBase {
 
       stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
       val request = requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER)
-      val res = service.getAccountDetails(CREDENTIAL_ID)(implicitly, implicitly, request)
+      val res     = service.getAccountDetails(CREDENTIAL_ID)(implicitly, implicitly, request)
 
       whenReady(res.value) { response =>
-        response shouldBe Right(accountDetailsUnUserFriendly(CREDENTIAL_ID))
+        response                                                                                        shouldBe Right(accountDetailsUnUserFriendly(CREDENTIAL_ID))
         response.getOrElse(AccountDetails(SCP, "", "", None, Some(""), Seq.empty, None)).emailDecrypted shouldBe Some(
           "email1@test.com"
         )

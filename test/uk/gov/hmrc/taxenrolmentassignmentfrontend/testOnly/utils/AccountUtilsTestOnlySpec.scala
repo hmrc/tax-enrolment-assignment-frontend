@@ -33,11 +33,11 @@ import scala.concurrent.Future
 
 class AccountUtilsTestOnlySpec extends BaseSpec {
 
-  lazy val mockEnrolmentStoreServiceTestOnly: EnrolmentStoreServiceTestOnly = mock[EnrolmentStoreServiceTestOnly]
+  lazy val mockEnrolmentStoreServiceTestOnly: EnrolmentStoreServiceTestOnly                 = mock[EnrolmentStoreServiceTestOnly]
   lazy val mockIdentityVerificationConnectorTestOnly: IdentityVerificationConnectorTestOnly =
     mock[IdentityVerificationConnectorTestOnly]
-  lazy val mockBasStubsConnectorTestOnly: BasStubsConnectorTestOnly = mock[BasStubsConnectorTestOnly]
-  lazy val mockOneLoginStubConnectorTestOnly: OneLoginStubConnectorTestOnly = mock[OneLoginStubConnectorTestOnly]
+  lazy val mockBasStubsConnectorTestOnly: BasStubsConnectorTestOnly                         = mock[BasStubsConnectorTestOnly]
+  lazy val mockOneLoginStubConnectorTestOnly: OneLoginStubConnectorTestOnly                 = mock[OneLoginStubConnectorTestOnly]
 
   override implicit lazy val app: Application = localGuiceApplicationBuilder()
     .overrides(
@@ -53,10 +53,10 @@ class AccountUtilsTestOnlySpec extends BaseSpec {
   val nino: Nino = generateNino
 
   "deleteAccountDetails" must {
-    val credId = "credId"
-    val groupId = "groupId"
+    val credId               = "credId"
+    val groupId              = "groupId"
     val identityProviderType = "SCP"
-    val enrolment = EnrolmentDetailsTestOnly(
+    val enrolment            = EnrolmentDetailsTestOnly(
       "serviceName",
       IdentifiersOrVerifiers("KEY", "VALUE"),
       List(IdentifiersOrVerifiers("KEY2", "VALUE2")),
@@ -64,7 +64,7 @@ class AccountUtilsTestOnlySpec extends BaseSpec {
       "state",
       "enrolmentType"
     )
-    val account = AccountDetailsTestOnly(
+    val account              = AccountDetailsTestOnly(
       identityProviderType,
       groupId,
       nino,
@@ -73,7 +73,7 @@ class AccountUtilsTestOnlySpec extends BaseSpec {
       List(enrolment),
       List(AdditonalFactors("factorType"))
     )
-    val caUserId = "12345"
+    val caUserId             = "12345"
 
     "delete all details for GG user" in {
       when(mockBasStubsConnectorTestOnly.putAccount(account))
@@ -151,10 +151,10 @@ class AccountUtilsTestOnlySpec extends BaseSpec {
   }
 
   "insertAccountDetails" must {
-    val credId = "credId"
-    val groupId = "groupId"
+    val credId               = "credId"
+    val groupId              = "groupId"
     val identityProviderType = "SCP"
-    val enrolment = EnrolmentDetailsTestOnly(
+    val enrolment            = EnrolmentDetailsTestOnly(
       "serviceName",
       IdentifiersOrVerifiers("KEY", "VALUE"),
       List(IdentifiersOrVerifiers("KEY2", "VALUE2")),
@@ -162,7 +162,7 @@ class AccountUtilsTestOnlySpec extends BaseSpec {
       "state",
       "enrolmentType"
     )
-    val account = AccountDetailsTestOnly(
+    val account              = AccountDetailsTestOnly(
       identityProviderType,
       groupId,
       nino,

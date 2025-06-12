@@ -38,12 +38,12 @@ class EnrolForSAControllerSpec extends BaseSpec {
 
   lazy val appConfig: AppConfig = app.injector.instanceOf[AppConfig]
 
-  lazy val mockSilentAssignmentService: SilentAssignmentService = mock[SilentAssignmentService]
+  lazy val mockSilentAssignmentService: SilentAssignmentService   = mock[SilentAssignmentService]
   lazy val mockAccountCheckOrchestrator: AccountCheckOrchestrator = mock[AccountCheckOrchestrator]
-  lazy val mockAuditHandler: AuditHandler = mock[AuditHandler]
+  lazy val mockAuditHandler: AuditHandler                         = mock[AuditHandler]
 
-  lazy val mockAuthConnector: AuthConnector = mock[AuthConnector]
-  lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
+  lazy val mockAuthConnector: AuthConnector     = mock[AuthConnector]
+  lazy val testBodyParser: BodyParsers.Default  = mock[BodyParsers.Default]
   lazy val mockTeaSessionCache: TEASessionCache = mock[TEASessionCache]
 
   override lazy val overrides: Seq[Binding[TEASessionCache]] = Seq(
@@ -71,7 +71,7 @@ class EnrolForSAControllerSpec extends BaseSpec {
 
       val res = controller.enrolForSA.apply(buildFakeRequestWithSessionId("GET"))
 
-      status(res) shouldBe SEE_OTHER
+      status(res)           shouldBe SEE_OTHER
       redirectLocation(res) shouldBe Some(appConfig.btaUrl)
     }
 

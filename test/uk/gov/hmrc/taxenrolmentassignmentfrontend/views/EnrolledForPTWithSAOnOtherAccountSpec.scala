@@ -29,7 +29,7 @@ class EnrolledForPTWithSAOnOtherAccountSpec extends ViewSpecHelper {
 
   val view: EnrolledForPTWithSAOnOtherAccount =
     app.injector.instanceOf[EnrolledForPTWithSAOnOtherAccount]
-  val userId = "3214"
+  val userId                                  = "3214"
 
   val currentAccountDetails: AccountDetails = AccountDetails(
     identityProviderType = SCP,
@@ -39,7 +39,7 @@ class EnrolledForPTWithSAOnOtherAccountSpec extends ViewSpecHelper {
     Some("Today"),
     mfaDetails
   )
-  val saAccountDetails: AccountDetails = AccountDetails(
+  val saAccountDetails: AccountDetails      = AccountDetails(
     identityProviderType = SCP,
     credId = CREDENTIAL_ID,
     userId,
@@ -47,20 +47,20 @@ class EnrolledForPTWithSAOnOtherAccountSpec extends ViewSpecHelper {
     Some("Yesterday"),
     mfaDetails
   )
-  val html: HtmlFormat.Appendable =
+  val html: HtmlFormat.Appendable           =
     view(currentAccountDetails, saAccountDetails)(FakeRequest(), testMessages)
-  val document: Document = doc(html)
-  val htmlSA: HtmlFormat.Appendable =
+  val document: Document                    = doc(html)
+  val htmlSA: HtmlFormat.Appendable         =
     view(currentAccountDetails, saAccountDetails)(FakeRequest(), testMessages)
-  val documentSA: Document = doc(htmlSA)
+  val documentSA: Document                  = doc(htmlSA)
 
   object Selectors {
-    val heading = "govuk-heading-xl"
-    val body = "govuk-body"
-    val subHeading = "govuk-heading-m"
+    val heading         = "govuk-heading-xl"
+    val body            = "govuk-body"
+    val subHeading      = "govuk-heading-m"
     val smallSubHeading = "govuk-heading-s"
-    val button = "govuk-button"
-    val form = "form"
+    val button          = "govuk-button"
+    val form            = "form"
   }
   "EnrolledForPTWithSAOnOtherAccount" when {
     "the user has chosen to keep SA separate" should {

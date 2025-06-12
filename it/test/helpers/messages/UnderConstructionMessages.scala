@@ -18,8 +18,8 @@ package helpers.messages
 
 object UnderConstructionMessages {
 
-  val title = "Tax Enrolment Assignment Frontend - Enrolment Present"
+  val title   = "Tax Enrolment Assignment Frontend - Enrolment Present"
   val heading = "This user has no PT enrolment"
-  val p = "The current user does not have an assigned PT enrolment"
+  val p       = "The current user does not have an assigned PT enrolment"
 
 }

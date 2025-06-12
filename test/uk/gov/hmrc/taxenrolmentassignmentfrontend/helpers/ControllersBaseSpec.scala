@@ -32,11 +32,11 @@ import scala.concurrent.Future
 
 trait ControllersBaseSpec extends BaseSpec {
 
-  lazy val mockAuthConnector: AuthConnector = mock[AuthConnector]
+  lazy val mockAuthConnector: AuthConnector     = mock[AuthConnector]
   lazy val mockTeaSessionCache: TEASessionCache = mock[TEASessionCache]
 
   def mockGetDataFromCacheForActionNoRedirectUrl: OngoingStubbing[Future[Option[CacheMap]]] = {
-    val data = Map(ACCOUNT_TYPE -> Json.toJson(randomAccountType))
+    val data     = Map(ACCOUNT_TYPE -> Json.toJson(randomAccountType))
     val cacheMap = CacheMap("id", data)
 
     when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))
@@ -48,7 +48,7 @@ trait ControllersBaseSpec extends BaseSpec {
     redirectUrl: String = "foo",
     additionCacheData: Map[String, JsValue] = Map()
   ): OngoingStubbing[Future[Option[CacheMap]]] = {
-    val data = generateBasicCacheData(accountType, redirectUrl) ++ additionCacheData
+    val data     = generateBasicCacheData(accountType, redirectUrl) ++ additionCacheData
     val cacheMap = CacheMap("id", data)
 
     when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))

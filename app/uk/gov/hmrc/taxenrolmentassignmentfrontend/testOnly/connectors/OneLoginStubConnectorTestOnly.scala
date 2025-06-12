@@ -53,11 +53,11 @@ class OneLoginStubConnectorTestOnly @Inject() (
           Right(
             (response.json \ "centralAuthUser" \ "_id").as[String]
           )
-        case Right(response) =>
+        case Right(response)                               =>
           val ex = new RuntimeException(s"Unexpected ${response.status} status")
           logger.error(ex.getMessage, ex)
           Left(UpstreamUnexpected2XX(response.body, response.status))
-        case Left(upstreamError) =>
+        case Left(upstreamError)                           =>
           logger.error(upstreamError.message)
           Left(UpstreamError(upstreamError))
       }
@@ -71,11 +71,11 @@ class OneLoginStubConnectorTestOnly @Inject() (
       httpClient.delete(url"$url").execute[Either[UpstreamErrorResponse, HttpResponse]]
     ).transform {
       case Right(response) if response.status == OK => Right(())
-      case Right(response) =>
+      case Right(response)                          =>
         val ex = new RuntimeException(s"Unexpected ${response.status} status")
         logger.error(ex.getMessage, ex)
         Left(UpstreamUnexpected2XX(response.body, response.status))
-      case Left(upstreamError) =>
+      case Left(upstreamError)                      =>
         logger.error(upstreamError.message)
         Left(UpstreamError(upstreamError))
 
@@ -91,7 +91,7 @@ class OneLoginStubConnectorTestOnly @Inject() (
     ).transform {
       case Right(response) =>
         Right(Some((response.json \ "caUserId").as[String]))
-      case Left(_) =>
+      case Left(_)         =>
         logger.warn(s"No account found for identityProviderId: $identityProviderId")
         Right(None)
     }

@@ -45,9 +45,9 @@ trait ViewSpecHelper extends BaseSpec {
       }
     "contain the timeout dialog" that {
       "has the expected keep alive and signout urls" in {
-        timeoutDialog.isDefined shouldBe true
+        timeoutDialog.isDefined                       shouldBe true
         timeoutDialog.get.attr("data-keep-alive-url") shouldBe "/protect-tax-info/keep-alive"
-        timeoutDialog.get.attr("data-sign-out-url") shouldBe "/protect-tax-info/timeout"
+        timeoutDialog.get.attr("data-sign-out-url")   shouldBe "/protect-tax-info/timeout"
       }
     }
   }

@@ -17,9 +17,9 @@
 package helpers.messages
 
 object EnrolledPTWithSAOnOtherAccountMessages {
-  val title =
+  val title                              =
     "You are choosing to have two Government Gateway user IDs"
-  val paragraph1: String =
+  val paragraph1: String                 =
     "You can only use these sign in details from now on. Keep these details safe."
   def paragraph2(userId: String): String =
     s"You are currently signed in with Government Gateway user ID ending with $userId"

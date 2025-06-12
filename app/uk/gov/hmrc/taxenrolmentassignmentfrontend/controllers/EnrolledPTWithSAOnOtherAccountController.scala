@@ -57,12 +57,12 @@ class EnrolledPTWithSAOnOtherAccountController @Inject() (
       res.value.map {
         case Right((currentUserId, Some(optSAAccount))) =>
           Ok(enrolledForPTPage(currentUserId, AccountDetails.userFriendlyAccountDetails(optSAAccount)))
-        case Right((_, None)) =>
+        case Right((_, None))                           =>
           errorHandler.handleErrors(
             GetSACredentialIfNotFraudReturnedNone,
             "[EnrolledPTWithSAOnOtherAccountController][view]"
           )(request, implicitly)
-        case Left(error) =>
+        case Left(error)                                =>
           errorHandler.handleErrors(error, "[EnrolledPTWithSAOnOtherAccountController][view]")(request, implicitly)
       }
     }

@@ -75,9 +75,9 @@ trait WireMockHelper extends Eventually with BeforeAndAfterAll with BeforeAndAft
 
   def stubAuthorizePost(status: Integer, responseBody: String): StubMapping = {
     val authorizePath = "/auth/authorise"
-    val jsonRequest = Json.obj(
+    val jsonRequest   = Json.obj(
       "authorise" -> (AuthProviders(GovernmentGateway) and ConfidenceLevel.L200).toJson,
-      "retrieve" -> Json.arr(
+      "retrieve"  -> Json.arr(
         JsString("nino"),
         JsString("optionalCredentials"),
         JsString("allEnrolments"),
@@ -156,7 +156,7 @@ trait WireMockHelper extends Eventually with BeforeAndAfterAll with BeforeAndAft
         .willReturn(aResponse().withStatus(status).withBody(responseBody))
     )
 
-  def stubPut(url: String, status: Integer, responseBody: String): StubMapping =
+  def stubPut(url: String, status: Integer, responseBody: String): StubMapping                                     =
     server.stubFor(
       put(urlMatching(url))
         .willReturn(aResponse().withStatus(status).withBody(responseBody))
@@ -191,7 +191,7 @@ trait WireMockHelper extends Eventually with BeforeAndAfterAll with BeforeAndAft
         )
     )
 
-  def verifyNoPOSTmade(url: String): Unit =
+  def verifyNoPOSTmade(url: String): Unit                =
     eventually(server.verify(0, postRequestedFor(urlMatching(url))))
   def verifyAuditEventSent(auditEvent: AuditEvent): Unit =
     eventually(

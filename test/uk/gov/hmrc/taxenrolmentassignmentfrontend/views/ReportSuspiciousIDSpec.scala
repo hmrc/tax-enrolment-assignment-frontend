@@ -33,13 +33,13 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
     app.injector.instanceOf[ReportSuspiciousIDOneLogin]
 
   object Selectors {
-    val backLink = "govuk-back-link"
-    val heading = "govuk-heading-l"
-    val body = "govuk-body"
-    val summaryListRow = "govuk-summary-list__row"
-    val summaryListKey = "govuk-summary-list__key"
+    val backLink         = "govuk-back-link"
+    val heading          = "govuk-heading-l"
+    val body             = "govuk-body"
+    val summaryListRow   = "govuk-summary-list__row"
+    val summaryListKey   = "govuk-summary-list__key"
     val summaryListValue = "govuk-summary-list__value"
-    val links = "govuk-link"
+    val links            = "govuk-link"
   }
 
   override val mfaDetails: Seq[MFADetails] = Seq(MFADetails("mfaDetails.text", "28923"))
@@ -60,7 +60,7 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
   val viewSA: HtmlFormat.Appendable =
     reportSuspiciousIdGGView(accountDetails)(FakeRequest(), testMessages)
 
-  val document: Document = doc(view())
+  val document: Document   = doc(view())
   val documentSA: Document = doc(viewSA)
 
   "The Report suspicious ID Page for GG account" should {
@@ -159,7 +159,7 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
   "The Report suspicious ID Page for OL account" should {
     def view(accountDetails: AccountDetails = accountDetails): HtmlFormat.Appendable =
       reportSuspiciousIdOLView(accountDetails)(FakeRequest(), testMessages)
-    val document: Document = doc(view())
+    val document: Document                                                           = doc(view())
     "have a back link" that {
       val backLink =
         document.getElementsByClass(Selectors.backLink)
@@ -244,12 +244,12 @@ class ReportSuspiciousIDSpec extends ViewSpecHelper {
 
   "The report suspicious ID Page when email and last login date fields are missing" should {
     "not render the email or last signed in fields" in {
-      val ad = accountDetails.copy(email = None, lastLoginDate = None)
-      val document: Document = doc(view(ad))
+      val ad                      = accountDetails.copy(email = None, lastLoginDate = None)
+      val document: Document      = doc(view(ad))
       val suspiciousIdDetailsRows =
         document.getElementsByClass(Selectors.summaryListRow)
-      val renderedElements = suspiciousIdDetailsRows.text()
-      renderedElements.contains("Email") shouldBe false
+      val renderedElements        = suspiciousIdDetailsRows.text()
+      renderedElements.contains("Email")          shouldBe false
       renderedElements.contains("Last signed in") shouldBe false
     }
   }

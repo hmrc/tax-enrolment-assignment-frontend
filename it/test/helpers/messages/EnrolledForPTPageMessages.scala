@@ -17,17 +17,17 @@
 package helpers.messages
 
 object EnrolledForPTPageMessages {
-  val title =
+  val title                 =
     "You can only access your personal tax account with one user ID from now on"
-  val heading =
+  val heading               =
     "Only your current user ID can access your personal tax account from now on"
-  val paragraphSA: String =
+  val paragraphSA: String   =
     "You are currently signed in with the Government Gateway user ID ending with 3214. This is now the only user ID that can access your personal tax account. Please keep the details of this user ID safe. You also have access to Self Assessment with your current user ID. If you have any other Government Gateway user IDs, they will lose access to your personal tax account."
   val paragraphNoSA: String =
     "You are currently signed in with the Government Gateway user ID ending with 3214. This is now the only user ID that can access your personal tax account. Please keep the details of this user ID safe. If you have any other Government Gateway user IDs, they will lose access to your personal tax account."
-  val heading3: String =
+  val heading3: String      =
     "What has happened to my other Government Gateway user IDs?"
-  val button = "Continue"
-  val action =
+  val button                = "Continue"
+  val action                =
     "/protect-tax-info/enrol-pt/enrolment-success-no-sa"
 }

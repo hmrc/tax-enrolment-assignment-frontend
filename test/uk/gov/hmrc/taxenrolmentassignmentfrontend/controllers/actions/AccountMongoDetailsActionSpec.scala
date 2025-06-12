@@ -60,9 +60,9 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
 
   val nino: Nino = new Generator().nextNino
 
-  "invoke" should {
+  "invoke"                                                      should {
     "return updated request when orchestrator returns success Some for both account type and redirect url" in {
-      val exampleMongoSessionData =
+      val exampleMongoSessionData           =
         Map(ACCOUNT_TYPE -> Json.toJson(PT_ASSIGNED_TO_CURRENT_USER), REDIRECT_URL -> JsString("foo"))
       val requestWithUserDetailsFromSession = RequestWithUserDetailsFromSession(
         FakeRequest(),
@@ -121,7 +121,7 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
           ),
           "foo"
         )
-        val function =
+        val function                          =
           (requestWithUserDetailsFromSessionAndMongo: RequestWithUserDetailsFromSessionAndMongo[
             _
           ]) =>
@@ -132,20 +132,20 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
         when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))
           .thenReturn(Future.successful(None))
 
-        val res = accountMongoDetailsAction.invokeBlock(
+        val res      = accountMongoDetailsAction.invokeBlock(
           requestWithUserDetailsFromSession,
           function
         )
         val loginUrl = "http://localhost:9553/bas-gateway/sign-in?continue_url=http%3A%2F%2Flocalhost%3A9232%2F" +
           "personal-account&origin=tax-enrolment-assignment-frontend"
 
-        status(res) shouldBe SEE_OTHER
+        status(res)           shouldBe SEE_OTHER
         redirectLocation(res) shouldBe Some(loginUrl)
       }
     }
     s"Return $INTERNAL_SERVER_ERROR" when {
       s"the session cache contains the redirectUrl but no the accountType" in {
-        val exampleMongoSessionData = Map(REDIRECT_URL -> JsString("foo"))
+        val exampleMongoSessionData           = Map(REDIRECT_URL -> JsString("foo"))
         val requestWithUserDetailsFromSession =
           RequestWithUserDetailsFromSession(
             FakeRequest(),
@@ -178,11 +178,11 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
           requestWithUserDetailsFromSession,
           function
         )
-        status(res) shouldBe INTERNAL_SERVER_ERROR
+        status(res)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(res) should include(messages("enrolmentError.heading"))
       }
       "the session cache contains the account type but not the redirect url" in {
-        val exampleMongoSessionData = Map(ACCOUNT_TYPE -> Json.toJson(PT_ASSIGNED_TO_CURRENT_USER))
+        val exampleMongoSessionData           = Map(ACCOUNT_TYPE -> Json.toJson(PT_ASSIGNED_TO_CURRENT_USER))
         val requestWithUserDetailsFromSession =
           RequestWithUserDetailsFromSession(
             FakeRequest(),
@@ -215,7 +215,7 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
           requestWithUserDetailsFromSession,
           function
         )
-        status(res) shouldBe INTERNAL_SERVER_ERROR
+        status(res)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(res) should include(messages("enrolmentError.heading"))
       }
     }
@@ -236,7 +236,7 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
         ),
         "foo"
       )
-      val function =
+      val function                          =
         (requestWithUserDetailsFromSessionAndMongo: RequestWithUserDetailsFromSessionAndMongo[
           _
         ]) =>
@@ -251,7 +251,7 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
         requestWithUserDetailsFromSession,
         function
       )
-      status(res) shouldBe INTERNAL_SERVER_ERROR
+      status(res)        shouldBe INTERNAL_SERVER_ERROR
       contentAsString(res) should include(messages("enrolmentError.heading"))
 
     }

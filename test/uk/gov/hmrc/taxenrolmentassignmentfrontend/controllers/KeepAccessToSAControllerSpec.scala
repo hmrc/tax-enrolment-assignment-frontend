@@ -45,11 +45,11 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
 
-  lazy val mockSilentAssignmentService: SilentAssignmentService = mock[SilentAssignmentService]
+  lazy val mockSilentAssignmentService: SilentAssignmentService   = mock[SilentAssignmentService]
   lazy val mockAccountCheckOrchestrator: AccountCheckOrchestrator = mock[AccountCheckOrchestrator]
-  lazy val mockAuditHandler: AuditHandler = mock[AuditHandler]
+  lazy val mockAuditHandler: AuditHandler                         = mock[AuditHandler]
 
-  lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
+  lazy val testBodyParser: BodyParsers.Default                            = mock[BodyParsers.Default]
   lazy val mockMultipleAccountsOrchestrator: MultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
 
   override lazy val overrides: Seq[Binding[TEASessionCache]] = Seq(
@@ -91,10 +91,10 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
 
         page.getElementsByTag("h1").text() shouldBe messages("keepAccessToSA.gg.heading")
         val radioInputs = page.getElementsByClass("govuk-radios__input")
-        radioInputs.size() shouldBe 2
-        radioInputs.get(0).attr("value") shouldBe "yes"
+        radioInputs.size()                    shouldBe 2
+        radioInputs.get(0).attr("value")      shouldBe "yes"
         radioInputs.get(0).hasAttr("checked") shouldBe false
-        radioInputs.get(1).attr("value") shouldBe "no"
+        radioInputs.get(1).attr("value")      shouldBe "no"
         radioInputs.get(1).hasAttr("checked") shouldBe false
       }
     }
@@ -123,10 +123,10 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
 
         page.getElementsByTag("h1").text() shouldBe messages("keepAccessToSA.gg.heading")
         val radioInputs = page.getElementsByClass("govuk-radios__input")
-        radioInputs.size() shouldBe 2
-        radioInputs.get(0).attr("value") shouldBe "yes"
+        radioInputs.size()                    shouldBe 2
+        radioInputs.get(0).attr("value")      shouldBe "yes"
         radioInputs.get(0).hasAttr("checked") shouldBe true
-        radioInputs.get(1).attr("value") shouldBe "no"
+        radioInputs.get(1).attr("value")      shouldBe "no"
         radioInputs.get(1).hasAttr("checked") shouldBe false
       }
     }
@@ -154,10 +154,10 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
 
         page.getElementsByTag("h1").text() shouldBe messages("keepAccessToSA.gg.heading")
         val radioInputs = page.getElementsByClass("govuk-radios__input")
-        radioInputs.size() shouldBe 2
-        radioInputs.get(0).attr("value") shouldBe "yes"
+        radioInputs.size()                    shouldBe 2
+        radioInputs.get(0).attr("value")      shouldBe "yes"
         radioInputs.get(0).hasAttr("checked") shouldBe false
-        radioInputs.get(1).attr("value") shouldBe "no"
+        radioInputs.get(1).attr("value")      shouldBe "no"
         radioInputs.get(1).hasAttr("checked") shouldBe true
       }
     }
@@ -176,12 +176,12 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(result) shouldBe SEE_OTHER
+        status(result)           shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some(UrlPaths.enrolledPTSAOnOtherAccountPath)
       }
     }
 
-    "the user does not have SA on another account" should {
+    "the user does not have SA on another account"  should {
       s"redirect to ${UrlPaths.accountCheckPath}" in {
 
         when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
@@ -195,7 +195,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(result) shouldBe SEE_OTHER
+        status(result)           shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some(UrlPaths.accountCheckPath)
       }
     }
@@ -208,7 +208,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
         val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(res) shouldBe INTERNAL_SERVER_ERROR
+        status(res)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(res) should include(messages("enrolmentError.heading"))
       }
     }
@@ -238,7 +238,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
               )
             )
 
-          status(res) shouldBe SEE_OTHER
+          status(res)           shouldBe SEE_OTHER
           redirectLocation(res) shouldBe Some(
             UrlPaths.saOnOtherAccountSigninAgainPath
           )
@@ -268,7 +268,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
               )
             )
 
-          status(res) shouldBe SEE_OTHER
+          status(res)           shouldBe SEE_OTHER
           redirectLocation(res) shouldBe Some(
             UrlPaths.enrolledPTSAOnOtherAccountPath
           )
@@ -301,7 +301,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
               )
             )
 
-          status(res) shouldBe SEE_OTHER
+          status(res)           shouldBe SEE_OTHER
           redirectLocation(res) shouldBe Some(UrlPaths.accountCheckPath)
         }
       }
@@ -346,7 +346,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
               )
             )
 
-          status(res) shouldBe SEE_OTHER
+          status(res)           shouldBe SEE_OTHER
           redirectLocation(res) shouldBe Some(
             UrlPaths.enrolledPTSAOnOtherAccountPath
           )
@@ -381,7 +381,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
               )
             )
 
-          status(res) shouldBe SEE_OTHER
+          status(res)           shouldBe SEE_OTHER
           redirectLocation(res) shouldBe Some(
             UrlPaths.enrolledPTSAOnOtherAccountPath
           )
@@ -415,7 +415,7 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
               )
             )
 
-          status(res) shouldBe SEE_OTHER
+          status(res)           shouldBe SEE_OTHER
           redirectLocation(res) shouldBe Some(UrlPaths.accountCheckPath)
         }
       }
@@ -446,12 +446,12 @@ class KeepAccessToSAControllerSpec extends ControllersBaseSpec {
               )
             )
 
-          status(res) shouldBe INTERNAL_SERVER_ERROR
+          status(res)        shouldBe INTERNAL_SERVER_ERROR
           contentAsString(res) should include(messages("enrolmentError.heading"))
         }
       }
     }
-    "a form error occurs" should {
+    "a form error occurs"      should {
       "render the keepAccessToSA page with error summary" in {
         when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))

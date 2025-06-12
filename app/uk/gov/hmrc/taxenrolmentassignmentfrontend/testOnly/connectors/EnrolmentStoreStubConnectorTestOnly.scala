@@ -58,11 +58,11 @@ class EnrolmentStoreStubConnectorTestOnly @Inject() (
     )
       .transform {
         case Right(response) if response.status == NO_CONTENT => Right(())
-        case Right(response) =>
+        case Right(response)                                  =>
           val ex = new RuntimeException(s"Unexpected ${response.status} status")
           logger.error(ex.getMessage, ex)
           Left(UpstreamUnexpected2XX(response.body, response.status))
-        case Left(upstreamError) =>
+        case Left(upstreamError)                              =>
           logger.error(upstreamError.message)
           Left(UpstreamError(upstreamError))
       }
@@ -74,11 +74,11 @@ class EnrolmentStoreStubConnectorTestOnly @Inject() (
     EitherT(httpClient.delete(url"$url").execute[Either[UpstreamErrorResponse, HttpResponse]]).transform {
       case Right(response) if response.status == NO_CONTENT => Right(())
       case Left(error) if error.statusCode == NOT_FOUND     => Right(())
-      case Right(response) =>
+      case Right(response)                                  =>
         val ex = new RuntimeException(s"Unexpected ${response.status} status")
         logger.error(ex.getMessage, ex)
         Left(UpstreamUnexpected2XX(response.body, response.status))
-      case Left(upstreamError) =>
+      case Left(upstreamError)                              =>
         logger.error(upstreamError.message)
         Left(UpstreamError(upstreamError))
     }
@@ -87,7 +87,7 @@ class EnrolmentStoreStubConnectorTestOnly @Inject() (
   def getUsersWithPTEnrolment(nino: Nino)(implicit hc: HeaderCarrier): TEAFResult[UsersAssignedEnrolment] = EitherT {
 
     val enrolmentKey = s"$hmrcPTKey~NINO~${nino.nino}"
-    val url =
+    val url          =
       s"${appConfig.enrolmentStoreStub}/enrolment-store-proxy/enrolment-store/enrolments/$enrolmentKey/users"
 
     httpClient
@@ -95,13 +95,13 @@ class EnrolmentStoreStubConnectorTestOnly @Inject() (
       .execute[HttpResponse]
       .map(httpResponse =>
         httpResponse.status match {
-          case OK =>
+          case OK         =>
             Right(
               httpResponse.json
                 .as[UsersAssignedEnrolment](UsersAssignedEnrolment.reads)
             )
           case NO_CONTENT => Right(UsersAssignedEnrolment(None))
-          case status =>
+          case status     =>
             eventLogger.logEvent(
               logUnexpectedResponseFromEACD(
                 enrolmentKey.split("~").head,

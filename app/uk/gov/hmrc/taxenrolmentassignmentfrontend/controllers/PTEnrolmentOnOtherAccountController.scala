@@ -76,7 +76,7 @@ class PTEnrolmentOnOtherAccountController @Inject() (
               )
             )
           )
-        case Left(error) =>
+        case Left(error)           =>
           errorHandler.handleErrors(error, "[PTEnrolmentOnOtherAccountController][view]")(request, implicitly)
       }
     }

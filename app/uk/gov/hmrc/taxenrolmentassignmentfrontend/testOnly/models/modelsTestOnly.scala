@@ -59,12 +59,12 @@ case class AccountDetailsTestOnly(
   additionalFactors: List[AdditonalFactors]
 ) {
 
-  def individualContextUpdateRequestBody(caUserId: String) =
+  def individualContextUpdateRequestBody(caUserId: String)                  =
     Json.obj(
       "caUserId" -> caUserId,
       "nino"     -> nino
     )
-  def identityProviderAccountContextRequestBody: JsObject =
+  def identityProviderAccountContextRequestBody: JsObject                   =
     Json.obj(
       "eacdUserId"           -> user.credId,
       "identityProviderId"   -> user.credId,
@@ -98,10 +98,10 @@ case class AccountDetailsTestOnly(
 
   def mfaAccountRequestBody: JsObject =
     Json.obj(
-      "sub"          -> user.credId,
-      "userId"       -> Json.obj("createdDate" -> "2016-10-16T14:40:25Z"),
-      "recoveryWord" -> true,
-      "password"     -> Json.obj("authType" -> "password", "status" -> "not locked"),
+      "sub"               -> user.credId,
+      "userId"            -> Json.obj("createdDate" -> "2016-10-16T14:40:25Z"),
+      "recoveryWord"      -> true,
+      "password"          -> Json.obj("authType" -> "password", "status" -> "not locked"),
       "additionalFactors" -> additionalFactors.map { additionalFactor =>
         Json.obj(
           "factorType"  -> additionalFactor.factorType,

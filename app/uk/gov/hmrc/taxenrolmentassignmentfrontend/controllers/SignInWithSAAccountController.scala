@@ -47,20 +47,20 @@ class SignInWithSAAccountController @Inject() (
   def view: Action[AnyContent] =
     authAction.andThen(accountMongoDetailsAction).async { implicit request =>
       val res = for {
-        _ <- EitherT {
-               Future.successful(
-                 multipleAccountsOrchestrator.checkAccessAllowedForPage(
-                   List(SA_ASSIGNED_TO_OTHER_USER)
-                 )
-               )
-             }
+        _         <- EitherT {
+                       Future.successful(
+                         multipleAccountsOrchestrator.checkAccessAllowedForPage(
+                           List(SA_ASSIGNED_TO_OTHER_USER)
+                         )
+                       )
+                     }
         saAccount <- multipleAccountsOrchestrator.getSACredentialDetails
-      } yield (AccountDetails.userFriendlyAccountDetails(saAccount))
+      } yield AccountDetails.userFriendlyAccountDetails(saAccount)
 
       res.value.map {
         case Right(saAccount) =>
           Ok(signInWithSAAccount(saAccount))
-        case Left(error) =>
+        case Left(error)      =>
           errorHandler.handleErrors(error, "[SignInWithSAAccountController][view]")(request, implicitly)
       }
     }

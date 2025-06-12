@@ -28,12 +28,12 @@ class PTEnrolmentOnOLAccountLoggedInOLSpec extends ViewSpecHelper {
     inject[PTEnrolmentOnOLAccountLoggedInOL]
 
   object Selectors {
-    val heading = "govuk-heading-l"
-    val body = "govuk-body"
-    val summaryListRow = "govuk-summary-list__row"
-    val summaryListKey = "govuk-summary-list__key"
+    val heading          = "govuk-heading-l"
+    val body             = "govuk-body"
+    val summaryListRow   = "govuk-summary-list__row"
+    val summaryListKey   = "govuk-summary-list__key"
     val summaryListValue = "govuk-summary-list__value"
-    val saHeading = "govuk-heading-m"
+    val saHeading        = "govuk-heading-m"
   }
 
   val elementsToMFADetails: Map[Int, MFADetails] = Map(

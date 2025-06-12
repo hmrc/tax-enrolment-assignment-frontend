@@ -75,7 +75,9 @@ class AuthAction @Inject() (
   hmrcPTEnrolment: HmrcPTEnrolment,
   errorHandler: ErrorHandler
 )(implicit val executionContext: ExecutionContext)
-    extends AuthorisedFunctions with AuthIdentifierAction with RedirectHelper {
+    extends AuthorisedFunctions
+    with AuthIdentifierAction
+    with RedirectHelper {
 
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
 
@@ -89,8 +91,8 @@ class AuthAction @Inject() (
       .retrieve(nino and credentials and allEnrolments and groupIdentifier and affinityGroup and email) {
         case Some(nino) ~ Some(credentials) ~ enrolments ~ Some(groupId) ~ Some(affinityGroup) ~ email =>
           implicit val hc: HeaderCarrier = fromRequestAndSession(request, request.session)
-          val hasSAEnrolment = enrolments.getEnrolment(s"$IRSAKey").fold(false)(_.isActivated)
-          val userDetails = UserDetailsFromSession(
+          val hasSAEnrolment             = enrolments.getEnrolment(s"$IRSAKey").fold(false)(_.isActivated)
+          val userDetails                = UserDetailsFromSession(
             credentials.providerId,
             credentials.providerType,
             Nino(nino),
@@ -124,7 +126,7 @@ class AuthAction @Inject() (
           logger.logEvent(logAuthenticationFailure(s"session missing credential or NINO field for uri: ${request.uri}"))
           Future.successful(Redirect(routes.AuthorisationController.notAuthorised.url))
       } recover {
-      case _: NoActiveSession =>
+      case _: NoActiveSession         =>
         toGGLogin // user has come from a gov uk page or a bookmark without authentication - nothing to be done
       case er: AuthorisationException =>
         logger.logEvent(logAuthenticationFailure(s"Auth exception: ${er.getMessage} for  uri ${request.uri}"))

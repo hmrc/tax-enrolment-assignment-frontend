@@ -36,13 +36,13 @@ class ErrorHandler @Inject() (errorView: ErrorTemplate, logger: EventLoggerServi
     baseLogger: Logger
   ): Result =
     error match {
-      case IncorrectUserType(redirectUrl, _) =>
+      case IncorrectUserType(redirectUrl, _)                                              =>
         Redirect(routes.AccountCheckController.accountCheck(RedirectUrl.apply(redirectUrl)))
       case UnexpectedPTEnrolment(accountType) if accountType == SA_ASSIGNED_TO_OTHER_USER =>
         Redirect(routes.EnrolledPTWithSAOnOtherAccountController.view)
-      case InvalidRedirectUrl               => BadRequest(errorView())
-      case EnrolmentStoreServiceUnavailable => InternalServerError(errorView())
-      case _ =>
+      case InvalidRedirectUrl                                                             => BadRequest(errorView())
+      case EnrolmentStoreServiceUnavailable                                               => InternalServerError(errorView())
+      case _                                                                              =>
         logger.logEvent(
           logUnexpectedErrorOccurred(
             request.userDetails.credId,

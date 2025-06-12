@@ -46,7 +46,7 @@ class EnrolmentStoreServiceTestOnlySpec extends BaseSpec {
 
   lazy val mockEnrolmentStoreStubConnectorTestOnly: EnrolmentStoreStubConnectorTestOnly =
     mock[EnrolmentStoreStubConnectorTestOnly]
-  lazy val mockEnrolmentStoreConnectorTestOnly: EnrolmentStoreConnectorTestOnly = mock[EnrolmentStoreConnectorTestOnly]
+  lazy val mockEnrolmentStoreConnectorTestOnly: EnrolmentStoreConnectorTestOnly         = mock[EnrolmentStoreConnectorTestOnly]
 
   override implicit lazy val app: Application = localGuiceApplicationBuilder()
     .overrides(
@@ -332,7 +332,7 @@ class EnrolmentStoreServiceTestOnlySpec extends BaseSpec {
   }
 
   "deleteEnrolment" must {
-    val enrolment = EnrolmentDetailsTestOnly(
+    val enrolment    = EnrolmentDetailsTestOnly(
       "serviceName",
       IdentifiersOrVerifiers("KEY", "VALUE"),
       List(IdentifiersOrVerifiers("KEY2", "VALUE2")),

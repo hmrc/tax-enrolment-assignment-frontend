@@ -31,7 +31,7 @@ class EACDConnectorISpec extends IntegrationSpecBase {
 
   "getUsersWithAssignedEnrolment" when {
     val ENROLMENT_KEY = s"HMRC-PT~NINO~$NINO"
-    val PATH =
+    val PATH          =
       s"/enrolment-store-proxy/enrolment-store/enrolments/$ENROLMENT_KEY/users"
 
     s"no users have the $ENROLMENT_KEY enrolment" should {
@@ -44,7 +44,7 @@ class EACDConnectorISpec extends IntegrationSpecBase {
       }
     }
 
-    s"a user exists with the $ENROLMENT_KEY" should {
+    s"a user exists with the $ENROLMENT_KEY"      should {
       "return the users credentialId" in {
         val eacdResponse = Json.obj(
           ("principalUserIds", Json.arr(JsString(CREDENTIAL_ID))),
@@ -81,7 +81,7 @@ class EACDConnectorISpec extends IntegrationSpecBase {
 
   "getUsersWithPTEnrolment" when {
     val ENROLMENT_KEY = s"HMRC-PT~NINO~$NINO"
-    val PATH =
+    val PATH          =
       s"/enrolment-store-proxy/enrolment-store/enrolments/$ENROLMENT_KEY/users"
 
     s"no users have the $ENROLMENT_KEY enrolment" should {
@@ -94,7 +94,7 @@ class EACDConnectorISpec extends IntegrationSpecBase {
       }
     }
 
-    s"a user exists with the $ENROLMENT_KEY" should {
+    s"a user exists with the $ENROLMENT_KEY"      should {
       "return the users credentialId" in {
         val eacdResponse = Json.obj(
           ("principalUserIds", Json.arr(JsString(CREDENTIAL_ID))),
@@ -111,7 +111,7 @@ class EACDConnectorISpec extends IntegrationSpecBase {
 
   "getUsersWithSAEnrolment" when {
     val ENROLMENT_KEY = s"IR-SA~UTR~$UTR"
-    val PATH =
+    val PATH          =
       s"/enrolment-store-proxy/enrolment-store/enrolments/$ENROLMENT_KEY/users"
 
     s"no users have the $ENROLMENT_KEY enrolment" should {
@@ -124,7 +124,7 @@ class EACDConnectorISpec extends IntegrationSpecBase {
       }
     }
 
-    s"a user exists with the $ENROLMENT_KEY" should {
+    s"a user exists with the $ENROLMENT_KEY"      should {
       "return the users credentialId" in {
         val eacdResponse = Json.obj(
           ("principalUserIds", Json.arr(JsString(CREDENTIAL_ID))),
@@ -143,7 +143,7 @@ class EACDConnectorISpec extends IntegrationSpecBase {
     val PATH =
       s"/enrolment-store-proxy/enrolment-store/enrolments"
 
-    s"no users have the IR-SA enrolment" should {
+    s"no users have the IR-SA enrolment"      should {
       "return None" in {
         stubPost(PATH, Status.NO_CONTENT, "")
         stubPost(s"/write/.*", OK, """{"x":2}""")
@@ -213,10 +213,10 @@ class EACDConnectorISpec extends IntegrationSpecBase {
 
   "queryEnrolmentsAssignedToUser" when {
     val USER_ID = "123456"
-    val PATH =
+    val PATH    =
       s"/enrolment-store-proxy/enrolment-store/users/$USER_ID/enrolments"
 
-    s"the user has no enrolments" should {
+    s"the user has no enrolments"       should {
       "return None" in {
         stubPost(s"/write/.*", OK, """{"x":2}""")
         stubGet(PATH, Status.NO_CONTENT, "")
@@ -276,7 +276,7 @@ class EACDConnectorISpec extends IntegrationSpecBase {
          |    ]
          |}
          |""".stripMargin
-    val apiUrl =
+    val apiUrl       =
       s"/enrolment-store-proxy/enrolment-store/enrolments/$enrolmentKey/groups"
 
     "get enrolments" when {
@@ -284,7 +284,7 @@ class EACDConnectorISpec extends IntegrationSpecBase {
         stubGetWithQueryParam(apiUrl, "ignore-assignments", "true", Status.NO_CONTENT, "{}")
         whenReady(connector.getGroupsFromEnrolment(enrolmentKey).value) { response =>
           response.map(_.status) shouldBe Right(Status.NO_CONTENT)
-          response.map(_.body) shouldBe Right("")
+          response.map(_.body)   shouldBe Right("")
         }
       }
 
@@ -292,7 +292,7 @@ class EACDConnectorISpec extends IntegrationSpecBase {
         stubGetWithQueryParam(apiUrl, "ignore-assignments", "true", Status.OK, responseBody)
         whenReady(connector.getGroupsFromEnrolment(enrolmentKey).value) { response =>
           response.map(_.status) shouldBe Right(Status.OK)
-          response.map(_.body) shouldBe Right(responseBody)
+          response.map(_.body)   shouldBe Right(responseBody)
         }
       }
     }

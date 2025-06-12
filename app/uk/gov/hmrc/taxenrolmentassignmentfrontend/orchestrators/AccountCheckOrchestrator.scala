@@ -58,7 +58,7 @@ class AccountCheckOrchestrator @Inject() (
           EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](None: Option[String])
 
         // HMRC-PT enrolment found on a different credential than the logged in one
-        case Some(credId) => EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](Some(credId): Option[String])
+        case Some(credId)                                    => EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](Some(credId): Option[String])
 
         // No HMRC-PT enrolment found on any credential
         case None =>
@@ -66,7 +66,7 @@ class AccountCheckOrchestrator @Inject() (
           hmrcPTEnrolment.findAndDeleteGroupsWithPTEnrolment.transform {
             case Left(error) =>
               Left(error: TaxEnrolmentAssignmentErrors)
-            case Right(_) =>
+            case Right(_)    =>
               Right(None: Option[String])
           }
       }
@@ -95,7 +95,7 @@ class AccountCheckOrchestrator @Inject() (
     requestWithUserDetails: RequestWithUserDetailsFromSession[_]
   ): AccountTypes.Value =
     (hmrcPtOnOtherAccount, irSaOnOtherAccount, hmrcPtOnCurrentAccount, irSaOnCurrentAccount, listOfCreds) match {
-      case (None, _, true, _, _) =>
+      case (None, _, true, _, _)          =>
         logger.logEvent(
           logCurrentUserAlreadyHasPTEnrolment(
             requestWithUserDetails.userDetails.credId
@@ -110,9 +110,9 @@ class AccountCheckOrchestrator @Inject() (
           )
         )
         PT_ASSIGNED_TO_OTHER_USER
-      case (Some(_), _, true, _, _) =>
+      case (Some(_), _, true, _, _)       =>
         throw new RuntimeException("HMRC-PT enrolment cannot be on both the current and an other account")
-      case (_, None, _, true, _) =>
+      case (_, None, _, true, _)          =>
         logger.logEvent(
           logCurrentUserHasSAEnrolment(requestWithUserDetails.userDetails.credId)
         )
@@ -125,7 +125,7 @@ class AccountCheckOrchestrator @Inject() (
           )
         )
         SA_ASSIGNED_TO_OTHER_USER
-      case (_, Some(credId), _, true, _) =>
+      case (_, Some(credId), _, true, _)  =>
         logger.logEvent(
           logCurrentAndAnotherAccountHasSAEnrolment(
             requestWithUserDetails.userDetails.credId,
@@ -133,7 +133,7 @@ class AccountCheckOrchestrator @Inject() (
           )
         )
         SA_ASSIGNED_TO_CURRENT_USER
-      case (_, _, _, _, listOfCreds) =>
+      case (_, _, _, _, listOfCreds)      =>
         if (listOfCreds.size > 1) {
           logger.logEvent(logCurrentUserhasMultipleAccounts(requestWithUserDetails.userDetails.credId))
           MULTIPLE_ACCOUNTS
@@ -150,14 +150,14 @@ class AccountCheckOrchestrator @Inject() (
   ): EitherT[Future, TaxEnrolmentAssignmentErrors, AccountTypes.Value] = EitherT {
     getOptAccountTypeFromCache.foldF {
       val hmrcPt = requestWithUserDetails.userDetails.hasPTEnrolment
-      val irSa = requestWithUserDetails.userDetails.hasSAEnrolment
+      val irSa   = requestWithUserDetails.userDetails.hasSAEnrolment
 
       (for {
         hmrcPtOnOtherAccount <- findAndFixHmrcPtEnrolmentOnOtherAccount
         irSaOnOtherAccount   <- findIrSaOnOtherAccount
         listOfCreds          <- usersGroupsSearchService.getAllCredIdsByNino(requestWithUserDetails.userDetails.nino.nino)
-        accountType = returnAccountType(hmrcPtOnOtherAccount, irSaOnOtherAccount, hmrcPt, irSa, listOfCreds)
-        _ <-
+        accountType           = returnAccountType(hmrcPtOnOtherAccount, irSaOnOtherAccount, hmrcPt, irSa, listOfCreds)
+        _                    <-
           EitherT[Future, TaxEnrolmentAssignmentErrors, CacheMap](
             sessionCache.save[AccountTypes.Value](ACCOUNT_TYPE, accountType).map(Right(_))
           )

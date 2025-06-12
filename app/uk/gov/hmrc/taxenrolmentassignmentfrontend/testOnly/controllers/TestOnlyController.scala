@@ -98,10 +98,10 @@ class TestOnlyController @Inject() (
           val json = Try(Json.parse(data.trim).as[List[AccountDetailsTestOnly]])
 
           json match {
-            case Success(accounts) =>
+            case Success(accounts)             =>
               insertAccount(accounts)
             case Failure(_: JsResultException) => insertAccount(List(Json.parse(data.trim).as[AccountDetailsTestOnly]))
-            case Failure(error) =>
+            case Failure(error)                =>
               Future
                 .successful(
                   BadRequest(
@@ -135,7 +135,7 @@ class TestOnlyController @Inject() (
 
   def extractData(file: String) =
     fileHelper.loadFile(s"$file.json") match {
-      case Success(json) =>
+      case Success(json)  =>
         Try(json.as[JsArray]) match {
           case Success(_)                    => json.as[List[AccountDetailsTestOnly]]
           case Failure(_: JsResultException) => List(json.as[AccountDetailsTestOnly])
@@ -213,7 +213,7 @@ class TestOnlyController @Inject() (
           userAssignedEnrolment.enrolledCredential match {
             case None                                                 => InternalServerError("No HMRC-PT enrolment")
             case Some(credID) if credID == request.userDetails.credId => Ok(loginCheckCompleteView())
-            case Some(credId) =>
+            case Some(credId)                                         =>
               InternalServerError(s"Wrong credid `$credId` in enrolment. It should be ${request.userDetails.credId}")
           }
       )

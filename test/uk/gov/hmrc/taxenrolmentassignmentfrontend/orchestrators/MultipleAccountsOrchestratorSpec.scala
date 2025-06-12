@@ -41,12 +41,12 @@ import scala.concurrent.{ExecutionContext, Future}
 class MultipleAccountsOrchestratorSpec extends BaseSpec {
 
   lazy val mockSilentAssignmentService: SilentAssignmentService = mock[SilentAssignmentService]
-  lazy val mockEacdService: EACDService = mock[EACDService]
-  lazy val mockTeaSessionCache: TEASessionCache = mock[TEASessionCache]
+  lazy val mockEacdService: EACDService                         = mock[EACDService]
+  lazy val mockTeaSessionCache: TEASessionCache                 = mock[TEASessionCache]
 
-  lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
+  lazy val testBodyParser: BodyParsers.Default                            = mock[BodyParsers.Default]
   lazy val mockMultipleAccountsOrchestrator: MultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
-  lazy val mockUsersGroupService: UsersGroupsSearchService = mock[UsersGroupsSearchService]
+  lazy val mockUsersGroupService: UsersGroupsSearchService                = mock[UsersGroupsSearchService]
 
   override lazy val overrides: Seq[Binding[TEASessionCache]] = Seq(
     bind[TEASessionCache].toInstance(mockTeaSessionCache)
@@ -150,7 +150,7 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
   }
 
   s"getCurrentAndPTAAndSAIfExistsForUser" when {
-    s"the accountType $PT_ASSIGNED_TO_OTHER_USER, no SA associated to the account" should {
+    s"the accountType $PT_ASSIGNED_TO_OTHER_USER, no SA associated to the account"                                                        should {
       "return a PTEnrolmentOtherAccountViewModel for the account details" in {
 
         val additionalCacheData = Map("USER_ASSIGNED_PT_ENROLMENT" -> Json.toJson(UsersAssignedEnrolment1))
@@ -195,7 +195,7 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
       }
     }
 
-    s"the accountType $PT_ASSIGNED_TO_OTHER_USER, account has SA in the current session" should {
+    s"the accountType $PT_ASSIGNED_TO_OTHER_USER, account has SA in the current session"                                                  should {
       "return a PTEnrolmentOtherAccountViewModel for the account details" in {
         val additionalCacheData = Map("USER_ASSIGNED_PT_ENROLMENT" -> Json.toJson(UsersAssignedEnrolment1))
 
@@ -238,7 +238,7 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
       }
     }
 
-    s"the accountType $PT_ASSIGNED_TO_OTHER_USER, account has SA on the another account that also has PT" should {
+    s"the accountType $PT_ASSIGNED_TO_OTHER_USER, account has SA on the another account that also has PT"                                 should {
       "return a PTEnrolmentOtherAccountViewModel for the account details" in {
         val additionalCacheData = Map("USER_ASSIGNED_PT_ENROLMENT" -> Json.toJson(UsersAssignedEnrolment1))
 
@@ -663,7 +663,7 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
     }
   }
   s"getSAAndCADetails" when {
-    s"the accountType $SA_ASSIGNED_TO_OTHER_USER, account has SA in the current session" should {
+    s"the accountType $SA_ASSIGNED_TO_OTHER_USER, account has SA in the current session"                              should {
       "return a CADetailsSADetailsIfExists for the account details" in {
         val additionalCacheData = Map("USER_ASSIGNED_SA_ENROLMENT" -> Json.toJson(UsersAssignedEnrolment1))
 
@@ -697,7 +697,7 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
       }
     }
 
-    s"the accountType $SA_ASSIGNED_TO_OTHER_USER, account has no SA in the current session but cred is retrieved" should {
+    s"the accountType $SA_ASSIGNED_TO_OTHER_USER, account has no SA in the current session but cred is retrieved"     should {
       "return a CADetailsSADetailsIfExists for the account details" in {
         when(
           mockUsersGroupService.getAccountDetails(

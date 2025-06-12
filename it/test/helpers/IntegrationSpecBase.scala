@@ -42,15 +42,22 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUN
 import scala.concurrent.ExecutionContext
 
 trait IntegrationSpecBase
-    extends AnyWordSpec with GuiceOneAppPerSuite with Matchers with PatienceConfiguration with BeforeAndAfterEach
-    with ScalaFutures with Injecting with IntegrationPatience with SessionCacheOperations {
+    extends AnyWordSpec
+    with GuiceOneAppPerSuite
+    with Matchers
+    with PatienceConfiguration
+    with BeforeAndAfterEach
+    with ScalaFutures
+    with Injecting
+    with IntegrationPatience
+    with SessionCacheOperations {
 
   override def fakeApplication(): Application =
     new GuiceApplicationBuilder()
       .configure(Map("mongodb.uri" -> mongoUri))
       .build()
 
-  def generateNino: Nino = new NinoGenerator().nextNino
+  def generateNino: Nino       = new NinoGenerator().nextNino
   def secondGenerateNino: Nino = new NinoGenerator().nextNino
 
   val nino: Nino = generateNino
@@ -65,10 +72,10 @@ trait IntegrationSpecBase
   }
 
   implicit lazy val ec: ExecutionContext = app.injector.instanceOf[ExecutionContext]
-  lazy implicit val hc: HeaderCarrier = HeaderCarrier(
+  lazy implicit val hc: HeaderCarrier    = HeaderCarrier(
     authorization = Some(Authorization(AUTHORIZE_HEADER_VALUE))
   )
-  lazy val crypto: TENCrypto = app.injector.instanceOf[TENCrypto]
+  lazy val crypto: TENCrypto             = app.injector.instanceOf[TENCrypto]
 
   lazy val config: Map[String, Any] =
     Map(

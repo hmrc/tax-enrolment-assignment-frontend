@@ -34,7 +34,7 @@ import scala.concurrent.Future
 
 class EACDServiceSpec extends BaseSpec {
 
-  lazy val mockEacdConnector: EACDConnector = mock[EACDConnector]
+  lazy val mockEacdConnector: EACDConnector     = mock[EACDConnector]
   lazy val mockTeaSessionCache: TEASessionCache = mock[TEASessionCache]
 
   val service = new EACDService(mockEacdConnector, mockTeaSessionCache)

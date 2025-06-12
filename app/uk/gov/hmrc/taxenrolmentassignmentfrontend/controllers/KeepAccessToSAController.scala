@@ -77,12 +77,12 @@ class KeepAccessToSAController @Inject() (
               .handleKeepAccessToSAChoice(keepAccessToSA)
               .value
               .map {
-                case Right(true) =>
+                case Right(true)  =>
                   Redirect(routes.SignInWithSAAccountController.view)
                 case Right(false) =>
                   auditHandler.audit(AuditEvent.auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(false))
                   Redirect(routes.EnrolledPTWithSAOnOtherAccountController.view)
-                case Left(error) =>
+                case Left(error)  =>
                   errorHandler.handleErrors(error, "[KeepAccessToSAController][continue]")(request, implicitly)
               }
         )

@@ -200,7 +200,7 @@ trait LoggingEventWarn {
       )
     )
 
-  def logInvalidRedirectUrl(error: String): LoggingEvent =
+  def logInvalidRedirectUrl(error: String): LoggingEvent                        =
     Warn(
       Event(
         "[AccountCheckController][accountCheck]",

@@ -20,7 +20,7 @@ import play.api.libs.functional.syntax.toFunctionalBuilderOps
 import play.api.libs.json.{Format, JsPath, JsValue, Json, Reads, Writes}
 
 case class AdditonalFactors(factorType: String, phoneNumber: Option[String] = None, name: Option[String] = None) {
-  val FIVE = 5
+  val FIVE                       = 5
   def trimmedPhoneNumber: String = phoneNumber.fold("")(_.trim.takeRight(FIVE))
 }
 

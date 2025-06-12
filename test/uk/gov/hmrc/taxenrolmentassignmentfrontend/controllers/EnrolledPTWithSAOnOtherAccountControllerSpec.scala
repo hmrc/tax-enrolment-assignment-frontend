@@ -39,11 +39,11 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
 
-  lazy val mockSilentAssignmentService: SilentAssignmentService = mock[SilentAssignmentService]
+  lazy val mockSilentAssignmentService: SilentAssignmentService   = mock[SilentAssignmentService]
   lazy val mockAccountCheckOrchestrator: AccountCheckOrchestrator = mock[AccountCheckOrchestrator]
-  lazy val mockAuditHandler: AuditHandler = mock[AuditHandler]
+  lazy val mockAuditHandler: AuditHandler                         = mock[AuditHandler]
 
-  lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
+  lazy val testBodyParser: BodyParsers.Default                            = mock[BodyParsers.Default]
   lazy val mockMultipleAccountsOrchestrator: MultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
 
   override lazy val overrides: Seq[Binding[TEASessionCache]] = Seq(
@@ -136,7 +136,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
       }
     }
 
-    "the user is the wrong usertype" should {
+    "the user is the wrong usertype"   should {
       s"redirect to the ${UrlPaths.accountCheckPath} page" in {
         when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
@@ -152,7 +152,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
         val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(res) shouldBe SEE_OTHER
+        status(res)           shouldBe SEE_OTHER
         redirectLocation(res) shouldBe Some(UrlPaths.accountCheckPath)
       }
     }
@@ -166,7 +166,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
         val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(res) shouldBe INTERNAL_SERVER_ERROR
+        status(res)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(res) should include(messages("enrolmentError.heading"))
       }
     }
@@ -183,7 +183,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
         val res = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(res) shouldBe INTERNAL_SERVER_ERROR
+        status(res)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(res) should include(messages("enrolmentError.heading"))
       }
     }
@@ -198,7 +198,7 @@ class EnrolledPTWithSAOnOtherAccountControllerSpec extends ControllersBaseSpec {
       val res = controller.continue
         .apply(buildFakeRequestWithSessionId(""))
 
-      status(res) shouldBe SEE_OTHER
+      status(res)               shouldBe SEE_OTHER
       redirectLocation(res).get shouldBe "redirect"
       mockDeleteDataFromCacheVerify
     }

@@ -29,8 +29,8 @@ class OneLoginStubConnectorTestOnlyISpec extends IntegrationSpecBase {
     app.injector.instanceOf[OneLoginStubConnectorTestOnly]
 
   "postAccount" must {
-    val credId = "credId"
-    val apiUrl = "/one-login-stub/test/accounts"
+    val credId  = "credId"
+    val apiUrl  = "/one-login-stub/test/accounts"
     val account = AccountDetailsTestOnly(
       "SCP",
       "groupId",
@@ -94,7 +94,7 @@ class OneLoginStubConnectorTestOnlyISpec extends IntegrationSpecBase {
 
   "delete account" must {
     val eacdUserId = "eacdUserId"
-    val apiUrl = s"/one-login-stub/test/accounts/$eacdUserId"
+    val apiUrl     = s"/one-login-stub/test/accounts/$eacdUserId"
     "delete the account and return OK" in {
 
       stubDelete(apiUrl, Status.OK)
@@ -122,9 +122,9 @@ class OneLoginStubConnectorTestOnlyISpec extends IntegrationSpecBase {
       }
     }
   }
-  "get account" must {
+  "get account"    must {
     val identityProviderId = "id"
-    val apiUrl = s"/one-login-stub/test/accounts?identityProviderId=$identityProviderId"
+    val apiUrl             = s"/one-login-stub/test/accounts?identityProviderId=$identityProviderId"
     "return the account with caUserID and OK status" in {
       val returnedBody =
         s"""

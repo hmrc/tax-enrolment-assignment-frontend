@@ -30,8 +30,8 @@ import scala.concurrent.Future
 
 class AuditHandlerSpec extends BaseSpec {
 
-  val appName = "appname"
-  val auditType = "type"
+  val appName         = "appname"
+  val auditType       = "type"
   val transactionName = "txName"
 
   val mockAuditConnector: AuditConnector = mock[AuditConnector]
@@ -67,11 +67,11 @@ class AuditHandlerSpec extends BaseSpec {
       val e = eventCapture.getAllValues.get(0)
 
       e.auditSource shouldBe appName
-      e.auditType shouldBe auditType
-      e.detail shouldBe detail
+      e.auditType   shouldBe auditType
+      e.detail      shouldBe detail
 
       e.tags("transactionName") shouldBe transactionName
-      e.tags.get("clientIP") should not be empty
+      e.tags.get("clientIP")      should not be empty
     }
   }
 }

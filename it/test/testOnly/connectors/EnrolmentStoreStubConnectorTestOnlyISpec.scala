@@ -29,7 +29,7 @@ class EnrolmentStoreStubConnectorTestOnlyISpec extends IntegrationSpecBase {
 
   "addStubAccount" should {
 
-    val account = AccountDetailsTestOnly(
+    val account     = AccountDetailsTestOnly(
       "SCP",
       "groupId",
       nino,
@@ -88,7 +88,7 @@ class EnrolmentStoreStubConnectorTestOnlyISpec extends IntegrationSpecBase {
          |  ]
          |}
          |""".stripMargin
-    val apiUrl = "/enrolment-store-stub/data"
+    val apiUrl      = "/enrolment-store-stub/data"
 
     "add account details" when {
       "response is OK" in {
@@ -117,7 +117,7 @@ class EnrolmentStoreStubConnectorTestOnlyISpec extends IntegrationSpecBase {
   "deleteStubAccount" should {
 
     val groupId = "groupId"
-    val apiUrl = s"/data/group/$groupId"
+    val apiUrl  = s"/data/group/$groupId"
 
     "delete account details" when {
       "response is NO_CONTENT" in {

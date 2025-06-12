@@ -28,7 +28,7 @@ class AuthorisationControllerSpec extends BaseSpec {
     "display the error page" in {
       val result = controller.notAuthorised()(FakeRequest())
 
-      status(result) shouldBe UNAUTHORIZED
+      status(result)        shouldBe UNAUTHORIZED
       contentAsString(result) should include(messages("enrolmentError.heading"))
     }
   }

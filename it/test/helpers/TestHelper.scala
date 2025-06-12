@@ -19,26 +19,26 @@ package helpers
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 
 object ItUrlPaths {
-  val enrolledPTNoSAOnAnyAccountPath: String = routes.EnrolledForPTController.view.url
-  val enrolledPTWithSAOnAnyAccountPath: String = routes.EnrolledForPTWithSAController.view.url
-  val enrolledPTSAOnOtherAccountPath: String =
+  val enrolledPTNoSAOnAnyAccountPath: String     = routes.EnrolledForPTController.view.url
+  val enrolledPTWithSAOnAnyAccountPath: String   = routes.EnrolledForPTWithSAController.view.url
+  val enrolledPTSAOnOtherAccountPath: String     =
     routes.EnrolledPTWithSAOnOtherAccountController.view.url
-  val reportFraudPTAccountPath: String =
+  val reportFraudPTAccountPath: String           =
     routes.ReportSuspiciousIDController.viewNoSA.url
-  val reportFraudSAAccountPath: String =
+  val reportFraudSAAccountPath: String           =
     routes.ReportSuspiciousIDController.viewSA.url
-  val saOnOtherAccountInterruptPath: String =
+  val saOnOtherAccountInterruptPath: String      =
     routes.SABlueInterruptController.view.url
   val saOnOtherAccountKeepAccessToSAPath: String =
     routes.KeepAccessToSAController.view.url
-  val saOnOtherAccountSigninAgainPath: String =
+  val saOnOtherAccountSigninAgainPath: String    =
     routes.SignInWithSAAccountController.view.url
-  val enrolForSAPath: String = routes.EnrolForSAController.enrolForSA.url
-  val ptOnOtherAccountPath: String =
+  val enrolForSAPath: String                     = routes.EnrolForSAController.enrolForSA.url
+  val ptOnOtherAccountPath: String               =
     routes.PTEnrolmentOnOtherAccountController.view.url
-  val logoutPath: String = routes.SignOutController.signOut.url
-  val unauthorizedPath: String = routes.AuthorisationController.notAuthorised.url
-  val keepAlive: String = routes.TimeOutController.keepAlive.url
-  val timeout: String = routes.TimeOutController.timeout.url
-  val signout: String = routes.SignOutController.signOut.url
+  val logoutPath: String                         = routes.SignOutController.signOut.url
+  val unauthorizedPath: String                   = routes.AuthorisationController.notAuthorised.url
+  val keepAlive: String                          = routes.TimeOutController.keepAlive.url
+  val timeout: String                            = routes.TimeOutController.timeout.url
+  val signout: String                            = routes.SignOutController.signOut.url
 }

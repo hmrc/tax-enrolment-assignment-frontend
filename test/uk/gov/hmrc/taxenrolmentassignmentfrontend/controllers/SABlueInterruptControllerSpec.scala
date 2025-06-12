@@ -41,11 +41,11 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class SABlueInterruptControllerSpec extends ControllersBaseSpec {
 
-  lazy val mockSilentAssignmentService: SilentAssignmentService = mock[SilentAssignmentService]
+  lazy val mockSilentAssignmentService: SilentAssignmentService   = mock[SilentAssignmentService]
   lazy val mockAccountCheckOrchestrator: AccountCheckOrchestrator = mock[AccountCheckOrchestrator]
-  lazy val mockAuditHandler: AuditHandler = mock[AuditHandler]
+  lazy val mockAuditHandler: AuditHandler                         = mock[AuditHandler]
 
-  lazy val testBodyParser: BodyParsers.Default = mock[BodyParsers.Default]
+  lazy val testBodyParser: BodyParsers.Default                            = mock[BodyParsers.Default]
   lazy val mockMultipleAccountsOrchestrator: MultipleAccountsOrchestrator = mock[MultipleAccountsOrchestrator]
 
   override lazy val overrides: Seq[Binding[TEASessionCache]] = Seq(
@@ -69,7 +69,7 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
     inject[SABlueInterrupt]
 
   "view" when {
-    "a user has SA on another account" should {
+    "a user has SA on another account"                                      should {
       "render the SABlueInterrupt page" when {
         "the user has not already been assigned a PT enrolment" in {
 
@@ -124,12 +124,12 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
           val result = controller.view
             .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-          status(result) shouldBe SEE_OTHER
+          status(result)           shouldBe SEE_OTHER
           redirectLocation(result) shouldBe Some(UrlPaths.enrolledPTSAOnOtherAccountPath)
         }
       }
     }
-    s"the cache no redirectUrl" should {
+    s"the cache no redirectUrl"                                             should {
       "render the error page" in {
         when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
@@ -139,7 +139,7 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(result) shouldBe INTERNAL_SERVER_ERROR
+        status(result)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) should include(messages("enrolmentError.heading"))
       }
     }
@@ -157,14 +157,14 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
         val result = controller.view
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(result) shouldBe SEE_OTHER
+        status(result)           shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some(UrlPaths.accountCheckPath)
       }
     }
   }
 
   "continue" when {
-    "a user has SA on another account" should {
+    "a user has SA on another account"                                      should {
       s"redirect to ${UrlPaths.saOnOtherAccountKeepAccessToSAPath}" in {
         when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
@@ -177,13 +177,13 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
         val result = controller.continue
           .apply(buildFakePOSTRequestWithSessionId(Map.empty))
 
-        status(result) shouldBe SEE_OTHER
+        status(result)           shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some(
           UrlPaths.saOnOtherAccountKeepAccessToSAPath
         )
       }
     }
-    s"the cache no redirectUrl" should {
+    s"the cache no redirectUrl"                                             should {
       "render the error page" in {
         when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse()))
@@ -192,7 +192,7 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
         val result = controller.continue
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
-        status(result) shouldBe INTERNAL_SERVER_ERROR
+        status(result)        shouldBe INTERNAL_SERVER_ERROR
         contentAsString(result) should include(messages("enrolmentError.heading"))
       }
     }
@@ -210,7 +210,7 @@ class SABlueInterruptControllerSpec extends ControllersBaseSpec {
         val result = controller.continue
           .apply(buildFakePOSTRequestWithSessionId(Map.empty))
 
-        status(result) shouldBe SEE_OTHER
+        status(result)           shouldBe SEE_OTHER
         redirectLocation(result) shouldBe Some(UrlPaths.accountCheckPath)
       }
     }

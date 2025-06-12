@@ -74,14 +74,14 @@ object AuditEvent {
   def auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
     accountType: AccountTypes.Value
   )(implicit request: RequestWithUserDetailsFromSession[_], messagesApi: MessagesApi): AuditEvent = {
-    implicit val lang: Lang = getLang
+    implicit val lang: Lang               = getLang
     val optSACredentialId: Option[String] =
       if (request.userDetails.hasSAEnrolment || accountType == SA_ASSIGNED_TO_CURRENT_USER) {
         Some(request.userDetails.credId)
       } else {
         None
       }
-    val details: JsObject = getDetailsForPTEnrolled(accountType, optSACredentialId, None)
+    val details: JsObject                 = getDetailsForPTEnrolled(accountType, optSACredentialId, None)
 
     auditSuccessfullyEnrolledForPT(details)
   }
@@ -89,8 +89,8 @@ object AuditEvent {
   def auditSuccessfullyEnrolledPTWhenSAOnOtherAccount(
     enrolledAfterReportingFraud: Boolean = false
   )(implicit request: RequestWithUserDetailsFromSessionAndMongo[_], messagesApi: MessagesApi): AuditEvent = {
-    implicit val lang: Lang = getLang(request, implicitly)
-    val optSACredentialId: Option[String] = if (request.userDetails.hasSAEnrolment) {
+    implicit val lang: Lang                              = getLang(request, implicitly)
+    val optSACredentialId: Option[String]                = if (request.userDetails.hasSAEnrolment) {
       Some(request.userDetails.credId)
     } else {
       request.accountDetailsFromMongo.optUserAssignedSA.fold[Option[String]](None)(_.enrolledCredential)
@@ -102,7 +102,7 @@ object AuditEvent {
     } else {
       None
     }
-    val details: JsObject = getDetailsForPTEnrolled(
+    val details: JsObject                                = getDetailsForPTEnrolled(
       request.accountDetailsFromMongo.accountType,
       optSACredentialId,
       suspiciousAccountDetails
@@ -134,7 +134,7 @@ object AuditEvent {
     suspiciousAccountDetails: AccountDetails
   )(implicit request: RequestWithUserDetailsFromSessionAndMongo[_], messagesApi: MessagesApi, lang: Lang): JsObject = {
     val userDetails: UserDetailsFromSession = request.userDetails
-    val defaultDetails = Json.obj(
+    val defaultDetails                      = Json.obj(
       "NINO"            -> userDetails.nino.nino,
       "currentAccount"  -> getCurrentAccountJson(userDetails, request.accountDetailsFromMongo.accountType),
       "reportedAccount" -> getPresentedAccountJson(suspiciousAccountDetails)
@@ -150,7 +150,7 @@ object AuditEvent {
     enrolledAccountDetails: AccountDetails
   )(implicit request: RequestWithUserDetailsFromSessionAndMongo[_], messagesApi: MessagesApi, lang: Lang): JsObject = {
     val userDetails: UserDetailsFromSession = request.userDetails
-    val defaultDetails = Json.obj(
+    val defaultDetails                      = Json.obj(
       "NINO"            -> userDetails.nino.nino,
       "currentAccount"  -> getCurrentAccountJson(userDetails, request.accountDetailsFromMongo.accountType),
       "enrolledAccount" -> getPresentedAccountJson(enrolledAccountDetails)
@@ -170,9 +170,9 @@ object AuditEvent {
   )(implicit request: RequestWithUserDetailsFromSession[_], messagesApi: MessagesApi, lang: Lang): JsObject = {
 
     val userDetails: UserDetailsFromSession = request.userDetails
-    val optSACredIdJson: JsObject =
+    val optSACredIdJson: JsObject           =
       optSACredentialId.fold(Json.obj())(credId => Json.obj("saAccountCredentialId" -> credId))
-    val optReportedAccountJson: JsObject = suspiciousAccountDetails.fold(Json.obj()) { accountDetails =>
+    val optReportedAccountJson: JsObject    = suspiciousAccountDetails.fold(Json.obj()) { accountDetails =>
       val defaultReportedAccountDetails = Json.obj("reportedAccount" -> getPresentedAccountJson(accountDetails))
       if (translationRequired) {
         defaultReportedAccountDetails ++
@@ -194,9 +194,9 @@ object AuditEvent {
     lang: Lang
   ): JsObject = {
     val userDetails: UserDetailsFromSession = request.userDetails
-    val optSACredId: Option[String] =
+    val optSACredId: Option[String]         =
       request.accountDetailsFromMongo.optUserAssignedSA.fold[Option[String]](None)(uae => uae.enrolledCredential)
-    val optSAAccountJson: JsObject = optSACredId.fold(Json.obj()) { credId =>
+    val optSAAccountJson: JsObject          = optSACredId.fold(Json.obj()) { credId =>
       request.accountDetailsFromMongo
         .optAccountDetails(credId)
         .fold(Json.obj()) { accountDetails =>
@@ -256,7 +256,7 @@ object AuditEvent {
 
   private def mfaFactorToJson(mfaDetail: MFADetails)(implicit messagesApi: MessagesApi, lang: Lang): JsValue =
     mfaDetail.factorNameKey match {
-      case "mfaDetails.totp" =>
+      case "mfaDetails.totp"  =>
         Json.obj(
           "factorType"  -> messagesApi("mfaDetails.totp"),
           "factorValue" -> mfaDetail.factorValue
@@ -266,7 +266,7 @@ object AuditEvent {
           "factorType"  -> messagesApi("mfaDetails.voice"),
           "factorValue" -> messagesApi("common.endingWith", mfaDetail.factorValue)
         )
-      case _ =>
+      case _                  =>
         Json.obj(
           "factorType"  -> messagesApi("mfaDetails.text"),
           "factorValue" -> messagesApi("common.endingWith", mfaDetail.factorValue)

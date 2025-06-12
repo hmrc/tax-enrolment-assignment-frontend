@@ -29,7 +29,7 @@ class AuthorisationControllerISpec extends IntegrationSpecBase {
       "return Unauthorized and take the user to the errorView" in {
         val request = FakeRequest(GET, unauthorizedPath)
           .withSession(xAuthToken)
-        val result = route(app, request).get
+        val result  = route(app, request).get
         status(result) shouldBe UNAUTHORIZED
       }
     }

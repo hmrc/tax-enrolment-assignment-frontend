@@ -23,7 +23,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.ErrorTemplateMessages
 class ErrorTemplateSpec extends ViewSpecHelper {
 
   val view: HtmlFormat.Appendable = errorView()(FakeRequest(), testMessages)
-  val document = doc(view)
+  val document                    = doc(view)
 
   "The Error Page" should {
     "contain the correct title" in {
@@ -57,7 +57,7 @@ class ErrorTemplateSpec extends ViewSpecHelper {
         .attr("href") shouldBe ErrorTemplateMessages.paragraph2Link
       document
         .getElementById("techSupportLink")
-        .text() shouldBe ErrorTemplateMessages.paragraph2LinkText
+        .text()       shouldBe ErrorTemplateMessages.paragraph2LinkText
     }
   }
 }

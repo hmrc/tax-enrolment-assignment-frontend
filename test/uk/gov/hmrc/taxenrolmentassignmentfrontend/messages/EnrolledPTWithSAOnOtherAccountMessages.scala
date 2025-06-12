@@ -17,20 +17,20 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.messages
 
 object EnrolledPTWithSAOnOtherAccountMessages extends BaseMessage {
-  val title: String =
+  val title: String                      =
     "You are choosing to have two Government Gateway user IDs" + defaultTitleSuffix
-  val heading =
+  val heading                            =
     "You have chosen to have two separate Government Gateway user IDs"
-  val subheading1: String = "User ID for Self Assessment in business tax account"
-  val paragraph1: String =
+  val subheading1: String                = "User ID for Self Assessment in business tax account"
+  val paragraph1: String                 =
     s"You can only use these sign in details from now on. Keep these details safe."
   def paragraph2(userId: String): String =
     s"You are currently signed in with Government Gateway user ID ending with $userId"
-  val subheading2 = "Self Assessment"
-  val linkText = "The above user ID does not belong to me"
-  val exclamation =
+  val subheading2                        = "Self Assessment"
+  val linkText                           = "The above user ID does not belong to me"
+  val exclamation                        =
     "If you have any other Government Gateway user IDs, you will not be able to use them to access your personal tax information or Self Assessment" // TODO - Add once class is figured out
-  val ptaLinkText = "Continue to personal tax account"
-  val ptaLink =
+  val ptaLinkText                        = "Continue to personal tax account"
+  val ptaLink                            =
     "/personal-account"
 }

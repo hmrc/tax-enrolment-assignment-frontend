@@ -18,11 +18,11 @@ package helpers.messages
 
 object ReportSuspiciousIDMessages {
 
-  val title = "You need to contact us"
-  val heading = "You need to contact us"
-  val paragraph1: String = "This is so we can investigate this user ID. " +
+  val title                  = "You need to contact us"
+  val heading                = "You need to contact us"
+  val paragraph1: String     = "This is so we can investigate this user ID. " +
     "We recommend you take a note of the user ID and email address below as this screen will time out after 15 minutes."
-  val button = "Continue"
+  val button                 = "Continue"
   val telephone: Seq[String] = Seq("Telephone:", "0300 200 3600")
   val outsideUK: Seq[String] = Seq("Outside UK:", "+44 161 930 8445")
 

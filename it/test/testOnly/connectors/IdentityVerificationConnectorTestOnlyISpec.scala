@@ -54,9 +54,9 @@ class IdentityVerificationConnectorTestOnlyISpec extends IntegrationSpecBase {
   }
 
   "insertCredId" must {
-    val credId = "credId"
-    val apiUrl = s"/identity-verification/nino/$credId"
-    val requestBody =
+    val credId       = "credId"
+    val apiUrl       = s"/identity-verification/nino/$credId"
+    val requestBody  =
       s"""
          |{
          |  "credId": "$credId",

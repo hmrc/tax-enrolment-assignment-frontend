@@ -24,11 +24,11 @@ import scala.io.Source
 
 class MessagesSpec extends BaseSpec {
 
-  private val MatchSingleQuoteOnly = """\w+'{1}\w+""".r
+  private val MatchSingleQuoteOnly   = """\w+'{1}\w+""".r
   private val MatchBacktickQuoteOnly = """`+""".r
 
   private val englishMessages = parseMessages("conf/messages")
-  private val welshMessages = parseMessages("conf/messages.cy")
+  private val welshMessages   = parseMessages("conf/messages.cy")
 
   "All message files" should {
     "have the same set of keys" in {
@@ -81,7 +81,7 @@ class MessagesSpec extends BaseSpec {
       withClue(
         s"In $label, there is an unescaped or invalid quote:[$key][$value]"
       ) {
-        MatchSingleQuoteOnly.findFirstIn(value).isDefined shouldBe false
+        MatchSingleQuoteOnly.findFirstIn(value).isDefined   shouldBe false
         MatchBacktickQuoteOnly.findFirstIn(value).isDefined shouldBe false
       }
     }

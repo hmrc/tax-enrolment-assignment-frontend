@@ -97,9 +97,9 @@ class AccountMongoDetailsAction @Inject() (
   ): Future[Either[TaxEnrolmentAssignmentErrors, AccountDetailsFromMongo]] =
     teaSessionCache.fetch().map { optCachedMap =>
       optCachedMap
-        .fold[Either[TaxEnrolmentAssignmentErrors, AccountDetailsFromMongo]](
+        .fold[Either[TaxEnrolmentAssignmentErrors, AccountDetailsFromMongo]] {
           Left(CacheNotCompleteOrNotCorrect(None, None))
-        ) { cachedMap =>
+        } { cachedMap =>
           (
             AccountDetailsFromMongo.optAccountType(cachedMap.data),
             AccountDetailsFromMongo.optRedirectUrl(cachedMap.data)
@@ -115,5 +115,4 @@ class AccountMongoDetailsAction @Inject() (
           }
         }
     }
-
 }

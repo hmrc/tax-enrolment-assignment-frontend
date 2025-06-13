@@ -17,7 +17,6 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions
 
 import play.api.mvc.*
-import play.api.mvc.Results.*
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
@@ -28,15 +27,8 @@ class AuthJourney @Inject() (
 ) {
   val authJourney: ActionBuilder[RequestWithUserDetailsFromSession, AnyContent] = authAction
 
-  def withAccountMongoDetailsAction(
-    requestWithUserDetailsFromSession: RequestWithUserDetailsFromSession[AnyContent]
-  )(
-    block: RequestWithUserDetailsFromSessionAndMongo[AnyContent] => Future[Unit]
-  )(implicit ec: ExecutionContext): Future[Unit] =
-    authAction
-      .andThen(accountMongoDetailsAction)
-      .async { implicit request =>
-        block(request).map(_ => Ok(""))
-      }(requestWithUserDetailsFromSession)
-      .map(_ => (): Unit)
+  def accountDetailsFromMongo(requestWithUserDetailsFromSession: RequestWithUserDetailsFromSession[AnyContent])(implicit
+    ec: ExecutionContext
+  ): Future[Either[Result, RequestWithUserDetailsFromSessionAndMongo[AnyContent]]] =
+    accountMongoDetailsAction.accountDetailsFromMongo(requestWithUserDetailsFromSession)
 }

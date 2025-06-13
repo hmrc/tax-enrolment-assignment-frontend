@@ -61,6 +61,10 @@ class AccountMongoDetailsAction @Inject() (
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
   override protected def refine[A](
     request: RequestWithUserDetailsFromSession[A]
+  ): Future[Either[Result, RequestWithUserDetailsFromSessionAndMongo[A]]] = accountDetailsFromMongo(request)
+
+  def accountDetailsFromMongo[A](
+    request: RequestWithUserDetailsFromSession[A]
   ): Future[Either[Result, RequestWithUserDetailsFromSessionAndMongo[A]]] =
     getAccountDetailsFromMongoFromCache(request)
       .map {

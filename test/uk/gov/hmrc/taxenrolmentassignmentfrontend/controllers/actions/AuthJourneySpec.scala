@@ -24,8 +24,9 @@ import play.api.inject.{Binding, bind}
 import play.api.libs.json.{JsString, Json}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SINGLE_ACCOUNT
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{predicates, randomAccountType, retrievalResponse, retrievals}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.*
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
@@ -46,8 +47,8 @@ class AuthJourneySpec extends BaseSpec {
     )
     .build()
 
-  "withAccountMongoDetailsAction" must {
-    "provide a request and execute code block" in {
+  "accountDetailsFromMongo" must {
+    "provide a request with account details from Mongo" in {
       val cacheMap =
         CacheMap("id", Map(ACCOUNT_TYPE -> Json.toJson(randomAccountType), REDIRECT_URL -> JsString("foo")))
       when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))
@@ -55,18 +56,26 @@ class AuthJourneySpec extends BaseSpec {
       when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(retrievalResponse()))
 
-      var executedBlock: Boolean = false
-
       val sut = app.injector.instanceOf[AuthJourney]
 
-      Await.result(
-        sut.withAccountMongoDetailsAction(requestWithUserDetails()) { _ =>
-          executedBlock = true
-          Future.successful((): Unit)
-        },
+      val result = Await.result(
+        sut.accountDetailsFromMongo(requestWithUserDetails()),
         Duration.Inf
       )
-      executedBlock mustBe true
+
+      result.map(_.userDetails) mustBe Right(userDetailsNoEnrolments)
+      result.map(_.sessionID) mustBe Right("sessionId")
+
+      val expAccountDetailsFromMongo =
+        AccountDetailsFromMongo(
+          SINGLE_ACCOUNT,
+          "foo",
+          Map(
+            "ACCOUNT_TYPE" -> JsString("SINGLE_ACCOUNT"),
+            "redirectURL"  -> JsString("foo")
+          )
+        )(crypto.crypto)
+      result.map(_.accountDetailsFromMongo) mustBe Right(expAccountDetailsFromMongo)
     }
   }
 }

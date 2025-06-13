@@ -110,6 +110,19 @@ trait BaseSpec
       "sessionId"
     )
 
+  def requestWithUserDetailsFromSessionAndMongo(
+    request: RequestWithUserDetailsFromSession[AnyContent],
+    accountDetailsFromMongo: AccountDetailsFromMongo
+  ): RequestWithUserDetailsFromSessionAndMongo[AnyContent] = {
+    val g = RequestWithUserDetailsFromSessionAndMongo(
+      request = request.request,
+      userDetails = request.userDetails,
+      sessionID = request.sessionID,
+      accountDetailsFromMongo = accountDetailsFromMongo
+    )
+    g
+  }
+
   def createInboundResult[T](result: T): TEAFResult[T] =
     EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(result))
 

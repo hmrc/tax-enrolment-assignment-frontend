@@ -50,7 +50,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.TENCrypto
 import scala.concurrent.{ExecutionContext, Future}
 
 trait BaseSpec
-  extends AnyWordSpec
+    extends AnyWordSpec
     with GuiceOneAppPerSuite
     with Matchers
     with PatienceConfiguration
@@ -102,20 +102,33 @@ trait BaseSpec
       .asInstanceOf[FakeRequest[AnyContentAsEmpty.type]]
 
   def requestWithUserDetails(
-                              userDetails: UserDetailsFromSession = userDetailsNoEnrolments
-                            ): RequestWithUserDetailsFromSession[AnyContent] =
+    userDetails: UserDetailsFromSession = userDetailsNoEnrolments
+  ): RequestWithUserDetailsFromSession[AnyContent] =
     new RequestWithUserDetailsFromSession[AnyContent](
       FakeRequest().asInstanceOf[Request[AnyContent]],
       userDetails,
       "sessionId"
     )
 
+  def requestWithUserDetailsFromSessionAndMongo(
+    request: RequestWithUserDetailsFromSession[AnyContent],
+    accountDetailsFromMongo: AccountDetailsFromMongo
+  ): RequestWithUserDetailsFromSessionAndMongo[AnyContent] = {
+    val g = RequestWithUserDetailsFromSessionAndMongo(
+      request = request.request,
+      userDetails = request.userDetails,
+      sessionID = request.sessionID,
+      accountDetailsFromMongo = accountDetailsFromMongo
+    )
+    g
+  }
+
   def createInboundResult[T](result: T): TEAFResult[T] =
     EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(result))
 
   def createInboundResultError[T](
-                                   error: TaxEnrolmentAssignmentErrors
-                                 ): TEAFResult[T] = EitherT.left(Future.successful(error))
+    error: TaxEnrolmentAssignmentErrors
+  ): TEAFResult[T] = EitherT.left(Future.successful(error))
 
   implicit val request: RequestWithUserDetailsFromSession[AnyContent] =
     new RequestWithUserDetailsFromSession[AnyContent](
@@ -135,11 +148,11 @@ trait BaseSpec
     Map(ACCOUNT_TYPE -> Json.toJson(accountType), REDIRECT_URL -> JsString(redirectUrl))
 
   def requestWithAccountType(
-                              accountType: AccountTypes.Value = SINGLE_ACCOUNT,
-                              redirectUrl: String = UrlPaths.returnUrl,
-                              additionalCacheData: Map[String, JsValue] = Map(),
-                              langCode: String = "en"
-                            ): RequestWithUserDetailsFromSessionAndMongo[_] =
+    accountType: AccountTypes.Value = SINGLE_ACCOUNT,
+    redirectUrl: String = UrlPaths.returnUrl,
+    additionalCacheData: Map[String, JsValue] = Map(),
+    langCode: String = "en"
+  ): RequestWithUserDetailsFromSessionAndMongo[_] =
     RequestWithUserDetailsFromSessionAndMongo(
       request.request.withTransientLang(langCode),
       request.userDetails,
@@ -153,21 +166,21 @@ trait BaseSpec
 
   class TestTeaSessionCache extends TEASessionCache {
     override def save[A](key: String, value: A)(implicit
-                                                request: RequestWithUserDetailsFromSession[_],
-                                                fmt: Format[A]
+      request: RequestWithUserDetailsFromSession[_],
+      fmt: Format[A]
     ): Future[CacheMap] = Future(CacheMap(request.sessionID, Map()))
 
     override def removeRecord(implicit
-                              request: RequestWithUserDetailsFromSession[_]
-                             ): Future[Boolean] = ???
+      request: RequestWithUserDetailsFromSession[_]
+    ): Future[Boolean] = ???
 
     override def fetch()(implicit
-                         request: RequestWithUserDetailsFromSession[_]
+      request: RequestWithUserDetailsFromSession[_]
     ): Future[Option[CacheMap]] =
       Future(Some(CacheMap(request.sessionID, Map())))
 
     override def extendSession()(implicit
-                                 request: RequestWithUserDetailsFromSession[_]
+      request: RequestWithUserDetailsFromSession[_]
     ): Future[Boolean] = Future.successful(true)
 
     def collectionDeleteOne(id: String): Future[Boolean]                = ???

@@ -93,13 +93,6 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
   lazy val returnUrl: RedirectUrl     = RedirectUrl.apply(returnUrlValue)
   private val exampleMongoSessionData =
     Map(ACCOUNT_TYPE -> Json.toJson(PT_ASSIGNED_TO_CURRENT_USER), REDIRECT_URL -> JsString("foo"))
-//  private val reqWithUserDetailsFromSessionAndMongo = requestWithUserDetailsFromSessionAndMongo(
-//    requestWithUserDetails(userDetailsWithSAEnrolment),
-//    accountDetailsFromMongo(additionalCacheData = exampleMongoSessionData)
-//  )
-
-  // TODO 10629: Uncomment tests below - they all use new authjourney method
-
   "accountCheck" when {
 
     "a single credential exists for a given nino with no PT enrolment" should {

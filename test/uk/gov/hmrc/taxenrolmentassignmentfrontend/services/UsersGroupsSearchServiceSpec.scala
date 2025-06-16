@@ -50,15 +50,16 @@ class UsersGroupsSearchServiceSpec extends BaseSpec {
 
   "getAccountDetails" when {
     "the account details are already in the cache"     should {
-      "not call the users-groups-search and return value from cache" in {
+      "not call the users-groups-search and return value from cache" in { // TODO
         val additionCacheData = Map(
           s"AccountDetailsFor$CREDENTIAL_ID" -> Json.toJson(accountDetails)(AccountDetails.mongoFormats(crypto.crypto))
         )
-        val result            = service.getAccountDetails(CREDENTIAL_ID)(
-          implicitly,
-          implicitly,
-          requestWithAccountType(additionalCacheData = additionCacheData)
-        )
+        val result            =
+          service.getAccountDetails(CREDENTIAL_ID, accountDetailsFromMongo(additionalCacheData = additionCacheData))(
+            implicitly,
+            implicitly,
+            requestWithAccountType(additionalCacheData = additionCacheData)
+          )
         whenReady(result.value) { res =>
           res shouldBe Right(accountDetails)
         }
@@ -79,7 +80,11 @@ class UsersGroupsSearchServiceSpec extends BaseSpec {
         )
           .thenReturn(Future(CacheMap(request.sessionID, Map())))
 
-        val result = service.getAccountDetails(CREDENTIAL_ID)(implicitly, implicitly, requestWithAccountType())
+        val result = service.getAccountDetails(CREDENTIAL_ID, accountDetailsFromMongo())(
+          implicitly,
+          implicitly,
+          requestWithAccountType()
+        )
         whenReady(result.value) { res =>
           res shouldBe Right(accountDetails.copy(userId = "********6037"))
         }
@@ -91,7 +96,11 @@ class UsersGroupsSearchServiceSpec extends BaseSpec {
         when(mockUsersGroupsSearchConnector.getUserDetails(CREDENTIAL_ID))
           .thenReturn(createInboundResultError(UnexpectedResponseFromUsersGroupsSearch))
 
-        val result = service.getAccountDetails(CREDENTIAL_ID)(implicitly, implicitly, requestWithAccountType())
+        val result = service.getAccountDetails(CREDENTIAL_ID, accountDetailsFromMongo())(
+          implicitly,
+          implicitly,
+          requestWithAccountType()
+        )
         whenReady(result.value) { res =>
           res shouldBe Left(UnexpectedResponseFromUsersGroupsSearch)
         }

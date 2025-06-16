@@ -147,6 +147,16 @@ trait BaseSpec
   def generateBasicCacheData(accountType: AccountTypes.Value, redirectUrl: String = "foo"): Map[String, JsValue] =
     Map(ACCOUNT_TYPE -> Json.toJson(accountType), REDIRECT_URL -> JsString(redirectUrl))
 
+  def accountDetailsFromMongo(
+    accountType: AccountTypes.Value = SINGLE_ACCOUNT,
+    redirectUrl: String = UrlPaths.returnUrl,
+    additionalCacheData: Map[String, JsValue] = Map()
+  ): AccountDetailsFromMongo = AccountDetailsFromMongo(
+    accountType = accountType,
+    redirectUrl = redirectUrl,
+    sessionData = generateBasicCacheData(accountType, redirectUrl) ++ additionalCacheData
+  )(crypto.crypto)
+
   def requestWithAccountType(
     accountType: AccountTypes.Value = SINGLE_ACCOUNT,
     redirectUrl: String = UrlPaths.returnUrl,

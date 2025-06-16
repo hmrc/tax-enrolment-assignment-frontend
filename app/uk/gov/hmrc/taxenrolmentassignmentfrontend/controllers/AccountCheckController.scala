@@ -116,7 +116,7 @@ class AccountCheckController @Inject() (
     if (!hasPTEnrolmentAlready && accountTypesToEnrolForPT.contains(accountType)) {
       silentAssignmentService.enrolUser().flatMap { _ =>
         // TODO: Tidy this up:-
-        val hh = authJourney.accountDetailsFromMongo(request).map { x =>
+        authJourney.accountDetailsFromMongo(request).map { x =>
           val r = x.map { req =>
             auditHandler.audit(AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(accountType)(req))
           }

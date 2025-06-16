@@ -637,10 +637,12 @@ class AuditEventSpec extends BaseSpec {
     "email does not exist in user details session" should {
       "return an audit that does not contain the email" in {
         val requestForAudit =
-          requestWithUserDetails(userDetailsNoEnrolments.copy(email = None))
+          requestWithUserDetailsFromSessionAndMongo(
+            requestWithUserDetails(userDetailsNoEnrolments.copy(email = None)),
+            accountDetailsFromMongo()
+          )
 
-        val expectedAuditEvent =
-          getExpectedAuditForPTEnrolled(SINGLE_ACCOUNT, None, None, withEmail = Some("-"))
+        val expectedAuditEvent = getExpectedAuditForPTEnrolled(SINGLE_ACCOUNT, None, None, withEmail = Some("-"))
 
         AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
           SINGLE_ACCOUNT
@@ -652,7 +654,10 @@ class AuditEventSpec extends BaseSpec {
     "the user has a single account with no SA" should {
       "return an audit event with the expected details" in {
         val requestForAudit =
-          requestWithUserDetails(userDetailsNoEnrolments)
+          requestWithUserDetailsFromSessionAndMongo(
+            requestWithUserDetails(userDetailsNoEnrolments),
+            accountDetailsFromMongo()
+          )
 
         val expectedAuditEvent =
           getExpectedAuditForPTEnrolled(SINGLE_ACCOUNT, None, None, withEmail = Some(CURRENT_USER_EMAIL))
@@ -666,7 +671,10 @@ class AuditEventSpec extends BaseSpec {
     "the user has a single account with SA" should {
       "return an audit event with the expected details" in {
         val requestForAudit =
-          requestWithUserDetails(userDetailsWithSAEnrolment)
+          requestWithUserDetailsFromSessionAndMongo(
+            requestWithUserDetails(userDetailsWithSAEnrolment),
+            accountDetailsFromMongo()
+          )
 
         val expectedAuditEvent =
           getExpectedAuditForPTEnrolled(SINGLE_ACCOUNT, None, Some(CREDENTIAL_ID))
@@ -680,7 +688,10 @@ class AuditEventSpec extends BaseSpec {
     "the user has multiple accounts with no SA" should {
       "return an audit event with the expected details" in {
         val requestForAudit =
-          requestWithUserDetails(userDetailsNoEnrolments)
+          requestWithUserDetailsFromSessionAndMongo(
+            requestWithUserDetails(userDetailsNoEnrolments),
+            accountDetailsFromMongo()
+          )
 
         val expectedAuditEvent =
           getExpectedAuditForPTEnrolled(MULTIPLE_ACCOUNTS, None, None)
@@ -694,7 +705,10 @@ class AuditEventSpec extends BaseSpec {
     "the user has multiple accounts and is signed in with SA account" should {
       "return an audit event with the expected details" in {
         val requestForAudit =
-          requestWithUserDetails(userDetailsWithSAEnrolment)
+          requestWithUserDetailsFromSessionAndMongo(
+            requestWithUserDetails(userDetailsWithSAEnrolment),
+            accountDetailsFromMongo()
+          )
 
         val expectedAuditEvent =
           getExpectedAuditForPTEnrolled(SA_ASSIGNED_TO_CURRENT_USER, None, Some(CREDENTIAL_ID))

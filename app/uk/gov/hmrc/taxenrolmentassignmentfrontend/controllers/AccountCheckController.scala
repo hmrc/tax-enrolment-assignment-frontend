@@ -19,17 +19,17 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 import cats.data.EitherT
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents, Result}
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.bootstrap.binders.*
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl.idFunctor
-import uk.gov.hmrc.play.bootstrap.binders._
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.*
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AuthJourney, RequestWithUserDetailsFromSession}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{InvalidRedirectUrl, TaxEnrolmentAssignmentErrors}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.*
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.AccountCheckOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REDIRECT_URL
@@ -76,7 +76,7 @@ class AccountCheckController @Inject() (
   }
 
   private def handleRequest(redirectUrl: String)(implicit
-    request: RequestWithUserDetailsFromSession[_],
+    request: RequestWithUserDetailsFromSession[AnyContent],
     hc: HeaderCarrier
   ): TEAFResult[AccountTypes.Value] =
     for {
@@ -88,7 +88,7 @@ class AccountCheckController @Inject() (
     } yield accountType
 
   private def handleUsers(accountType: AccountTypes.Value, redirectUrl: String)(implicit
-    request: RequestWithUserDetailsFromSession[_]
+    request: RequestWithUserDetailsFromSession[AnyContent]
   ): Future[Result] =
     accountType match {
       case PT_ASSIGNED_TO_OTHER_USER                                       => Future.successful(Redirect(routes.PTEnrolmentOnOtherAccountController.view))
@@ -108,14 +108,21 @@ class AccountCheckController @Inject() (
     }
 
   private def enrolForPTIfRequired(accountType: AccountTypes.Value)(implicit
-    request: RequestWithUserDetailsFromSession[_],
+    request: RequestWithUserDetailsFromSession[AnyContent],
     hc: HeaderCarrier
   ): TEAFResult[Unit] = {
     val accountTypesToEnrolForPT = List(SINGLE_ACCOUNT, MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER)
     val hasPTEnrolmentAlready    = request.userDetails.hasPTEnrolment
     if (!hasPTEnrolmentAlready && accountTypesToEnrolForPT.contains(accountType)) {
       silentAssignmentService.enrolUser().flatMap { _ =>
-        auditHandler.audit(AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(accountType))
+        // TODO: Tidy this up:-
+        authJourney.accountDetailsFromMongo(request).map { x =>
+          val r = x.map { req =>
+            auditHandler.audit(AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(accountType)(req))
+          }
+          r
+        }
+
         EitherT.right(if (accountType == SINGLE_ACCOUNT) {
           Future.successful(
             logger.logEvent(

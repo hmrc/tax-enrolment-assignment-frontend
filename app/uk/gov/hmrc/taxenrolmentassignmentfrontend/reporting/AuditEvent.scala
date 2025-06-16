@@ -73,7 +73,7 @@ object AuditEvent {
 
   def auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
     accountType: AccountTypes.Value
-  )(implicit request: RequestWithUserDetailsFromSession[_], messagesApi: MessagesApi): AuditEvent = {
+  )(implicit request: RequestWithUserDetailsFromSessionAndMongo[_], messagesApi: MessagesApi): AuditEvent = {
     implicit val lang: Lang               = getLang
     val optSACredentialId: Option[String] =
       if (request.userDetails.hasSAEnrolment || accountType == SA_ASSIGNED_TO_CURRENT_USER) {
@@ -167,7 +167,7 @@ object AuditEvent {
     accountType: AccountTypes.Value,
     optSACredentialId: Option[String],
     suspiciousAccountDetails: Option[AccountDetails]
-  )(implicit request: RequestWithUserDetailsFromSession[_], messagesApi: MessagesApi, lang: Lang): JsObject = {
+  )(implicit request: RequestWithUserDetailsFromSessionAndMongo[_], messagesApi: MessagesApi, lang: Lang): JsObject = {
 
     val userDetails: UserDetailsFromSession = request.userDetails
     val optSACredIdJson: JsObject           =
@@ -273,7 +273,7 @@ object AuditEvent {
         )
     }
 
-  private def getLang(implicit request: RequestWithUserDetailsFromSession[_], messagesApi: MessagesApi): Lang =
+  private def getLang(implicit request: RequestWithUserDetailsFromSessionAndMongo[_], messagesApi: MessagesApi): Lang =
     messagesApi.preferred(request.request).lang
 
   private def translationRequired(implicit lang: Lang): Boolean =

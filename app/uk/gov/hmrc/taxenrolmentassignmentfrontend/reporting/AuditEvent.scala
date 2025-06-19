@@ -17,10 +17,10 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting
 
 import play.api.i18n.{Lang, MessagesApi}
-import play.api.libs.json._
+import play.api.libs.json.*
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.*
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails}
 
 import java.util.Locale
@@ -106,7 +106,7 @@ object AuditEvent {
       request.accountDetailsFromMongo.accountType,
       optSACredentialId,
       suspiciousAccountDetails
-    )(request, implicitly, implicitly)
+    )
 
     auditSuccessfullyEnrolledForPT(details)
   }
@@ -136,7 +136,11 @@ object AuditEvent {
     val userDetails: UserDetailsFromSession = request.userDetails
     val defaultDetails                      = Json.obj(
       "NINO"            -> userDetails.nino.nino,
-      "currentAccount"  -> getCurrentAccountJson(userDetails, request.accountDetailsFromMongo.accountType),
+      "currentAccount"  -> getCurrentAccountJson(
+        userDetails,
+        request.accountDetailsFromMongo.accountType,
+        request.accountDetailsFromMongo.optAccountDetails(userDetails.credId)
+      ),
       "reportedAccount" -> getPresentedAccountJson(suspiciousAccountDetails)
     )
     if (translationRequired) {
@@ -152,7 +156,11 @@ object AuditEvent {
     val userDetails: UserDetailsFromSession = request.userDetails
     val defaultDetails                      = Json.obj(
       "NINO"            -> userDetails.nino.nino,
-      "currentAccount"  -> getCurrentAccountJson(userDetails, request.accountDetailsFromMongo.accountType),
+      "currentAccount"  -> getCurrentAccountJson(
+        userDetails,
+        request.accountDetailsFromMongo.accountType,
+        request.accountDetailsFromMongo.optAccountDetails(userDetails.credId)
+      ),
       "enrolledAccount" -> getPresentedAccountJson(enrolledAccountDetails)
     )
     if (translationRequired) {
@@ -184,7 +192,11 @@ object AuditEvent {
 
     Json.obj(
       "NINO"           -> userDetails.nino.nino,
-      "currentAccount" -> getCurrentAccountJson(userDetails, accountType)
+      "currentAccount" -> getCurrentAccountJson(
+        userDetails,
+        accountType,
+        request.accountDetailsFromMongo.optAccountDetails(userDetails.credId)
+      )
     ) ++ optSACredIdJson ++ optReportedAccountJson
   }
 
@@ -212,20 +224,29 @@ object AuditEvent {
 
     Json.obj(
       "NINO"           -> userDetails.nino.nino,
-      "currentAccount" -> getCurrentAccountJson(userDetails, SA_ASSIGNED_TO_OTHER_USER)
+      "currentAccount" -> getCurrentAccountJson(
+        userDetails,
+        SA_ASSIGNED_TO_OTHER_USER,
+        request.accountDetailsFromMongo.optAccountDetails(userDetails.credId)
+      )
     ) ++ optSAAccountJson
   }
 
   private def getCurrentAccountJson(
     userDetails: UserDetailsFromSession,
-    accountType: AccountTypes.Value
-  ): JsObject =
+    accountType: AccountTypes.Value,
+    accountDetailsOpt: Option[AccountDetails] = None
+  ): JsObject = {
+    val correctAuthProvider =
+      accountDetailsOpt.map(_.identityProviderType.toString).getOrElse(userDetails.providerType)
+
     Json.obj(
       "credentialId" -> userDetails.credId,
       "type"         -> accountType.toString,
-      "authProvider" -> userDetails.providerType,
+      "authProvider" -> correctAuthProvider,
       "email"        -> userDetails.email.getOrElse[String]("-")
     ) ++ userDetails.affinityGroup.toJson.as[JsObject]
+  }
 
   private def getPresentedAccountJson(
     accountDetails: AccountDetails

@@ -99,17 +99,24 @@ class AccountMongoDetailsAction @Inject() (
   private def getAccountDetailsFromMongoFromCache(implicit
     request: RequestWithUserDetailsFromSession[_]
   ): Future[Either[TaxEnrolmentAssignmentErrors, AccountDetailsFromMongo]] =
-    teaSessionCache.fetch().map {
-      case Some(cachedMap) =>
-        for {
-          accountType <-
-            AccountDetailsFromMongo.optAccountType(cachedMap.data).toRight(CacheNotCompleteOrNotCorrect(None, None))
-          redirectUrl <- AccountDetailsFromMongo
-                           .optRedirectUrl(cachedMap.data)
-                           .toRight(CacheNotCompleteOrNotCorrect(None, Some(accountType)))
-        } yield AccountDetailsFromMongo(accountType, redirectUrl, cachedMap.data)(crypto.crypto)
-
-      case None =>
-        Left(CacheNotCompleteOrNotCorrect(None, None))
+    teaSessionCache.fetch().map { optCachedMap =>
+      optCachedMap
+        .fold[Either[TaxEnrolmentAssignmentErrors, AccountDetailsFromMongo]](
+          Left(CacheNotCompleteOrNotCorrect(None, None))
+        ) { cachedMap =>
+          (
+            AccountDetailsFromMongo.optAccountType(cachedMap.data),
+            AccountDetailsFromMongo.optRedirectUrl(cachedMap.data)
+          ) match {
+            case (Some(accountType), Some(redirectUrl)) =>
+              Right(
+                AccountDetailsFromMongo(accountType, redirectUrl, cachedMap.data)(crypto.crypto)
+              )
+            case (optAccountType, optRedirectUrl)       =>
+              Left(
+                CacheNotCompleteOrNotCorrect(optRedirectUrl, optAccountType)
+              )
+          }
+        }
     }
 }

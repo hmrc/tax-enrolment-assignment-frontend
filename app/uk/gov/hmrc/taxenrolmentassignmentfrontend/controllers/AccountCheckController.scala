@@ -25,7 +25,7 @@ import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.*
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AuthJourney, RequestWithUserDetailsFromSession}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AuthJourney, RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{InvalidRedirectUrl, TaxEnrolmentAssignmentErrors}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
@@ -121,7 +121,7 @@ class AccountCheckController @Inject() (
         _ <- EitherT(
                authJourney.accountDetailsFromMongo(request).flatMap {
                  case Right(enrichedReq) =>
-                   handleAuditAfterEnrolment(enrichedReq, accountType)
+                   handleAuditAfterEnrolment(accountType)(enrichedReq, implicitly)
                  case Left(_)            =>
                    Future.successful(Right(()))
                }
@@ -145,8 +145,10 @@ class AccountCheckController @Inject() (
   }
 
   private def handleAuditAfterEnrolment(
-    enrichedReq: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
     accountType: AccountTypes.Value
+  )(implicit
+    enrichedReq: RequestWithUserDetailsFromSessionAndMongo[AnyContent],
+    hc: HeaderCarrier
   ): Future[Either[Nothing, Unit]] =
     enrichedReq.accountDetailsFromMongo
       .optAccountDetails(enrichedReq.userDetails.credId)

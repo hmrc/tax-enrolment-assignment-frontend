@@ -61,7 +61,7 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
   val nino: Nino = new Generator().nextNino
 
   "invoke"                                                      should {
-    "return updated request when orchestrator returns success Some for both account type and redirect url" in {
+    "successfully build enriched request when cache contains both accountType and redirectUrl" in {
       val exampleMongoSessionData           =
         Map(ACCOUNT_TYPE -> Json.toJson(PT_ASSIGNED_TO_CURRENT_USER), REDIRECT_URL -> JsString("foo"))
       val requestWithUserDetailsFromSession = RequestWithUserDetailsFromSession(

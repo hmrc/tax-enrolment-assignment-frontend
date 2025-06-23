@@ -72,16 +72,26 @@ object AuditEvent {
   }
 
   def auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
-    accountType: AccountTypes.Value
-  )(implicit request: RequestWithUserDetailsFromSessionAndMongo[_], messagesApi: MessagesApi): AuditEvent = {
-    implicit val lang: Lang               = getLang
+    accountType: AccountTypes.Value,
+    accountDetailsOverride: Option[AccountDetails] = None
+  )(implicit
+    request: RequestWithUserDetailsFromSessionAndMongo[_],
+    messagesApi: MessagesApi
+  ): AuditEvent = {
+    implicit val lang: Lang = getLang
+
     val optSACredentialId: Option[String] =
-      if (request.userDetails.hasSAEnrolment || accountType == SA_ASSIGNED_TO_CURRENT_USER) {
+      if (request.userDetails.hasSAEnrolment || accountType == SA_ASSIGNED_TO_CURRENT_USER)
         Some(request.userDetails.credId)
-      } else {
+      else
         None
-      }
-    val details: JsObject                 = getDetailsForPTEnrolled(accountType, optSACredentialId, None)
+
+    val details: JsObject = getDetailsForPTEnrolled(
+      accountType,
+      optSACredentialId,
+      suspiciousAccountDetails = None,
+      accountDetailsOverride
+    )
 
     auditSuccessfullyEnrolledForPT(details)
   }
@@ -102,11 +112,8 @@ object AuditEvent {
     } else {
       None
     }
-    val details: JsObject                                = getDetailsForPTEnrolled(
-      request.accountDetailsFromMongo.accountType,
-      optSACredentialId,
-      suspiciousAccountDetails
-    )
+    val details: JsObject                                =
+      getDetailsForPTEnrolled(request.accountDetailsFromMongo.accountType, optSACredentialId, suspiciousAccountDetails)
 
     auditSuccessfullyEnrolledForPT(details)
   }
@@ -159,7 +166,7 @@ object AuditEvent {
       "currentAccount"  -> getCurrentAccountJson(
         userDetails,
         request.accountDetailsFromMongo.accountType,
-        request.accountDetailsFromMongo.optAccountDetails(userDetails.credId)
+        Some(enrolledAccountDetails)
       ),
       "enrolledAccount" -> getPresentedAccountJson(enrolledAccountDetails)
     )
@@ -174,20 +181,20 @@ object AuditEvent {
   private def getDetailsForPTEnrolled(
     accountType: AccountTypes.Value,
     optSACredentialId: Option[String],
-    suspiciousAccountDetails: Option[AccountDetails]
+    suspiciousAccountDetails: Option[AccountDetails],
+    accountDetailsOverride: Option[AccountDetails] = None
   )(implicit request: RequestWithUserDetailsFromSessionAndMongo[_], messagesApi: MessagesApi, lang: Lang): JsObject = {
 
     val userDetails: UserDetailsFromSession = request.userDetails
     val optSACredIdJson: JsObject           =
       optSACredentialId.fold(Json.obj())(credId => Json.obj("saAccountCredentialId" -> credId))
-    val optReportedAccountJson: JsObject    = suspiciousAccountDetails.fold(Json.obj()) { accountDetails =>
+
+    val optReportedAccountJson: JsObject = suspiciousAccountDetails.fold(Json.obj()) { accountDetails =>
       val defaultReportedAccountDetails = Json.obj("reportedAccount" -> getPresentedAccountJson(accountDetails))
-      if (translationRequired) {
-        defaultReportedAccountDetails ++
-          Json.obj("reportedAccountEN" -> getTranslatedAccountJson(accountDetails))
-      } else {
+      if (translationRequired)
+        defaultReportedAccountDetails ++ Json.obj("reportedAccountEN" -> getTranslatedAccountJson(accountDetails))
+      else
         defaultReportedAccountDetails
-      }
     }
 
     Json.obj(
@@ -195,7 +202,7 @@ object AuditEvent {
       "currentAccount" -> getCurrentAccountJson(
         userDetails,
         accountType,
-        request.accountDetailsFromMongo.optAccountDetails(userDetails.credId)
+        accountDetailsOverride.orElse(request.accountDetailsFromMongo.optAccountDetails(userDetails.credId))
       )
     ) ++ optSACredIdJson ++ optReportedAccountJson
   }
@@ -237,9 +244,7 @@ object AuditEvent {
     accountType: AccountTypes.Value,
     accountDetailsOpt: Option[AccountDetails] = None
   ): JsObject = {
-    val correctAuthProvider =
-      accountDetailsOpt.map(_.identityProviderType.toString).getOrElse(userDetails.providerType)
-
+    val correctAuthProvider = accountDetailsOpt.map(_.identityProviderType.toString).getOrElse(userDetails.providerType)
     Json.obj(
       "credentialId" -> userDetails.credId,
       "type"         -> accountType.toString,

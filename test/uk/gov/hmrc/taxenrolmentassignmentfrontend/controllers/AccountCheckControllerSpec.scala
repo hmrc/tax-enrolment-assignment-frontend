@@ -54,10 +54,11 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
   lazy val mockAccountCheckOrchestrator: AccountCheckOrchestrator = mock[AccountCheckOrchestrator]
   lazy val mockAuditHandler: AuditHandler                         = mock[AuditHandler]
 
-  lazy val mockAuthConnector: AuthConnector     = mock[AuthConnector]
-  lazy val testBodyParser: BodyParsers.Default  = mock[BodyParsers.Default]
-  lazy val mockTeaSessionCache: TEASessionCache = mock[TEASessionCache]
-  lazy val mockHmrcPTEnrolment: HmrcPTEnrolment = mock[HmrcPTEnrolment]
+  lazy val mockAuthConnector: AuthConnector                = mock[AuthConnector]
+  lazy val testBodyParser: BodyParsers.Default             = mock[BodyParsers.Default]
+  lazy val mockTeaSessionCache: TEASessionCache            = mock[TEASessionCache]
+  lazy val mockHmrcPTEnrolment: HmrcPTEnrolment            = mock[HmrcPTEnrolment]
+  lazy val mockUsersGroupService: UsersGroupsSearchService = mock[UsersGroupsSearchService]
 
   override lazy val overrides: Seq[Binding[TEASessionCache]] = Seq(
     bind[TEASessionCache].toInstance(mockTeaSessionCache)
@@ -70,7 +71,8 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
       bind[AuditHandler].toInstance(mockAuditHandler),
       bind[AuthConnector].toInstance(mockAuthConnector),
       bind[BodyParsers.Default].toInstance(testBodyParser),
-      bind[HmrcPTEnrolment].toInstance(mockHmrcPTEnrolment)
+      bind[HmrcPTEnrolment].toInstance(mockHmrcPTEnrolment),
+      bind[UsersGroupsSearchService].toInstance(mockUsersGroupService)
     )
     .build()
 
@@ -78,6 +80,15 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
     super.beforeEach()
     when(mockHmrcPTEnrolment.findAndDeleteWrongPTEnrolment(any(), any(), any())(any(), any()))
       .thenReturn(EitherT.rightT[Future, UpstreamErrorResponse](()))
+    when(
+      mockUsersGroupService.getAccountDetails(
+        any()
+      )(
+        any[ExecutionContext],
+        any[HeaderCarrier],
+        any[RequestWithUserDetailsFromSessionAndMongo[AnyContent]]
+      )
+    ).thenReturn(createInboundResult(accountDetails))
   }
 
   override def afterEach(): Unit = {
@@ -462,7 +473,10 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
       requestWithUserDetailsFromSession: RequestWithUserDetailsFromSessionAndMongo[_],
       messagesApi: MessagesApi
     ): Future[Unit] = {
-      val expectedAudit = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(accountType)(
+      val expectedAudit = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
+        accountType,
+        accountDetailsOverride = Some(accountDetails)
+      )(
         requestWithUserDetailsFromSession,
         messagesApi
       )

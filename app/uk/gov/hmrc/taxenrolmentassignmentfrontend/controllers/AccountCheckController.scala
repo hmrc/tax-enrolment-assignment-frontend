@@ -123,6 +123,7 @@ class AccountCheckController @Inject() (
                  case Right(enrichedReq) =>
                    handleAuditAfterEnrolment(accountType)(enrichedReq, implicitly)
                  case Left(_)            =>
+                   auditHandler.audit(AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(accountType))
                    Future.successful(Right(()))
                }
              )

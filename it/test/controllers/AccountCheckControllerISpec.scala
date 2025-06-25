@@ -21,7 +21,7 @@ import helpers.TestITData.*
 import helpers.messages.*
 import helpers.{IntegrationSpecBase, ItUrlPaths}
 import play.api.http.Status
-import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NO_CONTENT, OK, SEE_OTHER}
+import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NON_AUTHORITATIVE_INFORMATION, NO_CONTENT, OK, SEE_OTHER}
 import play.api.libs.json.Json
 import play.api.mvc.{AnyContent, Request}
 import play.api.test.FakeRequest
@@ -99,6 +99,11 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
       s"/users-groups-search/users/nino/$NINO/credIds",
       OK,
       userGroupSearchCredIdsResponseOneId
+    )
+    stubGet(
+      s"/users-groups-search/users/$CREDENTIAL_ID",
+      NON_AUTHORITATIVE_INFORMATION,
+      usergroupsResponseJson().toString()
     )
   }
 
@@ -201,7 +206,8 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
       redirectLocation(result).get should include(returnUrl)
 
       val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
-        SINGLE_ACCOUNT
+        SINGLE_ACCOUNT,
+        accountDetailsOverride = Some(accountDetails)
       )(requestWithMongoUserDetails(), messagesApi)
       verifyAuditEventSent(expectedAuditEvent)
 
@@ -255,7 +261,8 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
       redirectLocation(result).get should include(returnUrl)
 
       val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
-        SINGLE_ACCOUNT
+        SINGLE_ACCOUNT,
+        accountDetailsOverride = Some(accountDetails)
       )(requestWithMongoUserDetails(), messagesApi)
       verifyAuditEventSent(expectedAuditEvent)
       server.verify(
@@ -463,7 +470,8 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
       recordExistsInMongo        shouldBe true
 
       val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
-        SA_ASSIGNED_TO_CURRENT_USER
+        SA_ASSIGNED_TO_CURRENT_USER,
+        accountDetailsOverride = Some(accountDetails)
       )(requestWithMongoUserDetails(userDetailsNoEnrolments.copy(hasSAEnrolment = true)), messagesApi)
       verifyAuditEventSent(expectedAuditEvent)
     }
@@ -522,7 +530,8 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
       recordExistsInMongo        shouldBe true
 
       val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
-        SA_ASSIGNED_TO_CURRENT_USER
+        SA_ASSIGNED_TO_CURRENT_USER,
+        accountDetailsOverride = Some(accountDetails)
       )(requestWithMongoUserDetails(), messagesApi)
       verifyAuditEventSent(expectedAuditEvent)
     }
@@ -588,7 +597,8 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
       recordExistsInMongo        shouldBe true
 
       val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
-        MULTIPLE_ACCOUNTS
+        MULTIPLE_ACCOUNTS,
+        accountDetailsOverride = Some(accountDetails)
       )(requestWithMongoUserDetails(), messagesApi)
       verifyAuditEventSent(expectedAuditEvent)
 
@@ -653,7 +663,8 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
       recordExistsInMongo        shouldBe false
 
       val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
-        SINGLE_ACCOUNT
+        SINGLE_ACCOUNT,
+        accountDetailsOverride = Some(accountDetails)
       )(requestWithMongoUserDetails(), messagesApi)
       verifyAuditEventSent(expectedAuditEvent)
 

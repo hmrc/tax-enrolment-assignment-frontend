@@ -61,6 +61,7 @@ case class RequestWithUserDetailsFromSession[A](
   userDetails: UserDetailsFromSession,
   sessionID: String
 ) extends WrappedRequest[A](request)
+    with RequestWithUserDetails
 
 trait AuthIdentifierAction
     extends ActionBuilder[RequestWithUserDetailsFromSession, AnyContent]

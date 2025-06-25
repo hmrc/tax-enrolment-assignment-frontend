@@ -18,6 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting
 
 import play.api.i18n.{Lang, MessagesApi}
 import play.api.libs.json.*
+import play.api.mvc.WrappedRequest
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.*
@@ -71,11 +72,11 @@ object AuditEvent {
     )
   }
 
-  def auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
+  def auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount[R <: RequestWithUserDetails](
     accountType: AccountTypes.Value,
     accountDetailsOverride: Option[AccountDetails] = None
   )(implicit
-    request: RequestWithUserDetailsFromSessionAndMongo[_],
+    request: R,
     messagesApi: MessagesApi
   ): AuditEvent = {
     implicit val lang: Lang = getLang
@@ -183,7 +184,7 @@ object AuditEvent {
     optSACredentialId: Option[String],
     suspiciousAccountDetails: Option[AccountDetails],
     accountDetailsOverride: Option[AccountDetails] = None
-  )(implicit request: RequestWithUserDetailsFromSessionAndMongo[_], messagesApi: MessagesApi, lang: Lang): JsObject = {
+  )(implicit request: RequestWithUserDetails, messagesApi: MessagesApi, lang: Lang): JsObject = {
 
     val userDetails: UserDetailsFromSession = request.userDetails
     val optSACredIdJson: JsObject           =
@@ -197,12 +198,20 @@ object AuditEvent {
         defaultReportedAccountDetails
     }
 
+    val mongoAccountDetails: Option[AccountDetails] =
+      request match {
+        case reqWithMongo: RequestWithMongoDetails =>
+          reqWithMongo.accountDetailsFromMongo.optAccountDetails(userDetails.credId)
+        case _                                     =>
+          None
+      }
+
     Json.obj(
       "NINO"           -> userDetails.nino.nino,
       "currentAccount" -> getCurrentAccountJson(
-        userDetails,
+        request.userDetails,
         accountType,
-        accountDetailsOverride.orElse(request.accountDetailsFromMongo.optAccountDetails(userDetails.credId))
+        accountDetailsOverride.orElse(mongoAccountDetails)
       )
     ) ++ optSACredIdJson ++ optReportedAccountJson
   }
@@ -299,8 +308,13 @@ object AuditEvent {
         )
     }
 
-  private def getLang(implicit request: RequestWithUserDetailsFromSessionAndMongo[_], messagesApi: MessagesApi): Lang =
-    messagesApi.preferred(request.request).lang
+  private def getLang(implicit request: RequestWithUserDetails, messagesApi: MessagesApi): Lang =
+    messagesApi
+      .preferred(request match {
+        case r: WrappedRequest[_] => r
+        case _                    => throw new IllegalArgumentException("Expected WrappedRequest")
+      })
+      .lang
 
   private def translationRequired(implicit lang: Lang): Boolean =
     lang.locale != Locale.ENGLISH

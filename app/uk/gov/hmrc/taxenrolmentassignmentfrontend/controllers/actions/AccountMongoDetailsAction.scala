@@ -28,12 +28,22 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.TENCrypto
 
 import scala.concurrent.{ExecutionContext, Future}
 
+trait RequestWithMongoDetails {
+  def accountDetailsFromMongo: AccountDetailsFromMongo
+}
+
+trait RequestWithUserDetails {
+  def userDetails: UserDetailsFromSession
+}
+
 case class RequestWithUserDetailsFromSessionAndMongo[A](
   request: Request[A],
   userDetails: UserDetailsFromSession,
   sessionID: String,
   accountDetailsFromMongo: AccountDetailsFromMongo
 ) extends WrappedRequest[A](request)
+    with RequestWithUserDetails
+    with RequestWithMongoDetails
 
 object RequestWithUserDetailsFromSessionAndMongo {
   import scala.language.implicitConversions

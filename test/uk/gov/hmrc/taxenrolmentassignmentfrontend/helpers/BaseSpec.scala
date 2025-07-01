@@ -33,8 +33,7 @@ import play.api.test.CSRFTokenHelper.*
 import play.api.test.{FakeRequest, Injecting}
 import play.api.{Application, Configuration}
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
-import uk.gov.hmrc.domain.{Generator => NinoGenerator, Nino}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, CacheMap, MFADetails, ONE_LOGIN, SCP}
+import uk.gov.hmrc.domain.{Generator as NinoGenerator, Nino}
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.service.TEAFResult
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
@@ -42,7 +41,8 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SINGLE_ACCOUNT
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.HmrcModule
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo, UserDetailsFromSession}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{CREDENTIAL_ID, CREDENTIAL_ID_1, PT_USER_ID, USER_ID, userDetails, userDetailsNoEnrolments}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.*
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.*
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.TENCrypto
@@ -110,6 +110,17 @@ trait BaseSpec
       "sessionId"
     )
 
+  def requestWithUserDetailsFromSessionAndMongo(
+    request: RequestWithUserDetailsFromSession[AnyContent],
+    accountDetailsFromMongo: AccountDetailsFromMongo
+  ): RequestWithUserDetailsFromSessionAndMongo[AnyContent] =
+    RequestWithUserDetailsFromSessionAndMongo(
+      request = request.request,
+      userDetails = request.userDetails,
+      sessionID = request.sessionID,
+      accountDetailsFromMongo = accountDetailsFromMongo
+    )
+
   def createInboundResult[T](result: T): TEAFResult[T] =
     EitherT.right[TaxEnrolmentAssignmentErrors](Future.successful(result))
 
@@ -133,6 +144,16 @@ trait BaseSpec
 
   def generateBasicCacheData(accountType: AccountTypes.Value, redirectUrl: String = "foo"): Map[String, JsValue] =
     Map(ACCOUNT_TYPE -> Json.toJson(accountType), REDIRECT_URL -> JsString(redirectUrl))
+
+  def accountDetailsFromMongo(
+    accountType: AccountTypes.Value = SINGLE_ACCOUNT,
+    redirectUrl: String = UrlPaths.returnUrl,
+    additionalCacheData: Map[String, JsValue] = Map()
+  ): AccountDetailsFromMongo = AccountDetailsFromMongo(
+    accountType = accountType,
+    redirectUrl = redirectUrl,
+    sessionData = generateBasicCacheData(accountType, redirectUrl) ++ additionalCacheData
+  )(crypto.crypto)
 
   def requestWithAccountType(
     accountType: AccountTypes.Value = SINGLE_ACCOUNT,

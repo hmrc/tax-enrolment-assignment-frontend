@@ -28,12 +28,22 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.TENCrypto
 
 import scala.concurrent.{ExecutionContext, Future}
 
+trait RequestWithMongoDetails {
+  def accountDetailsFromMongo: AccountDetailsFromMongo
+}
+
+trait RequestWithUserDetails {
+  def userDetails: UserDetailsFromSession
+}
+
 case class RequestWithUserDetailsFromSessionAndMongo[A](
   request: Request[A],
   userDetails: UserDetailsFromSession,
   sessionID: String,
   accountDetailsFromMongo: AccountDetailsFromMongo
 ) extends WrappedRequest[A](request)
+    with RequestWithUserDetails
+    with RequestWithMongoDetails
 
 object RequestWithUserDetailsFromSessionAndMongo {
   import scala.language.implicitConversions
@@ -60,6 +70,10 @@ class AccountMongoDetailsAction @Inject() (
     with RedirectHelper {
   implicit val baseLogger: Logger = Logger(this.getClass.getName)
   override protected def refine[A](
+    request: RequestWithUserDetailsFromSession[A]
+  ): Future[Either[Result, RequestWithUserDetailsFromSessionAndMongo[A]]] = accountDetailsFromMongo(request)
+
+  def accountDetailsFromMongo[A](
     request: RequestWithUserDetailsFromSession[A]
   ): Future[Either[Result, RequestWithUserDetailsFromSessionAndMongo[A]]] =
     getAccountDetailsFromMongoFromCache(request)
@@ -115,5 +129,4 @@ class AccountMongoDetailsAction @Inject() (
           }
         }
     }
-
 }

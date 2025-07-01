@@ -17,10 +17,11 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting
 
 import play.api.i18n.{Lang, MessagesApi}
-import play.api.libs.json._
+import play.api.libs.json.*
+import play.api.mvc.WrappedRequest
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.*
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails}
 
 import java.util.Locale
@@ -71,17 +72,27 @@ object AuditEvent {
     )
   }
 
-  def auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
-    accountType: AccountTypes.Value
-  )(implicit request: RequestWithUserDetailsFromSession[_], messagesApi: MessagesApi): AuditEvent = {
-    implicit val lang: Lang               = getLang
+  def auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount[R <: RequestWithUserDetails](
+    accountType: AccountTypes.Value,
+    accountDetailsOverride: Option[AccountDetails] = None
+  )(implicit
+    request: R,
+    messagesApi: MessagesApi
+  ): AuditEvent = {
+    implicit val lang: Lang = getLang
+
     val optSACredentialId: Option[String] =
-      if (request.userDetails.hasSAEnrolment || accountType == SA_ASSIGNED_TO_CURRENT_USER) {
+      if (request.userDetails.hasSAEnrolment || accountType == SA_ASSIGNED_TO_CURRENT_USER)
         Some(request.userDetails.credId)
-      } else {
+      else
         None
-      }
-    val details: JsObject                 = getDetailsForPTEnrolled(accountType, optSACredentialId, None)
+
+    val details: JsObject = getDetailsForPTEnrolled(
+      accountType,
+      optSACredentialId,
+      suspiciousAccountDetails = None,
+      accountDetailsOverride
+    )
 
     auditSuccessfullyEnrolledForPT(details)
   }
@@ -102,11 +113,8 @@ object AuditEvent {
     } else {
       None
     }
-    val details: JsObject                                = getDetailsForPTEnrolled(
-      request.accountDetailsFromMongo.accountType,
-      optSACredentialId,
-      suspiciousAccountDetails
-    )(request, implicitly, implicitly)
+    val details: JsObject                                =
+      getDetailsForPTEnrolled(request.accountDetailsFromMongo.accountType, optSACredentialId, suspiciousAccountDetails)
 
     auditSuccessfullyEnrolledForPT(details)
   }
@@ -136,7 +144,11 @@ object AuditEvent {
     val userDetails: UserDetailsFromSession = request.userDetails
     val defaultDetails                      = Json.obj(
       "NINO"            -> userDetails.nino.nino,
-      "currentAccount"  -> getCurrentAccountJson(userDetails, request.accountDetailsFromMongo.accountType),
+      "currentAccount"  -> getCurrentAccountJson(
+        userDetails,
+        request.accountDetailsFromMongo.accountType,
+        request.accountDetailsFromMongo.optAccountDetails(userDetails.credId)
+      ),
       "reportedAccount" -> getPresentedAccountJson(suspiciousAccountDetails)
     )
     if (translationRequired) {
@@ -152,7 +164,11 @@ object AuditEvent {
     val userDetails: UserDetailsFromSession = request.userDetails
     val defaultDetails                      = Json.obj(
       "NINO"            -> userDetails.nino.nino,
-      "currentAccount"  -> getCurrentAccountJson(userDetails, request.accountDetailsFromMongo.accountType),
+      "currentAccount"  -> getCurrentAccountJson(
+        userDetails,
+        request.accountDetailsFromMongo.accountType,
+        Some(enrolledAccountDetails)
+      ),
       "enrolledAccount" -> getPresentedAccountJson(enrolledAccountDetails)
     )
     if (translationRequired) {
@@ -166,25 +182,37 @@ object AuditEvent {
   private def getDetailsForPTEnrolled(
     accountType: AccountTypes.Value,
     optSACredentialId: Option[String],
-    suspiciousAccountDetails: Option[AccountDetails]
-  )(implicit request: RequestWithUserDetailsFromSession[_], messagesApi: MessagesApi, lang: Lang): JsObject = {
+    suspiciousAccountDetails: Option[AccountDetails],
+    accountDetailsOverride: Option[AccountDetails] = None
+  )(implicit request: RequestWithUserDetails, messagesApi: MessagesApi, lang: Lang): JsObject = {
 
     val userDetails: UserDetailsFromSession = request.userDetails
     val optSACredIdJson: JsObject           =
       optSACredentialId.fold(Json.obj())(credId => Json.obj("saAccountCredentialId" -> credId))
-    val optReportedAccountJson: JsObject    = suspiciousAccountDetails.fold(Json.obj()) { accountDetails =>
+
+    val optReportedAccountJson: JsObject = suspiciousAccountDetails.fold(Json.obj()) { accountDetails =>
       val defaultReportedAccountDetails = Json.obj("reportedAccount" -> getPresentedAccountJson(accountDetails))
-      if (translationRequired) {
-        defaultReportedAccountDetails ++
-          Json.obj("reportedAccountEN" -> getTranslatedAccountJson(accountDetails))
-      } else {
+      if (translationRequired)
+        defaultReportedAccountDetails ++ Json.obj("reportedAccountEN" -> getTranslatedAccountJson(accountDetails))
+      else
         defaultReportedAccountDetails
-      }
     }
+
+    val mongoAccountDetails: Option[AccountDetails] =
+      request match {
+        case reqWithMongo: RequestWithMongoDetails =>
+          reqWithMongo.accountDetailsFromMongo.optAccountDetails(userDetails.credId)
+        case _                                     =>
+          None
+      }
 
     Json.obj(
       "NINO"           -> userDetails.nino.nino,
-      "currentAccount" -> getCurrentAccountJson(userDetails, accountType)
+      "currentAccount" -> getCurrentAccountJson(
+        request.userDetails,
+        accountType,
+        accountDetailsOverride.orElse(mongoAccountDetails)
+      )
     ) ++ optSACredIdJson ++ optReportedAccountJson
   }
 
@@ -212,20 +240,27 @@ object AuditEvent {
 
     Json.obj(
       "NINO"           -> userDetails.nino.nino,
-      "currentAccount" -> getCurrentAccountJson(userDetails, SA_ASSIGNED_TO_OTHER_USER)
+      "currentAccount" -> getCurrentAccountJson(
+        userDetails,
+        SA_ASSIGNED_TO_OTHER_USER,
+        request.accountDetailsFromMongo.optAccountDetails(userDetails.credId)
+      )
     ) ++ optSAAccountJson
   }
 
   private def getCurrentAccountJson(
     userDetails: UserDetailsFromSession,
-    accountType: AccountTypes.Value
-  ): JsObject =
+    accountType: AccountTypes.Value,
+    accountDetailsOpt: Option[AccountDetails] = None
+  ): JsObject = {
+    val correctAuthProvider = accountDetailsOpt.map(_.identityProviderType.toString).getOrElse(userDetails.providerType)
     Json.obj(
       "credentialId" -> userDetails.credId,
       "type"         -> accountType.toString,
-      "authProvider" -> userDetails.providerType,
+      "authProvider" -> correctAuthProvider,
       "email"        -> userDetails.email.getOrElse[String]("-")
     ) ++ userDetails.affinityGroup.toJson.as[JsObject]
+  }
 
   private def getPresentedAccountJson(
     accountDetails: AccountDetails
@@ -273,8 +308,13 @@ object AuditEvent {
         )
     }
 
-  private def getLang(implicit request: RequestWithUserDetailsFromSession[_], messagesApi: MessagesApi): Lang =
-    messagesApi.preferred(request.request).lang
+  private def getLang(implicit request: RequestWithUserDetails, messagesApi: MessagesApi): Lang =
+    messagesApi
+      .preferred(request match {
+        case r: WrappedRequest[_] => r
+        case _                    => throw new IllegalArgumentException("Expected WrappedRequest")
+      })
+      .lang
 
   private def translationRequired(implicit lang: Lang): Boolean =
     lang.locale != Locale.ENGLISH

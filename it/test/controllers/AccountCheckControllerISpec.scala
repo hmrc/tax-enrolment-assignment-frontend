@@ -17,19 +17,24 @@
 package controllers
 
 import com.github.tomakehurst.wiremock.client.WireMock.{deleteRequestedFor, urlEqualTo, urlMatching}
-import helpers.TestITData._
-import helpers.messages._
+import helpers.TestITData.*
+import helpers.messages.*
 import helpers.{IntegrationSpecBase, ItUrlPaths}
 import play.api.http.Status
-import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NO_CONTENT, OK, SEE_OTHER}
+import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, NON_AUTHORITATIVE_INFORMATION, NO_CONTENT, OK, SEE_OTHER}
+import play.api.libs.json.Json
 import play.api.mvc.{AnyContent, Request}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{GET, contentAsString, defaultAwaitTimeout, redirectLocation, route, status, writeableOf_AnyContentAsEmpty}
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier}
+import uk.gov.hmrc.crypto.{Decrypter, Encrypter}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER, SINGLE_ACCOUNT}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{RequestWithUserDetailsFromSession, UserDetailsFromSession}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.*
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.*
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.hmrcPTKey
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.*
 
 import java.net.URLEncoder
 
@@ -48,6 +53,45 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
       sessionId
     )
 
+  def requestWithMongoUserDetails(
+    userDetails: UserDetailsFromSession = userDetailsNoEnrolments,
+    accountType: AccountTypes.Value = AccountTypes.SINGLE_ACCOUNT,
+    redirectUrl: String = "/redirect-url",
+    credId: String = "someCredId",
+    identityProvider: IdentityProviderType = SCP,
+    sessionId: String = "sessionId"
+  ): RequestWithUserDetailsFromSessionAndMongo[AnyContent] = {
+
+    val accountDetails = AccountDetails(
+      identityProviderType = identityProvider,
+      credId = credId,
+      userId = "userId123",
+      email = None,
+      lastLoginDate = None,
+      mfaDetails = Seq.empty,
+      hasSA = Some(false)
+    )
+
+    val sessionData = Map(
+      ACCOUNT_TYPE                        -> Json.toJson(accountType),
+      REDIRECT_URL                        -> Json.toJson(redirectUrl),
+      accountDetailsForCredential(credId) -> Json.toJson(accountDetails)
+    )
+
+    val accountDetailsFromMongo = AccountDetailsFromMongo(
+      accountType = accountType,
+      redirectUrl = redirectUrl,
+      sessionData = sessionData
+    )
+
+    RequestWithUserDetailsFromSessionAndMongo(
+      request = FakeRequest().asInstanceOf[Request[AnyContent]],
+      userDetails = userDetails,
+      sessionID = sessionId,
+      accountDetailsFromMongo = accountDetailsFromMongo(crypto.crypto)
+    )
+  }
+
   override def beforeEach(): Unit = {
     super.beforeEach()
     stubGetMatching("/users-groups-search/users/.*", Status.OK, usergroupsResponseJson().toString())
@@ -55,6 +99,11 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
       s"/users-groups-search/users/nino/$NINO/credIds",
       OK,
       userGroupSearchCredIdsResponseOneId
+    )
+    stubGet(
+      s"/users-groups-search/users/$CREDENTIAL_ID",
+      NON_AUTHORITATIVE_INFORMATION,
+      usergroupsResponseJson().toString()
     )
   }
 
@@ -157,8 +206,9 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
       redirectLocation(result).get should include(returnUrl)
 
       val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
-        SINGLE_ACCOUNT
-      )(requestWithUserDetails(), messagesApi)
+        SINGLE_ACCOUNT,
+        accountDetailsOverride = Some(accountDetails)
+      )(requestWithMongoUserDetails(), messagesApi)
       verifyAuditEventSent(expectedAuditEvent)
 
     }
@@ -211,8 +261,9 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
       redirectLocation(result).get should include(returnUrl)
 
       val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
-        SINGLE_ACCOUNT
-      )(requestWithUserDetails(), messagesApi)
+        SINGLE_ACCOUNT,
+        accountDetailsOverride = Some(accountDetails)
+      )(requestWithMongoUserDetails(), messagesApi)
       verifyAuditEventSent(expectedAuditEvent)
       server.verify(
         1,
@@ -419,8 +470,9 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
       recordExistsInMongo        shouldBe true
 
       val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
-        SA_ASSIGNED_TO_CURRENT_USER
-      )(requestWithUserDetails(userDetailsNoEnrolments.copy(hasSAEnrolment = true)), messagesApi)
+        SA_ASSIGNED_TO_CURRENT_USER,
+        accountDetailsOverride = Some(accountDetails)
+      )(requestWithMongoUserDetails(userDetailsNoEnrolments.copy(hasSAEnrolment = true)), messagesApi)
       verifyAuditEventSent(expectedAuditEvent)
     }
   }
@@ -478,8 +530,9 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
       recordExistsInMongo        shouldBe true
 
       val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
-        SA_ASSIGNED_TO_CURRENT_USER
-      )(requestWithUserDetails(), messagesApi)
+        SA_ASSIGNED_TO_CURRENT_USER,
+        accountDetailsOverride = Some(accountDetails)
+      )(requestWithMongoUserDetails(), messagesApi)
       verifyAuditEventSent(expectedAuditEvent)
     }
   }
@@ -544,8 +597,9 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
       recordExistsInMongo        shouldBe true
 
       val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
-        MULTIPLE_ACCOUNTS
-      )(requestWithUserDetails(), messagesApi)
+        MULTIPLE_ACCOUNTS,
+        accountDetailsOverride = Some(accountDetails)
+      )(requestWithMongoUserDetails(), messagesApi)
       verifyAuditEventSent(expectedAuditEvent)
 
     }
@@ -609,8 +663,9 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
       recordExistsInMongo        shouldBe false
 
       val expectedAuditEvent = AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
-        SINGLE_ACCOUNT
-      )(requestWithUserDetails(), messagesApi)
+        SINGLE_ACCOUNT,
+        accountDetailsOverride = Some(accountDetails)
+      )(requestWithMongoUserDetails(), messagesApi)
       verifyAuditEventSent(expectedAuditEvent)
 
     }

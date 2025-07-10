@@ -74,7 +74,7 @@ The insert-user end-point provides a more open UI solution to enter data, here y
 ```
 
 ### POST /protect-tax-info/test-only/create
-The /create POST route will accept the same JSON format as the /insert-data route listed above and can be used as a more direct way of inserting test data, it will first delete the records of the account given, then submit all the data.
+The /create POST route will accept the same JSON format as the /insert-data route listed above but can be used with a direct POST call rather than through a UI, it will first delete the records of the account given, then submit all the data.
 
 | StatusCode | Description                                                                        |
 |------------|------------------------------------------------------------------------------------|

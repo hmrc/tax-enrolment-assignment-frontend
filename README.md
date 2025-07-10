@@ -42,7 +42,18 @@ The insert-user end-point provides a more open UI solution to enter data, here y
     {
       "factorType":"totp",
       "name":"HMRC App"
-    }],
+    },
+    {
+      "factorType": "voiceCall",
+      "phoneNumber": "01234567890",
+      "name": "voice call"
+    },
+    {
+      "factorType": "sms",
+      "phoneNumber": "01234567890",
+      "name": "Text Messages"
+    }
+  ],
   "groupId":"<group-id>",
   "enrolments":[{
     "verifiers":[

@@ -28,8 +28,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.{GET, contentAsString, defaultAwaitTimeout, redirectLocation, route, status, writeableOf_AnyContentAsEmpty}
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier}
 import uk.gov.hmrc.crypto.{Decrypter, Encrypter}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER, SINGLE_ACCOUNT}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountTypes.{MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER, SINGLE_ACCOUNT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.*
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.*
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.hmrcPTKey

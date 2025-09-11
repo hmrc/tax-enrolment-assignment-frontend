@@ -28,7 +28,7 @@ import play.api.mvc.BodyParsers
 import play.api.test.Helpers._
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{IncorrectUserType, UnexpectedPTEnrolment, UnexpectedResponseFromTaxEnrolments}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{ControllersBaseSpec, UrlPaths}

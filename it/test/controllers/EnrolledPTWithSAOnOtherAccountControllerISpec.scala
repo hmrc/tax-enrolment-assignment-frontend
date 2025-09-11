@@ -23,8 +23,8 @@ import org.jsoup.Jsoup
 import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountTypes._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.USER_ASSIGNED_SA_ENROLMENT
 
 class EnrolledPTWithSAOnOtherAccountControllerISpec extends IntegrationSpecBase {

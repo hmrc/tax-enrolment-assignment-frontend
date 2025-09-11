@@ -22,14 +22,14 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.binders.*
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl.idFunctor
 import uk.gov.hmrc.service.TEAFResult
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.*
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountTypes.*
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AuthJourney, RequestWithUserDetailsFromSession, RequestWithUserDetailsFromSessionAndMongo}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{InvalidRedirectUrl, TaxEnrolmentAssignmentErrors}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.*
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.AccountCheckOrchestrator
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.REDIRECT_URL

@@ -18,7 +18,7 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
 import javax.inject.{Inject, Singleton}
 import play.api.mvc._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountMongoDetailsAction, AuthAction}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService

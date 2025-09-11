@@ -24,9 +24,9 @@ import helpers.messages._
 import org.jsoup.Jsoup
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, NON_AUTHORITATIVE_INFORMATION, NOT_FOUND, OK, SEE_OTHER}
 import play.api.libs.json.Json
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountTypes._
 import play.api.test.FakeRequest
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountTypes
 
 class EnrolledForPTISpec extends IntegrationSpecBase {
 

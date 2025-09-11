@@ -20,7 +20,7 @@ import javax.inject.Inject
 import play.api.Logger
 import play.api.mvc.{MessagesControllerComponents, Result}
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{EnrolmentStoreServiceUnavailable, IncorrectUserType, InvalidRedirectUrl, TaxEnrolmentAssignmentErrors, UnexpectedPTEnrolment}

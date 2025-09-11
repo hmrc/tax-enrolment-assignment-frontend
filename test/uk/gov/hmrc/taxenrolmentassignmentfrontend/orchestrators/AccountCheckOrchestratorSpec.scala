@@ -21,13 +21,12 @@ import org.mockito.Mockito.{times, verify, when}
 import play.api.Application
 import play.api.inject.{Binding, bind}
 import play.api.mvc.{AnyContent, BodyParsers}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountTypes._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.TaxEnrolmentsConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.CacheMap
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountTypes, CacheMap}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.ACCOUNT_TYPE
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, SilentAssignmentService, UsersGroupsSearchService}

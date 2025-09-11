@@ -20,13 +20,12 @@ import cats.data.{EitherT, OptionT}
 import cats.implicits._
 import play.api.Logger
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSession}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{logAnotherAccountAlreadyHasPTEnrolment, logAnotherAccountHasSAEnrolment, logCurrentAndAnotherAccountHasSAEnrolment, logCurrentUserAlreadyHasPTEnrolment, logCurrentUserHasSAEnrolment, logCurrentUserhasMultipleAccounts, logCurrentUserhasOneAccount}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{CacheMap, IdentityProviderWithCredId}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountTypes, CacheMap, IdentityProviderWithCredId}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, UsersGroupsSearchService}

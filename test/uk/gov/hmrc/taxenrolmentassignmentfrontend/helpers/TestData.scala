@@ -18,23 +18,22 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers
 
 import play.api.mvc.{AnyContentAsEmpty, AnyContentAsFormUrlEncoded}
 import play.api.test.FakeRequest
+import uk.gov.hmrc.auth.core.*
 import uk.gov.hmrc.auth.core.AffinityGroup.Individual
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core.authorise.Predicate
-import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals._
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.*
 import uk.gov.hmrc.auth.core.retrieve.{Credentials, Retrieval, ~}
-import uk.gov.hmrc.auth.core._
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
-import uk.gov.hmrc.domain.{Generator, Nino}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
+import uk.gov.hmrc.domain.{Nino, NinoGenerator}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.UserDetailsFromSession
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{EACDEnrolment => _, _}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{EACDEnrolment as _, *}
 
 object TestData {
 
-  val NINO: Nino         = new Generator().nextNino
-  val secondNino: Nino   = new Generator().nextNino
+  val NINO: Nino         = new NinoGenerator().nextNino
+  val secondNino: Nino   = new NinoGenerator().nextNino
   val GROUP_ID           = "D37DB2E1-CF03-42E8-B151-E17300FFCF78"
   val CREDENTIAL_ID      = "credId123"
   val PROVIDER_TYPE      = "GovernmentGateway"

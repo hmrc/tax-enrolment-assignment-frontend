@@ -16,21 +16,21 @@
 
 package helpers
 
-import play.api.libs.json._
+import play.api.libs.json.*
 import uk.gov.hmrc.auth.core.AffinityGroup.Individual
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
 import uk.gov.hmrc.auth.core.retrieve.Credentials
 import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolment, EnrolmentIdentifier, Enrolments}
 import uk.gov.hmrc.crypto.Sensitive.SensitiveString
-import uk.gov.hmrc.domain.{Generator, Nino}
+import uk.gov.hmrc.domain.{Nino, NinoGenerator}
 import uk.gov.hmrc.http.SessionKeys
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.UserDetailsFromSession
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.*
 
 object TestITData {
 
-  val NINO: Nino         = new Generator().nextNino
-  val mismatchNino: Nino = new Generator().nextNino
+  val NINO: Nino         = new NinoGenerator().nextNino
+  val mismatchNino: Nino = new NinoGenerator().nextNino
 
   val PROVIDER_TYPE                     = "GovernmentGateway"
   val CURRENT_USER_EMAIL                = "foobarwizz"

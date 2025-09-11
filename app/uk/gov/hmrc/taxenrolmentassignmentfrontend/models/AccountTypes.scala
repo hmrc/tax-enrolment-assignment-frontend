@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.taxenrolmentassignmentfrontend
+package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 
 import play.api.libs.json.{Format, Json, Reads}
 

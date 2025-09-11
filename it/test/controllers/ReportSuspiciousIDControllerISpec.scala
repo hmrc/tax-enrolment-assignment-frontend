@@ -28,9 +28,8 @@ import play.api.http.Status
 import play.api.i18n.Lang
 import play.api.libs.json.{JsString, Json}
 import play.api.test.FakeRequest
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, UsersAssignedEnrolment}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountTypes._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, AccountTypes, UsersAssignedEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys._
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
 import org.mongodb.scala.SingleObservableFuture

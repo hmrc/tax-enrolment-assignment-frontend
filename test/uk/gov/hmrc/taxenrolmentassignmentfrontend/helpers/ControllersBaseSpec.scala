@@ -21,10 +21,9 @@ import org.mockito.Mockito.{times, verify, when}
 import org.mockito.stubbing.OngoingStubbing
 import play.api.libs.json.{JsValue, Json}
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.CacheMap
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountTypes, CacheMap}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.ACCOUNT_TYPE
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 

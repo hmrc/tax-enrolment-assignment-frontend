@@ -30,13 +30,13 @@ import play.api.test.{FakeRequest, Injecting}
 import play.api.Application
 import uk.gov.hmrc.http.{Authorization, HeaderCarrier}
 import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSessionAndMongo}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.TENCrypto
 import uk.gov.hmrc.domain.Nino
-import uk.gov.hmrc.domain.{Generator => NinoGenerator}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
+import uk.gov.hmrc.domain.NinoGenerator
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountTypes.SA_ASSIGNED_TO_OTHER_USER
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountTypes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL}
 
 import scala.concurrent.ExecutionContext

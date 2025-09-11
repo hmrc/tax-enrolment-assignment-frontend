@@ -19,10 +19,9 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting
 import play.api.i18n.{Lang, MessagesApi}
 import play.api.libs.json.*
 import play.api.mvc.WrappedRequest
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountTypes.{SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.*
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, MFADetails}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, AccountTypes, MFADetails}
 
 import java.util.Locale
 

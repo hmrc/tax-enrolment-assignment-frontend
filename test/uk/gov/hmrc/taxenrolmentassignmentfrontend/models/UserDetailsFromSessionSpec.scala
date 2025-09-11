@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.models
 
 import uk.gov.hmrc.auth.core.{AffinityGroup, Enrolments}
-import uk.gov.hmrc.domain.{Generator, Nino}
+import uk.gov.hmrc.domain.{Nino, NinoGenerator}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.UserDetailsFromSession
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{CURRENT_USER_EMAIL, PROVIDER_TYPE, UTR, saEnrolmentOnly}
@@ -25,7 +25,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.IRS
 
 class UserDetailsFromSessionSpec extends BaseSpec {
 
-  val nino: Nino = new Generator().nextNino
+  val nino: Nino = new NinoGenerator().nextNino
 
   "utr" should {
     s"extract correctly if $IRSAKey exists" in {

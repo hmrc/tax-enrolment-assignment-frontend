@@ -22,7 +22,7 @@ import org.mockito.ArgumentMatchers.{any, anyString}
 import org.mockito.Mockito.{times, verify, when}
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK}
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier, Enrolments}
-import uk.gov.hmrc.domain.Generator
+import uk.gov.hmrc.domain.NinoGenerator
 import uk.gov.hmrc.http.{HttpResponse, UpstreamErrorResponse}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.TaxEnrolmentsConnector
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
@@ -104,7 +104,7 @@ class HmrcPTEnrolmentSpec extends BaseSpec {
 
     "There is several HMRC-PT enrolments" should {
       "call delete for the invalid enrolments only" in {
-        val thirdNino  = new Generator().nextNino
+        val thirdNino  = new NinoGenerator().nextNino
         val enrolments = Set(
           Enrolment("HMRC-PT", Seq(EnrolmentIdentifier("NINO", secondNino.nino)), "activated"),
           Enrolment("HMRC-PT", Seq(EnrolmentIdentifier("NINO", thirdNino.nino)), "activated"),

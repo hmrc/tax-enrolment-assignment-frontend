@@ -16,17 +16,16 @@
 
 package controllers
 
-import helpers.TestITData._
-import helpers.messages._
+import helpers.TestITData.*
+import helpers.messages.*
 import helpers.{IntegrationSpecBase, ItUrlPaths}
 import org.jsoup.Jsoup
 import play.api.http.Status
 import play.api.libs.json.{JsString, Json}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.{GET, POST, await, contentAsString, defaultAwaitTimeout, redirectLocation, route, status, writeableOf_AnyContentAsEmpty, writeableOf_AnyContentAsJson}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, UsersAssignedEnrolment}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountTypes._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, AccountTypes, UsersAssignedEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL, USER_ASSIGNED_SA_ENROLMENT, accountDetailsForCredential}
 

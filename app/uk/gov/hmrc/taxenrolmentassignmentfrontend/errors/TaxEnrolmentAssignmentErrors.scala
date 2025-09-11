@@ -17,7 +17,7 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.errors
 
 import uk.gov.hmrc.http.UpstreamErrorResponse
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountTypes
 
 sealed trait TaxEnrolmentAssignmentErrors
 

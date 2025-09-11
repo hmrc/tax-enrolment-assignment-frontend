@@ -24,15 +24,15 @@ import play.api.inject.{Binding, bind}
 import play.api.libs.json.{JsString, Json}
 import play.api.mvc.Results.Ok
 import play.api.test.FakeRequest
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.auth.core.AffinityGroup.Individual
 import uk.gov.hmrc.auth.core.{Enrolment, Enrolments}
-import uk.gov.hmrc.domain.{Generator, Nino}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.CacheMap
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.{PT_ASSIGNED_TO_CURRENT_USER, SINGLE_ACCOUNT}
+import uk.gov.hmrc.domain.{Nino, NinoGenerator}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo.requestConversion
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.BaseSpec
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.{CURRENT_USER_EMAIL, PROVIDER_TYPE}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountTypes.{PT_ASSIGNED_TO_CURRENT_USER, SINGLE_ACCOUNT}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.CacheMap
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{ACCOUNT_TYPE, REDIRECT_URL}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 
@@ -58,7 +58,7 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
 
   lazy val accountMongoDetailsAction: AccountMongoDetailsAction = app.injector.instanceOf[AccountMongoDetailsAction]
 
-  val nino: Nino = new Generator().nextNino
+  val nino: Nino = new NinoGenerator().nextNino
 
   "invoke"                                                      should {
     "successfully build enriched request when cache contains both accountType and redirectUrl" in {

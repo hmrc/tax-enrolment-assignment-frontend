@@ -24,10 +24,9 @@ import helpers.messages._
 import org.jsoup.Jsoup
 import play.api.http.Status
 import play.api.libs.json.Json
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountTypes._
 import play.api.test.FakeRequest
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.UsersAssignedEnrolment
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountTypes, UsersAssignedEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.USER_ASSIGNED_SA_ENROLMENT
 
 class SABlueInterruptControllerISpec extends IntegrationSpecBase with Status {

@@ -20,7 +20,7 @@ import helpers.IntegrationSpecBase
 import helpers.TestITData.{CREDENTIAL_ID, accountDetailsUnUserFriendly, usersGroupSearchResponse}
 import play.api.libs.json.JsObject
 import uk.gov.hmrc.crypto.Crypted
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.AccountTypes.PT_ASSIGNED_TO_OTHER_USER
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountTypes.PT_ASSIGNED_TO_OTHER_USER
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, SCP}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.UsersGroupsSearchService
 

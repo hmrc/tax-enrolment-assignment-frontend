@@ -19,31 +19,19 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.config.AppConfig
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthAction
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.{ErrorHandler, TEAFrontendController}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.NoSAEnrolmentWhenOneExpected
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TEAFrontendController
 
 import javax.inject.Inject
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 class EnrolForSAController @Inject() (
   authAction: AuthAction,
   mcc: MessagesControllerComponents,
-  appConfig: AppConfig,
-  errorHandler: ErrorHandler,
-  teaSessionCache: TEASessionCache
-)(implicit ec: ExecutionContext)
-    extends TEAFrontendController(mcc) {
+  appConfig: AppConfig
+) extends TEAFrontendController(mcc) {
 
   def enrolForSA: Action[AnyContent] = authAction.async { implicit request =>
-    if (request.userDetails.hasSAEnrolment) {
-      teaSessionCache.removeRecord.map(_ => Redirect(appConfig.btaUrl))
-    } else {
-      Future.successful(
-        errorHandler
-          .handleErrors(NoSAEnrolmentWhenOneExpected, "[EnrolForSAController][enrolForSA]")(request, implicitly)
-      )
-    }
+    Future.successful(Redirect(appConfig.btaUrl))
   }
 
 }

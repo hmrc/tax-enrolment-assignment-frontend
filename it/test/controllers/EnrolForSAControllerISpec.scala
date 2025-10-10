@@ -44,18 +44,6 @@ class EnrolForSAControllerISpec extends IntegrationSpecBase {
 
       }
     }
-
-    s"return $INTERNAL_SERVER_ERROR and when No SA enrolment found" when {
-      s"User hasSA == false" in {
-        stubAuthoriseSuccess()
-
-        val request = FakeRequest(GET, urlPath)
-          .withSession(xSessionId, xAuthToken)
-        val result  = route(app, request).get
-
-        status(result) shouldBe INTERNAL_SERVER_ERROR
-      }
-    }
   }
 
   def stubAuthoriseSuccess(hasSAEnrolment: Boolean = false): StubMapping = {

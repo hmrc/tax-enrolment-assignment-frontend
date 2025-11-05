@@ -48,6 +48,14 @@ class PTEnrolmentOnOLAccountLoggedInOLSpec extends ViewSpecHelper {
       testMessages
     )
 
+  val htmlWithSAAndMtdit =
+    view(ptEnrolmentDataModelOL(Some(CREDENTIAL_ID_1), testAccountDetailsWithSA), true)(
+      FakeRequest(),
+      testMessages
+    )
+
+  val documentWithSAAndMtdit = doc(htmlWithSAAndMtdit)
+
   val documentWithSA = doc(htmlWithSA)
 
   "PTEnrolmentOnAnotherAccount" should {

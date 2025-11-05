@@ -63,7 +63,13 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
   val orchestrator: MultipleAccountsOrchestrator = app.injector.instanceOf[MultipleAccountsOrchestrator]
 
   s"getDetailsForEnrolledPT" when {
-    List(MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER).foreach { accountType =>
+    List(
+      MULTIPLE_ACCOUNTS,
+      SA_ASSIGNED_TO_CURRENT_USER,
+      SA_ASSIGNED_TO_OTHER_USER,
+      MTDIT_ASSIGNED_TO_CURRENT_USER,
+      SA_AND_MTDIT_ASSIGNED_TO_CURRENT_USER
+    ).foreach { accountType =>
       s"the account type is correct for $accountType" should {
         "return the userDetails for the account" in {
 
@@ -81,7 +87,11 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
           whenReady(res.value) { result =>
             result shouldBe Right(
               accountDetails
-                .copy(hasSA = Some(accountType == SA_ASSIGNED_TO_CURRENT_USER))
+                .copy(
+                  hasSA = Some(
+                    accountType == SA_ASSIGNED_TO_CURRENT_USER || accountType == SA_AND_MTDIT_ASSIGNED_TO_CURRENT_USER
+                  )
+                )
             )
           }
         }

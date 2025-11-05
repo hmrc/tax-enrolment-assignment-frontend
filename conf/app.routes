@@ -18,6 +18,10 @@ GET        /enrol-pt/enrolment-success-sa-user-id               uk.gov.hmrc.taxe
 
 POST       /enrol-pt/enrolment-success-sa-user-id               uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.EnrolledForPTWithSAController.continue
 
+GET        /enrol-pt/enrolment-success-sa-mtdit-user-id         uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.EnrolledForPTWithSAandMTDITController.view
+
+POST       /enrol-pt/enrolment-success-sa-mtdit-user-id         uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.EnrolledForPTWithSAandMTDITController.continue
+
 GET        /enrol-pt/choose-two-user-ids                        uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.EnrolledPTWithSAOnOtherAccountController.view
 
 POST       /enrol-pt/choose-two-user-ids                        uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.EnrolledPTWithSAOnOtherAccountController.continue

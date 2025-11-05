@@ -27,7 +27,7 @@ govukButton: GovukButton,
 formHelper: FormWithCSRF,
 )
 
-@(ptEnrolmentOtherAccountViewModel: PTEnrolmentOnOtherAccount)(implicit request: Request[AnyRef], messages: Messages)
+@(ptEnrolmentOtherAccountViewModel: PTEnrolmentOnOtherAccount, currentAccountHasMTDIT: Boolean)(implicit request: Request[AnyRef], messages: Messages)
 
 @signInGuidance(bullet2: String) = {
     @if(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.ptAccountDetails.credId)){
@@ -45,13 +45,36 @@ formHelper: FormWithCSRF,
 @layout(pageTitle = Some(messages("ptEnrolmentOnOtherAccount.title")), None) {
 
     <h1 class="govuk-heading-l" id="mainHeading">@messages("ptEnrolmentOnOtherAccount.one_login.heading")</h1>
-    @if(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.currentAccountDetails.credId)){
-        <h2 class="govuk-heading-m">@messages("ptEnrolmentOnOtherAccount.saHeading")</h2>
-        <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.one_login.saText")
-            <a href="@routes.EnrolForSAController.enrolForSA" class="govuk-link--no-visited-state">@messages("ptEnrolmentOnOtherAccount.saLink")</a>.
-        </p>
-        <h2 class="govuk-heading-m">@messages("ptEnrolmentOnOtherAccount.ptaHeading")</h2>
+    @{(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.currentAccountDetails.credId), currentAccountHasMTDIT) match
+        case(true, false) => {
+            <h2 class="govuk-heading-m">{messages("ptEnrolmentOnOtherAccount.saHeading")}</h2>
+            <p class="govuk-body">{messages("ptEnrolmentOnOtherAccount.one_login.saText")}
+                <a href={routes.EnrolForSAController.enrolForSA.url} class="govuk-link--no-visited-state">{messages("ptEnrolmentOnOtherAccount.saLink")}</a>.
+            </p>
+            <h2 class="govuk-heading-m">{messages("ptEnrolmentOnOtherAccount.ptaHeading")}</h2>
+        }
+        case(true, true) => {
+            <h2 class="govuk-heading-m">{messages("ptEnrolmentOnOtherAccount.saAndMtditHeading")}</h2>
+            <p class="govuk-body">{messages("ptEnrolmentOnOtherAccount.saAndMtditPreLinkText")}
+                <a href={routes.EnrolForSAController.enrolForSA.url} class="govuk-link--no-visited-state">{messages("ptEnrolmentOnOtherAccount.saAndMtditLinkText")}</a>
+                {messages("ptEnrolmentOnOtherAccount.one_login.saAndMtditPostLinkText")}
+            </p>
+            <ul class="govuk-list govuk-list--bullet">
+                <li>{messages("ptEnrolmentOnOtherAccount.mtditHeading")}</li>
+                <li>{messages("ptEnrolmentOnOtherAccount.saLinkText")}</li>
+            </ul>
+            <h2 class="govuk-heading-m">{messages("ptEnrolmentOnOtherAccount.ptaHeading")}</h2>
+        }
+        case(false, true) => {
+            <h2 class="govuk-heading-m">{messages("ptEnrolmentOnOtherAccount.mtditHeading")}</h2>
+            <p class="govuk-body">{messages("ptEnrolmentOnOtherAccount.one_login.saText")}
+                <a href={routes.EnrolForSAController.enrolForSA.url} class="govuk-link--no-visited-state">{messages("ptEnrolmentOnOtherAccount.mtditLink")}</a>.
+            </p>
+            <h2 class="govuk-heading-m">{messages("ptEnrolmentOnOtherAccount.ptaAndSAHeading")}</h2>
+        }
+        case _ => {}
     }
+
 
     @if(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.ptAccountDetails.credId)){
         <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.one_loginSA.paragraph1")</p>

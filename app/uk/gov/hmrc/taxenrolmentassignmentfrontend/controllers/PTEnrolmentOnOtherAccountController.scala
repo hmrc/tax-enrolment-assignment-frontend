@@ -45,22 +45,24 @@ class PTEnrolmentOnOtherAccountController @Inject() (
     extends TEAFrontendController(mcc) {
 
   private def pageHandler(
-    ptAccountDetails: PTEnrolmentOnOtherAccount
+    ptAccountDetails: PTEnrolmentOnOtherAccount,
+    currentAccountHasMTDIT: Boolean
   )(implicit request: RequestWithUserDetailsFromSessionAndMongo[AnyContent]) =
     (
       ptAccountDetails.currentAccountDetails.isIdentityProviderOneLogin,
       ptAccountDetails.ptAccountDetails.isIdentityProviderOneLogin
     ) match {
-      case (true, true)   => ptOLLoggedInOLView(ptAccountDetails)
-      case (true, false)  => ptGGLoggedInOLView(ptAccountDetails)
-      case (false, true)  => ptOLLoggedInGGView(ptAccountDetails)
-      case (false, false) => ptGGLoggedInGGView(ptAccountDetails)
+      case (true, true)   => ptOLLoggedInOLView(ptAccountDetails, currentAccountHasMTDIT)
+      case (true, false)  => ptGGLoggedInOLView(ptAccountDetails, currentAccountHasMTDIT)
+      case (false, true)  => ptOLLoggedInGGView(ptAccountDetails, currentAccountHasMTDIT)
+      case (false, false) => ptGGLoggedInGGView(ptAccountDetails, currentAccountHasMTDIT)
 
     }
 
   def view: Action[AnyContent] =
     authAction.andThen(accountMongoDetailsAction).async { implicit request =>
-      val res = multipleAccountsOrchestrator.getCurrentAndPTAAndSAIfExistsForUser
+      val res      = multipleAccountsOrchestrator.getCurrentAndPTAAndSAIfExistsForUser
+      val hasMTDIT = request.userDetails.hasMTDITEnrolment
 
       res.value.map {
         case Right(accountDetails) =>
@@ -73,7 +75,8 @@ class PTEnrolmentOnOtherAccountController @Inject() (
                 AccountDetails.userFriendlyAccountDetails(accountDetails.currentAccountDetails),
                 accountFriendlyDetails,
                 accountDetails.saUserCred.map(AccountDetails.trimmedUserId)
-              )
+              ),
+              hasMTDIT
             )
           )
         case Left(error)           =>

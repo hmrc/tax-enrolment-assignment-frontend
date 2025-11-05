@@ -98,6 +98,7 @@ class AccountCheckController @Inject() (
       case SA_ASSIGNED_TO_OTHER_USER                                       => Some(Redirect(routes.SABlueInterruptController.view))
       case MULTIPLE_ACCOUNTS                                               => Some(Redirect(routes.EnrolledForPTController.view))
       case SA_ASSIGNED_TO_CURRENT_USER                                     => Some(Redirect(routes.EnrolledForPTWithSAController.view))
+      case SA_AND_MTDIT_ASSIGNED_TO_CURRENT_USER                           => Some(Redirect(routes.EnrolledForPTWithSAandMTDITController.view))
       case _                                                               => None
     }
 

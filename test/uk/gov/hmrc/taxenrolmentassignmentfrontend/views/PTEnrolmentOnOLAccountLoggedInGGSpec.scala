@@ -43,7 +43,7 @@ class PTEnrolmentOnOLAccountLoggedInGGSpec extends ViewSpecHelper {
   )
 
   val htmlWithSA =
-    view(ptEnrolmentDataModel(Some(CREDENTIAL_ID_1), testAccountDetailsWithSAOL))(
+    view(ptEnrolmentDataModel(Some(CREDENTIAL_ID_1), testAccountDetailsWithSAOL), false)(
       FakeRequest(),
       testMessages
     )
@@ -51,7 +51,7 @@ class PTEnrolmentOnOLAccountLoggedInGGSpec extends ViewSpecHelper {
   val documentWithSA = doc(htmlWithSA)
 
   val html     =
-    view(ptEnrolmentDataModel(None, testAccountDetails))(
+    view(ptEnrolmentDataModel(None, testAccountDetails), false)(
       FakeRequest(),
       testMessages
     )

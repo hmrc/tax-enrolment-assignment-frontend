@@ -56,7 +56,7 @@ class TestOnlyController @Inject() (
     extends TEAFrontendController(mcc) {
 
   def getTestDataInfo: Action[AnyContent] = Action { request =>
-    Ok(selectTestDataPage(TestMocks.mocks)(request, mcc.messagesApi.preferred(request)))
+    Ok(selectTestDataPage(TestMocks.mocks ++ TestMocks.mtdMocks)(request, mcc.messagesApi.preferred(request)))
   }
 
   def getCustomTestData: Action[AnyContent] = Action { request =>
@@ -128,7 +128,11 @@ class TestOnlyController @Inject() (
       .fold(
         _ =>
           Future
-            .successful(BadRequest(selectTestDataPage(TestMocks.mocks)(request, mcc.messagesApi.preferred(request)))),
+            .successful(
+              BadRequest(
+                selectTestDataPage(TestMocks.mocks ++ TestMocks.mtdMocks)(request, mcc.messagesApi.preferred(request))
+              )
+            ),
         data => insertAccount(extractData(data))
       )
   }

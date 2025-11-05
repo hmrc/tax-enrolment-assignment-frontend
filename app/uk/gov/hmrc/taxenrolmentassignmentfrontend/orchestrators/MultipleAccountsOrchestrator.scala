@@ -17,22 +17,22 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators
 
 import cats.data.EitherT
-import cats.implicits._
+import cats.implicits.*
 
 import javax.inject.{Inject, Singleton}
 import play.api.Logger
 import play.api.data.Form
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.service.TEAFResult
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountTypes.{MTDIT_ASSIGNED_TO_CURRENT_USER, MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_OTHER_USER, SA_AND_MTDIT_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.RequestWithUserDetailsFromSessionAndMongo
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.*
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.forms.KeepAccessToSAThroughPTAForm
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.logNoUserFoundWithPTEnrolment
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.forms.KeepAccessToSAThroughPTA
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountDetails, AccountTypes, CADetailsPTADetailsSADetailsIfExists, CADetailsSADetailsIfExists, PTEnrolmentOnOtherAccount, UsersAssignedEnrolment}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.*
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, SilentAssignmentService, UsersGroupsSearchService}
 
@@ -55,7 +55,13 @@ class MultipleAccountsOrchestrator @Inject() (
     ec: ExecutionContext
   ): TEAFResult[AccountDetails] =
     checkValidAccountType(
-      List(MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER)
+      List(
+        MULTIPLE_ACCOUNTS,
+        SA_ASSIGNED_TO_CURRENT_USER,
+        SA_ASSIGNED_TO_OTHER_USER,
+        SA_AND_MTDIT_ASSIGNED_TO_CURRENT_USER,
+        MTDIT_ASSIGNED_TO_CURRENT_USER
+      )
     ) match {
       case Left(error) => EitherT.left(Future.successful(error))
       case Right(_)    =>
@@ -65,7 +71,9 @@ class MultipleAccountsOrchestrator @Inject() (
           )(implicitly, implicitly, requestWithUserDetails)
           .map(accountDetails =>
             accountDetails.copy(
-              hasSA = Some(requestWithUserDetails.accountDetailsFromMongo.accountType == SA_ASSIGNED_TO_CURRENT_USER)
+              hasSA = Some(
+                requestWithUserDetails.accountDetailsFromMongo.accountType == SA_ASSIGNED_TO_CURRENT_USER || requestWithUserDetails.accountDetailsFromMongo.accountType == SA_AND_MTDIT_ASSIGNED_TO_CURRENT_USER
+              )
             )
           )
     }

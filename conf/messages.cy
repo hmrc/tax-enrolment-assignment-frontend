@@ -15,6 +15,11 @@ enrolledForPT.one_login.heading = O hyn allan, hwn yw’r unig GOV.UK One Login 
 
 enrolledForPT.gg.paragraph1 = Rydych wedi mewngofnodi gan ddefnyddio Dynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth sy’n gorffen gyda <strong>{0}</strong>.
 enrolledForPT.one_login.paragraph1 = Rydych wedi mewngofnodi gan ddefnyddio:
+enrolledForPT.gg.paragraph2 = Defnyddiwch y Dynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth hwn i gael mynediad at y canlynol:
+enrolledForPT.one_login.paragraph2 = Defnyddiwch y GOV.UK One Login hwn i gael mynediad at y canlynol:
+enrolledForPt.list.pta = Cyfrif treth personol
+enrolledForPt.list.sa = Hunanasesiad
+enrolledForPt.list.mtdit = Troi Treth yn Ddigidol ar gyfer Treth Incwm
 
 enrolledForPT.paragraphSA = Defnyddiwch y manylion mewngofnodi hyn er mwyn cael mynediad at eich cyfrif treth personol a Hunanasesiad.
 
@@ -162,10 +167,22 @@ ptEnrolmentOnOtherAccount.one_login.linkText = Nid fy GOV.UK One Login i yw hwn
 
 ptEnrolmentOnOtherAccount.saHeading = Hunanasesiad
 ptEnrolmentOnOtherAccount.ptaHeading = Cyfrif treth personol
+ptEnrolmentOnOtherAccount.mtditHeading = Troi Treth yn Ddigidol ar gyfer Treth Incwm
+ptEnrolmentOnOtherAccount.saAndMtditHeading = Troi Treth yn Ddigidol ar gyfer Treth Incwm a Hunanasesiad
+ptEnrolmentOnOtherAccount.ptaAndSAHeading = Cyfrif treth personol a Hunanasesiad
 
 ptEnrolmentOnOtherAccount.gg.saText = Gallwch ddefnyddio’r Dynodydd Defnyddiwr (ID) hwn ar gyfer Porth y Llywodraeth er mwyn
 ptEnrolmentOnOtherAccount.one_login.saText = Gallwch ddefnyddio’r GOV.UK One Login hwn er mwyn
 ptEnrolmentOnOtherAccount.saLink = cael mynediad at eich Hunanasesiad
+ptEnrolmentOnOtherAccount.mtditLink = cael mynediad at y cynllun Troi Treth yn Ddigidol ar gyfer Treth Incwm
+ptEnrolmentOnOtherAccount.gg.saAndMtditText = Gallwch ddefnyddio’r Dynodydd Defnyddiwr (ID) hwn ar gyfer Porth y Llywodraeth i gael mynediad at y canlynol:
+ptEnrolmentOnOtherAccount.one_login.saAndMtditText = Gallwch ddefnyddio’r GOV.UK One Login i gael mynediad at y canlynol:
+ptEnrolmentOnOtherAccount.saAndMtditPreLinkText = Ewch i’ch
+ptEnrolmentOnOtherAccount.saAndMtditLinkText = Cyfrif Treth Busnes
+ptEnrolmentOnOtherAccount.gg.saAndMtditPostLinkText = gan ddefnyddio’r Dynodydd Defnyddiwr (ID) ar gyfer Porth y Llywodraeth hwn er mwyn cael mynediad at:
+ptEnrolmentOnOtherAccount.one_login.saAndMtditPostLinkText = gan ddefnyddio’r GOV.UK One Login hwn er mwyn cael mynediad at:
+ptEnrolmentOnOtherAccount.mtditLinkText = Troi Treth yn Ddigidol ar gyfer Treth Incwm
+ptEnrolmentOnOtherAccount.saLinkText = Hunanasesiad
 
 ptEnrolmentOnOtherAccount.sa.signInParagraph = Er mwyn cael mynediad at eich cyfrif treth personol a Hunanasesiad:
 ptEnrolmentOnOtherAccount.nonSa.signInParagraph = Er mwyn cael mynediad at eich cyfrif treth personol:
@@ -181,5 +198,4 @@ ptEnrolmentOnOtherAccount.text2 =  gyda’r ID canlynol:
 ptEnrolmentOnOtherAccount.userId = Dynodydd Defnyddiwr (ID)
 ptEnrolmentOnOtherAccount.email =  E-bost
 ptEnrolmentOnOtherAccount.lastLoginDate = Mewngofnodwyd ddiwethaf
-ptEnrolmentOnOtherAccount.saHeading = Cael mynediad at Hunanasesiad
 ptEnrolmentOnOtherAccount.saLink = gael mynediad at Hunanasesiad

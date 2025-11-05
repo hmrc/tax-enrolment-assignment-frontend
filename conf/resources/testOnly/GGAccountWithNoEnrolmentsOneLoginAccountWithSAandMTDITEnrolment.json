@@ -1,0 +1,78 @@
+[
+    {
+        "identityProviderType": "SCP",
+        "groupId": "6949B2D7-BC9B-4E12-8411-3089E6148F10",
+        "affinityGroup": "Individual",
+        "nino": "JS271436A",
+        "user": {
+            "credId": "9308587656991700",
+            "name": "Firstname Surname",
+            "email": "email8@test.com"
+        },
+        "additionalFactors": [
+            {
+                "factorType": "totp",
+                "name": "HMRC App"
+            }
+        ]
+    },
+    {
+        "identityProviderType": "ONE_LOGIN",
+        "groupId": "74A2B44D-BAFC-4D1C-8F62-F54D68C0A94B",
+        "affinityGroup": "Individual",
+        "nino": "JS271436A",
+        "user": {
+            "credId": "4334822488849220",
+            "name": "Firstname Surname",
+            "email": "email9@test.com"
+        },
+        "enrolments": [
+            {
+                "serviceName": "IR-SA",
+                "assignedUserCreds": [
+                    "1"
+                ],
+                "identifiers": {
+                    "key": "UTR",
+                    "value": "AA123003D"
+                },
+                "verifiers": [
+                    {
+                        "key": "Postcode",
+                        "value": "postcode"
+                    },
+                    {
+                        "key": "NINO",
+                        "value": "JS271436A"
+                    }
+                ],
+                "enrolmentFriendlyName": "IR-SA Enrolment",
+                "state": "Activated",
+                "enrolmentType": "principal",
+                "assignedToAll": false
+            },
+            {
+              "serviceName": "HMRC-MTD-IT",
+              "assignedUserCreds": [
+                "1"
+              ],
+              "identifiers": {
+                "key": "MTDITID",
+                "value": "8474747737"
+              },
+              "verifiers": [
+              ],
+              "enrolmentFriendlyName": "HMRC-MTD-IT Enrolment",
+              "state": "Activated",
+              "enrolmentType": "principal",
+              "assignedToAll": false
+            }
+        ],
+        "additionalFactors": [
+            {
+                "factorType": "totp",
+                "name": "HMRC App"
+            }
+        ]
+    }
+]

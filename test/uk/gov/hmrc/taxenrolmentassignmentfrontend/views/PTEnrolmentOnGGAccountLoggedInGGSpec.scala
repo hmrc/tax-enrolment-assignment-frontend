@@ -17,7 +17,8 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.views
 
 import play.api.test.FakeRequest
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
+import play.twirl.api.HtmlFormat
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.*
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.PTEnrolmentOtherAccountMessagesBothGG
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.MFADetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnGGAccountLoggedInGG
@@ -43,7 +44,7 @@ class PTEnrolmentOnGGAccountLoggedInGGSpec extends ViewSpecHelper {
   )
 
   val htmlWithSA =
-    view(ptEnrolmentDataModel(Some(PT_USER_ID), testAccountDetailsWithSA))(
+    view(ptEnrolmentDataModel(Some(PT_USER_ID), testAccountDetailsWithSA), false)(
       FakeRequest(),
       testMessages
     )
@@ -52,7 +53,8 @@ class PTEnrolmentOnGGAccountLoggedInGGSpec extends ViewSpecHelper {
 
   val htmlNoEmail     =
     view(
-      ptEnrolmentDataModel(Some(NO_EMAIL_USER_ID), accountDetailsWithNoEmail)
+      ptEnrolmentDataModel(Some(NO_EMAIL_USER_ID), accountDetailsWithNoEmail),
+      false
     )(FakeRequest(), testMessages)
   val documentNoEmail = doc(htmlNoEmail)
 

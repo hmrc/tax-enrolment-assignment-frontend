@@ -98,6 +98,22 @@ trait LoggingEventInfo {
       )
     )
 
+  def logCurrentUserHasSAAndMtditEnrolment(credentialId: String): LoggingEvent =
+    Info(
+      Event(
+        "[AccountCheckOrchestrator][getAccountType]",
+        details = Some(s"Current credential $credentialId has $IRSAKey enrolment and an MTDIT enrolment")
+      )
+    )
+
+  def logCurrentUserHasMtditEnrolment: LoggingEvent =
+    Info(
+      Event(
+        "[AccountCheckOrchestrator][getAccountType]",
+        details = Some(s"Current credential has an MTDIT enrolment")
+      )
+    )
+
   def logAnotherAccountAlreadyHasPTEnrolment(
     credentialId: String,
     credentialWithPTEnrolment: String

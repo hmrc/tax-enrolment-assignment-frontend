@@ -30,6 +30,7 @@ formHelper: FormWithCSRF
 @(ptEnrolmentOtherAccountViewModel: PTEnrolmentOnOtherAccount, currentAccountHasMTDIT: Boolean)(implicit request: Request[AnyRef], messages: Messages)
 
 @signInGuidance(bullet2: String) = {
+    <h2 class="govuk-heading-m">@messages("signInAgain.nextSteps")</h2>
     @if(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.ptAccountDetails.credId)){
         <p class="govuk-body">@messages("ptEnrolmentOnOtherAccount.sa.signInParagraph")</p>
     } else {

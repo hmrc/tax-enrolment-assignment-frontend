@@ -50,6 +50,22 @@
                 "state": "Activated",
                 "enrolmentType": "principal",
                 "assignedToAll": false
+            },
+            {
+              "serviceName": "HMRC-MTD-IT",
+              "assignedUserCreds": [
+                "1"
+              ],
+              "identifiers": {
+                "key": "MTDITID",
+                "value": "8474747737"
+              },
+              "verifiers": [
+              ],
+              "enrolmentFriendlyName": "HMRC-MTD-IT Enrolment",
+              "state": "Activated",
+              "enrolmentType": "principal",
+              "assignedToAll": false
             }
         ],
         "additionalFactors": [

@@ -28,7 +28,7 @@
 
  @if(accountDetails.isIdentityProviderOneLogin) {
     <h1 class="govuk-heading-l">@messages("enrolledForPT.one_login.heading")</h1>
-    <p class="govuk-body">@messages("enrolledForPT.one_login.paragraph1") <strong>@accountDetails.emailDecrypted.get</strong></p>
+    <p class="govuk-body">@messages("enrolledForPT.one_login.paragraph1") <strong>@accountDetails.emailDecrypted.get</strong>.</p>
     <p class="govuk-body">@messages("enrolledForPT.one_login.paragraph2")</p>
  } else {
     <h1 class="govuk-heading-l">@messages("enrolledForPT.gg.heading")</h1>

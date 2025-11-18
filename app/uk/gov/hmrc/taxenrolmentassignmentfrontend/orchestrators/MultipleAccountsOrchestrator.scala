@@ -242,7 +242,8 @@ class MultipleAccountsOrchestrator @Inject() (
       PTEnrolmentOnOtherAccount(
         model.currentAccountDetails,
         model.ptAccountDetails,
-        model.saAccountDetails.map(_.credId)
+        model.saAccountDetails.map(_.credId),
+        requestWithUserDetails.userDetails.hasMTDITEnrolment
       )
     }
 

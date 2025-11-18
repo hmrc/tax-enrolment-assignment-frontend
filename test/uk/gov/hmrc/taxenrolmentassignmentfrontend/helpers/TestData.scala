@@ -252,20 +252,24 @@ object TestData {
 
   def ptEnrolmentDataModel(
     saUserCred: Option[String],
-    ptAccountDetails: AccountDetails = accountDetailsWithPT
+    ptAccountDetails: AccountDetails = accountDetailsWithPT,
+    hasMtdit: Boolean = false
   ): PTEnrolmentOnOtherAccount = PTEnrolmentOnOtherAccount(
     currentAccountDetails = accountDetails,
     ptAccountDetails = ptAccountDetails,
-    saUserCred = saUserCred
+    saUserCred = saUserCred,
+    hasMtdit
   )
 
   def ptEnrolmentDataModelOL(
     saUserCred: Option[String],
-    ptAccountDetails: AccountDetails = accountDetailsWithPTOL
+    ptAccountDetails: AccountDetails = accountDetailsWithPTOL,
+    hasMtdit: Boolean = false
   ): PTEnrolmentOnOtherAccount = PTEnrolmentOnOtherAccount(
     currentAccountDetails = accountDetailsOL,
     ptAccountDetails = ptAccountDetails,
-    saUserCred = saUserCred
+    saUserCred = saUserCred,
+    hasMtdit
   )
 
   val usersGroupSearchResponse: UsersGroupResponse = UsersGroupResponse(

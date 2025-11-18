@@ -44,7 +44,7 @@ class PTEnrolmentOnGGAccountLoggedInGGSpec extends ViewSpecHelper {
   )
 
   val htmlWithSA =
-    view(ptEnrolmentDataModel(Some(PT_USER_ID), testAccountDetailsWithSA), false)(
+    view(ptEnrolmentDataModel(Some(PT_USER_ID), testAccountDetailsWithSA))(
       FakeRequest(),
       testMessages
     )
@@ -52,7 +52,7 @@ class PTEnrolmentOnGGAccountLoggedInGGSpec extends ViewSpecHelper {
   val documentWithSA = doc(htmlWithSA)
 
   val htmlWithSAAndMtdit =
-    view(ptEnrolmentDataModel(Some(CREDENTIAL_ID_1), testAccountDetailsWithSA), true)(
+    view(ptEnrolmentDataModel(Some(CREDENTIAL_ID_1), testAccountDetailsWithSA, hasMtdit = true))(
       FakeRequest(),
       testMessages
     )
@@ -61,8 +61,7 @@ class PTEnrolmentOnGGAccountLoggedInGGSpec extends ViewSpecHelper {
 
   val htmlNoEmail     =
     view(
-      ptEnrolmentDataModel(Some(NO_EMAIL_USER_ID), accountDetailsWithNoEmail),
-      false
+      ptEnrolmentDataModel(Some(NO_EMAIL_USER_ID), accountDetailsWithNoEmail)
     )(FakeRequest(), testMessages)
   val documentNoEmail = doc(htmlNoEmail)
 

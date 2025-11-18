@@ -27,7 +27,7 @@ govukButton: GovukButton,
 formHelper: FormWithCSRF
 )
 
-@(ptEnrolmentOtherAccountViewModel: PTEnrolmentOnOtherAccount, currentAccountHasMTDIT: Boolean)(implicit request: Request[AnyRef], messages: Messages)
+@(ptEnrolmentOtherAccountViewModel: PTEnrolmentOnOtherAccount)(implicit request: Request[AnyRef], messages: Messages)
 
 @signInGuidance(bullet2: String) = {
     <h2 class="govuk-heading-m">@messages("signInAgain.nextSteps")</h2>
@@ -44,7 +44,7 @@ formHelper: FormWithCSRF
 
 @layout(pageTitle = Some(messages("ptEnrolmentOnOtherAccount.title")), None) {
     <h1 class="govuk-heading-l" id="mainHeading">@messages("ptEnrolmentOnOtherAccount.gg.heading")</h1>
-    @{(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.currentAccountDetails.credId), currentAccountHasMTDIT) match
+    @{(ptEnrolmentOtherAccountViewModel.saUserCred.contains(ptEnrolmentOtherAccountViewModel.currentAccountDetails.credId), ptEnrolmentOtherAccountViewModel.currentAccountHasMTDIT) match
         case(true, false) => {
             <h2 class="govuk-heading-m">{messages("ptEnrolmentOnOtherAccount.saHeading")}</h2>
             <p class="govuk-body">{messages("ptEnrolmentOnOtherAccount.gg.saText")}

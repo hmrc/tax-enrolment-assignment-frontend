@@ -45,25 +45,22 @@ class PTEnrolmentOnOtherAccountController @Inject() (
     extends TEAFrontendController(mcc) {
 
   private def pageHandler(
-    ptAccountDetails: PTEnrolmentOnOtherAccount,
-    currentAccountHasMTDIT: Boolean
+    ptAccountDetails: PTEnrolmentOnOtherAccount
   )(implicit request: RequestWithUserDetailsFromSessionAndMongo[AnyContent]) =
     (
       ptAccountDetails.currentAccountDetails.isIdentityProviderOneLogin,
       ptAccountDetails.ptAccountDetails.isIdentityProviderOneLogin
     ) match {
-      case (true, true)   => ptOLLoggedInOLView(ptAccountDetails, currentAccountHasMTDIT)
-      case (true, false)  => ptGGLoggedInOLView(ptAccountDetails, currentAccountHasMTDIT)
-      case (false, true)  => ptOLLoggedInGGView(ptAccountDetails, currentAccountHasMTDIT)
-      case (false, false) => ptGGLoggedInGGView(ptAccountDetails, currentAccountHasMTDIT)
+      case (true, true)   => ptOLLoggedInOLView(ptAccountDetails)
+      case (true, false)  => ptGGLoggedInOLView(ptAccountDetails)
+      case (false, true)  => ptOLLoggedInGGView(ptAccountDetails)
+      case (false, false) => ptGGLoggedInGGView(ptAccountDetails)
 
     }
 
   def view: Action[AnyContent] =
     authAction.andThen(accountMongoDetailsAction).async { implicit request =>
-      val res      = multipleAccountsOrchestrator.getCurrentAndPTAAndSAIfExistsForUser
-      val hasMTDIT = request.userDetails.hasMTDITEnrolment
-
+      val res = multipleAccountsOrchestrator.getCurrentAndPTAAndSAIfExistsForUser
       res.value.map {
         case Right(accountDetails) =>
           val accountFriendlyDetails = AccountDetails.userFriendlyAccountDetails(accountDetails.ptAccountDetails)
@@ -74,9 +71,9 @@ class PTEnrolmentOnOtherAccountController @Inject() (
               PTEnrolmentOnOtherAccount(
                 AccountDetails.userFriendlyAccountDetails(accountDetails.currentAccountDetails),
                 accountFriendlyDetails,
-                accountDetails.saUserCred.map(AccountDetails.trimmedUserId)
-              ),
-              hasMTDIT
+                accountDetails.saUserCred.map(AccountDetails.trimmedUserId),
+                accountDetails.currentAccountHasMTDIT
+              )
             )
           )
         case Left(error)           =>

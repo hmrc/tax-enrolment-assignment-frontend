@@ -17,7 +17,8 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.views
 
 import play.api.test.FakeRequest
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
+import play.twirl.api.HtmlFormat
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.*
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.messages.PTEnrolmentOtherAccountMessagesBothGG
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.MFADetails
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.views.html.PTEnrolmentOnGGAccountLoggedInGG
@@ -49,6 +50,14 @@ class PTEnrolmentOnGGAccountLoggedInGGSpec extends ViewSpecHelper {
     )
 
   val documentWithSA = doc(htmlWithSA)
+
+  val htmlWithSAAndMtdit =
+    view(ptEnrolmentDataModel(Some(CREDENTIAL_ID_1), testAccountDetailsWithSA, hasMtdit = true))(
+      FakeRequest(),
+      testMessages
+    )
+
+  val documentWithSAAndMtdit = doc(htmlWithSAAndMtdit)
 
   val htmlNoEmail     =
     view(
@@ -145,6 +154,9 @@ class PTEnrolmentOnGGAccountLoggedInGGSpec extends ViewSpecHelper {
           .get(2)
           .attr("href") should include(PTEnrolmentOtherAccountMessagesBothGG.fraudReportingUrl)
       }
+    }
+    "have mtdit text present if account has the enrolment" in {
+      documentWithSAAndMtdit.body().text() should include("Making Tax Digital for Income Tax")
     }
   }
 }

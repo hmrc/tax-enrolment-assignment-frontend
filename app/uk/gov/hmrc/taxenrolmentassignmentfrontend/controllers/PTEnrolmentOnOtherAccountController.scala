@@ -61,7 +61,6 @@ class PTEnrolmentOnOtherAccountController @Inject() (
   def view: Action[AnyContent] =
     authAction.andThen(accountMongoDetailsAction).async { implicit request =>
       val res = multipleAccountsOrchestrator.getCurrentAndPTAAndSAIfExistsForUser
-
       res.value.map {
         case Right(accountDetails) =>
           val accountFriendlyDetails = AccountDetails.userFriendlyAccountDetails(accountDetails.ptAccountDetails)
@@ -72,7 +71,8 @@ class PTEnrolmentOnOtherAccountController @Inject() (
               PTEnrolmentOnOtherAccount(
                 AccountDetails.userFriendlyAccountDetails(accountDetails.currentAccountDetails),
                 accountFriendlyDetails,
-                accountDetails.saUserCred.map(AccountDetails.trimmedUserId)
+                accountDetails.saUserCred.map(AccountDetails.trimmedUserId),
+                accountDetails.currentAccountHasMTDIT
               )
             )
           )

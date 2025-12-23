@@ -17,16 +17,16 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators
 
 import cats.data.{EitherT, OptionT}
-import cats.implicits._
+import cats.implicits.*
 import play.api.Logger
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountTypes.{MTDIT_ASSIGNED_TO_CURRENT_USER, MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_AND_MTDIT_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.{AccountDetailsFromMongo, RequestWithUserDetailsFromSession}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{logAnotherAccountAlreadyHasPTEnrolment, logAnotherAccountHasSAEnrolment, logCurrentAndAnotherAccountHasSAEnrolment, logCurrentUserAlreadyHasPTEnrolment, logCurrentUserHasSAEnrolment, logCurrentUserhasMultipleAccounts, logCurrentUserhasOneAccount}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.{logAnotherAccountAlreadyHasPTEnrolment, logAnotherAccountHasSAEnrolment, logCurrentAndAnotherAccountHasSAEnrolment, logCurrentUserAlreadyHasPTEnrolment, logCurrentUserHasMtditEnrolment, logCurrentUserHasSAAndMtditEnrolment, logCurrentUserHasSAEnrolment, logCurrentUserhasMultipleAccounts, logCurrentUserhasOneAccount}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountTypes, CacheMap, IdentityProviderWithCredId}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.*
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.{EACDService, UsersGroupsSearchService}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.utils.HmrcPTEnrolment
@@ -89,19 +89,27 @@ class AccountCheckOrchestrator @Inject() (
     irSaOnOtherAccount: Option[String],
     hmrcPtOnCurrentAccount: Boolean,
     irSaOnCurrentAccount: Boolean,
+    mtdItOnCurrentAccount: Boolean,
     listOfCreds: Seq[IdentityProviderWithCredId]
   )(implicit
     requestWithUserDetails: RequestWithUserDetailsFromSession[_]
   ): AccountTypes.Value =
-    (hmrcPtOnOtherAccount, irSaOnOtherAccount, hmrcPtOnCurrentAccount, irSaOnCurrentAccount, listOfCreds) match {
-      case (None, _, true, _, _)          =>
+    (
+      hmrcPtOnOtherAccount,
+      irSaOnOtherAccount,
+      hmrcPtOnCurrentAccount,
+      irSaOnCurrentAccount,
+      mtdItOnCurrentAccount,
+      listOfCreds
+    ) match {
+      case (None, _, true, _, _, _)          =>
         logger.logEvent(
           logCurrentUserAlreadyHasPTEnrolment(
             requestWithUserDetails.userDetails.credId
           )
         )
         PT_ASSIGNED_TO_CURRENT_USER
-      case (Some(credId), _, false, _, _) =>
+      case (Some(credId), _, false, _, _, _) =>
         logger.logEvent(
           logAnotherAccountAlreadyHasPTEnrolment(
             requestWithUserDetails.userDetails.credId,
@@ -109,14 +117,21 @@ class AccountCheckOrchestrator @Inject() (
           )
         )
         PT_ASSIGNED_TO_OTHER_USER
-      case (Some(_), _, true, _, _)       =>
+      case (Some(_), _, true, _, _, _)       =>
         throw new RuntimeException("HMRC-PT enrolment cannot be on both the current and an other account")
-      case (_, None, _, true, _)          =>
+      case (_, None, _, true, true, _)       =>
+        logger.logEvent(
+          logCurrentUserHasSAAndMtditEnrolment(
+            requestWithUserDetails.userDetails.credId
+          )
+        )
+        SA_AND_MTDIT_ASSIGNED_TO_CURRENT_USER
+      case (_, None, _, true, _, _)          =>
         logger.logEvent(
           logCurrentUserHasSAEnrolment(requestWithUserDetails.userDetails.credId)
         )
         SA_ASSIGNED_TO_CURRENT_USER
-      case (_, Some(credId), _, false, _) =>
+      case (_, Some(credId), _, false, _, _) =>
         logger.logEvent(
           logAnotherAccountHasSAEnrolment(
             requestWithUserDetails.userDetails.credId,
@@ -124,7 +139,7 @@ class AccountCheckOrchestrator @Inject() (
           )
         )
         SA_ASSIGNED_TO_OTHER_USER
-      case (_, Some(credId), _, true, _)  =>
+      case (_, Some(credId), _, true, _, _)  =>
         logger.logEvent(
           logCurrentAndAnotherAccountHasSAEnrolment(
             requestWithUserDetails.userDetails.credId,
@@ -132,7 +147,12 @@ class AccountCheckOrchestrator @Inject() (
           )
         )
         SA_ASSIGNED_TO_CURRENT_USER
-      case (_, _, _, _, listOfCreds)      =>
+      case (_, _, _, _, true, _)             =>
+        logger.logEvent(
+          logCurrentUserHasMtditEnrolment
+        )
+        MTDIT_ASSIGNED_TO_CURRENT_USER
+      case (_, _, _, _, _, listOfCreds)      =>
         if (listOfCreds.size > 1) {
           logger.logEvent(logCurrentUserhasMultipleAccounts(requestWithUserDetails.userDetails.credId))
           MULTIPLE_ACCOUNTS
@@ -148,14 +168,15 @@ class AccountCheckOrchestrator @Inject() (
     requestWithUserDetails: RequestWithUserDetailsFromSession[_]
   ): EitherT[Future, TaxEnrolmentAssignmentErrors, AccountTypes.Value] = EitherT {
     getOptAccountTypeFromCache.foldF {
-      val hmrcPt = requestWithUserDetails.userDetails.hasPTEnrolment
-      val irSa   = requestWithUserDetails.userDetails.hasSAEnrolment
+      val hmrcPt    = requestWithUserDetails.userDetails.hasPTEnrolment
+      val irSa      = requestWithUserDetails.userDetails.hasSAEnrolment
+      val hmrcMtdit = requestWithUserDetails.userDetails.hasMTDITEnrolment
 
       (for {
         hmrcPtOnOtherAccount <- findAndFixHmrcPtEnrolmentOnOtherAccount
         irSaOnOtherAccount   <- findIrSaOnOtherAccount
         listOfCreds          <- usersGroupsSearchService.getAllCredIdsByNino(requestWithUserDetails.userDetails.nino.nino)
-        accountType           = returnAccountType(hmrcPtOnOtherAccount, irSaOnOtherAccount, hmrcPt, irSa, listOfCreds)
+        accountType           = returnAccountType(hmrcPtOnOtherAccount, irSaOnOtherAccount, hmrcPt, irSa, hmrcMtdit, listOfCreds)
         _                    <-
           EitherT[Future, TaxEnrolmentAssignmentErrors, CacheMap](
             sessionCache.save[AccountTypes.Value](ACCOUNT_TYPE, accountType).map(Right(_))

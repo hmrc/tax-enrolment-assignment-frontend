@@ -43,11 +43,11 @@ object TestData {
   val CREDENTIAL_ID_1    = "6102202884164541"
   val CURRENT_USER_EMAIL = "foobarwizz"
 
-  val CREDENTIAL_ID_2               = "6102202884164542"
-  val UTR                           = "123456789"
-  val creds: Credentials            = Credentials(CREDENTIAL_ID, PROVIDER_TYPE)
-  val noEnrolments: Enrolments      = Enrolments(Set.empty[Enrolment])
-  val saEnrolmentOnly: Enrolments   = Enrolments(
+  val CREDENTIAL_ID_2                       = "6102202884164542"
+  val UTR                                   = "123456789"
+  val creds: Credentials                    = Credentials(CREDENTIAL_ID, PROVIDER_TYPE)
+  val noEnrolments: Enrolments              = Enrolments(Set.empty[Enrolment])
+  val saEnrolmentOnly: Enrolments           = Enrolments(
     Set(
       Enrolment(
         "IR-SA",
@@ -57,7 +57,7 @@ object TestData {
       )
     )
   )
-  val ptEnrolmentOnly: Enrolments   = Enrolments(
+  val ptEnrolmentOnly: Enrolments           = Enrolments(
     Set(
       Enrolment(
         "HMRC-PT",
@@ -67,7 +67,7 @@ object TestData {
       )
     )
   )
-  val saAndptEnrolments: Enrolments = Enrolments(
+  val saAndmtditAndptEnrolments: Enrolments = Enrolments(
     Set(
       Enrolment(
         "HMRC-PT",
@@ -78,6 +78,12 @@ object TestData {
       Enrolment(
         "IR-SA",
         Seq(EnrolmentIdentifier("UTR", "123456789")),
+        "Activated",
+        None
+      ),
+      Enrolment(
+        "HMRC-MTD-IT",
+        Seq(EnrolmentIdentifier("MTDIT", "123456789")),
         "Activated",
         None
       )
@@ -124,10 +130,11 @@ object TestData {
       Individual,
       enrolments = Enrolments(Set.empty[Enrolment]),
       hasPTEnrolment = hmrcPt,
-      hasSAEnrolment = irSa
+      hasSAEnrolment = irSa,
+      hasMTDITEnrolment = false
     )
 
-  val userDetailsNoEnrolments: UserDetailsFromSession         =
+  val userDetailsNoEnrolments: UserDetailsFromSession                 =
     UserDetailsFromSession(
       CREDENTIAL_ID,
       PROVIDER_TYPE,
@@ -137,9 +144,10 @@ object TestData {
       Individual,
       enrolments = Enrolments(Set.empty[Enrolment]),
       hasPTEnrolment = false,
-      hasSAEnrolment = false
+      hasSAEnrolment = false,
+      hasMTDITEnrolment = false
     )
-  val userDetailsWithPTEnrolment: UserDetailsFromSession      =
+  val userDetailsWithPTEnrolment: UserDetailsFromSession              =
     UserDetailsFromSession(
       CREDENTIAL_ID,
       PROVIDER_TYPE,
@@ -149,9 +157,10 @@ object TestData {
       Individual,
       enrolments = ptEnrolmentOnly,
       hasPTEnrolment = true,
-      hasSAEnrolment = false
+      hasSAEnrolment = false,
+      hasMTDITEnrolment = false
     )
-  val userDetailsWithSAEnrolment: UserDetailsFromSession      =
+  val userDetailsWithSAEnrolment: UserDetailsFromSession              =
     UserDetailsFromSession(
       CREDENTIAL_ID,
       PROVIDER_TYPE,
@@ -161,9 +170,10 @@ object TestData {
       Individual,
       enrolments = saEnrolmentOnly,
       hasPTEnrolment = false,
-      hasSAEnrolment = true
+      hasSAEnrolment = true,
+      hasMTDITEnrolment = false
     )
-  val userDetailsWithPTAndSAEnrolment: UserDetailsFromSession =
+  val userDetailsWithPTAndMTDITAndSAEnrolment: UserDetailsFromSession =
     UserDetailsFromSession(
       CREDENTIAL_ID,
       PROVIDER_TYPE,
@@ -171,9 +181,10 @@ object TestData {
       GROUP_ID,
       Some(CURRENT_USER_EMAIL),
       Individual,
-      enrolments = saAndptEnrolments,
+      enrolments = saAndmtditAndptEnrolments,
       hasPTEnrolment = true,
-      hasSAEnrolment = true
+      hasSAEnrolment = true,
+      hasMTDITEnrolment = true
     )
 
   val UsersAssignedEnrolmentCurrentCred: UsersAssignedEnrolment =
@@ -241,20 +252,24 @@ object TestData {
 
   def ptEnrolmentDataModel(
     saUserCred: Option[String],
-    ptAccountDetails: AccountDetails = accountDetailsWithPT
+    ptAccountDetails: AccountDetails = accountDetailsWithPT,
+    hasMtdit: Boolean = false
   ): PTEnrolmentOnOtherAccount = PTEnrolmentOnOtherAccount(
     currentAccountDetails = accountDetails,
     ptAccountDetails = ptAccountDetails,
-    saUserCred = saUserCred
+    saUserCred = saUserCred,
+    hasMtdit
   )
 
   def ptEnrolmentDataModelOL(
     saUserCred: Option[String],
-    ptAccountDetails: AccountDetails = accountDetailsWithPTOL
+    ptAccountDetails: AccountDetails = accountDetailsWithPTOL,
+    hasMtdit: Boolean = false
   ): PTEnrolmentOnOtherAccount = PTEnrolmentOnOtherAccount(
     currentAccountDetails = accountDetailsOL,
     ptAccountDetails = ptAccountDetails,
-    saUserCred = saUserCred
+    saUserCred = saUserCred,
+    hasMtdit
   )
 
   val usersGroupSearchResponse: UsersGroupResponse = UsersGroupResponse(
@@ -309,7 +324,8 @@ object TestData {
       Individual,
       enrolments = ptEnrolmentOnly,
       hasPTEnrolment = true,
-      hasSAEnrolment = false
+      hasSAEnrolment = false,
+      hasMTDITEnrolment = false
     )
 
   val all_account_types: Seq[AccountTypes.Value] = List(

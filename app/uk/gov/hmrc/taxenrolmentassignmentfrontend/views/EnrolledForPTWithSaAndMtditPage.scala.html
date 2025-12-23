@@ -1,0 +1,50 @@
+@*
+ * Copyright 2023 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountDetails
+
+@this(
+        layout: Layout,
+        formHelper: FormWithCSRF,
+        govukButton: GovukButton
+)
+
+@(accountDetails: AccountDetails, postAction: Call)(implicit request: Request[AnyRef], messages: Messages)
+
+@layout(pageTitle = Some(messages("enrolledForPT.title"))) {
+
+ @if(accountDetails.isIdentityProviderOneLogin) {
+    <h1 class="govuk-heading-l">@messages("enrolledForPT.one_login.heading")</h1>
+    <p class="govuk-body">@messages("enrolledForPT.one_login.paragraph1") <strong>@accountDetails.emailDecrypted.get</strong>.</p>
+    <p class="govuk-body">@messages("enrolledForPT.one_login.paragraph2")</p>
+ } else {
+    <h1 class="govuk-heading-l">@messages("enrolledForPT.gg.heading")</h1>
+    <p class="govuk-body">@Html(messages("enrolledForPT.gg.paragraph1", accountDetails.userId))</p>
+    <p class="govuk-body">@messages("enrolledForPT.gg.paragraph2")</p>
+ }
+<ul class="govuk-list govuk-list--bullet">
+    <li>@messages("enrolledForPt.list.pta")</li>
+    <li>@messages("enrolledForPt.list.sa")</li>
+    <li>@messages("enrolledForPt.list.mtdit")</li>
+</ul>
+ <p class="govuk-body">@messages("enrolledForPT.paragraph2")</p>
+  @formHelper(action = postAction) {
+   @govukButton(Button(
+    preventDoubleClick = Some(true),
+    content = Text(messages("enrolledForPT.continue"))
+   ))
+  }
+}

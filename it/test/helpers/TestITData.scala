@@ -393,7 +393,8 @@ object TestITData {
       Individual,
       Enrolments(Set.empty[Enrolment]),
       hasPTEnrolment = false,
-      hasSAEnrolment = false
+      hasSAEnrolment = false,
+      hasMTDITEnrolment = false
     )
 
   val userDetailsWithMismatchNino: UserDetailsFromSession =
@@ -415,7 +416,8 @@ object TestITData {
         )
       ),
       hasPTEnrolment = true,
-      hasSAEnrolment = false
+      hasSAEnrolment = false,
+      hasMTDITEnrolment = false
     )
 
   val accountDetails: AccountDetails = AccountDetails(

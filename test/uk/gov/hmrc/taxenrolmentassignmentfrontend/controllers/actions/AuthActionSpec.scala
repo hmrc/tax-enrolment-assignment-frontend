@@ -129,10 +129,10 @@ class AuthActionSpec extends BaseSpec {
       }
     }
 
-    "the session contains nino, credential and IR-SA and PT enrolments" should {
+    "the session contains nino, credential and IR-SA, MTDIT and PT enrolments" should {
       "return OK and the userDetails" in {
         when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
-          .thenReturn(Future.successful(retrievalResponse(enrolments = saAndptEnrolments)))
+          .thenReturn(Future.successful(retrievalResponse(enrolments = saAndmtditAndptEnrolments)))
 
         when(
           mockHmrcPTEnrolment
@@ -142,7 +142,7 @@ class AuthActionSpec extends BaseSpec {
 
         val result: Future[Result] = authAction(
           defaultAsyncBody(
-            _.userDetails shouldBe userDetailsWithPTAndSAEnrolment
+            _.userDetails shouldBe userDetailsWithPTAndMTDITAndSAEnrolment
           )
         )(FakeRequest())
 

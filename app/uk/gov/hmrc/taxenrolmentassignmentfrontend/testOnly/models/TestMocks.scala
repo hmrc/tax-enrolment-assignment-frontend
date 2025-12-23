@@ -41,4 +41,20 @@ object TestMocks {
     "Single User: No enrolments"                                                         -> "singleUserNoEnrolments",
     "Single User: SA Enrolments"                                                         -> "singleUserWithSAEnrolment"
   )
+
+  val mtdMocks: List[(String, String)] = List(
+    "Scenario 3: GG Multiple Accounts: One No Enrolment, Other with SA and MTDIT"         -> "multipleAccountsOneWithSAandMTDITEnrolment",
+    "Scenario 3: OL Multiple Accounts: One No Enrolment, Other with SA and MTDIT"         -> "OneLoginMultipleAccountsOneWithSAandMTDITEnrolment",
+    "Scenario 3: GG Account with No Enrolment, One Login Account with SA and MTDIT"       -> "GGAccountWithNoEnrolmentsOneLoginAccountWithSAandMTDITEnrolment",
+    "Scenario 3: GG Account with SA and MTDIT EnrolmentS, One Login Account with None"    -> "OneLoginAccountWithNoEnrolmentsGGAccountWithSAandMTDITEnrolment",
+    "Scenario 7a: GG Multiple Accounts: One PT Enrolment, Other with SA and MTDIT"        -> "multipleAccountsOneWithPTEnrolmentOtherWithSAAndMTDIT",
+    "Scenario 7a: OL Multiple Accounts: One PT Enrolment, Other with SA and MTDIT"        -> "OneLoginMultipleAccountsOneWithPTEnrolmentOtherWithSAAndMTDIT",
+    "Scenario 7a: GG Account with PT Enrolment, One Login Account with SA and MTDIT"      -> "GGAccountWithPTEnrolmentOneLoginAccountWithSAAndMTDITEnrolment",
+    "Scenario 7a: GG Account with SA and MTDIT, One Login Account with PT Enrolment"      -> "GGAccountWithSAAndMTDITEnrolmentOneLoginAccountWithPTEnrolment",
+    "Scenario 7b: GG Multiple Accounts: One PT and SA Enrolment, Other with MTDIT"        -> "multipleAccountsOneWithPTAndSAEnrolmentOtherWithMtdit",
+    "Scenario 7b: One Login Multiple Accounts: One PT and SA Enrolment, Other with MTDIT" -> "OneLoginMultipleAccountsOneWithPTAndSAEnrolmentOtherWithMtdit",
+    "Scenario 7b: GG Account with PT and SA Enrolment, One Login Account with MTDIT"      -> "GGAccountWithPTAndSAEnrolmentOneLoginAccountWithMtdit",
+    "Scenario 7b: GG Account with MTDIT Enrolment, One Login Account with PT and SA"      -> "GGAccountWithMtditEnrolmentOneLoginAccountWithPTAndSAEnrolment"
+  )
+
 }

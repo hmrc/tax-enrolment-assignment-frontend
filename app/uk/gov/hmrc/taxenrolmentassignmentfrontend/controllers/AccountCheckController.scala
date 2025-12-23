@@ -98,6 +98,7 @@ class AccountCheckController @Inject() (
       case SA_ASSIGNED_TO_OTHER_USER                                       => Some(Redirect(routes.SABlueInterruptController.view))
       case MULTIPLE_ACCOUNTS                                               => Some(Redirect(routes.EnrolledForPTController.view))
       case SA_ASSIGNED_TO_CURRENT_USER                                     => Some(Redirect(routes.EnrolledForPTWithSAController.view))
+      case SA_AND_MTDIT_ASSIGNED_TO_CURRENT_USER                           => Some(Redirect(routes.EnrolledForPTWithSAandMTDITController.view))
       case _                                                               => None
     }
 
@@ -113,7 +114,8 @@ class AccountCheckController @Inject() (
   private def enrolForPTIfRequired(
     accountType: AccountTypes.Value
   )(implicit request: RequestWithUserDetailsFromSession[AnyContent], hc: HeaderCarrier): TEAFResult[Unit] = {
-    val accountTypesToEnrol = Set(SINGLE_ACCOUNT, MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER)
+    val accountTypesToEnrol =
+      Set(SINGLE_ACCOUNT, MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER, SA_AND_MTDIT_ASSIGNED_TO_CURRENT_USER)
 
     if (!request.userDetails.hasPTEnrolment && accountTypesToEnrol.contains(accountType)) {
       for {

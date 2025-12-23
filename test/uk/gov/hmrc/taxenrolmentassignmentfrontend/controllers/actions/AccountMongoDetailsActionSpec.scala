@@ -75,7 +75,8 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
           Individual,
           Enrolments(Set.empty[Enrolment]),
           hasPTEnrolment = true,
-          hasSAEnrolment = true
+          hasSAEnrolment = true,
+          hasMTDITEnrolment = true
         ),
         "foo"
       )
@@ -117,7 +118,8 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
             Individual,
             Enrolments(Set.empty[Enrolment]),
             hasPTEnrolment = true,
-            hasSAEnrolment = true
+            hasSAEnrolment = true,
+            hasMTDITEnrolment = true
           ),
           "foo"
         )
@@ -158,7 +160,8 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
               Individual,
               Enrolments(Set.empty[Enrolment]),
               hasPTEnrolment = true,
-              hasSAEnrolment = true
+              hasSAEnrolment = true,
+              hasMTDITEnrolment = true
             ),
             "foo"
           )
@@ -195,7 +198,8 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
               Individual,
               Enrolments(Set.empty[Enrolment]),
               hasPTEnrolment = true,
-              hasSAEnrolment = true
+              hasSAEnrolment = true,
+              hasMTDITEnrolment = true
             ),
             "foo"
           )
@@ -232,7 +236,8 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
           Individual,
           Enrolments(Set.empty[Enrolment]),
           hasPTEnrolment = true,
-          hasSAEnrolment = true
+          hasSAEnrolment = true,
+          hasMTDITEnrolment = true
         ),
         "foo"
       )
@@ -269,7 +274,8 @@ class AccountMongoDetailsActionSpec extends BaseSpec {
           Individual,
           Enrolments(Set.empty[Enrolment]),
           hasPTEnrolment = true,
-          hasSAEnrolment = true
+          hasSAEnrolment = true,
+          hasMTDITEnrolment = true
         ),
         "foo"
       )

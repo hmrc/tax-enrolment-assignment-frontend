@@ -28,13 +28,19 @@ object AccountTypes extends Enumeration {
   val SINGLE_ACCOUNT: AccountTypes.Value              = Value("SINGLE_ACCOUNT")
   val MULTIPLE_ACCOUNTS: AccountTypes.Value           = Value("MULTIPLE_ACCOUNTS")
 
-  val SA_ASSIGNED_TO_CURRENT_USER: AccountTypes.Value = Value(
+  val SA_ASSIGNED_TO_CURRENT_USER: AccountTypes.Value           = Value(
     "SA_ASSIGNED_TO_CURRENT_USER"
   )
-  val SA_ASSIGNED_TO_OTHER_USER: AccountTypes.Value   = Value(
+  val SA_AND_MTDIT_ASSIGNED_TO_CURRENT_USER: AccountTypes.Value = Value(
+    "SA_AND_MTDIT_ASSIGNED_TO_CURRENT_USER"
+  )
+  val MTDIT_ASSIGNED_TO_CURRENT_USER: AccountTypes.Value        = Value(
+    "MTDIT_ASSIGNED_TO_CURRENT_USER"
+  )
+  val SA_ASSIGNED_TO_OTHER_USER: AccountTypes.Value             = Value(
     "SA_ASSIGNED_TO_OTHER_USER"
   )
-  implicit val read: Reads[AccountTypes.Value]        =
+  implicit val read: Reads[AccountTypes.Value]                  =
     Reads.enumNameReads(AccountTypes)
 
   implicit val format: Format[AccountTypes.Value] = Json.formatEnum(AccountTypes)

@@ -431,7 +431,7 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
     def mockAuthCallWithPT(hasSA: Boolean = false): OngoingStubbing[Future[
       Option[String] ~ Option[Credentials] ~ Enrolments ~ Option[String] ~ Option[AffinityGroup] ~ Option[String]
     ]] = {
-      val enrolments = if (hasSA) saAndptEnrolments else ptEnrolmentOnly
+      val enrolments = if (hasSA) saAndmtditAndptEnrolments else ptEnrolmentOnly
       when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
         .thenReturn(Future.successful(retrievalResponse(enrolments = enrolments)))
     }

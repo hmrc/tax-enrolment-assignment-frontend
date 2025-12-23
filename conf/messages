@@ -16,6 +16,11 @@ enrolledForPT.one_login.heading = Only this GOV.UK One Login can access your per
 
 enrolledForPT.gg.paragraph1 = You are signed in with Government Gateway user ID ending with <strong>{0}</strong>.
 enrolledForPT.one_login.paragraph1 = You are signed in with:
+enrolledForPT.gg.paragraph2 = Use this Government Gateway user ID to access:
+enrolledForPT.one_login.paragraph2 = Use this GOV.UK One Login to access:
+enrolledForPt.list.pta = Personal tax account
+enrolledForPt.list.sa = Self Assessment
+enrolledForPt.list.mtdit = Making Tax Digital for Income Tax
 
 enrolledForPT.paragraphSA = Use these sign in details to access your personal tax account and Self Assessment.
 
@@ -166,10 +171,21 @@ ptEnrolmentOnOtherAccount.one_login.linkText = This GOV.UK One Login is not mine
 
 ptEnrolmentOnOtherAccount.saHeading = Self Assessment
 ptEnrolmentOnOtherAccount.ptaHeading = Personal tax account
+ptEnrolmentOnOtherAccount.ptaAndSAHeading = Personal tax account and Self Assessment
+ptEnrolmentOnOtherAccount.mtditHeading = Making Tax Digital for Income Tax
+ptEnrolmentOnOtherAccount.saAndMtditHeading = Making Tax Digital for Income Tax and Self Assessment
 
 ptEnrolmentOnOtherAccount.gg.saText = You can use this Government Gateway user ID to
 ptEnrolmentOnOtherAccount.one_login.saText = You can use this GOV.UK One Login to
 ptEnrolmentOnOtherAccount.saLink = access your Self Assessment
+ptEnrolmentOnOtherAccount.mtditLink = access Making Tax Digital for Income Tax
+ptEnrolmentOnOtherAccount.gg.saAndMtditText = You can use this Government Gateway user ID to access:
+ptEnrolmentOnOtherAccount.one_login.saAndMtditText = You can use this GOV.UK One Login to access:
+ptEnrolmentOnOtherAccount.saAndMtditPreLinkText = Go to your
+ptEnrolmentOnOtherAccount.saAndMtditLinkText = Business Tax Account
+ptEnrolmentOnOtherAccount.gg.saAndMtditPostLinkText = using this Government Gateway user ID to access:
+ptEnrolmentOnOtherAccount.one_login.saAndMtditPostLinkText = using this GOV.UK One Login to access:
+ptEnrolmentOnOtherAccount.saLinkText = Self Assessment
 
 ptEnrolmentOnOtherAccount.sa.signInParagraph = To access your personal tax account and Self Assessment:
 ptEnrolmentOnOtherAccount.nonSa.signInParagraph = To access your personal tax account:

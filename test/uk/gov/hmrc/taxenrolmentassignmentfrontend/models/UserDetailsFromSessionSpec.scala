@@ -38,7 +38,8 @@ class UserDetailsFromSessionSpec extends BaseSpec {
         AffinityGroup.Agent,
         saEnrolmentOnly,
         true,
-        true
+        true,
+        false
       ).utr.get shouldBe UTR
     }
     s"return None if $IRSAKey doesnt exist" in {
@@ -51,7 +52,8 @@ class UserDetailsFromSessionSpec extends BaseSpec {
         AffinityGroup.Agent,
         Enrolments(Set.empty),
         true,
-        true
+        true,
+        false
       ).utr shouldBe None
     }
   }

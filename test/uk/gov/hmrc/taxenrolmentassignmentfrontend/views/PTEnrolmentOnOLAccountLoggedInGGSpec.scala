@@ -50,6 +50,14 @@ class PTEnrolmentOnOLAccountLoggedInGGSpec extends ViewSpecHelper {
 
   val documentWithSA = doc(htmlWithSA)
 
+  val htmlWithSAAndMtdit =
+    view(ptEnrolmentDataModel(Some(CREDENTIAL_ID_1), testAccountDetailsWithSA, hasMtdit = true))(
+      FakeRequest(),
+      testMessages
+    )
+
+  val documentWithSAAndMtdit = doc(htmlWithSAAndMtdit)
+
   val html     =
     view(ptEnrolmentDataModel(None, testAccountDetails))(
       FakeRequest(),
@@ -129,6 +137,9 @@ class PTEnrolmentOnOLAccountLoggedInGGSpec extends ViewSpecHelper {
           .get(2)
           .attr("href") should include(PTEnrolmentOtherAccountMessagesEnrolmentOLLoggedInGG.fraudReportingUrl)
       }
+    }
+    "have mtdit text present if account has the enrolment" in {
+      documentWithSAAndMtdit.body().text() should include("Making Tax Digital for Income Tax")
     }
   }
 }

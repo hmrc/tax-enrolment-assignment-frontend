@@ -17,11 +17,11 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions
 
 import play.api.Logger
-import play.api.mvc.Results._
-import play.api.mvc._
+import play.api.mvc.Results.*
+import play.api.mvc.*
 import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
-import uk.gov.hmrc.auth.core._
-import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals._
+import uk.gov.hmrc.auth.core.*
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.*
 import uk.gov.hmrc.auth.core.retrieve.~
 import uk.gov.hmrc.domain.Nino
 import uk.gov.hmrc.http.HeaderCarrier
@@ -32,8 +32,8 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.ErrorHandl
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.routes
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.UnexpectedError
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.{IRSAKey, hmrcPTKey}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.*
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.{IRSAKey, hmrcMTDITKey, hmrcPTKey}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.utils.HmrcPTEnrolment
 
 import java.util.UUID
@@ -49,7 +49,8 @@ case class UserDetailsFromSession(
   affinityGroup: AffinityGroup,
   enrolments: Enrolments,
   hasPTEnrolment: Boolean,
-  hasSAEnrolment: Boolean
+  hasSAEnrolment: Boolean,
+  hasMTDITEnrolment: Boolean
 ) {
 
   val utr: Option[String] = enrolments.getEnrolment(s"$IRSAKey").flatMap(_.getIdentifier("UTR").map(_.value))
@@ -93,6 +94,7 @@ class AuthAction @Inject() (
         case Some(nino) ~ Some(credentials) ~ enrolments ~ Some(groupId) ~ Some(affinityGroup) ~ email =>
           implicit val hc: HeaderCarrier = fromRequestAndSession(request, request.session)
           val hasSAEnrolment             = enrolments.getEnrolment(s"$IRSAKey").fold(false)(_.isActivated)
+          val hasMtditEnrolment          = enrolments.getEnrolment(s"$hmrcMTDITKey").fold(false)(_.isActivated)
           val userDetails                = UserDetailsFromSession(
             credentials.providerId,
             credentials.providerType,
@@ -102,7 +104,8 @@ class AuthAction @Inject() (
             affinityGroup,
             enrolments,
             enrolments.getEnrolment(s"$hmrcPTKey").flatMap(_.identifiers.find(_.value == nino)).isDefined,
-            hasSAEnrolment
+            hasSAEnrolment,
+            hasMtditEnrolment
           )
 
           val sessionID = hc.sessionId.fold {

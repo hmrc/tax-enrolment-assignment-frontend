@@ -1,30 +1,32 @@
 [
     {
         "identityProviderType": "ONE_LOGIN",
-        "groupId": "6949B2D7-BC9B-4E12-8411-3089E6148F10",
+        "groupId": "7284B3E9-D253-4D16-BC96-E685FD9DE3D6",
         "affinityGroup": "Individual",
-        "nino": "JS271436A",
+        "nino": "JS271435C",
         "user": {
-            "credId": "9308587656991700",
+            "credId": "6408620249920679",
             "name": "Firstname Surname",
-            "email": "email8@test.com"
+            "email": "email5@test.com"
         },
+        "enrolments": [],
         "additionalFactors": [
             {
-                "factorType": "totp",
-                "name": "HMRC App"
+                "factorType": "sms",
+                "phoneNumber": "07783924122",
+                "name": "Text Messages"
             }
         ]
     },
     {
         "identityProviderType": "ONE_LOGIN",
-        "groupId": "74A2B44D-BAFC-4D1C-8F62-F54D68C0A94B",
+        "groupId": "13BE43AE-DC3E-40BB-958E-EF724998C7A0",
         "affinityGroup": "Individual",
-        "nino": "JS271436A",
+        "nino": "JS271435C",
         "user": {
-            "credId": "4334822488849220",
+            "credId": "1447340264123859",
             "name": "Firstname Surname",
-            "email": "email9@test.com"
+            "email": "email6@test.com"
         },
         "enrolments": [
             {
@@ -34,7 +36,7 @@
                 ],
                 "identifiers": {
                     "key": "UTR",
-                    "value": "1234567890"
+                    "value": "AA223003E"
                 },
                 "verifiers": [
                     {
@@ -43,7 +45,7 @@
                     },
                     {
                         "key": "NINO",
-                        "value": "JS271436A"
+                        "value": "JS271435C"
                     }
                 ],
                 "enrolmentFriendlyName": "IR-SA Enrolment",
@@ -54,8 +56,9 @@
         ],
         "additionalFactors": [
             {
-                "factorType": "totp",
-                "name": "HMRC App"
+                "factorType": "sms",
+                "phoneNumber": "07783924122",
+                "name": "Text Messages"
             }
         ]
     }

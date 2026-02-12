@@ -28,7 +28,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.{GET, contentAsString, defaultAwaitTimeout, redirectLocation, route, status, writeableOf_AnyContentAsEmpty}
 import uk.gov.hmrc.auth.core.{Enrolment, EnrolmentIdentifier}
 import uk.gov.hmrc.crypto.{Decrypter, Encrypter}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountTypes.{MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER, SINGLE_ACCOUNT}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountTypes.{MTDIT_ASSIGNED_TO_CURRENT_USER, MULTIPLE_ACCOUNTS, SA_ASSIGNED_TO_CURRENT_USER, SINGLE_ACCOUNT}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.*
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.*
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.enums.EnrolmentEnum.hmrcPTKey
@@ -210,6 +210,36 @@ class AccountCheckControllerISpec extends IntegrationSpecBase {
       )(requestWithMongoUserDetails(), messagesApi)
       verifyAuditEventSent(expectedAuditEvent)
 
+    }
+
+    "the user has MTD IT enrolment only and no PT enrolment in session or EACD" in {
+      val authResponse = authoriseResponseJson(enrolments = mtditEnrolmentOnly)
+      stubAuthorizePost(OK, authResponse.toString())
+      stubPost(s"/write/.*", OK, """{"x":2}""")
+      stubGet(
+        s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/users",
+        OK,
+        es0ResponseNoRecordCred
+      )
+
+      stubGetWithQueryParam("/identity-verification/nino", "nino", NINO.nino, OK, ivResponseSingleCredsJsonString)
+      stubPost(s"/enrolment-store-proxy/enrolment-store/enrolments", NO_CONTENT, "")
+      stubPut(s"/tax-enrolments/service/HMRC-PT/enrolment", NO_CONTENT, "")
+      stubGet(s"/enrolment-store-proxy/enrolment-store/enrolments/HMRC-PT~NINO~$NINO/groups", NO_CONTENT, "")
+
+      val request = FakeRequest(GET, urlPath).withSession(xAuthToken)
+
+      val result = route(app, request).get
+      status(result)             shouldBe SEE_OTHER
+      redirectLocation(result).get should include(returnUrl)
+
+      val expectedAuditEvent =
+        AuditEvent.auditSuccessfullyEnrolledPTWhenSANotOnOtherAccount(
+          MTDIT_ASSIGNED_TO_CURRENT_USER,
+          accountDetailsOverride = Some(accountDetails)
+        )(requestWithMongoUserDetails(accountType = MTDIT_ASSIGNED_TO_CURRENT_USER), messagesApi)
+
+      verifyAuditEventSent(expectedAuditEvent)
     }
 
     "the user is a single account holder with an invalid PT enrolment in session or EACD" in {

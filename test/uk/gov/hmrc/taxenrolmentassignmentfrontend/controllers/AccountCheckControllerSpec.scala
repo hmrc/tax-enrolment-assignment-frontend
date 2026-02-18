@@ -134,6 +134,34 @@ class AccountCheckControllerSpec extends BaseSpec with OneInstancePerTest {
           mockAuditPTEnrolledVerify(SINGLE_ACCOUNT, req, messagesApi)
 
         }
+
+        "the account type is MTDIT_ASSIGNED_TO_CURRENT_USER" in new TestHelper {
+          val req: RequestWithUserDetailsFromSessionAndMongo[AnyContent] = requestWithUserDetailsFromSessionAndMongo(
+            requestWithUserDetails(userDetailsNoEnrolments),
+            accountDetailsFromMongo(additionalCacheData = exampleMongoSessionData)
+          )
+
+          mockAuthCall()
+          when(mockTeaSessionCache.fetch()(any[RequestWithUserDetailsFromSession[_]]))
+            .thenReturn(Future.successful(Some(CacheMap("id", exampleMongoSessionData))))
+          when(mockTeaSessionCache.removeRecord(any())).thenReturn(Future.successful(true))
+          when(mockTeaSessionCache.save(any(), any())(any(), any()))
+            .thenReturn(Future.successful(CacheMap("FAKE_SESSION_ID", Map.empty)))
+
+          mockAccountCheckSuccess(MTDIT_ASSIGNED_TO_CURRENT_USER)
+          mockSilentEnrolSuccess
+          mockAuditPTEnrolledWhen(MTDIT_ASSIGNED_TO_CURRENT_USER, req, messagesApi)
+
+          val result: Future[Result] = controller
+            .accountCheck(returnUrl)
+            .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
+
+          status(result)           shouldBe SEE_OTHER
+          redirectLocation(result) shouldBe Some(returnUrlValue)
+          verify(mockTeaSessionCache, times(1)).removeRecord(any())
+          verify(mockTeaSessionCache, times(1)).save(any(), any())(any(), any())
+          mockAuditPTEnrolledVerify(MTDIT_ASSIGNED_TO_CURRENT_USER, req, messagesApi)
+        }
       }
 
       s"not silently assign the HMRC-PT Enrolment and redirect to users redirect url" when {

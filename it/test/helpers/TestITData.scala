@@ -46,17 +46,13 @@ object TestITData {
   val creds: Credentials                =
     Credentials(CREDENTIAL_ID, GovernmentGateway.toString)
   val noEnrolments: JsValue             = Json.arr()
-  val saEnrolmentOnly: JsValue          =
-    Json.arr(createEnrolmentJson("IR-SA", "UTR", "123456789"))
+  val saEnrolmentOnly: JsValue          = Json.arr(createEnrolmentJson("IR-SA", "UTR", "123456789"))
   val saEnrolmentAsCaseClass: Enrolment = Enrolment("IR-SA", Seq(EnrolmentIdentifier("UTR", "123456789")), "Activated")
-  val ptEnrolmentOnly: JsValue          =
-    Json.arr(createEnrolmentJson("HMRC-PT", "NINO", NINO.nino))
-  val mismatchPtEnrolmentOnly: JsArray  =
-    Json.arr(createEnrolmentJson("HMRC-PT", "NINO", mismatchNino.nino))
-  val saAndptEnrolments: JsArray        = Json.arr(
-    createEnrolmentJson("HMRC-PT", "NINO", NINO.nino),
-    createEnrolmentJson("IR-SA", "UTR", "123456789")
-  )
+  val mtditEnrolmentOnly: JsValue       = Json.arr(createEnrolmentJson("HMRC-MTD-IT", "MTDITID", "847474773712345"))
+  val ptEnrolmentOnly: JsValue          = Json.arr(createEnrolmentJson("HMRC-PT", "NINO", NINO.nino))
+  val mismatchPtEnrolmentOnly: JsArray  = Json.arr(createEnrolmentJson("HMRC-PT", "NINO", mismatchNino.nino))
+  val saAndptEnrolments: JsArray        =
+    Json.arr(createEnrolmentJson("HMRC-PT", "NINO", NINO.nino), createEnrolmentJson("IR-SA", "UTR", "123456789"))
   val AUTHORIZE_HEADER_VALUE            =
     "Bearer BXQ3/Treo4kQCZvVcCqKPhhpBYpRtQQKWTypn1WBfRHWUopu5V/IFWF5phY/fymAP1FMqQR27MmCJxb50Hi5GD6G3VMjMtSLu7TAAIuqDia6jByIpXJpqOgLQuadi7j0XkyDVkl0Zp/zbKtHiNrxpa0nVHm3+GUC4H2h4Ki8OjP9KwIkeIPK/mMlBESjue4V"
 

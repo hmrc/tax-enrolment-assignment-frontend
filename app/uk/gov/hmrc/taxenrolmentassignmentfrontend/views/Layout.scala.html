@@ -21,6 +21,9 @@
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.backlink.BackLink
 @import play.api.mvc.RequestHeader
 @import uk.gov.hmrc.hmrcfrontend.views.viewmodels.hmrcstandardpage._
+@import uk.gov.hmrc.taxenrolmentassignmentfrontend.utils.UseNewServiceNavigation
+@import uk.gov.hmrc.govukfrontend.views.viewmodels.servicenavigation.ServiceNavigation
+@import uk.gov.hmrc.govukfrontend.views.Implicits.RichServiceNavigation
 
 @this(
         appConfig: AppConfig,
@@ -51,6 +54,21 @@
     @hmrcReportTechnicalIssueHelper()
 }
 
+
+@useNewServiceNavigation = @{
+    request.attrs.get(UseNewServiceNavigation.key).contains(true)
+}
+
+@serviceNavigationValue: Option[ServiceNavigation] = @{
+    if (useNewServiceNavigation) {
+        Some(ServiceNavigation(serviceName = Some(messages("service.name"))).withLanguageToggle())
+    } else {
+        None
+    }
+}
+
+
+
 @hmrcStandardPage(
     HmrcStandardPageParams(
         serviceURLs = ServiceURLs(
@@ -64,6 +82,7 @@
         pageTitle = Some(messages(if(hasError) {"common.pageTitle.error"} else {"common.pageTitle"}, pageTitle.getOrElse(""), messages("service.name"))),
         serviceName = Some(messages("service.name")),
         isWelshTranslationAvailable = appConfig.welshLanguageSupportEnabled,
-        backLink = if(backLinkEnabled) Some(BackLink.mimicsBrowserBackButtonViaJavaScript) else None
+        backLink = if(backLinkEnabled) Some(BackLink.mimicsBrowserBackButtonViaJavaScript) else None,
+        serviceNavigation = serviceNavigationValue
     )
 )(content)

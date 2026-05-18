@@ -57,6 +57,4 @@ class AppConfig @Inject() (val config: ServicesConfig) {
 
   lazy val scaWrapperDataUrl =
     s"${config.baseUrl("single-customer-account-wrapper-data")}/single-customer-account-wrapper-data"
-
-  lazy val newLayoutToggle = config.getBoolean("newLayoutToggle")
 }

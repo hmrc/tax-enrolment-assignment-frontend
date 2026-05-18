@@ -19,10 +19,11 @@ package uk.gov.hmrc.taxenrolmentassignmentfrontend.filters
 import org.apache.pekko.stream.Materializer
 import play.api.Logging
 import play.api.mvc.{Filter, RequestHeader, Result}
+import uk.gov.hmrc.hmrcfrontend.config.ServiceNavigationCanBeControlledByRequestAttr.UseServiceNavigation
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.ScaWrapperDataConnector
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.utils.UseNewServiceNavigation
+
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -58,7 +59,7 @@ class DataAttributesFilter @Inject() (
     useNewServiceNavigation: Boolean
   ): RequestHeader =
     requestHeader
-      .addAttr(UseNewServiceNavigation.key, useNewServiceNavigation)
+      .addAttr(UseServiceNavigation, useNewServiceNavigation)
 
   override def apply(f: RequestHeader => Future[Result])(rh: RequestHeader): Future[Result] = {
     implicit val headerCarrier: HeaderCarrier = HeaderCarrierConverter.fromRequestAndSession(rh, rh.session)

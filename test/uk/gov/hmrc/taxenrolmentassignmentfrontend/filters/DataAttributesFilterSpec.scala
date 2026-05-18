@@ -31,7 +31,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.{contentAsJson, defaultAwaitTimeout, status}
 import play.api.{Application, inject}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.ScaWrapperDataConnector
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.utils.UseNewServiceNavigation
+import uk.gov.hmrc.hmrcfrontend.config.ServiceNavigationCanBeControlledByRequestAttr.UseServiceNavigation
 
 import scala.concurrent.Future
 
@@ -68,7 +68,7 @@ class DataAttributesFilterSpec extends AsyncWordSpec with Matchers with MockitoS
           Future.successful(
             Ok(
               Json.obj(
-                "useNewServiceNavigation" -> r.attrs.get(UseNewServiceNavigation.key)
+                "useNewServiceNavigation" -> r.attrs.get(UseServiceNavigation)
               )
             )
           )
@@ -90,7 +90,7 @@ class DataAttributesFilterSpec extends AsyncWordSpec with Matchers with MockitoS
           FakeRequest("GET", path).withSession("authToken" -> "valid-token")
 
         val f: RequestHeader => Future[Result] =
-          r => Future.successful(Ok(Json.obj("useNewServiceNavigation" -> r.attrs.get(UseNewServiceNavigation.key))))
+          r => Future.successful(Ok(Json.obj("useNewServiceNavigation" -> r.attrs.get(UseServiceNavigation))))
 
         val result = dataAttributesFilter.apply(f)(request)
 
@@ -108,7 +108,7 @@ class DataAttributesFilterSpec extends AsyncWordSpec with Matchers with MockitoS
       implicit val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest("GET", "/not-excluded")
 
       val f: RequestHeader => Future[Result] =
-        r => Future.successful(Ok(Json.obj("useNewServiceNavigation" -> r.attrs.get(UseNewServiceNavigation.key))))
+        r => Future.successful(Ok(Json.obj("useNewServiceNavigation" -> r.attrs.get(UseServiceNavigation))))
 
       val result = dataAttributesFilter.apply(f)(request)
 

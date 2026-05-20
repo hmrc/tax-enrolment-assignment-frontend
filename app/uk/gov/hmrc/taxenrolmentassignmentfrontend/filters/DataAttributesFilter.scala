@@ -35,7 +35,7 @@ class DataAttributesFilter @Inject() (
 ) extends Filter
     with Logging {
 
-  private val excludedPaths: Seq[String] = Seq("/assets", "/ping/ping")
+  private val excludedPaths: Seq[String] = Seq("/assets", "/ping/ping", "/keep-alive", "/logout")
 
   private def checkIsAuthenticated(requestHeader: RequestHeader): Boolean =
     (requestHeader.session.get("authToken").isEmpty, excludedPaths.exists(requestHeader.path.contains(_))) match {

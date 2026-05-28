@@ -302,17 +302,6 @@ trait LoggingEventError {
       )
     )
 
-  def logES2ErrorFromEACD(credId: String, statusReturned: Int, eacdErrorMsg: String = "N/A"): LoggingEvent =
-    Error(
-      Event(
-        "[EACDConnector][queryEnrolmentsAssignedToUser]",
-        errorDetails = Some(
-          s"EACD returned status of $statusReturned when searching for enrolments associated with credId $credId." +
-            s"\nError Message: $eacdErrorMsg"
-        )
-      )
-    )
-
   def logES1ErrorFromEACD(enrolmentKey: String, eacdErrorMsg: String = "N/A"): LoggingEvent =
     Error(
       Event(

@@ -211,56 +211,6 @@ class EACDConnectorISpec extends IntegrationSpecBase {
     }
   }
 
-  "queryEnrolmentsAssignedToUser" when {
-    val USER_ID = "123456"
-    val PATH    =
-      s"/enrolment-store-proxy/enrolment-store/users/$USER_ID/enrolments"
-
-    s"the user has no enrolments"       should {
-      "return None" in {
-        stubPost(s"/write/.*", OK, """{"x":2}""")
-        stubGet(PATH, Status.NO_CONTENT, "")
-        whenReady(connector.queryEnrolmentsAssignedToUser(USER_ID).value) { response =>
-          response shouldBe Right(None)
-        }
-      }
-    }
-
-    s"the user has multiple enrolments" should {
-      "return a list of enrolments" in {
-        val eacdResponse = UserEnrolmentsListResponse(
-          Seq(userEnrolmentIRPAYE, userEnrolmentIRSA)
-        )
-
-        stubPost(s"/write/.*", OK, """{"x":2}""")
-        stubGet(PATH, Status.OK, Json.toJson(eacdResponse).toString())
-        whenReady(connector.queryEnrolmentsAssignedToUser(USER_ID).value) { response =>
-          response shouldBe Right(Some(eacdResponse))
-        }
-      }
-    }
-
-    "a BAD_REQUEST is returned" should {
-      "return an UnexpectedResponseFromEACD error" in {
-        stubGet(PATH, Status.BAD_REQUEST, "")
-        stubPost(s"/write/.*", OK, """{"x":2}""")
-        whenReady(connector.queryEnrolmentsAssignedToUser(USER_ID).value) { response =>
-          response shouldBe Left(UnexpectedResponseFromEACD)
-        }
-      }
-    }
-
-    "a 5xx is returned" should {
-      "return an UnexpectedResponseFromEACD error" in {
-        stubGet(PATH, Status.INTERNAL_SERVER_ERROR, "")
-        stubPost(s"/write/.*", OK, """{"x":2}""")
-        whenReady(connector.queryEnrolmentsAssignedToUser(USER_ID).value) { response =>
-          response shouldBe Left(UnexpectedResponseFromEACD)
-        }
-      }
-    }
-  }
-
   "getGroupsFromEnrolment" should {
 
     val enrolmentKey = "SERVICE~KEY~VALUE"

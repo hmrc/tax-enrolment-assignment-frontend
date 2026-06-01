@@ -42,14 +42,13 @@ class TimeOutControllerISpec extends IntegrationSpecBase {
       stubPost(s"/write/.*", OK, """{"x":2}""")
       val authResponse         = authoriseResponseJson()
       stubAuthorizePost(OK, authResponse.toString())
-      Thread.sleep(2000)
 
       val request = FakeRequest(GET, urlPathKeepAlive)
         .withSession(xAuthToken, xSessionId)
       val result  = route(app, request).get
 
       status(result) shouldBe NO_CONTENT
-      assert(getLastLoginDateTime(sessionId).isAfter(initialLastLoginDate))
+      eventually(getLastLoginDateTime(sessionId).isAfter(initialLastLoginDate))
     }
   }
 

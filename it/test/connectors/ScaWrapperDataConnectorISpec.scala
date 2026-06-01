@@ -54,7 +54,11 @@ class ScaWrapperDataConnectorISpec extends IntegrationSpecBase {
         result shouldBe false
       }
       "sca-wrapper-data service returns error response" in {
-        stubGet("/single-customer-account-wrapper-data/service-navigation/toggle", INTERNAL_SERVER_ERROR, "random response")
+        stubGet(
+          "/single-customer-account-wrapper-data/service-navigation/toggle",
+          INTERNAL_SERVER_ERROR,
+          "random response"
+        )
 
         val result = connector.serviceNavigationToggle().futureValue
         result shouldBe false

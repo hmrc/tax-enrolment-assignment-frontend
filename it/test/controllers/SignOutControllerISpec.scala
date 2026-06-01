@@ -18,7 +18,7 @@ package controllers
 
 import helpers.{IntegrationSpecBase, ItUrlPaths}
 import helpers.TestITData.{authoriseResponseJson, sessionId, xAuthToken, xSessionId}
-import play.api.test.Helpers.{GET, await, defaultAwaitTimeout, redirectLocation, route, status, writeableOf_AnyContentAsEmpty}
+import play.api.test.Helpers.{GET, LOCATION, await, defaultAwaitTimeout, redirectLocation, route, status, writeableOf_AnyContentAsEmpty}
 import play.api.http.Status.{OK, SEE_OTHER}
 import play.api.libs.json.JsString
 import play.api.test.FakeRequest
@@ -48,12 +48,16 @@ class SignOutControllerISpec extends IntegrationSpecBase {
           .withSession(xAuthToken, xSessionId)
         val result  = route(app, request).get
 
-        status(result)                   shouldBe SEE_OTHER
-        redirectLocation(result).get       should include(
-          s"/bas-gateway/sign-out-without-state?continue=${URLEncoder.encode(returnUrl, "UTF-8")}"
-        )
-        await(repository.get(sessionId)) shouldBe None
-
+        for {
+          requestResult <- result
+          cacheValue    <- repository.get(sessionId)
+        } yield {
+          requestResult.header.status                        shouldBe SEE_OTHER
+          requestResult.header.headers.getOrElse(LOCATION, "") should include(
+            s"/bas-gateway/sign-out-without-state?continue=${URLEncoder.encode(returnUrl, "UTF-8")}"
+          )
+          cacheValue                                         shouldBe None
+        }
       }
     }
 

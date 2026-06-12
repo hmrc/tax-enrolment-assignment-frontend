@@ -252,6 +252,7 @@ object TestData {
 
   def ptEnrolmentDataModel(
     saUserCred: Option[String],
+    currentAccountDetails: AccountDetails = accountDetails,
     ptAccountDetails: AccountDetails = accountDetailsWithPT,
     hasMtdit: Boolean = false
   ): PTEnrolmentOnOtherAccount = PTEnrolmentOnOtherAccount(

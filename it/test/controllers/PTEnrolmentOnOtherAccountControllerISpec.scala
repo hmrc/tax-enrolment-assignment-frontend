@@ -63,7 +63,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
           .text()      shouldBe PTEnrolmentOtherAccountMesages.saHeading
 
         val expectedAuditEvent: AuditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-          accountDetailsUserFriendly(CREDENTIAL_ID, identityProvider = ONE_LOGIN)
+          accountDetailsUserFriendly(CREDENTIAL_ID, identityProvider = ONE_LOGIN),
           accountDetailsUserFriendly(CREDENTIAL_ID_2)
         )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
 

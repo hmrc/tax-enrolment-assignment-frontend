@@ -28,7 +28,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountTypes.PT_ASSIGNE
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.*
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.*
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{ControllersBaseSpec, UrlPaths}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.ONE_LOGIN
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{ONE_LOGIN, PTEnrolmentOnOtherAccount}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
@@ -92,11 +92,12 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
           .thenReturn(Future.successful(retrievalResponse()))
 
         when(mockMultipleAccountsOrchestrator.getCurrentAndPTAAndSAIfExistsForUser(any(), any(), any()))
-          .thenReturn(createInboundResult(ptEnrolmentDataModelNone))
+          .thenReturn(createInboundResult[PTEnrolmentOnOtherAccount](ptEnrolmentDataModelNone))
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
+          accountDetails,
           accountDetailsWithPT.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM"))
         )(requestWithAccountType(randomAccountType), messagesApi)
 
@@ -134,7 +135,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
           .thenReturn(Future.successful(retrievalResponse(enrolments = saEnrolmentOnly)))
 
         when(mockMultipleAccountsOrchestrator.getCurrentAndPTAAndSAIfExistsForUser(any(), any(), any()))
-          .thenReturn(createInboundResult(ptEnrolmentModel))
+          .thenReturn(createInboundResult[PTEnrolmentOnOtherAccount](ptEnrolmentModel))
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
@@ -173,12 +174,12 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
           .thenReturn(Future.successful(retrievalResponse(enrolments = saEnrolmentOnly)))
 
         when(mockMultipleAccountsOrchestrator.getCurrentAndPTAAndSAIfExistsForUser(any(), any(), any()))
-          .thenReturn(createInboundResult(ptEnrolmentModel))
+          .thenReturn(createInboundResult[PTEnrolmentOnOtherAccount](ptEnrolmentModel))
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-          testAccountDetailsWithSA,
+          testAccountDetailsWithSAOL,
           accountDetailsWithPTOL.copy(lastLoginDate =
             Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM")
           )
@@ -208,21 +209,22 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
       }
       "render the pt on another page with Access SA text and mixed identity provider (logged in gg, PT on OL) messaging" in {
 
-        val ptEnrolmentModel = ptEnrolmentDataModel(Some(USER_ID), accountDetailsWithPTOL)
-
         when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse(enrolments = saEnrolmentOnly)))
 
         when(mockMultipleAccountsOrchestrator.getCurrentAndPTAAndSAIfExistsForUser(any(), any(), any()))
-          .thenReturn(createInboundResult(ptEnrolmentModel))
+          .thenReturn(
+            createInboundResult[PTEnrolmentOnOtherAccount](
+              ptEnrolmentDataModelOL(Some(CREDENTIAL_ID))
+                .copy(currentAccountDetails = accountDetailsSA.copy(lastLoginDate = Some("2022-02-27T12:00:27Z")))
+            )
+          )
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-          testAccountDetailsWithSA,
-          accountDetailsWithPTOL.copy(lastLoginDate =
-            Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM")
-          )
+          testAccountDetailsWithSA.copy(lastLoginDate = Some("27 February 2022 at 12:00PM")),
+          accountDetailsWithPTOL.copy(lastLoginDate = Some("27 February 2022 at 12:00PM"))
         )(requestWithAccountType(randomAccountType), messagesApi)
 
         when(mockAuditHandler.audit(ameq(auditEvent))(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
@@ -255,7 +257,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
           .thenReturn(Future.successful(retrievalResponse(enrolments = saEnrolmentOnly)))
 
         when(mockMultipleAccountsOrchestrator.getCurrentAndPTAAndSAIfExistsForUser(any(), any(), any()))
-          .thenReturn(createInboundResult(ptEnrolmentModel))
+          .thenReturn(createInboundResult[PTEnrolmentOnOtherAccount](ptEnrolmentModel))
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
@@ -288,19 +290,22 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
       }
       "render the pt on another page with Access SA text and One Login messaging" in {
 
-        val ptEnrolmentModel = ptEnrolmentDataModel(Some(USER_ID))
+        val ptEnrolmentModel = ptEnrolmentDataModelOL(
+          Some(USER_ID),
+          ptAccountDetails = accountDetailsWithPTOL
+        )
 
         when(mockAuthConnector.authorise(ameq(predicates), ameq(retrievals))(any[HeaderCarrier], any[ExecutionContext]))
           .thenReturn(Future.successful(retrievalResponse(enrolments = saEnrolmentOnly)))
 
         when(mockMultipleAccountsOrchestrator.getCurrentAndPTAAndSAIfExistsForUser(any(), any(), any()))
-          .thenReturn(createInboundResult(ptEnrolmentModel))
+          .thenReturn(createInboundResult[PTEnrolmentOnOtherAccount](ptEnrolmentModel))
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
-          accountDetailsSA.copy(identityProviderType = ONE_LOGIN),
-          accountDetailsWithPT.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM"))
+          accountDetailsOL.copy(lastLoginDate = Some("27 February 2022 at 12:00PM")),
+          accountDetailsWithPTOL.copy(lastLoginDate = Some("27 February 2022 at 12:00PM"))
         )(requestWithAccountType(randomAccountType), messagesApi)
 
         when(mockAuditHandler.audit(ameq(auditEvent))(any[HeaderCarrier])).thenReturn(Future.successful((): Unit))
@@ -309,7 +314,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
           .apply(buildFakeRequestWithSessionId("GET", "Not Used"))
 
         status(result) shouldBe OK
-//        contentAsString(result) shouldBe viewMultipleGG(
+//        contentAsString(result) shouldBe viewMultipleOL(
 //          ptEnrolmentModel.copy(
 //            currentAccountDetails = ptEnrolmentModel.currentAccountDetails.copy(lastLoginDate =
 //              Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM")
@@ -317,8 +322,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
 //            ptAccountDetails = ptEnrolmentModel.ptAccountDetails.copy(lastLoginDate =
 //              Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM")
 //            )
-//          ),
-//          "id"
+//          )
 //        )(
 //          fakeRequest,
 //          messages
@@ -336,7 +340,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
           .thenReturn(Future.successful(retrievalResponse(enrolments = saEnrolmentOnly)))
 
         when(mockMultipleAccountsOrchestrator.getCurrentAndPTAAndSAIfExistsForUser(any(), any(), any()))
-          .thenReturn(createInboundResult(ptEnrolmentModel))
+          .thenReturn(createInboundResult[PTEnrolmentOnOtherAccount](ptEnrolmentModel))
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
@@ -378,7 +382,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
           .thenReturn(Future.successful(retrievalResponse(enrolments = saEnrolmentOnly)))
 
         when(mockMultipleAccountsOrchestrator.getCurrentAndPTAAndSAIfExistsForUser(any(), any(), any()))
-          .thenReturn(createInboundResult(ptEnrolmentModel))
+          .thenReturn(createInboundResult[PTEnrolmentOnOtherAccount](ptEnrolmentModel))
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
@@ -420,7 +424,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
           .thenReturn(Future.successful(retrievalResponse(enrolments = saEnrolmentOnly)))
 
         when(mockMultipleAccountsOrchestrator.getCurrentAndPTAAndSAIfExistsForUser(any(), any(), any()))
-          .thenReturn(createInboundResult(ptEnrolmentModel))
+          .thenReturn(createInboundResult[PTEnrolmentOnOtherAccount](ptEnrolmentModel))
 
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 

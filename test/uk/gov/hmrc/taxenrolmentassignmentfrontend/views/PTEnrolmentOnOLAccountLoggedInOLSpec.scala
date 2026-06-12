@@ -43,13 +43,13 @@ class PTEnrolmentOnOLAccountLoggedInOLSpec extends ViewSpecHelper {
   )
 
   val htmlWithSA =
-    view(ptEnrolmentDataModelOL(Some(CREDENTIAL_ID_1), testAccountDetailsWithSAOL))(
+    view(ptEnrolmentDataModelOL(Some(CREDENTIAL_ID_1), ptAccountDetails = testAccountDetailsWithSAOL))(
       FakeRequest(),
       testMessages
     )
 
   val htmlWithSAAndMtdit =
-    view(ptEnrolmentDataModelOL(Some(CREDENTIAL_ID_1), testAccountDetailsWithSA, hasMtdit = true))(
+    view(ptEnrolmentDataModelOL(Some(CREDENTIAL_ID_1), ptAccountDetails = testAccountDetailsWithSA, hasMtdit = true))(
       FakeRequest(),
       testMessages
     )

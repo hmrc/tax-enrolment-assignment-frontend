@@ -256,7 +256,7 @@ object TestData {
     ptAccountDetails: AccountDetails = accountDetailsWithPT,
     hasMtdit: Boolean = false
   ): PTEnrolmentOnOtherAccount = PTEnrolmentOnOtherAccount(
-    currentAccountDetails = accountDetails,
+    currentAccountDetails = currentAccountDetails,
     ptAccountDetails = ptAccountDetails,
     saUserCred = saUserCred,
     hasMtdit
@@ -264,10 +264,11 @@ object TestData {
 
   def ptEnrolmentDataModelOL(
     saUserCred: Option[String],
+    currentAccountDetails: AccountDetails = accountDetailsOL,
     ptAccountDetails: AccountDetails = accountDetailsWithPTOL,
     hasMtdit: Boolean = false
   ): PTEnrolmentOnOtherAccount = PTEnrolmentOnOtherAccount(
-    currentAccountDetails = accountDetailsOL,
+    currentAccountDetails = currentAccountDetails,
     ptAccountDetails = ptAccountDetails,
     saUserCred = saUserCred,
     hasMtdit

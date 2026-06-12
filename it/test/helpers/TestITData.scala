@@ -165,10 +165,11 @@ object TestITData {
 
   def accountDetailsUserFriendly(
     credId: String,
-    userId: String = USER_ID
+    userId: String = USER_ID,
+    identityProvider: IdentityProviderType
   ): AccountDetails =
     AccountDetails(
-      identityProviderType = SCP,
+      identityProviderType = identityProvider,
       credId,
       userId,
       Some(SensitiveString("email1@test.com")),
@@ -177,8 +178,8 @@ object TestITData {
       None
     )
 
-  def usersGroupSearchResponsePTEnrolment(userId: String = "********1234"): UsersGroupResponse =
-    usersGroupSearchResponse.copy(obfuscatedUserId = Some(userId))
+  def usersGroupSearchResponsePTEnrolment(userId: String = "********1234", identityProviderType: IdentityProviderType = SCP): UsersGroupResponse =
+    usersGroupSearchResponse.copy(identityProviderType = identityProviderType, obfuscatedUserId = Some(userId))
 
   def accountDetailsUnUserFriendly(credId: String): AccountDetails =
     AccountDetails(

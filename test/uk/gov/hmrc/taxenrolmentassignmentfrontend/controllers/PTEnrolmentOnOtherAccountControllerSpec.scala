@@ -16,18 +16,19 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers
 
-import org.mockito.ArgumentMatchers.{any, eq => ameq}
+import org.mockito.ArgumentMatchers.{any, eq as ameq}
 import org.mockito.Mockito.{times, verify, when}
 import play.api.Application
 import play.api.inject.{Binding, bind}
 import play.api.mvc.BodyParsers
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountTypes.PT_ASSIGNED_TO_OTHER_USER
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors._
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.*
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.TestData.*
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.helpers.{ControllersBaseSpec, UrlPaths}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.ONE_LOGIN
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.orchestrators.{AccountCheckOrchestrator, MultipleAccountsOrchestrator}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.{AuditEvent, AuditHandler}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.TEASessionCache
@@ -138,6 +139,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
+          testAccountDetailsWithSA,
           accountDetailsWithPT.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM"))
         )(requestWithAccountType(randomAccountType), messagesApi)
 
@@ -176,6 +178,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
+          testAccountDetailsWithSA,
           accountDetailsWithPTOL.copy(lastLoginDate =
             Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM")
           )
@@ -216,6 +219,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
+          testAccountDetailsWithSA,
           accountDetailsWithPTOL.copy(lastLoginDate =
             Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM")
           )
@@ -256,6 +260,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
+          testAccountDetailsWithSA.copy(identityProviderType = ONE_LOGIN),
           accountDetailsWithPT.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM"))
         )(requestWithAccountType(randomAccountType), messagesApi)
 
@@ -294,6 +299,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
+          accountDetailsSA.copy(identityProviderType = ONE_LOGIN),
           accountDetailsWithPT.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM"))
         )(requestWithAccountType(randomAccountType), messagesApi)
 
@@ -335,6 +341,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
+          accountDetailsSA,
           accountDetailsWithPT.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM"))
         )(requestWithAccountType(randomAccountType), messagesApi)
 
@@ -376,6 +383,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
+          accountDetails,
           accountDetailsWithPT.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM"))
         )(requestWithAccountType(randomAccountType), messagesApi)
 
@@ -417,6 +425,7 @@ class PTEnrolmentOnOtherAccountControllerSpec extends ControllersBaseSpec {
         mockGetDataFromCacheForActionSuccess(randomAccountType)
 
         val auditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
+          accountDetails,
           accountDetailsWithPT.copy(lastLoginDate = Some(s"27 February 2022 ${messages("common.dateToTime")} 12:00PM"))
         )(requestWithAccountType(randomAccountType), messagesApi)
 

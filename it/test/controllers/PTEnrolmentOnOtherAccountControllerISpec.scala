@@ -18,10 +18,10 @@ package controllers
 
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import helpers.{IntegrationSpecBase, ItUrlPaths}
-import helpers.TestITData._
+import helpers.TestITData.*
 import play.api.test.Helpers.{GET, await, contentAsString, defaultAwaitTimeout, redirectLocation, route}
 import play.api.test.Helpers.{status, writeableOf_AnyContentAsEmpty}
-import helpers.messages._
+import helpers.messages.*
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import play.api.http.Status.{INTERNAL_SERVER_ERROR, OK, SEE_OTHER}
@@ -29,7 +29,7 @@ import play.api.libs.json.{JsString, Json}
 import play.api.mvc.{AnyContentAsEmpty, Result}
 import play.api.test.FakeRequest
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.AccountTypes.{MULTIPLE_ACCOUNTS, PT_ASSIGNED_TO_CURRENT_USER, PT_ASSIGNED_TO_OTHER_USER, SA_ASSIGNED_TO_CURRENT_USER, SA_ASSIGNED_TO_OTHER_USER, SINGLE_ACCOUNT}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountTypes, UsersAssignedEnrolment}
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.models.{AccountTypes, ONE_LOGIN, UsersAssignedEnrolment}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.reporting.AuditEvent
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.repository.SessionKeys.{USER_ASSIGNED_PT_ENROLMENT, USER_ASSIGNED_SA_ENROLMENT}
 
@@ -40,11 +40,11 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
   val urlPath: String = ItUrlPaths.ptOnOtherAccountPath
 
   s"GET $urlPath" when {
-    "the signed in user has SA enrolment in session and PT enrolment on another account" should {
+    "the signed in user has SA enrolment in session on a one login account, and PT enrolment on another SCP account" should {
       s"render the pt on another account page" in new DataAndMockSetup {
         saveDataToCache(optSAEnrolledCredential = None)
         stubAuthoriseSuccess(true)
-        stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse)
+        stubUserGroupSearchSuccess(CREDENTIAL_ID, usersGroupSearchResponse.copy(identityProviderType = ONE_LOGIN))
         stubUserGroupSearchSuccess(
           CREDENTIAL_ID_2,
           usersGroupSearchResponsePTEnrolment(USER_ID)
@@ -63,6 +63,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
           .text()      shouldBe PTEnrolmentOtherAccountMesages.saHeading
 
         val expectedAuditEvent: AuditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
+          accountDetailsUserFriendly(CREDENTIAL_ID, identityProvider = ONE_LOGIN)
           accountDetailsUserFriendly(CREDENTIAL_ID_2)
         )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
 

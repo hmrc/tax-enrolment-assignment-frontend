@@ -91,6 +91,7 @@ class PTEnrolmentOnOtherAccountControllerISpec extends IntegrationSpecBase {
         page.getElementsByClass("govuk-heading-m").text().isEmpty
 
         val expectedAuditEvent: AuditEvent = AuditEvent.auditPTEnrolmentOnOtherAccount(
+          accountDetailsUserFriendly(CREDENTIAL_ID),
           accountDetailsUserFriendly(CREDENTIAL_ID_2)
         )(requestWithAccountType(PT_ASSIGNED_TO_OTHER_USER), messagesApi)
 

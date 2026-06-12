@@ -166,7 +166,7 @@ object TestITData {
   def accountDetailsUserFriendly(
     credId: String,
     userId: String = USER_ID,
-    identityProvider: IdentityProviderType
+    identityProvider: IdentityProviderType = SCP
   ): AccountDetails =
     AccountDetails(
       identityProviderType = identityProvider,
@@ -178,7 +178,10 @@ object TestITData {
       None
     )
 
-  def usersGroupSearchResponsePTEnrolment(userId: String = "********1234", identityProviderType: IdentityProviderType = SCP): UsersGroupResponse =
+  def usersGroupSearchResponsePTEnrolment(
+    userId: String = "********1234",
+    identityProviderType: IdentityProviderType = SCP
+  ): UsersGroupResponse =
     usersGroupSearchResponse.copy(identityProviderType = identityProviderType, obfuscatedUserId = Some(userId))
 
   def accountDetailsUnUserFriendly(credId: String): AccountDetails =

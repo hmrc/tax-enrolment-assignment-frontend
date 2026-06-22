@@ -200,7 +200,7 @@ class MultipleAccountsOrchestratorSpec extends BaseSpec {
             implicitly
           )
         whenReady(res.value) { result =>
-          result shouldBe Right(ptEnrolmentDataModel(None, accountDetailsWithPT.copy(hasSA = None)))
+          result shouldBe Right(ptEnrolmentDataModel(None, ptAccountDetails = accountDetailsWithPT.copy(hasSA = None)))
         }
       }
     }

@@ -57,7 +57,8 @@ object AuditEvent {
     )
   }
 
-  def auditPTEnrolmentOnOtherAccount(enrolledAccountDetails: AccountDetails)(implicit
+  def auditPTEnrolmentOnOtherAccount(currentAccountDetails: AccountDetails, enrolledAccountDetails: AccountDetails)(
+    implicit
     request: RequestWithUserDetailsFromSessionAndMongo[_],
     messagesApi: MessagesApi
   ): AuditEvent = {
@@ -66,6 +67,7 @@ object AuditEvent {
       auditType = "EnrolledOnAnotherAccount",
       transactionName = "enrolled-on-another-account",
       detail = getDetailsForEnrolmentOnAnotherAccount(
+        currentAccountDetails,
         enrolledAccountDetails
       )
     )
@@ -158,6 +160,7 @@ object AuditEvent {
     }
   }
   private def getDetailsForEnrolmentOnAnotherAccount(
+    currentAccountDetails: AccountDetails,
     enrolledAccountDetails: AccountDetails
   )(implicit request: RequestWithUserDetailsFromSessionAndMongo[_], messagesApi: MessagesApi, lang: Lang): JsObject = {
     val userDetails: UserDetailsFromSession = request.userDetails
@@ -166,7 +169,7 @@ object AuditEvent {
       "currentAccount"  -> getCurrentAccountJson(
         userDetails,
         request.accountDetailsFromMongo.accountType,
-        Some(enrolledAccountDetails)
+        Some(currentAccountDetails)
       ),
       "enrolledAccount" -> getPresentedAccountJson(enrolledAccountDetails)
     )

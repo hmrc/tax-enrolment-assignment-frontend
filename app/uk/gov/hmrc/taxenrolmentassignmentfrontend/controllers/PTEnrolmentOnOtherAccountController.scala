@@ -63,14 +63,19 @@ class PTEnrolmentOnOtherAccountController @Inject() (
       val res = multipleAccountsOrchestrator.getCurrentAndPTAAndSAIfExistsForUser
       res.value.map {
         case Right(accountDetails) =>
-          val accountFriendlyDetails = AccountDetails.userFriendlyAccountDetails(accountDetails.ptAccountDetails)
+          val accountFriendlyCurrentDetails  =
+            AccountDetails.userFriendlyAccountDetails(accountDetails.currentAccountDetails)
+          val accountFriendlyEnrolledDetails =
+            AccountDetails.userFriendlyAccountDetails(accountDetails.ptAccountDetails)
           auditHandler
-            .audit(AuditEvent.auditPTEnrolmentOnOtherAccount(accountFriendlyDetails))
+            .audit(
+              AuditEvent.auditPTEnrolmentOnOtherAccount(accountFriendlyCurrentDetails, accountFriendlyEnrolledDetails)
+            )
           Ok(
             pageHandler(
               PTEnrolmentOnOtherAccount(
-                AccountDetails.userFriendlyAccountDetails(accountDetails.currentAccountDetails),
-                accountFriendlyDetails,
+                accountFriendlyCurrentDetails,
+                accountFriendlyEnrolledDetails,
                 accountDetails.saUserCred.map(AccountDetails.trimmedUserId),
                 accountDetails.currentAccountHasMTDIT
               )

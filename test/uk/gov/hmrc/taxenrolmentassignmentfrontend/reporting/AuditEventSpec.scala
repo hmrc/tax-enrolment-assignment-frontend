@@ -511,6 +511,7 @@ class AuditEventSpec extends BaseSpec {
           )
 
         AuditEvent.auditPTEnrolmentOnOtherAccount(
+          accountDetails,
           accountDetailsWithOneMFADetails
         )(requestWithMongoAndAccountType, messagesApi) shouldEqual expectedAuditEvent
       }
@@ -525,7 +526,7 @@ class AuditEventSpec extends BaseSpec {
             isAccountDetailsProviderNeeded = true
           )
 
-        AuditEvent.auditPTEnrolmentOnOtherAccount(accountDetailsNoEmailOrMFA)(
+        AuditEvent.auditPTEnrolmentOnOtherAccount(accountDetails, accountDetailsNoEmailOrMFA)(
           requestWithMongoAndAccountType,
           messagesApi
         ) shouldEqual expectedAuditEvent
@@ -541,7 +542,7 @@ class AuditEventSpec extends BaseSpec {
             isAccountDetailsProviderNeeded = true
           )
 
-        AuditEvent.auditPTEnrolmentOnOtherAccount(accountDetailsNoEmail)(
+        AuditEvent.auditPTEnrolmentOnOtherAccount(accountDetails, accountDetailsNoEmail)(
           requestWithMongoAndAccountType,
           messagesApi
         ) shouldEqual expectedAuditEvent
@@ -557,7 +558,7 @@ class AuditEventSpec extends BaseSpec {
             isAccountDetailsProviderNeeded = true
           )
 
-        AuditEvent.auditPTEnrolmentOnOtherAccount(accountDetailsNoMFA)(
+        AuditEvent.auditPTEnrolmentOnOtherAccount(accountDetails, accountDetailsNoMFA)(
           requestWithMongoAndAccountType,
           messagesApi
         ) shouldEqual expectedAuditEvent
@@ -580,6 +581,7 @@ class AuditEventSpec extends BaseSpec {
           )
 
         AuditEvent.auditPTEnrolmentOnOtherAccount(
+          accountDetails,
           accountDetailsWithThreeMFADetails
         )(requestWithMongoAndAccountType, messagesApi) shouldEqual expectedAuditEvent
       }
@@ -596,6 +598,7 @@ class AuditEventSpec extends BaseSpec {
           )
 
         AuditEvent.auditPTEnrolmentOnOtherAccount(
+          accountDetails,
           accountDetailsWithOneMFADetails
         )(requestWithMongoAndAccountTypeLangCY, messagesApi) shouldEqual expectedAuditEvent
       }
@@ -611,7 +614,7 @@ class AuditEventSpec extends BaseSpec {
             isAccountDetailsProviderNeeded = true
           )
 
-        AuditEvent.auditPTEnrolmentOnOtherAccount(accountDetailsNoEmailOrMFA)(
+        AuditEvent.auditPTEnrolmentOnOtherAccount(accountDetails, accountDetailsNoEmailOrMFA)(
           requestWithMongoAndAccountTypeLangCY,
           messagesApi
         ) shouldEqual expectedAuditEvent
@@ -628,7 +631,7 @@ class AuditEventSpec extends BaseSpec {
             isAccountDetailsProviderNeeded = true
           )
 
-        AuditEvent.auditPTEnrolmentOnOtherAccount(accountDetailsNoEmail)(
+        AuditEvent.auditPTEnrolmentOnOtherAccount(accountDetails, accountDetailsNoEmail)(
           requestWithMongoAndAccountTypeLangCY,
           messagesApi
         ) shouldEqual expectedAuditEvent
@@ -645,7 +648,7 @@ class AuditEventSpec extends BaseSpec {
             isAccountDetailsProviderNeeded = true
           )
 
-        AuditEvent.auditPTEnrolmentOnOtherAccount(accountDetailsNoMFA)(
+        AuditEvent.auditPTEnrolmentOnOtherAccount(accountDetails, accountDetailsNoMFA)(
           requestWithMongoAndAccountTypeLangCY,
           messagesApi
         ) shouldEqual expectedAuditEvent
@@ -670,6 +673,7 @@ class AuditEventSpec extends BaseSpec {
           )
 
         AuditEvent.auditPTEnrolmentOnOtherAccount(
+          accountDetails,
           accountDetailsWithThreeMFADetails
         )(requestWithMongoAndAccountTypeLangCY, messagesApi) shouldEqual expectedAuditEvent
       }

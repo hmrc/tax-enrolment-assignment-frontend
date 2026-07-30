@@ -81,6 +81,35 @@ Accepts the same JSON format and deletes the supplied accounts, enrolments, and 
 | 200 | Account successfully deleted |
 | 500 | Unrecoverable error, possibly invalid JSON submitted |
 
+### POST `/protect-tax-info/test-only/insert-user`
+
+Accepts user data in JSON format and inserts the supplied accounts and enrolments. Differs from `create` in that it does not delete existing records first.
+
+| Status code | Description |
+| --- | --- |
+| 200 | Account successfully inserted |
+| 400 | Invalid JSON submitted |
+| 500 | Unrecoverable error |
+
+### POST `/protect-tax-info/test-only/success`
+
+Submits a pre-selected test user scenario (referenced by form submission from `select-user` page).
+
+| Status code | Description |
+| --- | --- |
+| 200 | User data successfully loaded |
+| 400 | Invalid form submission |
+| 500 | Unrecoverable error |
+
+### GET `/protect-tax-info/test-only/successful`
+
+Verifies that the current authenticated user has the HMRC-PT enrolment assigned to their credential ID. Used to validate successful journey completion.
+
+| Status code | Description |
+| --- | --- |
+| 200 | User has HMRC-PT enrolment assigned to their credential |
+| 500 | User does not have HMRC-PT enrolment or authentication error |
+
 ## API
 
 | Path | Supported methods | Type | Description |

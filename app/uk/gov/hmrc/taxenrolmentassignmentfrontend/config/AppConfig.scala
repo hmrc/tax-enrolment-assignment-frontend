@@ -54,7 +54,4 @@ class AppConfig @Inject() (val config: ServicesConfig) {
   lazy val contactOneLoginFraud = config.getString("contactFraud.oneLogin")
   lazy val contactGGFraud       = config.getString("contactFraud.gg")
   lazy val ptaHomePage          = config.getString("external-url.personal-tax-account.host")
-
-  lazy val scaWrapperDataUrl =
-    s"${config.baseUrl("single-customer-account-wrapper-data")}/single-customer-account-wrapper-data"
 }

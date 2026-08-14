@@ -23,10 +23,9 @@ import javax.inject.{Inject, Singleton}
 
 @Singleton
 class Filters @Inject() (
-  defaultFilters: EnabledFilters,
-  dataAttributesFilter: DataAttributesFilter
+  defaultFilters: EnabledFilters
 ) extends HttpFilters {
 
   override val filters: Seq[EssentialFilter] =
-    defaultFilters.filters ++ Some(dataAttributesFilter)
+    defaultFilters.filters
 }

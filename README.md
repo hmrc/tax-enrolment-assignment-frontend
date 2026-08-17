@@ -1,117 +1,140 @@
-
 # Tax Enrolment Assignment Frontend
-## How it works
-https://confluence.tools.tax.service.gov.uk/pages/viewpage.action?spaceKey=TEN&title=How+Tax+Enrolment+Assignment+Frontend+works
 
-## For a NEW service to requiring to integrate with us 
-- YOU MUST, get in contact with the team that owns this service, we will need to allow the http host if needed and increase our performance tests JPS to take into account your additional users being sent to us.
-- They must start their journey on  `/protect-tax-info?redirectUrl=<providing-a-url-desitination-of-where-users-should-be-redirected-to>`
-- where redirectUrl should be URL encoded such as `/protect-tax-info?redirectUrl=%2FurlHere`
+This service provides the frontend endpoint for the Tax Enrolment Assignment journey. It lets users protect tax information and manages the redirects used to connect users with downstream services and test-only journeys.
 
-## Development Setup for LOCAL RUNNING (to walk the journey)
-- Run with test endpoints: `sbt 'run -Dapplication.router=testOnlyDoNotUseInAppConf.Routes'`
-- use the supporting endpoint https://localhost:7750/protect-tax-info/test-only/select-user.
+## Summary
 
-## Tests
-Run local tests here utilising plugins and coverage requirements `sbt clean coverage test it/test coverageReport scalastyle`
+This service provides:
 
-Run Journey Tests: see [here](https://github.com/hmrc/tax-enrolment-assignment-journey-tests)
+* the main `/protect-tax-info` journey entry point
+* test-only endpoints for creating and deleting user and enrolment data
+* support for Government Gateway and One Login test journeys
+* redirect validation for the URLs used by downstream services
 
-Run Performance Tests see [here](https://github.com/hmrc/tax-enrolment-assignment-performance-tests)
+## Requirements
 
-## Test Only Endpoints
-There are 3 test only endpoints that can be used to add test data to use the service and all downstream APIs that the service relies upon such as enrolment store, BAS stubs, one-login stubs etc. And one to delete from all the same APIs. 2 are UI based and the others are POST routes
+This service is written in [Scala 3.x](http://www.scala-lang.org/) and [Play 3.x](http://playframework.com/), so needs at least a [JRE 21](http://www.oracle.com/technetwork/java/javase/downloads/index.html) to run.
 
-### GET /protect-tax-info/test-only/select-user
-The select-user endpoint presents a page with 22 preset user details, with a range of scenarios for both Government Gateway and One Login users, these include:
-- Single Account with no enrolments
-- Single Account with IR-SA enrolment
-- Multiple Accounts with no enrolments
-- Multiple Account, each with varying enrolments between none, HMRC-PT and IR-SA
+## How to test the project
 
-After selecting and succesfully submitting a user, you will be taken to a success page that will let you easily log in to the service with any of the accounts added.
+### Unit tests
 
-### GET /protect-tax-info/test-only/insert-user
-The insert-user end-point provides a more open UI solution to enter data, here you can input data in the text area in the following format, which is an example of a user with one account with an IR-SA enrolment:
-```json
-[
-{
-  "nino":"<nino>",
-  "affinityGroup":"Individual",
-  "additionalFactors":[
-    {
-      "factorType":"totp",
-      "name":"HMRC App"
-    },
-    {
-      "factorType": "voiceCall",
-      "phoneNumber": "01234567890",
-      "name": "voice call"
-    },
-    {
-      "factorType": "sms",
-      "phoneNumber": "01234567890",
-      "name": "Text Messages"
-    }
-  ],
-  "groupId":"<group-id>",
-  "enrolments":[{
-    "verifiers":[
-      {
-        "key":"Postcode",
-        "value":"postcode"
-      }, {
-        "key":"NINO",
-        "value":"<nino>"
-      }],
-    "state":"Activated",
-    "serviceName":"IR-SA",
-    "identifiers":{
-      "key":"UTR",
-      "value":"<UTR-value>"
-    },
-    "enrolmentType":"principal",
-    "enrolmentFriendlyName":"IR-SA Enrolment"
-  }],
-  "identityProviderType":"<Login Provider Value>",
-  "user":{
-    "credId":"<cred-id>",
-    "name":"Firstname Surname", 
-    "email":"email9@test.com", 
-    "description":"Description", 
-    "credentialRole":"Admin"
-  }
-}]
-```
+* Run the full unit test suite: `sbt test`
+* Run a single spec file: `sbt "test:testOnly *fileName"`  
+  For example: `sbt "test:testOnly *AccountCheckControllerSpec"`
 
-### POST /protect-tax-info/test-only/create
-The /create POST route will accept the same JSON format as the /insert-data route listed above but can be used with a direct POST call rather than through a UI, it will first delete the records of the account given, then submit all the data.
+### Integration tests
 
-| StatusCode | Description                                                                        |
-|------------|------------------------------------------------------------------------------------|
-| 200        | Account successfully added                                                         |
-| 500        | There was an unrecoverable error, possibly invalid JSON submitted
+* Run the integration test suite: `sbt it/test`
 
-### POST /protect-tax-info/test-only/delete
-POST /delete will accept the same JSON format account data as the two above routes and will delete all of the accounts, enrolments and related data that is provided
+### Acceptance tests
 
-| StatusCode | Description                                                       |
-|------------|-------------------------------------------------------------------|
-| 200        | Account successfully deleted                                      |
-| 500        | There was an unrecoverable error, possibly invalid JSON submitted
+To verify the acceptance tests locally:
 
+1. Start the sm2 container for the TAI profile: `sm2 --start TAI_ALL`
+2. Stop the `TAI_FRONTEND` process running in sm2: `sm2 --stop TAI_FRONTEND`
+3. Run the service with test endpoints: `sbt "run -Dapplication.router=testOnlyDoNotUseInAppConf.Routes"`
+4. In the `tai-acceptance-test-suite` repository, run: `./run_specs_local.sh`
+
+## Development setup
+
+To walk the journey locally, run the service with test endpoints:
+
+`sbt 'run -Dapplication.router=testOnlyDoNotUseInAppConf.Routes'`
+
+Then use the test-only user selection page:
+
+`http://localhost:7750/protect-tax-info/test-only/select-user`
+
+## Test-only endpoints
+
+The service provides test-only endpoints for loading and removing account data used by the service and its downstream dependencies.
+
+### GET `/protect-tax-info/test-only/select-user`
+
+Shows preset user scenarios for Government Gateway and One Login accounts, including:
+
+* single account with no enrolments
+* single account with IR-SA enrolment
+* multiple accounts with no enrolments
+* multiple accounts with varying enrolments between none, HMRC-PT, and IR-SA
+
+### GET `/protect-tax-info/test-only/insert-user`
+
+Provides a UI for entering user data in JSON format.
+
+### POST `/protect-tax-info/test-only/create`
+
+Accepts the same JSON format as `insert-user`, deletes any existing records for the account, and then creates the supplied data.
+
+| Status code | Description |
+| --- | --- |
+| 200 | Account successfully added |
+| 500 | Unrecoverable error, possibly invalid JSON submitted |
+
+### POST `/protect-tax-info/test-only/delete`
+
+Accepts the same JSON format and deletes the supplied accounts, enrolments, and related data.
+
+| Status code | Description |
+| --- | --- |
+| 200 | Account successfully deleted |
+| 500 | Unrecoverable error, possibly invalid JSON submitted |
+
+### POST `/protect-tax-info/test-only/insert-user`
+
+Accepts user data in JSON format and inserts the supplied accounts and enrolments. Differs from `create` in that it does not delete existing records first.
+
+| Status code | Description |
+| --- | --- |
+| 200 | Account successfully inserted |
+| 400 | Invalid JSON submitted |
+| 500 | Unrecoverable error |
+
+### POST `/protect-tax-info/test-only/success`
+
+Submits a pre-selected test user scenario (referenced by form submission from `select-user` page).
+
+| Status code | Description |
+| --- | --- |
+| 200 | User data successfully loaded |
+| 400 | Invalid form submission |
+| 500 | Unrecoverable error |
+
+### GET `/protect-tax-info/test-only/successful`
+
+Verifies that the current authenticated user has the HMRC-PT enrolment assigned to their credential ID. Used to validate successful journey completion.
+
+| Status code | Description |
+| --- | --- |
+| 200 | User has HMRC-PT enrolment assigned to their credential |
+| 500 | User does not have HMRC-PT enrolment or authentication error |
 
 ## API
 
-| Path                                                         | Supported Methods | Type | Description                                             |
-|--------------------------------------------------------------|:-----------------:|:-----|---------------------------------------------------------|
-| `/protect-tax-info/redirectUrl=<urlHere>`                    |        GET        | Prod | Main endpoint for users to start their journey          |
+| Path | Supported methods | Type | Description |
+| --- | --- | --- | --- |
+| `/protect-tax-info?redirectUrl=<urlHere>` | GET | Prod | Main endpoint for users to start their journey |
 
-## Audits
-https://confluence.tools.tax.service.gov.uk/display/TEN/CIP+Assessment+tracker+-+TENINO
+## Acronyms
 
-## Encryption
-The result of UGS contains an email address which we display to the user, we encrypt this when we store it in mongo
+In the context of this service we use the following acronyms:
 
-### License
-This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html").
+* [API]: Application Programming Interface
+* [JRE]: Java Runtime Environment
+* [JSON]: JavaScript Object Notation
+* [NPS]: National Insurance and PAYE Service
+* [URL]: Uniform Resource Locator
+* [UGS]: Users Groups Search
+
+## License
+
+This code is open source software licensed under the [Apache 2.0 License](http://www.apache.org/licenses/LICENSE-2.0.html).
+
+[Apache 2.0 License]: http://www.apache.org/licenses/LICENSE-2.0.html
+[API]: https://en.wikipedia.org/wiki/Application_programming_interface
+[JRE]: http://www.oracle.com/technetwork/java/javase/overview/index.html
+[JSON]: http://json.org/
+[NPS]: http://www.publications.parliament.uk/pa/cm201012/cmselect/cmtreasy/731/73107.htm
+[URL]: https://en.wikipedia.org/wiki/Uniform_Resource_Locator
+[UGS]: https://github.com/hmrc/users-groups-search

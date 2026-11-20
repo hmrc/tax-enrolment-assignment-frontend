@@ -1,12 +1,14 @@
 # Tax Enrolment Assignment Frontend
 
-This service provides the frontend endpoint for the Tax Enrolment Assignment journey. It lets users protect tax information and manages the redirects used to connect users with downstream services and test-only journeys.
+Tax Enrolment Assignment Frontend (TENs) checks which Government Gateway or One Login user IDs are linked to a user's National Insurance number. It assigns the HMRC-PT (Personal Tax Account) enrolment to the right user ID and helps users who have Self Assessment (IR-SA) or MTD IT on a different user ID. Services such as the Personal Tax Account send users here, and TENs returns them to the `redirectUrl` they came from.
 
 ## Summary
 
 This service provides:
 
 * the main `/protect-tax-info` journey entry point
+* pages for users with more than one user ID, including choosing where to keep Self Assessment access and reporting a user ID they don't recognise
+* integration with EACD (via enrolment-store-proxy), tax-enrolments and users-groups-search
 * test-only endpoints for creating and deleting user and enrolment data
 * support for Government Gateway and One Login test journeys
 * redirect validation for the URLs used by downstream services
@@ -20,31 +22,41 @@ This service is written in [Scala 3.x](http://www.scala-lang.org/) and [Play 3.x
 ### Unit tests
 
 * Run the full unit test suite: `sbt test`
-* Run a single spec file: `sbt "test:testOnly *fileName"`  
-  For example: `sbt "test:testOnly *AccountCheckControllerSpec"`
+* Run a single spec file: `sbt "testOnly *fileName"`  
+  For example: `sbt "testOnly *AccountCheckControllerSpec"`
 
 ### Integration tests
 
 * Run the integration test suite: `sbt it/test`
 
-### Acceptance tests
+### Journey (acceptance) tests
 
-To verify the acceptance tests locally:
+The UI journey tests live in [tax-enrolment-assignment-journey-tests](https://github.com/hmrc/tax-enrolment-assignment-journey-tests). See that repository's README for its prerequisites (PostgreSQL and MongoDB).
 
-1. Start the sm2 container for the TAI profile: `sm2 --start TAI_ALL`
-2. Stop the `TAI_FRONTEND` process running in sm2: `sm2 --stop TAI_FRONTEND`
-3. Run the service with test endpoints: `sbt "run -Dapplication.router=testOnlyDoNotUseInAppConf.Routes"`
-4. In the `tai-acceptance-test-suite` repository, run: `./run_specs_local.sh`
+To run them against a local build of this service:
 
-## Development setup
+1. Start the TENs services in sm2: `sm2 --start TAX_ENROLMENT_ASSIGNMENT_ALL`
+2. Stop the `TAX_ENROLMENT_ASSIGNMENT_FRONTEND` process running in sm2: `sm2 --stop TAX_ENROLMENT_ASSIGNMENT_FRONTEND`
+3. In this repository, run the service with the test-only routes: `./run.sh`
+4. In the `tax-enrolment-assignment-journey-tests` repository, run: `./run_tests_local.sh`
 
-To walk the journey locally, run the service with test endpoints:
+## Running locally
 
-`sbt 'run -Dapplication.router=testOnlyDoNotUseInAppConf.Routes'`
+Start the dependent services in sm2, then stop the sm2 copy of this service so you can run your local build:
 
-Then use the test-only user selection page:
+sm2 --start TAX_ENROLMENT_ASSIGNMENT_ALL
+sm2 --stop TAX_ENROLMENT_ASSIGNMENT_FRONTEND
+./run.sh
+
+`run.sh` starts the service on port 7750 with the test-only routes enabled. It is the same as:
+
+`sbt -Dplay.http.router=testOnlyDoNotUseInAppConf.Routes "run 7750"`
+
+To walk the journey, open the test-only user selection page:
 
 `http://localhost:7750/protect-tax-info/test-only/select-user`
+
+More example request bodies for creating test data are in [doc/CreateData.md](doc/CreateData.md). There is also a Postman collection in the `doc` folder.
 
 ## Test-only endpoints
 
@@ -58,6 +70,7 @@ Shows preset user scenarios for Government Gateway and One Login accounts, inclu
 * single account with IR-SA enrolment
 * multiple accounts with no enrolments
 * multiple accounts with varying enrolments between none, HMRC-PT, and IR-SA
+* accounts with MTD IT enrolments
 
 ### GET `/protect-tax-info/test-only/insert-user`
 
@@ -123,7 +136,11 @@ In the context of this service we use the following acronyms:
 * [API]: Application Programming Interface
 * [JRE]: Java Runtime Environment
 * [JSON]: JavaScript Object Notation
-* [NPS]: National Insurance and PAYE Service
+* [EACD]: Enrolment and Access Control Data (the enrolment store)
+* MTD IT: Making Tax Digital for Income Tax
+* PT: Personal Tax (the HMRC-PT enrolment)
+* SA: Self Assessment (the IR-SA enrolment)
+* TENs: Tax Enrolment Assignment Frontend (this service)
 * [URL]: Uniform Resource Locator
 * [UGS]: Users Groups Search
 
@@ -135,6 +152,6 @@ This code is open source software licensed under the [Apache 2.0 License](http:/
 [API]: https://en.wikipedia.org/wiki/Application_programming_interface
 [JRE]: http://www.oracle.com/technetwork/java/javase/overview/index.html
 [JSON]: http://json.org/
-[NPS]: http://www.publications.parliament.uk/pa/cm201012/cmselect/cmtreasy/731/73107.htm
+[EACD]: https://github.com/hmrc/enrolment-store-proxy
 [URL]: https://en.wikipedia.org/wiki/Uniform_Resource_Locator
 [UGS]: https://github.com/hmrc/users-groups-search

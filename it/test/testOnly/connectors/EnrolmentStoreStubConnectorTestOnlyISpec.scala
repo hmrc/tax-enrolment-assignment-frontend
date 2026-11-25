@@ -117,7 +117,7 @@ class EnrolmentStoreStubConnectorTestOnlyISpec extends IntegrationSpecBase {
   "deleteStubAccount" should {
 
     val groupId = "groupId"
-    val apiUrl  = s"/data/group/$groupId"
+    val apiUrl  = s"/enrolment-store-stub/data/group/$groupId"
 
     "delete account details" when {
       "response is NO_CONTENT" in {

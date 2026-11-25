@@ -69,7 +69,7 @@ class EnrolmentStoreStubConnectorTestOnly @Inject() (
   }
 
   def deleteStubAccount(groupId: String)(implicit hc: HeaderCarrier): TEAFResult[Unit] = {
-    val url = s"${appConfig.enrolmentStoreStub}/data/group/$groupId"
+    val url = s"${appConfig.enrolmentStoreStub}/enrolment-store-stub/data/group/$groupId"
 
     EitherT(httpClient.delete(url"$url").execute[Either[UpstreamErrorResponse, HttpResponse]]).transform {
       case Right(response) if response.status == NO_CONTENT => Right(())

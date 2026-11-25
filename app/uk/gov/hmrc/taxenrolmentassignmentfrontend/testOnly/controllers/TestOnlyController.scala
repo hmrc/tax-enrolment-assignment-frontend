@@ -24,14 +24,14 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.actions.AuthJourne
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.controllers.helpers.TEAFrontendController
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.{UpstreamError, UpstreamUnexpected2XX}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.EventLoggerService
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.logging.LoggingEvent.*
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.services.EACDService
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.config.AppConfigTestOnly
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.CustomTestDataForm.customDataForm
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.{AccountDetailsTestOnly, CustomTestDataForm, TestMocks}
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.utils.AccountUtilsTestOnly
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.TestDataForm.selectUserForm
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.{AccountDetailsTestOnly, CustomTestDataForm, TestMocks}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.services.EnrolmentStoreServiceTestOnly
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.utils.{AccountUtilsTestOnly, TestCredIdGenerator}
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.views.html.{InsertTestData, LoginCheckCompleteView, SelectTestData, SuccessView}
 
 import javax.inject.{Inject, Singleton}
@@ -133,11 +133,52 @@ class TestOnlyController @Inject() (
                 selectTestDataPage(TestMocks.mocks ++ TestMocks.mtdMocks)(request, mcc.messagesApi.preferred(request))
               )
             ),
-        data => insertAccount(extractData(data))
+        data => {
+          val accounts = extractData(data)
+          if (accounts.exists(isOneLogin)) {
+            insertAccountsWithFreshOneLoginCredIds(accounts)
+          } else {
+            insertAccount(accounts)
+          }
+        }
       )
   }
 
-  def extractData(file: String) =
+  private def isOneLogin(account: AccountDetailsTestOnly): Boolean = account.identityProviderType == "ONE_LOGIN"
+
+  private def insertAccountsWithFreshOneLoginCredIds(
+    accounts: List[AccountDetailsTestOnly]
+  )(implicit hc: HeaderCarrier, request: Request[AnyRef]) = {
+    val freshAccounts = accounts.map { account =>
+      if (isOneLogin(account)) {
+        account.copy(user = account.user.copy(credId = TestCredIdGenerator.generate()))
+      } else {
+        account
+      }
+    }
+
+    (for {
+      _ <- accounts
+             .distinctBy(_.nino)
+             .map(account => accountUtilsTestOnly.deleteAccountsLinkedToNino(account))
+             .sequence
+      _ <- accounts
+             .zip(freshAccounts)
+             .map { case (account, freshAccount) =>
+               for {
+                 _ <- accountUtilsTestOnly.deleteAccountDetails(account)
+                 _ <- accountUtilsTestOnly.insertAccountDetails(freshAccount)
+               } yield ()
+             }
+             .sequence
+    } yield ())
+      .fold(
+        error => InternalServerError(error.toString),
+        _ => Ok(successPage(freshAccounts, appConfigTestOnly)(request, request2Messages))
+      )
+  }
+
+  def extractData(file: String): List[AccountDetailsTestOnly] =
     fileHelper.loadFile(s"$file.json") match {
       case Success(json)  =>
         Try(json.as[JsArray]) match {
@@ -206,9 +247,11 @@ class TestOnlyController @Inject() (
   def successfulCall: Action[AnyContent] = authJourney.authJourney.async { implicit request =>
     logger.logEvent(logSuccessfulRedirectToReturnUrl)
     val connectorCall =
-      if (appConfigTestOnly.environment == "Staging")
+      if (appConfigTestOnly.environment == "Staging") {
         enrolmentStoreServiceTestOnly.getUsersAssignedPTEnrolmentFromStub(request.userDetails.nino)
-      else eacdService.getUsersAssignedPTEnrolment
+      } else {
+        eacdService.getUsersAssignedPTEnrolment
+      }
 
     connectorCall
       .bimap(

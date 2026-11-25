@@ -16,23 +16,46 @@
 
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.utils
 
+import cats.data.EitherT
 import cats.implicits.toTraverseOps
+import play.api.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.service.TEAFResult
-import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.connectors._
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.connectors.UsersGroupsSearchConnector
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.errors.TaxEnrolmentAssignmentErrors
+import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.connectors.*
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.models.AccountDetailsTestOnly
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.services.EnrolmentStoreServiceTestOnly
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class AccountUtilsTestOnly @Inject() (
   enrolmentStoreServiceTestOnly: EnrolmentStoreServiceTestOnly,
   identityVerificationConnectorTestOnly: IdentityVerificationConnectorTestOnly,
   basStubsConnectorTestOnly: BasStubsConnectorTestOnly,
-  oneLoginStubConnectorTestOnly: OneLoginStubConnectorTestOnly
-)(implicit ec: ExecutionContext) {
+  oneLoginStubConnectorTestOnly: OneLoginStubConnectorTestOnly,
+  usersGroupsSearchConnector: UsersGroupsSearchConnector
+)(implicit ec: ExecutionContext)
+    extends Logging {
+
+  def deleteAccountsLinkedToNino(account: AccountDetailsTestOnly)(implicit hc: HeaderCarrier): TEAFResult[Unit] =
+    EitherT[Future, TaxEnrolmentAssignmentErrors, List[String]](
+      usersGroupsSearchConnector.getAllCredIdsByNino(account.nino.nino).value.map {
+        case Right(credIds) => Right(credIds.map(_.credId).distinct.toList)
+        case Left(error)    =>
+          logger.warn(s"Could not look up existing accounts for NINO ${account.nino.nino}, skipping clean-up: $error")
+          Right(List.empty[String])
+      }
+    )
+      .flatMap { credIds =>
+        credIds
+          .map(credId => deleteAccountDetails(account.copy(user = account.user.copy(credId = credId))))
+          .sequence
+          .map(_ => ())
+      }
+
   def deleteAccountDetails(account: AccountDetailsTestOnly)(implicit hc: HeaderCarrier): TEAFResult[Unit] =
     for {
       // delete account from IPAC

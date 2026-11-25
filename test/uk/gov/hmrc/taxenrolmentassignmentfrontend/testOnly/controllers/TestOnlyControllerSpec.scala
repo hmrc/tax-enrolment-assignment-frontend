@@ -17,9 +17,10 @@
 package uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.controllers
 
 import cats.data.EitherT
-import org.mockito.ArgumentMatchers.{any, eq => ameq}
-import org.mockito.Mockito.when
-import org.scalatest.matchers.must.Matchers._
+import org.mockito.ArgumentCaptor
+import org.mockito.ArgumentMatchers.{any, eq as ameq}
+import org.mockito.Mockito.{atLeastOnce, verify, when}
+import org.scalatest.matchers.must.Matchers.*
 import play.api.Application
 import play.api.http.Status.{BAD_REQUEST, INTERNAL_SERVER_ERROR, OK}
 import play.api.inject.bind
@@ -38,6 +39,7 @@ import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.services.EnrolmentSto
 import uk.gov.hmrc.taxenrolmentassignmentfrontend.testOnly.utils.AccountUtilsTestOnly
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.jdk.CollectionConverters.*
 import scala.util.Success
 
 class TestOnlyControllerSpec extends BaseSpec {
@@ -477,6 +479,52 @@ class TestOnlyControllerSpec extends BaseSpec {
       val result = sut.insertTestData.apply(request)
 
       status(result) mustBe OK
+    }
+    "give One Login accounts a fresh credId and clear accounts linked to the NINO first" in {
+      val nino = generateNino
+
+      val oneLoginAccount = AccountDetailsTestOnly(
+        "ONE_LOGIN",
+        "1B958C76-8F5B-406A-B2D6-CB3B7D92E063",
+        nino,
+        "Individual",
+        UserTestOnly("1358163060829375", "Firstname Surname", "email@example.com"),
+        List(),
+        List(AdditonalFactors("totp", None, Some("HMRC-APP")))
+      )
+
+      val request = FakeRequest()
+        .withMethod("POST")
+        .withFormUrlEncodedBody(
+          "selectUser" -> nino.nino
+        )
+
+      when(mockFileHelper.loadFile(s"${nino.nino}.json"))
+        .thenReturn(Success(Json.toJson(oneLoginAccount)))
+
+      when(mockAccountUtilsTestOnly.deleteAccountsLinkedToNino(ameq(oneLoginAccount))(any()))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+
+      when(mockAccountUtilsTestOnly.deleteAccountDetails(ameq(oneLoginAccount))(any()))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+
+      when(mockAccountUtilsTestOnly.insertAccountDetails(any())(any()))
+        .thenReturn(EitherT.rightT[Future, TaxEnrolmentAssignmentErrors](()))
+
+      val result = sut.insertTestData.apply(request)
+
+      status(result) mustBe OK
+
+      val captor: ArgumentCaptor[AccountDetailsTestOnly] = ArgumentCaptor.forClass(classOf[AccountDetailsTestOnly])
+      verify(mockAccountUtilsTestOnly).deleteAccountsLinkedToNino(ameq(oneLoginAccount))(any())
+      verify(mockAccountUtilsTestOnly, atLeastOnce()).insertAccountDetails(captor.capture())(any())
+
+      val insertedForThisNino = captor.getAllValues.asScala.toList.filter(_.nino == nino)
+      insertedForThisNino.size mustBe 1
+      val inserted            = insertedForThisNino.head
+      inserted.user.credId must not be oneLoginAccount.user.credId
+      inserted.user.credId must fullyMatch regex "[1-9][0-9]{15}"
+      inserted.copy(user = inserted.user.copy(credId = oneLoginAccount.user.credId)) mustBe oneLoginAccount
     }
     "create bad request when given no form data" in {
 
